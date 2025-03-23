@@ -220,30 +220,11 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
   const nonToSiloDisabled = txnType !== "redeemToSilo" && (!exists(toMode) || !tokenOut);
   const buttonDisabled = baseDisabled || isConfirming || submitting || outputNotReady || inputError || quoting || nonToSiloDisabled;
 
-  const sourceIsInternal = balanceSource === FarmFromMode.INTERNAL;
-
-  const spender = (() => {
-    if (sourceIsInternal && txnType !== "swap") {
-      return siloToken.address;
-    }
-    if (!sourceIsInternal && txnType === "swap") {
-      return diamond;
-    }
-    return undefined;
-  })();
-
-  // only require allowance if
-  const buttonToken = (() => {
-    if (sourceIsInternal && txnType !== "swap") {
-      return siloToken;
-    }
-    if (!sourceIsInternal && txnType === "swap") {
-      return siloToken;
-    }
-    return undefined;
-  })();
-
-  const requiresDiamondAllowance = sourceIsInternal && txnType !== "swap";
+  const {
+    spender,
+    approvalToken,
+    requiresDiamondAllowance,
+  } = useButtonApprovalProps(toSilo, siloToken, tokenOut, balanceSource);
 
   return (
     <div className="flex flex-col gap-6">
@@ -350,9 +331,9 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
           variant="gradient"
           disabled={buttonDisabled}
           amount={amountIn}
-          token={buttonToken}
           balanceFrom={balanceSource}
           spender={spender}
+          token={approvalToken}
           requiresDiamondAllowance={requiresDiamondAllowance}
         />
       </div>
@@ -364,7 +345,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
           variant="gradient"
           amount={amountIn}
           disabled={buttonDisabled}
-          token={buttonToken}
+          token={approvalToken}
           balanceFrom={balanceSource}
           spender={spender}
           requiresDiamondAllowance={requiresDiamondAllowance}
@@ -387,7 +368,13 @@ const useTxnType = (toSilo: boolean, tokenOut: Token | undefined): TxnType | und
   return tokenOut.isMain ? "redeemAdvanced" : "swap";
 }
 
-const useButtonProps = (
+const defaultUseButtonProps = {
+  spender: undefined,
+  approvalToken: undefined,
+  requiresDiamondAllowance: false,
+}
+
+const useButtonApprovalProps = (
   toSilo: boolean,
   siloToken: Token,
   tokenOut: Token | undefined,
@@ -397,42 +384,25 @@ const useButtonProps = (
   const txnType = useTxnType(toSilo, tokenOut);
 
   const fromInternal = fromMode === FarmFromMode.INTERNAL;
+  const requiresDiamondAllowance = fromInternal && txnType !== "swap";
 
-  let spender: Address | undefined = undefined;
-  let token: Token | undefined = undefined;
-
-  switch (txnType) {
-    case "redeemAdvanced": {
-      if (fromInternal) {
-        spender = siloToken.address;
-        token = siloToken;
-      }
-      break;
-    }
-    case "swap": {
-      spender = diamond;
-      token = siloToken;
-      break;
-    }
-    // default is redeemToSilo
-    default: {
-      if (fromInternal) {
-        spender = siloToken.address;
-        token = siloToken;
-      }
-      break;
+  if (txnType !== "redeemToSilo" && fromInternal) {
+    return {
+      spender: siloToken.address,
+      approvalToken: siloToken,
+      requiresDiamondAllowance
     }
   }
 
-  if (fromInternal) {
-    spender = diamond;
-    token = siloToken;
+  if (txnType === "swap" && !fromInternal) {
+    return {
+      spender: diamond,
+      approvalToken: siloToken,
+      requiresDiamondAllowance
+    }
   }
 
-  if (txnType === "swap") {
-    spender = diamond;
-    token = siloToken;
-  }
+  return defaultUseButtonProps;
 }
 
 const useFilterDestinationTokens = () => {
@@ -542,69 +512,3 @@ function getInputAltTextWithSource(source: FarmFromMode) {
       return "Combined";
   }
 }
-
-/**
- * 
- * Add LP
- * -> lper APY
- * 
- * PT
- * -> 
- * 
- * 
- * YT
- * -> 
- * 
- * -------
- * 
- * 1 PINTO = 1 TY & 1 PT
- * 
- * Can mint 1 PINTO & 1PT for some fixed period of time
- * at redemption 1 PT -> 1 PINTO
- * 1 YT = yield of sPINTO
- *
- * 
- * 
- * 
- * -------
- * 
- * exchange rate
- * -> virtualPrice 10e18 sPINTO => 1000374163094591981 sPINTO PT
- * 
- * 
- * APY for holding PT
- * 
- * contract.price_oracle
- * 1e18 / 88278355_2398530886 => ~1.13 => exchange rate for 1.13 PT for 1 sPINTO
- * 
- * for 6 months long
- * 
- * what is the APY? 
- * 
- * => 1.13^2 = 1.2769 => 27.69% APY
- * 
- * How many days are left in the fixed term? 
- * 
- * rate^(1year/(time remaining in market)))
- * 
- * rate = 1/price_oracle
- * 
- * 
- * ____
- * 
- * POOLS
- * 
- * sPINTO<>PT pool
- * -> 1 PT => .88278355249174477 sPINTO
- * 
- * 
- * 
- * 
- * --------
- * 
- * yield leverage for buying YT = 1/(1-PRICEORACLE)
- * 1/(1-0.88278355249174477) = 8.5312259607 / PINTO
- * 
- * 
- * 
- */
