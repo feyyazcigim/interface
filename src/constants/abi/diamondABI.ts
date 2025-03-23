@@ -7522,7 +7522,7 @@ export const diamondABI = [
           {
             internalType: "enum ShipmentRecipient",
             name: "recipient",
-            type: "ShipmentRecipient",
+            type: "uint8",
           },
           {
             internalType: "bytes",
