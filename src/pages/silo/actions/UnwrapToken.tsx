@@ -91,10 +91,6 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
     disabled: !tokenOut || txnType !== "swap" || tokenOut?.isMain,
   });
 
-  useEffect(() => {
-    console.log(swap.data);
-  }, [swap]);
-
   const swapSummary = useSwapSummary(swap.data);
   const buildSwapQuote = useBuildSwapQuoteAsync(swap.data, balanceSource, toMode, account, account);
 
