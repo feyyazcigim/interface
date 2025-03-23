@@ -471,14 +471,14 @@ export function useFarmerSilo(address?: `0x${string}`) {
       floodData.refetch(),
       grownStalkPerToken.refetch(),
       mowStatusPerToken.refetch(),
-    ])
+    ]);
   }, [
     activeStalkBalance.refetch,
     earnedBeansBalance.refetch,
     depositsQuery.refetch,
     floodData.refetch,
     grownStalkPerToken.refetch,
-    mowStatusPerToken.refetch
+    mowStatusPerToken.refetch,
   ]);
 
   return {
@@ -515,6 +515,6 @@ export function useFarmerSilo(address?: `0x${string}`) {
 
     // Query management
     queryKeys,
-    refetch: refetch
+    refetch: refetch,
   };
 }

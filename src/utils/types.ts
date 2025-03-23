@@ -277,7 +277,7 @@ export type UseSeasonalResult = {
 };
 
 export type UseMultiSeasonalResult = {
-  data: {[key: string]: SeasonalChartData[]} | undefined;
+  data: { [key: string]: SeasonalChartData[] } | undefined;
   isLoading: boolean;
   isError: boolean;
 };

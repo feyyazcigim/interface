@@ -194,7 +194,7 @@ class Eq2EQStrategy extends SiloConvertLP2LPConvertStrategy {
 
     // 4: check balance of buyToken in pipeline.
     pipe.add(
-      Eq2EQStrategy.snippets.erc20BalanceOf(swap.buyToken, pipelineAddress[resolveChainId(this.context.chainId)])
+      Eq2EQStrategy.snippets.erc20BalanceOf(swap.buyToken, pipelineAddress[resolveChainId(this.context.chainId)]),
     );
 
     // 4: transfer swap result to target well

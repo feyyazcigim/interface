@@ -9,7 +9,6 @@ import { Address, StateOverride, decodeFunctionResult } from "viem";
 import { readContract, simulateContract } from "viem/actions";
 import { Config as WagmiConfig } from "wagmi";
 
-
 /**
  * @param value - Eth value specified in the call
  * @param clipboard - Clipboard specified in the call

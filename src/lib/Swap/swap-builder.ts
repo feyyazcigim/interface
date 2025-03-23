@@ -63,11 +63,7 @@ export class SwapBuilder {
     this.#nodes = [];
   }
 
-  async deriveClipboardWithOutputToken(
-    token: Token,
-    pasteSlot: number,
-    account: Address | undefined,
-  ) {
+  async deriveClipboardWithOutputToken(token: Token, pasteSlot: number, account: Address | undefined) {
     const node = this.#nodes.find((n) => tokensEqual(n.buyToken, token));
     if (!node) {
       throw new Error(`No node found for token ${token.symbol}`);
@@ -96,7 +92,7 @@ export class SwapBuilder {
     const { copySlot, summary } = extractABIDynamicArrayCopySlot(
       result.result[pipe.index],
       functionSlot,
-      amountOutSlot
+      amountOutSlot,
     );
 
     const clipboard = Clipboard.encodeSlot(pipe.index, copySlot, pasteSlot);
@@ -107,12 +103,12 @@ export class SwapBuilder {
       copySlot,
       pasteSlot,
       clipboard,
-    })
+    });
 
     return {
       summary,
       clipboard,
-    }
+    };
   }
 
   async build(
@@ -121,7 +117,7 @@ export class SwapBuilder {
     farmToMode: FarmToMode,
     caller: Address,
     recipient: Address,
-    id?: string
+    id?: string,
   ) {
     this.#initWorkflow(quote, id);
 
@@ -153,7 +149,6 @@ export class SwapBuilder {
     for (const [i, node] of this.#nodes.entries()) {
       // 1st leg of the swap
       if (i === 0) {
-
         // Wrap ETH before loading pipeline
         if (isWrapEthNode(node)) {
           toMode = FarmToMode.INTERNAL;
@@ -190,7 +185,7 @@ export class SwapBuilder {
           case isZeroXNode(node): {
             this.#advPipe.add(this.#getApproveERC20MaxAllowance(node));
             this.#advPipe.add(node.buildStep(), {
-              tag: node.thisTag
+              tag: node.thisTag,
             });
             break;
           }
@@ -200,7 +195,7 @@ export class SwapBuilder {
               node.transferStep({ copySlot: this.#getPrevNodeCopySlot(i) }, this.#advPipe.getClipboardContext()),
             );
             this.#advPipe.add(node.buildStep({ recipient: this.pipelineAddress }), {
-              tag: node.thisTag
+              tag: node.thisTag,
             });
             break;
           }
@@ -208,12 +203,14 @@ export class SwapBuilder {
           case isWellRemoveSingleSidedNode(node): {
             const isFirst = this.#advPipe.length === 0;
             if (!isFirst) {
-              throw new Error("Error building swap: WellRemoveSingleSidedSwapNode must be the first txn in a sequence.");
+              throw new Error(
+                "Error building swap: WellRemoveSingleSidedSwapNode must be the first txn in a sequence.",
+              );
             }
             this.#advPipe.add(this.#getApproveERC20MaxAllowance(node));
             // just send to pipeline regardless of mode
             this.#advPipe.add(node.buildStep({ recipient: this.pipelineAddress }), {
-              tag: node.thisTag
+              tag: node.thisTag,
             });
 
             // throw error here for now since we haven't sufficiently tested withdrawing as any arbitrary token yet.
@@ -229,11 +226,11 @@ export class SwapBuilder {
               node.buildStep(
                 {
                   recipient: this.pipelineAddress,
-                  copySlot: this.#getPrevNodeCopySlot(i)
+                  copySlot: this.#getPrevNodeCopySlot(i),
                 },
-                this.#advPipe.getClipboardContext()
+                this.#advPipe.getClipboardContext(),
               ),
-              { tag: node.thisTag }
+              { tag: node.thisTag },
             );
             break;
           }
@@ -246,11 +243,11 @@ export class SwapBuilder {
                 {
                   recipient: this.pipelineAddress,
                   owner: this.pipelineAddress,
-                  copySlot: this.#getPrevNodeCopySlot(i)
+                  copySlot: this.#getPrevNodeCopySlot(i),
                 },
-                this.#advPipe.getClipboardContext()
+                this.#advPipe.getClipboardContext(),
               ),
-              { tag: node.thisTag }
+              { tag: node.thisTag },
             );
             break;
           }
@@ -531,7 +528,7 @@ const isWellRemoveSingleSidedNode = (node: SwapNode): node is WellRemoveSingleSi
 };
 const isSiloWrappedWrapNode = (node: SwapNode): node is SiloWrappedTokenWrapNode => {
   return node instanceof SiloWrappedTokenWrapNode;
-}
+};
 const isSiloWrappedUnwrapNode = (node: SwapNode): node is SiloWrappedTokenUnwrapNode => {
   return node instanceof SiloWrappedTokenUnwrapNode;
-}
+};

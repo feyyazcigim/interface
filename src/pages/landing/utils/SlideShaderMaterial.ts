@@ -13,7 +13,7 @@ const SlideShaderMaterial = shaderMaterial(
     opacity: 1,
   },
   vertexShader,
-  fragmentShader
+  fragmentShader,
 );
 
 export default SlideShaderMaterial;

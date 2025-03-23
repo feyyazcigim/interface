@@ -244,7 +244,7 @@ class WellsRouter {
 
     advPipe.add([
       encoders.well.getSwapOut(sellTokenWell, sellToken, this.#context.mainToken, amount),
-      encoders.well.getSwapOut(buyTokenWell, this.#context.mainToken, buyToken, amount, Clipboard.encodeSlot(0, 0, 2))
+      encoders.well.getSwapOut(buyTokenWell, this.#context.mainToken, buyToken, amount, Clipboard.encodeSlot(0, 0, 2)),
     ]);
 
     const encodedResult = await advPipe.readStatic();
@@ -411,10 +411,16 @@ export class SwapQuoter {
 
   /**
    * Handle wrapping & unwrapping swaps
-   * 
+   *
    * In the case where we are only wrapping or unwrapping, we can return the quote immediately.
    */
-  async #startSwapWithWrapIsh(nodes: SwapNode[], sellToken: Token, buyToken: Token, amount: TV, slippage: number): Promise<{
+  async #startSwapWithWrapIsh(
+    nodes: SwapNode[],
+    sellToken: Token,
+    buyToken: Token,
+    amount: TV,
+    slippage: number,
+  ): Promise<{
     thruToken?: Token;
     quote?: BeanSwapNodeQuote;
   }> {
@@ -422,7 +428,7 @@ export class SwapQuoter {
 
     const makeQuoteObject = (node: SwapNode) => {
       return {
-        quote: this.#makeQuote([node], sellToken, buyToken, amount, slippage)
+        quote: this.#makeQuote([node], sellToken, buyToken, amount, slippage),
       };
     };
 
@@ -472,13 +478,12 @@ export class SwapQuoter {
       nodes.push(siloWrapNode);
     }
 
-
     return { thruToken };
   }
 
   /**
-   * Handle wrapping / unwrapping to the buy token if necessary at the end of the swap. 
-   * 
+   * Handle wrapping / unwrapping to the buy token if necessary at the end of the swap.
+   *
    * Assumes that nodes.length !== 0
    */
   async #endSwapWithWrapIsh(nodes: SwapNode[], buyToken: Token): Promise<void> {
@@ -501,7 +506,9 @@ export class SwapQuoter {
     if (isWrappingToSilo) {
       // if thruToken is not main, throw
       if (!thruToken.isMain) {
-        throw new Error(`[Swap Router/endSwapWithWrapIsh] Invalid Sell Token. Expected Main, but got non-main token, ${thruToken.address}`);
+        throw new Error(
+          `[Swap Router/endSwapWithWrapIsh] Invalid Sell Token. Expected Main, but got non-main token, ${thruToken.address}`,
+        );
       }
 
       const siloWrapNode = new SiloWrappedTokenWrapNode(this.context);
@@ -513,7 +520,9 @@ export class SwapQuoter {
     else if (isUnwrappingtoETH) {
       // if thruToken is not WETH, throw
       if (!thruToken.isWrappedNative) {
-        throw new Error(`[Swap Router/endSwapWithWrapIsh] Invalid Thru Token. Expected WETH, but got ${thruToken.symbol}`);
+        throw new Error(
+          `[Swap Router/endSwapWithWrapIsh] Invalid Thru Token. Expected WETH, but got ${thruToken.symbol}`,
+        );
       }
 
       const unwrapEthNode = new UnwrapEthSwapNode(this.context);
@@ -527,7 +536,9 @@ export class SwapQuoter {
    */
   async #erc20OnlyQuote(sellToken: Token, buyToken: Token, sellAmount: TV, slippage: number, options?: SwapOptions) {
     if (!isPureERC20(sellToken) || !isPureERC20(buyToken)) {
-      throw new Error(`[Swap Router/erc20OnlyQuote] Invalid tokens. Expected non native & non silo wrapped tokens, but got SELL: ${sellToken.symbol}, BUY: ${buyToken.symbol}`);
+      throw new Error(
+        `[Swap Router/erc20OnlyQuote] Invalid tokens. Expected non native & non silo wrapped tokens, but got SELL: ${sellToken.symbol}, BUY: ${buyToken.symbol}`,
+      );
     }
 
     const {
@@ -673,15 +684,15 @@ export class SwapQuoter {
 
   /**
    * Handle quote for selling PINTO -> NON_PINTO
-   * 
-   * Notes: 
-   * 
+   *
+   * Notes:
+   *
    * 1. If we are disabling 0x quotes (for example, if swapping between PINTO & WSOL)
    *    -> returns the direct well route
    * 2. Fetch well routes & fetch from dex aggregator
-   * 
-   * 3. Compare the approximate USD value of the 
-   * 
+   *
+   * 3. Compare the approximate USD value of the
+   *
    */
   async #handleSellMain(
     sellToken: Token,
@@ -805,7 +816,9 @@ export class SwapQuoter {
     },
   ): Promise<SwapNode[]> {
     const [zeroXNode, well2WellQuote] = await Promise.all([
-      options?.aggDisabled ? undefined : this.#handleZeroXQuote(sellToken, buyToken, sellAmount, slippage, options?.excludePintoExchange),
+      options?.aggDisabled
+        ? undefined
+        : this.#handleZeroXQuote(sellToken, buyToken, sellAmount, slippage, options?.excludePintoExchange),
       options?.well2WellDisabled ? undefined : this.#handleWell2WellQuote(sellToken, buyToken, sellAmount, slippage),
     ]);
 
@@ -854,7 +867,13 @@ export class SwapQuoter {
     return nodes;
   }
 
-  async #handleZeroXQuote(sellToken: Token, buyToken: Token, sellAmount: TV, slippage: number, excludePintoExchange: boolean = false) {
+  async #handleZeroXQuote(
+    sellToken: Token,
+    buyToken: Token,
+    sellAmount: TV,
+    slippage: number,
+    excludePintoExchange: boolean = false,
+  ) {
     const node = new ZeroXSwapNode(this.context, sellToken, buyToken);
     await node.quoteForward(sellAmount, slippage, excludePintoExchange);
     return node;
@@ -950,12 +969,12 @@ export class SwapQuoter {
       routes.swap = {
         sellToken: sellToken,
         buyToken: this.context.mainToken,
-      }
+      };
 
       routes.swapThru = {
         sellToken: this.context.mainToken,
         buyToken: buyToken,
-      }
+      };
 
       return routes;
     }

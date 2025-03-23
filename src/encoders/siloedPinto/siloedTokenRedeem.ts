@@ -5,13 +5,12 @@ import { HashString } from "@/utils/types.generic";
 import { encodeFunctionData, Address } from "viem";
 import { Clipboard } from "@/classes/Clipboard";
 
-
 export default function siloedTokenRedeem(
   shares: TV,
   recipient: Address,
   owner: Address,
   target: Address,
-  clipboard: HashString = Clipboard.encode([])
+  clipboard: HashString = Clipboard.encode([]),
 ): AdvancedPipeCall {
   const callData = encodeFunctionData({
     abi: siloedPintoABI,

@@ -1,4 +1,4 @@
-import { ZeroX } from '@/lib/matcha/ZeroX';
+import { ZeroX } from "@/lib/matcha/ZeroX";
 import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import encoders from "@/encoders";
@@ -22,8 +22,8 @@ import {
   SiloConvertTargetSummary,
 } from "./ConvertStrategy";
 import { resolveChainId } from "@/utils/chain";
-import { pipelineAddress } from '@/generated/contractHooks';
-import { isAddress } from 'viem';
+import { pipelineAddress } from "@/generated/contractHooks";
+import { isAddress } from "viem";
 
 export interface SourceSummaryLP2LP extends SiloConvertSourceSummary {
   well: ExtendedPoolData;
@@ -123,7 +123,13 @@ export abstract class LP2LPStrategy extends SiloConvertStrategy {
    * @param slippage - The slippage percentage.
    * @returns The swap quote params.
    */
-  protected generateSwapQuoteParams(buyToken: Token, sellToken: Token, sellAmount: TV, slippage: number, disablePintoExchange: boolean = true): ZeroXQuoteV2Parameters {
+  protected generateSwapQuoteParams(
+    buyToken: Token,
+    sellToken: Token,
+    sellAmount: TV,
+    slippage: number,
+    disablePintoExchange: boolean = true,
+  ): ZeroXQuoteV2Parameters {
     const pipeline = pipelineAddress[resolveChainId(this.context.chainId)];
 
     return ZeroX.generateQuoteParams({
@@ -246,7 +252,7 @@ export abstract class LP2LPStrategy extends SiloConvertStrategy {
       return {
         ...encoders.token.erc20BalanceOf(account),
         target: token.address,
-      }
+      };
     },
     // // Well Methods
     removeLiquidity: (

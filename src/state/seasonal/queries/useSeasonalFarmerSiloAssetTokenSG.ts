@@ -1,5 +1,9 @@
-import { isValidAddress } from '@/utils/string';
-import { FarmerSeasonalSiloAssetTokenDocument as Document, FarmerSeasonalSiloAssetTokenQuery, SiloAssetHourlySnapshot } from "@/generated/gql/graphql";
+import { isValidAddress } from "@/utils/string";
+import {
+  FarmerSeasonalSiloAssetTokenDocument as Document,
+  FarmerSeasonalSiloAssetTokenQuery,
+  SiloAssetHourlySnapshot,
+} from "@/generated/gql/graphql";
 import { paginateSubgraph, PaginationSettings } from "@/utils/paginateSubgraph";
 import useSeasonalQueries, { ConvertEntryFn, SeasonalQueryVars } from "./useSeasonalInternalQueries";
 import { useChainId } from "wagmi";
@@ -38,9 +42,12 @@ export default function useSeasonalFarmerSiloAssetTokenSG(
 ): UseSeasonalResult {
   const chainId = useChainId();
 
-  const queryFnFactory = useCallback((vars: SeasonalQueryVars) => {
-    return () => paginateSubgraph(paginateSettings, subgraphs[chainId].beanstalk, Document, vars);
-  }, [chainId]);
+  const queryFnFactory = useCallback(
+    (vars: SeasonalQueryVars) => {
+      return () => paginateSubgraph(paginateSettings, subgraphs[chainId].beanstalk, Document, vars);
+    },
+    [chainId],
+  );
 
   const siloAsset = `${account}-${token}`.toLowerCase();
 
@@ -58,6 +65,6 @@ export default function useSeasonalFarmerSiloAssetTokenSG(
       convertResult,
     },
     true,
-    queryDisabled
+    queryDisabled,
   );
 }

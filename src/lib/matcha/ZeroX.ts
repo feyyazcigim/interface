@@ -1,11 +1,11 @@
-import { resolveChainId } from '@/utils/chain';
+import { resolveChainId } from "@/utils/chain";
 import { ZeroXQuoteV2Parameters, ZeroXQuoteV2Response } from "@/lib/matcha/types";
 import { exists } from "@/utils/utils";
 import { stringEq, stringToNumber } from "@/utils/string";
 
 import { ZERO_ADDRESS_HEX } from "@/constants/address";
-import { TV } from '@/classes/TokenValue';
-import { getChainTokenMap, getTokenIndex } from '@/utils/token';
+import { TV } from "@/classes/TokenValue";
+import { getChainTokenMap, getTokenIndex } from "@/utils/token";
 
 type RequestParams = Omit<RequestInit, "headers" | "method">;
 
@@ -74,7 +74,9 @@ export class ZeroX {
    *
    * @returns the params for the 0x API
    */
-  static generateQuoteParams<T extends ZeroXQuoteV2Parameters = ZeroXQuoteV2Parameters>(params: T): ZeroXQuoteV2Parameters {
+  static generateQuoteParams<T extends ZeroXQuoteV2Parameters = ZeroXQuoteV2Parameters>(
+    params: T,
+  ): ZeroXQuoteV2Parameters {
     if (!ZeroX.isValidQuoteParams(params)) {
       throw new Error("ERROR: Invalid quote params");
     }

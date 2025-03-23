@@ -3,7 +3,7 @@ import { tokensEqual } from "@/utils/token";
 import { test, expect } from "vitest";
 import { base } from "viem/chains";
 
-test('tokensEqual', () => {
+test("tokensEqual", () => {
   const main = MAIN_TOKEN[base.id];
 
   const eth = NATIVE_TOKEN[base.id];
@@ -15,4 +15,4 @@ test('tokensEqual', () => {
   expect(tokensEqual(main, eth)).toBe(false);
   expect(tokensEqual(eth, weth)).toBe(false);
   expect(tokensEqual(main, undefined)).toBe(false);
-})
+});

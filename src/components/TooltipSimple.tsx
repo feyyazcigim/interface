@@ -1,4 +1,9 @@
-import { Tooltip, TooltipContent as RadixStyledTooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
+import {
+  Tooltip,
+  TooltipContent as RadixStyledTooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/Tooltip";
 import { TooltipContent, TooltipPortal } from "@radix-ui/react-tooltip";
 import { cn } from "@/utils/utils";
 import { ReactNode } from "react";
@@ -26,7 +31,7 @@ const variantMap = {
   green: "text-pinto-green-4",
   outlined: "text-pinto-gray-4",
   unstyled: "",
-}
+};
 
 export default function TooltipSimple({
   variant = "pinto",
@@ -66,6 +71,6 @@ export default function TooltipSimple({
           </ContentComponent>
         </TooltipPortal>
       </Tooltip>
-    </TooltipProvider >
+    </TooltipProvider>
   );
 }

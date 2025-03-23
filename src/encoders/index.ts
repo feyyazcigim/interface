@@ -49,7 +49,7 @@ const encoders = {
 
   siloedPinto: {
     depositERC20: siloedTokenDeposit,
-    redeemERC20: siloedTokenRedeem
+    redeemERC20: siloedTokenRedeem,
   },
 
   token: {

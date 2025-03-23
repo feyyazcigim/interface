@@ -79,8 +79,7 @@ export default function useSwap({ tokenIn, tokenOut, amountIn, slippage, disable
       return swapResult;
     },
     enabled: !!account && hasSwapVars && !disabled,
-    ...defaultQuerySettingsQuote
-
+    ...defaultQuerySettingsQuote,
   });
 
   const resetSwap = useCallback(() => {

@@ -15,11 +15,15 @@ interface SiloToken {
 
 const SLUGS = {
   wrappable: ["wrap", "unwrap"],
-  nonWrappable: ["deposit", "withdraw", "convert"]
+  nonWrappable: ["deposit", "withdraw", "convert"],
 } as const;
 
 export default function SiloActions({ token }: SiloToken) {
-  const [tab, handleChangeTab] = useParamsTabs(token.isSiloWrapped ? SLUGS.wrappable : SLUGS.nonWrappable, "action", true);
+  const [tab, handleChangeTab] = useParamsTabs(
+    token.isSiloWrapped ? SLUGS.wrappable : SLUGS.nonWrappable,
+    "action",
+    true,
+  );
 
   return (
     <Tabs value={tab} onValueChange={handleChangeTab} className="w-full">
@@ -66,4 +70,3 @@ export default function SiloActions({ token }: SiloToken) {
     </Tabs>
   );
 }
-

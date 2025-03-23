@@ -8,18 +8,14 @@ import { useMemo } from "react";
 import { useChainConstant } from "@/utils/chain";
 import { S_MAIN_TOKEN } from "@/constants/tokens";
 
-const getExchangeRate = (
-  mainToken: Token,
-  siloWrappedToken: Token,
-  amount: bigint
-) => {
+const getExchangeRate = (mainToken: Token, siloWrappedToken: Token, amount: bigint) => {
   const baseAmount = TV.fromHuman(1, mainToken.decimals);
   const siloWrappedAmount = TV.fromBigInt(amount, siloWrappedToken.decimals);
 
   const exchangeRate = siloWrappedAmount.div(baseAmount);
 
   return exchangeRate;
-}
+};
 
 export const useSiloWrappedTokenExchangeRateQuery = () => {
   const { mainToken, siloWrappedToken } = useTokenData();
@@ -31,11 +27,11 @@ export const useSiloWrappedTokenExchangeRateQuery = () => {
     args: [BigInt(10 ** mainToken.decimals)],
     query: {
       select: (data) => {
-        return getExchangeRate(mainToken, siloWrappedToken, data)
-      }
-    }
+        return getExchangeRate(mainToken, siloWrappedToken, data);
+      },
+    },
   });
-}
+};
 
 export const useSiloWrappedTokenExchangeRate = () => {
   const { mainToken } = useTokenData();
@@ -54,7 +50,7 @@ export const useSiloWrappedTokenExchangeRate = () => {
   return {
     ...query,
     usd: siloWrappedTokenUSD,
-  }
+  };
 };
 
 export const useSiloWrappedTokenToUSD = (amount: TV | undefined) => {
@@ -66,9 +62,9 @@ export const useSiloWrappedTokenToUSD = (amount: TV | undefined) => {
 
   return {
     isLoading: query.isLoading,
-    totalUSD
-  }
-}
+    totalUSD,
+  };
+};
 
 export const useSiloWrappedTokenTotalSupply = () => {
   const siloWrappedToken = useChainConstant(S_MAIN_TOKEN);
@@ -87,5 +83,5 @@ export const useSiloWrappedTokenTotalSupply = () => {
   return {
     ...query,
     data: totalAssets,
-  }
-}
+  };
+};

@@ -5,9 +5,9 @@ export interface PageMetaWrapperProps {
   metaKey: MetaSlug;
 }
 
-const PINTO_LOGO_URL = 'https://pinto.money/pinto-logo.png';
+const PINTO_LOGO_URL = "https://pinto.money/pinto-logo.png";
 
-const PINTO_HERO_URL = 'https://pinto.money/pinto-hero.png';
+const PINTO_HERO_URL = "https://pinto.money/pinto-hero.png";
 
 export default function PageMetaWrapper({ metaKey, children }: PageMetaWrapperProps) {
   const { title, description, url, imgUrl } = META[metaKey] ?? META.index;
@@ -24,20 +24,20 @@ export default function PageMetaWrapper({ metaKey, children }: PageMetaWrapperPr
             "@type": "WebApplication",
             name: "Pinto",
             url: url,
-            "image": PINTO_LOGO_URL,
+            image: PINTO_LOGO_URL,
             description: description,
             operatingSystem: "All",
-            "logo": {
+            logo: {
               "@type": "ImageObject",
-              "url": PINTO_LOGO_URL,
-              "width": 512,
-              "height": 512
+              url: PINTO_LOGO_URL,
+              width: 512,
+              height: 512,
             },
-            "author": {
+            author: {
               "@type": "Organization",
-              "name": "Pinto",
-              "url": "https://pinto.money",
-            }
+              name: "Pinto",
+              url: "https://pinto.money",
+            },
           })}
         </script>
 

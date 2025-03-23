@@ -154,7 +154,7 @@ class OneSidedPairToken extends SiloConvertLP2LPConvertStrategy {
 
     // 4. get balance of buyToken
     pipe.add(
-      OneSidedPairToken.snippets.erc20BalanceOf(swap.buyToken, pipelineAddress[resolveChainId(this.context.chainId)])
+      OneSidedPairToken.snippets.erc20BalanceOf(swap.buyToken, pipelineAddress[resolveChainId(this.context.chainId)]),
     );
 
     // 5. transfer swap result to target well

@@ -1,4 +1,4 @@
-import { resolveChainId } from '@/utils/chain';
+import { resolveChainId } from "@/utils/chain";
 import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import { basinWellABI } from "@/constants/abi/basinWellABI";
@@ -15,9 +15,9 @@ import { exists } from "@/utils/utils";
 import { Address } from "viem";
 import { readContract } from "viem/actions";
 import { ClipboardContext, ISwapNode, SwapNode } from "./SwapNode";
-import erc20BalanceOf from '@/encoders/erc20BalanceOf';
-import { MAIN_TOKEN, S_MAIN_TOKEN } from '@/constants/tokens';
-import { siloedPintoABI } from '@/constants/abi/siloedPintoABI';
+import erc20BalanceOf from "@/encoders/erc20BalanceOf";
+import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
+import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
 
 interface IERC20SwapNode {
   minBuyAmount: TV;
@@ -157,7 +157,9 @@ export class ZeroXSwapNode extends ERC20SwapNode {
 
   get allowanceTarget() {
     if (!this.quote?.transaction) {
-      throw this.makeErrorWithContext("Error building zeroX swap: Quote must be set fetched before getting allowance target.");
+      throw this.makeErrorWithContext(
+        "Error building zeroX swap: Quote must be set fetched before getting allowance target.",
+      );
     }
     return this.quote.transaction.to;
   }
@@ -242,7 +244,6 @@ export class ZeroXSwapNode extends ERC20SwapNode {
     };
   }
 }
-
 
 /** ---------------------------------------------------------------------------------------------------------- */
 /** ---------------------------------------- Basin Well Methods ---------------------------------------------- */
@@ -592,7 +593,10 @@ export class SiloWrappedTokenWrapNode extends ERC20SwapNode {
     return this;
   }
 
-  buildStep({ recipient, copySlot }: SiloWrappedTokenWrapNodeBuildParams, clipboardContext?: ClipboardContext): AdvancedPipeCall {
+  buildStep(
+    { recipient, copySlot }: SiloWrappedTokenWrapNodeBuildParams,
+    clipboardContext?: ClipboardContext,
+  ): AdvancedPipeCall {
     this.validateAll();
 
     let clipboard: HashString | undefined = undefined;
@@ -604,12 +608,7 @@ export class SiloWrappedTokenWrapNode extends ERC20SwapNode {
       }
     }
 
-    const pipeStruct = encoders.siloedPinto.depositERC20(
-      this.sellAmount,
-      recipient,
-      this.buyToken.address,
-      clipboard,
-    );
+    const pipeStruct = encoders.siloedPinto.depositERC20(this.sellAmount, recipient, this.buyToken.address, clipboard);
 
     console.debug("[Swap/SiloedPintoWrapNode] build:", {
       ...this.getHuman(),
@@ -662,9 +661,12 @@ export class SiloWrappedTokenUnwrapNode extends ERC20SwapNode {
     this.setFields({ buyAmount, minBuyAmount: buyAmount });
 
     return this;
-  };
+  }
 
-  buildStep({ recipient, owner, copySlot }: SiloWrappedTokenUnwrapNodeBuildParams, clipboardContext?: ClipboardContext): AdvancedPipeCall {
+  buildStep(
+    { recipient, owner, copySlot }: SiloWrappedTokenUnwrapNodeBuildParams,
+    clipboardContext?: ClipboardContext,
+  ): AdvancedPipeCall {
     this.validateAll();
 
     let clipboard: HashString | undefined = undefined;

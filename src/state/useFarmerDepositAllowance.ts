@@ -27,7 +27,7 @@ export default function useFarmerDepositAllowance(enabled: boolean = true) {
     query: {
       enabled: Boolean(account) && enabled,
       select: (data) => TV.fromBigInt(data, mainToken.decimals),
-    }
+    },
   });
 
   const currentAllowance = query.data;
@@ -42,32 +42,35 @@ export default function useFarmerDepositAllowance(enabled: boolean = true) {
     successCallback: onSuccess,
   });
 
-  const setAllowance = useCallback(async (totalAmount: TV) => {
-    try {
-      if (!account) {
-        throw new Error("Signer Required");
-      }
-      if (!query.isFetched) {
-        throw new Error("Allowance not fetched");
-      }
+  const setAllowance = useCallback(
+    async (totalAmount: TV) => {
+      try {
+        if (!account) {
+          throw new Error("Signer Required");
+        }
+        if (!query.isFetched) {
+          throw new Error("Allowance not fetched");
+        }
 
-      const increaseAmount = totalAmount.sub(currentAllowance ?? 0n);
+        const increaseAmount = totalAmount.sub(currentAllowance ?? 0n);
 
-      return writeWithEstimateGas({
-        address: diamond,
-        abi: diamondABI,
-        functionName: "increaseDepositAllowance",
-        args: [sMainToken.address, mainToken.address, increaseAmount]
-      });
-    } catch (e) {
-      console.error(e);
-      const eMessage = tryExtractErrorMessage(e, "Failed to set Silo Deposit allowance");
-      toast.error(eMessage);
-      throw e;
-    } finally {
-      setSubmitting(false);
-    }
-  }, [account, currentAllowance, mainToken.address, onSuccess, query.queryKey, writeWithEstimateGas]);
+        return writeWithEstimateGas({
+          address: diamond,
+          abi: diamondABI,
+          functionName: "increaseDepositAllowance",
+          args: [sMainToken.address, mainToken.address, increaseAmount],
+        });
+      } catch (e) {
+        console.error(e);
+        const eMessage = tryExtractErrorMessage(e, "Failed to set Silo Deposit allowance");
+        toast.error(eMessage);
+        throw e;
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [account, currentAllowance, mainToken.address, onSuccess, query.queryKey, writeWithEstimateGas],
+  );
 
   return {
     allowance: currentAllowance,
@@ -75,5 +78,5 @@ export default function useFarmerDepositAllowance(enabled: boolean = true) {
     queryKey: query.queryKey,
     loading: query.isLoading,
     confirming: isConfirming || submitting,
-  }
+  };
 }

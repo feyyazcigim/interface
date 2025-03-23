@@ -69,7 +69,7 @@ export default function SmartSubmitButton({
     args: [account.address ?? ZERO_ADDRESS, spender ?? ZERO_ADDRESS, token?.address ?? ZERO_ADDRESS],
     query: {
       enabled: baseAllowanceQueryEnabled && requiresDiamondAllowance && !!spender,
-    }
+    },
   });
 
   const allowance = requiresDiamondAllowance ? diamondAllowance : tokenAllowance;
@@ -79,7 +79,6 @@ export default function SmartSubmitButton({
   const onSuccess = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: allowanceQueryKey });
   }, [queryClient, allowanceQueryKey]);
-
 
   const {
     submitting: submittingApproval,
@@ -152,10 +151,7 @@ export default function SmartSubmitButton({
           abi: erc20Abi,
           address: token?.address ?? ZERO_ADDRESS,
           functionName: "approve",
-          args: [
-            spender ?? diamond,
-            inputAmount.toBigInt(),
-          ],
+          args: [spender ?? diamond, inputAmount.toBigInt()],
         });
       } catch (e) {
         console.error(e);

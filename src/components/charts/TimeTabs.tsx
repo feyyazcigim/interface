@@ -1,4 +1,4 @@
-import { TimeTab } from '@/components/charts/SeasonalChart';
+import { TimeTab } from "@/components/charts/SeasonalChart";
 
 export interface TimeTabSelector {
   tab: TimeTab;
@@ -21,7 +21,7 @@ const TimeTabsSelector = ({ tab, setTab }: TimeTabSelector) => {
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
 
 export default TimeTabsSelector;
