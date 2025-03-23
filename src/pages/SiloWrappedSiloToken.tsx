@@ -31,6 +31,7 @@ import { useAccount } from "wagmi";
 import SiloActions from "./silo/SiloActions";
 import SiloTokenPageHeader, { SiloTokenPageSubHeader } from "./siloToken/SiloTokenPageHeader";
 import SiloedTokenCharts from "./wrap/SiloedTokenCharts";
+import { useSpectraYieldBreakdown } from "@/state/integrations/useSpectraYieldSummary";
 
 export default function SiloWrappedSiloToken({ token }: { token: Token }) {
   // URL Params
@@ -298,6 +299,8 @@ const SiloedTokenOverviewStats = ({
   loading: isLoading,
 }: ISiloedTokenOverviewStats) => {
   const { mainToken, siloWrappedToken } = useTokenData();
+
+  const opportunity = useSpectraYieldBreakdown();
 
   const depositsData = deposits?.get(mainToken);
 

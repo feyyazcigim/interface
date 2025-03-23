@@ -1,9 +1,11 @@
+import { ChainLookup } from '@/utils/types.generic';
 import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
-import { useChainConstant } from "@/utils/chain";
+import { useChainConstant, useResolvedChainId } from "@/utils/chain";
 import { Token } from "@/utils/types";
 import { Address } from "viem";
 import { base } from "viem/chains";
 import { useReadContract } from "wagmi";
+import { useSiloWrappedTokenExchangeRateQuery } from '../useSiloWrappedTokenData';
 
 export interface SpectraCurvePool {
   maturity: number;
@@ -15,36 +17,61 @@ export interface SpectraCurvePool {
   token: Token;
 };
 
-const spectraCurvePool: SpectraCurvePool = {
-  maturity: 1758153782,
-  pool: "0xd8E4662ffd6b202cF85e3783Fb7252ff0A423a72",
-  lp: "0xba1F1eA8c269003aFe161aFAa0bd205E2c7F782a",
-  pt: "0x42AF817725D8cda8E69540d72f35dBfB17345178",
-  yt: "0xaF4f5bdF468861feF71Ed6f5ea0C01A75B62273d",
-  underlying: MAIN_TOKEN[base.id],
-  token: S_MAIN_TOKEN[base.id]
-};
+const spectraCurvePool: ChainLookup<SpectraCurvePool> = {
+  [base.id]: {
+    maturity: 1758153782,
+    pool: "0xd8E4662ffd6b202cF85e3783Fb7252ff0A423a72" satisfies Address,
+    lp: "0xba1F1eA8c269003aFe161aFAa0bd205E2c7F782a" satisfies Address,
+    pt: "0x42AF817725D8cda8E69540d72f35dBfB17345178" satisfies Address,
+    yt: "0xaF4f5bdF468861feF71Ed6f5ea0C01A75B62273d" satisfies Address,
+    underlying: MAIN_TOKEN[base.id],
+    token: S_MAIN_TOKEN[base.id]
+  }
+} as const;
 
 export const useSpectraYieldBreakdown = () => {
   const siloWrappedToken = useChainConstant(S_MAIN_TOKEN);
+  const rqteQ = useSiloWrappedTokenExchangeRateQuery();
 
-  const ibt2PtRate = useReadContract({
-    address: spectraCurvePool.pool,
+  const chainId = useResolvedChainId();
+  const pool = spectraCurvePool[chainId];
+
+  const enabled = !!pool;
+
+  const rateQuery = useReadContract({
+    address: pool.pool,
     abi,
     functionName: "get_dy",
-    args: [0n, 1n, BigInt(siloWrappedToken.decimals)]
+    args: [0n, 1n, BigInt(10 ** siloWrappedToken.decimals)],
+    query: {
+      enabled
+    }
   });
 
   const priceOracleQuery = useReadContract({
-    address: spectraCurvePool.pool,
+    address: pool.pool,
     abi,
     functionName: "price_oracle",
-    args: []
+    args: [],
+    query: {
+      enabled
+    }
   });
 
   const ibt2PTRate = priceOracleQuery.data ? BigInt(1e18) / priceOracleQuery.data : undefined;
+
+  const data = {
+    ibt2PTRate,
+    priceOracleQuery: priceOracleQuery.data,
+    rateQuery: rateQuery.data
+  }
+
+  console.log(data);
+
+  return data;
 }
 
+// 88278355 3118610363
 
 
 /**
