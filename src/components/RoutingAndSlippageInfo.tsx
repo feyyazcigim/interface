@@ -2,6 +2,7 @@ import swap0xlogo from "@/assets/misc/0x.svg";
 import baseLogo from "@/assets/misc/base-logo.svg";
 import pintoExchangeLogo from "@/assets/misc/pinto-exchange-logo.svg";
 import { default as pintoIcon, default as pintoIconOriginal } from "@/assets/tokens/PINTO.png";
+import sPINTOLogo from "@/assets/tokens/sPINTO.png";
 import { TV } from "@/classes/TokenValue";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
@@ -19,7 +20,6 @@ import { ArrowRightIcon, CornerBottomLeftIcon } from "@radix-ui/react-icons";
 import { Separator } from "@radix-ui/react-separator";
 import React, { createContext, useContext } from "react";
 import IconImage from "./ui/IconImage";
-import sPINTOLogo from "@/assets/tokens/sPINTO.png";
 
 type SiloTxn = "Swap" | "Deposit" | "Convert" | "Withdraw";
 

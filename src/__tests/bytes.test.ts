@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
 import { extractABIDynamicArrayCopySlot, parseABIDynamicArrayReturnData, splitHexToBytes32Words } from "@/utils/bytes";
 import { HashString } from "@/utils/types.generic";
+import { describe, expect, it } from "vitest";
 
 describe("splitHexToBytes32Words", () => {
   it("should handle empty string", () => {

@@ -320,7 +320,8 @@ const LineChart = React.memo(
                 ctx.textAlign = "left";
 
                 // Position the label based on proximity to chart edges
-                let labelY;
+                // biome-ignore lint/suspicious/noExplicitAny:
+                let labelY: any;
                 ctx.textBaseline = "bottom";
                 labelY = y - labelPadding;
                 if (isNearTop) {

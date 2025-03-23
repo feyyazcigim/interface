@@ -1,5 +1,11 @@
+import CompactSeasonalLineChart from "@/components/charts/CompactSeasonalLineChart";
+import { TimeTab, tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
+import TimeTabsSelector from "@/components/charts/TimeTabs";
+import { getAreaGradientFunctions, getStrokeGradientFunctions } from "@/components/charts/chartHelpers";
 import IconImage from "@/components/ui/IconImage";
-import { formatter } from "@/utils/format";
+import { STALK } from "@/constants/internalTokens";
+import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
+import { truncateBeanstalkWrappedDespositsSeasons } from "@/state/seasonal/queries/useSeasonalBeanstalkWrappedDepositsSG";
 import {
   useFarmerSeasonalGrownStalkPerDepositedBDV,
   useFarmerSeasonalSiloAssetDepositedAmount,
@@ -7,16 +13,10 @@ import {
   useSeasonalWrappedDepositExchangeRate,
   useSeasonalWrappedDepositTotalSupply,
 } from "@/state/seasonal/seasonalDataHooks";
-import React, { useMemo, useState } from "react";
-import { tabToSeasonalLookback, TimeTab } from "@/components/charts/SeasonalChart";
 import { useSeason } from "@/state/useSunData";
 import { useChainConstant } from "@/utils/chain";
-import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
-import CompactSeasonalLineChart from "@/components/charts/CompactSeasonalLineChart";
-import { getAreaGradientFunctions, getStrokeGradientFunctions } from "@/components/charts/chartHelpers";
-import TimeTabsSelector from "@/components/charts/TimeTabs";
-import { truncateBeanstalkWrappedDespositsSeasons } from "@/state/seasonal/queries/useSeasonalBeanstalkWrappedDepositsSG";
-import { STALK } from "@/constants/internalTokens";
+import { formatter } from "@/utils/format";
+import React, { useMemo, useState } from "react";
 
 export default function SiloedTokenCharts() {
   const season = useSeason();
@@ -81,6 +81,7 @@ const DepositedPintoHeader = () => {
     </div>
   );
 };
+// biome-ignore lint/correctness/useJsxKeyInIterable:
 const totalDepositedHeaders = [<SPintoSupplyHeader />, <DepositedPintoHeader />];
 const totalDepositedFormatter = [
   (value: number) => formatter.twoDec(value),
@@ -131,6 +132,8 @@ const ExchangeRateHeader = () => {
     </div>
   );
 };
+
+// biome-ignore lint/correctness/useJsxKeyInIterable:
 const exchangeRateHeaders = [<ExchangeRateHeader />];
 const exchangeRateFormatter = [(value: number) => formatter.xDec(value, 4)];
 const exchangeRateBorderFunction = getStrokeGradientFunctions(["#387F5C"]);

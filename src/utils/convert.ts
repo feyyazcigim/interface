@@ -1,8 +1,8 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { STALK } from "@/constants/internalTokens";
 import { encodeAbiParameters } from "viem";
 import { stringEq } from "./string";
 import { DepositCrateData, DepositData, SiloTokenDataMap, Token } from "./types";
-import { STALK } from "@/constants/internalTokens";
 
 export enum ConvertKind {
   LAMBDA_LAMBDA = 0,

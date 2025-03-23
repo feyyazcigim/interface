@@ -1,15 +1,15 @@
+import { TV } from "@/classes/TokenValue";
 import { diamondABI } from "@/constants/abi/diamondABI";
+import { S_MAIN_TOKEN } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import useTransaction from "@/hooks/useTransaction";
+import { useChainConstant } from "@/utils/chain";
+import { tryExtractErrorMessage } from "@/utils/error";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
+import { toast } from "sonner";
 import { useAccount, useReadContract } from "wagmi";
 import useTokenData from "./useTokenData";
-import { useCallback } from "react";
-import useTransaction from "@/hooks/useTransaction";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { tryExtractErrorMessage } from "@/utils/error";
-import { TV } from "@/classes/TokenValue";
-import { useChainConstant } from "@/utils/chain";
-import { S_MAIN_TOKEN } from "@/constants/tokens";
 
 export default function useFarmerDepositAllowance(enabled: boolean = true) {
   const { address: account } = useAccount();

@@ -1,5 +1,5 @@
-import { Helmet } from "react-helmet-async";
 import META, { MetaSlug } from "@/constants/meta";
+import { Helmet } from "react-helmet-async";
 export interface PageMetaWrapperProps {
   children: React.ReactNode;
   metaKey: MetaSlug;

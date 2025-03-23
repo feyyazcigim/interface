@@ -1,12 +1,12 @@
-import useSeasonsData from "@/state/useSeasonsData";
+import { HideColumnDropdown } from "@/components/HideColumnDropdown";
 import FrameAnimator from "@/components/LoadingSpinner";
 import { SeasonsTable } from "@/components/tables/SeasonsTable";
-import { HideColumnDropdown } from "@/components/HideColumnDropdown";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import useIsMobile from "@/hooks/display/useIsMobile";
+import useSeasonsData from "@/state/useSeasonsData";
 import { useSunData } from "@/state/useSunData";
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
-import useIsMobile from "@/hooks/display/useIsMobile";
+import { useEffect, useState } from "react";
 export interface SeasonColumn {
   id: string;
   name: string;

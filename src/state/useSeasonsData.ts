@@ -1,4 +1,5 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 import { subgraphs } from "@/constants/subgraph";
 import {
   Season,
@@ -7,18 +8,17 @@ import {
   SeasonsTableBeanStalkDocument,
   SeasonsTableBeanStalkQuery,
 } from "@/generated/gql/graphql";
+import { PaginationSettings, paginateMultiQuerySubgraph, paginateSubgraph } from "@/utils/paginateSubgraph";
+import { Duration } from "luxon";
 import { useEffect, useMemo, useState } from "react";
 import { useChainId } from "wagmi";
-import { useSeason } from "./useSunData";
-import useTokenData from "./useTokenData";
-import { Duration } from "luxon";
-import { paginateMultiQuerySubgraph, paginateSubgraph, PaginationSettings } from "@/utils/paginateSubgraph";
 import useSeasonalQueries, {
   ConvertEntryFn,
   SeasonalQueryVars,
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
-import { SeasonalChartData } from "@/components/charts/SeasonalChart";
+import { useSeason } from "./useSunData";
+import useTokenData from "./useTokenData";
 
 export interface SeasonsTableData {
   season: number;

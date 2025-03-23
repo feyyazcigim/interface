@@ -1,5 +1,6 @@
 import advancedPipe from "./advancedPipe";
 import erc20Approve from "./erc20Approve";
+import erc20BalanceOf from "./erc20BalanceOf";
 import erc20Transfer from "./erc20Transfer";
 import balanceOfRainRoots from "./farmerSilo/balanceOfRainRoots";
 import balanceOfStalk from "./farmerSilo/balanceOfStalk";
@@ -13,6 +14,8 @@ import shift from "./shift";
 import convert, { getMaxAmountIn, getAmountOut } from "./silo/convert";
 import { pipelineConvert } from "./silo/pipelineConvert";
 import siloWithdraw from "./silo/withdraw";
+import siloedTokenDeposit from "./siloedPinto/siloedTokenDeposit";
+import siloedTokenRedeem from "./siloedPinto/siloedTokenRedeem";
 import sync from "./sync";
 import transferToken from "./transferToken";
 import unwrapEth from "./unwrapEth";
@@ -22,9 +25,6 @@ import getWellSwapOut from "./well/getWellSwapOut";
 import swapFrom from "./well/swapFrom";
 import wellRemoveLiquidity, { wellRemoveLiquidityOneToken } from "./wellRemoveLiquidity";
 import wrapEth from "./wrapEth";
-import erc20BalanceOf from "./erc20BalanceOf";
-import siloedTokenDeposit from "./siloedPinto/siloedTokenDeposit";
-import siloedTokenRedeem from "./siloedPinto/siloedTokenRedeem";
 
 const encoders = {
   advancedPipe,

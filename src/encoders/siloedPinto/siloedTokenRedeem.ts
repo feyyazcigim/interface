@@ -1,9 +1,9 @@
+import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
 import { AdvancedPipeCall } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
-import { encodeFunctionData, Address } from "viem";
-import { Clipboard } from "@/classes/Clipboard";
+import { Address, encodeFunctionData } from "viem";
 
 export default function siloedTokenRedeem(
   shares: TV,

@@ -1,4 +1,3 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   CategoryScale,
   Chart,
@@ -11,9 +10,10 @@ import {
   Plugin,
   PointElement,
 } from "chart.js";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ReactChart } from "../ReactChart";
-import { MakeGradientFunction, defaultLineChartOptions, scalesX, plugins } from "./chartHelpers";
 import { LineChartData } from "./LineChart";
+import { MakeGradientFunction, defaultLineChartOptions, plugins, scalesX } from "./chartHelpers";
 
 Chart.register(LineController, LineElement, LinearScale, CategoryScale, PointElement, Filler);
 
@@ -90,7 +90,7 @@ const MultiAxisLineChart = React.memo(
             color: (context) => scalesX.grid.color(activeIndex)(context),
           },
           border: {
-            display: tickConfig?.hideXTicks ? false : true,
+            display: !Boolean(tickConfig?.hideXTicks),
           },
           ticks: {
             padding: 0,

@@ -13,6 +13,7 @@ import { AdvancedPipeCall, Token } from "@/utils/types";
 import { AddressLookup, HashString } from "@/utils/types.generic";
 import { readContract } from "viem/actions";
 import { Config as WagmiConfig } from "wagmi";
+import { AdvancedPipeWorkflow } from "../farm/workflow";
 import {
   ERC20SwapNode,
   SiloWrappedTokenUnwrapNode,
@@ -25,7 +26,6 @@ import {
 import { UnwrapEthSwapNode, WrapEthSwapNode } from "./nodes/NativeSwapNode";
 import { SwapNode } from "./nodes/SwapNode";
 import { SwapPriceCache } from "./price-cache";
-import { AdvancedPipeWorkflow } from "../farm/workflow";
 
 export interface BeanSwapNodeQuote {
   /**

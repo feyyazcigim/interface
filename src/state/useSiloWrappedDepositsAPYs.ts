@@ -1,16 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
-import { useSeason } from "./useSunData";
-import request from "graphql-request";
-import { useChainId } from "wagmi";
 import { subgraphs } from "@/constants/subgraph";
 import {
   BeanstalkSeasonalWrappedDepositErc20Query,
   BeanstalkSeasonalWrappedDepositErc20Document as Document,
 } from "@/generated/gql/graphql";
-import { exists } from "@/utils/utils";
-import { EMAWindows } from "./useSiloAPYs";
 import { formatter } from "@/utils/format";
+import { exists } from "@/utils/utils";
+import { useQuery } from "@tanstack/react-query";
+import request from "graphql-request";
+import { useChainId } from "wagmi";
 import { truncateBeanstalkWrappedDespositsSeasons } from "./seasonal/queries/useSeasonalBeanstalkWrappedDepositsSG";
+import { EMAWindows } from "./useSiloAPYs";
+import { useSeason } from "./useSunData";
 
 const toSafeNumber = (value: any) => {
   if (exists(value)) {

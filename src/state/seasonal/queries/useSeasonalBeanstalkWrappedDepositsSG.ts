@@ -1,15 +1,15 @@
-import { isDev } from "@/utils/utils";
+import { subgraphs } from "@/constants/subgraph";
 import {
   BeanstalkSeasonalWrappedDepositErc20Document,
   BeanstalkSeasonalWrappedDepositErc20Query,
   WrappedDepositErc20HourlySnapshot,
 } from "@/generated/gql/graphql";
-import { paginateSubgraph, PaginationSettings } from "@/utils/paginateSubgraph";
-import useSeasonalQueries, { ConvertEntryFn, SeasonalQueryVars } from "./useSeasonalInternalQueries";
-import { useChainId } from "wagmi";
-import { subgraphs } from "@/constants/subgraph";
+import { PaginationSettings, paginateSubgraph } from "@/utils/paginateSubgraph";
 import { UseSeasonalResult } from "@/utils/types";
+import { isDev } from "@/utils/utils";
 import { useCallback } from "react";
+import { useChainId } from "wagmi";
+import useSeasonalQueries, { ConvertEntryFn, SeasonalQueryVars } from "./useSeasonalInternalQueries";
 
 const paginateSettings: PaginationSettings<
   WrappedDepositErc20HourlySnapshot,

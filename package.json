@@ -11,7 +11,7 @@
     "build:netlify": "./scripts/build-netlify.sh",
     "lint:check": "biome check",
     "lint:check-errors-only": "biome check --diagnostic-level=error",
-    "lint:fix-all": "biome check --write",
+    "lint:fix-all": "biome check --write --diagnostic-level=error",
     "format": "biome format --write",
     "preview": "vite preview",
     "test": "vitest run",

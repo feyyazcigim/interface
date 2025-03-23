@@ -1,10 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ConnectKitProvider } from "connectkit";
+import { atom, useAtom } from "jotai";
 import { ReactNode, useEffect, useMemo } from "react";
 import { createTestClient } from "viem";
 import { http, WagmiProvider, createConfig } from "wagmi";
 import { mock } from "wagmi/connectors";
+import { isValidAddress } from "./utils/string";
 import { isLocalhost, isNetlifyPreview, isProd } from "./utils/utils";
 import {
   TENDERLY_RPC_URL,
@@ -13,8 +15,6 @@ import {
   tenderlyTestnetNetwork as testnet,
 } from "./utils/wagmi/chains";
 import config from "./utils/wagmi/config";
-import { atom, useAtom } from "jotai";
-import { isValidAddress } from "./utils/string";
 
 // biome-ignore lint/suspicious/noExplicitAny: React Query needs this to serialize BigInts
 (BigInt.prototype as any).toJSON = function () {

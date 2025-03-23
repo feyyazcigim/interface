@@ -1,11 +1,11 @@
 import {
-  Tooltip,
   TooltipContent as RadixStyledTooltipContent,
+  Tooltip,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/Tooltip";
-import { TooltipContent, TooltipPortal } from "@radix-ui/react-tooltip";
 import { cn } from "@/utils/utils";
+import { TooltipContent, TooltipPortal } from "@radix-ui/react-tooltip";
 import { ReactNode } from "react";
 import { InfoOutlinedIcon, InfoSolidIcon } from "./Icons";
 

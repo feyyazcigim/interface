@@ -1,12 +1,15 @@
-import { resolveChainId } from "@/utils/chain";
 import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import { basinWellABI } from "@/constants/abi/basinWellABI";
+import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
+import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
 import encoders from "@/encoders";
+import erc20BalanceOf from "@/encoders/erc20BalanceOf";
 import { pipelineAddress } from "@/generated/contractHooks";
 import { SwapContext } from "@/lib/Swap/swap-router";
 import { ZeroX } from "@/lib/matcha/ZeroX";
 import { ZeroXQuoteV2Response } from "@/lib/matcha/types";
+import { resolveChainId } from "@/utils/chain";
 import { stringEq } from "@/utils/string";
 import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { AdvancedPipeCall, Token } from "@/utils/types";
@@ -15,9 +18,6 @@ import { exists } from "@/utils/utils";
 import { Address } from "viem";
 import { readContract } from "viem/actions";
 import { ClipboardContext, ISwapNode, SwapNode } from "./SwapNode";
-import erc20BalanceOf from "@/encoders/erc20BalanceOf";
-import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
-import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
 
 interface IERC20SwapNode {
   minBuyAmount: TV;

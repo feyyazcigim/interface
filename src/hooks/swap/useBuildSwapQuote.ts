@@ -1,13 +1,13 @@
+import { defaultQuerySettingsQuote } from "@/constants/query";
 import { SwapBuilder } from "@/lib/Swap/swap-builder";
 import { BeanSwapNodeQuote } from "@/lib/Swap/swap-router";
 import { FarmFromMode, FarmToMode } from "@/utils/types";
+import { exists } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { Address } from "viem";
 import { useAccount, useChainId, useConfig } from "wagmi";
 import { SWAP_QUERY_KEY_PREDICATE } from "./useSwap";
-import { defaultQuerySettingsQuote } from "@/constants/query";
-import { exists } from "@/utils/utils";
 
 export default function useBuildSwapQuote(
   quote: BeanSwapNodeQuote | undefined,

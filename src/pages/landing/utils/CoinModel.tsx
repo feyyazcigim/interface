@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
-import { MeshStandardMaterial, Color, Vector3 } from "three";
+import React, { useRef, useEffect, useState, useCallback } from "react";
+import { Color, MeshStandardMaterial, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 type CoinModelProps = {
@@ -158,7 +158,7 @@ const CoinModel: React.FC<CoinModelProps> = ({
       const negPostSideThreshold = -Math.PI / 2 - 0.35;
 
       // Gradually slow down rotation as it approaches thresholds
-      let speedFactor = 1; // Default speed multiplier
+      const speedFactor = 1; // Default speed multiplier
       if (
         (currentRotation > preSideThreshold && currentRotation < postSideThreshold) ||
         (currentRotation < negPreSideThreshold && currentRotation > negPostSideThreshold)

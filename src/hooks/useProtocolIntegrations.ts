@@ -1,10 +1,10 @@
+import creamFinanceLogo from "@/assets/misc/cream-finance-logo.png";
+import spectraLogo from "@/assets/misc/spectra-token-logo.svg";
+import { resolveChainId } from "@/utils/chain";
+import { Token } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
 import { base } from "viem/chains";
 import { useChainId } from "wagmi";
-import creamFinanceLogo from "@/assets/misc/cream-finance-logo.png";
-import { Token } from "@/utils/types";
-import { resolveChainId } from "@/utils/chain";
-import spectraLogo from "@/assets/misc/spectra-token-logo.svg";
 interface ProtocolIntegrationSummary {
   protocol: string;
   name: string;

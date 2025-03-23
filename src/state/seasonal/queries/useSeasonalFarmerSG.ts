@@ -5,9 +5,9 @@ import { UseSeasonalResult } from "@/utils/types";
 import { useChainId } from "wagmi";
 import useSeasonalQueries, { ConvertEntryFn, SeasonalQueryVars } from "./useSeasonalInternalQueries";
 
-import { useAccount } from "wagmi";
-import { useCallback } from "react";
 import { isValidAddress } from "@/utils/string";
+import { useCallback } from "react";
+import { useAccount } from "wagmi";
 
 const paginateSettings: PaginationSettings<
   SiloHourlySnapshot,

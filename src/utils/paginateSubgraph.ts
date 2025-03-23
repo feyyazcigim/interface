@@ -59,7 +59,7 @@ export const paginateMultiQuerySubgraph = async <R, T, V>(
   initialVars: V,
 ): Promise<{ [key: string]: R[] }> => {
   let vars: V | undefined = initialVars;
-  let prevPageIds: { [key: string]: string[] } = {};
+  const prevPageIds: { [key: string]: string[] } = {};
   const k = "id"; //settings.primaryPropertyName;
 
   const allResults: { [key: string]: R[] } = {};

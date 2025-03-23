@@ -1,3 +1,4 @@
+import { mockAddressAtom } from "@/Web3Provider";
 import { morningFieldDevModeAtom } from "@/state/protocol/field/field.atoms";
 import { getMorningResult, getNowRounded } from "@/state/protocol/sun";
 import { morningAtom, seasonAtom, sunQueryKeysAtom } from "@/state/protocol/sun/sun.atoms";
@@ -20,7 +21,6 @@ import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
 import Text from "./ui/Text";
-import { mockAddressAtom } from "@/Web3Provider";
 
 type ServerStatus = "running" | "not-running" | "checking";
 

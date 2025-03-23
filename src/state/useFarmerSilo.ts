@@ -13,8 +13,8 @@ import { getTokenIndex } from "@/utils/token";
 import { DepositData, Token, TokenDepositData } from "@/utils/types";
 import { unpackStem } from "@/utils/utils";
 import { useCallback, useMemo } from "react";
-import { Address, decodeAbiParameters, encodeFunctionData, parseAbiItem, toHex } from "viem";
-import { useAccount, useChainId, useConfig, usePublicClient, useReadContract, useSimulateContract } from "wagmi";
+import { Address, decodeAbiParameters, encodeFunctionData, toHex } from "viem";
+import { useAccount, useReadContract, useSimulateContract } from "wagmi";
 import { usePriceData } from "./usePriceData";
 import { useSiloData } from "./useSiloData";
 import useTokenData from "./useTokenData";
@@ -130,9 +130,6 @@ const abiSnippet = [
 
 export function useFarmerSilo(address?: `0x${string}`) {
   const account = useAccount();
-  const chainId = useChainId();
-  const config = useConfig();
-  const client = usePublicClient();
   const BEAN = useTokenData().mainToken;
   const tokenData = useTokenData();
   const siloData = useSiloData();
@@ -384,6 +381,7 @@ export function useFarmerSilo(address?: `0x${string}`) {
     depositsByToken,
     SILO_WHITELIST,
     siloData.tokenData,
+    priceData.price,
     // depositEvents.data,
     grownStalkPerToken.data,
     mowStatusPerToken.data,

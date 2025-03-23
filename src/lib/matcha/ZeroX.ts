@@ -1,10 +1,10 @@
-import { resolveChainId } from "@/utils/chain";
 import { ZeroXQuoteV2Parameters, ZeroXQuoteV2Response } from "@/lib/matcha/types";
-import { exists } from "@/utils/utils";
+import { resolveChainId } from "@/utils/chain";
 import { stringEq, stringToNumber } from "@/utils/string";
+import { exists } from "@/utils/utils";
 
-import { ZERO_ADDRESS_HEX } from "@/constants/address";
 import { TV } from "@/classes/TokenValue";
+import { ZERO_ADDRESS_HEX } from "@/constants/address";
 import { getChainTokenMap, getTokenIndex } from "@/utils/token";
 
 type RequestParams = Omit<RequestInit, "headers" | "method">;

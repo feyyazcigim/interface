@@ -1,15 +1,15 @@
-import { isValidAddress } from "@/utils/string";
+import { subgraphs } from "@/constants/subgraph";
 import {
   FarmerSeasonalSiloAssetTokenDocument as Document,
   FarmerSeasonalSiloAssetTokenQuery,
   SiloAssetHourlySnapshot,
 } from "@/generated/gql/graphql";
-import { paginateSubgraph, PaginationSettings } from "@/utils/paginateSubgraph";
-import useSeasonalQueries, { ConvertEntryFn, SeasonalQueryVars } from "./useSeasonalInternalQueries";
-import { useChainId } from "wagmi";
-import { subgraphs } from "@/constants/subgraph";
+import { PaginationSettings, paginateSubgraph } from "@/utils/paginateSubgraph";
+import { isValidAddress } from "@/utils/string";
 import { UseSeasonalResult } from "@/utils/types";
 import { useCallback } from "react";
+import { useChainId } from "wagmi";
+import useSeasonalQueries, { ConvertEntryFn, SeasonalQueryVars } from "./useSeasonalInternalQueries";
 
 const paginateSettings: PaginationSettings<
   SiloAssetHourlySnapshot,

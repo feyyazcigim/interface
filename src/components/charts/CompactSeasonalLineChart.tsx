@@ -1,14 +1,14 @@
+import { CloseIconAlt } from "@/components/Icons";
 import FrameAnimator from "@/components/LoadingSpinner.tsx";
+import IconImage from "@/components/ui/IconImage";
+import { useNormalizeMayMultipleSeasonalData } from "@/state/seasonal/utils";
 import { formatDate } from "@/utils/format";
 import { UseSeasonalResult } from "@/utils/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CloseIconAlt } from "@/components/Icons";
 import { LineChartData, MakeGradientFunction } from "./LineChart";
-import { metallicGreenStrokeGradientFn, metallicMorningStrokeGradientFn } from "./chartHelpers";
 import MultiAxisLineChart, { MultiAxisYAxisConfig } from "./MultiAxisLineChart";
-import { useNormalizeMayMultipleSeasonalData } from "@/state/seasonal/utils";
 import { SeasonalChartData, TimeTab } from "./SeasonalChart";
-import IconImage from "@/components/ui/IconImage";
+import { metallicGreenStrokeGradientFn, metallicMorningStrokeGradientFn } from "./chartHelpers";
 
 interface CompactSeasonalChartProps {
   titles: (string | JSX.Element)[];
@@ -124,7 +124,7 @@ const CompactSeasonalLineChart = ({
     <div className={className}>
       <div className="flex flex-col w-full gap-2">
         {titles.map((title, i) => (
-          <div className="flex flex-row items-center justify-between">
+          <div key={`compact-seasonal-line-${i}`} className="flex flex-row items-center justify-between">
             {typeof title === "string" ? (
               <span key={i} className="pinto-sm-light text-pinto-primary">
                 {title}

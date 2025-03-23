@@ -5,10 +5,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useAccount, useChainId, useConfig } from "wagmi";
 
+import { defaultQuerySettingsQuote } from "@/constants/query";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { useChainConstant } from "@/utils/chain";
 import { SwapOptions, SwapQuoter } from "../../lib/Swap/swap-router";
-import { defaultQuerySettingsQuote } from "@/constants/query";
 
 const useRouter = () => {
   const chainId = useChainId();

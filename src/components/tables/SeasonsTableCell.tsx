@@ -1,7 +1,7 @@
 import { TableCell } from "@/components/ui/Table";
 import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
-import { TwoColumnCell } from "./TwoColumnCell";
 import TooltipSimple from "../TooltipSimple";
+import { TwoColumnCell } from "./TwoColumnCell";
 export enum SeasonsTableCellType {
   Default = "default",
   TwoColumn = "twoColumn",

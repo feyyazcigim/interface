@@ -1,5 +1,7 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { diamondABI } from "@/constants/abi/diamondABI";
 import { ZERO_ADDRESS } from "@/constants/address";
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useTransaction from "@/hooks/useTransaction";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { FarmFromMode, Token } from "@/utils/types";
@@ -10,8 +12,6 @@ import { toast } from "sonner";
 import { Address, erc20Abi } from "viem";
 import { useAccount, useReadContract } from "wagmi";
 import { Button, ButtonProps } from "./ui/Button";
-import { diamondABI } from "@/constants/abi/diamondABI";
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 
 interface SmartSubmitButton extends Omit<ButtonProps, "onClick" | "disabled" | "className"> {
   token?: Token;

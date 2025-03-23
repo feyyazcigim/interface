@@ -1,13 +1,13 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import eyeballCrossed from "@/assets/misc/eyeball-crossed.svg";
 import IconImage from "@/components/ui/IconImage";
-import { SeasonsTableData } from "@/state/useSeasonsData";
-import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { areEqual, ListChildComponentProps, VariableSizeList } from "react-window";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
+import { SeasonsTableData } from "@/state/useSeasonsData";
 import { calculateCropScales, convertDeltaDemandToPercentage } from "@/utils/convert";
 import { caseIdToDescriptiveText } from "@/utils/utils";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ListChildComponentProps, VariableSizeList, areEqual } from "react-window";
 import { SeasonsTableCell, SeasonsTableCellType } from "./SeasonsTableCell";
 
 interface SeasonsTableProps {
@@ -38,7 +38,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
     }
     const windowHeight = window.innerHeight;
     const headerOffset = elem?.getBoundingClientRect().height;
-    let columnDropdownOffset;
+    let columnDropdownOffset: number;
     if (window.screen.width < 768) {
       columnDropdownOffset = 105;
     } else if (window.screen.width < 1600) {

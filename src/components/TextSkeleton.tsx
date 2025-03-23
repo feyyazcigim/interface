@@ -1,5 +1,5 @@
 import { cn } from "@/utils/utils";
-import { cva, VariantProps } from "class-variance-authority";
+import { VariantProps, cva } from "class-variance-authority";
 import React from "react";
 import { Skeleton } from "./ui/Skeleton";
 

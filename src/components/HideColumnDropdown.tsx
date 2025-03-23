@@ -1,5 +1,6 @@
 import eyeballCrossed from "@/assets/misc/eyeball-crossed.svg";
-import IconImage from "@/components/ui/IconImage";
+import { Button } from "@/components/ui/Button";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/Drawer";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -7,10 +8,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/Dropdown";
-import { Button } from "@/components/ui/Button";
-import { nonHideableFields, SeasonColumn } from "@/pages/explorer/SeasonsExplorer";
+import IconImage from "@/components/ui/IconImage";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/Drawer";
+import { SeasonColumn, nonHideableFields } from "@/pages/explorer/SeasonsExplorer";
 import { useState } from "react";
 interface HideColumnDropdownProps {
   seasonColumns: SeasonColumn[];

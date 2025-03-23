@@ -1,7 +1,7 @@
 import SeasonalChart, { tabToSeasonalLookback, TimeTab } from "@/components/charts/SeasonalChart";
 import {
-  useFarmerSeasonalPlantedPinto,
   useFarmerSeasonalClaimedGrownStalkBalance,
+  useFarmerSeasonalPlantedPinto,
   useFarmerSeasonalStalkOwnership,
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";

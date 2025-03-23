@@ -1,17 +1,20 @@
-import { ZeroX } from "@/lib/matcha/ZeroX";
 import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import encoders from "@/encoders";
 import erc20Approve from "@/encoders/erc20Approve";
 import erc20Transfer from "@/encoders/erc20Transfer";
 import sync from "@/encoders/sync";
+import { pipelineAddress } from "@/generated/contractHooks";
 import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
+import { ZeroX } from "@/lib/matcha/ZeroX";
 import { ZeroXQuoteV2Parameters, ZeroXQuoteV2Response } from "@/lib/matcha/types";
+import { resolveChainId } from "@/utils/chain";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { stringEq } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { AdvancedPipeCall, DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
+import { isAddress } from "viem";
 import { SiloConvertContext } from "../SiloConvert";
 import { ExtendedPoolData } from "../SiloConvert.cache";
 import {
@@ -21,9 +24,6 @@ import {
   SiloConvertSwapQuote,
   SiloConvertTargetSummary,
 } from "./ConvertStrategy";
-import { resolveChainId } from "@/utils/chain";
-import { pipelineAddress } from "@/generated/contractHooks";
-import { isAddress } from "viem";
 
 export interface SourceSummaryLP2LP extends SiloConvertSourceSummary {
   well: ExtendedPoolData;

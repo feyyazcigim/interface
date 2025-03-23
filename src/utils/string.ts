@@ -1,7 +1,7 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { isAddress } from "viem";
 import { HashString } from "./types.generic";
 import { exists } from "./utils";
-import { isAddress } from "viem";
 
 export const truncateAddress = (
   address: string | HashString | undefined,

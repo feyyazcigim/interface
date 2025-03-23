@@ -218,7 +218,7 @@ export function useMultiSeasonalQueries<T>(
     retryDelay: 2000,
   });
 
-  let historicalData: { [key: string]: SeasonalChartData[] } | undefined = historical.data;
+  const historicalData: { [key: string]: SeasonalChartData[] } | undefined = historical.data;
   // Iterate through the historical data and fill in missing seasons with the data of preceding populated season.
   // if (sparseData) {
   //   // Populate missing data in between and following the sparse data.

@@ -1,7 +1,7 @@
 import { MAIN_TOKEN, NATIVE_TOKEN, WETH_TOKEN } from "@/constants/tokens";
 import { tokensEqual } from "@/utils/token";
-import { test, expect } from "vitest";
 import { base } from "viem/chains";
+import { expect, test } from "vitest";
 
 test("tokensEqual", () => {
   const main = MAIN_TOKEN[base.id];

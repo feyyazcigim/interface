@@ -1,20 +1,20 @@
-import { Token, UseSeasonalResult } from "@/utils/types";
-import useSeasonalBeanBeanSG from "./queries/useSeasonalBeanBeanSG";
-import useSeasonalBeanstalkSiloSG from "./queries/useSeasonalBeanstalkSiloSG";
-import useSeasonalFarmerSG from "./queries/useSeasonalFarmerSG";
-import { PODS, STALK } from "@/constants/internalTokens";
 import { TV } from "@/classes/TokenValue";
+import { PODS, STALK } from "@/constants/internalTokens";
 import { MAIN_TOKEN, PINTO, S_MAIN_TOKEN } from "@/constants/tokens";
+import { SiloHourlySnapshot } from "@/generated/gql/graphql";
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import { useChainConstant } from "@/utils/chain";
+import { Token, UseSeasonalResult } from "@/utils/types";
+import { HashString } from "@/utils/types.generic";
+import { useMemo } from "react";
+import { useAccount } from "wagmi";
+import useSeasonalBeanBeanSG from "./queries/useSeasonalBeanBeanSG";
 import useSeasonalBeanSeasonSG from "./queries/useSeasonalBeanSeasonSG";
 import useSeasonalBeanstalkFieldSG from "./queries/useSeasonalBeanstalkFieldSG";
+import useSeasonalBeanstalkSiloSG from "./queries/useSeasonalBeanstalkSiloSG";
 import useSeasonalBeanstalkWrappedDepositsSG from "./queries/useSeasonalBeanstalkWrappedDepositsSG";
-import { useChainConstant } from "@/utils/chain";
-import { SiloHourlySnapshot } from "@/generated/gql/graphql";
-import { HashString } from "@/utils/types.generic";
+import useSeasonalFarmerSG from "./queries/useSeasonalFarmerSG";
 import useSeasonalFarmerSiloAssetTokenSG from "./queries/useSeasonalFarmerSiloAssetTokenSG";
-import { useAccount } from "wagmi";
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useMemo } from "react";
 import { mergeUseSeasonalQueriesResults } from "./utils";
 
 /** ==================== Bean BeanHourlySnapshot ==================== **/
