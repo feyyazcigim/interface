@@ -52,7 +52,6 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
   const qc = useQueryClient();
   const filterTokens = useFilterOutTokens(siloToken);
   const destinationTokenFilter = useFilterDestinationTokens();
-  const { tokenPrices } = usePriceData();
 
   const farmerBalance = farmerBalances.balances.get(siloToken);
 
@@ -74,7 +73,8 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
 
   const txnType = useTxnType(toSilo, tokenOut);
 
-  const quoteDisabled = !siloToken.isSiloWrapped || txnType === "swap";
+  // disable quote if we are unwrapping and swapping && tokenOut is not main token
+  const quoteDisabled = txnType === "swap" && !tokenOut?.isMain;
 
   // Queries & Hooks
   // Quote for redeemToSilo and redeemAdvanced
@@ -87,7 +87,8 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
     tokenOut,
     slippage,
     amountIn: amountTV,
-    disabled: !tokenOut || txnType === "swap", // disable quote if we are unwrapping to silo deposit
+    // disable quote if we are unwrapping via redeemAdvanced or redeemToSilo
+    disabled: !tokenOut || txnType === "swap" || tokenOut?.isMain,
   });
   const swapSummary = useSwapSummary(swap.data);
   const buildSwapQuote = useBuildSwapQuoteAsync(swap.data, balanceSource, toMode, account, account);
