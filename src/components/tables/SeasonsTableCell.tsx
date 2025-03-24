@@ -1,7 +1,7 @@
 import { TableCell } from "@/components/ui/Table";
 import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
-import { TwoColumnCell } from "./TwoColumnCell";
 import TooltipSimple from "../TooltipSimple";
+import { TwoColumnCell } from "./TwoColumnCell";
 export enum SeasonsTableCellType {
   Default = "default",
   TwoColumn = "twoColumn",
@@ -27,12 +27,20 @@ export const SeasonsTableCell = ({
   hiddenFields,
 }: SeasonsTableCellProps) => {
   if (hiddenFields.includes(columnKey)) return null;
-  const column = seasonColumns.find(c => c.id === columnKey);
+  const column = seasonColumns.find((c) => c.id === columnKey);
   const additionalClasses = column?.classes;
 
   switch (cellType) {
     case SeasonsTableCellType.TwoColumn:
-      return <TwoColumnCell className={`${className} ${additionalClasses}`} value={value} subValue={subValue} hoverContent={hoverContent} hiddenFields={hiddenFields} />;
+      return (
+        <TwoColumnCell
+          className={`${className} ${additionalClasses}`}
+          value={value}
+          subValue={subValue}
+          hoverContent={hoverContent}
+          hiddenFields={hiddenFields}
+        />
+      );
     default:
       return hoverContent ? (
         <TableCell className={`${className} ${additionalClasses} group`}>
@@ -45,4 +53,4 @@ export const SeasonsTableCell = ({
         <TableCell className={`${className} ${additionalClasses}`}>{value}</TableCell>
       );
   }
-}; 
+};

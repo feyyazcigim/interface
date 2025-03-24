@@ -9,7 +9,10 @@
     "generate": "yarn wagmi:generate && graphql-codegen",
     "build": "yarn generate && tsc && vite build",
     "build:netlify": "./scripts/build-netlify.sh",
-    "lint": "biome check .",
+    "lint:check": "biome check",
+    "lint:check-errors-only": "biome check --diagnostic-level=error",
+    "lint:fix-all": "biome check --write --diagnostic-level=error",
+    "format": "biome format --write",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

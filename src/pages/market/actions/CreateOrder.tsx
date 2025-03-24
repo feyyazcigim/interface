@@ -159,13 +159,22 @@ export default function CreateOrder() {
 
     const _amount = shouldSwap ? TV.ZERO : TokenValue.fromHuman(amountIn, tokenIn.decimals);
     const fromMode = shouldSwap ? FarmFromMode.INTERNAL : balanceFrom;
-    const orderClipboard = shouldSwap && swapBuild ? await swapBuild.deriveClipboardWithOutputToken(mainToken, 5, account) : undefined;
+    const orderClipboard =
+      shouldSwap && swapBuild ? await swapBuild.deriveClipboardWithOutputToken(mainToken, 5, account) : undefined;
 
     const _maxPlaceInLine = TokenValue.fromHuman(maxPlaceInLine?.toString() || "0", PODS.decimals);
     const _pricePerPod = TokenValue.fromHuman(pricePerPod?.toString() || "0", mainToken.decimals);
     const minFill = TokenValue.fromHuman("1", PODS.decimals);
 
-    const orderCallStruct = createPodOrder(account, _amount, Number(_pricePerPod), _maxPlaceInLine, minFill, fromMode, orderClipboard?.clipboard);
+    const orderCallStruct = createPodOrder(
+      account,
+      _amount,
+      Number(_pricePerPod),
+      _maxPlaceInLine,
+      minFill,
+      fromMode,
+      orderClipboard?.clipboard,
+    );
 
     advFarm.push(orderCallStruct);
 

@@ -1,7 +1,6 @@
 import { HashString } from "@/utils/types.generic";
 import { Address } from "viem";
 
-
 /**
  * Zero X V2 API params
  * @link https://0x.org/docs/api#tag/Swap/operation/swap::allowanceHolder::getQuote

@@ -3,7 +3,7 @@ import * as React from "react";
 import { cn } from "@/utils/utils";
 import { HTMLMotionProps, motion } from "framer-motion";
 
-type TableProps = React.HTMLAttributes<HTMLTableElement> & { noOverflow?: boolean, overscroll?: boolean };
+type TableProps = React.HTMLAttributes<HTMLTableElement> & { noOverflow?: boolean; overscroll?: boolean };
 const Table = React.forwardRef<HTMLTableElement, TableProps>(({ className, noOverflow, overscroll, ...props }, ref) => (
   <div className={`relative w-full ${noOverflow ? "" : "overflow-auto"} ${overscroll ? "overscroll-auto" : ""}`}>
     <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />

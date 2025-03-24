@@ -1,8 +1,8 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { STALK } from "@/constants/internalTokens";
 import { encodeAbiParameters } from "viem";
 import { stringEq } from "./string";
 import { DepositCrateData, DepositData, SiloTokenDataMap, Token } from "./types";
-import { STALK } from "@/constants/internalTokens";
 
 export enum ConvertKind {
   LAMBDA_LAMBDA = 0,
@@ -281,19 +281,24 @@ export function pickCratesAsCrates(sortedDeposits: DepositData[], quote: TokenVa
   };
 }
 
-export const extractStemsAndAmountsFromCrates = (crates: DepositCrateData[]): {
-  stems: TokenValue[],
-  amounts: TokenValue[]
+export const extractStemsAndAmountsFromCrates = (
+  crates: DepositCrateData[],
+): {
+  stems: TokenValue[];
+  amounts: TokenValue[];
 } => {
-  return crates.reduce<{ stems: TokenValue[], amounts: TokenValue[] }>((acc, crate) => {
-    acc.stems.push(crate.stem);
-    acc.amounts.push(crate.amount);
-    return acc;
-  }, {
-    stems: [],
-    amounts: []
-  });
-}
+  return crates.reduce<{ stems: TokenValue[]; amounts: TokenValue[] }>(
+    (acc, crate) => {
+      acc.stems.push(crate.stem);
+      acc.amounts.push(crate.amount);
+      return acc;
+    },
+    {
+      stems: [],
+      amounts: [],
+    },
+  );
+};
 
 export function sortAndPickCrates(
   mode: "convert" | "transfer" | "withdraw" | "wrap",
@@ -308,14 +313,14 @@ export function sortAndPickCrates(
     if (!toToken) throw new Error("No toToken specified.");
     sortedCrates = toToken.isLP
       ? /// BEAN -> LP: oldest crates are best. Grown stalk is equivalent
-      /// on both sides of the convert, but having more seeds in older crates
-      /// allows you to accrue stalk faster after convert.
-      /// Note that during this convert, BDV is approx. equal after the convert.
-      sortCratesByStem(deposits, "asc")
+        /// on both sides of the convert, but having more seeds in older crates
+        /// allows you to accrue stalk faster after convert.
+        /// Note that during this convert, BDV is approx. equal after the convert.
+        sortCratesByStem(deposits, "asc")
       : /// LP -> BEAN: use the crates with the lowest [BDV/Amount] ratio first.
-      /// Since LP deposits can have varying BDV, the best option for the Farmer
-      /// is to increase the BDV of their existing lowest-BDV crates.
-      sortCratesByBDVRatio(deposits, "asc");
+        /// Since LP deposits can have varying BDV, the best option for the Farmer
+        /// is to increase the BDV of their existing lowest-BDV crates.
+        sortCratesByBDVRatio(deposits, "asc");
   } else if (mode === "transfer" || mode === "withdraw" || mode === "wrap") {
     sortedCrates = sortCratesByStem(deposits, "desc");
   } else {
@@ -345,14 +350,14 @@ export function calculateConvert(
   const sortedCrates =
     !fromToken.isLP && toToken.isLP
       ? /// BEAN -> LP: oldest crates are best. Grown stalk is equivalent
-      /// on both sides of the convert, but having more seeds in older crates
-      /// allows you to accrue stalk faster after convert.
-      /// Note that during this convert, BDV is approx. equal after the convert.
-      sortCratesByStem(deposits, "asc")
+        /// on both sides of the convert, but having more seeds in older crates
+        /// allows you to accrue stalk faster after convert.
+        /// Note that during this convert, BDV is approx. equal after the convert.
+        sortCratesByStem(deposits, "asc")
       : /// X -> LP: use the crates with the lowest [BDV/Amount] ratio first.
-      /// Since LP deposits can have varying BDV, the best option for the Farmer
-      /// is to increase the BDV of their existing lowest-BDV crates.
-      sortCratesByBDVRatio(deposits, "asc");
+        /// Since LP deposits can have varying BDV, the best option for the Farmer
+        /// is to increase the BDV of their existing lowest-BDV crates.
+        sortCratesByBDVRatio(deposits, "asc");
 
   const pickedCrates = pickCrates(sortedCrates, fromAmount);
 
@@ -412,7 +417,7 @@ export function calculateCropScales(value: number, isRaining: boolean) {
   // Calculate crop scalar
   const scalarMinOutput = 0;
   const scalarValue = scalarMinOutput + ((value - minInput) * (maxOutput - scalarMinOutput)) / (maxInput - minInput);
-  const cropScalar = (Math.min(Math.max(scalarValue, scalarMinOutput), maxOutput)).toFixed(1);
+  const cropScalar = Math.min(Math.max(scalarValue, scalarMinOutput), maxOutput).toFixed(1);
 
   // Calculate crop ratio
   const ratioMinOutput = isRaining ? 33 : 50;
@@ -423,8 +428,7 @@ export function calculateCropScales(value: number, isRaining: boolean) {
     cropScalar,
     cropRatio,
   };
-};
-
+}
 
 export function convertDeltaDemandToPercentage(deltaDemand: number) {
   if (deltaDemand === 0) return "0%";

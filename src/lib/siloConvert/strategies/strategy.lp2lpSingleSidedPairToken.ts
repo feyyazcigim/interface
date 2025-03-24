@@ -2,9 +2,11 @@ import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import { abiSnippets } from "@/constants/abiSnippets";
 import { PIPELINE_ADDRESS } from "@/constants/address";
+import { pipelineAddress } from "@/generated/contractHooks";
 import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
 import { ZeroX } from "@/lib/matcha/ZeroX";
 import { ZeroXQuoteV2Response } from "@/lib/matcha/types";
+import { resolveChainId } from "@/utils/chain";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { tokensEqual } from "@/utils/token";
 import { Token } from "@/utils/types";
@@ -12,8 +14,6 @@ import { HashString } from "@/utils/types.generic";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 import { ConvertStrategyQuote } from "./ConvertStrategy";
 import { SiloConvertLP2LPConvertStrategy, SourceSummaryLP2LP, TargetSummaryLP2LP } from "./LP2LPConvertStrategy";
-import { pipelineAddress } from "@/generated/contractHooks";
-import { resolveChainId } from "@/utils/chain";
 
 class OneSidedPairToken extends SiloConvertLP2LPConvertStrategy {
   // The index of the token in the well to remove liquidity from.
@@ -154,7 +154,7 @@ class OneSidedPairToken extends SiloConvertLP2LPConvertStrategy {
 
     // 4. get balance of buyToken
     pipe.add(
-      OneSidedPairToken.snippets.erc20BalanceOf(swap.buyToken, pipelineAddress[resolveChainId(this.context.chainId)])
+      OneSidedPairToken.snippets.erc20BalanceOf(swap.buyToken, pipelineAddress[resolveChainId(this.context.chainId)]),
     );
 
     // 5. transfer swap result to target well

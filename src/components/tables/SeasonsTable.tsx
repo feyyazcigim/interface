@@ -1,13 +1,13 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import eyeballCrossed from "@/assets/misc/eyeball-crossed.svg";
 import IconImage from "@/components/ui/IconImage";
-import { SeasonsTableData } from "@/state/useSeasonsData";
-import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { areEqual, ListChildComponentProps, VariableSizeList } from "react-window";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
+import { SeasonsTableData } from "@/state/useSeasonsData";
 import { calculateCropScales, convertDeltaDemandToPercentage } from "@/utils/convert";
 import { caseIdToDescriptiveText } from "@/utils/utils";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ListChildComponentProps, VariableSizeList, areEqual } from "react-window";
 import { SeasonsTableCell, SeasonsTableCellType } from "./SeasonsTableCell";
 
 interface SeasonsTableProps {
@@ -16,12 +16,10 @@ interface SeasonsTableProps {
   hideColumn: (id: string) => void;
 }
 
-export const nonHideableFields = ['season']
+export const nonHideableFields = ["season"];
 const paginationPadding = 50;
 
-
 export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsTableProps) => {
-
   const tableRef = useRef<HTMLTableElement>(null);
   const isMobile = useIsMobile();
   const [height, setHeight] = useState(500);
@@ -29,18 +27,18 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
   const calculatedWidth = useMemo(() => {
     return seasonColumns.reduce((acc, column) => {
       if (hiddenFields.includes(column.id)) return acc;
-      return acc + column.width
+      return acc + column.width;
     }, 0);
   }, [hiddenFields]);
 
   const calculateHeight = () => {
-    const elem = document.getElementById('pinto-navbar')
+    const elem = document.getElementById("pinto-navbar");
     if (!elem) {
       return;
     }
     const windowHeight = window.innerHeight;
-    const headerOffset = elem?.getBoundingClientRect().height
-    let columnDropdownOffset;
+    const headerOffset = elem?.getBoundingClientRect().height;
+    let columnDropdownOffset: number;
     if (window.screen.width < 768) {
       columnDropdownOffset = 105;
     } else if (window.screen.width < 1600) {
@@ -48,20 +46,20 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
     } else {
       columnDropdownOffset = 120;
     }
-    const newHeight = windowHeight - headerOffset - paginationPadding - columnDropdownOffset
-    setHeight(newHeight)
-  }
+    const newHeight = windowHeight - headerOffset - paginationPadding - columnDropdownOffset;
+    setHeight(newHeight);
+  };
 
   useEffect(() => {
-    window.addEventListener('resize', calculateHeight);
+    window.addEventListener("resize", calculateHeight);
     return () => {
-      window.removeEventListener('resize', calculateHeight);
-    }
-  }, [])
+      window.removeEventListener("resize", calculateHeight);
+    };
+  }, []);
 
   useEffect(() => {
     calculateHeight();
-  }, [seasonsData])
+  }, [seasonsData]);
 
   const RenderRow = React.memo(({ index, style }: ListChildComponentProps<SeasonsTableData>) => {
     const data = seasonsData[index];
@@ -73,11 +71,16 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
         <TableRow key={data.season} style={style} noHoverMute>
           {seasonColumns.map(({ id }) => {
             return (
-              <SeasonsTableCell key={id} columnKey={id} value={id === 'season' ? data.season : 'N/A'} hiddenFields={hiddenFields} />
-            )
+              <SeasonsTableCell
+                key={id}
+                columnKey={id}
+                value={id === "season" ? data.season : "N/A"}
+                hiddenFields={hiddenFields}
+              />
+            );
           })}
         </TableRow>
-      )
+      );
     }
     return (
       <TableRow key={data.season} style={style} noHoverMute>
@@ -97,11 +100,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           value={`${data.deltaBeans.toNumber() > 0 ? "+" : ""}${data.deltaBeans.toHuman("short")}`}
           hiddenFields={hiddenFields}
         />
-        <SeasonsTableCell
-          columnKey="totalSoil"
-          value={data.issuedSoil.toHuman("short")}
-          hiddenFields={hiddenFields}
-        />
+        <SeasonsTableCell columnKey="totalSoil" value={data.issuedSoil.toHuman("short")} hiddenFields={hiddenFields} />
         <SeasonsTableCell
           cellType={SeasonsTableCellType.TwoColumn}
           columnKey="soilSown"
@@ -109,11 +108,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           subValue={`Total: ${data.sownBeans.toHuman("short")}`}
           hiddenFields={hiddenFields}
         />
-        <SeasonsTableCell
-          columnKey="timeSown"
-          value={data.blocksToSoldOutSoil}
-          hiddenFields={hiddenFields}
-        />
+        <SeasonsTableCell columnKey="timeSown" value={data.blocksToSoldOutSoil} hiddenFields={hiddenFields} />
         <SeasonsTableCell
           columnKey="price"
           value={`$${data.price.toNumber().toFixed(4)}`}
@@ -144,11 +139,11 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           cellType={SeasonsTableCellType.TwoColumn}
           columnKey="deltaDemand"
           value={convertDeltaDemandToPercentage(data.deltaPodDemand.toNumber())}
-          subValue={caseIdToDescriptiveText(data.caseId, 'soil_demand')}
+          subValue={caseIdToDescriptiveText(data.caseId, "soil_demand")}
           hiddenFields={hiddenFields}
-        // hoverContent={
-        //   <DeltaDemandChart />
-        // }
+          // hoverContent={
+          //   <DeltaDemandChart />
+          // }
         />
         <SeasonsTableCell
           columnKey="cropScalar"
@@ -163,11 +158,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           }
           hiddenFields={hiddenFields}
         />
-        <SeasonsTableCell
-          columnKey="cropRatio"
-          value={`${cropRatio}%`}
-          hiddenFields={hiddenFields}
-        />
+        <SeasonsTableCell columnKey="cropRatio" value={`${cropRatio}%`} hiddenFields={hiddenFields} />
         <SeasonsTableCell
           cellType={SeasonsTableCellType.TwoColumn}
           columnKey="temperature"
@@ -193,10 +184,18 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           {seasonColumns.map(({ id, name, classes }) => {
             if (hiddenFields.includes(id)) return null;
             return (
-              <TableHead className={`sticky top-0 z-[1] ${classes} group ${!nonHideableFields.includes(id) ? 'cursor-pointer' : ''}`} key={id} onClick={() => hideColumn(id)}>
+              <TableHead
+                className={`sticky top-0 z-[1] ${classes} group ${!nonHideableFields.includes(id) ? "cursor-pointer" : ""}`}
+                key={id}
+                onClick={() => hideColumn(id)}
+              >
                 {!nonHideableFields.includes(id) ? (
                   <div className="flex items-center justify-end gap-2">
-                    <IconImage className="cursor-pointer opacity-0 group-hover:opacity-100" src={eyeballCrossed} size={4} />
+                    <IconImage
+                      className="cursor-pointer opacity-0 group-hover:opacity-100"
+                      src={eyeballCrossed}
+                      size={4}
+                    />
                     <span>{name}</span>
                   </div>
                 ) : (
@@ -224,6 +223,6 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           {RenderRow}
         </VariableSizeList>
       </TableBody>
-    </Table >
+    </Table>
   );
 };
