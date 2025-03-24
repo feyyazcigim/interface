@@ -203,11 +203,11 @@ export function caseIdToDescriptiveText(caseId: number, column: "price" | "soil_
       else if ((caseId % 36) / 9 === 2) return "Reasonably High";
       else return "Excessively High";
     case "l2sr":
-      if (caseId / 36 === 0) {
+      if (Math.trunc(caseId / 36) === 0) {
         return "Extremely Low";
-      } else if (caseId / 36 === 1) {
+      } else if (Math.trunc(caseId / 36) === 1) {
         return "Reasonably Low";
-      } else if (caseId / 36 === 2) {
+      } else if (Math.trunc(caseId / 36) === 2) {
         return "Reasonably High";
       } else {
         return "Extremely High";
