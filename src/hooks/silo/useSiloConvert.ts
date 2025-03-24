@@ -1,5 +1,6 @@
 import { TV } from "@/classes/TokenValue";
 import { diamondABI } from "@/constants/abi/diamondABI";
+import { STALK } from "@/constants/internalTokens";
 import { defaultQuerySettingsQuote } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { SiloConvert } from "@/lib/siloConvert/SiloConvert";
@@ -9,7 +10,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAccount, useChainId, useConfig, useReadContract } from "wagmi";
 import { useSiloConvertResult } from "./useSiloConvertResult";
-import { STALK } from "@/constants/internalTokens";
 
 /**
  * NOTE: B/c 0xV2 utilizes permits, LP<>LP convert quotes will fail if the local block time is further ahead than the permit's expiration.
@@ -160,8 +160,8 @@ const selectGrownStalkPenalty = (result: readonly [bigint, bigint]) => {
     lossGrownStalk,
     isPenalty,
     penaltyRatio,
-  }
-}
+  };
+};
 
 export const useSiloConvertDownPenaltyQuery = (
   source: Token,
@@ -189,15 +189,11 @@ export const useSiloConvertDownPenaltyQuery = (
     address: diamond,
     abi: diamondABI,
     functionName: "downPenalizedGrownStalk",
-    args: [
-      well?.address ?? "0x",
-      fromBdv?.toBigInt() ?? 0n,
-      grownStalk?.toBigInt() ?? 0n,
-    ],
+    args: [well?.address ?? "0x", fromBdv?.toBigInt() ?? 0n, grownStalk?.toBigInt() ?? 0n],
     query: {
       enabled: queryEnabled,
       select: selectGrownStalkPenalty,
-    }
+    },
   });
 
   useEffect(() => {
@@ -208,9 +204,8 @@ export const useSiloConvertDownPenaltyQuery = (
     query.data && setStruct(query.data);
   }, [query.data]);
 
-
   return {
     ...query,
     data: struct,
-  }
-}
+  };
+};

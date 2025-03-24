@@ -151,9 +151,9 @@ export function pickCratesMultiple(
       const cratePct = amountToRemoveFromCrate.div(deposit.amount);
 
       // update decimals to match the correct decimals
-      const crateBDV = deposit.depositBdv.mul(cratePct)
+      const crateBDV = deposit.depositBdv.mul(cratePct);
       const crateCurrentBDV = deposit.currentBdv.mul(cratePct);
-      const crateSeeds = deposit.seeds.mul(cratePct)
+      const crateSeeds = deposit.seeds.mul(cratePct);
 
       const baseStalk = deposit.stalk.base.mul(cratePct);
       const grownStalk = deposit.stalk.grown.mul(cratePct);
@@ -179,7 +179,7 @@ export function pickCratesMultiple(
           total: crateStalk,
           base: baseStalk,
           grown: grownStalk,
-          grownSinceDeposit: grownSinceDepositStalk
+          grownSinceDeposit: grownSinceDepositStalk,
         },
         seeds: crateSeeds,
         isGerminating: deposit.isGerminating,

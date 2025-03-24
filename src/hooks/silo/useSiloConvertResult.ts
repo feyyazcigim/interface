@@ -53,9 +53,7 @@ export function useSiloConvertResult(
         const germinatingSeasons = willGerminate ? (resultToStem.eq(targetStemTip) ? 2 : 1) : 0;
 
         const targetDeltaStem = targetStemTip.sub(result.toStem);
-        const grownStalkBigInt = willGerminate
-          ? 0n
-          : targetDeltaStem.toBigInt() * result.toBdv.toBigInt();
+        const grownStalkBigInt = willGerminate ? 0n : targetDeltaStem.toBigInt() * result.toBdv.toBigInt();
 
         const toInitialStalk = result.toBdv.reDecimal(STALK.decimals);
         const toGrownStalk = TV.fromBigInt(grownStalkBigInt, STALK.decimals);
