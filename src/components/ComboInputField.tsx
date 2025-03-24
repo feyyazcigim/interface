@@ -125,8 +125,6 @@ function ComboInputField({
     : TokenValue.ZERO;
   const protocolTokenPrice = tokenPrices.tokenPrices.get(tokenData.mainToken)?.instant || TokenValue.ZERO;
 
-
-
   const pct = useMemo(() => {
     if (mode === "plots") return TokenValue.ONE;
     if (!farmerDepositedTokenBalance || !farmerDepositedTokenBalance.amount.gt(0)) {

@@ -2,17 +2,17 @@ import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import { abiSnippets } from "@/constants/abiSnippets";
 import { PIPELINE_ADDRESS } from "@/constants/address";
+import { pipelineAddress } from "@/generated/contractHooks";
 import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
 import { ZeroX } from "@/lib/matcha/ZeroX";
 import { ZeroXQuoteV2Response } from "@/lib/matcha/types";
+import { resolveChainId } from "@/utils/chain";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 import { ConvertStrategyQuote } from "./ConvertStrategy";
 import { SiloConvertLP2LPConvertStrategy, SourceSummaryLP2LP, TargetSummaryLP2LP } from "./LP2LPConvertStrategy";
-import { pipelineAddress } from "@/generated/contractHooks";
-import { resolveChainId } from "@/utils/chain";
 
 class Eq2EQStrategy extends SiloConvertLP2LPConvertStrategy {
   // Getters
@@ -194,7 +194,7 @@ class Eq2EQStrategy extends SiloConvertLP2LPConvertStrategy {
 
     // 4: check balance of buyToken in pipeline.
     pipe.add(
-      Eq2EQStrategy.snippets.erc20BalanceOf(swap.buyToken, pipelineAddress[resolveChainId(this.context.chainId)])
+      Eq2EQStrategy.snippets.erc20BalanceOf(swap.buyToken, pipelineAddress[resolveChainId(this.context.chainId)]),
     );
 
     // 4: transfer swap result to target well

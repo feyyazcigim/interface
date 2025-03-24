@@ -189,7 +189,7 @@ function Sow({ isMorning }: SowProps) {
       if (!swapBuild || !swapBuild.advFarm.length) {
         throw new Error("No swap quote");
       }
-      
+
       const { clipboard } = await swapBuild.deriveClipboardWithOutputToken(mainToken, 0, account.address);
       const sowCallStruct = sowWithMin(amount, minTemp, minSoil, FarmFromMode.INTERNAL, clipboard);
 

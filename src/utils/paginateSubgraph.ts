@@ -7,7 +7,7 @@ export interface PaginationSettings<R, T, K extends keyof T, V> {
   primaryPropertyName: Extract<K, string>;
   idField: Extract<keyof R, string>;
   nextVars: (value1000: R, prevVars: V) => V | undefined;
-  orderBy?: 'asc' | 'desc';
+  orderBy?: "asc" | "desc";
 }
 
 type ResultObject<T, K extends keyof T, R> = {
@@ -57,17 +57,16 @@ export const paginateMultiQuerySubgraph = async <R, T, V>(
   url: string,
   document: RequestDocument | TypedQueryDocumentNode<T, V>,
   initialVars: V,
-): Promise<{[key: string]: R[]}> => {
+): Promise<{ [key: string]: R[] }> => {
   let vars: V | undefined = initialVars;
-  let prevPageIds: {[key: string] : string[]} = {};
-  const k = 'id'//settings.primaryPropertyName;
+  const prevPageIds: { [key: string]: string[] } = {};
+  const k = "id"; //settings.primaryPropertyName;
 
-  const allResults: {[key: string]: R[]} = {};
+  const allResults: { [key: string]: R[] } = {};
   while (vars) {
     const results = (await request<T>(url, document, vars)) as ResultObject<T, any, R>;
 
     Object.entries(results).forEach(([key, value]: [string, any]) => {
-
       if (!allResults[key]) {
         allResults[key] = [];
       }
@@ -89,7 +88,7 @@ export const paginateMultiQuerySubgraph = async <R, T, V>(
         }
       }
       prevPageIds[key] = pageIds;
-    })
+    });
 
     const firstQueryKey = Object.keys(results)[0];
     vars = settings.nextVars(results[firstQueryKey][PAGE_SIZE - 1], vars);

@@ -1,12 +1,12 @@
-import useSeasonsData from "@/state/useSeasonsData";
+import { HideColumnDropdown } from "@/components/HideColumnDropdown";
 import FrameAnimator from "@/components/LoadingSpinner";
 import { SeasonsTable } from "@/components/tables/SeasonsTable";
-import { HideColumnDropdown } from "@/components/HideColumnDropdown";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { useSunData } from "@/state/useSunData";
-import { ArrowLeftIcon } from "@radix-ui/react-icons"
 import useIsMobile from "@/hooks/display/useIsMobile";
+import useSeasonsData from "@/state/useSeasonsData";
+import { useSunData } from "@/state/useSunData";
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { useEffect, useState } from "react";
 export interface SeasonColumn {
   id: string;
   name: string;
@@ -19,7 +19,13 @@ export const nonHideableFields = ["season"];
 
 export const seasonColumns: SeasonColumn[] = [
   { id: "season", name: "Season", classes: "text-left  w-[100px]", width: 100 },
-  { id: "instantDeltaP", name: "Instant. ∆P", dropdownName: "Instantaneous ∆P", classes: "text-right  w-[125px]", width: 125 },
+  {
+    id: "instantDeltaP",
+    name: "Instant. ∆P",
+    dropdownName: "Instantaneous ∆P",
+    classes: "text-right  w-[125px]",
+    width: 125,
+  },
   { id: "twaDeltaP", name: "TWA ∆P", classes: "text-right  w-[125px]", width: 125 },
   { id: "pintoSupply", name: "Pinto Supply", classes: "text-right  w-[135px]", width: 135 },
   { id: "totalSoil", name: "Total Soil", classes: "text-right  w-[125px]", width: 125 },
@@ -37,7 +43,7 @@ export const seasonColumns: SeasonColumn[] = [
 
 export interface SortColumn {
   column: string;
-  dir: 'asc' | 'desc';
+  dir: "asc" | "desc";
 }
 
 const PAGE_SIZE = 100;
@@ -47,7 +53,7 @@ const SeasonsExplorer = () => {
   const currentSeason = useSunData().current;
 
   const [hiddenFields, setHiddenFields] = useState<string[]>(localStorageHiddenFields);
-  const [displayPage, setDisplayPage] = useState<number | string>('1');
+  const [displayPage, setDisplayPage] = useState<number | string>("1");
   const [page, setPage] = useState(1);
   const [jumpToSeason, setJumpToSeason] = useState(0);
   const [seasons, setSeasons] = useState<any>([]);
@@ -59,7 +65,7 @@ const SeasonsExplorer = () => {
 
   const calculateSeasonPageToJump = (season: number) => {
     return Math.ceil((currentSeason - season) / PAGE_SIZE);
-  }
+  };
 
   useEffect(() => {
     if (seasonsData?.data?.length && page * PAGE_SIZE > seasonsData?.data?.length) {
@@ -103,36 +109,36 @@ const SeasonsExplorer = () => {
   };
 
   const onDisplayPageKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      const asNumber = Math.min(Math.max(Number(displayPage), 1), totalPages)
+    if (e.key === "Enter") {
+      const asNumber = Math.min(Math.max(Number(displayPage), 1), totalPages);
       const clampedPage = Number.isNaN(asNumber) ? 1 : asNumber;
       setPage(clampedPage);
       setDisplayPage(clampedPage);
     }
-  }
+  };
 
   const resetAllHiddenColumns = () => {
     setHiddenFieldsWithLocalStorage([]);
   };
 
   const onJumpToSeasonChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const season = Math.min(currentSeason, Number(e.target.value))
+    const season = Math.min(currentSeason, Number(e.target.value));
     setJumpToSeason(season);
-  }
+  };
 
   const handleJumpToSeason = (e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLInputElement>) => {
-    const seasonToJumpTo = calculateSeasonPageToJump(jumpToSeason)
+    const seasonToJumpTo = calculateSeasonPageToJump(jumpToSeason);
     setPage(seasonToJumpTo);
     setDisplayPage(seasonToJumpTo);
-  }
+  };
 
   const onJumpToSeasonKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleJumpToSeason(e);
     }
-  }
+  };
 
-  const isLoading = seasonsData.isFetching && seasonsData.data?.length === 0
+  const isLoading = seasonsData.isFetching && seasonsData.data?.length === 0;
 
   return (
     <>
@@ -144,13 +150,11 @@ const SeasonsExplorer = () => {
           resetAllHiddenColumns={resetAllHiddenColumns}
         />
       </div>
-      {isLoading ? <FrameAnimator className="flex self-center" size={250} /> :
-        <SeasonsTable
-          seasonsData={seasons}
-          hiddenFields={hiddenFields}
-          hideColumn={hideColumn}
-        />
-      }
+      {isLoading ? (
+        <FrameAnimator className="flex self-center" size={250} />
+      ) : (
+        <SeasonsTable seasonsData={seasons} hiddenFields={hiddenFields} hideColumn={hideColumn} />
+      )}
       <div className="self-center w-[100vw] flex justify-center flex-row sm:px-8 px-6 gap-x-2 bg-pinto-gray-1 border border-pinto-gray-2 h-[50px] fixed bottom-0 left-0 right-0 font-medium z-[1]">
         <div className="w-full min-w-0 2xl:max-w-[1550px] 3xl:max-w-[2560px] flex items-center gap-2">
           <Button
@@ -163,7 +167,13 @@ const SeasonsExplorer = () => {
             <ArrowLeftIcon />
           </Button>
           <span>Page</span>
-          <input className="border border-pinto-gray-4 w-12 px-[4px] text-center rounded-[4px]" type="text" value={displayPage} onKeyDown={onDisplayPageKeyDown} onChange={(e) => setDisplayPage(e.target.value)} />
+          <input
+            className="border border-pinto-gray-4 w-12 px-[4px] text-center rounded-[4px]"
+            type="text"
+            value={displayPage}
+            onKeyDown={onDisplayPageKeyDown}
+            onChange={(e) => setDisplayPage(e.target.value)}
+          />
           <span> of {totalPages}</span>
           <Button
             variant="pagination"
@@ -174,19 +184,27 @@ const SeasonsExplorer = () => {
           >
             <ArrowLeftIcon className=" rotate-180" />
           </Button>
-          {!isMobile && (<>
-            <span>Jump to Season</span>
-            <input className="border border-pinto-gray-4 w-14 px-[4px] text-center rounded-[4px]" type="text" onKeyDown={onJumpToSeasonKeyDown} value={jumpToSeason} onChange={onJumpToSeasonChange} />
-            <Button
-              variant="pagination"
-              size="xs"
-              onClick={handleJumpToSeason}
-              disabled={seasonsData.isFetching}
-              className="cursor-pointer"
-            >
-              <ArrowLeftIcon className=" rotate-180" />
-            </Button>
-          </>)}
+          {!isMobile && (
+            <>
+              <span>Jump to Season</span>
+              <input
+                className="border border-pinto-gray-4 w-14 px-[4px] text-center rounded-[4px]"
+                type="text"
+                onKeyDown={onJumpToSeasonKeyDown}
+                value={jumpToSeason}
+                onChange={onJumpToSeasonChange}
+              />
+              <Button
+                variant="pagination"
+                size="xs"
+                onClick={handleJumpToSeason}
+                disabled={seasonsData.isFetching}
+                className="cursor-pointer"
+              >
+                <ArrowLeftIcon className=" rotate-180" />
+              </Button>
+            </>
+          )}
           <span className="text-pinto-gray-4">{currentSeason} Records</span>
         </div>
       </div>

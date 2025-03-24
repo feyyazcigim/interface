@@ -25,7 +25,12 @@ export interface IPageContainer
   removeBottomPadding?: boolean;
 }
 
-const PageContainer = ({ removeBottomPadding, bottomMarginOnMobile = false, variant = "lg", ...props }: IPageContainer) => {
+const PageContainer = ({
+  removeBottomPadding,
+  bottomMarginOnMobile = false,
+  variant = "lg",
+  ...props
+}: IPageContainer) => {
   return (
     <div>
       <div
@@ -35,7 +40,7 @@ const PageContainer = ({ removeBottomPadding, bottomMarginOnMobile = false, vari
           "flex flex-col w-full items-center",
           `pt-2 px-4 ${removeBottomPadding ? "" : "pb-4"}`, // mobile
           `sm:px-8 sm:pt-5 ${removeBottomPadding ? "" : "sm:pb-20"} sm:mt-10`, // above mobile
-          bottomMarginOnMobile ? "mb-[75px] sm:mb-0" : "mb-0"
+          bottomMarginOnMobile ? "mb-[75px] sm:mb-0" : "mb-0",
         )}
       >
         <div className={cn(pageContainerVariants({ variant }), props.className)}>{props.children}</div>

@@ -22,7 +22,7 @@ interface ImportMetaEnv {
    */
   readonly VITE_APY_ENDPOINT: string;
   /**
-   * 
+   *
    */
   readonly VITE_ROUTER_ENDPOINT: string;
   /**

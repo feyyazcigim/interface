@@ -1,9 +1,9 @@
-import { AdvancedPipeCall } from "@/utils/types";
+import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
-import { Address, encodeFunctionData } from "viem";
-import { Clipboard } from "@/classes/Clipboard";
+import { AdvancedPipeCall } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
+import { Address, encodeFunctionData } from "viem";
 
 export default function siloedTokenDeposit(
   assetsAmount: TV,

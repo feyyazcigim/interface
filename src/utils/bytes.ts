@@ -41,7 +41,7 @@ export function splitHexToBytes32Words(data: HashString | string): HashString[] 
 
     // Pad incomplete chunk to 64 hex chars with zeros
     if (chunkContent.length < chunkSize) {
-      chunkContent = chunkContent.padEnd(chunkSize, '0');
+      chunkContent = chunkContent.padEnd(chunkSize, "0");
     }
 
     chunks.push(`0x${chunkContent}` as HashString);
@@ -119,8 +119,9 @@ export function parseABIDynamicArrayReturnData(returnData: HashString): {
 
   if (!raw.length) {
     return {
-      summary: [], data: []
-    }
+      summary: [],
+      data: [],
+    };
   }
 
   if (raw.length < 2) {

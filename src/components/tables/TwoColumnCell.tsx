@@ -34,4 +34,4 @@ export const TwoColumnCell = ({
   ) : (
     <TableCell className={className}>{cellContent}</TableCell>
   );
-}; 
+};
