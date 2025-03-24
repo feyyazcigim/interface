@@ -25,7 +25,7 @@ export const HideColumnDropdown = ({ seasonColumns, hiddenFields, toggleColumn, 
     }
 
     const trigger = (
-        <Button className="justify-between sm:h-6 h-8 rounded-full w-[140px]" variant="outline">
+        <Button className="justify-between sm:h-6 h-8 rounded-full w-[200px]" variant="outline">
             <IconImage className="mr-2" src={eyeballCrossed} size={4} />
             <span className="w-full text-center">{columnDropdownLabel}</span>
         </Button>
