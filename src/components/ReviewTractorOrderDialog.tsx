@@ -16,6 +16,7 @@ import { diamondABI } from "@/constants/abi/diamondABI";
 interface ReviewTractorOrderProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
   orderData: {
     totalAmount: string;
     temperature: string;
@@ -31,6 +32,7 @@ interface ReviewTractorOrderProps {
 export default function ReviewTractorOrderDialog({
   open,
   onOpenChange,
+  onSuccess,
   orderData,
   encodedData,
   operatorPasteInstrs,
@@ -93,10 +95,15 @@ export default function ReviewTractorOrderDialog({
         functionName: "publishRequisition",
         args: [signedRequisitionData],
       });
-      
+
       // Explicitly close the dialog after successful transaction
       toast.success("Order published successfully");
       onOpenChange(false);
+
+      // Call the parent success callback to close the parent dialog
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error("Error publishing requisition:", error);
     }
