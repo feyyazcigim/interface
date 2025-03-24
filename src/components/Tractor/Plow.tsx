@@ -18,21 +18,13 @@ export function Plow() {
   const { data: latestBlock } = useLatestBlock();
 
   const { data: requisitions = [], isLoading } = useQuery({
-    queryKey: ["requisitions", protocolAddress],
+    queryKey: ["requisitions", protocolAddress, latestBlock?.number],
     queryFn: async () => {
       console.log("Loading requisitions...");
       if (!publicClient || !protocolAddress) return [];
 
-      const events = await loadPublishedRequisitions(undefined, protocolAddress, publicClient);
+      const events = await loadPublishedRequisitions(undefined, protocolAddress, publicClient, latestBlock);
       console.log("Loaded requisitions:", events.length);
-
-      // Add timestamps
-      if (latestBlock) {
-        return events.map((event) => ({
-          ...event,
-          timestamp: Number(latestBlock.timestamp) * 1000 - (Number(latestBlock.number) - event.blockNumber) * 2000, // Approximate 2s per block
-        }));
-      }
 
       return events;
     },

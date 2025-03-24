@@ -230,35 +230,7 @@ export function decodeSowTractorData(encodedData: `0x${string}`): {
       throw new Error("Missing farm calls");
     }
 
-    const sowWithMinCall = decodeFunctionData({
-      abi: beanstalkAbi,
-      data: calls[0].callData,
-    });
-
-    const transferTokenCall = decodeFunctionData({
-      abi: beanstalkAbi,
-      data: calls[1].callData,
-    });
-
-    if (sowWithMinCall.functionName !== "sowWithMin") {
-      throw new Error("Not a sowWithMin call");
-    }
-
-    if (transferTokenCall.functionName !== "transferToken") {
-      throw new Error("Not a transferToken call");
-    }
-
-    const [amount, temp, minAmount, fromMode] = sowWithMinCall.args;
-    const [, , tip] = transferTokenCall.args;
-
-    // Convert from blockchain values (6 decimals) to human readable
-    return {
-      pintoAmount: TokenValue.fromBlockchain(amount, 6).toHuman(),
-      temperature: TokenValue.fromBlockchain(temp, 6).toHuman(),
-      minPintoAmount: TokenValue.fromBlockchain(minAmount, 6).toHuman(),
-      fromMode: Number(fromMode) as unknown as FarmFromMode,
-      operatorTip: TokenValue.fromBlockchain(tip, 6).toHuman(),
-    };
+    // In the future we can decode more complicated blueprints here and show them just for informational purposes, for now we only care about the sowBlueprintv0
   } catch (error) {
     console.error("Failed to decode sow data:", error);
     throw new Error("Invalid sow data");
@@ -339,6 +311,7 @@ export async function loadPublishedRequisitions(
   address: string | undefined,
   protocolAddress: `0x${string}` | undefined,
   publicClient: PublicClient | null,
+  latestBlock?: { number: bigint; timestamp: bigint } | null,
 ) {
   if (!protocolAddress || !publicClient) return [];
 
@@ -365,10 +338,22 @@ export async function loadPublishedRequisitions(
           // If decoding fails, keep type as unknown
         }
 
+        // Calculate timestamp if we have the latest block info
+        let timestamp: number | undefined = undefined;
+        if (latestBlock) {
+          // Convert all BigInt values to Number before arithmetic operations
+          const latestTimestamp = Number(latestBlock.timestamp);
+          const latestBlockNumber = Number(latestBlock.number);
+          const eventBlockNumber = Number(event.blockNumber);
+
+          // Calculate timestamp (approximately 2 seconds per block)
+          timestamp = latestTimestamp * 1000 - (latestBlockNumber - eventBlockNumber) * 2000;
+        }
+
         return {
           requisition,
           blockNumber: Number(event.blockNumber),
-          timestamp: undefined,
+          timestamp,
           isCancelled: cancelledHashes.has(requisition.blueprintHash),
           requisitionType,
         } as RequisitionEvent;
