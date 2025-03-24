@@ -64,7 +64,7 @@ const SeasonsExplorer = () => {
   const seasonsData = useSeasonsData(fromSeason, currentSeason);
 
   const calculateSeasonPageToJump = (season: number) => {
-    return Math.ceil((currentSeason - season) / PAGE_SIZE);
+    return Math.min(Math.floor((currentSeason - season) / PAGE_SIZE) + 1, totalPages);
   };
 
   useEffect(() => {
