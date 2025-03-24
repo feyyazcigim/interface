@@ -7,7 +7,6 @@ import { useMemo } from "react";
 import { useAccount, useBalance, useReadContract } from "wagmi";
 import useTokenData from "./useTokenData";
 
-
 const settings = {
   staleTime: 1000 * 60 * 2,
   refetchInterval: 1000 * 60 * 3, // 3 minutes, in milliseconds
@@ -81,11 +80,14 @@ export function useFarmerBalances() {
   const queriesLoading = nativeBalance.isLoading || isLoading;
   const queriesFetched = nativeBalance.isFetched && isFetched;
 
-  return useMemo(() => ({
-    isLoading: queriesLoading,
-    isFetched: queriesFetched,
-    balances: balanceData,
-    queryKeys: [queryKey, nativeBalance.queryKey],
-    refetch: refetch,
-  }), [queriesLoading, balanceData, queriesFetched, queryKey, nativeBalance.queryKey, refetch]);
+  return useMemo(
+    () => ({
+      isLoading: queriesLoading,
+      isFetched: queriesFetched,
+      balances: balanceData,
+      queryKeys: [queryKey, nativeBalance.queryKey],
+      refetch: refetch,
+    }),
+    [queriesLoading, balanceData, queriesFetched, queryKey, nativeBalance.queryKey, refetch],
+  );
 }

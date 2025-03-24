@@ -1,13 +1,13 @@
+import { defaultQuerySettingsQuote } from "@/constants/query";
 import { SwapBuilder } from "@/lib/Swap/swap-builder";
 import { BeanSwapNodeQuote } from "@/lib/Swap/swap-router";
 import { FarmFromMode, FarmToMode } from "@/utils/types";
+import { exists } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { Address } from "viem";
 import { useAccount, useChainId, useConfig } from "wagmi";
 import { SWAP_QUERY_KEY_PREDICATE } from "./useSwap";
-import { defaultQuerySettingsQuote } from "@/constants/query";
-import { exists } from "@/utils/utils";
 
 export default function useBuildSwapQuote(
   quote: BeanSwapNodeQuote | undefined,
@@ -26,7 +26,7 @@ export default function useBuildSwapQuote(
 
   const queryKey = [
     SWAP_QUERY_KEY_PREDICATE,
-    'builder',
+    "builder",
     {
       args: [
         quote?.buyToken.address ?? "0",
@@ -38,8 +38,8 @@ export default function useBuildSwapQuote(
         swapCaller,
         swapRecipient,
         disabled,
-      ]
-    }
+      ],
+    },
   ] as const;
 
   const query = useQuery({
@@ -55,9 +55,8 @@ export default function useBuildSwapQuote(
       return builder;
     },
     enabled: !!quote && !!account && !!swapCaller && !!swapRecipient && !disabled,
-    ...defaultQuerySettingsQuote
+    ...defaultQuerySettingsQuote,
   });
-
 
   return query.data;
 }
@@ -65,7 +64,7 @@ export default function useBuildSwapQuote(
 /**
  * Same thing as useBuildSwapQuote, but only used when the output token can be ETH.
  * This is because SwapBuilder.build requires a simulation to derive the clipboard if the output token is ETH.
- * 
+ *
  * Otherwise, use useBuildSwapQuote.
  */
 export function useBuildSwapQuoteAsync(

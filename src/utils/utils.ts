@@ -15,7 +15,7 @@ export const generateID = (prefix = "") => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
-export const noop = () => { };
+export const noop = () => {};
 
 export function unpackStem(data: string | number | bigint): bigint {
   // Convert input to BigInt if it isn't already
@@ -213,4 +213,4 @@ export function caseIdToDescriptiveText(caseId: number, column: "price" | "soil_
         return "Extremely High";
       }
   }
-};
+}

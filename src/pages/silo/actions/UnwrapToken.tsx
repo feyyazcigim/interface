@@ -110,37 +110,46 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
   });
 
   // Submit handlers
-  const handleRedeemAdvanced = useCallback(async (shares: TV, address: Address, from: FarmFromMode, to: FarmToMode) => {
-    return writeWithEstimateGas({
-      address: siloToken.address,
-      abi: siloedPintoABI,
-      functionName: "redeemAdvanced",
-      args: [shares, address, address, from, to],
-    })
-  }, [writeWithEstimateGas, siloToken]);
+  const handleRedeemAdvanced = useCallback(
+    async (shares: TV, address: Address, from: FarmFromMode, to: FarmToMode) => {
+      return writeWithEstimateGas({
+        address: siloToken.address,
+        abi: siloedPintoABI,
+        functionName: "redeemAdvanced",
+        args: [shares, address, address, from, to],
+      });
+    },
+    [writeWithEstimateGas, siloToken],
+  );
 
-  const handleRedeemToSilo = useCallback(async (amount: TV, address: Address, from: FarmFromMode) => {
-    return writeWithEstimateGas({
-      address: siloToken.address,
-      abi: siloedPintoABI,
-      functionName: "redeemToSilo",
-      args: [amount.toBigInt(), address, address, Number(from)],
-    });
-  }, [writeWithEstimateGas, siloToken]);
+  const handleRedeemToSilo = useCallback(
+    async (amount: TV, address: Address, from: FarmFromMode) => {
+      return writeWithEstimateGas({
+        address: siloToken.address,
+        abi: siloedPintoABI,
+        functionName: "redeemToSilo",
+        args: [amount.toBigInt(), address, address, Number(from)],
+      });
+    },
+    [writeWithEstimateGas, siloToken],
+  );
 
-  const handleSwap = useCallback(async (buildSwapCallback: NonNullable<ReturnType<typeof useBuildSwapQuoteAsync>>) => {
-    const swapbuild = await buildSwapCallback();
-    if (!swapbuild) {
-      throw new Error("Failed to build swap");
-    }
+  const handleSwap = useCallback(
+    async (buildSwapCallback: NonNullable<ReturnType<typeof useBuildSwapQuoteAsync>>) => {
+      const swapbuild = await buildSwapCallback();
+      if (!swapbuild) {
+        throw new Error("Failed to build swap");
+      }
 
-    return writeWithEstimateGas({
-      address: diamond,
-      abi: abiSnippets.advancedFarm,
-      functionName: "advancedFarm",
-      args: [swapbuild.advancedFarm],
-    });
-  }, [writeWithEstimateGas, diamond]);
+      return writeWithEstimateGas({
+        address: diamond,
+        abi: abiSnippets.advancedFarm,
+        functionName: "advancedFarm",
+        args: [swapbuild.advancedFarm],
+      });
+    },
+    [writeWithEstimateGas, diamond],
+  );
 
   const onSubmit = useCallback(async () => {
     try {
@@ -153,7 +162,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
       const startSubmission = () => {
         setSubmitting(true);
         toast.loading(`Unwrapping ${siloToken.symbol}...`);
-      }
+      };
 
       // transaction
       if (toSilo) {
@@ -220,13 +229,15 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
 
   const baseDisabled = !account || !validAmountIn || !balance.gte(amountTV);
   const nonToSiloDisabled = txnType !== "redeemToSilo" && (!exists(toMode) || !tokenOut);
-  const buttonDisabled = baseDisabled || isConfirming || submitting || outputNotReady || inputError || quoting || nonToSiloDisabled;
+  const buttonDisabled =
+    baseDisabled || isConfirming || submitting || outputNotReady || inputError || quoting || nonToSiloDisabled;
 
-  const {
-    spender,
-    approvalToken,
-    requiresDiamondAllowance,
-  } = useButtonApprovalProps(toSilo, siloToken, tokenOut, balanceSource);
+  const { spender, approvalToken, requiresDiamondAllowance } = useButtonApprovalProps(
+    toSilo,
+    siloToken,
+    tokenOut,
+    balanceSource,
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -291,7 +302,10 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
                   <div className="flex flex-col gap-1">
                     <TextSkeleton height="h3" loading={txnType === "swap" && swap.isLoading} className="w-20">
                       <div className="pinto-h3">
-                        {formatter.token(txnType === "swap" ? swap.data?.buyAmount : output?.amount, tokenOut ?? mainToken)}
+                        {formatter.token(
+                          txnType === "swap" ? swap.data?.buyAmount : output?.amount,
+                          tokenOut ?? mainToken,
+                        )}
                       </div>
                     </TextSkeleton>
                   </div>
@@ -303,12 +317,14 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
                   />
                 </div>
                 <TextSkeleton height="sm" className="w-20" loading={txnType === "swap" && swap.isLoading}>
-                  <div className="pinto-sm-light text-pinto-light">{formatter.usd(txnType === "swap" ? swap.data?.usdOut : output?.usd)}</div>
+                  <div className="pinto-sm-light text-pinto-light">
+                    {formatter.usd(txnType === "swap" ? swap.data?.usdOut : output?.usd)}
+                  </div>
                 </TextSkeleton>
               </div>
             </div>
           </div>
-          {(txnType === "swap" && swap.isLoading) ? (
+          {txnType === "swap" && swap.isLoading ? (
             <div className="flex flex-row items-center justify-center h-[5.5rem]">
               <FrameAnimator size={64} />
             </div>
@@ -324,8 +340,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
             />
           ) : null}
         </div>
-      ) : null
-      }
+      ) : null}
       <div className="flex-row hidden sm:flex">
         <SmartSubmitButton
           submitFunction={onSubmit}
@@ -353,7 +368,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
           requiresDiamondAllowance={requiresDiamondAllowance}
         />
       </MobileActionBar>
-    </div >
+    </div>
   );
 }
 
@@ -368,13 +383,13 @@ const useTxnType = (toSilo: boolean, tokenOut: Token | undefined): TxnType | und
   if (!tokenOut) return undefined;
 
   return tokenOut.isMain ? "redeemAdvanced" : "swap";
-}
+};
 
 const defaultUseButtonProps = {
   spender: undefined,
   approvalToken: undefined,
   requiresDiamondAllowance: false,
-}
+};
 
 const useButtonApprovalProps = (
   toSilo: boolean,
@@ -392,20 +407,20 @@ const useButtonApprovalProps = (
     return {
       spender: siloToken.address,
       approvalToken: siloToken,
-      requiresDiamondAllowance
-    }
+      requiresDiamondAllowance,
+    };
   }
 
   if (txnType === "swap" && !fromInternal) {
     return {
       spender: diamond,
       approvalToken: siloToken,
-      requiresDiamondAllowance
-    }
+      requiresDiamondAllowance,
+    };
   }
 
   return defaultUseButtonProps;
-}
+};
 
 const useFilterDestinationTokens = () => {
   const tokenMap = useTokenMap();

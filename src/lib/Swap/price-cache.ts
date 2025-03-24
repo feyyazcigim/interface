@@ -94,15 +94,12 @@ export class SwapPriceCache {
         allowFailure: false,
       }),
       // silo wrapped token redemption for 1 main token
-      readContract(
-        this.#context.config.getClient({ chainId: this.#context.chainId }),
-        {
-          address: this.#context.siloWrappedToken.address,
-          abi: siloedPintoABI,
-          functionName: "previewRedeem",
-          args: [BigInt(10 ** this.#context.siloWrappedToken.decimals)],
-        }
-      )
+      readContract(this.#context.config.getClient({ chainId: this.#context.chainId }), {
+        address: this.#context.siloWrappedToken.address,
+        abi: siloedPintoABI,
+        functionName: "previewRedeem",
+        args: [BigInt(10 ** this.#context.siloWrappedToken.decimals)],
+      }),
     ]);
 
     const priceMap = new Map<Token, TV>();
@@ -174,10 +171,7 @@ export class SwapPriceCache {
     };
   }
 
-  #updatePriceMapWithSiloWrappedToken(
-    amount: bigint,
-    priceMap: Map<Token, TV>
-  ): void {
+  #updatePriceMapWithSiloWrappedToken(amount: bigint, priceMap: Map<Token, TV>): void {
     const baseAmount = TV.fromHuman(1, this.#context.mainToken.decimals);
     const redemptionAmount = TV.fromBigInt(amount, this.#context.mainToken.decimals);
     const mainTokenUSD = priceMap.get(this.#context.mainToken);
@@ -188,6 +182,6 @@ export class SwapPriceCache {
 
     const siloWrappedUSD = redemptionAmount.div(baseAmount).mul(mainTokenUSD).reDecimal(6);
 
-    priceMap.set(this.#context.siloWrappedToken, siloWrappedUSD)
+    priceMap.set(this.#context.siloWrappedToken, siloWrappedUSD);
   }
 }

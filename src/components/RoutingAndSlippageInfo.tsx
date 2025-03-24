@@ -2,6 +2,7 @@ import swap0xlogo from "@/assets/misc/0x.svg";
 import baseLogo from "@/assets/misc/base-logo.svg";
 import pintoExchangeLogo from "@/assets/misc/pinto-exchange-logo.svg";
 import { default as pintoIcon, default as pintoIconOriginal } from "@/assets/tokens/PINTO.png";
+import sPINTOLogo from "@/assets/tokens/sPINTO.png";
 import { TV } from "@/classes/TokenValue";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
@@ -19,7 +20,6 @@ import { ArrowRightIcon, CornerBottomLeftIcon } from "@radix-ui/react-icons";
 import { Separator } from "@radix-ui/react-separator";
 import React, { createContext, useContext } from "react";
 import IconImage from "./ui/IconImage";
-import sPINTOLogo from '@/assets/tokens/sPINTO.png'
 
 type SiloTxn = "Swap" | "Deposit" | "Convert" | "Withdraw";
 
@@ -110,10 +110,12 @@ const FormRouterAndSlippage = () => {
   const { preferredSummary, txnType, noMarginTopOnTrigger } = useRoutingAndSlippageInfoContext();
 
   return (
-    <div className={cn(
-      "flex flex-col bg-pinto-gray-1 border border-pinto-gray-2 rounded-md p-3 gap-y-3 mt-4 hover:bg-pinto-green-1 hover:border-pinto-green-4 cursor-pointer",
-      noMarginTopOnTrigger && "mt-0"
-    )}>
+    <div
+      className={cn(
+        "flex flex-col bg-pinto-gray-1 border border-pinto-gray-2 rounded-md p-3 gap-y-3 mt-4 hover:bg-pinto-green-1 hover:border-pinto-green-4 cursor-pointer",
+        noMarginTopOnTrigger && "mt-0",
+      )}
+    >
       {preferredSummary === "swap" ? <RoutesFormContent /> : null}
       {preferredSummary === "priceImpact" ? (
         txnType === "Convert" ? (
@@ -362,7 +364,7 @@ const getDetailsWithExchange = (exchange: SwapSummaryExchange, noBase = false) =
   }
 
   return { logo, text };
-}
+};
 
 const RoutesFormContent = () => {
   const { swapSummary, priceImpactSummary, txnType, tokenOut } = useRoutingAndSlippageInfoContext();
@@ -390,7 +392,7 @@ const RoutesFormContent = () => {
                 <IconImage src={logo} alt={text} size={4} />
                 {text}
               </div>
-            )
+            );
           })}
         </div>
       </div>
