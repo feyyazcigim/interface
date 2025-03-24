@@ -35,7 +35,7 @@ export const seasonColumns: SeasonColumn[] = [
   { id: "twaPrice", name: "TWA Price", classes: "text-right  w-[125px]", width: 125 },
   { id: "l2sr", name: "L2SR", classes: "text-right  w-[150px]", width: 150 },
   { id: "podRate", name: "Pod Rate", classes: "text-right  w-[150px]", width: 150 },
-  { id: 'deltaDemand', name: 'Delta Demand', classes: 'text-right  w-[150px]', width: 150 },
+  { id: "deltaDemand", name: "Delta Demand", classes: "text-right  w-[150px]", width: 150 },
   { id: "cropScalar", name: "Crop Scalar", classes: "text-right  w-[150px]", width: 150 },
   { id: "cropRatio", name: "Crop Ratio", classes: "text-right  w-[125px]", width: 125 },
   { id: "temperature", name: "Max Temperature", classes: "text-right w-[175px]", width: 175 },

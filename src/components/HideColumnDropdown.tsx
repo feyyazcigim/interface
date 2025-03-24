@@ -41,7 +41,7 @@ export const HideColumnDropdown = ({
       <IconImage className="mr-2" src={eyeballCrossed} size={4} />
       <span className="w-full text-center">{columnDropdownLabel}</span>
     </Button>
-  )
+  );
 
   if (isMobile) {
     return (
@@ -51,19 +51,29 @@ export const HideColumnDropdown = ({
           <div className="max-h-[300px] overflow-auto my-2">
             {seasonColumns.map(({ id, dropdownName, name }) => {
               if (nonHideableFields.includes(id)) {
-                return null
+                return null;
               }
-              const checked = hiddenFields.includes(id)
-              const extraClasses = hiddenFields.includes(id) ? 'line-through' : ''
+              const checked = hiddenFields.includes(id);
+              const extraClasses = hiddenFields.includes(id) ? "line-through" : "";
               return (
-                <div key={id} onClick={() => toggleColumn(id)} className={`flex items-center h-[36px] gap-2 ${extraClasses}`}>
-                  <IconImage className={`${!checked ? 'opacity-100' : 'opacity-0'} flex items-center justify-center`} src={eyeballCrossed} size={4} />
-                  <span >{dropdownName || name}</span>
+                <div
+                  key={id}
+                  onClick={() => toggleColumn(id)}
+                  className={`flex items-center h-[36px] gap-2 ${extraClasses}`}
+                >
+                  <IconImage
+                    className={`${!checked ? "opacity-100" : "opacity-0"} flex items-center justify-center`}
+                    src={eyeballCrossed}
+                    size={4}
+                  />
+                  <span>{dropdownName || name}</span>
                 </div>
-              )
+              );
             })}
           </div>
-          <Button className="w-full text-base h-10" onClick={resetAllHiddenColumns} variant="outline">Reset</Button>
+          <Button className="w-full text-base h-10" onClick={resetAllHiddenColumns} variant="outline">
+            Reset
+          </Button>
         </DrawerContent>
       </Drawer>
     );
@@ -110,7 +120,7 @@ export const HideColumnDropdown = ({
       <DropdownMenuTrigger asChild className="border border-pinto-gray-2 bg-pinto-gray-1 text-base">
         {trigger}
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="overflow-auto" avoidCollisions={false} onCloseAutoFocus={() => { }} align="start">
+      <DropdownMenuContent className="overflow-auto" avoidCollisions={false} onCloseAutoFocus={() => {}} align="start">
         {seasonColumns.map(({ id, dropdownName, name }) => {
           if (nonHideableFields.includes(id)) {
             return null;
