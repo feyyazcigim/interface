@@ -386,7 +386,7 @@ export function calculateConvertData(fromToken: Token, toToken: Token, amountIn:
 export function calculateCropScales(value: number, isRaining: boolean) {
   const minInput = 0;
   const maxInput = 1e18 * 100; // value is 1-100 not 0.0 -  1.0
-  const maxOutput = 100;
+  const maxOutput = 150;
 
   // Calculate crop scalar
   const scalarMinOutput = 0;

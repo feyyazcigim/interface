@@ -24,7 +24,7 @@ export const seasonColumns: SeasonColumn[] = [
   { id: "pintoSupply", name: "Pinto Supply", classes: "text-right  w-[135px]", width: 135 },
   { id: "totalSoil", name: "Total Soil", classes: "text-right  w-[125px]", width: 125 },
   { id: "soilSown", name: "Soil Sown", classes: "text-right  w-[125px]", width: 125 },
-  { id: "timeSown", name: "Time Sown", classes: "text-right  w-[125px]", width: 125 },
+  { id: "timeSown", name: "Time All Sown", classes: "text-right  w-[125px]", width: 125 },
   { id: "price", name: "Price", classes: "text-right  w-[125px]", width: 125 },
   { id: "twaPrice", name: "TWA Price", classes: "text-right  w-[125px]", width: 125 },
   { id: "l2sr", name: "L2SR", classes: "text-right  w-[150px]", width: 150 },
