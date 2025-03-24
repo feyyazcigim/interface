@@ -88,8 +88,9 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
     slippage,
     amountIn: amountTV,
     // disable quote if we are unwrapping via redeemAdvanced or redeemToSilo
-    disabled: !tokenOut || txnType === "swap" || tokenOut?.isMain,
+    disabled: !tokenOut || txnType !== "swap" || tokenOut?.isMain,
   });
+
   const swapSummary = useSwapSummary(swap.data);
   const buildSwapQuote = useBuildSwapQuoteAsync(swap.data, balanceSource, toMode, account, account);
 
