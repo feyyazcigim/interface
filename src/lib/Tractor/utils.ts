@@ -172,68 +172,76 @@ export async function signRequisition(
   return signature;
 }
 
+export interface SowBlueprintData {
+  sourceTokenIndices: readonly number[];
+  sowAmounts: {
+    totalAmountToSow: string;
+    minAmountToSowPerSeason: string;
+    maxAmountToSowPerSeason: string;
+  };
+  minTemp: string;
+  maxPodlineLength: string;
+  maxGrownStalkPerBdv: string;
+  runBlocksAfterSunrise: string;
+  operatorParams: {
+    whitelistedOperators: readonly `0x${string}`[];
+    tipAddress: `0x${string}`;
+    operatorTipAmount: string;
+  };
+  fromMode: FarmFromMode;
+}
+
 /**
  * Decodes sow data from encoded function call
  */
-export function decodeSowTractorData(encodedData: `0x${string}`): {
-  pintoAmount: string;
-  temperature: string;
-  minPintoAmount: string;
-  fromMode: FarmFromMode;
-  operatorTip: string;
-} {
+export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintData | null {
   try {
-    // First try to decode as a direct sowBlueprintv0 call
-    try {
+    // Check if this is a sowBlueprintv0 call by looking at the selector
+    const selector = encodedData.slice(0, 10);
+    const SOW_BLUEPRINT_V0_SELECTOR = "0x1e08d5c0";
+
+    if (selector === SOW_BLUEPRINT_V0_SELECTOR) {
+      // Decode using the sowBlueprintv0 ABI
       const decoded = decodeFunctionData({
         abi: sowBlueprintv0ABI,
         data: encodedData,
       });
 
-      console.log("Decoded:", decoded);
-
-      if (decoded.functionName === "sowBlueprintv0") {
+      if (decoded.functionName === "sowBlueprintv0" && decoded.args[0]) {
         const params = decoded.args[0];
 
-        // Extract values from the nested structure
-        const totalAmount = params.sowParams.sowAmounts.totalAmountToSow;
-        const minAmount = params.sowParams.sowAmounts.minAmountToSowPerSeason;
-        const temp = params.sowParams.minTemp;
-        const tip = params.opParams.operatorTipAmount;
-
-        // Convert from blockchain values (6 decimals) to human readable
+        // Convert all BigInt values to strings and maintain the full structure
         return {
-          pintoAmount: TokenValue.fromBlockchain(totalAmount, 6).toHuman(),
-          temperature: TokenValue.fromBlockchain(temp, 6).toHuman(),
-          minPintoAmount: TokenValue.fromBlockchain(minAmount, 6).toHuman(),
+          sourceTokenIndices: params.sowParams.sourceTokenIndices,
+          sowAmounts: {
+            totalAmountToSow: TokenValue.fromBlockchain(params.sowParams.sowAmounts.totalAmountToSow, 6).toHuman(),
+            minAmountToSowPerSeason: TokenValue.fromBlockchain(
+              params.sowParams.sowAmounts.minAmountToSowPerSeason,
+              6,
+            ).toHuman(),
+            maxAmountToSowPerSeason: TokenValue.fromBlockchain(
+              params.sowParams.sowAmounts.maxAmountToSowPerSeason,
+              6,
+            ).toHuman(),
+          },
+          minTemp: TokenValue.fromBlockchain(params.sowParams.minTemp, 6).toHuman(),
+          maxPodlineLength: TokenValue.fromBlockchain(params.sowParams.maxPodlineLength, 6).toHuman(),
+          maxGrownStalkPerBdv: TokenValue.fromBlockchain(params.sowParams.maxGrownStalkPerBdv, 6).toHuman(),
+          runBlocksAfterSunrise: params.sowParams.runBlocksAfterSunrise.toString(),
+          operatorParams: {
+            whitelistedOperators: params.opParams.whitelistedOperators,
+            tipAddress: params.opParams.tipAddress,
+            operatorTipAmount: TokenValue.fromBlockchain(params.opParams.operatorTipAmount, 6).toHuman(),
+          },
           fromMode: FarmFromMode.INTERNAL, // Default for blueprint
-          operatorTip: TokenValue.fromBlockchain(tip, 6).toHuman(),
         };
       }
-    } catch (e) {
-      // If it's not a direct sowBlueprintv0 call, continue with existing logic
-      console.log("Not a direct sowBlueprintv0 call, trying advancedFarm...");
     }
 
-    // Existing logic for advancedFarm calls
-    const decoded = decodeFunctionData({
-      abi: beanstalkAbi,
-      data: encodedData,
-    });
-
-    if (decoded.functionName !== "advancedFarm") {
-      throw new Error("Not an advancedFarm call");
-    }
-
-    const [calls] = decoded.args;
-    if (!calls?.[0]?.callData || !calls?.[1]?.callData) {
-      throw new Error("Missing farm calls");
-    }
-
-    // In the future we can decode more complicated blueprints here and show them just for informational purposes, for now we only care about the sowBlueprintv0
+    return null;
   } catch (error) {
     console.error("Failed to decode sow data:", error);
-    throw new Error("Invalid sow data");
+    return null;
   }
 }
 
@@ -305,6 +313,7 @@ export interface RequisitionEvent {
   timestamp?: number;
   isCancelled?: boolean;
   requisitionType: "sowBlueprintv0" | "unknown";
+  decodedData: SowBlueprintData | null;
 }
 
 export async function loadPublishedRequisitions(
@@ -329,13 +338,10 @@ export async function loadPublishedRequisitions(
         }
 
         let requisitionType: "sowBlueprintv0" | "unknown" = "unknown";
-        try {
-          const decodedData = decodeSowTractorData(requisition.blueprint.data);
-          if (decodedData) {
-            requisitionType = "sowBlueprintv0";
-          }
-        } catch (error) {
-          // If decoding fails, keep type as unknown
+        // Try to decode the data
+        const decodedData = decodeSowTractorData(requisition.blueprint.data);
+        if (decodedData) {
+          requisitionType = "sowBlueprintv0";
         }
 
         // Calculate timestamp if we have the latest block info
@@ -356,6 +362,7 @@ export async function loadPublishedRequisitions(
           timestamp,
           isCancelled: cancelledHashes.has(requisition.blueprintHash),
           requisitionType,
+          decodedData,
         } as RequisitionEvent;
       })
       .filter((event): event is NonNullable<typeof event> => event !== null);

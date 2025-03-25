@@ -24,7 +24,7 @@ export function Plow() {
       if (!publicClient || !protocolAddress) return [];
 
       const events = await loadPublishedRequisitions(undefined, protocolAddress, publicClient, latestBlock);
-      console.log("Loaded requisitions:", events.length);
+      console.log("Loaded requisitions:", events);
 
       return events;
     },
@@ -59,18 +59,6 @@ export function Plow() {
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
           {/* Rest of the JSX is identical to SoilOrderbook */}
           {requisitions.map((req, index) => {
-            let decodedData: {
-              pintoAmount: string;
-              temperature: string;
-              minPintoAmount: string;
-              operatorTip: string;
-            } | null = null;
-            try {
-              decodedData = decodeSowTractorData(req.requisition.blueprint.data);
-            } catch (error) {
-              console.error("Failed to decode data for requisition:", error);
-            }
-
             const dateOptions: Intl.DateTimeFormatOptions = {
               year: "2-digit",
               month: "2-digit",
@@ -101,7 +89,7 @@ export function Plow() {
                 <TableCell className="p-2">{req.requisition.blueprint.maxNonce.toString()}</TableCell>
                 <TableCell className="p-2 font-mono text-sm">{req.requisitionType}</TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.operatorTip} PINTO` : "Failed to decode"}
+                  {req.decodedData ? `${req.decodedData.operatorParams.operatorTipAmount} PINTO` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2">
                   <Button
