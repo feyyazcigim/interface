@@ -22,6 +22,7 @@ import { useAccount } from "wagmi";
 import { isDev } from "@/utils/utils"; // Only used for pre-filling form data for faster developing, remove before prod
 import { Blueprint } from "@/lib/Tractor/types";
 import { InfoOutlinedIcon, WarningIcon } from "@/components/Icons";
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 
 interface SowOrderDialogProps {
   open: boolean;
