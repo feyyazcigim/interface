@@ -201,6 +201,34 @@ export default function DevPage() {
     }
   };
 
+  const handleQuickMint = async () => {
+    if (!address) {
+      toast.error("No wallet connected");
+      return;
+    }
+
+    setLoading("quickMint");
+    try {
+      // Mint ETH
+      await executeTask("mintEth", { account: address });
+      // Mint USDC
+      await executeTask("mintUsdc", { account: address, amount: "10000" });
+      // Get PINTO tokens
+      await executeTask("getTokens", {
+        receiver: address,
+        amount: "10000",
+        token: "PINTO",
+      });
+
+      toast.success("Successfully minted tokens");
+    } catch (error) {
+      console.error("Quick mint failed:", error);
+      toast.error("Failed to mint tokens");
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center">
       <div className="flex flex-col gap-6 w-[80%] mb-20">
@@ -250,6 +278,16 @@ export default function DevPage() {
               <Button onClick={() => executeTask("updateOracleTimeouts")} disabled={loading === "updateOracleTimeouts"}>
                 Update Oracle Timeouts
               </Button>
+              <Button onClick={() => executeTask("deploySiloHelpers")} disabled={loading === "deploySiloHelpers"}>
+                Deploy Tractor Stuff
+              </Button>
+              <Button
+                onClick={handleQuickMint}
+                disabled={!address || loading === "quickMint"}
+                className="bg-pinto-green-4 hover:bg-pinto-green-5 text-white"
+              >
+                Mint Me ETH/USDC/Pinto
+              </Button>
             </div>
             <div className="flex gap-2 items-center">
               <Input
@@ -267,18 +305,16 @@ export default function DevPage() {
         <Card className="p-6">
           <h2 className="text-2xl mb-4">Mock Configuration</h2>
           <div className="flex flex-col gap-4">
-            <div className="text-sm text-gray-500">
-              Configure the mock wallet address for local development
-            </div>
+            <div className="text-sm text-gray-500">Configure the mock wallet address for local development</div>
             <div className="flex gap-2">
               <Input
-                placeholder="Mock Wallet Address" 
+                placeholder="Mock Wallet Address"
                 value={mockAddress}
                 onChange={(e) => {
                   const newAddress = e.target.value as `0x${string}`;
                   setMockAddress(newAddress); // Always update the input
                   if (isAddress(newAddress)) {
-                    localStorage.setItem('mockAddress', newAddress);
+                    localStorage.setItem("mockAddress", newAddress);
                   }
                 }}
                 className={`flex-1 ${mockAddress && !isAddress(mockAddress) ? "border-pinto-red-2" : ""}`}
@@ -500,7 +536,6 @@ export default function DevPage() {
           </div>
         </Card>
         <MorningAuctionDev executeTask={executeTask} skipBlocks={skipBlocks} />
-
       </div>
     </div>
   );

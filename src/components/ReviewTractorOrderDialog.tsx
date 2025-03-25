@@ -251,7 +251,7 @@ export default function ReviewTractorOrderDialog({
                 </div>
 
                 {/* Operator Instructions */}
-                <div>
+                {/* <div>
                   <h3 className="text-lg font-medium mb-2">Operator Instructions</h3>
                   <div className="bg-white p-4 rounded border border-gray-200 font-mono text-sm overflow-x-auto">
                     {operatorPasteInstrs.map((instr, i) => (
@@ -261,7 +261,7 @@ export default function ReviewTractorOrderDialog({
                       </div>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 {/* Requisition Data */}
                 <div>

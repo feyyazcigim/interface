@@ -44,7 +44,14 @@ export function PlowDetails({ requisition, isOpen, onClose }: PlowDetailsProps) 
         address: protocolAddress,
         abi: diamondABI,
         functionName: "tractor",
-        args: [requisition.requisition, "0x"], // Empty operator data since we're not using paste instructions
+        args: [
+          {
+            blueprint: requisition.requisition.blueprint,
+            blueprintHash: requisition.requisition.blueprintHash,
+            signature: requisition.requisition.signature,
+          },
+          "0x",
+        ] as const,
       });
     } catch (error) {
       console.error("Failed to execute plow:", error);
@@ -62,7 +69,14 @@ export function PlowDetails({ requisition, isOpen, onClose }: PlowDetailsProps) 
         address: protocolAddress,
         abi: diamondABI,
         functionName: "tractor",
-        args: [requisition.requisition, "0x"] as const,
+        args: [
+          {
+            blueprint: requisition.requisition.blueprint,
+            blueprintHash: requisition.requisition.blueprintHash,
+            signature: requisition.requisition.signature,
+          },
+          "0x",
+        ] as const,
       });
 
       toast.success("Simulation successful");

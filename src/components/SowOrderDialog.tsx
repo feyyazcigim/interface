@@ -144,12 +144,18 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   // Update the dev mode defaults
   useEffect(() => {
     if (isDev()) {
-      setTotalAmount("1000");
-      setTemperature("20");
-      setPodLineLength("100");
-      setMinSoil("1000");
-      setOperatorTip("1");
-      setMaxPerSeason("1000");
+      // Generate random numbers within specified ranges
+      const randomTotal = Math.floor(Math.random() * (10000 - 1000) + 1000);
+      const randomTemp = Math.floor(Math.random() * (2000 - 1000) + 1000);
+      const randomMaxSeason = Math.floor(Math.random() * (1000 - 500) + 500);
+      const randomMinSoil = Math.floor(Math.random() * (100 - 50) + 50);
+
+      setTotalAmount(randomTotal.toString());
+      setTemperature(randomTemp.toString());
+      setPodLineLength("100000000");
+      setMinSoil(randomMinSoil.toString());
+      setOperatorTip("0.1");
+      setMaxPerSeason(randomMaxSeason.toString());
       setSelectedTokenStrategy({ type: "LOWEST_SEEDS" });
     }
   }, [isDev]);
@@ -172,7 +178,6 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       console.time("handleNext total");
       setIsLoading(true);
 
-      console.time("createSowTractorData");
       const { data, operatorPasteInstrs } = createSowTractorData({
         totalAmountToSow: totalAmount || "0",
         temperature: temperature || "0",
@@ -185,7 +190,8 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
         whitelistedOperators: [],
         tokenStrategy: selectedTokenStrategy,
       });
-      console.timeEnd("createSowTractorData");
+
+      console.log("createSowTractorData, data:", data);
 
       if (!address) {
         toast.error("Please connect your wallet");

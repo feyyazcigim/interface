@@ -3,7 +3,13 @@ import { usePublicClient } from "wagmi";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { toast } from "sonner";
 import { useEffect, useState, useCallback } from "react";
-import { RequisitionEvent, loadPublishedRequisitions, decodeSowTractorData } from "@/lib/Tractor/utils";
+import { 
+  RequisitionEvent, 
+  loadPublishedRequisitions, 
+  decodeSowTractorData, 
+  SowBlueprintData,
+  getSowBlueprintDisplayData
+} from "@/lib/Tractor/utils";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
@@ -61,7 +67,7 @@ export function SoilOrderbook() {
           const dataA = decodeSowTractorData(a.requisition.blueprint.data);
           const dataB = decodeSowTractorData(b.requisition.blueprint.data);
           if (!dataA || !dataB) return 0;
-          return parseFloat(dataA.temperature) - parseFloat(dataB.temperature);
+          return parseFloat(dataA.minTemp) - parseFloat(dataB.minTemp);
         } catch (error) {
           console.error("Failed to decode data for requisition:", error);
           return 0;
@@ -95,12 +101,7 @@ export function SoilOrderbook() {
         </TableHeader>
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
           {requisitions.map((req, index) => {
-            let decodedData: {
-              pintoAmount: string;
-              temperature: string;
-              minPintoAmount: string;
-              operatorTip: string;
-            } | null = null;
+            let decodedData: SowBlueprintData | null = null;
             try {
               decodedData = decodeSowTractorData(req.requisition.blueprint.data);
             } catch (error) {
@@ -136,16 +137,16 @@ export function SoilOrderbook() {
                 </TableCell>
                 <TableCell className="p-2">{req.requisition.blueprint.maxNonce.toString()}</TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.pintoAmount} PINTO` : "Failed to decode"}
+                  {decodedData ? `${decodedData.sowAmounts.totalAmountToSow} PINTO` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.minPintoAmount} PINTO` : "Failed to decode"}
+                  {decodedData ? `${decodedData.sowAmounts.minAmountToSowPerSeason} PINTO` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.temperature}%` : "Failed to decode"}
+                  {decodedData ? `${decodedData.minTemp}%` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.operatorTip} PINTO` : "Failed to decode"}
+                  {decodedData ? `${decodedData.operatorParams.operatorTipAmount} PINTO` : "Failed to decode"}
                 </TableCell>
               </TableRow>
             );

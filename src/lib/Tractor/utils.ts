@@ -142,16 +142,24 @@ export function createSowTractorData({
   });
 
   // Encode the function call with the struct
-  const data = encodeFunctionData({
+  const sowBlueprintCall = encodeFunctionData({
     abi: sowBlueprintv0ABI,
     functionName: "sowBlueprintv0",
     args: [sowBlueprintStruct],
   });
 
-  console.log("Encoded data:", {
-    fullData: data,
-    selector: data.slice(0, 10),
-    structData: data.slice(10),
+  // Wrap in an advanced farm call, all tractor orders need this
+  const data = encodeFunctionData({
+    abi: beanstalkAbi,
+    functionName: "advancedFarm",
+    args: [
+      [
+        {
+          callData: sowBlueprintCall,
+          clipboard: "0x" as `0x${string}`, // Empty clipboard since we don't need it for this call
+        },
+      ],
+    ],
   });
 
   return {
@@ -450,4 +458,34 @@ export function generateOperatorData(fields: PasteField[], values: string[]): `0
     console.error("Failed to generate operator data:", error);
     throw error;
   }
+}
+
+// Add this interface to make it easier to use in components
+export interface SowBlueprintDisplayData {
+  totalAmount: string;
+  minAmount: string;
+  maxAmount: string;
+  minTemp: string;
+  maxPodlineLength: string;
+  maxGrownStalkPerBdv: string;
+  runBlocksAfterSunrise: string;
+  operatorTip: string;
+  whitelistedOperators: readonly `0x${string}`[];
+  tipAddress: `0x${string}`;
+}
+
+// Add a helper function to convert SowBlueprintData to display data
+export function getSowBlueprintDisplayData(data: SowBlueprintData): SowBlueprintDisplayData {
+  return {
+    totalAmount: data.sowAmounts.totalAmountToSow,
+    minAmount: data.sowAmounts.minAmountToSowPerSeason,
+    maxAmount: data.sowAmounts.maxAmountToSowPerSeason,
+    minTemp: data.minTemp,
+    maxPodlineLength: data.maxPodlineLength,
+    maxGrownStalkPerBdv: data.maxGrownStalkPerBdv,
+    runBlocksAfterSunrise: data.runBlocksAfterSunrise,
+    operatorTip: data.operatorParams.operatorTipAmount,
+    whitelistedOperators: data.operatorParams.whitelistedOperators,
+    tipAddress: data.operatorParams.tipAddress
+  };
 }
