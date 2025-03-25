@@ -387,30 +387,3 @@ export function calculateConvertData(fromToken: Token, toToken: Token, amountIn:
     console.error("CONVERT: Unknown conversion pathway");
   }
 }
-
-export function calculateCropScales(value: number, isRaining: boolean, season: number) {
-  const maxInput = 1e18;
-  const maxOutput = season >= 2710 ? 150 : 100;
-
-  // Calculate crop scalar
-  const cropScalar = value / maxInput;
-
-  // Calculate crop ratio
-  const minCropRatio = isRaining ? 33 : 50;
-  const cropRatio = Math.min(maxOutput, Math.max(minCropRatio, (cropScalar / 100) * maxOutput)).toFixed(1);
-
-  return {
-    cropScalar,
-    cropRatio,
-  };
-}
-
-export function convertDeltaDemandToPercentage(deltaDemand: number) {
-  if (deltaDemand === 0) return "0%";
-  if (deltaDemand === 1e18) return "100%";
-  if (deltaDemand === 1e36) return "∞%";
-
-  // Scale the value between 0-100%
-  const scaledValue = (deltaDemand / 1e18) * 100;
-  return `${TokenValue.fromHuman(scaledValue, 0).toHuman("short")}%`;
-}
