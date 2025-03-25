@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLatestBlock } from "@/hooks/useLatestBlock";
 
 const BASESCAN_URL = "https://basescan.org/address/";
+const UINT256_MAX = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
 
 export function Plow() {
   const [selectedRequisition, setSelectedRequisition] = useState<RequisitionEvent | null>(null);
@@ -86,7 +87,11 @@ export function Plow() {
                 <TableCell className="p-2 font-mono text-sm">
                   {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
-                <TableCell className="p-2">{req.requisition.blueprint.maxNonce.toString()}</TableCell>
+                <TableCell className="p-2">
+                  {req.requisition.blueprint.maxNonce === UINT256_MAX
+                    ? "Max uint256"
+                    : req.requisition.blueprint.maxNonce.toString()}
+                </TableCell>
                 <TableCell className="p-2 font-mono text-sm">{req.requisitionType}</TableCell>
                 <TableCell className="p-2 font-mono text-sm">
                   {req.decodedData ? `${req.decodedData.operatorParams.operatorTipAmount} PINTO` : "Failed to decode"}

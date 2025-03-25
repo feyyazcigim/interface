@@ -1,20 +1,15 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/Dialog";
-import {
-  RequisitionEvent,
-  decodeSowTractorData,
-  parsePasteInstructions,
-  generateOperatorData,
-} from "@/lib/Tractor/utils";
+import { RequisitionEvent } from "@/lib/Tractor/utils";
 import { Button } from "@/components/ui/Button";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { useAccount, useContractWrite, usePublicClient } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useTransaction from "@/hooks/useTransaction";
-import { useQueryClient } from "@tanstack/react-query";
-import { simulateContract } from "viem/actions";
+
+const UINT256_MAX = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
 
 interface PlowDetailsProps {
   requisition: RequisitionEvent | null;
@@ -25,13 +20,11 @@ interface PlowDetailsProps {
 export function PlowDetails({ requisition, isOpen, onClose }: PlowDetailsProps) {
   const { address } = useAccount();
   const protocolAddress = useProtocolAddress();
-  const qc = useQueryClient();
   const [isSimulating, setIsSimulating] = useState(false);
   const publicClient = usePublicClient();
 
   // Handle success callback
   const handleSuccess = useCallback(() => {
-    // Invalidate relevant queries here if needed
     onClose();
   }, [onClose]);
 
@@ -42,72 +35,34 @@ export function PlowDetails({ requisition, isOpen, onClose }: PlowDetailsProps) 
     successCallback: handleSuccess,
   });
 
-  const [operatorInputs, setOperatorInputs] = React.useState<string[]>([]);
-  const decodedData = requisition ? decodeSowTractorData(requisition.requisition.blueprint.data) : null;
-  const pasteInstructions = requisition ? parsePasteInstructions(requisition) : null;
-  const firstOpen = useRef(true);
-
-  useEffect(() => {
-    if (isOpen && pasteInstructions && address && firstOpen.current) {
-      const initialInputs = pasteInstructions.fields.map(() => address);
-      setOperatorInputs(initialInputs);
-      firstOpen.current = false;
-    } else if (!isOpen) {
-      setOperatorInputs([]);
-      firstOpen.current = true;
-    }
-  }, [isOpen, pasteInstructions, address]);
-
-  const handleInputChange = useCallback((index: number, value: string) => {
-    setOperatorInputs((prev) => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
-    });
-  }, []);
-
   const handlePlow = useCallback(async () => {
-    if (!requisition || !pasteInstructions || !protocolAddress) return;
+    if (!requisition || !protocolAddress) return;
     setSubmitting(true);
 
     try {
-      const operatorData = generateOperatorData(pasteInstructions.fields, operatorInputs);
-      console.log("Generated operator data:", operatorData);
-
       await writeWithEstimateGas({
         address: protocolAddress,
         abi: diamondABI,
         functionName: "tractor",
-        args: [requisition.requisition, operatorData],
+        args: [requisition.requisition, "0x"], // Empty operator data since we're not using paste instructions
       });
     } catch (error) {
       console.error("Failed to execute plow:", error);
     } finally {
       setSubmitting(false);
     }
-  }, [requisition, pasteInstructions, operatorInputs, protocolAddress, writeWithEstimateGas, setSubmitting]);
+  }, [requisition, protocolAddress, writeWithEstimateGas, setSubmitting]);
 
   const handleSimulate = useCallback(async () => {
-    if (!requisition || !pasteInstructions || !protocolAddress || !publicClient) return;
+    if (!requisition || !protocolAddress || !publicClient) return;
     setIsSimulating(true);
 
     try {
-      const operatorData = generateOperatorData(pasteInstructions.fields, operatorInputs);
-
-      console.log("Generated operator data:", operatorData);
-
       const simulation = await publicClient.simulateContract({
         address: protocolAddress,
         abi: diamondABI,
         functionName: "tractor",
-        args: [
-          {
-            blueprint: requisition.requisition.blueprint,
-            blueprintHash: requisition.requisition.blueprintHash,
-            signature: requisition.requisition.signature,
-          },
-          operatorData,
-        ] as const,
+        args: [requisition.requisition, "0x"] as const,
       });
 
       toast.success("Simulation successful");
@@ -118,7 +73,7 @@ export function PlowDetails({ requisition, isOpen, onClose }: PlowDetailsProps) 
     } finally {
       setIsSimulating(false);
     }
-  }, [requisition, pasteInstructions, operatorInputs, protocolAddress, publicClient]);
+  }, [requisition, protocolAddress, publicClient]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -127,61 +82,44 @@ export function PlowDetails({ requisition, isOpen, onClose }: PlowDetailsProps) 
           <DialogTitle>Plow Details</DialogTitle>
           <DialogDescription>Review and confirm the plow operation details</DialogDescription>
         </DialogHeader>
-        {requisition && decodedData && pasteInstructions && (
+        {requisition?.decodedData && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-sm text-gray-500">Type</div>
               <div className="font-mono">{requisition.requisitionType}</div>
-              <div className="text-sm text-gray-500">Max Pinto</div>
-              <div>{`${decodedData.pintoAmount} PINTO`}</div>
-              <div className="text-sm text-gray-500">Min Pinto</div>
-              <div>{`${decodedData.minPintoAmount} PINTO`}</div>
+
+              <div className="text-sm text-gray-500">Total Amount to Sow</div>
+              <div>{`${requisition.decodedData.sowAmounts.totalAmountToSow} PINTO`}</div>
+
+              <div className="text-sm text-gray-500">Min Amount per Season</div>
+              <div>{`${requisition.decodedData.sowAmounts.minAmountToSowPerSeason} PINTO`}</div>
+
+              <div className="text-sm text-gray-500">Max Amount per Season</div>
+              <div>{`${requisition.decodedData.sowAmounts.maxAmountToSowPerSeason} PINTO`}</div>
+
               <div className="text-sm text-gray-500">Temperature</div>
-              <div>{`${decodedData.temperature}%`}</div>
+              <div>{`${requisition.decodedData.minTemp}%`}</div>
+
+              <div className="text-sm text-gray-500">Max Pod Line Length</div>
+              <div>{requisition.decodedData.maxPodlineLength}</div>
+
+              <div className="text-sm text-gray-500">Max Grown Stalk per BDV</div>
+              <div>{requisition.decodedData.maxGrownStalkPerBdv}</div>
+
+              <div className="text-sm text-gray-500">Run Blocks After Sunrise</div>
+              <div>{requisition.decodedData.runBlocksAfterSunrise}</div>
+
               <div className="text-sm text-gray-500">Operator Tip</div>
-              <div>{`${decodedData.operatorTip} PINTO`}</div>
-              <div className="col-span-2 border-t border-border my-2" />
-              <div className="col-span-2 text-sm font-semibold mb-2">Operator Paste Instructions</div>
-              {pasteInstructions.fields.map((field, index) => (
-                <React.Fragment key={field.name}>
-                  <div className="text-sm text-gray-500">{field.name}</div>
-                  {field.type === "address" ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={operatorInputs[index] || ""}
-                        onChange={(e) => handleInputChange(index, e.target.value)}
-                        className={`w-full px-2 py-1 text-right rounded-lg bg-card font-mono text-sm border-2 ${
-                          address?.toLowerCase() === operatorInputs[index]?.toLowerCase()
-                            ? "border-pinto-green-4"
-                            : operatorInputs[index]
-                              ? "border-orange-500"
-                              : "border-border"
-                        } hover:border-foreground focus:border-foreground focus:outline-none`}
-                        placeholder={`Enter ${field.name.toLowerCase()}`}
-                        style={{ userSelect: "none" }}
-                        tabIndex={-1}
-                      />
-                      {operatorInputs[index] && (
-                        <span
-                          className={
-                            address?.toLowerCase() === operatorInputs[index]?.toLowerCase()
-                              ? "text-pinto-green-4 text-sm"
-                              : "text-orange-500 text-sm"
-                          }
-                        >
-                          {address?.toLowerCase() === operatorInputs[index]?.toLowerCase()
-                            ? "Your Address"
-                            : "Not your address"}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <div>{/* Handle other field types here */}</div>
-                  )}
-                </React.Fragment>
-              ))}
+              <div>{`${requisition.decodedData.operatorParams.operatorTipAmount} PINTO`}</div>
+
+              <div className="text-sm text-gray-500">Max Nonce</div>
+              <div>
+                {requisition.requisition.blueprint.maxNonce === UINT256_MAX
+                  ? "Max uint256"
+                  : requisition.requisition.blueprint.maxNonce.toString()}
+              </div>
             </div>
+
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={onClose}>
                 Cancel
