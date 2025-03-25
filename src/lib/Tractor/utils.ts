@@ -64,7 +64,7 @@ export function createSowTractorData({
   operatorTip: string;
   whitelistedOperators: `0x${string}`[];
   tokenStrategy: TokenStrategy;
-}): { data: `0x${string}`; operatorPasteInstrs: `0x${string}`[] } {
+}): { data: `0x${string}`; operatorPasteInstrs: `0x${string}`[]; rawCall: `0x${string}` } {
   // Add debug logs
   console.log("tokenStrategy received:", tokenStrategy);
   console.log("tokenStrategy.type:", tokenStrategy.type);
@@ -165,6 +165,7 @@ export function createSowTractorData({
   return {
     data,
     operatorPasteInstrs: [], // TODO: Update if needed
+    rawCall: sowBlueprintCall  // Return the raw call data
   };
 }
 

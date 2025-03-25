@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/Dial
 import { Button } from "./ui/Button";
 import { CornerBottomLeftIcon } from "@radix-ui/react-icons";
 import { useAccount } from "wagmi";
-import { createSowTractorData, createBlueprint, createRequisition, useSignRequisition } from "@/lib/Tractor";
+import { createRequisition, useSignRequisition } from "@/lib/Tractor";
 import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { toast } from "sonner";
 import { useState } from "react";

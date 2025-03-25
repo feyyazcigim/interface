@@ -178,7 +178,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       console.time("handleNext total");
       setIsLoading(true);
 
-      const { data, operatorPasteInstrs } = createSowTractorData({
+      const { data, operatorPasteInstrs, rawCall } = createSowTractorData({
         totalAmountToSow: totalAmount || "0",
         temperature: temperature || "0",
         minAmountPerSeason: minSoil || "0",
@@ -192,6 +192,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       });
 
       console.log("createSowTractorData, data:", data);
+      console.log("rawCall:", rawCall);
 
       if (!address) {
         toast.error("Please connect your wallet");
@@ -213,7 +214,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
       // Set state immediately
       setBlueprint(newBlueprint);
-      setEncodedData(data);
+      setEncodedData(rawCall);
       setOperatorPasteInstructions(operatorPasteInstrs);
       setShowReview(true);
       setIsLoading(false);
