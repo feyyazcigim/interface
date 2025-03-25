@@ -15,7 +15,7 @@ import { useDebouncedEffect } from "@/utils/useDebounce";
 import { cn } from "@/utils/utils";
 import { Dispatch, InputHTMLAttributes, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
 import PlotSelect from "./PlotSelect";
-import TokenSelectWithBalances from "./TokenSelectWithBalances";
+import TokenSelectWithBalances, { TransformTokenLabelsFunction } from "./TokenSelectWithBalances";
 import { Button } from "./ui/Button";
 import { Skeleton } from "./ui/Skeleton";
 
@@ -61,6 +61,9 @@ export interface ComboInputProps extends InputHTMLAttributes<HTMLInputElement> {
   selectedPlots?: Plot[];
   setPlots?: Dispatch<SetStateAction<Plot[]>>;
   plotSelectionType?: "single" | "multiple";
+
+  // Token select props
+  transformTokenLabels?: TransformTokenLabelsFunction;
 }
 
 function ComboInputField({
@@ -96,6 +99,7 @@ function ComboInputField({
   tokenSelectLoading,
   filterTokens,
   selectKey,
+  transformTokenLabels,
 }: ComboInputProps) {
   const tokenData = useTokenData();
   const { balances } = useFarmerBalances();
@@ -311,7 +315,7 @@ function ComboInputField({
         )}
       >
         <div className="flex flex-col gap-2">
-          <div className="flex flex-row gap-2 items-center">
+          <div className="flex flex-row items-center">
             {isLoading ? (
               <Skeleton className="flex w-full h-8 rounded-[0.75rem]" />
             ) : (
@@ -333,10 +337,8 @@ function ComboInputField({
               : setToken &&
                 selectedToken && (
                   <TokenSelectWithBalances
-                    setToken={setToken}
                     selectedToken={selectedToken}
                     tokenNameOverride={tokenNameOverride}
-                    setBalanceFrom={setBalanceFrom}
                     balanceFrom={balanceFrom}
                     balancesToShow={balancesToShow}
                     tokenAndBalanceMap={tokenAndBalanceMap}
@@ -344,6 +346,9 @@ function ComboInputField({
                     isLoading={tokenSelectLoading}
                     filterTokens={filterTokens}
                     selectKey={selectKey}
+                    setToken={setToken}
+                    setBalanceFrom={setBalanceFrom}
+                    transformTokenLabels={transformTokenLabels}
                   />
                 )}
           </div>

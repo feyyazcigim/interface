@@ -310,6 +310,7 @@ function Sow({ isMorning }: SowProps) {
           setError={setInputError}
           selectedToken={tokenIn}
           error={inputError}
+          transformTokenLabels={fromSilo ? transformTokenLabels : undefined}
           tokenAndBalanceMap={fromSilo ? depositedByWhitelistedToken : undefined}
           balanceFrom={fromSilo ? undefined : balanceFrom}
           disableButton={isConfirming}
@@ -320,12 +321,15 @@ function Sow({ isMorning }: SowProps) {
           disableClamping={true}
         />
       </div>
-      <Row className="w-full justify-between mt-4">
+      <Row className="justify-between">
         <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">Use Silo deposits</div>
         <TextSkeleton loading={false} className="w-11 h-6">
           <Switch checked={tokenSource === "deposits"} onCheckedChange={handleOnCheckedChange} />
         </TextSkeleton>
       </Row>
+      {tokenSource === "deposits" && tokenIn.isLP ? (
+        <Warning>Withdrawing from your LP deposits removes liquidity as single sided {mainToken.symbol}.</Warning>
+      ) : null}
       {totalSoil.eq(0) && maxSow?.lte(0) && (
         <Warning>Your usable balance is 0.00 because there is no Soil available.</Warning>
       )}
@@ -470,14 +474,16 @@ const useFilterTokens = (mode: TokenSource) => {
 };
 
 const useMapSiloDepositsToAmounts = (deposits: ReturnType<typeof useFarmerSilo>["deposits"]) => {
-  return useMemo(() => {
-    const map = new Map<Token, TokenValue>();
-    for (const [token, deposit] of deposits) {
-      map.set(token, deposit.amount);
-    }
+  const tokenMap = useTokenMap();
 
-    return map;
-  }, [deposits]);
+  return useMemo(
+    () =>
+      Object.values(tokenMap).reduce<Map<Token, TokenValue>>(
+        (acc, curr) => acc.set(curr, deposits.get(curr)?.amount ?? TokenValue.ZERO),
+        new Map(),
+      ),
+    [deposits, tokenMap],
+  );
 };
 
 const useWithdrawDepositBreakdown = (
@@ -498,4 +504,13 @@ const useWithdrawDepositBreakdown = (
 
     return sortAndPickCrates("withdraw", amount, tokenDeposits.deposits, token);
   }, [deposits, amountIn, enabled]);
+};
+
+// ------------------------------ Functions ------------------------------
+
+const transformTokenLabels = (token: Token) => {
+  return {
+    label: `DEP. ${token.symbol}`,
+    sublabel: `Silo Deposited ${token.name}`,
+  };
 };
