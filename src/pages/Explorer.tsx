@@ -61,14 +61,14 @@ const Explorer = () => {
       <div className="flex flex-col w-full items-center">
         <div className="flex flex-col w-full gap-4 sm:gap-8">
           <div className="flex flex-col gap-2 sm:ml-4">
-            <div className="pinto-h2 sm:pinto-h1">Explorer</div>
+            <div className="pinto-h2 sm:pinto-h1 ml-[-3px]">Explorer</div>
             <div className="flex gap-6 sm:gap-10 mt-4 sm:mt-8 overflow-x-auto scrollbar-none">
               {TABS.map(({ tabName, urlSlug }, idx) => (
                 <div
                   key={tabName}
                   data-state={selectedIdx === idx ? "active" : "inactive"}
                   onClick={handleMainTabClickFactory(urlSlug)}
-                  className={`pinto-h4 sm:pinto-h3 shrink-0 cursor-pointer ${selectedIdx === idx ? "text-pinto-primary sm:text-pinto-primary" : "text-pinto-light sm:text-pinto-light"} data-[state=inactive]:hover:text-pinto-green-3`}
+                  className={`pinto-h4 sm:pinto-h3 shrink-0 cursor-pointer ml-[-1px] ${selectedIdx === idx ? "text-pinto-primary sm:text-pinto-primary" : "text-pinto-light sm:text-pinto-light"} data-[state=inactive]:hover:text-pinto-green-3`}
                 >
                   {tabName}
                 </div>
