@@ -396,19 +396,11 @@ function PriceButtonPanel() {
                   Show time-weighted average values
                   <TooltipSimple content={"Show the time-weighted average ΔP and price in each pool."} />
                 </div>
-                <Switch
-                  checked={useTwa}
-                  onCheckedChange={() => setUseTwa(!useTwa)}
-                  variant="omegaLarge"
-                />
+                <Switch checked={useTwa} onCheckedChange={() => setUseTwa(!useTwa)} variant="omegaLarge" />
               </div>
               <div className="flex flex-row justify-between h-14 items-center">
                 <div className="pinto-sm sm:pinto-body">Show ΔP and total liquidity on all Wells</div>
-                <Switch
-                  checked={expandAll}
-                  onCheckedChange={() => setExpandAll(!expandAll)}
-                  variant="omegaLarge"
-                />
+                <Switch checked={expandAll} onCheckedChange={() => setExpandAll(!expandAll)} variant="omegaLarge" />
               </div>
             </div>
           )}

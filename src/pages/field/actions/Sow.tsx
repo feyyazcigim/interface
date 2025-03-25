@@ -25,24 +25,24 @@ import settingsIcon from "@/assets/misc/Settings.svg";
 import FrameAnimator from "@/components/LoadingSpinner";
 import MobileActionBar from "@/components/MobileActionBar";
 
+import { Row } from "@/components/Container";
 import RoutingAndSlippageInfo, { useRoutingAndSlippageWarning } from "@/components/RoutingAndSlippageInfo";
+import TextSkeleton from "@/components/TextSkeleton";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { Switch } from "@/components/ui/Switch";
 import useDelayedLoading from "@/hooks/display/useDelayedLoading";
+import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import useMaxBuy from "@/hooks/swap/useMaxBuy";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
-import { useDebouncedEffect } from "@/utils/useDebounce";
-import { getBalanceFromMode } from "@/utils/utils";
-import TextSkeleton from "@/components/TextSkeleton";
-import { Switch } from "@/components/ui/Switch";
-import { Row } from "@/components/Container";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { sortAndPickCrates } from "@/utils/convert";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { useDebouncedEffect } from "@/utils/useDebounce";
+import { getBalanceFromMode } from "@/utils/utils";
 
 type SowProps = {
   isMorning: boolean;
@@ -109,7 +109,7 @@ function Sow({ isMorning }: SowProps) {
     farmerSilo.deposits,
     tokenIn,
     stringToStringNum(amountIn),
-    fromSilo
+    fromSilo,
   );
 
   const tokenInBalance = farmerBalances.balances.get(tokenIn);
@@ -232,7 +232,6 @@ function Sow({ isMorning }: SowProps) {
     inputError,
   ]);
 
-
   const handleOnCheckedChange = (checked: boolean) => {
     setAmountIn("0");
     const newTokenSource = checked ? "deposits" : "balances";
@@ -302,7 +301,9 @@ function Sow({ isMorning }: SowProps) {
         <ComboInputField
           amount={amountIn}
           disableInput={isConfirming}
-          customMaxAmount={maxSow?.gt(0) && tokenBalance?.gt(0) ? TokenValue.min(tokenBalance, maxSow) : TokenValue.ZERO}
+          customMaxAmount={
+            maxSow?.gt(0) && tokenBalance?.gt(0) ? TokenValue.min(tokenBalance, maxSow) : TokenValue.ZERO
+          }
           setAmount={setAmountIn}
           setToken={setTokenIn}
           setBalanceFrom={setBalanceFrom}
@@ -320,14 +321,9 @@ function Sow({ isMorning }: SowProps) {
         />
       </div>
       <Row className="w-full justify-between mt-4">
-        <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">
-          Use Silo deposits
-        </div>
+        <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">Use Silo deposits</div>
         <TextSkeleton loading={false} className="w-11 h-6">
-          <Switch
-            checked={tokenSource === "deposits"}
-            onCheckedChange={handleOnCheckedChange}
-          />
+          <Switch checked={tokenSource === "deposits"} onCheckedChange={handleOnCheckedChange} />
         </TextSkeleton>
       </Row>
       {totalSoil.eq(0) && maxSow?.lte(0) && (
@@ -464,21 +460,16 @@ const useFilterTokens = (mode: TokenSource) => {
           set.add(token);
         }
       } else if (mode === "deposits") {
-        if (
-          token.isSiloWrapped ||
-          token.is3PSiloWrapped ||
-          (!token.isLP && !token.isMain)
-        ) {
+        if (token.isSiloWrapped || token.is3PSiloWrapped || (!token.isLP && !token.isMain)) {
           set.add(token);
         }
       }
-
-    })
+    });
     return set;
   }, [tokenMap, mode]);
 };
 
-const useMapSiloDepositsToAmounts = (deposits: ReturnType<typeof useFarmerSilo>['deposits']) => {
+const useMapSiloDepositsToAmounts = (deposits: ReturnType<typeof useFarmerSilo>["deposits"]) => {
   return useMemo(() => {
     const map = new Map<Token, TokenValue>();
     for (const [token, deposit] of deposits) {
@@ -486,11 +477,11 @@ const useMapSiloDepositsToAmounts = (deposits: ReturnType<typeof useFarmerSilo>[
     }
 
     return map;
-  }, [deposits])
+  }, [deposits]);
 };
 
 const useWithdrawDepositBreakdown = (
-  deposits: ReturnType<typeof useFarmerSilo>['deposits'],
+  deposits: ReturnType<typeof useFarmerSilo>["deposits"],
   token: Token,
   amountIn: string,
   enabled: boolean,
@@ -506,5 +497,5 @@ const useWithdrawDepositBreakdown = (
     const amount = TV.min(TV.fromHuman(amountIn, token.decimals), tokenDeposits.amount);
 
     return sortAndPickCrates("withdraw", amount, tokenDeposits.deposits, token);
-  }, [deposits, amountIn, enabled])
+  }, [deposits, amountIn, enabled]);
 };
