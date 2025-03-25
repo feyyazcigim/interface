@@ -149,10 +149,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       const randomTemp = Math.floor(Math.random() * (2000 - 1000) + 1000);
       const randomMaxSeason = Math.floor(Math.random() * (1000 - 500) + 500);
       const randomMinSoil = Math.floor(Math.random() * (100 - 50) + 50);
+      const randomPodLineLength = Math.floor(Math.random() * (70000000 - 35000000) + 35000000);
 
       setTotalAmount(randomTotal.toString());
       setTemperature(randomTemp.toString());
-      setPodLineLength("100000000");
+      setPodLineLength(randomPodLineLength.toString());
       setMinSoil(randomMinSoil.toString());
       setOperatorTip("0.1");
       setMaxPerSeason(randomMaxSeason.toString());

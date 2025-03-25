@@ -205,7 +205,68 @@ export interface SowBlueprintData {
  */
 export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintData | null {
   try {
-    // Check if this is a sowBlueprintv0 call by looking at the selector
+    // First, try to decode as advancedFarm call
+    try {
+      const advancedFarmDecoded = decodeFunctionData({
+        abi: beanstalkAbi,
+        data: encodedData,
+      });
+
+      if (advancedFarmDecoded.functionName === "advancedFarm" && advancedFarmDecoded.args[0]) {
+        // Extract the calls array from advancedFarm
+        const calls = advancedFarmDecoded.args[0] as { callData: `0x${string}`; clipboard: `0x${string}` }[];
+        
+        // Check each call to find sowBlueprintv0
+        for (const call of calls) {
+          const callData = call.callData;
+          // Extract the function selector (first 4 bytes)
+          const selector = callData.slice(0, 10);
+          const SOW_BLUEPRINT_V0_SELECTOR = "0x1e08d5c0";
+          
+          if (selector === SOW_BLUEPRINT_V0_SELECTOR) {
+            // Found a sowBlueprintv0 call, decode it
+            const decoded = decodeFunctionData({
+              abi: sowBlueprintv0ABI,
+              data: callData,
+            });
+
+            if (decoded.functionName === "sowBlueprintv0" && decoded.args[0]) {
+              const params = decoded.args[0];
+
+              // Convert all BigInt values to strings and maintain the full structure
+              return {
+                sourceTokenIndices: params.sowParams.sourceTokenIndices,
+                sowAmounts: {
+                  totalAmountToSow: TokenValue.fromBlockchain(params.sowParams.sowAmounts.totalAmountToSow, 6).toHuman(),
+                  minAmountToSowPerSeason: TokenValue.fromBlockchain(
+                    params.sowParams.sowAmounts.minAmountToSowPerSeason,
+                    6,
+                  ).toHuman(),
+                  maxAmountToSowPerSeason: TokenValue.fromBlockchain(
+                    params.sowParams.sowAmounts.maxAmountToSowPerSeason,
+                    6,
+                  ).toHuman(),
+                },
+                minTemp: TokenValue.fromBlockchain(params.sowParams.minTemp, 6).toHuman(),
+                maxPodlineLength: TokenValue.fromBlockchain(params.sowParams.maxPodlineLength, 6).toHuman(),
+                maxGrownStalkPerBdv: TokenValue.fromBlockchain(params.sowParams.maxGrownStalkPerBdv, 6).toHuman(),
+                runBlocksAfterSunrise: params.sowParams.runBlocksAfterSunrise.toString(),
+                operatorParams: {
+                  whitelistedOperators: params.opParams.whitelistedOperators,
+                  tipAddress: params.opParams.tipAddress,
+                  operatorTipAmount: TokenValue.fromBlockchain(params.opParams.operatorTipAmount, 6).toHuman(),
+                },
+                fromMode: FarmFromMode.INTERNAL, // Default for blueprint
+              };
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.log("Not an advancedFarm call, trying direct decode:", error);
+    }
+
+    // If we couldn't decode as advancedFarm, try the original direct decode approach as a fallback
     const selector = encodedData.slice(0, 10);
     const SOW_BLUEPRINT_V0_SELECTOR = "0x1e08d5c0";
 
@@ -399,13 +460,33 @@ interface PasteInstructions {
  */
 export function parsePasteInstructions(requisition: RequisitionEvent): PasteInstructions | null {
   try {
-    const decoded = decodeFunctionData({
-      abi: beanstalkAbi,
-      data: requisition.requisition.blueprint.data,
-    });
-
-    const calls = decoded.args?.[0] as { callData: `0x${string}`; clipboard: `0x${string}` }[] | undefined;
+    // Try to decode as advancedFarm first
+    let calls: { callData: `0x${string}`; clipboard: `0x${string}` }[] | undefined;
+    
+    try {
+      const decoded = decodeFunctionData({
+        abi: beanstalkAbi,
+        data: requisition.requisition.blueprint.data,
+      });
+      
+      if (decoded.functionName === "advancedFarm") {
+        calls = decoded.args?.[0] as { callData: `0x${string}`; clipboard: `0x${string}` }[] | undefined;
+      }
+    } catch (error) {
+      console.log("Not an advancedFarm call, trying direct approach:", error);
+      // Not an advancedFarm call, will try the original approach next
+    }
+    
+    // If we couldn't decode as advancedFarm or didn't find the calls
     if (!calls) {
+      // Try the original approach - assume it's a direct call
+      calls = [{ 
+        callData: requisition.requisition.blueprint.data, 
+        clipboard: "0x" as `0x${string}` 
+      }];
+    }
+
+    if (!calls || calls.length === 0) {
       console.error("No calls found in blueprint data");
       return null;
     }
