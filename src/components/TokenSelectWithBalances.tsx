@@ -157,54 +157,57 @@ export default function TokenSelectWithBalances({
                 >
                   {tokenAndBalanceMap
                     ? [...tokenAndBalanceMap.keys()].map((token) => {
-                        const balance = tokenAndBalanceMap.get(token);
-                        if (!balance || filterTokens?.has(token)) return null;
-                        const price = TokenValue.ZERO;
-                        if (token.isNative && balanceFrom === FarmFromMode.INTERNAL) {
-                          return null;
-                        }
+                      const balance = tokenAndBalanceMap.get(token);
+                      if (!balance || filterTokens?.has(token)) return null;
+                      if (token.isNative && balanceFrom === FarmFromMode.INTERNAL) {
+                        return null;
+                      }
+                      const tokenPrice = priceData.tokenPrices.get(token);
+                      const price = tokenPrice?.instant ?? TokenValue.ZERO;
 
-                        return (
-                          <TokenSelectItem
-                            key={`single-select-bal-${token.address}`}
-                            token={token}
-                            balanceAmount={balance}
-                            price={price}
-                            onClick={() => setToken(token)}
-                            noBalance={noBalances}
-                          />
-                        );
-                      })
+                      return (
+                        <TokenSelectItem
+                          key={`single-select-bal-${token.address}`}
+                          token={token}
+                          balanceAmount={balance}
+                          price={price}
+                          onClick={() => setToken(token)}
+                          noBalance={noBalances}
+                        />
+                      );
+                    })
                     : [...balances.keys()].map((token) => {
-                        const balance = balances.get(token);
-                        if (!balance || filterTokens?.has(token)) return null;
-                        if (token.isNative && balanceFrom === FarmFromMode.INTERNAL) {
-                          return null;
-                        }
-                        const tokenPrice = priceData.tokenPrices.get(token);
-                        const price = tokenPrice?.instant ?? TokenValue.ZERO;
-                        let balanceAmount: TokenValue;
-                        switch (balanceFrom) {
-                          case FarmFromMode.EXTERNAL:
-                            balanceAmount = balance.external;
-                            break;
-                          case FarmFromMode.INTERNAL:
-                            balanceAmount = balance.internal;
-                            break;
-                          default:
-                            balanceAmount = balance.total;
-                        }
-                        return (
-                          <TokenSelectItem
-                            key={`single-select-${selectKey}-${token.address}`}
-                            token={token}
-                            balanceAmount={balanceAmount}
-                            price={price}
-                            onClick={() => setToken(token)}
-                            noBalance={noBalances}
-                          />
-                        );
-                      })}
+                      const balance = balances.get(token);
+                      if (!balance || filterTokens?.has(token)) return null;
+                      if (token.isNative && balanceFrom === FarmFromMode.INTERNAL) {
+                        return null;
+                      }
+                      const tokenPrice = priceData.tokenPrices.get(token);
+
+
+                      const price = tokenPrice?.instant ?? TokenValue.ZERO;
+                      let balanceAmount: TokenValue;
+                      switch (balanceFrom) {
+                        case FarmFromMode.EXTERNAL:
+                          balanceAmount = balance.external;
+                          break;
+                        case FarmFromMode.INTERNAL:
+                          balanceAmount = balance.internal;
+                          break;
+                        default:
+                          balanceAmount = balance.total;
+                      }
+                      return (
+                        <TokenSelectItem
+                          key={`single-select-${selectKey}-${token.address}`}
+                          token={token}
+                          balanceAmount={balanceAmount}
+                          price={price}
+                          onClick={() => setToken(token)}
+                          noBalance={noBalances}
+                        />
+                      );
+                    })}
                 </ToggleGroup>
               </div>
             </ScrollArea>
