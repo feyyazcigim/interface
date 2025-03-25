@@ -1,9 +1,9 @@
-import { TV, TokenValue } from "@/classes/TokenValue";
+import { TV } from "@/classes/TokenValue";
 import { ComboInputField } from "@/components/ComboInputField";
 import OutputDisplay from "@/components/OutputDisplay";
 import SmartSubmitButton from "@/components/SmartSubmitButton";
 import Warning from "@/components/ui/Warning";
-import { PODS } from "@/constants/internalTokens";
+import { PODS, SEEDS, STALK } from "@/constants/internalTokens";
 import sowWithMin from "@/encoders/sowWithMin";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
@@ -15,7 +15,7 @@ import { useTemperature } from "@/state/useFieldData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { stringEq, stringToNumber, stringToStringNum } from "@/utils/string";
-import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
+import { AdvancedFarmCall, FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -25,7 +25,7 @@ import settingsIcon from "@/assets/misc/Settings.svg";
 import FrameAnimator from "@/components/LoadingSpinner";
 import MobileActionBar from "@/components/MobileActionBar";
 
-import { Row } from "@/components/Container";
+import { Col, Row } from "@/components/Container";
 import RoutingAndSlippageInfo, { useRoutingAndSlippageWarning } from "@/components/RoutingAndSlippageInfo";
 import TextSkeleton from "@/components/TextSkeleton";
 import { Button } from "@/components/ui/Button";
@@ -34,7 +34,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover
 import { Switch } from "@/components/ui/Switch";
 import useDelayedLoading from "@/hooks/display/useDelayedLoading";
 import { useTokenMap } from "@/hooks/pinto/useTokenMap";
-import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
+import useBuildSwapQuote, { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useMaxBuy from "@/hooks/swap/useMaxBuy";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
@@ -43,6 +43,8 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { sortAndPickCrates } from "@/utils/convert";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { getBalanceFromMode } from "@/utils/utils";
+import siloWithdraw from "@/encoders/silo/withdraw";
+import { HashString } from "@/utils/types.generic";
 
 type SowProps = {
   isMorning: boolean;
@@ -96,7 +98,12 @@ function Sow({ isMorning }: SowProps) {
     slippage,
     disabled: tokenIn.isMain || stringToNumber(amountIn) <= 0 || maxSow?.lte(0),
   });
-  const swapBuild = useBuildSwapQuote(swap.data, balanceFrom, FarmToMode.INTERNAL);
+  // const swapBuild = useBuildSwapQuote(swap.data, balanceFrom, FarmToMode.INTERNAL);
+  const buildSwapAsync = useBuildSwapQuoteAsync(
+    swap.data,
+    fromSilo ? FarmFromMode.INTERNAL : balanceFrom, // if we are using silo deposits, fromMode = INTERNAL
+    FarmToMode.INTERNAL,
+  );
   const swapSummary = useSwapSummary(swap.data);
 
   const { slippageWarning, canProceed } = useRoutingAndSlippageWarning({
@@ -105,12 +112,7 @@ function Sow({ isMorning }: SowProps) {
     txnType: "Swap",
   });
 
-  const withdrawBreakdown = useWithdrawDepositBreakdown(
-    farmerSilo.deposits,
-    tokenIn,
-    stringToStringNum(amountIn),
-    fromSilo,
-  );
+  const withdrawBreakdown = useWithdrawDepositBreakdown(farmerSilo.deposits, tokenIn, amountIn, fromSilo);
 
   const tokenInBalance = farmerBalances.balances.get(tokenIn);
 
@@ -143,7 +145,7 @@ function Sow({ isMorning }: SowProps) {
       return multiplier.mul(numPinto);
     }
 
-    return TokenValue.ZERO;
+    return TV.ZERO;
   }, [amountIn, currentTemperature, isUsingMain, swap.data?.buyAmount]);
 
   const onSubmit = useCallback(async () => {
@@ -151,7 +153,6 @@ function Sow({ isMorning }: SowProps) {
       return;
     }
 
-    setSubmitting(true);
     try {
       if (!account.address) {
         throw new Error("Signer required");
@@ -162,10 +163,9 @@ function Sow({ isMorning }: SowProps) {
       if (currentTemperature.lte(0)) {
         throw new Error("Current temperature must be greater than 0");
       }
+      setSubmitting(true);
 
-      const amount = isUsingMain
-        ? TokenValue.fromHuman(amountIn || 0n, tokenIn.decimals)
-        : swap.data?.buyAmount || TokenValue.ZERO;
+      const amount = isUsingMain ? TV.fromHuman(amountIn || 0n, tokenIn.decimals) : swap.data?.buyAmount || TV.ZERO;
 
       if (amount.lte(0)) {
         throw new Error("Amount must be greater than 0");
@@ -174,12 +174,12 @@ function Sow({ isMorning }: SowProps) {
       toast.loading(`Sowing...`);
 
       // temperature at 6 decimals
-      const _minTemp = TokenValue.fromHuman(minTemperature, PODS.decimals);
+      const _minTemp = TV.fromHuman(minTemperature, PODS.decimals);
       const minTemp = (_minTemp.gt(currentTemperature) ? _minTemp : currentTemperature).subSlippage(slippage);
 
-      const minSoil = TokenValue.ZERO;
+      const minSoil = TV.ZERO;
 
-      if (isUsingMain) {
+      if (isUsingMain && !fromSilo) {
         return writeWithEstimateGas({
           address: diamond,
           abi: beanstalkAbi,
@@ -187,17 +187,43 @@ function Sow({ isMorning }: SowProps) {
           args: [amount.toBigInt(), minTemp.toBigInt(), minSoil.toBigInt(), Number(balanceFrom)],
         });
       }
-      if (!swapBuild || !swapBuild.advFarm.length) {
-        throw new Error("No swap quote");
+
+      const advFarm: AdvancedFarmCall[] = [];
+
+      // If we are using silo deposits, withdraw first to INTERNAL
+      if (fromSilo) {
+        if (!withdrawBreakdown) {
+          throw new Error("Unable to calculate Silo withdraw");
+        }
+
+        const withdrawStruct = siloWithdraw(
+          tokenIn,
+          withdrawBreakdown.crates.map((crate) => crate.stem),
+          withdrawBreakdown.crates.map((crate) => crate.amount),
+          FarmToMode.INTERNAL,
+        );
+
+        advFarm.push(withdrawStruct);
       }
 
-      const { clipboard } = await swapBuild.deriveClipboardWithOutputToken(mainToken, 0, account.address);
-      const sowCallStruct = sowWithMin(amount, minTemp, minSoil, FarmFromMode.INTERNAL, clipboard);
+      let clipboard: HashString | undefined = undefined;
 
-      const advFarm = [...swapBuild.advFarm.getSteps()];
+
+      if (!isUsingMain) {
+        const swapBuild = await buildSwapAsync?.();
+        if (!swapBuild) {
+          throw new Error("No swap quote");
+        }
+
+        const result = await swapBuild.deriveClipboardWithOutputToken(mainToken, 0, account.address);
+        clipboard = result.clipboard;
+        advFarm.push(...swapBuild.advFarm.getSteps());
+      };
+
+      const sowCallStruct = sowWithMin(amount, minTemp, minSoil, FarmFromMode.INTERNAL, clipboard);
       advFarm.push(sowCallStruct);
 
-      const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals).toBigInt() : 0n;
+      const value = tokenIn.isNative ? TV.fromHuman(amountIn, tokenIn.decimals).toBigInt() : 0n;
 
       return writeWithEstimateGas({
         address: diamond,
@@ -217,10 +243,11 @@ function Sow({ isMorning }: SowProps) {
   }, [
     writeWithEstimateGas,
     setSubmitting,
+    buildSwapAsync,
+    withdrawBreakdown,
     diamond,
     slippage,
     swap.data,
-    swapBuild,
     account.address,
     amountIn,
     tokenIn,
@@ -286,8 +313,11 @@ function Sow({ isMorning }: SowProps) {
 
   const buttonText = inputError ? "Amount too large" : "Sow";
 
+  const renderWarnings =
+    (tokenSource === "deposits" && tokenIn.isLP) || ready || (!tokenIn.isMain && swapSummary?.swap);
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <div>
         <div className="flex flex-row justify-between items-center">
           <div className="pinto-body-light text-pinto-light">Amount and token to sow</div>
@@ -301,9 +331,7 @@ function Sow({ isMorning }: SowProps) {
         <ComboInputField
           amount={amountIn}
           disableInput={isConfirming}
-          customMaxAmount={
-            maxSow?.gt(0) && tokenBalance?.gt(0) ? TokenValue.min(tokenBalance, maxSow) : TokenValue.ZERO
-          }
+          customMaxAmount={maxSow?.gt(0) && tokenBalance?.gt(0) ? TV.min(tokenBalance, maxSow) : TV.ZERO}
           setAmount={setAmountIn}
           setToken={setTokenIn}
           setBalanceFrom={setBalanceFrom}
@@ -327,9 +355,6 @@ function Sow({ isMorning }: SowProps) {
           <Switch checked={tokenSource === "deposits"} onCheckedChange={handleOnCheckedChange} />
         </TextSkeleton>
       </Row>
-      {tokenSource === "deposits" && tokenIn.isLP ? (
-        <Warning>Withdrawing from your LP deposits removes liquidity as single sided {mainToken.symbol}.</Warning>
-      ) : null}
       {totalSoil.eq(0) && maxSow?.lte(0) && (
         <Warning>Your usable balance is 0.00 because there is no Soil available.</Warning>
       )}
@@ -346,19 +371,52 @@ function Sow({ isMorning }: SowProps) {
             <OutputDisplay.Item label="Place in line">
               <OutputDisplay.Value value={formatter.noDec(podLine)} />
             </OutputDisplay.Item>
+            {fromSilo ? (
+              <>
+                <OutputDisplay.Item label="Stalk">
+                  <OutputDisplay.Value
+                    value={formatter.token(withdrawBreakdown?.stalk, STALK)}
+                    delta="down"
+                    suffix="Stalk"
+                    token={STALK}
+                    showArrow
+                  />
+                </OutputDisplay.Item>
+                <OutputDisplay.Item label="Seed">
+                  <OutputDisplay.Value
+                    value={formatter.token(withdrawBreakdown?.seeds, SEEDS)}
+                    token={SEEDS}
+                    delta="down"
+                    suffix="Seeds"
+                    showArrow
+                  />
+                </OutputDisplay.Item>
+              </>
+            ) : null}
           </OutputDisplay>
-          <Warning>Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.</Warning>
         </div>
       ) : null}
-      {!tokenIn.isMain && swapSummary?.swap && (
-        <RoutingAndSlippageInfo
-          title="Total Swap Slippage"
-          swapSummary={swapSummary}
-          preferredSummary="swap"
-          txnType="Swap"
-          tokenIn={tokenIn}
-          tokenOut={mainToken}
-        />
+      {renderWarnings && (
+        <div>
+          <div className="flex flex-col gap-4">
+            {tokenSource === "deposits" && tokenIn.isLP ? (
+              <Warning>Withdrawing from your LP deposits removes liquidity as single sided {mainToken.symbol}.</Warning>
+            ) : null}
+            {ready && (
+              <Warning>Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.</Warning>
+            )}
+          </div>
+          {!tokenIn.isMain && swapSummary?.swap && (
+            <RoutingAndSlippageInfo
+              title="Total Swap Slippage"
+              swapSummary={swapSummary}
+              preferredSummary="swap"
+              txnType="Swap"
+              tokenIn={tokenIn}
+              tokenOut={mainToken}
+            />
+          )}
+        </div>
       )}
       {slippageWarning}
       <div className="hidden sm:flex flex-row gap-2">
@@ -478,8 +536,8 @@ const useMapSiloDepositsToAmounts = (deposits: ReturnType<typeof useFarmerSilo>[
 
   return useMemo(
     () =>
-      Object.values(tokenMap).reduce<Map<Token, TokenValue>>(
-        (acc, curr) => acc.set(curr, deposits.get(curr)?.amount ?? TokenValue.ZERO),
+      Object.values(tokenMap).reduce<Map<Token, TV>>(
+        (acc, curr) => acc.set(curr, deposits.get(curr)?.amount ?? TV.ZERO),
         new Map(),
       ),
     [deposits, tokenMap],
@@ -489,21 +547,30 @@ const useMapSiloDepositsToAmounts = (deposits: ReturnType<typeof useFarmerSilo>[
 const useWithdrawDepositBreakdown = (
   deposits: ReturnType<typeof useFarmerSilo>["deposits"],
   token: Token,
-  amountIn: string,
+  amountIn: string | undefined,
   enabled: boolean,
 ) => {
-  return useMemo(() => {
-    if (!enabled) return;
+  const [breakdown, setBreakdown] = useState<ReturnType<typeof sortAndPickCrates> | undefined>(undefined);
 
+  const inputAmount = stringToStringNum(amountIn ?? "0");
+
+  useEffect(() => {
+    if (!enabled || inputAmount === "0") setBreakdown(undefined);
+  }, [enabled, inputAmount]);
+
+  useEffect(() => {
+    if (!enabled) return;
     const tokenDeposits = deposits.get(token);
     if (!tokenDeposits) return;
 
     // Take the minimum of the amount in and the amount in the deposits
     // If the amount is greater than amount deposited, sortAndPickCrates will throw
-    const amount = TV.min(TV.fromHuman(amountIn, token.decimals), tokenDeposits.amount);
+    const amount = TV.min(TV.fromHuman(stringToStringNum(inputAmount ?? "0"), token.decimals), tokenDeposits.amount);
 
-    return sortAndPickCrates("withdraw", amount, tokenDeposits.deposits, token);
-  }, [deposits, amountIn, enabled]);
+    setBreakdown(sortAndPickCrates("withdraw", amount, tokenDeposits.deposits));
+  }, [inputAmount, deposits, enabled, token]);
+
+  return breakdown;
 };
 
 // ------------------------------ Functions ------------------------------
