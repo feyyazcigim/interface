@@ -41,51 +41,25 @@ export function decodeCallData(callData: string) {
           <div className="space-y-2">
             <div className="text-gray-500">Function: sowBlueprintv0</div>
             <div className="pl-4 space-y-1 text-gray-600">
-              <div>
-                sourceTokenIndices: [
-                {params.sowParams.sourceTokenIndices.join(", ")}]
-              </div>
+              <div>sourceTokenIndices: [{params.sowParams.sourceTokenIndices.join(", ")}]</div>
               <div>
                 sowAmounts:
                 <div className="pl-4">
-                  <div>
-                    totalAmountToSow:{" "}
-                    {params.sowParams.sowAmounts.totalAmountToSow.toString()}
-                  </div>
-                  <div>
-                    minAmountToSowPerSeason:{" "}
-                    {params.sowParams.sowAmounts.minAmountToSowPerSeason.toString()}
-                  </div>
-                  <div>
-                    maxAmountToSowPerSeason:{" "}
-                    {params.sowParams.sowAmounts.maxAmountToSowPerSeason.toString()}
-                  </div>
+                  <div>totalAmountToSow: {params.sowParams.sowAmounts.totalAmountToSow.toString()}</div>
+                  <div>minAmountToSowPerSeason: {params.sowParams.sowAmounts.minAmountToSowPerSeason.toString()}</div>
+                  <div>maxAmountToSowPerSeason: {params.sowParams.sowAmounts.maxAmountToSowPerSeason.toString()}</div>
                 </div>
               </div>
               <div>minTemp: {params.sowParams.minTemp.toString()}</div>
-              <div>
-                maxPodlineLength: {params.sowParams.maxPodlineLength.toString()}
-              </div>
-              <div>
-                maxGrownStalkPerBdv:{" "}
-                {params.sowParams.maxGrownStalkPerBdv.toString()}
-              </div>
-              <div>
-                runBlocksAfterSunrise:{" "}
-                {params.sowParams.runBlocksAfterSunrise.toString()}
-              </div>
+              <div>maxPodlineLength: {params.sowParams.maxPodlineLength.toString()}</div>
+              <div>maxGrownStalkPerBdv: {params.sowParams.maxGrownStalkPerBdv.toString()}</div>
+              <div>runBlocksAfterSunrise: {params.sowParams.runBlocksAfterSunrise.toString()}</div>
               <div>
                 operatorParams:
                 <div className="pl-4">
-                  <div>
-                    operatorTipAmount:{" "}
-                    {params.opParams.operatorTipAmount.toString()}
-                  </div>
+                  <div>operatorTipAmount: {params.opParams.operatorTipAmount.toString()}</div>
                   <div>tipAddress: {params.opParams.tipAddress}</div>
-                  <div>
-                    whitelistedOperators: [
-                    {params.opParams.whitelistedOperators.join(", ")}]
-                  </div>
+                  <div>whitelistedOperators: [{params.opParams.whitelistedOperators.join(", ")}]</div>
                 </div>
               </div>
             </div>
@@ -113,7 +87,7 @@ export function decodeCallData(callData: string) {
               ? "advancedFarm"
               : selector === SOW_BLUEPRINT_V0_SELECTOR
                 ? "sowBlueprintv0"
-                : null)
+                : null),
   );
 
   if (!functionAbi || functionAbi.type !== "function" || !functionAbi.inputs) {
@@ -148,9 +122,7 @@ export function decodeCallData(callData: string) {
             </div>
           </div>
         )}
-        {selector === "0x36bfafbd" && (
-          <div className="text-gray-500">Raw Data: {data}</div>
-        )}
+        {selector === "0x36bfafbd" && <div className="text-gray-500">Raw Data: {data}</div>}
       </div>
     );
   }
@@ -229,12 +201,8 @@ export function HighlightedCallData({
           <div className={className}>
             <div className="space-y-4">
               <div>
-                <div className="text-sm text-gray-500 mb-1">
-                  sowBlueprintv0 call:
-                </div>
-                <div className="text-gray-500">
-                  {decodeCallData(blueprintData)}
-                </div>
+                <div className="text-sm text-gray-500 mb-1">sowBlueprintv0 call:</div>
+                <div className="text-gray-500">{decodeCallData(blueprintData)}</div>
               </div>
             </div>
           </div>
@@ -255,78 +223,6 @@ export function HighlightedCallData({
     if (isRequisitionData && decodeAbi) {
       return <div className={className}>{targetData}</div>;
     }
-
-    if (decodeAbi) {
-      // For encoded farm data, show the advancedFarm call first
-      if (!isRequisitionData && targetData === encodedData) {
-        return (
-          <div className={className}>
-            <div className="space-y-4">
-              <div>
-                <div className="text-sm text-gray-500 mb-1">
-                  advancedFarm call:
-                </div>
-                <div className="text-gray-500">
-                  {decodeCallData(blueprintData)}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      // For individual farm calls section
-      return (
-        <div className={className}>
-          <div className="space-y-4">
-            <div>
-              <div className="text-sm text-gray-500 mb-1">sowWithMin call:</div>
-              <div className="text-blue-500">
-                {decodeCallData(sowWithMinCall)}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-500 mb-1">
-                transferToken call:
-              </div>
-              <div className="text-orange-500">
-                {decodeCallData(transferTokenCall)}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Find and highlight both calls within the target data
-    const sowWithMinCallIndex = targetData.indexOf(sowWithMinCall.slice(2));
-    const transferTokenCallIndex = targetData.indexOf(
-      transferTokenCall.slice(2)
-    );
-    if (sowWithMinCallIndex === -1 || transferTokenCallIndex === -1)
-      return targetData;
-
-    // Sort indices to handle the calls in order
-    const segments: (string | JSX.Element)[] = [];
-    let lastIndex = 0;
-
-    [
-      [sowWithMinCallIndex, sowWithMinCall, "blue"],
-      [transferTokenCallIndex, transferTokenCall, "orange"],
-    ]
-      .sort((a, b) => a[0] - b[0])
-      .forEach(([index, call, color]) => {
-        segments.push(targetData.slice(lastIndex, index));
-        segments.push(
-          <span key={index} className={`text-${color}-500`}>
-            {targetData.slice(index, index + (call as string).length - 2)}
-          </span>
-        );
-        lastIndex = index + (call as string).length - 2;
-      });
-    segments.push(targetData.slice(lastIndex));
-
-    return <div className={className}>{segments}</div>;
   } catch {
     return targetData;
   }
