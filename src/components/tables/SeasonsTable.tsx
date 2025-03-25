@@ -177,7 +177,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
     );
   }, areEqual);
   return (
-    <Table overscroll className="table-fixed w-[0px]" ref={tableRef}>
+    <Table overscroll className="table-fixed w-[0px] mx-4" ref={tableRef}>
       <TableHeader>
         <TableRow noHoverMute className="z-[1] [&>*]:text-pinto-gray-5">
           {seasonColumns.map(({ id, name, classes }) => {
