@@ -14,7 +14,7 @@ import { useInvalidateField, usePodLine, useTotalSoil } from "@/state/useFieldDa
 import { useTemperature } from "@/state/useFieldData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { stringEq, stringToNumber } from "@/utils/string";
+import { stringEq, stringToNumber, stringToStringNum } from "@/utils/string";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -37,59 +37,56 @@ import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { getBalanceFromMode } from "@/utils/utils";
+import TextSkeleton from "@/components/TextSkeleton";
+import { Switch } from "@/components/ui/Switch";
+import { Row } from "@/components/Container";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
+import { sortAndPickCrates } from "@/utils/convert";
+import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 
 type SowProps = {
   isMorning: boolean;
 };
 
-const useFilterTokens = (balances: ReturnType<typeof useFarmerBalances>["balances"]) => {
-  return useMemo(() => {
-    const set = new Set<Token>();
-
-    [...balances.keys()].forEach((token) => {
-      if (token.isLP || token.isSiloWrapped || token.is3PSiloWrapped) {
-        set.add(token);
-      }
-    });
-
-    return set;
-  }, [balances]);
-};
-
 function Sow({ isMorning }: SowProps) {
+  // Hooks
+  const queryClient = useQueryClient();
+
+  // State Hooks
   const temperature = useTemperature();
   const farmerBalances = useFarmerBalances();
-  const totalSoil = useTotalSoil().totalSoil;
+  const farmerSilo = useFarmerSilo();
+  const { totalSoil } = useTotalSoil();
   const podLine = usePodLine();
   const account = useAccount();
   const diamond = useProtocolAddress();
   const invalidateField = useInvalidateField();
   const { queryKeys: farmerFieldQueryKeys } = useFarmerField();
-  const mainToken = useTokenData().mainToken;
-  const queryClient = useQueryClient();
-  const filterTokens = useFilterTokens(farmerBalances.balances);
+  const { mainToken } = useTokenData();
 
   const { preferredToken, loading: preferredLoading } = usePreferredInputToken({
     filterLP: true,
   });
+  const depositedByWhitelistedToken = useMapSiloDepositsToAmounts(farmerSilo.deposits);
 
-  const [didSetPreferred, setDidSetPreferred] = useState(false);
-
+  // Local State
+  const [tokenSource, setTokenSource] = useState<TokenSource>("balances");
+  const [tokenIn, setTokenIn] = useState<Token>(preferredToken);
   const [amountIn, setAmountIn] = useState("0");
-  const [tokenIn, setTokenIn] = useState(preferredToken);
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [slippage, setSlippage] = useState(0.1);
+  const [didSetPreferred, setDidSetPreferred] = useState(false);
   const [inputError, setInputError] = useState(false);
+  const filterTokens = useFilterTokens(tokenSource);
+  const [minTemperature, setMinTemperature] = useState(Math.max(temperature.scaled.toNumber(), 1));
+  const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
 
-  useEffect(() => {
-    // If we are still calculating the preferred token, set the token to the preferred token once it's been set.
-    if (preferredLoading) return;
-    if (preferredToken && !didSetPreferred) {
-      setTokenIn(preferredToken);
-      setDidSetPreferred(true);
-    }
-  }, [preferredToken, preferredLoading, didSetPreferred]);
+  // Derived State
+  const fromSilo = tokenSource === "deposits";
+  const numIn = stringToNumber(amountIn);
+  const currentTemperature = temperature.scaled;
 
+  // Swap / Quotes
   const maxSow = useMaxBuy(tokenIn, slippage, totalSoil);
 
   const swap = useSwap({
@@ -108,8 +105,12 @@ function Sow({ isMorning }: SowProps) {
     txnType: "Swap",
   });
 
-  const currentTemperature = temperature.scaled;
-  const [minTemperature, setMinTemperature] = useState(Math.max(currentTemperature.toNumber(), 1));
+  const withdrawBreakdown = useWithdrawDepositBreakdown(
+    farmerSilo.deposits,
+    tokenIn,
+    stringToStringNum(amountIn),
+    fromSilo
+  );
 
   const tokenInBalance = farmerBalances.balances.get(tokenIn);
 
@@ -231,11 +232,36 @@ function Sow({ isMorning }: SowProps) {
     inputError,
   ]);
 
-  const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
 
-  const numIn = stringToNumber(amountIn);
+  const handleOnCheckedChange = (checked: boolean) => {
+    setAmountIn("0");
+    const newTokenSource = checked ? "deposits" : "balances";
+    if (newTokenSource === "deposits") {
+      setTokenIn(mainToken);
+    } else {
+      setTokenIn(preferredToken);
+    }
+    setTokenSource(newTokenSource);
+  };
 
-  // reset amount in when token in changes
+  // Effects
+  // Initialize the token source
+  useEffect(() => {
+    // If we are still calculating the preferred token,
+    //  set the token to the preferred token once it's been set.
+    if (didSetPreferred || preferredLoading) return;
+    if (tokenSource === "balances") {
+      if (preferredToken) {
+        setTokenIn(preferredToken);
+        setDidSetPreferred(true);
+      }
+    }
+
+    if (tokenSource === "deposits") {
+      setTokenIn(mainToken);
+      setDidSetPreferred(true);
+    }
+  }, [preferredToken, preferredLoading, didSetPreferred, tokenSource]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: only reset when token in changes
   useEffect(() => {
@@ -244,19 +270,18 @@ function Sow({ isMorning }: SowProps) {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: only reset when swap data changes
   useEffect(() => {
-    if (swap?.isLoading) {
-      setLoadingTrue();
-    } else {
-      setLoadingFalse();
-    }
+    if (swap?.isLoading) setLoadingTrue();
+    else setLoadingFalse();
   }, [swap?.isLoading]);
 
   const isLoading = (numIn > 0 && loading) || (pods?.lte(0) && numIn > 0);
-
   const ready = pods?.gt(0) && podLine.gte(0) && maxSow?.gt(0);
 
-  const balanceFromMode = getBalanceFromMode(tokenInBalance, balanceFrom);
-  const balanceExceedsSoil = balanceFromMode.gt(0) && maxSow && balanceFromMode.gte(maxSow);
+  const tokenBalance = fromSilo
+    ? depositedByWhitelistedToken.get(tokenIn)
+    : getBalanceFromMode(tokenInBalance, balanceFrom);
+
+  const balanceExceedsSoil = tokenBalance?.gt(0) && maxSow && tokenBalance?.gte(maxSow);
 
   const ctaDisabled = isLoading || isConfirming || submitting || !ready || inputError || !canProceed;
 
@@ -277,14 +302,15 @@ function Sow({ isMorning }: SowProps) {
         <ComboInputField
           amount={amountIn}
           disableInput={isConfirming}
-          customMaxAmount={maxSow?.gt(0) ? TokenValue.min(balanceFromMode, maxSow) : TokenValue.ZERO}
+          customMaxAmount={maxSow?.gt(0) && tokenBalance?.gt(0) ? TokenValue.min(tokenBalance, maxSow) : TokenValue.ZERO}
           setAmount={setAmountIn}
           setToken={setTokenIn}
           setBalanceFrom={setBalanceFrom}
           setError={setInputError}
           selectedToken={tokenIn}
           error={inputError}
-          balanceFrom={balanceFrom}
+          tokenAndBalanceMap={fromSilo ? depositedByWhitelistedToken : undefined}
+          balanceFrom={fromSilo ? undefined : balanceFrom}
           disableButton={isConfirming}
           connectedAccount={!!account.address}
           altText={balanceExceedsSoil ? "Usable balance:" : undefined}
@@ -293,6 +319,17 @@ function Sow({ isMorning }: SowProps) {
           disableClamping={true}
         />
       </div>
+      <Row className="w-full justify-between mt-4">
+        <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">
+          Use Silo deposits
+        </div>
+        <TextSkeleton loading={false} className="w-11 h-6">
+          <Switch
+            checked={tokenSource === "deposits"}
+            onCheckedChange={handleOnCheckedChange}
+          />
+        </TextSkeleton>
+      </Row>
       {totalSoil.eq(0) && maxSow?.lte(0) && (
         <Warning>Your usable balance is 0.00 because there is no Soil available.</Warning>
       )}
@@ -353,6 +390,8 @@ function Sow({ isMorning }: SowProps) {
 
 export default Sow;
 
+// ------------------------------ SETTINGS POPOVER ------------------------------
+
 const SettingsPoppover = ({
   slippage,
   setSlippage,
@@ -367,21 +406,9 @@ const SettingsPoppover = ({
   const [internalAmount, setInternalAmount] = useState(slippage);
   const [internalMinTemperature, setInternalMinTemperature] = useState(minTemperature);
 
-  useDebouncedEffect(
-    () => {
-      setSlippage(internalAmount);
-    },
-    [internalAmount],
-    100,
-  );
-
-  useDebouncedEffect(
-    () => {
-      setMinTemperature(internalMinTemperature);
-    },
-    [internalMinTemperature],
-    100,
-  );
+  // Effects
+  useDebouncedEffect(() => setSlippage(internalAmount), [internalAmount], 100);
+  useDebouncedEffect(() => setMinTemperature(internalMinTemperature), [internalMinTemperature], 100);
 
   return (
     <Popover>
@@ -418,4 +445,66 @@ const SettingsPoppover = ({
       </PopoverContent>
     </Popover>
   );
+};
+
+// ------------------------------ Types ------------------------------
+
+type TokenSource = "deposits" | "balances";
+
+// ------------------------------ Hooks ------------------------------
+
+const useFilterTokens = (mode: TokenSource) => {
+  const tokenMap = useTokenMap();
+  return useMemo(() => {
+    const set = new Set<Token>();
+
+    Object.values(tokenMap).forEach((token) => {
+      if (mode === "balances") {
+        if (token.isLP || token.isSiloWrapped || token.is3PSiloWrapped) {
+          set.add(token);
+        }
+      } else if (mode === "deposits") {
+        if (
+          token.isSiloWrapped ||
+          token.is3PSiloWrapped ||
+          (!token.isLP && !token.isMain)
+        ) {
+          set.add(token);
+        }
+      }
+
+    })
+    return set;
+  }, [tokenMap, mode]);
+};
+
+const useMapSiloDepositsToAmounts = (deposits: ReturnType<typeof useFarmerSilo>['deposits']) => {
+  return useMemo(() => {
+    const map = new Map<Token, TokenValue>();
+    for (const [token, deposit] of deposits) {
+      map.set(token, deposit.amount);
+    }
+
+    return map;
+  }, [deposits])
+};
+
+const useWithdrawDepositBreakdown = (
+  deposits: ReturnType<typeof useFarmerSilo>['deposits'],
+  token: Token,
+  amountIn: string,
+  enabled: boolean,
+) => {
+  return useMemo(() => {
+    if (!enabled) return;
+
+    const tokenDeposits = deposits.get(token);
+    if (!tokenDeposits) return;
+
+    // Take the minimum of the amount in and the amount in the deposits
+    // If the amount is greater than amount deposited, sortAndPickCrates will throw
+    const amount = TV.min(TV.fromHuman(amountIn, token.decimals), tokenDeposits.amount);
+
+    return sortAndPickCrates("withdraw", amount, tokenDeposits.deposits, token);
+  }, [deposits, amountIn, enabled])
 };
