@@ -12,7 +12,7 @@ import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { http, PublicClient, createPublicClient, isAddress } from "viem";
+import { http, PublicClient, createPublicClient, isAddress, TransactionReceipt, decodeEventLog } from "viem";
 import { hardhat } from "viem/chains";
 import { useAccount, useBlockNumber, useChainId } from "wagmi";
 import MorningCard from "./MorningCard";
@@ -21,6 +21,9 @@ import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
 import Text from "./ui/Text";
 import { mockAddressAtom } from "@/Web3Provider";
+import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
+import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
+import { siloHelpersABI } from "@/constants/abi/SiloHelpersABI";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
@@ -33,6 +36,9 @@ const publicClient = createPublicClient({
   chain: hardhat,
   transport: http(),
 });
+
+// Merge the ABIs
+const combinedABI = [...beanstalkAbi, ...sowBlueprintv0ABI, ...siloHelpersABI];
 
 export default function DevPage() {
   const { address } = useAccount();
@@ -77,6 +83,14 @@ export default function DevPage() {
   const [blockSkipAmount, setBlockSkipAmount] = useState("6"); // default to 6 blocks because the morning auction updates every 6 blocks (12 seconds on eth, 2 seconds on base, 12/2 = 6)
 
   const [mockAddress, setMockAddress] = useAtom(mockAddressAtom);
+
+  const [txHash, setTxHash] = useState<string>("");
+  const [txEvents, setTxEvents] = useState<{
+    eventName: string;
+    args: Record<string, any>;
+    address: string;
+    logIndex: number;
+  }[] | null>(null);
 
   useEffect(() => {
     const checkServer = async () => {
@@ -224,6 +238,58 @@ export default function DevPage() {
     } catch (error) {
       console.error("Quick mint failed:", error);
       toast.error("Failed to mint tokens");
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const analyzeTxEvents = async () => {
+    if (!txHash || !publicClient) {
+      toast.error("Please enter a valid transaction hash");
+      return;
+    }
+
+    try {
+      setLoading("analyzeTx");
+      const receipt = await publicClient.getTransactionReceipt({
+        hash: txHash as `0x${string}`,
+      });
+
+      const decodedEvents = receipt.logs.map((log, index) => {
+        try {
+          const decoded = decodeEventLog({
+            abi: combinedABI, // Use the combined ABI
+            data: log.data,
+            topics: log.topics,
+          });
+
+          return {
+            eventName: decoded.eventName,
+            args: decoded.args as Record<string, any>,
+            address: log.address,
+            logIndex: log.logIndex,
+          };
+        } catch (error) {
+          // If we can't decode with any ABI, return a raw event
+          return {
+            eventName: "Unknown Event",
+            args: {
+              data: log.data,
+              topics: log.topics,
+            },
+            address: log.address,
+            logIndex: log.logIndex,
+          };
+        }
+      });
+
+      setTxEvents(decodedEvents);
+      console.log("Transaction Events:", decodedEvents);
+      toast.success("Transaction analyzed successfully");
+    } catch (error) {
+      console.error("Failed to analyze transaction:", error);
+      toast.error("Failed to analyze transaction");
+      setTxEvents(null);
     } finally {
       setLoading(null);
     }
@@ -536,6 +602,56 @@ export default function DevPage() {
           </div>
         </Card>
         <MorningAuctionDev executeTask={executeTask} skipBlocks={skipBlocks} />
+        <Card className="p-6">
+          <h2 className="text-2xl mb-4">Transaction Analysis</h2>
+          <div className="flex flex-col gap-4">
+            <div className="text-sm text-gray-500">
+              Paste a transaction hash to see all events that occurred in that transaction.
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Transaction Hash"
+                value={txHash}
+                onChange={(e) => setTxHash(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                onClick={analyzeTxEvents}
+                disabled={!txHash || loading === "analyzeTx"}
+              >
+                Analyze
+              </Button>
+            </div>
+            {txEvents && (
+              <div className="mt-4 space-y-4">
+                <h3 className="text-lg font-medium">Events:</h3>
+                <div className="space-y-4">
+                  {txEvents.map((event, index) => (
+                    <div key={index} className="p-4 border rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <span className="font-medium text-pinto-green-4">
+                          {event.eventName}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          Log Index: {event.logIndex}
+                        </span>
+                      </div>
+                      <div className="text-sm font-mono mt-2">
+                        Contract: {event.address}
+                      </div>
+                      <div className="mt-2">
+                        <div className="text-sm font-medium">Arguments:</div>
+                        <pre className="mt-1 p-2 bg-gray-50 rounded text-sm overflow-x-auto">
+                          {JSON.stringify(event.args, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
       </div>
     </div>
   );
