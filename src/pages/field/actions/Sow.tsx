@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
 import { Switch } from "@/components/ui/Switch";
+import siloWithdraw from "@/encoders/silo/withdraw";
 import useDelayedLoading from "@/hooks/display/useDelayedLoading";
 import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import useBuildSwapQuote, { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
@@ -41,10 +42,9 @@ import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { sortAndPickCrates } from "@/utils/convert";
+import { HashString } from "@/utils/types.generic";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { getBalanceFromMode } from "@/utils/utils";
-import siloWithdraw from "@/encoders/silo/withdraw";
-import { HashString } from "@/utils/types.generic";
 
 type SowProps = {
   isMorning: boolean;
@@ -149,10 +149,6 @@ function Sow({ isMorning }: SowProps) {
   }, [amountIn, currentTemperature, isUsingMain, swap.data?.buyAmount]);
 
   const onSubmit = useCallback(async () => {
-    if (inputError) {
-      return;
-    }
-
     try {
       if (!account.address) {
         throw new Error("Signer required");
@@ -163,11 +159,18 @@ function Sow({ isMorning }: SowProps) {
       if (currentTemperature.lte(0)) {
         throw new Error("Current temperature must be greater than 0");
       }
+      if (inputError) {
+        throw new Error("Invalid input");
+      }
       setSubmitting(true);
 
-      const amount = isUsingMain ? TV.fromHuman(amountIn || 0n, tokenIn.decimals) : swap.data?.buyAmount || TV.ZERO;
+      const mainTokenAmount = isUsingMain ? TV.fromHuman(amountIn || 0n, tokenIn.decimals) : swap.data?.buyAmount ?? TV.ZERO;
 
-      if (amount.lte(0)) {
+      if (!mainTokenAmount.gt(0)) {
+        throw new Error("Sow amount must be greater than 0");
+      }
+
+      if (mainTokenAmount.lte(0)) {
         throw new Error("Amount must be greater than 0");
       }
 
@@ -184,7 +187,7 @@ function Sow({ isMorning }: SowProps) {
           address: diamond,
           abi: beanstalkAbi,
           functionName: "sowWithMin",
-          args: [amount.toBigInt(), minTemp.toBigInt(), minSoil.toBigInt(), Number(balanceFrom)],
+          args: [mainTokenAmount.toBigInt(), minTemp.toBigInt(), minSoil.toBigInt(), Number(balanceFrom)],
         });
       }
 
@@ -220,7 +223,7 @@ function Sow({ isMorning }: SowProps) {
         advFarm.push(...swapBuild.advFarm.getSteps());
       };
 
-      const sowCallStruct = sowWithMin(amount, minTemp, minSoil, FarmFromMode.INTERNAL, clipboard);
+      const sowCallStruct = sowWithMin(mainTokenAmount, minTemp, minSoil, FarmFromMode.INTERNAL_TOLERANT, clipboard);
       advFarm.push(sowCallStruct);
 
       const value = tokenIn.isNative ? TV.fromHuman(amountIn, tokenIn.decimals).toBigInt() : 0n;
@@ -249,6 +252,7 @@ function Sow({ isMorning }: SowProps) {
     slippage,
     swap.data,
     account.address,
+    fromSilo,
     amountIn,
     tokenIn,
     mainToken,
