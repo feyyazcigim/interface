@@ -9,9 +9,7 @@ import { PINTO } from "@/constants/tokens";
 import { PublicClient } from "viem";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
-
-// Add this constant definition at the top level of the file:
-const SILO_HELPERS_ADDRESS = "0x207b78B23Ee4b9F9D9b07102Ed5bBf8573004B8A" as `0x${string}`;
+import { SILO_HELPERS_ADDRESS, SOW_BLUEPRINT_V0_ADDRESS } from "@/utils/wagmi/wagmi.config";
 
 /**
  * Encodes three uint80 values into a bytes32 value in the format:
@@ -115,6 +113,7 @@ export function createSowTractorData({
       maxPodlineLength: maxPodline,
       maxGrownStalkPerBdv: maxGrownStalk,
       runBlocksAfterSunrise: runBlocks,
+      slippageRatio: BigInt(1e18),
     },
     opParams: {
       whitelistedOperators: whitelistedOperators as readonly `0x${string}`[],
@@ -157,7 +156,7 @@ export function createSowTractorData({
     args: [
       [
         {
-          target: SILO_HELPERS_ADDRESS, // Use the constant directly
+          target: SOW_BLUEPRINT_V0_ADDRESS, // Use the constant directly
           callData: sowBlueprintCall,
           clipboard: "0x0000" as `0x${string}`, // Minimal clipboard data
         },
@@ -214,6 +213,7 @@ export interface SowBlueprintData {
   maxPodlineLength: string;
   maxGrownStalkPerBdv: string;
   runBlocksAfterSunrise: string;
+  slippageRatio: string;
   operatorParams: {
     whitelistedOperators: readonly `0x${string}`[];
     tipAddress: `0x${string}`;
@@ -314,6 +314,7 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
             maxPodlineLength: TokenValue.fromBlockchain(params.sowParams.maxPodlineLength, 6).toHuman(),
             maxGrownStalkPerBdv: TokenValue.fromBlockchain(params.sowParams.maxGrownStalkPerBdv, 6).toHuman(),
             runBlocksAfterSunrise: params.sowParams.runBlocksAfterSunrise.toString(),
+            slippageRatio: TokenValue.fromBlockchain(params.sowParams.slippageRatio, 18).toHuman(),
             operatorParams: {
               whitelistedOperators: params.opParams.whitelistedOperators,
               tipAddress: params.opParams.tipAddress,
@@ -572,6 +573,7 @@ export interface SowBlueprintDisplayData {
   maxPodlineLength: string;
   maxGrownStalkPerBdv: string;
   runBlocksAfterSunrise: string;
+  slippageRatio: string;
   operatorTip: string;
   whitelistedOperators: readonly `0x${string}`[];
   tipAddress: `0x${string}`;
@@ -587,6 +589,7 @@ export function getSowBlueprintDisplayData(data: SowBlueprintData): SowBlueprint
     maxPodlineLength: data.maxPodlineLength,
     maxGrownStalkPerBdv: data.maxGrownStalkPerBdv,
     runBlocksAfterSunrise: data.runBlocksAfterSunrise,
+    slippageRatio: data.slippageRatio,
     operatorTip: data.operatorParams.operatorTipAmount,
     whitelistedOperators: data.operatorParams.whitelistedOperators,
     tipAddress: data.operatorParams.tipAddress
