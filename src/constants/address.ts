@@ -10,6 +10,10 @@ export const PIPELINE_ADDRESS: HashString = "0xb1bE0001f5a373b69b1E132b420e6D968
 
 export const JUNCTION_ADDRESS: HashString = "0x5A5A5AF07D8a389472AdC1E60aA71BAC89Fcff8b";
 
+export const SILO_HELPERS_ADDRESS: HashString = "0x8D75F9F7f4F4C4eFAB9402261bC864f21DF0c649";
+
+export const SOW_BLUEPRINT_V0_ADDRESS: HashString = "0x30760501864c379788FD6A303fb7b9Cf391fE5De";
+
 export const WELL_FUNCTION_ADDRESSES: ChainLookup<{
   stable2: HashString;
   cp2: HashString;

@@ -11,7 +11,7 @@ import { pipelineABI } from "@/constants/abi/PipelineABI";
 import { depotABI } from "@/constants/abi/depotABI";
 import { junctionABI } from "@/constants/abi/junctionABI";
 
-import { JUNCTION_ADDRESS } from "@/constants/address";
+import { JUNCTION_ADDRESS, SILO_HELPERS_ADDRESS, SOW_BLUEPRINT_V0_ADDRESS } from "@/constants/address";
 import { diamondFarmerABI } from "@/constants/abi/diamondFarmerABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 
@@ -29,10 +29,6 @@ import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import { viewSeasonABI } from "@/constants/abi/viewSeasonABI";
 import { viewSiloABI } from "@/constants/abi/viewSiloABI";
 import { siloHelpersABI } from "@/constants/abi/SiloHelpersABI";
-
-// Export these constants so they can be imported elsewhere
-export const SILO_HELPERS_ADDRESS = "0x8D75F9F7f4F4C4eFAB9402261bC864f21DF0c649" as const;
-export const SOW_BLUEPRINT_V0_ADDRESS = "0x30760501864c379788FD6A303fb7b9Cf391fE5De" as const;
 
 const TESTNET_CHAIN_ID = 41337;
 

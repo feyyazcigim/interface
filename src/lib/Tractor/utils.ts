@@ -9,7 +9,7 @@ import { PINTO } from "@/constants/tokens";
 import { PublicClient } from "viem";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
-import { SILO_HELPERS_ADDRESS, SOW_BLUEPRINT_V0_ADDRESS } from "@/utils/wagmi/wagmi.config";
+import { SILO_HELPERS_ADDRESS, SOW_BLUEPRINT_V0_ADDRESS } from "@/constants/address";
 
 /**
  * Encodes three uint80 values into a bytes32 value in the format:
