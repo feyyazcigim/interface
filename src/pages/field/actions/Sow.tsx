@@ -39,7 +39,7 @@ import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useMaxBuy from "@/hooks/swap/useMaxBuy";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
-import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
+import { usePreferredInputSiloDepositToken, usePreferredInputToken } from "@/hooks/usePreferredInputToken";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { sortAndPickCrates } from "@/utils/convert";
 import { HashString } from "@/utils/types.generic";
@@ -52,44 +52,55 @@ type SowProps = {
 
 function Sow({ isMorning }: SowProps) {
   // Hooks
-  const queryClient = useQueryClient();
-
-  // State Hooks
-  const temperature = useTemperature();
+  const qc = useQueryClient();
+  const diamond = useProtocolAddress();
+  const { mainToken } = useTokenData();
   const farmerBalances = useFarmerBalances();
   const farmerSilo = useFarmerSilo();
-  const { totalSoil, isLoading: totalSoilLoading } = useTotalSoil();
-  const podLine = usePodLine();
+  const farmerField = useFarmerField();
   const account = useAccount();
-  const diamond = useProtocolAddress();
-  const invalidateField = useInvalidateField();
-  const { queryKeys: farmerFieldQueryKeys } = useFarmerField();
-  const { mainToken } = useTokenData();
 
-  const { preferredToken, loading: preferredLoading } = usePreferredInputToken({
-    filterLP: true,
-  });
+  const temperature = useTemperature();
+  const podLine = usePodLine();
+  const { totalSoil, isLoading: totalSoilLoading } = useTotalSoil();
+  const invalidateField = useInvalidateField();
+
   const depositedByWhitelistedToken = useMapSiloDepositsToAmounts(farmerSilo.deposits);
 
-  // Local State
+  // Form State
   const [tokenSource, setTokenSource] = useState<TokenSource>("balances");
-  const [tokenIn, setTokenIn] = useState<Token>(preferredToken);
-  const [amountIn, setAmountIn] = useState("0");
+
+  const preferredSiloDepositToken = usePreferredInputSiloDepositToken(farmerSilo, mainToken);
+  const preferredBalanceToken = usePreferredInputToken({
+    filterLP: true,
+  });
+
+  const preferredLoading = tokenSource === "deposits" ? preferredSiloDepositToken.isLoading : preferredBalanceToken.loading;
+  
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
+  const [tokenIn, setTokenIn] = useState<Token>(
+    tokenSource === "deposits" ? preferredSiloDepositToken.preferredToken : preferredBalanceToken.preferredToken
+  );
+  const [amountIn, setAmountIn] = useState("0");
   const [slippage, setSlippage] = useState(0.1);
-  const [didSetPreferred, setDidSetPreferred] = useState(false);
-  const [inputError, setInputError] = useState(false);
-  const filterTokens = useFilterTokens(tokenSource);
   const [minTemperature, setMinTemperature] = useState(Math.max(temperature.scaled.toNumber(), 1));
+  
+  const [didSetPreferred, setDidSetPreferred] = useState(!preferredLoading);
+  const [inputError, setInputError] = useState(false);
+  
+  //
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
+  const filterTokens = useFilterTokens(tokenSource);
 
   // Derived State
   const fromSilo = tokenSource === "deposits";
   const numIn = stringToNumber(amountIn);
   const currentTemperature = temperature.scaled;
+  const isUsingMain = !!tokenIn.isMain;
 
   // Swap / Quotes
-  const maxSow = useMaxBuy(tokenIn, slippage, totalSoil);
+  const maxBuyQuery = useMaxBuy(tokenIn, slippage, totalSoil);
+  const maxSow = maxBuyQuery.data;
 
   const swap = useSwap({
     tokenIn: tokenIn,
@@ -98,13 +109,17 @@ function Sow({ isMorning }: SowProps) {
     slippage,
     disabled: tokenIn.isMain || stringToNumber(amountIn) <= 0 || maxSow?.lte(0),
   });
+
+  const swapSummary = useSwapSummary(swap.data);
+  const resetSwap = swap.resetSwap;
+
   const buildSwapAsync = useBuildSwapQuoteAsync(
     swap.data,
     fromSilo ? FarmFromMode.INTERNAL : balanceFrom, // if we are using silo deposits, fromMode = INTERNAL
     FarmToMode.INTERNAL,
   );
-  const swapSummary = useSwapSummary(swap.data);
 
+  // Swap Quote Derived
   const { slippageWarning, canProceed } = useRoutingAndSlippageWarning({
     totalSlippage: swapSummary?.swap.totalSlippage,
     priceImpact: undefined,
@@ -113,33 +128,20 @@ function Sow({ isMorning }: SowProps) {
 
   const withdrawBreakdown = useWithdrawDepositBreakdown(farmerSilo.deposits, tokenIn, amountIn, fromSilo);
 
+  // Transaction
   const onSuccess = useCallback(() => {
     setAmountIn("0");
-    swap.resetSwap();
+    resetSwap();
     invalidateField("all");
-    if (fromSilo) {
-      farmerSilo.refetch();
-    } else {
-      queryClient.invalidateQueries({ queryKey: farmerBalances.queryKeys });
-    }
-    farmerFieldQueryKeys.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));
-  }, [
-    fromSilo,
-    queryClient,
-    farmerFieldQueryKeys,
-    farmerBalances.queryKeys,
-    invalidateField,
-    swap.resetSwap,
-    farmerSilo.refetch,
-  ]);
+    const staleQueryKeys = [...farmerField.queryKeys, ...(fromSilo ? farmerSilo.queryKeys : farmerBalances.queryKeys)];
+    staleQueryKeys.forEach((key) => qc.invalidateQueries({ queryKey: key }));
+  }, [qc, fromSilo, farmerField.queryKeys, farmerBalances.queryKeys, farmerSilo.queryKeys, invalidateField, resetSwap]);
 
   const { writeWithEstimateGas, isConfirming, submitting, setSubmitting } = useTransaction({
     successCallback: onSuccess,
     errorMessage: "Sow failed",
     successMessage: "Sow successful",
   });
-
-  const isUsingMain = !!tokenIn.isMain;
 
   const pods = useMemo(() => {
     const amount = stringToNumber(amountIn);
@@ -277,13 +279,14 @@ function Sow({ isMorning }: SowProps) {
     inputError,
   ]);
 
+  // Callbacks
   const handleOnCheckedChange = (checked: boolean) => {
     setAmountIn("0");
     const newTokenSource = checked ? "deposits" : "balances";
     if (newTokenSource === "deposits") {
-      setTokenIn(mainToken);
+      setTokenIn(preferredSiloDepositToken.preferredToken);
     } else {
-      setTokenIn(preferredToken);
+      setTokenIn(preferredBalanceToken.preferredToken);
     }
     setTokenSource(newTokenSource);
   };
@@ -294,18 +297,17 @@ function Sow({ isMorning }: SowProps) {
     // If we are still calculating the preferred token,
     //  set the token to the preferred token once it's been set.
     if (didSetPreferred || preferredLoading) return;
-    if (tokenSource === "balances") {
-      if (preferredToken) {
-        setTokenIn(preferredToken);
-        setDidSetPreferred(true);
-      }
-    }
 
-    if (tokenSource === "deposits") {
-      setTokenIn(mainToken);
+    const preferred = fromSilo 
+      ? preferredSiloDepositToken.preferredToken
+      : preferredBalanceToken.preferredToken;
+
+    if (preferred) {
+      setTokenIn(preferred);
       setDidSetPreferred(true);
     }
-  }, [preferredToken, preferredLoading, didSetPreferred, tokenSource, mainToken]);
+
+  }, [preferredBalanceToken.preferredToken, preferredLoading, didSetPreferred, fromSilo, preferredSiloDepositToken.preferredToken]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: only reset when token in changes
   useEffect(() => {
@@ -317,6 +319,10 @@ function Sow({ isMorning }: SowProps) {
     if (swap?.isLoading) setLoadingTrue();
     else setLoadingFalse();
   }, [swap?.isLoading]);
+
+
+  // Derived State
+  const initializing = !didSetPreferred;
 
   const noSoil = Boolean(totalSoil.eq(0) && !totalSoilLoading);
 
@@ -346,6 +352,8 @@ function Sow({ isMorning }: SowProps) {
           />
         </div>
         <ComboInputField
+          isLoading={initializing}
+          tokenSelectLoading={initializing}
           amount={amountIn}
           disableInput={isConfirming}
           customMaxAmount={maxSow?.gt(0) && tokenBalance?.gt(0) ? TV.min(tokenBalance, maxSow) : TV.ZERO}
@@ -361,7 +369,6 @@ function Sow({ isMorning }: SowProps) {
           disableButton={isConfirming}
           connectedAccount={!!account.address}
           altText={balanceExceedsSoil ? "Usable balance:" : undefined}
-          tokenSelectLoading={preferredLoading || !didSetPreferred}
           filterTokens={filterTokens}
           disableClamping={true}
         />

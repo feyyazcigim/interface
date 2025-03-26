@@ -1,11 +1,15 @@
 import { MAIN_TOKEN, NATIVE_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
 import { useChainConstant, useResolvedChainId } from "@/utils/chain";
-import { getTokenIndex, tokensEqual } from "@/utils/token";
+import { getChainTokenMap, getTokenIndex, tokensEqual } from "@/utils/token";
 import { Token } from "@/utils/types";
+import { TV } from "@/classes/TokenValue";
 import { Lookup } from "@/utils/types.generic";
 import { useMemo } from "react";
 import { useLPTokenToNonPintoUnderlyingMap, useTokenMap } from "./pinto/useTokenMap";
 import useUSDExtendedFarmerBalances, { USDExtendedFarmerBalances } from "./useUSDExtendedFarmerBalances";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
+import { usePriceData } from "@/state/usePriceData";
+import { useChainId } from "wagmi";
 
 export interface UsePreferredTokenProps {
   /**
@@ -157,3 +161,41 @@ function getTokensWithBalances(balances: Lookup<USDExtendedFarmerBalances>): USD
 
   return hasBalance;
 }
+
+export function usePreferredInputSiloDepositToken(farmerSilo: ReturnType<typeof useFarmerSilo>, fallbackToken?: Token) {
+  const mainToken = useChainConstant(MAIN_TOKEN);
+  const chainId = useChainId();
+
+  const tokenMap = useTokenMap();
+  const priceData = usePriceData();
+
+  const sortedByBDVDescending = useMemo(
+    () => sortByBDVDescending(farmerSilo.deposits, chainId),
+    [farmerSilo.deposits, tokenMap, priceData, chainId],
+  );
+
+  const preferredToken = sortedByBDVDescending.length ? sortedByBDVDescending[0]?.token : fallbackToken ?? mainToken;
+
+  return {
+    preferredToken,
+    isLoading: farmerSilo.isLoading || priceData.loading,
+  };
+}
+
+const sortByBDVDescending = (farmerDeposits: ReturnType<typeof useFarmerSilo>["deposits"], chainId: number) => {
+  const tokens = getChainTokenMap(chainId);
+
+  const values: { token: Token; bdv: TV }[] = [];
+
+  for (const token of Object.values(tokens)) {
+    if (!token.isMain && !token.isLP) continue;
+
+    const deposit = farmerDeposits.get(token);
+    values.push({
+      token,
+      bdv: deposit?.currentBDV ?? TV.ZERO,
+    });
+  }
+
+  return values.sort((a, b) => b.bdv.sub(a.bdv).toNumber());
+};
