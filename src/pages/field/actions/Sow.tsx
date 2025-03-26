@@ -130,7 +130,7 @@ function Sow({ isMorning }: SowProps) {
     successMessage: "Sow successful",
   });
 
-  const isUsingMain = stringEq(tokenIn.address, mainToken.address);
+  const isUsingMain = !!tokenIn.isMain;
 
   const pods = useMemo(() => {
     const amount = stringToNumber(amountIn);
@@ -164,7 +164,9 @@ function Sow({ isMorning }: SowProps) {
       }
       setSubmitting(true);
 
-      const mainTokenAmount = isUsingMain ? TV.fromHuman(amountIn || 0n, tokenIn.decimals) : swap.data?.buyAmount ?? TV.ZERO;
+      const mainTokenAmount = isUsingMain
+        ? TV.fromHuman(amountIn || 0n, mainToken.decimals)
+        : swap.data?.buyAmount ?? TV.ZERO;
 
       if (!mainTokenAmount.gt(0)) {
         throw new Error("Sow amount must be greater than 0");
@@ -191,6 +193,8 @@ function Sow({ isMorning }: SowProps) {
         });
       }
 
+      console.log("FROM SILO", fromSilo);
+
       const advFarm: AdvancedFarmCall[] = [];
 
       // If we are using silo deposits, withdraw first to INTERNAL
@@ -211,19 +215,23 @@ function Sow({ isMorning }: SowProps) {
 
       let clipboard: HashString | undefined = undefined;
 
-
       if (!isUsingMain) {
         const swapBuild = await buildSwapAsync?.();
         if (!swapBuild) {
           throw new Error("No swap quote");
         }
 
-        const result = await swapBuild.deriveClipboardWithOutputToken(mainToken, 0, account.address);
-        clipboard = result.clipboard;
-        advFarm.push(...swapBuild.advFarm.getSteps());
-      };
+        const result = await swapBuild.deriveClipboardWithOutputToken(mainToken, 0, account.address, {
+          before: advFarm,
+        });
 
-      const sowCallStruct = sowWithMin(mainTokenAmount, minTemp, minSoil, FarmFromMode.INTERNAL_TOLERANT, clipboard);
+        clipboard = result.clipboard;
+        swapBuild.advFarm.getSteps().forEach((step) => {
+          advFarm.push(step);
+        });
+      }
+
+      const sowCallStruct = sowWithMin(mainTokenAmount, minTemp, minSoil, FarmFromMode.INTERNAL, clipboard);
       advFarm.push(sowCallStruct);
 
       const value = tokenIn.isNative ? TV.fromHuman(amountIn, tokenIn.decimals).toBigInt() : 0n;
@@ -291,7 +299,7 @@ function Sow({ isMorning }: SowProps) {
       setTokenIn(mainToken);
       setDidSetPreferred(true);
     }
-  }, [preferredToken, preferredLoading, didSetPreferred, tokenSource]);
+  }, [preferredToken, preferredLoading, didSetPreferred, tokenSource, mainToken]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: only reset when token in changes
   useEffect(() => {
@@ -559,11 +567,10 @@ const useWithdrawDepositBreakdown = (
   const inputAmount = stringToStringNum(amountIn ?? "0");
 
   useEffect(() => {
-    if (!enabled || inputAmount === "0") setBreakdown(undefined);
-  }, [enabled, inputAmount]);
-
-  useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || inputAmount === "0") {
+      setBreakdown(undefined);
+      return;
+    }
     const tokenDeposits = deposits.get(token);
     if (!tokenDeposits) return;
 
