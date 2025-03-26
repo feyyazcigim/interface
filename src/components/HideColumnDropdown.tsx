@@ -37,11 +37,47 @@ export const HideColumnDropdown = ({
   };
 
   const trigger = (
-    <Button className="justify-between sm:h-6 h-8 rounded-full" variant="outline">
+    <Button className="justify-between sm:h-6 h-8 rounded-full w-[200px] sm:w-[140px]" variant="outline">
       <IconImage className="mr-2" src={eyeballCrossed} size={4} />
-      {columnDropdownLabel}
+      <span className="w-full text-center">{columnDropdownLabel}</span>
     </Button>
   );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={() => toggle()}>
+        <DrawerTrigger>{trigger}</DrawerTrigger>
+        <DrawerContent className="px-4 pb-2">
+          <div className="max-h-[300px] overflow-auto my-2">
+            {seasonColumns.map(({ id, dropdownName, name }) => {
+              if (nonHideableFields.includes(id)) {
+                return null;
+              }
+              const checked = hiddenFields.includes(id);
+              const extraClasses = hiddenFields.includes(id) ? "line-through" : "";
+              return (
+                <div
+                  key={id}
+                  onClick={() => toggleColumn(id)}
+                  className={`flex items-center h-[36px] gap-2 ${extraClasses}`}
+                >
+                  <IconImage
+                    className={`${!checked ? "opacity-100" : "opacity-0"} flex items-center justify-center`}
+                    src={eyeballCrossed}
+                    size={4}
+                  />
+                  <span>{dropdownName || name}</span>
+                </div>
+              );
+            })}
+          </div>
+          <Button className="w-full text-base h-10" onClick={resetAllHiddenColumns} variant="outline">
+            Reset
+          </Button>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
 
   if (isMobile) {
     return (
