@@ -15,10 +15,10 @@ import { useDebouncedEffect } from "@/utils/useDebounce";
 import { cn } from "@/utils/utils";
 import { Dispatch, InputHTMLAttributes, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
 import PlotSelect from "./PlotSelect";
+import TextSkeleton from "./TextSkeleton";
 import TokenSelectWithBalances, { TransformTokenLabelsFunction } from "./TokenSelectWithBalances";
 import { Button } from "./ui/Button";
 import { Skeleton } from "./ui/Skeleton";
-import TextSkeleton from "./TextSkeleton";
 
 const ETH_GAS_RESERVE = TokenValue.fromHuman("0.0003333333333", 18); // Reserve $1 of gas if eth is $3k
 

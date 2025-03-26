@@ -1,15 +1,15 @@
+import { TV } from "@/classes/TokenValue";
 import { MAIN_TOKEN, NATIVE_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
+import { usePriceData } from "@/state/usePriceData";
 import { useChainConstant, useResolvedChainId } from "@/utils/chain";
 import { getChainTokenMap, getTokenIndex, tokensEqual } from "@/utils/token";
 import { Token } from "@/utils/types";
-import { TV } from "@/classes/TokenValue";
 import { Lookup } from "@/utils/types.generic";
 import { useMemo } from "react";
+import { useAccount, useChainId } from "wagmi";
 import { useLPTokenToNonPintoUnderlyingMap, useTokenMap } from "./pinto/useTokenMap";
 import useUSDExtendedFarmerBalances, { USDExtendedFarmerBalances } from "./useUSDExtendedFarmerBalances";
-import { useFarmerSilo } from "@/state/useFarmerSilo";
-import { usePriceData } from "@/state/usePriceData";
-import { useAccount, useChainId } from "wagmi";
 
 export interface UsePreferredTokenProps {
   /**
