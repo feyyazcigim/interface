@@ -8,6 +8,7 @@ import { useAccount, usePublicClient } from "wagmi";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useTransaction from "@/hooks/useTransaction";
+import { useQueryClient } from "@tanstack/react-query";
 
 const UINT256_MAX = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
 
@@ -15,20 +16,30 @@ interface PlowDetailsProps {
   requisition: RequisitionEvent | null;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function PlowDetails({ requisition, isOpen, onClose }: PlowDetailsProps) {
+export function PlowDetails({ requisition, isOpen, onClose, onSuccess }: PlowDetailsProps) {
   const { address } = useAccount();
   const protocolAddress = useProtocolAddress();
   const [isSimulating, setIsSimulating] = useState(false);
   const publicClient = usePublicClient();
+  const queryClient = useQueryClient();
 
-  // Handle success callback
+  // Handle success callback for refreshing data
   const handleSuccess = useCallback(() => {
+    // Close the dialog
     onClose();
-  }, [onClose]);
+    
+    // Call any additional success handling passed from parent
+    if (onSuccess) onSuccess();
+    
+    // Invalidate queries to refresh data
+    // Add specific query invalidation as needed
+    // queryClient.invalidateQueries({ queryKey: ['tractorRequisitions'] });
+  }, [onClose, onSuccess, queryClient]);
 
-  // Setup transaction handler
+  // Setup transaction handler with useTransaction hook
   const { writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
     successMessage: "Plow successful",
     errorMessage: "Plow failed",
