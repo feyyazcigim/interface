@@ -75,19 +75,20 @@ function Sow({ isMorning }: SowProps) {
     filterLP: true,
   });
 
-  const preferredLoading = tokenSource === "deposits" ? preferredSiloDepositToken.isLoading : preferredBalanceToken.loading;
-  
+  const preferredLoading =
+    tokenSource === "deposits" ? preferredSiloDepositToken.isLoading : preferredBalanceToken.loading;
+
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [tokenIn, setTokenIn] = useState<Token>(
-    tokenSource === "deposits" ? preferredSiloDepositToken.preferredToken : preferredBalanceToken.preferredToken
+    tokenSource === "deposits" ? preferredSiloDepositToken.preferredToken : preferredBalanceToken.preferredToken,
   );
   const [amountIn, setAmountIn] = useState("0");
   const [slippage, setSlippage] = useState(0.1);
   const [minTemperature, setMinTemperature] = useState(Math.max(temperature.scaled.toNumber(), 1));
-  
+
   const [didSetPreferred, setDidSetPreferred] = useState(!preferredLoading);
   const [inputError, setInputError] = useState(false);
-  
+
   //
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
   const filterTokens = useFilterTokens(tokenSource);
@@ -100,14 +101,14 @@ function Sow({ isMorning }: SowProps) {
 
   // Swap / Quotes
   const maxBuyQuery = useMaxBuy(tokenIn, slippage, totalSoil);
-  const maxSow = maxBuyQuery.data;
+  const maxBuy = totalSoilLoading ? TV.ZERO : maxBuyQuery.data;
 
   const swap = useSwap({
     tokenIn: tokenIn,
     tokenOut: mainToken,
     amountIn: tokenIn.isMain ? TV.ZERO : TV.fromHuman(amountIn, tokenIn.decimals),
     slippage,
-    disabled: tokenIn.isMain || stringToNumber(amountIn) <= 0 || maxSow?.lte(0),
+    disabled: tokenIn.isMain || stringToNumber(amountIn) <= 0 || maxBuy?.lte(0),
   });
 
   const swapSummary = useSwapSummary(swap.data);
@@ -294,20 +295,19 @@ function Sow({ isMorning }: SowProps) {
   // Effects
   // Initialize the token source
   useEffect(() => {
-    // If we are still calculating the preferred token,
-    //  set the token to the preferred token once it's been set.
+    // If we are still calculating the preferred token, set the token to the preferred token once it's been set.
     if (didSetPreferred || preferredLoading) return;
+    const preferred = fromSilo ? preferredSiloDepositToken.preferredToken : preferredBalanceToken.preferredToken;
 
-    const preferred = fromSilo 
-      ? preferredSiloDepositToken.preferredToken
-      : preferredBalanceToken.preferredToken;
-
-    if (preferred) {
-      setTokenIn(preferred);
-      setDidSetPreferred(true);
-    }
-
-  }, [preferredBalanceToken.preferredToken, preferredLoading, didSetPreferred, fromSilo, preferredSiloDepositToken.preferredToken]);
+    setTokenIn(preferred);
+    setDidSetPreferred(true);
+  }, [
+    preferredBalanceToken.preferredToken,
+    preferredLoading,
+    didSetPreferred,
+    fromSilo,
+    preferredSiloDepositToken.preferredToken,
+  ]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: only reset when token in changes
   useEffect(() => {
@@ -320,20 +320,21 @@ function Sow({ isMorning }: SowProps) {
     else setLoadingFalse();
   }, [swap?.isLoading]);
 
-
   // Derived State
   const initializing = !didSetPreferred;
 
   const noSoil = Boolean(totalSoil.eq(0) && !totalSoilLoading);
 
   const isLoading = (numIn > 0 && loading) || (pods?.lte(0) && numIn > 0);
-  const ready = pods?.gt(0) && podLine.gte(0) && noSoil ? true : maxSow?.gt(0);
+  const ready = pods?.gt(0) && podLine.gte(0) && noSoil ? true : maxBuy?.gt(0);
 
   const tokenBalance = fromSilo
     ? depositedByWhitelistedToken.get(tokenIn)
     : getBalanceFromMode(farmerBalances.balances.get(tokenIn), balanceFrom);
 
-  const balanceExceedsSoil = tokenBalance?.gt(0) && maxSow && tokenBalance?.gte(maxSow);
+  const balanceExceedsSoil =
+    (!totalSoilLoading && totalSoil.lte(0)) ||
+    (!maxBuyQuery.isLoading && Boolean(tokenBalance && maxBuy?.lt(tokenBalance)));
 
   const ctaDisabled = isLoading || isConfirming || submitting || !ready || inputError || !canProceed;
 
@@ -356,7 +357,7 @@ function Sow({ isMorning }: SowProps) {
           tokenSelectLoading={initializing}
           amount={amountIn}
           disableInput={isConfirming}
-          customMaxAmount={maxSow?.gt(0) && tokenBalance?.gt(0) ? TV.min(tokenBalance, maxSow) : TV.ZERO}
+          customMaxAmount={maxBuy?.gt(0) && tokenBalance?.gt(0) ? TV.min(tokenBalance, maxBuy) : TV.ZERO}
           setAmount={setAmountIn}
           setToken={setTokenIn}
           setBalanceFrom={setBalanceFrom}

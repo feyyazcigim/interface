@@ -9,7 +9,7 @@ import { useLPTokenToNonPintoUnderlyingMap, useTokenMap } from "./pinto/useToken
 import useUSDExtendedFarmerBalances, { USDExtendedFarmerBalances } from "./useUSDExtendedFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
-import { useChainId } from "wagmi";
+import { useAccount, useChainId } from "wagmi";
 
 export interface UsePreferredTokenProps {
   /**
@@ -37,6 +37,7 @@ export interface UsePreferredTokenProps {
 }
 
 export function usePreferredInputToken(args?: UsePreferredTokenProps) {
+  const { isConnecting } = useAccount();
   const { data: farmerBalances, loading } = useUSDExtendedFarmerBalances();
   const lp2Underlying = useLPTokenToNonPintoUnderlyingMap("lp2Underlying");
 
@@ -75,7 +76,7 @@ export function usePreferredInputToken(args?: UsePreferredTokenProps) {
   }, [farmerBalances, tokenMap, args, lp2Underlying, chainId, siloWrapped]);
 
   return {
-    loading,
+    loading: loading || isConnecting,
     preferredToken,
   };
 }
@@ -165,6 +166,7 @@ function getTokensWithBalances(balances: Lookup<USDExtendedFarmerBalances>): USD
 export function usePreferredInputSiloDepositToken(farmerSilo: ReturnType<typeof useFarmerSilo>, fallbackToken?: Token) {
   const mainToken = useChainConstant(MAIN_TOKEN);
   const chainId = useChainId();
+  const { isConnecting } = useAccount();
 
   const tokenMap = useTokenMap();
   const priceData = usePriceData();
@@ -178,7 +180,7 @@ export function usePreferredInputSiloDepositToken(farmerSilo: ReturnType<typeof 
 
   return {
     preferredToken,
-    isLoading: farmerSilo.isLoading || priceData.loading,
+    isLoading: farmerSilo.isLoading || priceData.loading || isConnecting,
   };
 }
 
