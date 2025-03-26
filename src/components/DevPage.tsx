@@ -12,7 +12,7 @@ import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { http, PublicClient, createPublicClient, isAddress, TransactionReceipt, decodeEventLog } from "viem";
+import { http, PublicClient, createPublicClient, isAddress, TransactionReceipt, decodeEventLog, erc20Abi } from "viem";
 import { hardhat } from "viem/chains";
 import { useAccount, useBlockNumber, useChainId } from "wagmi";
 import MorningCard from "./MorningCard";
@@ -38,7 +38,7 @@ const publicClient = createPublicClient({
 });
 
 // Merge the ABIs
-const combinedABI = [...beanstalkAbi, ...sowBlueprintv0ABI, ...siloHelpersABI];
+const combinedABI = [...beanstalkAbi, ...sowBlueprintv0ABI, ...siloHelpersABI, ...erc20Abi];
 
 export default function DevPage() {
   const { address } = useAccount();
@@ -272,7 +272,7 @@ export default function DevPage() {
         } catch (error) {
           // If we can't decode with any ABI, return a raw event
           return {
-            eventName: "Unknown Event",
+            eventName: "Unknown Event (Note: This just means we probably don't have the ABI, add it in DevPage.tsx)",
             args: {
               data: log.data,
               topics: log.topics,
