@@ -193,8 +193,6 @@ function Sow({ isMorning }: SowProps) {
         });
       }
 
-      console.log("FROM SILO", fromSilo);
-
       const advFarm: AdvancedFarmCall[] = [];
 
       // If we are using silo deposits, withdraw first to INTERNAL
