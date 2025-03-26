@@ -14,7 +14,7 @@ import { useInvalidateField, usePodLine, useTotalSoil } from "@/state/useFieldDa
 import { useTemperature } from "@/state/useFieldData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { stringEq, stringToNumber, stringToStringNum } from "@/utils/string";
+import { stringToNumber, stringToStringNum } from "@/utils/string";
 import { AdvancedFarmCall, FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -25,7 +25,7 @@ import settingsIcon from "@/assets/misc/Settings.svg";
 import FrameAnimator from "@/components/LoadingSpinner";
 import MobileActionBar from "@/components/MobileActionBar";
 
-import { Col, Row } from "@/components/Container";
+import { Row } from "@/components/Container";
 import RoutingAndSlippageInfo, { useRoutingAndSlippageWarning } from "@/components/RoutingAndSlippageInfo";
 import TextSkeleton from "@/components/TextSkeleton";
 import { Button } from "@/components/ui/Button";
@@ -35,7 +35,7 @@ import { Switch } from "@/components/ui/Switch";
 import siloWithdraw from "@/encoders/silo/withdraw";
 import useDelayedLoading from "@/hooks/display/useDelayedLoading";
 import { useTokenMap } from "@/hooks/pinto/useTokenMap";
-import useBuildSwapQuote, { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
+import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useMaxBuy from "@/hooks/swap/useMaxBuy";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
@@ -44,7 +44,7 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { sortAndPickCrates } from "@/utils/convert";
 import { HashString } from "@/utils/types.generic";
 import { useDebouncedEffect } from "@/utils/useDebounce";
-import { getBalanceFromMode } from "@/utils/utils";
+import { cn, getBalanceFromMode } from "@/utils/utils";
 
 type SowProps = {
   isMorning: boolean;
@@ -58,7 +58,7 @@ function Sow({ isMorning }: SowProps) {
   const temperature = useTemperature();
   const farmerBalances = useFarmerBalances();
   const farmerSilo = useFarmerSilo();
-  const { totalSoil } = useTotalSoil();
+  const { totalSoil, isLoading: totalSoilLoading } = useTotalSoil();
   const podLine = usePodLine();
   const account = useAccount();
   const diamond = useProtocolAddress();
@@ -98,7 +98,6 @@ function Sow({ isMorning }: SowProps) {
     slippage,
     disabled: tokenIn.isMain || stringToNumber(amountIn) <= 0 || maxSow?.lte(0),
   });
-  // const swapBuild = useBuildSwapQuote(swap.data, balanceFrom, FarmToMode.INTERNAL);
   const buildSwapAsync = useBuildSwapQuoteAsync(
     swap.data,
     fromSilo ? FarmFromMode.INTERNAL : balanceFrom, // if we are using silo deposits, fromMode = INTERNAL
@@ -114,15 +113,25 @@ function Sow({ isMorning }: SowProps) {
 
   const withdrawBreakdown = useWithdrawDepositBreakdown(farmerSilo.deposits, tokenIn, amountIn, fromSilo);
 
-  const tokenInBalance = farmerBalances.balances.get(tokenIn);
-
   const onSuccess = useCallback(() => {
     setAmountIn("0");
     swap.resetSwap();
     invalidateField("all");
+    if (fromSilo) {
+      farmerSilo.refetch();
+    } else {
+      queryClient.invalidateQueries({ queryKey: farmerBalances.queryKeys });
+    }
     farmerFieldQueryKeys.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));
-    queryClient.invalidateQueries({ queryKey: farmerBalances.queryKeys });
-  }, [queryClient, farmerFieldQueryKeys, farmerBalances.queryKeys, invalidateField, swap.resetSwap]);
+  }, [
+    fromSilo,
+    queryClient,
+    farmerFieldQueryKeys,
+    farmerBalances.queryKeys,
+    invalidateField,
+    swap.resetSwap,
+    farmerSilo.refetch,
+  ]);
 
   const { writeWithEstimateGas, isConfirming, submitting, setSubmitting } = useTransaction({
     successCallback: onSuccess,
@@ -172,10 +181,6 @@ function Sow({ isMorning }: SowProps) {
         throw new Error("Sow amount must be greater than 0");
       }
 
-      if (mainTokenAmount.lte(0)) {
-        throw new Error("Amount must be greater than 0");
-      }
-
       toast.loading(`Sowing...`);
 
       // temperature at 6 decimals
@@ -184,6 +189,7 @@ function Sow({ isMorning }: SowProps) {
 
       const minSoil = TV.ZERO;
 
+      // If we are sowing w/ the Main Token, we can use the regular sowWithMin function
       if (isUsingMain && !fromSilo) {
         return writeWithEstimateGas({
           address: diamond,
@@ -213,6 +219,7 @@ function Sow({ isMorning }: SowProps) {
 
       let clipboard: HashString | undefined = undefined;
 
+      // If we are sowing w/ a non-Main Token, we need to build a swap
       if (!isUsingMain) {
         const swapBuild = await buildSwapAsync?.();
         if (!swapBuild) {
@@ -229,6 +236,7 @@ function Sow({ isMorning }: SowProps) {
         });
       }
 
+      // Finally, add the sowWithMin call to the advFarm
       const sowCallStruct = sowWithMin(mainTokenAmount, minTemp, minSoil, FarmFromMode.INTERNAL, clipboard);
       advFarm.push(sowCallStruct);
 
@@ -310,21 +318,20 @@ function Sow({ isMorning }: SowProps) {
     else setLoadingFalse();
   }, [swap?.isLoading]);
 
+  const noSoil = Boolean(totalSoil.eq(0) && !totalSoilLoading);
+
   const isLoading = (numIn > 0 && loading) || (pods?.lte(0) && numIn > 0);
-  const ready = pods?.gt(0) && podLine.gte(0) && maxSow?.gt(0);
+  const ready = pods?.gt(0) && podLine.gte(0) && noSoil ? true : maxSow?.gt(0);
 
   const tokenBalance = fromSilo
     ? depositedByWhitelistedToken.get(tokenIn)
-    : getBalanceFromMode(tokenInBalance, balanceFrom);
+    : getBalanceFromMode(farmerBalances.balances.get(tokenIn), balanceFrom);
 
   const balanceExceedsSoil = tokenBalance?.gt(0) && maxSow && tokenBalance?.gte(maxSow);
 
   const ctaDisabled = isLoading || isConfirming || submitting || !ready || inputError || !canProceed;
 
   const buttonText = inputError ? "Amount too large" : "Sow";
-
-  const renderWarnings =
-    (tokenSource === "deposits" && tokenIn.isLP) || ready || (!tokenIn.isMain && swapSummary?.swap);
 
   return (
     <div className="flex flex-col gap-4">
@@ -365,69 +372,66 @@ function Sow({ isMorning }: SowProps) {
           <Switch checked={tokenSource === "deposits"} onCheckedChange={handleOnCheckedChange} />
         </TextSkeleton>
       </Row>
-      {totalSoil.eq(0) && maxSow?.lte(0) && (
-        <Warning>Your usable balance is 0.00 because there is no Soil available.</Warning>
-      )}
+      {noSoil && <Warning>Your usable balance is 0.00 because there is no Soil available.</Warning>}
       {isLoading ? (
-        <div className="flex flex-col w-full h-[224px] items-center justify-center">
+        <div
+          className={cn(
+            "flex flex-col w-full h-[230px] items-center justify-center",
+            fromSilo && !tokenIn.isMain && "h-[305px]",
+            noSoil ? (fromSilo ? "h-[230px]" : "h-[305px]") : "h-[230px]",
+          )}
+        >
           <FrameAnimator size={64} />
         </div>
       ) : ready ? (
-        <div className="flex flex-col gap-6 px-2">
-          <OutputDisplay>
-            <OutputDisplay.Item label="Pods">
-              <OutputDisplay.Value value={formatter.token(pods, PODS)} token={PODS} suffix={PODS.symbol} />
-            </OutputDisplay.Item>
-            <OutputDisplay.Item label="Place in line">
-              <OutputDisplay.Value value={formatter.noDec(podLine)} />
-            </OutputDisplay.Item>
-            {fromSilo ? (
-              <>
-                <OutputDisplay.Item label="Stalk">
-                  <OutputDisplay.Value
-                    value={formatter.token(withdrawBreakdown?.stalk, STALK)}
-                    delta="down"
-                    suffix="Stalk"
-                    token={STALK}
-                    showArrow
-                  />
-                </OutputDisplay.Item>
-                <OutputDisplay.Item label="Seed">
-                  <OutputDisplay.Value
-                    value={formatter.token(withdrawBreakdown?.seeds, SEEDS)}
-                    token={SEEDS}
-                    delta="down"
-                    suffix="Seeds"
-                    showArrow
-                  />
-                </OutputDisplay.Item>
-              </>
-            ) : null}
-          </OutputDisplay>
-        </div>
-      ) : null}
-      {renderWarnings && (
-        <div>
-          <div className="flex flex-col gap-4">
-            {tokenSource === "deposits" && tokenIn.isLP ? (
-              <Warning>Withdrawing from your LP deposits removes liquidity as single sided {mainToken.symbol}.</Warning>
-            ) : null}
-            {ready && (
-              <Warning>Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.</Warning>
+        <>
+          <div className="flex flex-col gap-6 px-2">
+            <OutputDisplay>
+              <OutputDisplay.Item label="Pods">
+                <OutputDisplay.Value value={formatter.token(pods, PODS)} token={PODS} suffix={PODS.symbol} />
+              </OutputDisplay.Item>
+              <OutputDisplay.Item label="Place in line">
+                <OutputDisplay.Value value={formatter.noDec(podLine)} />
+              </OutputDisplay.Item>
+              {fromSilo ? (
+                <>
+                  <OutputDisplay.Item label="Stalk">
+                    <OutputDisplay.Value
+                      value={formatter.token(withdrawBreakdown?.stalk, STALK)}
+                      delta="down"
+                      suffix="Stalk"
+                      token={STALK}
+                      showArrow
+                    />
+                  </OutputDisplay.Item>
+                  <OutputDisplay.Item label="Seed">
+                    <OutputDisplay.Value
+                      value={formatter.token(withdrawBreakdown?.seeds, SEEDS)}
+                      token={SEEDS}
+                      delta="down"
+                      suffix="Seeds"
+                      showArrow
+                    />
+                  </OutputDisplay.Item>
+                </>
+              ) : null}
+            </OutputDisplay>
+          </div>
+          <div className="flex flex-col gap-0">
+            <Warning>Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.</Warning>
+            {!tokenIn.isMain && swapSummary?.swap && (
+              <RoutingAndSlippageInfo
+                title="Total Swap Slippage"
+                swapSummary={swapSummary}
+                preferredSummary="swap"
+                txnType="Swap"
+                tokenIn={tokenIn}
+                tokenOut={mainToken}
+              />
             )}
           </div>
-          {!tokenIn.isMain && swapSummary?.swap && (
-            <RoutingAndSlippageInfo
-              title="Total Swap Slippage"
-              swapSummary={swapSummary}
-              preferredSummary="swap"
-              txnType="Swap"
-              tokenIn={tokenIn}
-              tokenOut={mainToken}
-            />
-          )}
-        </div>
-      )}
+        </>
+      ) : null}
       {slippageWarning}
       <div className="hidden sm:flex flex-row gap-2">
         <SmartSubmitButton
@@ -560,6 +564,8 @@ const useWithdrawDepositBreakdown = (
   amountIn: string | undefined,
   enabled: boolean,
 ) => {
+  const tokenDeposits = useMemo(() => deposits.get(token), [deposits, token]);
+
   const [breakdown, setBreakdown] = useState<ReturnType<typeof sortAndPickCrates> | undefined>(undefined);
 
   const inputAmount = stringToStringNum(amountIn ?? "0");
@@ -569,7 +575,7 @@ const useWithdrawDepositBreakdown = (
       setBreakdown(undefined);
       return;
     }
-    const tokenDeposits = deposits.get(token);
+
     if (!tokenDeposits) return;
 
     // Take the minimum of the amount in and the amount in the deposits
@@ -577,7 +583,7 @@ const useWithdrawDepositBreakdown = (
     const amount = TV.min(TV.fromHuman(stringToStringNum(inputAmount ?? "0"), token.decimals), tokenDeposits.amount);
 
     setBreakdown(sortAndPickCrates("withdraw", amount, tokenDeposits.deposits));
-  }, [inputAmount, deposits, enabled, token]);
+  }, [inputAmount, tokenDeposits, enabled, token]);
 
   return breakdown;
 };
