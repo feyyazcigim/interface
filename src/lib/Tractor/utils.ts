@@ -8,7 +8,6 @@ import { TokenValue } from "@/classes/TokenValue";
 import { PINTO } from "@/constants/tokens";
 import { PublicClient } from "viem";
 import { diamondABI } from "@/constants/abi/diamondABI";
-import { siloHelpersABI } from "@/constants/abi/SiloHelpersABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 
 // Add this constant definition at the top level of the file:

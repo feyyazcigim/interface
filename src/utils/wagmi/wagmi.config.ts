@@ -12,8 +12,9 @@ import { depotABI } from "@/constants/abi/depotABI";
 import { junctionABI } from "@/constants/abi/junctionABI";
 
 import { JUNCTION_ADDRESS } from "@/constants/address";
-
 import { diamondFarmerABI } from "@/constants/abi/diamondFarmerABI";
+import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
+
 /**
  * Diamond cut fragmented facets
  *
@@ -29,7 +30,8 @@ import { viewSeasonABI } from "@/constants/abi/viewSeasonABI";
 import { viewSiloABI } from "@/constants/abi/viewSiloABI";
 import { siloHelpersABI } from "@/constants/abi/SiloHelpersABI";
 
-const SILO_HELPERS_ADDRESS = "0x207b78B23Ee4b9F9D9b07102Ed5bBf8573004B8A";
+const SILO_HELPERS_ADDRESS = "0x8D75F9F7f4F4C4eFAB9402261bC864f21DF0c649";
+const SOW_BLUEPRINT_V0_ADDRESS = "0x30760501864c379788FD6A303fb7b9Cf391fE5De";
 
 const TESTNET_CHAIN_ID = 41337;
 
@@ -128,6 +130,18 @@ const config = defineConfig(() => {
           [TESTNET_CHAIN_ID]: SILO_HELPERS_ADDRESS,
           [foundry.id]: SILO_HELPERS_ADDRESS,
         },
+      },
+      {
+        name: "sowBlueprintv0",
+        abi: sowBlueprintv0ABI as Abi,
+        address: {
+          [mainnet.id]: SOW_BLUEPRINT_V0_ADDRESS,
+          [arbitrum.id]: SOW_BLUEPRINT_V0_ADDRESS,
+          [base.id]: SOW_BLUEPRINT_V0_ADDRESS,
+          [localhost.id]: SOW_BLUEPRINT_V0_ADDRESS,
+          [TESTNET_CHAIN_ID]: SOW_BLUEPRINT_V0_ADDRESS,
+          [foundry.id]: SOW_BLUEPRINT_V0_ADDRESS,
+        }
       },
     ],
     plugins: [
