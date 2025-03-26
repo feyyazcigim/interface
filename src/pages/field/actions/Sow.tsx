@@ -25,7 +25,7 @@ import settingsIcon from "@/assets/misc/Settings.svg";
 import FrameAnimator from "@/components/LoadingSpinner";
 import MobileActionBar from "@/components/MobileActionBar";
 
-import { Row } from "@/components/Container";
+import { Col, Row } from "@/components/Container";
 import RoutingAndSlippageInfo, { useRoutingAndSlippageWarning } from "@/components/RoutingAndSlippageInfo";
 import TextSkeleton from "@/components/TextSkeleton";
 import { Button } from "@/components/ui/Button";
@@ -44,7 +44,8 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { sortAndPickCrates } from "@/utils/convert";
 import { HashString } from "@/utils/types.generic";
 import { useDebouncedEffect } from "@/utils/useDebounce";
-import { cn, getBalanceFromMode } from "@/utils/utils";
+import { getBalanceFromMode } from "@/utils/utils";
+import { AnimatePresence, motion } from "framer-motion";
 
 type SowProps = {
   isMorning: boolean;
@@ -90,7 +91,7 @@ function Sow({ isMorning }: SowProps) {
   const [inputError, setInputError] = useState(false);
 
   //
-  const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
+  const { loading, setLoading } = useDelayedLoading();
   const filterTokens = useFilterTokens(tokenSource);
 
   // Derived State
@@ -103,10 +104,12 @@ function Sow({ isMorning }: SowProps) {
   const maxBuyQuery = useMaxBuy(tokenIn, slippage, totalSoil);
   const maxBuy = totalSoilLoading ? TV.ZERO : maxBuyQuery.data;
 
+  const amountInTV = TV.fromHuman(stringToStringNum(amountIn), tokenIn.decimals);
+
   const swap = useSwap({
     tokenIn: tokenIn,
     tokenOut: mainToken,
-    amountIn: tokenIn.isMain ? TV.ZERO : TV.fromHuman(amountIn, tokenIn.decimals),
+    amountIn: tokenIn.isMain ? TV.ZERO : amountInTV,
     slippage,
     disabled: tokenIn.isMain || stringToNumber(amountIn) <= 0 || maxBuy?.lte(0),
   });
@@ -125,6 +128,7 @@ function Sow({ isMorning }: SowProps) {
     totalSlippage: swapSummary?.swap.totalSlippage,
     priceImpact: undefined,
     txnType: "Swap",
+    noMarginTop: true,
   });
 
   const withdrawBreakdown = useWithdrawDepositBreakdown(farmerSilo.deposits, tokenIn, amountIn, fromSilo);
@@ -316,17 +320,16 @@ function Sow({ isMorning }: SowProps) {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: only reset when swap data changes
   useEffect(() => {
-    if (swap?.isLoading) setLoadingTrue();
-    else setLoadingFalse();
-  }, [swap?.isLoading]);
+    setLoading(swap.isLoading);
+  }, [swap.isLoading]);
 
   // Derived State
-  const initializing = !didSetPreferred;
+  const hasSoil = Boolean(!totalSoilLoading && totalSoil.gt(0));
 
-  const noSoil = Boolean(totalSoil.eq(0) && !totalSoilLoading);
+  const initializing = !didSetPreferred || (hasSoil ? maxBuyQuery.isLoading : false);
 
   const isLoading = (numIn > 0 && loading) || (pods?.lte(0) && numIn > 0);
-  const ready = pods?.gt(0) && podLine.gte(0) && noSoil ? true : maxBuy?.gt(0);
+  const ready = pods?.gt(0) && podLine.gte(0) && (hasSoil ? maxBuy?.gt(0) && amountInTV.gt(0) : true);
 
   const tokenBalance = fromSilo
     ? depositedByWhitelistedToken.get(tokenIn)
@@ -339,6 +342,8 @@ function Sow({ isMorning }: SowProps) {
   const ctaDisabled = isLoading || isConfirming || submitting || !ready || inputError || !canProceed;
 
   const buttonText = inputError ? "Amount too large" : "Sow";
+
+  const animationHeight = getAnimateHeight({ fromSilo, hasSoil, tokenIn });
 
   return (
     <div className="flex flex-col gap-4">
@@ -354,7 +359,7 @@ function Sow({ isMorning }: SowProps) {
         </div>
         <ComboInputField
           isLoading={initializing}
-          tokenSelectLoading={initializing}
+          tokenSelectLoading={!didSetPreferred}
           amount={amountIn}
           disableInput={isConfirming}
           customMaxAmount={maxBuy?.gt(0) && tokenBalance?.gt(0) ? TV.min(tokenBalance, maxBuy) : TV.ZERO}
@@ -380,66 +385,74 @@ function Sow({ isMorning }: SowProps) {
           <Switch checked={tokenSource === "deposits"} onCheckedChange={handleOnCheckedChange} />
         </TextSkeleton>
       </Row>
-      {noSoil && <Warning>Your usable balance is 0.00 because there is no Soil available.</Warning>}
-      {isLoading ? (
-        <div
-          className={cn(
-            "flex flex-col w-full h-[230px] items-center justify-center",
-            fromSilo && !tokenIn.isMain && "h-[305px]",
-            noSoil ? (fromSilo ? "h-[230px]" : "h-[305px]") : "h-[230px]",
-          )}
-        >
-          <FrameAnimator size={64} />
-        </div>
-      ) : ready ? (
-        <>
-          <div className="flex flex-col gap-6 px-2">
-            <OutputDisplay>
-              <OutputDisplay.Item label="Pods">
-                <OutputDisplay.Value value={formatter.token(pods, PODS)} token={PODS} suffix={PODS.symbol} />
-              </OutputDisplay.Item>
-              <OutputDisplay.Item label="Place in line">
-                <OutputDisplay.Value value={formatter.noDec(podLine)} />
-              </OutputDisplay.Item>
-              {fromSilo ? (
-                <>
-                  <OutputDisplay.Item label="Stalk">
-                    <OutputDisplay.Value
-                      value={formatter.token(withdrawBreakdown?.stalk, STALK)}
-                      delta="down"
-                      suffix="Stalk"
-                      token={STALK}
-                      showArrow
+      <AnimatePresence mode="wait">
+        {(isLoading || ready) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: animationHeight }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.1 }}
+            className="relative overflow-hidden"
+          >
+            {isLoading ? (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <FrameAnimator size={64} />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-6 px-2">
+                  <OutputDisplay>
+                    <OutputDisplay.Item label="Pods">
+                      <OutputDisplay.Value value={formatter.token(pods, PODS)} token={PODS} suffix={PODS.symbol} />
+                    </OutputDisplay.Item>
+                    <OutputDisplay.Item label="Place in line">
+                      <OutputDisplay.Value value={formatter.noDec(podLine)} />
+                    </OutputDisplay.Item>
+                    {fromSilo ? (
+                      <>
+                        <OutputDisplay.Item label="Stalk">
+                          <OutputDisplay.Value
+                            value={formatter.token(withdrawBreakdown?.stalk, STALK)}
+                            delta="down"
+                            suffix="Stalk"
+                            token={STALK}
+                            showArrow
+                          />
+                        </OutputDisplay.Item>
+                        <OutputDisplay.Item label="Seed">
+                          <OutputDisplay.Value
+                            value={formatter.token(withdrawBreakdown?.seeds, SEEDS)}
+                            token={SEEDS}
+                            delta="down"
+                            suffix="Seeds"
+                            showArrow
+                          />
+                        </OutputDisplay.Item>
+                      </>
+                    ) : null}
+                  </OutputDisplay>
+                </div>
+                <div className="flex flex-col gap-0">
+                  <Col className="gap-4">
+                    {!hasSoil && <Warning>Your usable balance is 0.00 because there is no Soil available.</Warning>}
+                    <Warning>Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.</Warning>
+                  </Col>
+                  {!tokenIn.isMain && swapSummary?.swap && (
+                    <RoutingAndSlippageInfo
+                      title="Total Swap Slippage"
+                      swapSummary={swapSummary}
+                      preferredSummary="swap"
+                      txnType="Swap"
+                      tokenIn={tokenIn}
+                      tokenOut={mainToken}
                     />
-                  </OutputDisplay.Item>
-                  <OutputDisplay.Item label="Seed">
-                    <OutputDisplay.Value
-                      value={formatter.token(withdrawBreakdown?.seeds, SEEDS)}
-                      token={SEEDS}
-                      delta="down"
-                      suffix="Seeds"
-                      showArrow
-                    />
-                  </OutputDisplay.Item>
-                </>
-              ) : null}
-            </OutputDisplay>
-          </div>
-          <div className="flex flex-col gap-0">
-            <Warning>Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.</Warning>
-            {!tokenIn.isMain && swapSummary?.swap && (
-              <RoutingAndSlippageInfo
-                title="Total Swap Slippage"
-                swapSummary={swapSummary}
-                preferredSummary="swap"
-                txnType="Swap"
-                tokenIn={tokenIn}
-                tokenOut={mainToken}
-              />
+                  )}
+                </div>
+              </div>
             )}
-          </div>
-        </>
-      ) : null}
+          </motion.div>
+        )}
+      </AnimatePresence>
       {slippageWarning}
       <div className="hidden sm:flex flex-row gap-2">
         <SmartSubmitButton
@@ -603,4 +616,31 @@ const transformTokenLabels = (token: Token) => {
     label: `DEP. ${token.symbol}`,
     sublabel: `Silo Deposited ${token.name}`,
   };
+};
+
+// TODO: This is hard to maintain and not that generic...
+// Is there a better way to do this? You can't have dynamic class names in tailwind.
+const heightMapping = {
+  fromSilo: {
+    isMain: { 0: "19.76rem", 1: "25rem" },
+    notMain: { 0: "25.3125rem", 1: "30.5625rem" },
+  },
+  fromBalance: {
+    isMain: { 0: "13.5rem", 1: "18.75rem" },
+    notMain: { 0: "19rem", 1: "24.25rem" },
+  },
+} as const;
+
+const getAnimateHeight = (args: {
+  fromSilo: boolean;
+  hasSoil: boolean;
+  tokenIn: Token;
+}) => {
+  const { fromSilo, hasSoil, tokenIn } = args;
+
+  const baseKey = fromSilo ? "fromSilo" : "fromBalance";
+  const isMainKey = tokenIn.isMain ? "isMain" : "notMain";
+  const soilKey = !hasSoil ? 1 : 0;
+
+  return heightMapping[baseKey]?.[isMainKey]?.[soilKey] ?? "auto";
 };
