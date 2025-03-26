@@ -9,7 +9,7 @@ import { PINTO } from "@/constants/tokens";
 import { PublicClient } from "viem";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
-import { SILO_HELPERS_ADDRESS, SOW_BLUEPRINT_V0_ADDRESS } from "@/constants/address";
+import { SILO_HELPERS_ADDRESS, SOW_BLUEPRINT_V0_ADDRESS, SOW_BLUEPRINT_V0_SELECTOR } from "@/constants/address";
 
 /**
  * Encodes three uint80 values into a bytes32 value in the format:
@@ -237,8 +237,9 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
         data: encodedData,
       });
       
+      console.log("Advanced Farm decoded:", advancedFarmDecoded);
+      
       if (advancedFarmDecoded.functionName === "advancedFarm" && advancedFarmDecoded.args[0]) {
-        // Extract the calls array from advancedFarm
         const farmCalls = advancedFarmDecoded.args[0] as { callData: `0x${string}`; clipboard: `0x${string}` }[];
         
         if (farmCalls.length > 0) {
@@ -250,8 +251,9 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
               data: pipeCallData,
             });
             
+            console.log("Advanced Pipe decoded:", advancedPipeDecoded);
+            
             if (advancedPipeDecoded.functionName === "advancedPipe" && advancedPipeDecoded.args[0]) {
-              // Extract the calls array from advancedPipe
               const pipeCalls = advancedPipeDecoded.args[0] as { 
                 target: `0x${string}`; 
                 callData: `0x${string}`; 
@@ -262,72 +264,75 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
                 // Step 3: Get the sowBlueprintv0 call data
                 sowBlueprintData = pipeCalls[0].callData;
                 console.log("Found sowBlueprintData in advancedPipe:", sowBlueprintData);
+                
+                // Try to decode the sowBlueprintv0 data directly
+                try {
+                  const sowDecoded = decodeFunctionData({
+                    abi: sowBlueprintv0ABI,
+                    data: sowBlueprintData,
+                  });
+                  console.log("Sow Blueprint decoded:", sowDecoded);
+                  
+                  if (sowDecoded.args && typeof sowDecoded.args[0] === 'object' && sowDecoded.args[0] !== null) {
+                    const params = sowDecoded.args[0] as {
+                      sowParams: {
+                        sourceTokenIndices: readonly number[];
+                        sowAmounts: {
+                          totalAmountToSow: bigint;
+                          minAmountToSowPerSeason: bigint;
+                          maxAmountToSowPerSeason: bigint;
+                        };
+                        minTemp: bigint;
+                        maxPodlineLength: bigint;
+                        maxGrownStalkPerBdv: bigint;
+                        runBlocksAfterSunrise: bigint;
+                        slippageRatio: bigint;
+                      };
+                      opParams: {
+                        whitelistedOperators: readonly `0x${string}`[];
+                        tipAddress: `0x${string}`;
+                        operatorTipAmount: bigint;
+                      };
+                    };
+                    
+                    return {
+                      sourceTokenIndices: params.sowParams.sourceTokenIndices,
+                      sowAmounts: {
+                        totalAmountToSow: TokenValue.fromBlockchain(params.sowParams.sowAmounts.totalAmountToSow, 6).toHuman(),
+                        minAmountToSowPerSeason: TokenValue.fromBlockchain(
+                          params.sowParams.sowAmounts.minAmountToSowPerSeason,
+                          6,
+                        ).toHuman(),
+                        maxAmountToSowPerSeason: TokenValue.fromBlockchain(
+                          params.sowParams.sowAmounts.maxAmountToSowPerSeason,
+                          6,
+                        ).toHuman(),
+                      },
+                      minTemp: TokenValue.fromBlockchain(params.sowParams.minTemp, 6).toHuman(),
+                      maxPodlineLength: TokenValue.fromBlockchain(params.sowParams.maxPodlineLength, 6).toHuman(),
+                      maxGrownStalkPerBdv: TokenValue.fromBlockchain(params.sowParams.maxGrownStalkPerBdv, 6).toHuman(),
+                      runBlocksAfterSunrise: params.sowParams.runBlocksAfterSunrise.toString(),
+                      slippageRatio: TokenValue.fromBlockchain(params.sowParams.slippageRatio, 18).toHuman(),
+                      operatorParams: {
+                        whitelistedOperators: params.opParams.whitelistedOperators,
+                        tipAddress: params.opParams.tipAddress,
+                        operatorTipAmount: TokenValue.fromBlockchain(params.opParams.operatorTipAmount, 6).toHuman(),
+                      },
+                      fromMode: FarmFromMode.INTERNAL,
+                    };
+                  }
+                } catch (error) {
+                  console.error("Failed to decode sowBlueprintv0 data:", error);
+                }
               }
             }
           } catch (error) {
-            console.log("Failed to decode as advancedPipe, trying direct:", error);
-            // If decoding as advancedPipe fails, try to decode the farm call directly as sowBlueprintv0
-            sowBlueprintData = farmCalls[0].callData;
+            console.log("Failed to decode as advancedPipe:", error);
           }
         }
       }
     } catch (error) {
-      console.log("Failed to decode as advancedFarm, trying direct:", error);
-      // If decoding as advancedFarm fails, try direct decode as sowBlueprintv0
-      sowBlueprintData = encodedData;
-    }
-    
-    // If we haven't found the sowBlueprintData yet, use the original data as fallback
-    if (!sowBlueprintData) {
-      sowBlueprintData = encodedData;
-    }
-    
-    // Final step: Decode as sowBlueprintv0
-    const SOW_BLUEPRINT_V0_SELECTOR = "0x1e08d5c0";
-    const selector = sowBlueprintData.slice(0, 10);
-    
-    if (selector === SOW_BLUEPRINT_V0_SELECTOR) {
-      try {
-        const decoded = decodeFunctionData({
-          abi: sowBlueprintv0ABI,
-          data: sowBlueprintData,
-        });
-        
-        if (decoded.functionName === "sowBlueprintv0" && decoded.args[0]) {
-          const params = decoded.args[0];
-          
-          // Convert all BigInt values to strings and maintain the full structure
-          return {
-            sourceTokenIndices: params.sowParams.sourceTokenIndices,
-            sowAmounts: {
-              totalAmountToSow: TokenValue.fromBlockchain(params.sowParams.sowAmounts.totalAmountToSow, 6).toHuman(),
-              minAmountToSowPerSeason: TokenValue.fromBlockchain(
-                params.sowParams.sowAmounts.minAmountToSowPerSeason,
-                6,
-              ).toHuman(),
-              maxAmountToSowPerSeason: TokenValue.fromBlockchain(
-                params.sowParams.sowAmounts.maxAmountToSowPerSeason,
-                6,
-              ).toHuman(),
-            },
-            minTemp: TokenValue.fromBlockchain(params.sowParams.minTemp, 6).toHuman(),
-            maxPodlineLength: TokenValue.fromBlockchain(params.sowParams.maxPodlineLength, 6).toHuman(),
-            maxGrownStalkPerBdv: TokenValue.fromBlockchain(params.sowParams.maxGrownStalkPerBdv, 6).toHuman(),
-            runBlocksAfterSunrise: params.sowParams.runBlocksAfterSunrise.toString(),
-            slippageRatio: TokenValue.fromBlockchain(params.sowParams.slippageRatio, 18).toHuman(),
-            operatorParams: {
-              whitelistedOperators: params.opParams.whitelistedOperators,
-              tipAddress: params.opParams.tipAddress,
-              operatorTipAmount: TokenValue.fromBlockchain(params.opParams.operatorTipAmount, 6).toHuman(),
-            },
-            fromMode: FarmFromMode.INTERNAL, // Default for blueprint
-          };
-        }
-      } catch (error) {
-        console.error("Failed to decode sowBlueprintv0 data:", error);
-      }
-    } else {
-      console.log("Not a sowBlueprintv0 call, selector:", selector);
+      console.log("Failed to decode as advancedFarm:", error);
     }
     
     return null;

@@ -1,9 +1,7 @@
 import { decodeFunctionData, keccak256, toHex } from "viem";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
-
-// Define the function selector as a named constant
-const SOW_BLUEPRINT_V0_SELECTOR = "0x1e08d5c0";
+import { SOW_BLUEPRINT_V0_SELECTOR } from "@/constants/address";
 
 interface HighlightedCallDataProps {
   blueprintData: `0x${string}`;
