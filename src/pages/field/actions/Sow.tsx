@@ -601,7 +601,7 @@ const useWithdrawDepositBreakdown = (
       return;
     }
 
-    if (!tokenDeposits) return;
+    if (!tokenDeposits || !tokenDeposits?.deposits.length) return;
 
     // Take the minimum of the amount in and the amount in the deposits
     // If the amount is greater than amount deposited, sortAndPickCrates will throw
