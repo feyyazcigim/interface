@@ -623,7 +623,6 @@ const transformTokenLabels = (token: Token) => {
 };
 
 // TODO: This is hard to maintain and not that generic...
-// Is there a better way to do this? You can't have dynamic class names in tailwind.
 const heightMapping = {
   fromSilo: {
     isMain: { 0: "19.76rem", 1: "25rem" },
