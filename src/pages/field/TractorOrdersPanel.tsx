@@ -109,6 +109,16 @@ const TractorOrdersPanel = () => {
           .filter(exec => exec.blueprintHash === req.requisition.blueprintHash)
           .sort((a, b) => b.blockNumber - a.blockNumber)[0];
 
+        // Determine token strategy based on sourceTokenIndices
+        let strategyText = "Unknown strategy";
+        if (data.sourceTokenIndices.includes(255)) {
+          strategyText = "Lowest Seeds";
+        } else if (data.sourceTokenIndices.includes(254)) {
+          strategyText = "Lowest Price";
+        } else {
+          strategyText = "Specific Token";
+        }
+
         return (
           <div 
             key={`requisition-${index}`} 
@@ -117,9 +127,8 @@ const TractorOrdersPanel = () => {
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                <div className="bg-pinto-green-4 text-white px-4 py-1 rounded-full">Sow</div>
+                  <div className="bg-pinto-green-4 text-white px-4 py-1 rounded-full">Sow</div>
                   <div className="flex items-center ml-2">
-                    
                     <span className="ml-1">{formatter.number(totalAmount)} PINTO</span>
                   </div>
                 </div>
@@ -128,12 +137,24 @@ const TractorOrdersPanel = () => {
                 </div>
               </div>
               
+              {/* Add token strategy indicator */}
+              <div className="text-pinto-gray-4 flex gap-1 items-center">
+                <span className="text-xs bg-pinto-green-1 text-pinto-green-4 px-2 py-1 rounded-md">
+                  Strategy: {strategyText}
+                </span>
+              </div>
+              
               <div className="text-pinto-gray-4 flex gap-1 items-center">
                 Execute only when I can sow at least {formatter.number(TokenValue.fromHuman(data.sowAmounts.minAmountToSowPerSeason, 6))}
               </div>
               
               <div className="text-pinto-gray-4">
                 Execute only Temperature is at least {formatPercentage(minTemp)}
+              </div>
+
+              {/* Add podline length condition */}
+              <div className="text-pinto-gray-4">
+                Execute only when Pod Line Length ≤ {formatter.number(TokenValue.fromHuman(data.maxPodlineLength, 6))}
               </div>
               
               {latestExecution && latestExecution.sowEvent && (
