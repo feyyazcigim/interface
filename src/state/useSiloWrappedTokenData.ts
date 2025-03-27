@@ -17,9 +17,7 @@ const getExchangeRate = (mainToken: Token, siloWrappedToken: Token, amount: bigi
   return exchangeRate;
 };
 
-export const useSiloWrappedTokenExchangeRateQuery = (options?: {
-  enabled?: boolean;
-}) => {
+export const useSiloWrappedTokenExchangeRateQuery = () => {
   const { mainToken, siloWrappedToken } = useTokenData();
 
   return useReadContract({
@@ -28,7 +26,6 @@ export const useSiloWrappedTokenExchangeRateQuery = (options?: {
     functionName: "previewDeposit",
     args: [BigInt(10 ** mainToken.decimals)],
     query: {
-      enabled: options?.enabled ?? true,
       select: (data) => {
         return getExchangeRate(mainToken, siloWrappedToken, data);
       },
