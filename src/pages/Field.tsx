@@ -31,6 +31,7 @@ import FieldActions from "./field/FieldActions";
 import FieldStats from "./field/FieldStats";
 import MorningPanel from "./field/MorningPanel";
 import TemperatureChart from "./field/Temperature";
+import TractorOrdersPanel from "./field/TractorOrdersPanel";
 
 function Field() {
   useUpdateMorningTemperatureOnInterval();
@@ -136,7 +137,7 @@ function Field() {
               <FieldActions />
             </OnlyMorningCard>
           )}
-          {/* <div className="p-4 rounded-[1.25rem] bg-pinto-off-white border-pinto-gray-2 border"></div> */}
+          {!isMobile && <TractorOrdersPanel />}
           {!isMobile && (
             <div className="p-2 rounded-[1rem] bg-pinto-off-white border-pinto-gray-2 border flex flex-col gap-2">
               <Button

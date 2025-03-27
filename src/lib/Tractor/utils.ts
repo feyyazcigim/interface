@@ -1,4 +1,4 @@
-import { Address, SignableMessage, decodeFunctionData, encodeAbiParameters, encodeFunctionData, keccak256 } from "viem";
+import { Address, SignableMessage, decodeEventLog, decodeFunctionData, encodeAbiParameters, encodeFunctionData, keccak256 } from "viem";
 import { useContractWrite, type BaseError } from "wagmi";
 import { Requisition } from "./types";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
@@ -599,4 +599,83 @@ export function getSowBlueprintDisplayData(data: SowBlueprintData): SowBlueprint
     whitelistedOperators: data.operatorParams.whitelistedOperators,
     tipAddress: data.operatorParams.tipAddress
   };
+}
+
+interface SowEventData {
+  account: `0x${string}`;
+  fieldId: bigint;
+  index: bigint;
+  beans: bigint;
+  pods: bigint;
+}
+
+export async function fetchTractorExecutions(
+  publicClient: PublicClient, 
+  protocolAddress: `0x${string}`,
+  publisher: `0x${string}`
+) {
+  // Get Tractor events
+  const tractorEvents = await publicClient.getContractEvents({
+    address: protocolAddress,
+    abi: diamondABI,
+    eventName: "Tractor",
+    args: {
+      publisher: publisher
+    },
+    fromBlock: BigInt(0),
+    toBlock: "latest",
+  });
+
+  // For each Tractor event, get the full transaction receipt to find the Sow event
+  const eventsWithSow = await Promise.all(tractorEvents.map(async event => {
+    const receipt = await publicClient.getTransactionReceipt({
+      hash: event.transactionHash
+    });
+
+    // Find the Sow event in the transaction logs
+    const sowEvent = receipt.logs.find(log => {
+      try {
+        const decoded = decodeEventLog({
+          abi: diamondABI,
+          data: log.data,
+          topics: log.topics,
+        });
+        return decoded.eventName === "Sow";
+      } catch {
+        return false;
+      }
+    });
+
+    // Decode the Sow event if found
+    let sowData: SowEventData | undefined;
+    if (sowEvent) {
+      try {
+        const decoded = decodeEventLog({
+          abi: diamondABI,
+          data: sowEvent.data,
+          topics: sowEvent.topics,
+        });
+        sowData = {
+          account: decoded.args.account as `0x${string}`,
+          fieldId: decoded.args.fieldId as bigint,
+          index: decoded.args.index as bigint,
+          beans: decoded.args.beans as bigint,
+          pods: decoded.args.pods as bigint,
+        };
+      } catch (error) {
+        console.error("Failed to decode Sow event:", error);
+      }
+    }
+
+    return {
+      blockNumber: Number(event.blockNumber),
+      operator: event.args?.operator as `0x${string}`,
+      publisher: event.args?.publisher as `0x${string}`,
+      blueprintHash: event.args?.blueprintHash as `0x${string}`,
+      transactionHash: event.transactionHash,
+      sowEvent: sowData
+    };
+  }));
+
+  return eventsWithSow;
 }
