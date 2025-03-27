@@ -27,6 +27,7 @@ interface ReviewTractorOrderProps {
   encodedData: `0x${string}`;
   operatorPasteInstrs: `0x${string}`[];
   blueprint: Blueprint;
+  isViewOnly?: boolean;
 }
 
 export default function ReviewTractorOrderDialog({
@@ -37,6 +38,7 @@ export default function ReviewTractorOrderDialog({
   encodedData,
   operatorPasteInstrs,
   blueprint,
+  isViewOnly = false,
 }: ReviewTractorOrderProps) {
   const { address } = useAccount();
   const signRequisition = useSignRequisition();
@@ -112,10 +114,12 @@ export default function ReviewTractorOrderDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1200px] backdrop-blur-sm">
-        <DialogTitle>Review and Publish Tractor Order</DialogTitle>
+        <DialogTitle>{isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}</DialogTitle>
         <DialogDescription>
-          A Tractor Order allows you to pay an Operator to execute a transaction for you on the Base network. This
-          allows you to interact with the Pinto protocol autonomously when the conditions of your Order are met.
+          {isViewOnly 
+            ? "This is your active Tractor Order. It allows an Operator to execute a transaction for you on the Base network when the conditions are met."
+            : "A Tractor Order allows you to pay an Operator to execute a transaction for you on the Base network. This allows you to interact with the Pinto protocol autonomously when the conditions of your Order are met."
+          }
         </DialogDescription>
         <div className="flex flex-col gap-6">
           {/* Tabs */}
@@ -280,31 +284,42 @@ export default function ReviewTractorOrderDialog({
           )}
 
           {/* Footer */}
-          <div className="flex justify-between items-center mt-4">
-            <p className="text-gray-600">
-              Your Order will remain active until you've Sown {orderData.totalAmount} Pods under the specified
-              conditions or until Order cancellation
-            </p>
-            <div className="flex gap-2">
+          {!isViewOnly ? (
+            <div className="flex justify-between items-center mt-4">
+              <p className="text-gray-600">
+                Your Order will remain active until you've Sown {orderData.totalAmount} Pods under the specified
+                conditions or until Order cancellation
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSignBlueprint}
+                  disabled={signing || !!signedRequisitionData}
+                  className="bg-pinto-green-4 hover:bg-pinto-green-5 text-white px-6 py-2 rounded-full"
+                >
+                  {signing ? "Signing..." : signedRequisitionData ? "Signed" : "Sign Order"}
+                </Button>
+
+                <Button
+                  onClick={handlePublishRequisition}
+                  disabled={submitting || !signedRequisitionData}
+                  className={`${
+                    signedRequisitionData ? "bg-pinto-green-4 hover:bg-pinto-green-5" : "bg-gray-300"
+                  } text-white px-6 py-2 rounded-full`}
+                >
+                  {submitting ? "Publishing..." : "Publish Order"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-end mt-4">
               <Button
-                onClick={handleSignBlueprint}
-                disabled={signing || !!signedRequisitionData}
+                onClick={() => onOpenChange(false)}
                 className="bg-pinto-green-4 hover:bg-pinto-green-5 text-white px-6 py-2 rounded-full"
               >
-                {signing ? "Signing..." : signedRequisitionData ? "Signed" : "Sign Order"}
-              </Button>
-
-              <Button
-                onClick={handlePublishRequisition}
-                disabled={submitting || !signedRequisitionData}
-                className={`${
-                  signedRequisitionData ? "bg-pinto-green-4 hover:bg-pinto-green-5" : "bg-gray-300"
-                } text-white px-6 py-2 rounded-full`}
-              >
-                {submitting ? "Publishing..." : "Publish Order"}
+                Close
               </Button>
             </div>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

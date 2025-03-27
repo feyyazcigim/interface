@@ -2,13 +2,19 @@ import { useState, useEffect } from "react";
 import { usePublicClient } from "wagmi";
 import { useAccount } from "wagmi";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { loadPublishedRequisitions, fetchTractorExecutions, RequisitionEvent } from "@/lib/Tractor/utils";
+import { loadPublishedRequisitions, fetchTractorExecutions, RequisitionEvent, decodeSowTractorData } from "@/lib/Tractor/utils";
 import { TokenValue } from "@/classes/TokenValue";
 import { Button } from "@/components/ui/Button";
 import { formatter } from "@/utils/format";
 import { Skeleton } from "@/components/ui/Skeleton";
 import Text from "@/components/ui/Text";
 import TooltipSimple from "@/components/TooltipSimple";
+import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
+import { createRequisition } from "@/lib/Tractor";
+import { Blueprint } from "@/lib/Tractor/types";
+import { decodeFunctionData } from "viem";
+import { beanstalkAbi } from "@/generated/contractHooks";
+import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 
 type ExecutionData = Awaited<ReturnType<typeof fetchTractorExecutions>>[number];
 
@@ -20,6 +26,11 @@ const TractorOrdersPanel = () => {
   const [requisitions, setRequisitions] = useState<RequisitionEvent[]>([]);
   const [executions, setExecutions] = useState<ExecutionData[]>([]);
   const [error, setError] = useState<string | null>(null);
+  
+  // State for the dialog
+  const [selectedOrder, setSelectedOrder] = useState<RequisitionEvent | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [rawSowBlueprintCall, setRawSowBlueprintCall] = useState<`0x${string}` | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,6 +76,72 @@ const TractorOrdersPanel = () => {
 
     fetchData();
   }, [address, protocolAddress, publicClient]);
+
+  // Extract the sowBlueprintv0 call from the advancedFarm call
+  const extractSowBlueprintCall = (data: `0x${string}`): `0x${string}` | null => {
+    try {
+      // Step 1: Decode as advancedFarm
+      const advancedFarmDecoded = decodeFunctionData({
+        abi: beanstalkAbi,
+        data: data,
+      });
+      
+      if (advancedFarmDecoded.functionName === "advancedFarm" && advancedFarmDecoded.args[0]) {
+        const farmCalls = advancedFarmDecoded.args[0] as { callData: `0x${string}`; clipboard: `0x${string}` }[];
+        
+        if (farmCalls.length > 0) {
+          // Step 2: Decode the inner call as advancedPipe
+          const pipeCallData = farmCalls[0].callData;
+          const advancedPipeDecoded = decodeFunctionData({
+            abi: beanstalkAbi,
+            data: pipeCallData,
+          });
+          
+          if (advancedPipeDecoded.functionName === "advancedPipe" && advancedPipeDecoded.args[0]) {
+            const pipeCalls = advancedPipeDecoded.args[0] as { 
+              target: `0x${string}`; 
+              callData: `0x${string}`; 
+              clipboard: `0x${string}` 
+            }[];
+            
+            if (pipeCalls.length > 0) {
+              // Step 3: Get the sowBlueprintv0 call data
+              return pipeCalls[0].callData;
+            }
+          }
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error("Failed to extract sowBlueprintv0 call:", error);
+      return null;
+    }
+  };
+
+  const handleOrderClick = (req: RequisitionEvent) => {
+    setSelectedOrder(req);
+    
+    // Extract the raw sowBlueprintv0 call data if available
+    try {
+      // Use the existing function to extract the sowBlueprintv0 call from the advancedFarm call
+      const sowCall = extractSowBlueprintCall(req.requisition.blueprint.data);
+      console.log("Extracted sowCall:", sowCall);
+      setRawSowBlueprintCall(sowCall);
+    } catch (error) {
+      console.error("Failed to extract sowBlueprintv0 call data:", error);
+      setRawSowBlueprintCall(null);
+    }
+    
+    setShowDialog(true);
+  };
+
+  // Convert the blueprint to match the expected Blueprint type (fixing readonly issue)
+  const adaptBlueprintForDialog = (blueprint: RequisitionEvent["requisition"]["blueprint"]): Blueprint => {
+    return {
+      ...blueprint,
+      operatorPasteInstrs: [...blueprint.operatorPasteInstrs] // Create a mutable copy
+    };
+  };
 
   if (loading) {
     return (
@@ -146,7 +223,8 @@ const TractorOrdersPanel = () => {
         return (
           <div 
             key={`requisition-${index}`} 
-            className={`p-4 rounded-[1rem] border ${isComplete ? 'border-pinto-green-4 bg-pinto-green-1' : 'border-pinto-gray-2 bg-pinto-off-white'}`}
+            className={`p-4 rounded-[1rem] border ${isComplete ? 'border-pinto-green-4 bg-pinto-green-1' : 'border-pinto-gray-2 bg-pinto-off-white'} cursor-pointer hover:shadow-md transition-shadow`}
+            onClick={() => handleOrderClick(req)}
           >
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
@@ -216,6 +294,25 @@ const TractorOrdersPanel = () => {
           </div>
         );
       })}
+      
+      {/* Dialog for order details */}
+      {selectedOrder && selectedOrder.decodedData && (
+        <ReviewTractorOrderDialog
+          open={showDialog}
+          onOpenChange={setShowDialog}
+          orderData={{
+            totalAmount: selectedOrder.decodedData.sowAmounts.totalAmountToSow,
+            temperature: TokenValue.fromHuman(selectedOrder.decodedData.minTemp, 6).mul(100).toHuman(),
+            podLineLength: selectedOrder.decodedData.maxPodlineLength,
+            minSoil: selectedOrder.decodedData.sowAmounts.minAmountToSowPerSeason,
+            operatorTip: selectedOrder.decodedData.operatorParams.operatorTipAmount,
+          }}
+          encodedData={rawSowBlueprintCall || selectedOrder.requisition.blueprint.data}
+          operatorPasteInstrs={[...selectedOrder.requisition.blueprint.operatorPasteInstrs]} // Create a mutable copy
+          blueprint={adaptBlueprintForDialog(selectedOrder.requisition.blueprint)}
+          isViewOnly={true}
+        />
+      )}
     </div>
   );
 };
