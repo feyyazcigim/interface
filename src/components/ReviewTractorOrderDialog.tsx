@@ -346,12 +346,12 @@ export default function ReviewTractorOrderDialog({
                 <div className="text-center text-gray-500 py-8">No executions yet</div>
               ) : (
                 <>
-                  {/* Enhanced Summary Section with Progress Bar */}
+                  {/* Enhanced Summary Section with Progress Bar and Tips Paid */}
                   <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
                     <h4 className="text-lg font-medium mb-4">Execution Summary</h4>
                     
-                    {/* Metrics Grid */}
-                    <div className="grid grid-cols-3 gap-6 mb-4">
+                    {/* Metrics Grid - Now with Total Tips Paid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-500">Total PINTO Sown</span>
                         <span className="text-xl font-medium text-pinto-green-4 mt-3">
@@ -370,9 +370,21 @@ export default function ReviewTractorOrderDialog({
                           {formatter.number(averagePodsPerBean)}
                         </span>
                       </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">Total Tips Paid</span>
+                        <span className="text-xl font-medium mt-3">
+                          {(() => {
+                            // Get tip amount from order data
+                            const tipAmount = orderData.operatorTip ? TokenValue.fromHuman(orderData.operatorTip, 6) : TokenValue.ZERO;
+                            // Calculate total tips paid
+                            const totalTipsPaid = tipAmount.mul(executionHistory.length);
+                            return formatter.number(totalTipsPaid);
+                          })()} PINTO
+                        </span>
+                      </div>
                     </div>
                     
-                    {/* Progress Bar Section */}
+                    {/* Progress Bar Section - remains the same */}
                     {orderData.totalAmount && (
                       <>
                         {/* Calculate progress */}
