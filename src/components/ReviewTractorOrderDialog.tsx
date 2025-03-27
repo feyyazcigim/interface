@@ -354,7 +354,7 @@ export default function ReviewTractorOrderDialog({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-500">Total PINTO Sown</span>
-                        <span className="text-xl font-medium text-pinto-green-4 mt-3">
+                        <span className="text-xl font-medium mt-3">
                           {formatter.number(totalBeansSpent)}
                         </span>
                       </div>
