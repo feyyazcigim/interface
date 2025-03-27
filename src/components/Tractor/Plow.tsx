@@ -6,8 +6,10 @@ import { useEffect, useState, useCallback } from "react";
 import { RequisitionEvent, loadPublishedRequisitions, decodeSowTractorData } from "@/lib/Tractor/utils";
 import { Button } from "@/components/ui/Button";
 import { PlowDetails } from "./PlowDetails";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLatestBlock } from "@/hooks/useLatestBlock";
+import { diamondABI } from "@/constants/abi/diamondABI";
+import useTransaction from "@/hooks/useTransaction";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 const UINT256_MAX = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
@@ -17,7 +19,8 @@ export function Plow() {
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
   const { data: latestBlock } = useLatestBlock();
-
+  const queryClient = useQueryClient();
+  
   const { data: requisitions = [], isLoading } = useQuery({
     queryKey: ["requisitions", protocolAddress, latestBlock?.number],
     queryFn: async () => {
@@ -38,6 +41,159 @@ export function Plow() {
     setSelectedRequisition(requisition);
   }, []);
 
+  // Add state for simulation loading
+  const [simulatingReq, setSimulatingReq] = useState<string | null>(null);
+
+  // Add state for tracking failed simulations
+  const [failedSimulations, setFailedSimulations] = useState<Set<string>>(new Set());
+
+  // Add state for tracking successful simulations
+  const [successfulSimulations, setSuccessfulSimulations] = useState<Set<string>>(new Set());
+
+  // Add state for tracking if we're simulating all
+  const [simulatingAll, setSimulatingAll] = useState(false);
+
+  // Add state for tracking completed executions
+  const [completedExecutions, setCompletedExecutions] = useState<Set<string>>(new Set());
+
+  // Setup transaction handler
+  const { writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
+    successMessage: "Plow successful",
+    errorMessage: "Plow failed",
+    successCallback: (hash) => {
+      // Add to completed executions
+      setCompletedExecutions(prev => new Set(prev).add(hash));
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["requisitions"] });
+    },
+  });
+
+  // Add state for tracking which requisition is being executed
+  const [executingReq, setExecutingReq] = useState<string | null>(null);
+
+  // Add handler for simulating all requisitions
+  const handleSimulateAll = useCallback(async () => {
+    if (!protocolAddress || !publicClient || simulatingAll) return;
+    setSimulatingAll(true);
+
+    try {
+      for (const req of requisitions) {
+        setSimulatingReq(req.requisition.blueprintHash);
+        // Clear previous states
+        setFailedSimulations(prev => {
+          const next = new Set(prev);
+          next.delete(req.requisition.blueprintHash);
+          return next;
+        });
+        setSuccessfulSimulations(prev => {
+          const next = new Set(prev);
+          next.delete(req.requisition.blueprintHash);
+          return next;
+        });
+
+        try {
+          await publicClient.simulateContract({
+            address: protocolAddress,
+            abi: diamondABI,
+            functionName: "tractor",
+            args: [
+              {
+                blueprint: req.requisition.blueprint,
+                blueprintHash: req.requisition.blueprintHash,
+                signature: req.requisition.signature,
+              },
+              "0x",
+            ] as const,
+          });
+
+          console.log(`Simulation successful for ${req.requisition.blueprintHash}`);
+          setSuccessfulSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
+        } catch (error) {
+          console.error(`Simulation failed for ${req.requisition.blueprintHash}:`, error);
+          setFailedSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
+        }
+        setSimulatingReq(null);
+      }
+      toast.success("Completed simulating all requisitions");
+    } catch (error) {
+      console.error("Failed during simulate all:", error);
+      toast.error("Failed to simulate all requisitions");
+    } finally {
+      setSimulatingAll(false);
+    }
+  }, [protocolAddress, publicClient, requisitions]);
+
+  // Update handleSimulate function
+  const handleSimulate = useCallback(async (req: RequisitionEvent) => {
+    if (!protocolAddress || !publicClient) return;
+    setSimulatingReq(req.requisition.blueprintHash);
+    // Clear previous states
+    setFailedSimulations(prev => {
+      const next = new Set(prev);
+      next.delete(req.requisition.blueprintHash);
+      return next;
+    });
+    setSuccessfulSimulations(prev => {
+      const next = new Set(prev);
+      next.delete(req.requisition.blueprintHash);
+      return next;
+    });
+
+    try {
+      await publicClient.simulateContract({
+        address: protocolAddress,
+        abi: diamondABI,
+        functionName: "tractor",
+        args: [
+          {
+            blueprint: req.requisition.blueprint,
+            blueprintHash: req.requisition.blueprintHash,
+            signature: req.requisition.signature,
+          },
+          "0x",
+        ] as const,
+      });
+
+      toast.success("Simulation successful");
+      console.log("Simulation result:", simulation);
+      setSuccessfulSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
+    } catch (error) {
+      console.error("Simulation failed:", error);
+      toast.error(`Simulation failed: ${(error as Error).message}`);
+      setFailedSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
+    } finally {
+      setSimulatingReq(null);
+    }
+  }, [protocolAddress, publicClient]);
+
+  // Add execute handler
+  const handleExecute = useCallback(async (req: RequisitionEvent) => {
+    if (!protocolAddress) return;
+    setExecutingReq(req.requisition.blueprintHash);
+    setSubmitting(true);
+
+    try {
+      await writeWithEstimateGas({
+        address: protocolAddress,
+        abi: diamondABI,
+        functionName: "tractor",
+        args: [
+          {
+            blueprint: req.requisition.blueprint,
+            blueprintHash: req.requisition.blueprintHash,
+            signature: req.requisition.signature,
+          },
+          "0x",
+        ] as const,
+      });
+    } catch (error) {
+      console.error("Failed to execute plow:", error);
+    } finally {
+      setExecutingReq(null);
+      setSubmitting(false);
+    }
+  }, [protocolAddress, writeWithEstimateGas, setSubmitting]);
+
   if (isLoading) {
     return <div>Loading requisitions...</div>;
   }
@@ -54,6 +210,20 @@ export function Plow() {
             <TableHead>Max Nonce</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Operator Tip</TableHead>
+            <TableHead>
+              <div className="flex items-center gap-2">
+                <span>Simulate</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSimulateAll}
+                  disabled={simulatingAll || requisitions.length === 0}
+                  className="text-pinto-gray-4 hover:text-pinto-gray-5"
+                >
+                  {simulatingAll ? "Simulating All..." : "Simulate All"}
+                </Button>
+              </div>
+            </TableHead>
             <TableHead>Plow</TableHead>
           </TableRow>
         </TableHeader>
@@ -95,6 +265,47 @@ export function Plow() {
                 <TableCell className="p-2 font-mono text-sm">{req.requisitionType}</TableCell>
                 <TableCell className="p-2 font-mono text-sm">
                   {req.decodedData ? `${req.decodedData.operatorParams.operatorTipAmount} PINTO` : "Failed to decode"}
+                </TableCell>
+                <TableCell className="p-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (successfulSimulations.has(req.requisition.blueprintHash)) {
+                        handleExecute(req);
+                      } else {
+                        handleSimulate(req);
+                      }
+                    }}
+                    disabled={
+                      simulatingReq === req.requisition.blueprintHash || 
+                      failedSimulations.has(req.requisition.blueprintHash) ||
+                      executingReq === req.requisition.blueprintHash ||
+                      completedExecutions.has(req.requisition.blueprintHash)
+                    }
+                    className={`
+                      ${successfulSimulations.has(req.requisition.blueprintHash) && !completedExecutions.has(req.requisition.blueprintHash)
+                        ? 'bg-pinto-green-4 text-white hover:bg-pinto-green-5' 
+                        : completedExecutions.has(req.requisition.blueprintHash)
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          : 'text-pinto-gray-4 hover:text-pinto-gray-5'
+                      } 
+                      ${failedSimulations.has(req.requisition.blueprintHash) ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
+                  >
+                    {simulatingReq === req.requisition.blueprintHash 
+                      ? "Simulating..." 
+                      : executingReq === req.requisition.blueprintHash
+                        ? "Executing..."
+                        : failedSimulations.has(req.requisition.blueprintHash)
+                          ? "Simulation Failed"
+                          : completedExecutions.has(req.requisition.blueprintHash)
+                            ? "Plowed"
+                            : successfulSimulations.has(req.requisition.blueprintHash)
+                              ? "Execute"
+                              : "Simulate"
+                    }
+                  </Button>
                 </TableCell>
                 <TableCell className="p-2">
                   <Button
