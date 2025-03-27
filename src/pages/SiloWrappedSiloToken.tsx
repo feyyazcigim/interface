@@ -278,7 +278,9 @@ const IntegrationLinks = ({ token }: { token: Token }) => {
             className="flex flex-row items-center justify-between p-4 box-border rounded-[1.25rem] bg-pinto-off-white border-pinto-gray-2 border"
           >
             <div className="pinto-sm-light text-pinto-light">
-              {typeof integration.ctaMessage === "function" ? integration.ctaMessage(token, queryData) : integration.ctaMessage}
+              {typeof integration.ctaMessage === "function"
+                ? integration.ctaMessage(token, queryData)
+                : integration.ctaMessage}
             </div>
             <Button asChild variant="outline-secondary" className="rounded-[12px] min-w-min">
               <Link to={integration.url} target="_blank" rel="noopener noreferrer">
