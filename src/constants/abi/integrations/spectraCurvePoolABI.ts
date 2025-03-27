@@ -1,6 +1,6 @@
-// sPINTO Spectra Pool: https://basescan.org/address/0xd8E4662ffd6b202cF85e3783Fb7252ff0A423a72#code
+// sPINTO Spectra Curve Pool: https://basescan.org/address/0xd8E4662ffd6b202cF85e3783Fb7252ff0A423a72#code
 
-export const spectraPoolABI = [
+export const spectraCurvePoolABI = [
   {
     name: "TokenExchange",
     inputs: [
