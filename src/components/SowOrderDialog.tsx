@@ -147,7 +147,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     if (isDev()) {
       // Generate random numbers within specified ranges
       const randomTotal = Math.floor(Math.random() * (10000 - 1000) + 1000);
-      const randomTemp = Math.floor(Math.random() * (2000 - 1000) + 1000);
+      const randomTemp = Math.floor(Math.random() * (900-100) + 100);
       const randomMaxSeason = Math.floor(Math.random() * (1000 - 500) + 500);
       const randomMinSoil = Math.floor(Math.random() * (100 - 50) + 50);
       const randomPodLineLength = Math.floor(Math.random() * (70000000 - 35000000) + 35000000);

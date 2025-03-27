@@ -125,36 +125,38 @@ export default function DevPage() {
     if (!address || !publicClient) return;
     
     try {
-      // Get the total number of transactions sent by this address
-      const nonce = await publicClient.getTransactionCount({ address });
-      const recentTxs: `0x${string}`[] = [];
+      const latestBlock = await publicClient.getBlockNumber();
+      const recentTxs = new Set<`0x${string}`>();
       
-      // Get the 5 most recent transactions by looking at the last few nonces
-      for (let i = 0; i < 5; i++) {
-        if (nonce - i <= 0) break; // Stop if we've gone through all transactions
-        
+      // Look back through blocks until we find 5 transactions or hit 100 blocks
+      for (let i = 0; i < 100 && recentTxs.size < 5; i++) {
         try {
           const block = await publicClient.getBlock({
-            blockNumber: await publicClient.getBlockNumber(),
+            blockNumber: latestBlock - BigInt(i),
             includeTransactions: true
           });
           
-          // Find transaction from our address in this block
-          const tx = block.transactions.find(tx => 
+          // Find all transactions from our address in this block
+          const blockTxs = block.transactions.filter(tx => 
             typeof tx === 'object' && 
             tx.from.toLowerCase() === address.toLowerCase()
           );
           
-          if (tx && typeof tx === 'object') {
-            recentTxs.push(tx.hash);
+          // Add new transactions to our set
+          for (const tx of blockTxs) {
+            if (typeof tx === 'object') {
+              recentTxs.add(tx.hash);
+              if (recentTxs.size >= 5) break;
+            }
           }
         } catch (err) {
-          console.warn(`Failed to fetch transaction for nonce ${nonce - i}:`, err);
+          console.warn(`Failed to fetch block ${latestBlock - BigInt(i)}:`, err);
           continue;
         }
       }
       
-      setRecentTxs(recentTxs);
+      // Convert Set back to array and update state
+      setRecentTxs(Array.from(recentTxs));
     } catch (error) {
       console.error("Failed to fetch recent transactions:", error);
     }
@@ -676,17 +678,29 @@ export default function DevPage() {
                 <div className="text-sm text-gray-500 mb-2">Recent transactions:</div>
                 <div className="flex flex-col gap-2">
                   {recentTxs.map((hash, index) => (
-                    <button
-                      key={index}
-                      onClick={async () => {
-                        await analyzeTxEvents(hash);
-                        setTxHash(hash);
-                      }}
-                      className="text-sm text-pinto-green-4 hover:text-pinto-green-5 hover:underline font-mono break-all text-left"
-                      title="Click to analyze this transaction"
-                    >
-                      {hash}
-                    </button>
+                    <div key={index} className="flex items-center gap-4">
+                      <button
+                        onClick={async () => {
+                          await analyzeTxEvents(hash);
+                          setTxHash(hash);
+                        }}
+                        className="text-sm text-pinto-green-4 hover:text-pinto-green-5 hover:underline font-mono break-all text-left"
+                        title="Click to analyze this transaction"
+                      >
+                        {hash}
+                      </button>
+                      <button
+                        onClick={() => {
+                          const command = `cast run ${hash} --rpc-url http://localhost:8545`;
+                          navigator.clipboard.writeText(command);
+                          toast.success("Debug command copied to clipboard");
+                        }}
+                        className="text-sm text-pinto-gray-4 hover:text-pinto-gray-5 whitespace-nowrap"
+                        title="Copy debug command to clipboard"
+                      >
+                        Copy Debug Command
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -921,3 +935,4 @@ const MorningAuctionDev = ({
     </MorningCard>
   );
 };
+
