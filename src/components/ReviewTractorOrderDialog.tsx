@@ -340,36 +340,84 @@ export default function ReviewTractorOrderDialog({
               </div>
             </div>
           ) : (
-            /* Table-Based Execution History View with Date & Time */
+            /* Table-Based Execution History View with Date & Time and Progress Bar */
             <div>
-              
               {executionHistory.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">No executions yet</div>
               ) : (
                 <>
-                  {/* New Summary Section  */}
-                  <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-                    <h4 className="text-lg font-medium mb-3">Execution Summary</h4>
-                    <div className="grid grid-cols-3 gap-6">
+                  {/* Enhanced Summary Section with Progress Bar */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+                    <h4 className="text-lg font-medium mb-4">Execution Summary</h4>
+                    
+                    {/* Metrics Grid */}
+                    <div className="grid grid-cols-3 gap-6 mb-4">
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-500">Total PINTO Sown</span>
-                        <span className="text-lg font-medium text-pinto-green-4 mt-2">
+                        <span className="text-xl font-medium text-pinto-green-4 mt-3">
                           {formatter.number(totalBeansSpent)}
                         </span>
                       </div>
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-500">Total Pods Received</span>
-                        <span className="text-lg font-medium mt-2">
+                        <span className="text-xl font-medium mt-3">
                           {formatter.number(totalPodsReceived)}
                         </span>
                       </div>
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-500">Average Pods per PINTO</span>
-                        <span className="text-lg font-medium mt-2">
+                        <span className="text-xl font-medium mt-3">
                           {formatter.number(averagePodsPerBean)}
                         </span>
                       </div>
                     </div>
+                    
+                    {/* Progress Bar Section */}
+                    {orderData.totalAmount && (
+                      <>
+                        {/* Calculate progress */}
+                        {(() => {
+                          const totalAmount = TokenValue.fromHuman(orderData.totalAmount, 6);
+                          const percentComplete = totalAmount.gt(0) 
+                            ? totalBeansSpent.div(totalAmount).mul(100)
+                            : TokenValue.ZERO;
+                          
+                          // Convert to number safely
+                          const percentCompleteNumber = Math.min(
+                            percentComplete.toNumber ? percentComplete.toNumber() : 
+                            (percentComplete.toHuman ? Number(percentComplete.toHuman()) : 0), 
+                            100
+                          );
+                          
+                          const isComplete = percentCompleteNumber >= 100;
+                          
+                          return (
+                            <div className="mt-5">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm text-gray-500">Progress</span>
+                                <span className="text-sm text-gray-500">
+                                  {formatter.number(totalBeansSpent)} / {orderData.totalAmount} PINTO sown 
+                                  ({Math.round(percentCompleteNumber)}%)
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-3">
+                                <div 
+                                  className={`h-3 rounded-full ${isComplete ? 'bg-pinto-green-4' : 'bg-pinto-green-4'}`}
+                                  style={{ width: `${percentCompleteNumber}%` }}
+                                ></div>
+                              </div>
+                              
+                              {/* Completion message */}
+                              {isComplete && (
+                                <div className="mt-3 py-2 bg-pinto-green-1 rounded-lg border border-pinto-green-4 text-pinto-green-4 text-center font-medium">
+                                  Order Completed!
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </>
+                    )}
                   </div>
 
                   {/* Existing Table */}
