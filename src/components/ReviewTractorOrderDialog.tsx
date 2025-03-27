@@ -280,28 +280,7 @@ export default function ReviewTractorOrderDialog({
                     </div>
                   </div>
                 </div>
-                
-                {/* Execution Summary - only show in view mode with history */}
-                {isViewOnly && executionHistory.length > 0 && (
-                  <div className="flex items-center justify-center mt-8">
-                    <div className="bg-white rounded-xl px-8 py-3 shadow-sm flex flex-col gap-2 border border-gray-200 w-full max-w-md">
-                      <div className="text-lg font-medium text-center mb-2">Execution Summary</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="text-gray-600">Executions:</div>
-                        <div className="text-right font-medium">{executionHistory.length}</div>
-                        
-                        <div className="text-gray-600">Total PINTO Sown:</div>
-                        <div className="text-right font-medium text-pinto-green-4">{formatter.number(totalBeansSpent)}</div>
-                        
-                        <div className="text-gray-600">Total Pods Received:</div>
-                        <div className="text-right font-medium">{formatter.number(totalPodsReceived)}</div>
-                        
-                        <div className="text-gray-600">Average Pods per PINTO:</div>
-                        <div className="text-right font-medium">{formatter.number(averagePodsPerBean)}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+
               </div>
             </div>
           ) : activeTab === "blueprint" ? (
@@ -363,86 +342,113 @@ export default function ReviewTractorOrderDialog({
           ) : (
             /* Table-Based Execution History View with Date & Time */
             <div>
-              <h3 className="text-xl font-medium mb-4">Execution History</h3>
               
               {executionHistory.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">No executions yet</div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="px-4 py-3 text-left text-gray-600 border-b">Execution</th>
-                        <th className="px-4 py-3 text-right text-gray-600 border-b">PINTO Sown</th>
-                        <th className="px-4 py-3 text-right text-gray-600 border-b">Pods Received</th>
-                        <th className="px-4 py-3 text-right text-gray-600 border-b">Pods per PINTO</th>
-                        <th className="px-4 py-3 text-left text-gray-600 border-b">Operator</th>
-                        <th className="px-4 py-3 text-right text-gray-600 border-b min-w-[150px]">Date</th>
-                        <th className="px-4 py-3 text-right text-gray-600 border-b">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* Sort executions by timestamp or block number in descending order */}
-                      {[...executionHistory]
-                        .sort((a, b) => {
-                          // If timestamps are available, use those for sorting
-                          if (a.timestamp && b.timestamp) {
-                            return b.timestamp - a.timestamp;
-                          }
-                          // Otherwise fall back to block numbers
-                          return b.blockNumber - a.blockNumber;
-                        })
-                        .map((execution, index) => {
-                          // Calculate pods per PINTO for this execution
-                          const podsPerPinto = execution.sowEvent && execution.sowEvent.beans > 0n
-                            ? TokenValue.fromBlockchain(execution.sowEvent.pods, 6)
-                                .div(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
-                            : TokenValue.ZERO;
+                <>
+                  {/* New Summary Section  */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+                    <h4 className="text-lg font-medium mb-3">Execution Summary</h4>
+                    <div className="grid grid-cols-3 gap-6">
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">Total PINTO Sown</span>
+                        <span className="text-lg font-medium text-pinto-green-4 mt-2">
+                          {formatter.number(totalBeansSpent)}
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">Total Pods Received</span>
+                        <span className="text-lg font-medium mt-2">
+                          {formatter.number(totalPodsReceived)}
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">Average Pods per PINTO</span>
+                        <span className="text-lg font-medium mt-2">
+                          {formatter.number(averagePodsPerBean)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Existing Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="px-4 py-3 text-left text-gray-600 border-b">Execution</th>
+                          <th className="px-4 py-3 text-right text-gray-600 border-b">PINTO Sown</th>
+                          <th className="px-4 py-3 text-right text-gray-600 border-b">Pods Received</th>
+                          <th className="px-4 py-3 text-right text-gray-600 border-b">Pods per PINTO</th>
+                          <th className="px-4 py-3 text-left text-gray-600 border-b">Operator</th>
+                          <th className="px-4 py-3 text-right text-gray-600 border-b min-w-[150px]">Date & Time</th>
+                          <th className="px-4 py-3 text-right text-gray-600 border-b">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* Table rows - remain the same */}
+                        {[...executionHistory]
+                          .sort((a, b) => {
+                            // If timestamps are available, use those for sorting
+                            if (a.timestamp && b.timestamp) {
+                              return b.timestamp - a.timestamp;
+                            }
+                            // Otherwise fall back to block numbers
+                            return b.blockNumber - a.blockNumber;
+                          })
+                          .map((execution, index) => {
+                            // Calculate pods per PINTO for this execution
+                            const podsPerPinto = execution.sowEvent && execution.sowEvent.beans > 0n
+                              ? TokenValue.fromBlockchain(execution.sowEvent.pods, 6)
+                                  .div(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
+                              : TokenValue.ZERO;
                                 
-                          return (
-                            <tr key={index} className="hover:bg-gray-50 border-b">
-                              <td className="px-4 py-3 font-medium">
-                                #{executionHistory.length - index}
-                              </td>
-                              <td className="px-4 py-3 text-right">
-                                {execution.sowEvent 
-                                  ? formatter.number(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
-                                  : "-"}
-                              </td>
-                              <td className="px-4 py-3 text-right">
-                                {execution.sowEvent 
-                                  ? formatter.number(TokenValue.fromBlockchain(execution.sowEvent.pods, 6))
-                                  : "-"}
-                              </td>
-                              <td className="px-4 py-3 text-right">
-                                {execution.sowEvent && execution.sowEvent.beans > 0n
-                                  ? formatter.number(podsPerPinto)
-                                  : "-"}
-                              </td>
-                              <td className="px-4 py-3 text-gray-500">
-                                {shortenAddress(execution.operator)}
-                              </td>
-                              <td className="px-4 py-3 text-right text-gray-500">
-                                {execution.timestamp 
-                                  ? formatDate(execution.timestamp)
-                                  : `Block ${execution.blockNumber}`}
-                              </td>
-                              <td className="px-4 py-3 text-right">
-                                <a 
-                                  href={`https://basescan.org/tx/${execution.transactionHash}`} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-pinto-green-4 hover:underline text-sm"
-                                >
-                                  View Transaction
-                                </a>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
-                </div>
+                            return (
+                              <tr key={index} className="hover:bg-gray-50 border-b">
+                                <td className="px-4 py-3 font-medium">
+                                  #{executionHistory.length - index}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  {execution.sowEvent 
+                                    ? formatter.number(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
+                                    : "-"}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  {execution.sowEvent 
+                                    ? formatter.number(TokenValue.fromBlockchain(execution.sowEvent.pods, 6))
+                                    : "-"}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  {execution.sowEvent && execution.sowEvent.beans > 0n
+                                    ? formatter.number(podsPerPinto)
+                                    : "-"}
+                                </td>
+                                <td className="px-4 py-3 text-gray-500">
+                                  {shortenAddress(execution.operator)}
+                                </td>
+                                <td className="px-4 py-3 text-right text-gray-500">
+                                  {execution.timestamp 
+                                    ? formatDate(execution.timestamp)
+                                    : `Block ${execution.blockNumber}`}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <a 
+                                    href={`https://basescan.org/tx/${execution.transactionHash}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-pinto-green-4 hover:underline text-sm"
+                                  >
+                                    View Transaction
+                                  </a>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           )}
