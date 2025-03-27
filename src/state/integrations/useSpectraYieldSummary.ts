@@ -1,15 +1,15 @@
-import { ChainLookup } from "@/utils/types.generic";
+import { TV } from "@/classes/TokenValue";
+import { spectraCurvePoolABI } from "@/constants/abi/integrations/spectraCurvePoolABI";
+import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
 import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
+import { getNowRounded } from "@/state/protocol/sun";
 import { useChainConstant, useResolvedChainId } from "@/utils/chain";
 import { Token } from "@/utils/types";
+import { ChainLookup } from "@/utils/types.generic";
+import { useEffect } from "react";
 import { Address } from "viem";
 import { base } from "viem/chains";
 import { useReadContracts } from "wagmi";
-import { TV } from "@/classes/TokenValue";
-import { getNowRounded } from "@/state/protocol/sun";
-import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
-import { spectraCurvePoolABI } from "@/constants/abi/integrations/spectraCurvePoolABI";
-import { useEffect } from "react";
 
 export interface SpectraCurvePool {
   maturity: number;
@@ -81,19 +81,10 @@ const HOURS_PER_YEAR = 24 * 365;
 
 // ---------- FUNCTIONS ----------
 
-type SpectraCurvePoolQueryReturn = [
-  get_dy: bigint,
-  previewRedeem: bigint,
-];
+type SpectraCurvePoolQueryReturn = [get_dy: bigint, previewRedeem: bigint];
 
-const selectQuery = (
-  response: SpectraCurvePoolQueryReturn,
-  pool: SpectraCurvePool,
-) => {
-  const [
-    get_dy,
-    previewRedeem,
-  ] = response;
+const selectQuery = (response: SpectraCurvePoolQueryReturn, pool: SpectraCurvePool) => {
+  const [get_dy, previewRedeem] = response;
 
   const now = getNowRounded();
 

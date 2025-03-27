@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/Separator";
 import { SEEDS, STALK } from "@/constants/internalTokens";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useProtocolIntegrationLinks } from "@/hooks/useProtocolIntegrations";
+import { useSpectraYieldBreakdown } from "@/state/integrations/useSpectraYieldSummary";
 import { useSeasonalPrice, useSeasonalWrappedDepositExchangeRate } from "@/state/seasonal/seasonalDataHooks";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -31,7 +32,6 @@ import { useAccount } from "wagmi";
 import SiloActions from "./silo/SiloActions";
 import SiloTokenPageHeader, { SiloTokenPageSubHeader } from "./siloToken/SiloTokenPageHeader";
 import SiloedTokenCharts from "./wrap/SiloedTokenCharts";
-import { useSpectraYieldBreakdown } from "@/state/integrations/useSpectraYieldSummary";
 
 export default function SiloWrappedSiloToken({ token }: { token: Token }) {
   // URL Params
