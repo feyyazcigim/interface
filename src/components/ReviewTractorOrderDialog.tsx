@@ -540,16 +540,7 @@ export default function ReviewTractorOrderDialog({
                 </Button>
               </div>
             </div>
-          ) : (
-            <div className="flex justify-end mt-4">
-              <Button
-                onClick={() => onOpenChange(false)}
-                className="bg-pinto-green-4 hover:bg-pinto-green-5 text-white px-6 py-2 rounded-full"
-              >
-                Close
-              </Button>
-            </div>
-          )}
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
