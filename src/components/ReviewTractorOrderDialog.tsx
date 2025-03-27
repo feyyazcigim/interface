@@ -12,6 +12,26 @@ import { Switch } from "./ui/Switch";
 import useTransaction from "@/hooks/useTransaction";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { diamondABI } from "@/constants/abi/diamondABI";
+import { TokenValue } from "@/classes/TokenValue";
+import { formatter } from "@/utils/format";
+import { format } from "date-fns";
+
+// Define the execution data type
+export interface ExecutionData {
+  blockNumber: number;
+  operator: `0x${string}`;
+  publisher: `0x${string}`;
+  blueprintHash: `0x${string}`;
+  transactionHash: `0x${string}`;
+  timestamp?: number;
+  sowEvent?: {
+    account: `0x${string}`;
+    fieldId: bigint;
+    index: bigint;
+    beans: bigint;
+    pods: bigint;
+  };
+}
 
 interface ReviewTractorOrderProps {
   open: boolean;
@@ -28,6 +48,7 @@ interface ReviewTractorOrderProps {
   operatorPasteInstrs: `0x${string}`[];
   blueprint: Blueprint;
   isViewOnly?: boolean;
+  executionHistory?: ExecutionData[]; // Add execution history
 }
 
 export default function ReviewTractorOrderDialog({
@@ -39,12 +60,13 @@ export default function ReviewTractorOrderDialog({
   operatorPasteInstrs,
   blueprint,
   isViewOnly = false,
+  executionHistory = [], // Default to empty array
 }: ReviewTractorOrderProps) {
   const { address } = useAccount();
   const signRequisition = useSignRequisition();
   const [signing, setSigning] = useState(false);
   const { data: blueprintHash } = useGetBlueprintHash(blueprint);
-  const [activeTab, setActiveTab] = useState<"order" | "blueprint">("order");
+  const [activeTab, setActiveTab] = useState<"order" | "blueprint" | "executions">("order");
   const [decodeAbi, setDecodeAbi] = useState(false);
   const [signedRequisitionData, setSignedRequisitionData] = useState<any>(null);
   const protocolAddress = useProtocolAddress();
@@ -111,6 +133,31 @@ export default function ReviewTractorOrderDialog({
     }
   };
 
+  // Calculate total results from execution history
+  const totalBeansSpent = executionHistory.reduce((acc, exec) => {
+    if (exec.sowEvent) {
+      return acc.add(TokenValue.fromBlockchain(exec.sowEvent.beans, 6));
+    }
+    return acc;
+  }, TokenValue.ZERO);
+
+  const totalPodsReceived = executionHistory.reduce((acc, exec) => {
+    if (exec.sowEvent) {
+      return acc.add(TokenValue.fromBlockchain(exec.sowEvent.pods, 6));
+    }
+    return acc;
+  }, TokenValue.ZERO);
+
+  const averagePodsPerBean = totalBeansSpent.gt(0) 
+    ? totalPodsReceived.div(totalBeansSpent) 
+    : TokenValue.ZERO;
+
+  // Helper function to format dates with time
+  const formatDate = (timestamp?: number) => {
+    if (!timestamp) return "Unknown";
+    return format(new Date(timestamp), "MM/dd/yyyy h:mm a"); // Include hours and minutes with AM/PM
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1200px] backdrop-blur-sm">
@@ -138,6 +185,16 @@ export default function ReviewTractorOrderDialog({
             >
               View Blueprint and Requisition
             </button>
+            {isViewOnly && executionHistory.length > 0 && (
+              <button
+                className={`pb-2 ${
+                  activeTab === "executions" ? "border-b-2 border-green-600 font-medium" : "text-gray-500"
+                }`}
+                onClick={() => setActiveTab("executions")}
+              >
+                Execution History ({executionHistory.length})
+              </button>
+            )}
           </div>
 
           {/* Content */}
@@ -223,9 +280,31 @@ export default function ReviewTractorOrderDialog({
                     </div>
                   </div>
                 </div>
+                
+                {/* Execution Summary - only show in view mode with history */}
+                {isViewOnly && executionHistory.length > 0 && (
+                  <div className="flex items-center justify-center mt-8">
+                    <div className="bg-white rounded-xl px-8 py-3 shadow-sm flex flex-col gap-2 border border-gray-200 w-full max-w-md">
+                      <div className="text-lg font-medium text-center mb-2">Execution Summary</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="text-gray-600">Executions:</div>
+                        <div className="text-right font-medium">{executionHistory.length}</div>
+                        
+                        <div className="text-gray-600">Total PINTO Sown:</div>
+                        <div className="text-right font-medium text-pinto-green-4">{formatter.number(totalBeansSpent)}</div>
+                        
+                        <div className="text-gray-600">Total Pods Received:</div>
+                        <div className="text-right font-medium">{formatter.number(totalPodsReceived)}</div>
+                        
+                        <div className="text-gray-600">Average Pods per PINTO:</div>
+                        <div className="text-right font-medium">{formatter.number(averagePodsPerBean)}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          ) : (
+          ) : activeTab === "blueprint" ? (
             /* Blueprint View */
             <div className="bg-gray-50 p-6 rounded-lg">
               <div className="space-y-6">
@@ -281,6 +360,91 @@ export default function ReviewTractorOrderDialog({
                 </div>
               </div>
             </div>
+          ) : (
+            /* Table-Based Execution History View with Date & Time */
+            <div>
+              <h3 className="text-xl font-medium mb-4">Execution History</h3>
+              
+              {executionHistory.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">No executions yet</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="px-4 py-3 text-left text-gray-600 border-b">Execution</th>
+                        <th className="px-4 py-3 text-right text-gray-600 border-b">PINTO Sown</th>
+                        <th className="px-4 py-3 text-right text-gray-600 border-b">Pods Received</th>
+                        <th className="px-4 py-3 text-right text-gray-600 border-b">Pods per PINTO</th>
+                        <th className="px-4 py-3 text-left text-gray-600 border-b">Operator</th>
+                        <th className="px-4 py-3 text-right text-gray-600 border-b min-w-[150px]">Date</th>
+                        <th className="px-4 py-3 text-right text-gray-600 border-b">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Sort executions by timestamp or block number in descending order */}
+                      {[...executionHistory]
+                        .sort((a, b) => {
+                          // If timestamps are available, use those for sorting
+                          if (a.timestamp && b.timestamp) {
+                            return b.timestamp - a.timestamp;
+                          }
+                          // Otherwise fall back to block numbers
+                          return b.blockNumber - a.blockNumber;
+                        })
+                        .map((execution, index) => {
+                          // Calculate pods per PINTO for this execution
+                          const podsPerPinto = execution.sowEvent && execution.sowEvent.beans > 0n
+                            ? TokenValue.fromBlockchain(execution.sowEvent.pods, 6)
+                                .div(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
+                            : TokenValue.ZERO;
+                                
+                          return (
+                            <tr key={index} className="hover:bg-gray-50 border-b">
+                              <td className="px-4 py-3 font-medium">
+                                #{executionHistory.length - index}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                {execution.sowEvent 
+                                  ? formatter.number(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
+                                  : "-"}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                {execution.sowEvent 
+                                  ? formatter.number(TokenValue.fromBlockchain(execution.sowEvent.pods, 6))
+                                  : "-"}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                {execution.sowEvent && execution.sowEvent.beans > 0n
+                                  ? formatter.number(podsPerPinto)
+                                  : "-"}
+                              </td>
+                              <td className="px-4 py-3 text-gray-500">
+                                {shortenAddress(execution.operator)}
+                              </td>
+                              <td className="px-4 py-3 text-right text-gray-500">
+                                {execution.timestamp 
+                                  ? formatDate(execution.timestamp)
+                                  : `Block ${execution.blockNumber}`}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <a 
+                                  href={`https://basescan.org/tx/${execution.transactionHash}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-pinto-green-4 hover:underline text-sm"
+                                >
+                                  View Transaction
+                                </a>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Footer */}
@@ -324,4 +488,9 @@ export default function ReviewTractorOrderDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+// Helper function to shorten addresses
+function shortenAddress(address: string): string {
+  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 }

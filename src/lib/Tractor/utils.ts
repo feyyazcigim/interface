@@ -626,11 +626,15 @@ export async function fetchTractorExecutions(
     toBlock: "latest",
   });
 
-  // For each Tractor event, get the full transaction receipt to find the Sow event
-  const eventsWithSow = await Promise.all(tractorEvents.map(async event => {
+  // Process transaction receipts and collect block numbers
+  const blockNumbers = new Set<bigint>();
+  const processingResults = await Promise.all(tractorEvents.map(async event => {
     const receipt = await publicClient.getTransactionReceipt({
       hash: event.transactionHash
     });
+
+    // Add block number to the set for batch fetching
+    blockNumbers.add(receipt.blockNumber);
 
     // Find the Sow event in the transaction logs
     const sowEvent = receipt.logs.find(log => {
@@ -668,14 +672,36 @@ export async function fetchTractorExecutions(
     }
 
     return {
-      blockNumber: Number(event.blockNumber),
-      operator: event.args?.operator as `0x${string}`,
-      publisher: event.args?.publisher as `0x${string}`,
-      blueprintHash: event.args?.blueprintHash as `0x${string}`,
-      transactionHash: event.transactionHash,
-      sowEvent: sowData
+      blockNumber: receipt.blockNumber,
+      event,
+      receipt,
+      sowData
     };
   }));
 
-  return eventsWithSow;
+  // Fetch all required blocks in a batch
+  const blocks = await Promise.all(
+    Array.from(blockNumbers).map(blockNumber => 
+      publicClient.getBlock({ blockNumber })
+    )
+  );
+
+  // Build a map of block numbers to timestamps
+  const blockTimestamps = new Map<string, number>();
+  blocks.forEach(block => {
+    blockTimestamps.set(block.number.toString(), Number(block.timestamp) * 1000);
+  });
+
+  // Assemble the final result
+  return processingResults.map(result => {
+    return {
+      blockNumber: Number(result.blockNumber),
+      operator: result.event.args?.operator as `0x${string}`,
+      publisher: result.event.args?.publisher as `0x${string}`,
+      blueprintHash: result.event.args?.blueprintHash as `0x${string}`,
+      transactionHash: result.event.transactionHash,
+      timestamp: blockTimestamps.get(result.blockNumber.toString()),
+      sowEvent: result.sowData
+    };
+  });
 }

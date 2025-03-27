@@ -311,6 +311,7 @@ const TractorOrdersPanel = () => {
           operatorPasteInstrs={[...selectedOrder.requisition.blueprint.operatorPasteInstrs]} // Create a mutable copy
           blueprint={adaptBlueprintForDialog(selectedOrder.requisition.blueprint)}
           isViewOnly={true}
+          executionHistory={executions.filter(exec => exec.blueprintHash === selectedOrder.requisition.blueprintHash)}
         />
       )}
     </div>
