@@ -99,15 +99,39 @@ const TractorOrdersPanel = () => {
         const totalAmount = TokenValue.fromHuman(data.sowAmounts.totalAmountToSow, 6);
         const minTemp = TokenValue.fromHuman(data.minTemp, 6);
         
-        // Count how many times this blueprint has been executed
-        const executionCount = executions.filter(
+        // Get executions for this blueprint
+        const blueprintExecutions = executions.filter(
           exec => exec.blueprintHash === req.requisition.blueprintHash
-        ).length;
+        );
+        
+        // Count how many times this blueprint has been executed
+        const executionCount = blueprintExecutions.length;
+        
+        // Calculate total PINTO sown so far for this blueprint
+        const totalSown = blueprintExecutions.reduce((acc, exec) => {
+          if (exec.sowEvent) {
+            return acc.add(TokenValue.fromBlockchain(exec.sowEvent.beans, 6));
+          }
+          return acc;
+        }, TokenValue.ZERO);
+        
+        // Calculate percentage completion
+        const percentComplete = totalAmount.gt(0) 
+          ? totalSown.div(totalAmount).mul(100)
+          : TokenValue.ZERO;
+        
+        // Get percentage as number for display
+        const percentCompleteNumber = Math.min(
+          percentComplete.toHuman ? Number(percentComplete.toHuman()) : 0, 
+          100
+        );
+        
+        const isComplete = percentComplete.gte(100);
         
         // Find latest execution for this blueprint
-        const latestExecution = executions
-          .filter(exec => exec.blueprintHash === req.requisition.blueprintHash)
-          .sort((a, b) => b.blockNumber - a.blockNumber)[0];
+        const latestExecution = blueprintExecutions.length > 0
+          ? blueprintExecutions.sort((a, b) => b.blockNumber - a.blockNumber)[0]
+          : null;
 
         // Determine token strategy based on sourceTokenIndices
         let strategyText = "Unknown strategy";
@@ -122,7 +146,7 @@ const TractorOrdersPanel = () => {
         return (
           <div 
             key={`requisition-${index}`} 
-            className="p-4 rounded-[1rem] border border-pinto-gray-2 bg-pinto-off-white"
+            className={`p-4 rounded-[1rem] border ${isComplete ? 'border-pinto-green-4 bg-pinto-green-1' : 'border-pinto-gray-2 bg-pinto-off-white'}`}
           >
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
@@ -137,7 +161,23 @@ const TractorOrdersPanel = () => {
                 </div>
               </div>
               
-              {/* Add token strategy indicator */}
+              {/* Progress section */}
+              <div className="mt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-pinto-gray-4">Progress</span>
+                  <span className="text-xs text-pinto-gray-4">
+                    {formatter.number(totalSown)} / {formatter.number(totalAmount)} PINTO sown ({Math.round(percentCompleteNumber)}%)
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-pinto-green-4 h-2 rounded-full" 
+                    style={{ width: `${percentCompleteNumber}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              {/* Token strategy indicator */}
               <div className="text-pinto-gray-4 flex gap-1 items-center">
                 <span className="text-xs bg-pinto-green-1 text-pinto-green-4 px-2 py-1 rounded-md">
                   Strategy: {strategyText}
@@ -164,6 +204,12 @@ const TractorOrdersPanel = () => {
                     <span>Sowed {formatter.number(TokenValue.fromBlockchain(latestExecution.sowEvent.beans, 6))} PINTO</span>
                     <span>Got {formatter.number(TokenValue.fromBlockchain(latestExecution.sowEvent.pods, 6))} Pods</span>
                   </div>
+                </div>
+              )}
+              
+              {isComplete && (
+                <div className="mt-2 p-2 bg-pinto-green-1 rounded-lg border border-pinto-green-4 text-pinto-green-4 text-center font-medium">
+                  Order Completed!
                 </div>
               )}
             </div>
