@@ -92,7 +92,6 @@ export function SoilOrderbook() {
             <TableHead>Created At</TableHead>
             <TableHead>Publisher</TableHead>
             <TableHead>Blueprint Hash</TableHead>
-            <TableHead>Max Nonce</TableHead>
             <TableHead>Max Pinto</TableHead>
             <TableHead>Min Pinto</TableHead>
             <TableHead>Temperature</TableHead>
@@ -135,7 +134,6 @@ export function SoilOrderbook() {
                 <TableCell className="p-2 font-mono text-sm">
                   {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
-                <TableCell className="p-2">{req.requisition.blueprint.maxNonce.toString()}</TableCell>
                 <TableCell className="p-2 font-mono text-sm">
                   {decodedData ? `${decodedData.sowAmounts.totalAmountToSow} PINTO` : "Failed to decode"}
                 </TableCell>

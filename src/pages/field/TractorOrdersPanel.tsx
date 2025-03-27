@@ -45,13 +45,14 @@ const TractorOrdersPanel = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch published requisitions
+        // Fetch published requisitions, filtered to sowBlueprintv0 type
         const latestBlock = await publicClient.getBlock({ blockTag: 'latest' });
         const userRequisitions = await loadPublishedRequisitions(
           address,
           protocolAddress,
           publicClient,
-          { number: latestBlock.number, timestamp: latestBlock.timestamp }
+          { number: latestBlock.number, timestamp: latestBlock.timestamp },
+          "sowBlueprintv0"  // Only get sow blueprint requisitions
         );
         
         // Filter out cancelled requisitions

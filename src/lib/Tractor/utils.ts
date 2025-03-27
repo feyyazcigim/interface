@@ -413,11 +413,15 @@ export interface RequisitionEvent {
   decodedData: SowBlueprintData | null;
 }
 
+// First, export the requisition type as a standalone type for reuse
+export type RequisitionType = "sowBlueprintv0" | "unknown";
+
 export async function loadPublishedRequisitions(
   address: string | undefined,
   protocolAddress: `0x${string}` | undefined,
   publicClient: PublicClient | null,
   latestBlock?: { number: bigint; timestamp: bigint } | null,
+  requisitionType?: RequisitionType | RequisitionType[] // Add requisition type filter
 ) {
   if (!protocolAddress || !publicClient) return [];
 
@@ -434,11 +438,19 @@ export async function loadPublishedRequisitions(
           return null;
         }
 
-        let requisitionType: "sowBlueprintv0" | "unknown" = "unknown";
+        let eventRequisitionType: RequisitionType = "unknown";
         // Try to decode the data
         const decodedData = decodeSowTractorData(requisition.blueprint.data);
         if (decodedData) {
-          requisitionType = "sowBlueprintv0";
+          eventRequisitionType = "sowBlueprintv0";
+        }
+
+        // Filter by requisition type if provided
+        if (requisitionType) {
+          const typeArray = Array.isArray(requisitionType) ? requisitionType : [requisitionType];
+          if (!typeArray.includes(eventRequisitionType)) {
+            return null;
+          }
         }
 
         // Calculate timestamp if we have the latest block info
@@ -458,7 +470,7 @@ export async function loadPublishedRequisitions(
           blockNumber: Number(event.blockNumber),
           timestamp,
           isCancelled: cancelledHashes.has(requisition.blueprintHash),
-          requisitionType,
+          requisitionType: eventRequisitionType,
           decodedData,
         } as RequisitionEvent;
       })
