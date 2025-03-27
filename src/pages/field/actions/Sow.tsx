@@ -138,9 +138,13 @@ function Sow({ isMorning }: SowProps) {
     setAmountIn("0");
     resetSwap();
     invalidateField("all");
-    const staleQueryKeys = [...farmerField.queryKeys, ...(fromSilo ? farmerSilo.queryKeys : farmerBalances.queryKeys)];
-    staleQueryKeys.forEach((key) => qc.invalidateQueries({ queryKey: key }));
-  }, [qc, fromSilo, farmerField.queryKeys, farmerBalances.queryKeys, farmerSilo.queryKeys, invalidateField, resetSwap]);
+    farmerField.refetch();
+    if (fromSilo) {
+      farmerSilo.refetch();
+    } else {
+      farmerBalances.refetch();
+    }
+  }, [fromSilo, farmerField.refetch, farmerBalances.refetch, farmerSilo.refetch, invalidateField, resetSwap]);
 
   const { writeWithEstimateGas, isConfirming, submitting, setSubmitting } = useTransaction({
     successCallback: onSuccess,
