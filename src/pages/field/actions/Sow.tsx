@@ -617,7 +617,7 @@ const useWithdrawDepositBreakdown = (
 
 const transformTokenLabels = (token: Token) => {
   return {
-    label: `DEP. ${token.symbol}`,
+    label: `Dep. ${token.symbol}`,
     sublabel: `Silo Deposited ${token.name}`,
   };
 };

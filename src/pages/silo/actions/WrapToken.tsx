@@ -253,7 +253,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
           filterTokens={filterTokens}
           setBalanceFrom={setBalanceFrom}
           balanceFrom={balanceFrom}
-          tokenNameOverride={usingDeposits ? "DEP. PINTO" : undefined}
+          tokenNameOverride={usingDeposits ? "Dep. PINTO" : undefined}
           error={inputError}
           setError={setInputError}
           selectedToken={usingDeposits ? mainToken : token}
