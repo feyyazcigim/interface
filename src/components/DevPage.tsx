@@ -92,6 +92,8 @@ export default function DevPage() {
     logIndex: number;
   }[] | null>(null);
 
+  const [recentTxs, setRecentTxs] = useState<`0x${string}`[]>([]);
+
   useEffect(() => {
     const checkServer = async () => {
       try {
@@ -118,6 +120,49 @@ export default function DevPage() {
     setTokenBalance((prev) => ({ ...prev, receiver: address || "" }));
     setReceiverAddress(address || "");
   }, [address]);
+
+  const fetchRecentTransactions = async () => {
+    if (!address || !publicClient) return;
+    
+    try {
+      // Get the total number of transactions sent by this address
+      const nonce = await publicClient.getTransactionCount({ address });
+      const recentTxs: `0x${string}`[] = [];
+      
+      // Get the 5 most recent transactions by looking at the last few nonces
+      for (let i = 0; i < 5; i++) {
+        if (nonce - i <= 0) break; // Stop if we've gone through all transactions
+        
+        try {
+          const block = await publicClient.getBlock({
+            blockNumber: await publicClient.getBlockNumber(),
+            includeTransactions: true
+          });
+          
+          // Find transaction from our address in this block
+          const tx = block.transactions.find(tx => 
+            typeof tx === 'object' && 
+            tx.from.toLowerCase() === address.toLowerCase()
+          );
+          
+          if (tx && typeof tx === 'object') {
+            recentTxs.push(tx.hash);
+          }
+        } catch (err) {
+          console.warn(`Failed to fetch transaction for nonce ${nonce - i}:`, err);
+          continue;
+        }
+      }
+      
+      setRecentTxs(recentTxs);
+    } catch (error) {
+      console.error("Failed to fetch recent transactions:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecentTransactions();
+  }, [address, publicClient]);
 
   if (!isDev()) {
     return <Navigate to="/" replace />;
@@ -243,8 +288,10 @@ export default function DevPage() {
     }
   };
 
-  const analyzeTxEvents = async () => {
-    if (!txHash || !publicClient) {
+  const analyzeTxEvents = async (hashToAnalyze?: `0x${string}`) => {
+    const hashToUse = hashToAnalyze || txHash;
+    
+    if (!hashToUse || !publicClient) {
       toast.error("Please enter a valid transaction hash");
       return;
     }
@@ -252,7 +299,7 @@ export default function DevPage() {
     try {
       setLoading("analyzeTx");
       const receipt = await publicClient.getTransactionReceipt({
-        hash: txHash as `0x${string}`,
+        hash: hashToUse,
       });
 
       const decodedEvents = receipt.logs.map((log, index) => {
@@ -616,12 +663,36 @@ export default function DevPage() {
                 className="flex-1"
               />
               <Button
-                onClick={analyzeTxEvents}
+                onClick={() => analyzeTxEvents()}
                 disabled={!txHash || loading === "analyzeTx"}
               >
                 Analyze
               </Button>
             </div>
+            
+            {/* Add Recent Transactions Section */}
+            {recentTxs.length > 0 && (
+              <div className="mt-2">
+                <div className="text-sm text-gray-500 mb-2">Recent transactions:</div>
+                <div className="flex flex-col gap-2">
+                  {recentTxs.map((hash, index) => (
+                    <button
+                      key={index}
+                      onClick={async () => {
+                        await analyzeTxEvents(hash);
+                        setTxHash(hash);
+                      }}
+                      className="text-sm text-pinto-green-4 hover:text-pinto-green-5 hover:underline font-mono break-all text-left"
+                      title="Click to analyze this transaction"
+                    >
+                      {hash}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Existing Events Display */}
             {txEvents && (
               <div className="mt-4 space-y-4">
                 <h3 className="text-lg font-medium">Events:</h3>
