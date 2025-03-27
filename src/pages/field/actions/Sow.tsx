@@ -462,9 +462,9 @@ function Sow({ isMorning }: SowProps) {
         <SmartSubmitButton
           variant={isMorning ? "morning" : "gradient"}
           disabled={ctaDisabled}
-          token={tokenIn}
-          amount={amountIn}
-          balanceFrom={balanceFrom}
+          token={!fromSilo ? tokenIn : undefined}
+          amount={!fromSilo ? amountIn : undefined}
+          balanceFrom={!fromSilo ? balanceFrom : undefined}
           submitFunction={onSubmit}
           submitButtonText={buttonText}
         />
@@ -473,9 +473,9 @@ function Sow({ isMorning }: SowProps) {
         <SmartSubmitButton
           variant={isMorning ? "morning" : "gradient"}
           disabled={ctaDisabled}
-          token={tokenIn}
-          amount={amountIn}
-          balanceFrom={balanceFrom}
+          token={!fromSilo ? tokenIn : undefined}
+          amount={!fromSilo ? amountIn : undefined}
+          balanceFrom={!fromSilo ? balanceFrom : undefined}
           submitFunction={onSubmit}
           submitButtonText={buttonText}
           className="h-full"
@@ -625,12 +625,12 @@ const transformTokenLabels = (token: Token) => {
 // TODO: This is hard to maintain and not that generic...
 const heightMapping = {
   fromSilo: {
-    isMain: { 0: "19.76rem", 1: "25rem" },
-    notMain: { 0: "25.3125rem", 1: "30.5625rem" },
+    isMain: { 0: "20rem", 1: "25.5rem" },
+    notMain: { 0: "25.5rem", 1: "31rem" },
   },
   fromBalance: {
-    isMain: { 0: "13.5rem", 1: "18.75rem" },
-    notMain: { 0: "19rem", 1: "24.25rem" },
+    isMain: { 0: "13.75rem", 1: "19rem" },
+    notMain: { 0: "19.25rem", 1: "24.5rem" },
   },
 } as const;
 
