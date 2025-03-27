@@ -6,10 +6,10 @@ import { getNowRounded } from "@/state/protocol/sun";
 import { useChainConstant, useResolvedChainId } from "@/utils/chain";
 import { Token } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
-import { useEffect } from "react";
 import { Address } from "viem";
 import { base } from "viem/chains";
 import { useReadContracts } from "wagmi";
+import { ProtocolIntegrationQueryReturnType } from "./types";
 
 export interface SpectraCurvePool {
   maturity: number;
@@ -33,7 +33,9 @@ const spectraCurvePool: ChainLookup<SpectraCurvePool> = {
   },
 } as const;
 
-export const useSpectraYieldBreakdown = () => {
+type SpectraYieldSummaryResponse = { apr: TV };
+
+export const useSpectraYieldSummary = (): ProtocolIntegrationQueryReturnType<SpectraYieldSummaryResponse> => {
   const siloWrappedToken = useChainConstant(S_MAIN_TOKEN);
   const chainId = useResolvedChainId();
 
@@ -58,19 +60,15 @@ export const useSpectraYieldBreakdown = () => {
     query: {
       enabled: !!pool,
       select: (response) => {
-        if (!pool) return undefined;
         return selectQuery(response, pool);
       },
     },
   });
 
-  useEffect(() => {
-    if (query.data) {
-      console.log(query.data);
-    }
-  }, [query.data]);
-
-  return query;
+  return {
+    ...query,
+    integrationKey: "SPECTRA",
+  };
 };
 
 // ---------- CONSTANTS & INTERFACES ----------
@@ -99,6 +97,6 @@ const selectQuery = (response: SpectraCurvePoolQueryReturn, pool: SpectraCurvePo
   const apr = underlyingToPTRate.sub(1).div(hoursToMaturity).mul(HOURS_PER_YEAR);
 
   return {
-    apr: apr.mul(100).toNumber(),
+    apr,
   };
 };

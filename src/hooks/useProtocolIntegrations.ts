@@ -1,11 +1,15 @@
 import creamFinanceLogo from "@/assets/misc/cream-finance-logo.png";
 import spectraLogo from "@/assets/misc/spectra-token-logo.svg";
+import { TV } from "@/classes/TokenValue";
+import { ProtocolIntegration } from "@/state/integrations/types";
 import { resolveChainId } from "@/utils/chain";
+import { formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
 import { base } from "viem/chains";
 import { useChainId } from "wagmi";
-interface ProtocolIntegrationSummary {
+
+export interface ProtocolIntegrationSummary {
   protocol: string;
   name: string;
   url: string;
@@ -13,7 +17,9 @@ interface ProtocolIntegrationSummary {
   ctaMessage: string | ((...data: any[]) => string);
 }
 
-const baseIntegrations: Record<string, ProtocolIntegrationSummary> = {
+type IntegrationLookup = Partial<Record<ProtocolIntegration, ProtocolIntegrationSummary>>;
+
+const baseIntegrations: IntegrationLookup = {
   CREAM: {
     protocol: "CREAM",
     name: "CREAM Finance",
@@ -26,11 +32,12 @@ const baseIntegrations: Record<string, ProtocolIntegrationSummary> = {
     name: "Spectra",
     url: "https://app.spectra.finance/pools/base:0xd8e4662ffd6b202cf85e3783fb7252ff0a423a72",
     logoURI: spectraLogo,
-    ctaMessage: (token: Token) => `Get Fixed rates or trade yield with ${token.symbol} on Spectra`,
+    ctaMessage: (token: Token, data: { apr: TV } | undefined) =>
+      `Earn a Fixed APR of ${data?.apr ? `${formatter.pct(data.apr.mul(100))}` : "--%"} or trade yield with ${token.symbol} on Spectra`,
   },
 } as const;
 
-const integrationURLs: ChainLookup<Record<string, ProtocolIntegrationSummary>> = {
+const integrationURLs: ChainLookup<IntegrationLookup> = {
   [base.id]: baseIntegrations,
 };
 
