@@ -306,6 +306,15 @@ const TractorOrdersPanel = () => {
             podLineLength: selectedOrder.decodedData.maxPodlineLength,
             minSoil: selectedOrder.decodedData.sowAmounts.minAmountToSowPerSeason,
             operatorTip: selectedOrder.decodedData.operatorParams.operatorTipAmount,
+            tokenStrategy: (() => {
+              if (selectedOrder.decodedData?.sourceTokenIndices.includes(255)) {
+                return "LOWEST_SEEDS";
+              } else if (selectedOrder.decodedData?.sourceTokenIndices.includes(254)) {
+                return "LOWEST_PRICE";
+              } else {
+                return "SPECIFIC_TOKEN";
+              }
+            })()
           }}
           encodedData={rawSowBlueprintCall || selectedOrder.requisition.blueprint.data}
           operatorPasteInstrs={[...selectedOrder.requisition.blueprint.operatorPasteInstrs]} // Create a mutable copy
