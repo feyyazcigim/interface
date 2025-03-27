@@ -1,5 +1,5 @@
 import { cn } from "@/utils/utils";
-import { forwardRef, HTMLAttributes } from "react";
+import { HTMLAttributes, forwardRef } from "react";
 
 export type InlineCenterSpanProps = HTMLAttributes<HTMLSpanElement> & {
   gap1?: boolean;
@@ -15,14 +15,10 @@ export const InlineCenterSpan = forwardRef<HTMLSpanElement, InlineCenterSpanProp
   },
 );
 
-export const Row = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => {
-    return <div {...props} ref={ref} className={cn("flex flex-row items-center", className)} />;
-  },
-);
+export const Row = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => {
+  return <div {...props} ref={ref} className={cn("flex flex-row items-center", className)} />;
+});
 
-export const Col = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => {
-    return <div {...props} ref={ref} className={cn("flex flex-col", className)} />;
-  },
-);
+export const Col = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => {
+  return <div {...props} ref={ref} className={cn("flex flex-col", className)} />;
+});
