@@ -350,9 +350,9 @@ function Sow({ isMorning }: SowProps) {
   const animationHeight = getAnimateHeight({ fromSilo, hasSoil, tokenIn });
 
   return (
-    <div className="flex flex-col gap-4">
+    <Col className="gap-4">
       <div>
-        <div className="flex flex-row justify-between items-center">
+        <Row className="justify-between items-center">
           <div className="pinto-body-light text-pinto-light">Amount and token to sow</div>
           <SettingsPoppover
             slippage={slippage}
@@ -360,7 +360,7 @@ function Sow({ isMorning }: SowProps) {
             minTemperature={minTemperature}
             setMinTemperature={setMinTemperature}
           />
-        </div>
+        </Row>
         <ComboInputField
           isLoading={initializing}
           tokenSelectLoading={!didSetPreferred}
@@ -383,7 +383,7 @@ function Sow({ isMorning }: SowProps) {
           disableClamping={true}
         />
       </div>
-      <Row className="justify-between">
+      <Row className="justify-between mt-2">
         <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">Use Silo deposits</div>
         <TextSkeleton loading={false} className="w-11 h-6">
           <Switch checked={tokenSource === "deposits"} onCheckedChange={handleOnCheckedChange} />
@@ -481,7 +481,7 @@ function Sow({ isMorning }: SowProps) {
           className="h-full"
         />
       </MobileActionBar>
-    </div>
+    </Col>
   );
 }
 
