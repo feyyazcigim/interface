@@ -613,7 +613,7 @@ export function getSowBlueprintDisplayData(data: SowBlueprintData): SowBlueprint
   };
 }
 
-interface SowEventData {
+interface SowEventArgs {
   account: `0x${string}`;
   fieldId: bigint;
   index: bigint;
@@ -663,20 +663,21 @@ export async function fetchTractorExecutions(
     });
 
     // Decode the Sow event if found
-    let sowData: SowEventData | undefined;
+    let sowData: SowEventArgs | undefined;
     if (sowEvent) {
       try {
         const decoded = decodeEventLog({
           abi: diamondABI,
           data: sowEvent.data,
           topics: sowEvent.topics,
-        });
+        }) as { args: SowEventArgs };
+        
         sowData = {
-          account: decoded.args.account as `0x${string}`,
-          fieldId: decoded.args.fieldId as bigint,
-          index: decoded.args.index as bigint,
-          beans: decoded.args.beans as bigint,
-          pods: decoded.args.pods as bigint,
+          account: decoded.args.account,
+          fieldId: decoded.args.fieldId,
+          index: decoded.args.index,
+          beans: decoded.args.beans,
+          pods: decoded.args.pods,
         };
       } catch (error) {
         console.error("Failed to decode Sow event:", error);

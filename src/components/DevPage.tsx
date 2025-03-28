@@ -84,7 +84,7 @@ export default function DevPage() {
 
   const [mockAddress, setMockAddress] = useAtom(mockAddressAtom);
 
-  const [txHash, setTxHash] = useState<string>("");
+  const [txHash, setTxHash] = useState<`0x${string}` | ''>('');
   const [txEvents, setTxEvents] = useState<{
     eventName: string;
     args: Record<string, any>;
@@ -291,9 +291,10 @@ export default function DevPage() {
   };
 
   const analyzeTxEvents = async (hashToAnalyze?: `0x${string}`) => {
-    const hashToUse = hashToAnalyze || txHash;
+    // Add type assertion to ensure hashToUse is of type `0x${string}`
+    const hashToUse = (hashToAnalyze || txHash) as `0x${string}`;
     
-    if (!hashToUse || !publicClient) {
+    if (!hashToUse || !hashToUse.startsWith('0x') || !publicClient) {
       toast.error("Please enter a valid transaction hash");
       return;
     }
@@ -661,7 +662,7 @@ export default function DevPage() {
               <Input
                 placeholder="Transaction Hash"
                 value={txHash}
-                onChange={(e) => setTxHash(e.target.value)}
+                onChange={(e) => setTxHash(e.target.value as `0x${string}`)}
                 className="flex-1"
               />
               <Button
@@ -682,7 +683,7 @@ export default function DevPage() {
                       <button
                         onClick={async () => {
                           await analyzeTxEvents(hash);
-                          setTxHash(hash);
+                          setTxHash(hash as `0x${string}`);
                         }}
                         className="text-sm text-pinto-green-4 hover:text-pinto-green-5 hover:underline font-mono break-all text-left"
                         title="Click to analyze this transaction"

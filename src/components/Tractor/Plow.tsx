@@ -60,9 +60,10 @@ export function Plow() {
   const { writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
     successMessage: "Plow successful",
     errorMessage: "Plow failed",
-    successCallback: (hash) => {
+    successCallback: (receipt) => {
+      if (!receipt?.transactionHash) return;
       // Add to completed executions
-      setCompletedExecutions(prev => new Set(prev).add(hash));
+      setCompletedExecutions(prev => new Set(prev).add(receipt.transactionHash));
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["requisitions"] });
     },
@@ -155,7 +156,6 @@ export function Plow() {
       });
 
       toast.success("Simulation successful");
-      console.log("Simulation result:", simulation);
       setSuccessfulSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
     } catch (error) {
       console.error("Simulation failed:", error);
