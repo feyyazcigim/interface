@@ -110,6 +110,7 @@ export function SoilOrderbook() {
             <TableHead>Operator Tip</TableHead>
             <TableHead>Remaining Pinto to sow</TableHead>
             <TableHead>Available Pinto</TableHead>
+            <TableHead>Currently Sowable</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
@@ -165,6 +166,9 @@ export function SoilOrderbook() {
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
                   {`${formatter.number(req.totalAvailablePinto)} PINTO`}
+                </TableCell>
+                <TableCell className="p-2 font-mono text-sm">
+                  {`${formatter.number(req.currentlySowable)} PINTO`}
                 </TableCell>
               </TableRow>
             );

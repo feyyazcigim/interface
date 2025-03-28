@@ -736,7 +736,8 @@ export async function fetchTractorExecutions(
 // Update the interface
 export interface OrderbookEntry extends RequisitionEvent {
   pintosLeftToSow: TokenValue;
-  totalAvailablePinto: TokenValue;  // Add this field
+  totalAvailablePinto: TokenValue;
+  currentlySowable: TokenValue;  // Add new field
 }
 
 export async function loadOrderbookData(
@@ -800,7 +801,8 @@ export async function loadOrderbookData(
           return {
             ...requisition,
             pintosLeftToSow: finalPintosLeft,
-            totalAvailablePinto
+            totalAvailablePinto,
+            currentlySowable: TokenValue.min(finalPintosLeft, totalAvailablePinto), // Get the smaller value
           };
         } catch (error) {
           console.error(
@@ -812,7 +814,8 @@ export async function loadOrderbookData(
           return {
             ...requisition,
             pintosLeftToSow: TokenValue.fromBlockchain(totalAmount, 6),
-            totalAvailablePinto: TokenValue.ZERO
+            totalAvailablePinto: TokenValue.ZERO,
+            currentlySowable: TokenValue.ZERO,
           };
         }
       })
