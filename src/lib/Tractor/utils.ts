@@ -718,3 +718,82 @@ export async function fetchTractorExecutions(
     };
   });
 }
+
+// Add this interface to represent the extended orderbook data
+export interface OrderbookEntry extends RequisitionEvent {
+  pintosLeftToSow: TokenValue;
+}
+
+export async function loadOrderbookData(
+  address: string | undefined,
+  protocolAddress: `0x${string}` | undefined,
+  publicClient: PublicClient | null,
+  latestBlock?: { number: bigint; timestamp: bigint } | null,
+): Promise<OrderbookEntry[]> {
+  if (!protocolAddress || !publicClient) return [];
+
+  try {
+    // First load all requisitions
+    const requisitions = await loadPublishedRequisitions(
+      address,
+      protocolAddress,
+      publicClient,
+      latestBlock,
+      "sowBlueprintv0" // Only get sow blueprint requisitions
+    );
+
+    // Filter out cancelled requisitions
+    const activeRequisitions = requisitions.filter(req => !req.isCancelled);
+
+    // Get remaining PINTO for each requisition
+    const orderbookData = await Promise.all(
+      activeRequisitions.map(async (requisition): Promise<OrderbookEntry> => {
+        try {
+          // Call getPintosLeftToSow for this requisition
+          const pintosLeft = await publicClient.readContract({
+            address: SOW_BLUEPRINT_V0_ADDRESS,
+            abi: sowBlueprintv0ABI,
+            functionName: 'getPintosLeftToSow',
+            args: [requisition.requisition.blueprintHash]
+          });
+
+          // If pintosLeft is zero, this means the storage slow hasn't been initialized yet, the full amount is left to sow
+          if (pintosLeft === 0n) {
+            return {
+              ...requisition,
+              pintosLeftToSow: TokenValue.fromHuman(requisition.decodedData?.sowAmounts.totalAmountToSow || '0', 6)
+            };
+          }
+
+          return {
+            ...requisition,
+            pintosLeftToSow: TokenValue.fromBlockchain(pintosLeft, 6)
+          };
+        } catch (error) {
+          console.error(
+            `Failed to get remaining PINTO for requisition ${requisition.requisition.blueprintHash}:`,
+            error
+          );
+          // If the call fails, assume the full amount is left to sow
+          const totalAmount = requisition.decodedData?.sowAmounts.totalAmountToSow || '0';
+          return {
+            ...requisition,
+            pintosLeftToSow: TokenValue.fromHuman(totalAmount, 6)
+          };
+        }
+      })
+    );
+
+    // Sort by timestamp if available, otherwise by block number
+    return orderbookData.sort((a, b) => {
+      if (a.timestamp && b.timestamp) {
+        return b.timestamp - a.timestamp;
+      }
+      return b.blockNumber - a.blockNumber;
+    });
+
+  } catch (error) {
+    console.error("Error loading orderbook data:", error);
+    throw new Error("Failed to load orderbook data");
+  }
+}

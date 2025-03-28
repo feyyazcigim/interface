@@ -4,17 +4,18 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { toast } from "sonner";
 import { useEffect, useState, useCallback } from "react";
 import { 
-  RequisitionEvent, 
-  loadPublishedRequisitions, 
+  OrderbookEntry, 
+  loadOrderbookData, 
   decodeSowTractorData, 
   SowBlueprintData,
   getSowBlueprintDisplayData
 } from "@/lib/Tractor/utils";
+import { formatter } from "@/utils/format";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
 export function SoilOrderbook() {
-  const [requisitions, setRequisitions] = useState<RequisitionEvent[]>([]);
+  const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
   const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
@@ -38,7 +39,7 @@ export function SoilOrderbook() {
   }, [publicClient]);
 
   const getApproximateTimestamps = useCallback(
-    (events: RequisitionEvent[]) => {
+    (events: OrderbookEntry[]) => {
       if (!latestBlockInfo || events.length === 0) return events;
 
       return events.map((event) => {
@@ -55,14 +56,24 @@ export function SoilOrderbook() {
 
   const loadAllRequisitions = useCallback(async () => {
     try {
-      if (!publicClient) return;
-      const events = await loadPublishedRequisitions(undefined, protocolAddress, publicClient);
-      const activeEvents = events.filter((req) => !req.isCancelled);
+      if (!publicClient || !protocolAddress) return;
+      
+      // Use the new loadOrderbookData function
+      const orderbookData = await loadOrderbookData(
+        undefined, 
+        protocolAddress, 
+        publicClient,
+        latestBlockInfo ? { 
+          number: BigInt(latestBlockInfo.number), 
+          timestamp: BigInt(latestBlockInfo.timestamp / 1000) 
+        } : undefined
+      );
 
       // Get approximate timestamps
-      const eventsWithTimestamps = getApproximateTimestamps(activeEvents);
+      const dataWithTimestamps = getApproximateTimestamps(orderbookData);
 
-      const sortedEvents = eventsWithTimestamps.sort((a, b) => {
+      // Sort by temperature
+      const sortedData = dataWithTimestamps.sort((a, b) => {
         try {
           const dataA = decodeSowTractorData(a.requisition.blueprint.data);
           const dataB = decodeSowTractorData(b.requisition.blueprint.data);
@@ -73,12 +84,13 @@ export function SoilOrderbook() {
           return 0;
         }
       });
-      setRequisitions(sortedEvents);
+
+      setRequisitions(sortedData);
     } catch (error) {
       console.error("Failed to load soil orderbook:", error);
       toast.error("Failed to load soil orderbook");
     }
-  }, [protocolAddress, publicClient, getApproximateTimestamps]);
+  }, [protocolAddress, publicClient, latestBlockInfo, getApproximateTimestamps]);
 
   useEffect(() => {
     loadAllRequisitions();
@@ -96,6 +108,7 @@ export function SoilOrderbook() {
             <TableHead>Min Pinto</TableHead>
             <TableHead>Temperature</TableHead>
             <TableHead>Operator Tip</TableHead>
+            <TableHead>Remaining Pinto to sow</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
@@ -145,6 +158,9 @@ export function SoilOrderbook() {
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
                   {decodedData ? `${decodedData.operatorParams.operatorTipAmount} PINTO` : "Failed to decode"}
+                </TableCell>
+                <TableCell className="p-2 font-mono text-sm">
+                  {`${formatter.number(req.pintosLeftToSow)} PINTO`}
                 </TableCell>
               </TableRow>
             );
