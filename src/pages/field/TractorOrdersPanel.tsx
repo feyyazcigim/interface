@@ -303,7 +303,7 @@ const TractorOrdersPanel = () => {
           onOpenChange={setShowDialog}
           orderData={{
             totalAmount: selectedOrder.decodedData.sowAmounts.totalAmountToSow,
-            temperature: TokenValue.fromHuman(selectedOrder.decodedData.minTemp, 6).mul(100).toHuman(),
+            temperature: TokenValue.fromHuman(selectedOrder.decodedData.minTemp, 6).toHuman(),
             podLineLength: selectedOrder.decodedData.maxPodlineLength,
             minSoil: selectedOrder.decodedData.sowAmounts.minAmountToSowPerSeason,
             operatorTip: selectedOrder.decodedData.operatorParams.operatorTipAmount,
@@ -330,7 +330,7 @@ const TractorOrdersPanel = () => {
 
 // Helper function for formatting percentage since formatter.percentage doesn't exist
 function formatPercentage(value: TokenValue): string {
-  return `${value.mul(100).toHuman()}%`;
+  return `${value.toHuman()}%`;
 }
 
 export default TractorOrdersPanel; 
