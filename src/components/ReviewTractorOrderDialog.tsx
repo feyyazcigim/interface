@@ -384,9 +384,9 @@ export default function ReviewTractorOrderDialog({
                         </span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-500">Average Pods per PINTO</span>
+                        <span className="text-sm text-gray-500">Average Temperature</span>
                         <span className="text-xl font-medium mt-3">
-                          {formatter.number(averagePodsPerBean)}
+                          {formatter.number(averagePodsPerBean.mul(100))}%
                         </span>
                       </div>
                       <div className="flex flex-col">
@@ -459,7 +459,7 @@ export default function ReviewTractorOrderDialog({
                           <th className="px-4 py-3 text-left text-gray-600 border-b">Execution</th>
                           <th className="px-4 py-3 text-right text-gray-600 border-b">PINTO Sown</th>
                           <th className="px-4 py-3 text-right text-gray-600 border-b">Pods Received</th>
-                          <th className="px-4 py-3 text-right text-gray-600 border-b">Pods per PINTO</th>
+                          <th className="px-4 py-3 text-right text-gray-600 border-b">Temperature</th>
                           <th className="px-4 py-3 text-left text-gray-600 border-b">Operator</th>
                           <th className="px-4 py-3 text-right text-gray-600 border-b min-w-[150px]">Date & Time</th>
                           <th className="px-4 py-3 text-right text-gray-600 border-b">Actions</th>
@@ -477,10 +477,11 @@ export default function ReviewTractorOrderDialog({
                             return b.blockNumber - a.blockNumber;
                           })
                           .map((execution, index) => {
-                            // Calculate pods per PINTO for this execution
-                            const podsPerPinto = execution.sowEvent && execution.sowEvent.beans > 0n
+                            // Calculate temperature for this execution
+                            const temperature = execution.sowEvent && execution.sowEvent.beans > 0n
                               ? TokenValue.fromBlockchain(execution.sowEvent.pods, 6)
                                   .div(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
+                                  .mul(100) // Convert to percentage
                               : TokenValue.ZERO;
                                 
                             return (
@@ -500,7 +501,7 @@ export default function ReviewTractorOrderDialog({
                                 </td>
                                 <td className="px-4 py-3 text-right">
                                   {execution.sowEvent && execution.sowEvent.beans > 0n
-                                    ? formatter.number(podsPerPinto)
+                                    ? `${formatter.number(temperature)}%`
                                     : "-"}
                                 </td>
                                 <td className="px-4 py-3 text-gray-500">
