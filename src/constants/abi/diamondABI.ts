@@ -396,17 +396,23 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "operator",
-        type: "address",
+        type: "address"
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "publisher",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "bytes32",
         name: "blueprintHash",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     name: "Tractor",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
