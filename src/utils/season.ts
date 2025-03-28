@@ -1,8 +1,8 @@
 import { TokenValue } from "@/classes/TokenValue";
 
-function toFixedNumber(num: number, digits: number, base: number) {
-  const pow = Math.pow(base ?? 10, digits);
-  return Math.round(num*pow) / pow;
+function toFixedNumber(num: number, digits: number, base?: number) {
+  const pow = (base ?? 10) ** digits;
+  return Math.round(num * pow) / pow;
 }
 
 export function calculateCropScales(value: number, isRaining: boolean, season: number) {
@@ -10,7 +10,7 @@ export function calculateCropScales(value: number, isRaining: boolean, season: n
   const maxOutput = season >= 2710 ? 150 : 100;
 
   // Calculate crop scalar
-  const cropScalar = toFixedNumber(value / maxInput, 1, 10);
+  const cropScalar = toFixedNumber(value / maxInput, 1);
 
   // Calculate crop ratio
   const minCropRatio = isRaining ? 33 : 50;
