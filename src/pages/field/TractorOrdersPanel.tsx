@@ -174,7 +174,7 @@ const TractorOrdersPanel = () => {
         if (req.requisitionType !== "sowBlueprintv0" || !req.decodedData) return null;
         
         const data = req.decodedData;
-        const totalAmount = TokenValue.fromHuman(data.sowAmounts.totalAmountToSow, 6);
+        const totalAmount = TokenValue.fromHuman(data.sowAmounts.totalAmountToSowAsString, 6);
         const minTemp = TokenValue.fromHuman(data.minTemp, 6);
         
         // Get executions for this blueprint
@@ -245,7 +245,7 @@ const TractorOrdersPanel = () => {
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-xs text-pinto-gray-4">Progress</span>
                   <span className="text-xs text-pinto-gray-4">
-                    {formatter.number(totalSown)} / {formatter.number(totalAmount)} PINTO sown ({Math.round(percentCompleteNumber)}%)
+                    {formatter.number(totalSown)} / {data.sowAmounts.totalAmountToSowAsString} PINTO sown ({Math.round(percentCompleteNumber)}%)
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -264,16 +264,16 @@ const TractorOrdersPanel = () => {
               </div>
               
               <div className="text-pinto-gray-4 flex gap-1 items-center">
-                Execute only when I can sow at least {formatter.number(TokenValue.fromHuman(data.sowAmounts.minAmountToSowPerSeason, 6))}
+                Execute only when I can sow at least {data.sowAmounts.minAmountToSowPerSeasonAsString} PINTO
               </div>
               
               <div className="text-pinto-gray-4">
-                Execute only Temperature is at least {formatPercentage(minTemp)}
+                Execute only Temperature is at least {formatPercentage(data.minTemp)}
               </div>
 
-              {/* Add podline length condition */}
+              {/* Update podline length condition */}
               <div className="text-pinto-gray-4">
-                Execute only when Pod Line Length ≤ {formatter.number(TokenValue.fromHuman(data.maxPodlineLength, 6))}
+                Execute only when Pod Line Length ≤ {formatter.number(TokenValue.fromHuman(data.maxPodlineLengthAsString, 6))} PINTO
               </div>
               
               {latestExecution && latestExecution.sowEvent && (
@@ -302,11 +302,11 @@ const TractorOrdersPanel = () => {
           open={showDialog}
           onOpenChange={setShowDialog}
           orderData={{
-            totalAmount: selectedOrder.decodedData.sowAmounts.totalAmountToSow,
-            temperature: TokenValue.fromHuman(selectedOrder.decodedData.minTemp, 6).toHuman(),
-            podLineLength: selectedOrder.decodedData.maxPodlineLength,
-            minSoil: selectedOrder.decodedData.sowAmounts.minAmountToSowPerSeason,
-            operatorTip: selectedOrder.decodedData.operatorParams.operatorTipAmount,
+            totalAmount: selectedOrder.decodedData.sowAmounts.totalAmountToSowAsString,
+            temperature: selectedOrder.decodedData.minTempAsString,
+            podLineLength: selectedOrder.decodedData.maxPodlineLengthAsString,
+            minSoil: selectedOrder.decodedData.sowAmounts.minAmountToSowPerSeasonAsString,
+            operatorTip: selectedOrder.decodedData.operatorParams.operatorTipAmountAsString,
             tokenStrategy: (() => {
               if (selectedOrder.decodedData?.sourceTokenIndices.includes(255)) {
                 return "LOWEST_SEEDS";
@@ -318,7 +318,7 @@ const TractorOrdersPanel = () => {
             })()
           }}
           encodedData={rawSowBlueprintCall || selectedOrder.requisition.blueprint.data}
-          operatorPasteInstrs={[...selectedOrder.requisition.blueprint.operatorPasteInstrs]} // Create a mutable copy
+          operatorPasteInstrs={[...selectedOrder.requisition.blueprint.operatorPasteInstrs]}
           blueprint={adaptBlueprintForDialog(selectedOrder.requisition.blueprint)}
           isViewOnly={true}
           executionHistory={executions.filter(exec => exec.blueprintHash === selectedOrder.requisition.blueprintHash)}
@@ -329,8 +329,8 @@ const TractorOrdersPanel = () => {
 };
 
 // Helper function for formatting percentage since formatter.percentage doesn't exist
-function formatPercentage(value: TokenValue): string {
-  return `${value.toHuman()}%`;
+function formatPercentage(value: bigint): string {
+  return `${(Number(value) / 1e6).toFixed(2)}%`;
 }
 
 export default TractorOrdersPanel; 
