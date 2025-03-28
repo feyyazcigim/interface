@@ -733,11 +733,36 @@ export async function fetchTractorExecutions(
   });
 }
 
-// Update the interface
-export interface OrderbookEntry extends RequisitionEvent {
+// Add interface for tracking deposits
+interface Deposit {
+  stem: bigint;
+  amount: bigint;
+  used: boolean;
+}
+
+interface AccountDeposits {
+  [account: string]: {
+    [token: string]: Deposit[];
+  };
+}
+
+// Update the interface to make decodedData optional
+export interface OrderbookEntry extends Omit<RequisitionEvent, 'decodedData'> {
   pintosLeftToSow: TokenValue;
   totalAvailablePinto: TokenValue;
-  currentlySowable: TokenValue;  // Add new field
+  currentlySowable: TokenValue;
+}
+
+// Then update the processing interface
+interface OrderbookEntryWithProcessingData extends Omit<OrderbookEntry, 'decodedData'> {
+  decodedData: SowBlueprintData | null;
+  withdrawalPlan?: {
+    sourceTokens: `0x${string}`[];
+    stems: bigint[][];
+    amounts: bigint[][];
+    availableBeans: bigint[];
+    totalAvailableBeans: bigint;
+  };
 }
 
 export async function loadOrderbookData(
@@ -759,8 +784,9 @@ export async function loadOrderbookData(
 
     const activeRequisitions = requisitions.filter(req => !req.isCancelled);
 
-    const orderbookData = await Promise.all(
-      activeRequisitions.map(async (requisition): Promise<OrderbookEntry> => {
+    // First pass: Get all data and sort by temperature
+    let orderbookData = await Promise.all(
+      activeRequisitions.map(async (requisition): Promise<OrderbookEntryWithProcessingData> => {
         try {
           // Get pintos left to sow
           const pintosLeft = await publicClient.readContract({
@@ -773,9 +799,10 @@ export async function loadOrderbookData(
           // Get withdrawal plan
           const decodedData = decodeSowTractorData(requisition.requisition.blueprint.data);
           let totalAvailablePinto = TokenValue.ZERO;
-          console.log("this decodedData:", decodedData);
+          let withdrawalPlan;
+
           if (decodedData) {
-            const withdrawalPlan = await publicClient.readContract({
+            withdrawalPlan = await publicClient.readContract({
               address: SILO_HELPERS_ADDRESS,
               abi: siloHelpersABI,
               functionName: 'getWithdrawalPlan',
@@ -787,10 +814,7 @@ export async function loadOrderbookData(
               ]
             });
 
-            console.log("this withdrawalPlan:", withdrawalPlan);
-
             totalAvailablePinto = TokenValue.fromBlockchain(withdrawalPlan.totalAvailableBeans, 6);
-            console.log("this totalAvailablePinto:", totalAvailablePinto);
           }
 
           // If pintosLeft is zero, this means the storage slot hasn't been initialized yet
@@ -802,31 +826,81 @@ export async function loadOrderbookData(
             ...requisition,
             pintosLeftToSow: finalPintosLeft,
             totalAvailablePinto,
-            currentlySowable: TokenValue.min(finalPintosLeft, totalAvailablePinto), // Get the smaller value
+            currentlySowable: TokenValue.min(finalPintosLeft, totalAvailablePinto),
+            decodedData,
+            withdrawalPlan,
           };
         } catch (error) {
-          console.error(
-            `Failed to get data for requisition ${requisition.requisition.blueprintHash}:`,
-            error
-          );
-          // If the call fails and we have decoded data, use the total amount
-          const totalAmount = decodedData?.sowAmounts.totalAmountToSow || 0n;
+          console.error(`Failed to get data for requisition ${requisition.requisition.blueprintHash}:`, error);
           return {
             ...requisition,
-            pintosLeftToSow: TokenValue.fromBlockchain(totalAmount, 6),
+            pintosLeftToSow: TokenValue.ZERO,
             totalAvailablePinto: TokenValue.ZERO,
             currentlySowable: TokenValue.ZERO,
+            decodedData: null,
+            withdrawalPlan: undefined,
           };
         }
       })
     );
 
-    return orderbookData.sort((a, b) => {
-      if (a.timestamp && b.timestamp) {
-        return b.timestamp - a.timestamp;
-      }
-      return b.blockNumber - a.blockNumber;
+    // Sort by temperature
+    orderbookData = orderbookData.sort((a, b) => {
+      const tempA = a.decodedData?.minTemp || 0n;
+      const tempB = b.decodedData?.minTemp || 0n;
+      return Number(tempA - tempB);
     });
+
+    // Track used deposits
+    const accountDeposits: AccountDeposits = {};
+
+    // Second pass: Recalculate available PINTO
+    orderbookData = orderbookData.map(entry => {
+      if (!entry.withdrawalPlan || !entry.decodedData) {
+        return entry;
+      }
+
+      const publisher = entry.requisition.blueprint.publisher;
+      if (!accountDeposits[publisher]) {
+        accountDeposits[publisher] = {};
+      }
+
+      let availablePinto = TokenValue.ZERO;
+
+      entry.withdrawalPlan.sourceTokens.forEach((token, tokenIndex) => {
+        if (!accountDeposits[publisher][token]) {
+          accountDeposits[publisher][token] = entry.withdrawalPlan!.stems[tokenIndex].map((stem, i) => ({
+            stem,
+            amount: entry.withdrawalPlan!.amounts[tokenIndex][i],
+            used: false,
+          }));
+        }
+
+        const unusedDeposits = accountDeposits[publisher][token].filter(d => !d.used);
+        const tokenAvailable = unusedDeposits.reduce(
+          (sum, deposit) => sum + deposit.amount,
+          0n
+        );
+
+        let remainingNeeded = entry.decodedData!.sowAmounts.totalAmountToSow;
+        for (const deposit of unusedDeposits) {
+          if (remainingNeeded <= 0n) break;
+          deposit.used = true;
+          remainingNeeded -= deposit.amount;
+        }
+
+        availablePinto = availablePinto.add(TokenValue.fromBlockchain(tokenAvailable, 6));
+      });
+
+      return {
+        ...entry,
+        totalAvailablePinto: availablePinto,
+        currentlySowable: TokenValue.min(entry.pintosLeftToSow, availablePinto),
+      };
+    });
+
+    // Remove processing data and return final result
+    return orderbookData.map(({ decodedData, withdrawalPlan, ...entry }) => entry);
 
   } catch (error) {
     console.error("Error loading orderbook data:", error);
