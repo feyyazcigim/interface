@@ -10,6 +10,7 @@ import { PublicClient } from "viem";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import { SILO_HELPERS_ADDRESS, SOW_BLUEPRINT_V0_ADDRESS, SOW_BLUEPRINT_V0_SELECTOR } from "@/constants/address";
+import { siloHelpersABI } from "@/constants/abi/SiloHelpersABI";
 
 /**
  * Encodes three uint80 values into a bytes32 value in the format:
@@ -202,22 +203,32 @@ export async function signRequisition(
   return signature;
 }
 
+// Update the interface to include both raw and formatted values
 export interface SowBlueprintData {
   sourceTokenIndices: readonly number[];
   sowAmounts: {
-    totalAmountToSow: string;
-    minAmountToSowPerSeason: string;
-    maxAmountToSowPerSeason: string;
+    totalAmountToSow: bigint;
+    totalAmountToSowAsString: string;
+    minAmountToSowPerSeason: bigint;
+    minAmountToSowPerSeasonAsString: string;
+    maxAmountToSowPerSeason: bigint;
+    maxAmountToSowPerSeasonAsString: string;
   };
-  minTemp: string;
-  maxPodlineLength: string;
-  maxGrownStalkPerBdv: string;
-  runBlocksAfterSunrise: string;
-  slippageRatio: string;
+  minTemp: bigint;
+  minTempAsString: string;
+  maxPodlineLength: bigint;
+  maxPodlineLengthAsString: string;
+  maxGrownStalkPerBdv: bigint;
+  maxGrownStalkPerBdvAsString: string;
+  runBlocksAfterSunrise: bigint;
+  runBlocksAfterSunriseAsString: string;
+  slippageRatio: bigint;
+  slippageRatioAsString: string;
   operatorParams: {
     whitelistedOperators: readonly `0x${string}`[];
     tipAddress: `0x${string}`;
-    operatorTipAmount: string;
+    operatorTipAmount: bigint;
+    operatorTipAmountAsString: string;
   };
   fromMode: FarmFromMode;
 }
@@ -227,7 +238,7 @@ export interface SowBlueprintData {
  */
 export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintData | null {
   try {
-    console.log("Decoding data:", encodedData);
+    // console.log("Decoding data:", encodedData);
     let sowBlueprintData: `0x${string}` | null = null;
     
     // Step 1: Try to decode as advancedFarm call first
@@ -237,7 +248,7 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
         data: encodedData,
       });
       
-      console.log("Advanced Farm decoded:", advancedFarmDecoded);
+      // console.log("Advanced Farm decoded:", advancedFarmDecoded);
       
       if (advancedFarmDecoded.functionName === "advancedFarm" && advancedFarmDecoded.args[0]) {
         const farmCalls = advancedFarmDecoded.args[0] as { callData: `0x${string}`; clipboard: `0x${string}` }[];
@@ -251,7 +262,7 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
               data: pipeCallData,
             });
             
-            console.log("Advanced Pipe decoded:", advancedPipeDecoded);
+            // console.log("Advanced Pipe decoded:", advancedPipeDecoded);
             
             if (advancedPipeDecoded.functionName === "advancedPipe" && advancedPipeDecoded.args[0]) {
               const pipeCalls = advancedPipeDecoded.args[0] as { 
@@ -263,7 +274,7 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
               if (pipeCalls.length > 0) {
                 // Step 3: Get the sowBlueprintv0 call data
                 sowBlueprintData = pipeCalls[0].callData;
-                console.log("Found sowBlueprintData in advancedPipe:", sowBlueprintData);
+                // console.log("Found sowBlueprintData in advancedPipe:", sowBlueprintData);
                 
                 // Try to decode the sowBlueprintv0 data directly
                 try {
@@ -271,7 +282,7 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
                     abi: sowBlueprintv0ABI,
                     data: sowBlueprintData,
                   });
-                  console.log("Sow Blueprint decoded:", sowDecoded);
+                  // console.log("Sow Blueprint decoded:", sowDecoded);
                   
                   if (sowDecoded.args && typeof sowDecoded.args[0] === 'object' && sowDecoded.args[0] !== null) {
                     const params = sowDecoded.args[0] as {
@@ -298,25 +309,28 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
                     return {
                       sourceTokenIndices: params.sowParams.sourceTokenIndices,
                       sowAmounts: {
-                        totalAmountToSow: TokenValue.fromBlockchain(params.sowParams.sowAmounts.totalAmountToSow, 6).toHuman(),
-                        minAmountToSowPerSeason: TokenValue.fromBlockchain(
-                          params.sowParams.sowAmounts.minAmountToSowPerSeason,
-                          6,
-                        ).toHuman(),
-                        maxAmountToSowPerSeason: TokenValue.fromBlockchain(
-                          params.sowParams.sowAmounts.maxAmountToSowPerSeason,
-                          6,
-                        ).toHuman(),
+                        totalAmountToSow: params.sowParams.sowAmounts.totalAmountToSow,
+                        totalAmountToSowAsString: TokenValue.fromBlockchain(params.sowParams.sowAmounts.totalAmountToSow, 6).toHuman(),
+                        minAmountToSowPerSeason: params.sowParams.sowAmounts.minAmountToSowPerSeason,
+                        minAmountToSowPerSeasonAsString: TokenValue.fromBlockchain(params.sowParams.sowAmounts.minAmountToSowPerSeason, 6).toHuman(),
+                        maxAmountToSowPerSeason: params.sowParams.sowAmounts.maxAmountToSowPerSeason,
+                        maxAmountToSowPerSeasonAsString: TokenValue.fromBlockchain(params.sowParams.sowAmounts.maxAmountToSowPerSeason, 6).toHuman(),
                       },
-                      minTemp: TokenValue.fromBlockchain(params.sowParams.minTemp, 6).toHuman(),
-                      maxPodlineLength: TokenValue.fromBlockchain(params.sowParams.maxPodlineLength, 6).toHuman(),
-                      maxGrownStalkPerBdv: TokenValue.fromBlockchain(params.sowParams.maxGrownStalkPerBdv, 6).toHuman(),
-                      runBlocksAfterSunrise: params.sowParams.runBlocksAfterSunrise.toString(),
-                      slippageRatio: TokenValue.fromBlockchain(params.sowParams.slippageRatio, 18).toHuman(),
+                      minTemp: params.sowParams.minTemp,
+                      minTempAsString: TokenValue.fromBlockchain(params.sowParams.minTemp, 6).toHuman(),
+                      maxPodlineLength: params.sowParams.maxPodlineLength,
+                      maxPodlineLengthAsString: TokenValue.fromBlockchain(params.sowParams.maxPodlineLength, 6).toHuman(),
+                      maxGrownStalkPerBdv: params.sowParams.maxGrownStalkPerBdv,
+                      maxGrownStalkPerBdvAsString: TokenValue.fromBlockchain(params.sowParams.maxGrownStalkPerBdv, 6).toHuman(),
+                      runBlocksAfterSunrise: params.sowParams.runBlocksAfterSunrise,
+                      runBlocksAfterSunriseAsString: params.sowParams.runBlocksAfterSunrise.toString(),
+                      slippageRatio: params.sowParams.slippageRatio,
+                      slippageRatioAsString: TokenValue.fromBlockchain(params.sowParams.slippageRatio, 18).toHuman(),
                       operatorParams: {
                         whitelistedOperators: params.opParams.whitelistedOperators,
                         tipAddress: params.opParams.tipAddress,
-                        operatorTipAmount: TokenValue.fromBlockchain(params.opParams.operatorTipAmount, 6).toHuman(),
+                        operatorTipAmount: params.opParams.operatorTipAmount,
+                        operatorTipAmountAsString: TokenValue.fromBlockchain(params.opParams.operatorTipAmount, 6).toHuman(),
                       },
                       fromMode: FarmFromMode.INTERNAL,
                     };
@@ -599,15 +613,15 @@ export interface SowBlueprintDisplayData {
 // Add a helper function to convert SowBlueprintData to display data
 export function getSowBlueprintDisplayData(data: SowBlueprintData): SowBlueprintDisplayData {
   return {
-    totalAmount: data.sowAmounts.totalAmountToSow,
-    minAmount: data.sowAmounts.minAmountToSowPerSeason,
-    maxAmount: data.sowAmounts.maxAmountToSowPerSeason,
-    minTemp: data.minTemp,
-    maxPodlineLength: data.maxPodlineLength,
-    maxGrownStalkPerBdv: data.maxGrownStalkPerBdv,
-    runBlocksAfterSunrise: data.runBlocksAfterSunrise,
-    slippageRatio: data.slippageRatio,
-    operatorTip: data.operatorParams.operatorTipAmount,
+    totalAmount: data.sowAmounts.totalAmountToSowAsString,
+    minAmount: data.sowAmounts.minAmountToSowPerSeasonAsString,
+    maxAmount: data.sowAmounts.maxAmountToSowPerSeasonAsString,
+    minTemp: data.minTempAsString,
+    maxPodlineLength: data.maxPodlineLengthAsString,
+    maxGrownStalkPerBdv: data.maxGrownStalkPerBdvAsString,
+    runBlocksAfterSunrise: data.runBlocksAfterSunriseAsString,
+    slippageRatio: data.slippageRatioAsString,
+    operatorTip: data.operatorParams.operatorTipAmountAsString,
     whitelistedOperators: data.operatorParams.whitelistedOperators,
     tipAddress: data.operatorParams.tipAddress
   };
@@ -719,9 +733,10 @@ export async function fetchTractorExecutions(
   });
 }
 
-// Add this interface to represent the extended orderbook data
+// Update the interface
 export interface OrderbookEntry extends RequisitionEvent {
   pintosLeftToSow: TokenValue;
+  totalAvailablePinto: TokenValue;  // Add this field
 }
 
 export async function loadOrderbookData(
@@ -733,23 +748,20 @@ export async function loadOrderbookData(
   if (!protocolAddress || !publicClient) return [];
 
   try {
-    // First load all requisitions
     const requisitions = await loadPublishedRequisitions(
       address,
       protocolAddress,
       publicClient,
       latestBlock,
-      "sowBlueprintv0" // Only get sow blueprint requisitions
+      "sowBlueprintv0"
     );
 
-    // Filter out cancelled requisitions
     const activeRequisitions = requisitions.filter(req => !req.isCancelled);
 
-    // Get remaining PINTO for each requisition
     const orderbookData = await Promise.all(
       activeRequisitions.map(async (requisition): Promise<OrderbookEntry> => {
         try {
-          // Call getPintosLeftToSow for this requisition
+          // Get pintos left to sow
           const pintosLeft = await publicClient.readContract({
             address: SOW_BLUEPRINT_V0_ADDRESS,
             abi: sowBlueprintv0ABI,
@@ -757,34 +769,55 @@ export async function loadOrderbookData(
             args: [requisition.requisition.blueprintHash]
           });
 
-          // If pintosLeft is zero, this means the storage slow hasn't been initialized yet, the full amount is left to sow
-          if (pintosLeft === 0n) {
-            return {
-              ...requisition,
-              pintosLeftToSow: TokenValue.fromHuman(requisition.decodedData?.sowAmounts.totalAmountToSow || '0', 6)
-            };
+          // Get withdrawal plan
+          const decodedData = decodeSowTractorData(requisition.requisition.blueprint.data);
+          let totalAvailablePinto = TokenValue.ZERO;
+          console.log("this decodedData:", decodedData);
+          if (decodedData) {
+            const withdrawalPlan = await publicClient.readContract({
+              address: SILO_HELPERS_ADDRESS,
+              abi: siloHelpersABI,
+              functionName: 'getWithdrawalPlan',
+              args: [
+                requisition.requisition.blueprint.publisher,
+                decodedData.sourceTokenIndices,
+                decodedData.sowAmounts.totalAmountToSow,
+                decodedData.maxGrownStalkPerBdv,
+              ]
+            });
+
+            console.log("this withdrawalPlan:", withdrawalPlan);
+
+            totalAvailablePinto = TokenValue.fromBlockchain(withdrawalPlan.totalAvailableBeans, 6);
+            console.log("this totalAvailablePinto:", totalAvailablePinto);
           }
+
+          // If pintosLeft is zero, this means the storage slot hasn't been initialized yet
+          const finalPintosLeft = pintosLeft === 0n && decodedData
+            ? TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6)
+            : TokenValue.fromBlockchain(pintosLeft, 6);
 
           return {
             ...requisition,
-            pintosLeftToSow: TokenValue.fromBlockchain(pintosLeft, 6)
+            pintosLeftToSow: finalPintosLeft,
+            totalAvailablePinto
           };
         } catch (error) {
           console.error(
-            `Failed to get remaining PINTO for requisition ${requisition.requisition.blueprintHash}:`,
+            `Failed to get data for requisition ${requisition.requisition.blueprintHash}:`,
             error
           );
-          // If the call fails, assume the full amount is left to sow
-          const totalAmount = requisition.decodedData?.sowAmounts.totalAmountToSow || '0';
+          // If the call fails and we have decoded data, use the total amount
+          const totalAmount = decodedData?.sowAmounts.totalAmountToSow || 0n;
           return {
             ...requisition,
-            pintosLeftToSow: TokenValue.fromHuman(totalAmount, 6)
+            pintosLeftToSow: TokenValue.fromBlockchain(totalAmount, 6),
+            totalAvailablePinto: TokenValue.ZERO
           };
         }
       })
     );
 
-    // Sort by timestamp if available, otherwise by block number
     return orderbookData.sort((a, b) => {
       if (a.timestamp && b.timestamp) {
         return b.timestamp - a.timestamp;

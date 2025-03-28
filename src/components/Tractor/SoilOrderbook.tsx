@@ -109,6 +109,7 @@ export function SoilOrderbook() {
             <TableHead>Temperature</TableHead>
             <TableHead>Operator Tip</TableHead>
             <TableHead>Remaining Pinto to sow</TableHead>
+            <TableHead>Available Pinto</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
@@ -148,19 +149,22 @@ export function SoilOrderbook() {
                   {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.sowAmounts.totalAmountToSow} PINTO` : "Failed to decode"}
+                  {decodedData ? `${decodedData.sowAmounts.totalAmountToSowAsString} PINTO` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.sowAmounts.minAmountToSowPerSeason} PINTO` : "Failed to decode"}
+                  {decodedData ? `${decodedData.sowAmounts.minAmountToSowPerSeasonAsString} PINTO` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.minTemp}%` : "Failed to decode"}
+                  {decodedData ? `${decodedData.minTempAsString}%` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.operatorParams.operatorTipAmount} PINTO` : "Failed to decode"}
+                  {decodedData ? `${decodedData.operatorParams.operatorTipAmountAsString} PINTO` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
                   {`${formatter.number(req.pintosLeftToSow)} PINTO`}
+                </TableCell>
+                <TableCell className="p-2 font-mono text-sm">
+                  {`${formatter.number(req.totalAvailablePinto)} PINTO`}
                 </TableCell>
               </TableRow>
             );
