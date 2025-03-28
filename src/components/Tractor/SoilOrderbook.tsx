@@ -78,7 +78,7 @@ export function SoilOrderbook() {
           const dataA = decodeSowTractorData(a.requisition.blueprint.data);
           const dataB = decodeSowTractorData(b.requisition.blueprint.data);
           if (!dataA || !dataB) return 0;
-          return parseFloat(dataA.minTemp) - parseFloat(dataB.minTemp);
+          return parseFloat(dataA.minTempAsString) - parseFloat(dataB.minTempAsString);
         } catch (error) {
           console.error("Failed to decode data for requisition:", error);
           return 0;

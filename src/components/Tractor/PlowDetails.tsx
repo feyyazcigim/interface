@@ -114,28 +114,28 @@ export function PlowDetails({ requisition, isOpen, onClose, onSuccess }: PlowDet
               <div className="font-mono">{requisition.requisitionType}</div>
 
               <div className="text-sm text-gray-500">Total Amount to Sow</div>
-              <div>{`${requisition.decodedData.sowAmounts.totalAmountToSow} PINTO`}</div>
+              <div>{`${requisition.decodedData.sowAmounts.totalAmountToSowAsString} PINTO`}</div>
 
               <div className="text-sm text-gray-500">Min Amount per Season</div>
-              <div>{`${requisition.decodedData.sowAmounts.minAmountToSowPerSeason} PINTO`}</div>
+              <div>{`${requisition.decodedData.sowAmounts.minAmountToSowPerSeasonAsString} PINTO`}</div>
 
               <div className="text-sm text-gray-500">Max Amount per Season</div>
-              <div>{`${requisition.decodedData.sowAmounts.maxAmountToSowPerSeason} PINTO`}</div>
+              <div>{`${requisition.decodedData.sowAmounts.maxAmountToSowPerSeasonAsString} PINTO`}</div>
 
               <div className="text-sm text-gray-500">Temperature</div>
-              <div>{`${requisition.decodedData.minTemp}%`}</div>
+              <div>{`${requisition.decodedData.minTempAsString}%`}</div>
 
               <div className="text-sm text-gray-500">Max Pod Line Length</div>
-              <div>{requisition.decodedData.maxPodlineLength}</div>
+              <div>{requisition.decodedData.maxPodlineLengthAsString}</div>
 
               <div className="text-sm text-gray-500">Max Grown Stalk per BDV</div>
-              <div>{requisition.decodedData.maxGrownStalkPerBdv}</div>
+              <div>{requisition.decodedData.maxGrownStalkPerBdvAsString}</div>
 
               <div className="text-sm text-gray-500">Run Blocks After Sunrise</div>
-              <div>{requisition.decodedData.runBlocksAfterSunrise}</div>
+              <div>{requisition.decodedData.runBlocksAfterSunriseAsString}</div>
 
               <div className="text-sm text-gray-500">Operator Tip</div>
-              <div>{`${requisition.decodedData.operatorParams.operatorTipAmount} PINTO`}</div>
+              <div>{`${requisition.decodedData.operatorParams.operatorTipAmountAsString} PINTO`}</div>
 
               <div className="text-sm text-gray-500">Max Nonce</div>
               <div>

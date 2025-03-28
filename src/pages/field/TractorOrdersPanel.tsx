@@ -174,8 +174,8 @@ const TractorOrdersPanel = () => {
         if (req.requisitionType !== "sowBlueprintv0" || !req.decodedData) return null;
         
         const data = req.decodedData;
-        const totalAmount = TokenValue.fromHuman(data.sowAmounts.totalAmountToSowAsString, 6);
-        const minTemp = TokenValue.fromHuman(data.minTemp, 6);
+        const totalAmount = TokenValue.fromBlockchain(data.sowAmounts.totalAmountToSow, 6);
+        const minTemp = TokenValue.fromBlockchain(data.minTemp, 6);
         
         // Get executions for this blueprint
         const blueprintExecutions = executions.filter(
@@ -273,7 +273,7 @@ const TractorOrdersPanel = () => {
 
               {/* Update podline length condition */}
               <div className="text-pinto-gray-4">
-                Execute only when Pod Line Length ≤ {formatter.number(TokenValue.fromHuman(data.maxPodlineLengthAsString, 6))} PINTO
+                Execute only when Pod Line Length ≤ {formatter.number(TokenValue.fromBlockchain(data.maxPodlineLengthAsString, 6))} PINTO
               </div>
               
               {latestExecution && latestExecution.sowEvent && (

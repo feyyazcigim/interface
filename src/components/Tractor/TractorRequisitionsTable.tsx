@@ -83,17 +83,30 @@ export function TractorRequisitionsTable({ refreshTrigger = 0 }: TractorRequisit
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
           {requisitions.map((req, index) => {
             let decodedData: {
-              minTemp: string;
+              minTempAsString: string;
               sowAmounts: {
-                totalAmountToSow: string;
-                minAmountToSowPerSeason: string;
+                totalAmountToSowAsString: string;
+                minAmountToSowPerSeasonAsString: string;
               };
               operatorParams: {
-                operatorTipAmount: string;
+                operatorTipAmountAsString: string;
               };
             } | null = null;
+
             try {
-              decodedData = decodeSowTractorData(req.requisition.blueprint.data);
+              const decoded = decodeSowTractorData(req.requisition.blueprint.data);
+              if (decoded) {
+                decodedData = {
+                  minTempAsString: decoded.minTempAsString,
+                  sowAmounts: {
+                    totalAmountToSowAsString: decoded.sowAmounts.totalAmountToSowAsString,
+                    minAmountToSowPerSeasonAsString: decoded.sowAmounts.minAmountToSowPerSeasonAsString,
+                  },
+                  operatorParams: {
+                    operatorTipAmountAsString: decoded.operatorParams.operatorTipAmountAsString,
+                  }
+                };
+              }
             } catch (error) {
               console.error("Failed to decode data for requisition:", error);
             }
@@ -106,16 +119,16 @@ export function TractorRequisitionsTable({ refreshTrigger = 0 }: TractorRequisit
                 </TableCell>
                 <TableCell className="p-2">{req.requisition.blueprint.maxNonce.toString()}</TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.sowAmounts.totalAmountToSow} PINTO` : "Failed to decode"}
+                  {decodedData ? `${decodedData.sowAmounts.totalAmountToSowAsString} PINTO` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.sowAmounts.minAmountToSowPerSeason} PINTO` : "Failed to decode"}
+                  {decodedData ? `${decodedData.sowAmounts.minAmountToSowPerSeasonAsString} PINTO` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.minTemp}%` : "Failed to decode"}
+                  {decodedData ? `${decodedData.minTempAsString}%` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.operatorParams.operatorTipAmount} PINTO` : "Failed to decode"}
+                  {decodedData ? `${decodedData.operatorParams.operatorTipAmountAsString} PINTO` : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2">
                   {req.isCancelled ? (
