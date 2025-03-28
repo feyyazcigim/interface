@@ -353,7 +353,7 @@ function Sow({ isMorning }: SowProps) {
     <Col className="gap-4">
       <div>
         <Row className="justify-between items-center">
-          <div className="pinto-body-light text-pinto-light">Amount and token to sow</div>
+          <div className="pinto-body-light text-pinto-light">Amount and token to Sow</div>
           <SettingsPoppover
             slippage={slippage}
             setSlippage={setSlippage}
@@ -383,8 +383,8 @@ function Sow({ isMorning }: SowProps) {
           disableClamping={true}
         />
       </div>
-      <Row className="justify-between mt-4">
-        <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">Use Silo deposits</div>
+      <Row className="justify-between my-2">
+        <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">Use Silo Deposits</div>
         <TextSkeleton loading={false} className="w-11 h-6">
           <Switch checked={tokenSource === "deposits"} onCheckedChange={handleOnCheckedChange} />
         </TextSkeleton>
@@ -409,7 +409,7 @@ function Sow({ isMorning }: SowProps) {
                     <OutputDisplay.Item label="Pods">
                       <OutputDisplay.Value value={formatter.token(pods, PODS)} token={PODS} suffix={PODS.symbol} />
                     </OutputDisplay.Item>
-                    <OutputDisplay.Item label="Place in line">
+                    <OutputDisplay.Item label="Place in Line">
                       <OutputDisplay.Value value={formatter.noDec(podLine)} />
                     </OutputDisplay.Item>
                     {fromSilo ? (
