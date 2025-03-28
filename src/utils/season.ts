@@ -1,10 +1,5 @@
 import { TokenValue } from "@/classes/TokenValue";
-
-function toFixedNumber(num: number, digits: number, base?: number) {
-  const pow = (base ?? 10) ** digits;
-  return Math.round(num * pow) / pow;
-}
-
+import { toFixedNumber } from "./format";
 export function calculateCropScales(value: number, isRaining: boolean, season: number) {
   const maxInput = 1e18;
   const maxOutput = season >= 2710 ? 150 : 100;
