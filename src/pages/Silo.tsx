@@ -49,6 +49,7 @@ function Silo() {
   const convertEnabled = farmerActions.convertDeposits.enabled;
   const convertFrom = farmerActions.convertDeposits.bestConversion.from;
   const convertTo = farmerActions.convertDeposits.bestConversion.to;
+  const bestDeposit = farmerActions.optimalDepositToken?.token;
 
   const claimEnabled =
     farmerActions.claimRewards.outputs.beanGain.gt(0.01) ||
@@ -240,7 +241,6 @@ function Silo() {
                   }
                 />
               )} */}
-              {/* 
               {!convertEnabled && bestDeposit && (
                 <TableRowConnector
                   toTarget={`token-row-${bestDeposit.address}`}
@@ -269,7 +269,7 @@ function Silo() {
                     </div>
                   }
                 />
-              )}*/}
+              )}
             </div>
           </div>
         </div>
