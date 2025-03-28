@@ -18,7 +18,7 @@ import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
 import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { toast } from "sonner";
-import { useAccount } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 import { isDev } from "@/utils/utils"; // Only used for pre-filling form data for faster developing, remove before prod
 import { Blueprint } from "@/lib/Tractor/types";
 import { InfoOutlinedIcon, WarningIcon } from "@/components/Icons";
@@ -47,6 +47,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [encodedData, setEncodedData] = useState<`0x${string}` | null>(null);
   const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const publicClient = usePublicClient();
 
   // Get LP tokens
   const lpTokens = useMemo(() => whitelistedTokens.filter((t) => t.isLP), [whitelistedTokens]);
@@ -180,7 +181,13 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       console.time("handleNext total");
       setIsLoading(true);
 
-      const { data, operatorPasteInstrs, rawCall } = createSowTractorData({
+      if (!publicClient) {
+        toast.error("No public client available");
+        setIsLoading(false);
+        return;
+      }
+
+      const { data, operatorPasteInstrs, rawCall } = await createSowTractorData({
         totalAmountToSow: totalAmount || "0",
         temperature: temperature || "0",
         minAmountPerSeason: minSoil || "0",
@@ -191,6 +198,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
         operatorTip: operatorTip || "0",
         whitelistedOperators: [],
         tokenStrategy: selectedTokenStrategy,
+        publicClient,
       });
 
       console.log("createSowTractorData, data:", data);
@@ -298,15 +306,23 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                           : ""
                   }
                   onValueChange={(value) => {
+                    console.log("Select value changed to:", value);
                     if (value === "LOWEST_SEEDS") {
+                      console.log("Setting LOWEST_SEEDS strategy");
                       setSelectedTokenStrategy({ type: "LOWEST_SEEDS" });
                     } else if (value === "LOWEST_PRICE") {
+                      console.log("Setting LOWEST_PRICE strategy");
                       setSelectedTokenStrategy({ type: "LOWEST_PRICE" });
                     } else {
-                      setSelectedTokenStrategy({
-                        type: "SPECIFIC_TOKEN",
-                        address: value,
-                      });
+                      const token = whitelistedTokens.find(t => t.address === value);
+                      console.log("Found token:", token, "with address:", value);
+                      if (token) {
+                        console.log("Setting SPECIFIC_TOKEN strategy with address:", token.address);
+                        setSelectedTokenStrategy({
+                          type: "SPECIFIC_TOKEN",
+                          address: token.address as `0x${string}`,
+                        });
+                      }
                     }
                   }}
                 >
@@ -590,6 +606,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
             podLineLength,
             minSoil,
             operatorTip,
+            tokenStrategy: selectedTokenStrategy.type,
+            tokenSymbol: selectedTokenStrategy.type === "SPECIFIC_TOKEN" 
+              ? whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.symbol 
+              : undefined
           }}
           encodedData={encodedData}
           operatorPasteInstrs={operatorPasteInstructions}

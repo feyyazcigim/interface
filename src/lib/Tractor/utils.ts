@@ -38,12 +38,24 @@ import { siloHelpersABI } from "@/constants/abi/SiloHelpersABI";
 export type TokenStrategy =
   | { type: "LOWEST_SEEDS" }
   | { type: "LOWEST_PRICE" }
-  | { type: "SPECIFIC_TOKEN"; address: string };
+  | { type: "SPECIFIC_TOKEN"; address: `0x${string}` };
+
+// Add this helper function outside createSowTractorData
+async function getTokenIndex(publicClient: PublicClient, tokenAddress: `0x${string}`): Promise<number> {
+  const index = await publicClient.readContract({
+    address: SILO_HELPERS_ADDRESS,
+    abi: siloHelpersABI,
+    functionName: 'getTokenIndex',
+    args: [tokenAddress]
+  });
+  
+  return Number(index);
+}
 
 /**
  * Creates blueprint data from Tractor inputs
  */
-export function createSowTractorData({
+export async function createSowTractorData({
   totalAmountToSow,
   temperature,
   minAmountPerSeason,
@@ -54,6 +66,7 @@ export function createSowTractorData({
   operatorTip,
   whitelistedOperators,
   tokenStrategy,
+  publicClient, // Add this parameter
 }: {
   totalAmountToSow: string;
   temperature: string;
@@ -65,13 +78,13 @@ export function createSowTractorData({
   operatorTip: string;
   whitelistedOperators: `0x${string}`[];
   tokenStrategy: TokenStrategy;
-}): { data: `0x${string}`; operatorPasteInstrs: `0x${string}`[]; rawCall: `0x${string}` } {
-  // Add debug logs
+  publicClient: PublicClient;
+}): Promise<{ data: `0x${string}`; operatorPasteInstrs: `0x${string}`[]; rawCall: `0x${string}` }> {
+  // Add more detailed debug logs
   console.log("tokenStrategy received:", tokenStrategy);
   console.log("tokenStrategy.type:", tokenStrategy.type);
-  console.log("LOWEST_SEEDS check:", tokenStrategy.type === "LOWEST_SEEDS");
-  console.log("LOWEST_PRICE check:", tokenStrategy.type === "LOWEST_PRICE");
-
+  console.log("tokenStrategy.address:", tokenStrategy.type === "SPECIFIC_TOKEN" ? tokenStrategy.address : "N/A");
+  
   // Convert inputs to appropriate types
   const totalAmount = BigInt(Math.floor(parseFloat(totalAmountToSow) * 1e6));
   const minAmount = BigInt(Math.floor(parseFloat(minAmountPerSeason) * 1e6));
@@ -82,29 +95,31 @@ export function createSowTractorData({
   const temp = BigInt(Math.floor(parseFloat(temperature) * 1e6));
   const tip = BigInt(Math.floor(parseFloat(operatorTip) * 1e6));
 
-  // Create the TokenSelectionStrategy
-  let tokenSelectionStrategy: { type: number; token: `0x${string}` };
-  switch (tokenStrategy.type) {
-    case "LOWEST_SEEDS":
-      tokenSelectionStrategy = { type: 0, token: "0x" as `0x${string}` };
-      break;
-    case "LOWEST_PRICE":
-      tokenSelectionStrategy = { type: 1, token: "0x" as `0x${string}` };
-      break;
-    case "SPECIFIC_TOKEN":
-      tokenSelectionStrategy = { type: 2, token: tokenStrategy.address as `0x${string}` };
-      break;
+  // Get source token indices based on strategy
+  let sourceTokenIndices: number[];
+  if (tokenStrategy.type === "LOWEST_SEEDS") {
+    console.log("Using LOWEST_SEEDS strategy");
+    sourceTokenIndices = [255];
+  } else if (tokenStrategy.type === "LOWEST_PRICE") {
+    console.log("Using LOWEST_PRICE strategy");
+    sourceTokenIndices = [254];
+  } else if (tokenStrategy.type === "SPECIFIC_TOKEN") {
+    console.log("Using SPECIFIC_TOKEN strategy with address:", tokenStrategy.address);
+    const index = await getTokenIndex(publicClient, tokenStrategy.address as `0x${string}`);
+    console.log("Got token index:", index);
+    sourceTokenIndices = [index];
+  } else {
+    console.log("Unknown strategy type:", tokenStrategy);
+    sourceTokenIndices = [];
   }
+
+  // Log the final indices
+  console.log("Final sourceTokenIndices:", sourceTokenIndices);
 
   // Create the SowBlueprintStruct
   const sowBlueprintStruct = {
     sowParams: {
-      sourceTokenIndices:
-        tokenStrategy.type === "LOWEST_SEEDS"
-          ? [255]
-          : tokenStrategy.type === "LOWEST_PRICE"
-            ? [254]
-            : ([] as number[]),
+      sourceTokenIndices,
       sowAmounts: {
         totalAmountToSow: totalAmount,
         minAmountToSowPerSeason: minAmount,

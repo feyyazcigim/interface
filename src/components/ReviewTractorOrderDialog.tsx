@@ -44,6 +44,7 @@ interface ReviewTractorOrderProps {
     minSoil: string;
     operatorTip: string;
     tokenStrategy?: "LOWEST_SEEDS" | "LOWEST_PRICE" | "SPECIFIC_TOKEN";
+    tokenSymbol?: string;
   };
   encodedData: `0x${string}`;
   operatorPasteInstrs: `0x${string}`[];
@@ -220,20 +221,14 @@ export default function ReviewTractorOrderDialog({
                       <span className="text-box">
                         with <span className="text-black">
                         {(() => {
-                          // Use the token strategy from props if available
-                          if (orderData.tokenStrategy) {
-                            switch (orderData.tokenStrategy) {
-                              case "LOWEST_SEEDS":
-                                return "Lowest Seeds";
-                              case "LOWEST_PRICE":
-                                return "Lowest Price";
-                              case "SPECIFIC_TOKEN":
-                                return "Specific Token";
-                              default:
-                                return "Best PINTO";
-                            }
+                          if (orderData.tokenStrategy === "LOWEST_SEEDS") {
+                            return "Lowest Seeds";
+                          } else if (orderData.tokenStrategy === "LOWEST_PRICE") {
+                            return "Lowest Price";
+                          } else if (orderData.tokenStrategy === "SPECIFIC_TOKEN" && orderData.tokenSymbol) {
+                            return orderData.tokenSymbol;
                           } else {
-                            return "Unknown";
+                            return "Unknown Strategy";
                           }
                         })()}
                         </span> Strategy

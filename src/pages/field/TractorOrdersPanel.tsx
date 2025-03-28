@@ -273,7 +273,7 @@ const TractorOrdersPanel = () => {
 
               {/* Update podline length condition */}
               <div className="text-pinto-gray-4">
-                Execute only when Pod Line Length ≤ {formatter.number(TokenValue.fromBlockchain(data.maxPodlineLengthAsString, 6))} PINTO
+                Execute only when Pod Line Length ≤ {formatter.number(TokenValue.fromHuman(data.maxPodlineLengthAsString, 6))} PINTO
               </div>
               
               {latestExecution && latestExecution.sowEvent && (
