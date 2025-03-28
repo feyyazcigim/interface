@@ -8,9 +8,13 @@ import pintoCbethIcon from "@/assets/tokens/PINTO_cbETH.png";
 import wsolIcon from "@/assets/tokens/WSOL.png";
 import crsPintoIcon from "@/assets/tokens/crsPINTO.png";
 import sPintoIcon from "@/assets/tokens/sPINTO.png";
+import spectrasPintoYTIcon from '@/assets/tokens/spectra-spinto-yt.png'
+import spectrasPintoPTIcon from '@/assets/tokens/spectra-spinto-pt.png'
+import spectrasPintoLPIcon from '@/assets/tokens/spectra-spinto-lp.png'
 import { Token } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
 import { arbitrum, base } from "viem/chains";
+
 
 const defaultChain = base.id;
 
@@ -273,6 +277,47 @@ export const CREAM_S_MAIN_TOKEN: ChainLookup<Token> = {
       "crsPINTO is a yield-bearing, ERC-20 representation of a PINTO Silo Deposit, integrated by Cream Finance.",
   },
 } as const;
+
+export const SPECTRA_YT: ChainLookup<Token> = {
+  [base.id]: {
+    chainId: base.id,
+    name: "Cream Siloed Pinto",
+    symbol: "crsPINTO",
+    address: "0x98887ED12565cd9518f41A009d2EcE7c71ff271e",
+    decimals: 8,
+    displayDecimals: 2,
+    is3PSiloWrapped: true,
+    logoURI: spectrasPintoYTIcon,
+  }
+}
+
+export const SPECTRA_PT: ChainLookup<Token> = {
+  [base.id]: {
+    chainId: base.id,
+    name: "Cream Siloed Pinto",
+    symbol: "crsPINTO",
+    address: "0x98887ED12565cd9518f41A009d2EcE7c71ff271e",
+    decimals: 8,
+    displayDecimals: 2,
+    is3PSiloWrapped: true,
+    logoURI: spectrasPintoPTIcon,
+  }
+}
+
+export const SPECTRA_LP: ChainLookup<Token> = {
+  [base.id]: {
+    chainId: base.id,
+    name: "Cream Siloed Pinto",
+    symbol: "crsPINTO",
+    address: "0x98887ED12565cd9518f41A009d2EcE7c71ff271e",
+    decimals: 8,
+    displayDecimals: 2,
+    is3PSiloWrapped: true,
+    logoURI: spectrasPintoLPIcon,
+  }
+}
+
+
 
 // -------------------- AGGREGATED TOKEN LISTS --------------------
 
