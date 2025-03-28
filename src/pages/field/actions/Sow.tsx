@@ -383,7 +383,7 @@ function Sow({ isMorning }: SowProps) {
           disableClamping={true}
         />
       </div>
-      <Row className="justify-between mt-2">
+      <Row className="justify-between mt-4">
         <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">Use Silo deposits</div>
         <TextSkeleton loading={false} className="w-11 h-6">
           <Switch checked={tokenSource === "deposits"} onCheckedChange={handleOnCheckedChange} />
