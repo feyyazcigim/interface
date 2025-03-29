@@ -799,6 +799,17 @@ export async function loadOrderbookData(
 
     const activeRequisitions = requisitions.filter(req => !req.isCancelled);
 
+    // Track used deposits by publisher and token
+    const usedDeposits: {
+      [publisher: string]: {
+        [token: string]: {
+          stem: bigint;
+          amount: bigint;
+          used: boolean;
+        }[];
+      };
+    } = {};
+
     // First pass: Get all data and sort by temperature
     let orderbookData = await Promise.all(
       activeRequisitions.map(async (requisition): Promise<OrderbookEntryWithProcessingData> => {
@@ -829,7 +840,12 @@ export async function loadOrderbookData(
               ]
             });
 
+            // Fix: Ensure we're using the correct scaling for totalAvailableBeans
             totalAvailablePinto = TokenValue.fromBlockchain(withdrawalPlan.totalAvailableBeans, 6);
+            
+            // Add debug logging to help diagnose the issue
+            console.log("Raw totalAvailableBeans:", withdrawalPlan.totalAvailableBeans.toString());
+            console.log("Converted totalAvailablePinto:", totalAvailablePinto.toHuman());
           }
 
           // If pintosLeft is zero, this means the storage slot hasn't been initialized yet
@@ -859,58 +875,108 @@ export async function loadOrderbookData(
       })
     );
 
-    // Sort by temperature
+    // Sort by temperature first
     orderbookData = orderbookData.sort((a, b) => {
       const tempA = a.decodedData?.minTemp || 0n;
       const tempB = b.decodedData?.minTemp || 0n;
       return Number(tempA - tempB);
     });
 
-    // Track used deposits
-    const accountDeposits: AccountDeposits = {};
-
-    // Second pass: Recalculate available PINTO
-    orderbookData = orderbookData.map(entry => {
+    // Second pass: Calculate available PINTO with temperature-based priority
+    orderbookData = orderbookData.map((entry, orderIndex) => {
       if (!entry.withdrawalPlan || !entry.decodedData) {
         return entry;
       }
 
       const publisher = entry.requisition.blueprint.publisher;
-      if (!accountDeposits[publisher]) {
-        accountDeposits[publisher] = {};
+      console.log(`\n--- Processing Order #${orderIndex + 1} ---`);
+      console.log(`Temperature: ${entry.decodedData.minTempAsString}%`);
+      console.log(`Publisher: ${publisher}`);
+      console.log(`Pintos Left to Sow: ${entry.pintosLeftToSow.toHuman()}`);
+      
+      // Initialize deposits tracking for this publisher if needed
+      if (!usedDeposits[publisher]) {
+        usedDeposits[publisher] = {};
       }
 
+      // Calculate available PINTO based on unused deposits
       let availablePinto = TokenValue.ZERO;
-
+      
+      // Process each token's deposits
       entry.withdrawalPlan.sourceTokens.forEach((token, tokenIndex) => {
-        if (!accountDeposits[publisher][token]) {
-          accountDeposits[publisher][token] = entry.withdrawalPlan!.stems[tokenIndex].map((stem, i) => ({
-            stem,
-            amount: entry.withdrawalPlan!.amounts[tokenIndex][i],
-            used: false,
-          }));
+        console.log(`\nChecking token: ${token}`);
+        
+        // Initialize deposits array for this token if it doesn't exist
+        if (!usedDeposits[publisher][token]) {
+          const stems = entry.withdrawalPlan!.stems[tokenIndex];
+          const amounts = entry.withdrawalPlan!.amounts[tokenIndex];
+          
+          console.log('Initializing new deposits:');
+          usedDeposits[publisher][token] = [];
+          
+          // Create a deposit entry for each stem/amount pair
+          for (let i = 0; i < stems.length; i++) {
+            usedDeposits[publisher][token].push({
+              stem: stems[i],
+              amount: amounts[i],
+              used: false
+            });
+            console.log(`- Stem ${stems[i].toString()}: ${TokenValue.fromBlockchain(amounts[i], 6).toHuman()} LP/PINTO (unused)`);
+          }
         }
 
-        const unusedDeposits = accountDeposits[publisher][token].filter(d => !d.used);
-        const tokenAvailable = unusedDeposits.reduce(
-          (sum, deposit) => sum + deposit.amount,
-          0n
-        );
-
-        let remainingNeeded = entry.decodedData!.sowAmounts.totalAmountToSow;
-        for (const deposit of unusedDeposits) {
-          if (remainingNeeded <= 0n) break;
-          deposit.used = true;
-          remainingNeeded -= deposit.amount;
-        }
-
-        availablePinto = availablePinto.add(TokenValue.fromBlockchain(tokenAvailable, 6));
+        // Calculate and log available amount from unused deposits
+        const unusedDeposits = usedDeposits[publisher][token].filter(deposit => !deposit.used);
+        
+        // Use availableBeans for this token from the withdrawal plan
+        const availableBeansForToken = entry.withdrawalPlan!.availableBeans[tokenIndex];
+        const unusedAmount = unusedDeposits.length > 0 ? availableBeansForToken : 0n;
+        
+        console.log(`Available from ${token}: ${TokenValue.fromBlockchain(unusedAmount, 6).toHuman()} PINTO`);
+        
+        // Convert to PINTO equivalent
+        availablePinto = availablePinto.add(TokenValue.fromBlockchain(unusedAmount, 6));
       });
 
+      // Calculate how much PINTO this order can use
+      const currentlySowable = TokenValue.min(entry.pintosLeftToSow, availablePinto);
+      console.log(`\nTotal available PINTO: ${availablePinto.toHuman()}`);
+      console.log(`Currently sowable: ${currentlySowable.toHuman()}`);
+
+      // Mark deposits as used based on the amount being used
+      if (currentlySowable.gt(TokenValue.ZERO)) {
+        let remainingToMark = currentlySowable.toBigInt();
+        console.log(`\nMarking deposits as used (need ${TokenValue.fromBlockchain(remainingToMark, 6).toHuman()} PINTO):`);
+        
+        entry.withdrawalPlan.sourceTokens.forEach((token) => {
+          const deposits = usedDeposits[publisher][token];
+          // Sort deposits by stem to use oldest deposits first
+          deposits.sort((a, b) => Number(a.stem - b.stem));
+          
+          for (const deposit of deposits) {
+            if (!deposit.used && remainingToMark > 0n) {
+              if (remainingToMark >= deposit.amount) {
+                // Use entire deposit
+                deposit.used = true;
+                console.log(`- Using entire deposit: Stem ${deposit.stem.toString()}, Amount: ${TokenValue.fromBlockchain(deposit.amount, 6).toHuman()} PINTO`);
+                remainingToMark -= deposit.amount;
+              } else {
+                // Use partial deposit
+                deposit.used = true;
+                console.log(`- Using partial deposit: Stem ${deposit.stem.toString()}, Amount: ${TokenValue.fromBlockchain(remainingToMark, 6).toHuman()} PINTO`);
+                remainingToMark = 0n;
+                break;
+              }
+            }
+          }
+        });
+      }
+
+      // Return updated entry
       return {
         ...entry,
         totalAvailablePinto: availablePinto,
-        currentlySowable: TokenValue.min(entry.pintosLeftToSow, availablePinto),
+        currentlySowable,
       };
     });
 

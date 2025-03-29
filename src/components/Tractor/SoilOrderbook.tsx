@@ -131,6 +131,9 @@ export function SoilOrderbook() {
               hourCycle: "h24",
             };
 
+            console.log("Raw totalAvailablePinto:", req.totalAvailablePinto.toBigInt().toString());
+            console.log("Formatted totalAvailablePinto:", formatter.number(req.totalAvailablePinto));
+
             return (
               <TableRow key={index} className="h-[4.5rem] bg-transparent items-center hover:bg-pinto-green-1/50">
                 <TableCell className="p-2">
