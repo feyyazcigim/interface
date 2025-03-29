@@ -142,7 +142,7 @@ const SeasonsExplorer = () => {
 
   return (
     <>
-      <div className="flex flex-row gap-x-2">
+      <div className="flex flex-row gap-x-2 ml-4">
         <HideColumnDropdown
           seasonColumns={seasonColumns}
           hiddenFields={hiddenFields}
@@ -155,8 +155,8 @@ const SeasonsExplorer = () => {
       ) : (
         <SeasonsTable seasonsData={seasons} hiddenFields={hiddenFields} hideColumn={hideColumn} />
       )}
-      <div className="self-center w-[100vw] flex justify-center flex-row sm:px-8 px-6 gap-x-2 bg-pinto-gray-1 border border-pinto-gray-2 h-[50px] fixed bottom-0 left-0 right-0 font-medium z-[1]">
-        <div className="w-full min-w-0 2xl:max-w-[1550px] 3xl:max-w-[2560px] flex items-center gap-2">
+      <div className="self-center w-[100vw] flex justify-center flex-row gap-x-2 bg-pinto-gray-1 border border-pinto-gray-2 h-[50px] fixed bottom-0 left-0 right-0 font-medium z-[1]">
+        <div className="w-full min-w-0 2xl:max-w-[1550px] 3xl:max-w-[2560px] flex items-center gap-2 sm:px-12 px-8 3xl:px-4">
           <Button
             variant="pagination"
             size="xs"
