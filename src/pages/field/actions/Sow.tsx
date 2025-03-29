@@ -16,7 +16,6 @@ import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { stringToNumber, stringToStringNum } from "@/utils/string";
 import { AdvancedFarmCall, FarmFromMode, FarmToMode, Token } from "@/utils/types";
-import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
@@ -46,6 +45,7 @@ import { HashString } from "@/utils/types.generic";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { getBalanceFromMode } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
+import LabelValue from "@/components/LabelValue";
 
 type SowProps = {
   isMorning: boolean;
@@ -53,7 +53,6 @@ type SowProps = {
 
 function Sow({ isMorning }: SowProps) {
   // Hooks
-  const qc = useQueryClient();
   const diamond = useProtocolAddress();
   const { mainToken } = useTokenData();
   const farmerBalances = useFarmerBalances();
@@ -151,6 +150,8 @@ function Sow({ isMorning }: SowProps) {
     errorMessage: "Sow failed",
     successMessage: "Sow successful",
   });
+
+  const soilSown = isUsingMain ? amountInTV : swap.data?.buyAmount;
 
   const pods = useMemo(() => {
     const amount = stringToNumber(amountIn);
@@ -383,7 +384,7 @@ function Sow({ isMorning }: SowProps) {
           disableClamping={true}
         />
       </div>
-      <Row className="justify-between my-2">
+      <Row className="justify-between mt-2">
         <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">Use Silo Deposits</div>
         <TextSkeleton loading={false} className="w-11 h-6">
           <Switch checked={tokenSource === "deposits"} onCheckedChange={handleOnCheckedChange} />
@@ -403,56 +404,61 @@ function Sow({ isMorning }: SowProps) {
                 <FrameAnimator size={64} />
               </div>
             ) : (
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-6 px-2">
-                  <OutputDisplay>
-                    <OutputDisplay.Item label="Pods">
-                      <OutputDisplay.Value value={formatter.token(pods, PODS)} token={PODS} suffix={PODS.symbol} />
-                    </OutputDisplay.Item>
-                    <OutputDisplay.Item label="Place in Line">
-                      <OutputDisplay.Value value={formatter.noDec(podLine)} />
-                    </OutputDisplay.Item>
-                    {fromSilo ? (
-                      <>
-                        <OutputDisplay.Item label="Stalk">
-                          <OutputDisplay.Value
-                            value={formatter.token(withdrawBreakdown?.stalk, STALK)}
-                            delta="down"
-                            suffix="Stalk"
-                            token={STALK}
-                            showArrow
-                          />
-                        </OutputDisplay.Item>
-                        <OutputDisplay.Item label="Seed">
-                          <OutputDisplay.Value
-                            value={formatter.token(withdrawBreakdown?.seeds, SEEDS)}
-                            token={SEEDS}
-                            delta="down"
-                            suffix="Seeds"
-                            showArrow
-                          />
-                        </OutputDisplay.Item>
-                      </>
-                    ) : null}
-                  </OutputDisplay>
+              <Col>
+                <OutputDisplay.Item label="Soil Sown" className="mt-2">
+                  <OutputDisplay.Value value={formatter.token(soilSown, mainToken)} />
+                </OutputDisplay.Item>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-0 px-2">
+                    <OutputDisplay>
+                      <OutputDisplay.Item label="Pods">
+                        <OutputDisplay.Value value={formatter.token(pods, PODS)} token={PODS} suffix={PODS.symbol} />
+                      </OutputDisplay.Item>
+                      <OutputDisplay.Item label="Place in Line">
+                        <OutputDisplay.Value value={formatter.noDec(podLine)} />
+                      </OutputDisplay.Item>
+                      {fromSilo ? (
+                        <>
+                          <OutputDisplay.Item label="Stalk">
+                            <OutputDisplay.Value
+                              value={formatter.token(withdrawBreakdown?.stalk, STALK)}
+                              delta="down"
+                              suffix="Stalk"
+                              token={STALK}
+                              showArrow
+                            />
+                          </OutputDisplay.Item>
+                          <OutputDisplay.Item label="Seed">
+                            <OutputDisplay.Value
+                              value={formatter.token(withdrawBreakdown?.seeds, SEEDS)}
+                              token={SEEDS}
+                              delta="down"
+                              suffix="Seeds"
+                              showArrow
+                            />
+                          </OutputDisplay.Item>
+                        </>
+                      ) : null}
+                    </OutputDisplay>
+                  </div>
+                  <div className="flex flex-col gap-0">
+                    <Col className="gap-4">
+                      {!hasSoil && <Warning>Your usable balance is 0.00 because there is no Soil available.</Warning>}
+                      <Warning>Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.</Warning>
+                    </Col>
+                    {!tokenIn.isMain && swapSummary?.swap && (
+                      <RoutingAndSlippageInfo
+                        title="Total Swap Slippage"
+                        swapSummary={swapSummary}
+                        preferredSummary="swap"
+                        txnType="Swap"
+                        tokenIn={tokenIn}
+                        tokenOut={mainToken}
+                      />
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-0">
-                  <Col className="gap-4">
-                    {!hasSoil && <Warning>Your usable balance is 0.00 because there is no Soil available.</Warning>}
-                    <Warning>Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.</Warning>
-                  </Col>
-                  {!tokenIn.isMain && swapSummary?.swap && (
-                    <RoutingAndSlippageInfo
-                      title="Total Swap Slippage"
-                      swapSummary={swapSummary}
-                      preferredSummary="swap"
-                      txnType="Swap"
-                      tokenIn={tokenIn}
-                      tokenOut={mainToken}
-                    />
-                  )}
-                </div>
-              </div>
+              </Col>
             )}
           </motion.div>
         )}
