@@ -23,6 +23,7 @@ import useTokenData from "./useTokenData";
 export interface SeasonsTableData {
   season: number;
   caseId: number;
+  sunriseBlock: number;
   beanToMaxLpGpPerBdvRatio: number;
   deltaBeanToMaxLpGpPerBdvRatio: number;
   blocksToSoldOutSoil: string;
@@ -164,6 +165,7 @@ export default function useSeasonsData(fromSeason: number, toSeason: number) {
         ...acc[season.beanHourlySnapshot.season.season],
         season: season.beanHourlySnapshot.season.season,
         caseId: Number(currFieldHourlySnapshots.caseId || 0),
+        sunriseBlock: Number(currStalkSeasons.sunriseBlock),
         instDeltaB: TokenValue.fromHuman(season.beanHourlySnapshot.instDeltaB, tokenData.mainToken.decimals),
         instPrice: TokenValue.fromHuman(season.beanHourlySnapshot.instPrice, tokenData.mainToken.decimals),
         l2sr: TokenValue.fromHuman(season.beanHourlySnapshot.l2sr * 100, 2),
