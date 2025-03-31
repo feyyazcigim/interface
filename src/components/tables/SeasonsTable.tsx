@@ -7,6 +7,7 @@ import { SeasonsTableData } from "@/state/useSeasonsData";
 import { calculateCropScales, caseIdToDescriptiveText, convertDeltaDemandToPercentage } from "@/utils/season";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ListChildComponentProps, VariableSizeList, areEqual } from "react-window";
+import { DeltaDemandChart } from "../charts/DeltaDemandChart";
 import { SeasonsTableCell, SeasonsTableCellType } from "./SeasonsTableCell";
 
 interface SeasonsTableProps {
@@ -126,9 +127,9 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           value={convertDeltaDemandToPercentage(data.deltaPodDemand.toNumber())}
           subValue={caseIdToDescriptiveText(data.caseId, "soil_demand")}
           hiddenFields={hiddenFields}
-          // hoverContent={
-          //   <DeltaDemandChart />
-          // }
+          hoverContent={
+            <DeltaDemandChart currentSeason={data} prevSeasons={[seasonsData[index + 1], seasonsData[index + 2]]} />
+          }
         />
         <SeasonsTableCell
           columnKey="cropScalar"

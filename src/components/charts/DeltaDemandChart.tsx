@@ -1,12 +1,30 @@
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import { SeasonsTableData } from "@/state/useSeasonsData";
 import { Separator } from "@radix-ui/react-separator";
+import { Button } from "../ui/Button";
 
-export const DeltaDemandChart = () => {
+interface DeltaDemandChartProps {
+  currentSeason: SeasonsTableData;
+  prevSeasons: SeasonsTableData[];
+}
+
+export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChartProps) => {
   const lowerBound = 15000;
   const upperBound = 15000;
   const secondLowerBound = 24000;
   const secondUpperBound = 24000;
+
+  const protocolAddress = useProtocolAddress();
+
+  const generateData = () => {
+    const bound1 = [prevSeasons[0].sunriseBlock, currentSeason.sunriseBlock];
+    console.info("🚀 ~ generateData ~ bound1:", bound1);
+    const bound2 = [prevSeasons[1].sunriseBlock, prevSeasons[0].sunriseBlock];
+    console.info("🚀 ~ generateData ~ bound2:", bound2);
+  };
+
   return (
-    <div className="w-[600px] bg-white rounded-md p-6 border border-pinto-gray-2">
+    <div className="w-[600px] bg-white">
       <span>Demand for Soil is increasing</span>
       <div className="flex text-sm mt-2 gap-1 items-center">
         <div className="rounded-full w-3 h-3 bg-pinto-green-4" />
@@ -30,7 +48,9 @@ export const DeltaDemandChart = () => {
         </span>
         <span className="text-pinto-gray-4">(100%)</span>
       </div>
-      <div className="w-full h-[200px] bg-pinto-gray-1 rounded-md mt-2">Super Slick Chart here</div>
+      <div className="w-full h-[200px] bg-pinto-gray-1 rounded-md mt-2">
+        Super Slick Chart here <Button onClick={generateData}>Click me to gen chart</Button>
+      </div>
       <Separator className="my-4" />
       <div className="flex flex-col">
         <span className="text-base">Demand for Soil</span>
