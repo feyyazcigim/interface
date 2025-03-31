@@ -45,7 +45,6 @@ import { HashString } from "@/utils/types.generic";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { getBalanceFromMode } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import LabelValue from "@/components/LabelValue";
 
 type SowProps = {
   isMorning: boolean;
@@ -103,7 +102,9 @@ function Sow({ isMorning }: SowProps) {
   const maxBuyQuery = useMaxBuy(tokenIn, slippage, totalSoil);
   const maxBuy = totalSoilLoading ? TV.ZERO : maxBuyQuery.data;
 
-  const amountInTV = TV.fromHuman(stringToStringNum(amountIn), tokenIn.decimals);
+  const amountInTV = useMemo(() => {
+    return TV.fromHuman(stringToStringNum(amountIn), tokenIn.decimals);
+  }, [tokenIn.decimals, amountIn]);
 
   const swap = useSwap({
     tokenIn: tokenIn,
@@ -151,7 +152,10 @@ function Sow({ isMorning }: SowProps) {
     successMessage: "Sow successful",
   });
 
-  const soilSown = isUsingMain ? amountInTV : swap.data?.buyAmount;
+  const soilSown = useMemo(
+    () => (isUsingMain ? amountInTV : swap.data?.buyAmount),
+    [isUsingMain, amountInTV, swap.data?.buyAmount],
+  );
 
   const pods = useMemo(() => {
     const amount = stringToNumber(amountIn);
@@ -384,7 +388,7 @@ function Sow({ isMorning }: SowProps) {
           disableClamping={true}
         />
       </div>
-      <Row className="justify-between mt-2">
+      <Row className="justify-between my-2">
         <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">Use Silo Deposits</div>
         <TextSkeleton loading={false} className="w-11 h-6">
           <Switch checked={tokenSource === "deposits"} onCheckedChange={handleOnCheckedChange} />
@@ -405,12 +409,19 @@ function Sow({ isMorning }: SowProps) {
               </div>
             ) : (
               <Col>
-                <OutputDisplay.Item label="Soil Sown" className="mt-2">
-                  <OutputDisplay.Value value={formatter.token(soilSown, mainToken)} />
-                </OutputDisplay.Item>
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-0 px-2">
-                    <OutputDisplay>
+                    <OutputDisplay
+                      title={
+                        <span>
+                          Sow{" "}
+                          <span className="text-pinto-primary">
+                            {`${formatter.twoDec(soilSown)}/${formatter.twoDec(totalSoil)}`}{" "}
+                          </span>
+                          {`available Soil and receive`}
+                        </span>
+                      }
+                    >
                       <OutputDisplay.Item label="Pods">
                         <OutputDisplay.Value value={formatter.token(pods, PODS)} token={PODS} suffix={PODS.symbol} />
                       </OutputDisplay.Item>
@@ -595,26 +606,22 @@ const useWithdrawDepositBreakdown = (
   amountIn: string | undefined,
   enabled: boolean,
 ) => {
-  const tokenDeposits = useMemo(() => deposits.get(token), [deposits, token]);
-
-  const [breakdown, setBreakdown] = useState<ReturnType<typeof sortAndPickCrates> | undefined>(undefined);
-
   const inputAmount = stringToStringNum(amountIn ?? "0");
 
-  useEffect(() => {
+  const breakdown = useMemo(() => {
     if (!enabled || inputAmount === "0") {
-      setBreakdown(undefined);
       return;
     }
 
+    const tokenDeposits = deposits?.get(token);
     if (!tokenDeposits || !tokenDeposits?.deposits.length) return;
 
     // Take the minimum of the amount in and the amount in the deposits
     // If the amount is greater than amount deposited, sortAndPickCrates will throw
     const amount = TV.min(TV.fromHuman(stringToStringNum(inputAmount ?? "0"), token.decimals), tokenDeposits.amount);
 
-    setBreakdown(sortAndPickCrates("withdraw", amount, tokenDeposits.deposits));
-  }, [inputAmount, tokenDeposits, enabled, token]);
+    return sortAndPickCrates("withdraw", amount, tokenDeposits.deposits);
+  }, [deposits, inputAmount, enabled, token]);
 
   return breakdown;
 };
