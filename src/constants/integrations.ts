@@ -1,9 +1,21 @@
 import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
-import { SpectraCurvePool } from "@/state/integrations/types";
+import { Token } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
+import { Address } from "viem";
 import { base } from "viem/chains";
 
-export const spectraCurvePool: ChainLookup<SpectraCurvePool> = {
+export interface SpectraCurvePool {
+  maturity: number;
+  pool: Address;
+  lp: Address;
+  pt: Address;
+  yt: Address;
+  underlying: Token;
+  token: Token;
+}
+
+
+export const SPECTRA_CURVE_POOLS: ChainLookup<SpectraCurvePool> = {
   [base.id]: {
     maturity: 1758153782,
     pool: "0xd8E4662ffd6b202cF85e3783Fb7252ff0A423a72",
@@ -13,4 +25,8 @@ export const spectraCurvePool: ChainLookup<SpectraCurvePool> = {
     underlying: MAIN_TOKEN[base.id],
     token: S_MAIN_TOKEN[base.id],
   },
+} as const;
+
+export const INTEGRATION_ENDPOINTS = {
+  SPECTRA: import.meta.env.VITE_SPECTRA_ENDPOINT,
 } as const;

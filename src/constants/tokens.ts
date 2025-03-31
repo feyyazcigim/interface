@@ -8,9 +8,9 @@ import pintoCbethIcon from "@/assets/tokens/PINTO_cbETH.png";
 import wsolIcon from "@/assets/tokens/WSOL.png";
 import crsPintoIcon from "@/assets/tokens/crsPINTO.png";
 import sPintoIcon from "@/assets/tokens/sPINTO.png";
-import spectrasPintoYTIcon from '@/assets/tokens/spectra-spinto-yt.png'
-import spectrasPintoPTIcon from '@/assets/tokens/spectra-spinto-pt.png'
-import spectrasPintoLPIcon from '@/assets/tokens/spectra-spinto-lp.png'
+import spectrasPintoYTIcon from '@/assets/tokens/SPECTRA-sPINTO-YT.png'
+import spectrasPintoPTIcon from '@/assets/tokens/SPECTRA-sPINTO-PT.png'
+import spectrasPintoLPIcon from '@/assets/tokens/SPECTRA-sPINTO-LP.png'
 import { Token } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
 import { arbitrum, base } from "viem/chains";

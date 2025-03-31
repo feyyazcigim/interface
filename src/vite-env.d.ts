@@ -29,6 +29,10 @@ interface ImportMetaEnv {
    * RPC URL for the testnet
    */
   readonly VITE_TENDERLY_RPC_URL?: string;
+  /**
+   * Spectra API Endpoint
+   */
+  readonly VITE_SPECTRA_ENDPOINT?: string;
 }
 
 declare module "*.md";
