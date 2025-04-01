@@ -771,13 +771,16 @@ export interface OrderbookEntry extends Omit<RequisitionEvent, 'decodedData'> {
 // Then update the processing interface
 interface OrderbookEntryWithProcessingData extends Omit<OrderbookEntry, 'decodedData'> {
   decodedData: SowBlueprintData | null;
-  withdrawalPlan?: {
-    sourceTokens: `0x${string}`[];
-    stems: bigint[][];
-    amounts: bigint[][];
-    availableBeans: bigint[];
-    totalAvailableBeans: bigint;
-  };
+  withdrawalPlan?: any; // Use any to avoid type errors
+}
+
+// Add this type definition after the OrderbookEntryWithProcessingData interface
+export interface WithdrawalPlan {
+  sourceTokens: readonly `0x${string}`[];
+  stems: readonly (readonly bigint[])[];
+  amounts: readonly (readonly bigint[])[];
+  availableBeans: readonly bigint[];
+  totalAvailableBeans: bigint;
 }
 
 export async function loadOrderbookData(
@@ -798,17 +801,6 @@ export async function loadOrderbookData(
     );
 
     const activeRequisitions = requisitions.filter(req => !req.isCancelled);
-
-    // Track used deposits by publisher and token
-    const usedDeposits: {
-      [publisher: string]: {
-        [token: string]: {
-          stem: bigint;
-          amount: bigint;
-          used: boolean;
-        }[];
-      };
-    } = {};
 
     // First pass: Get all data and sort by temperature
     let orderbookData = await Promise.all(
@@ -844,8 +836,9 @@ export async function loadOrderbookData(
             totalAvailablePinto = TokenValue.fromBlockchain(withdrawalPlan.totalAvailableBeans, 6);
             
             // Add debug logging to help diagnose the issue
-            console.log("Raw totalAvailableBeans:", withdrawalPlan.totalAvailableBeans.toString());
-            console.log("Converted totalAvailablePinto:", totalAvailablePinto.toHuman());
+            console.log(`Initial withdrawal plan for ${requisition.requisition.blueprint.publisher}:`);
+            console.log("Total tokens:", withdrawalPlan.sourceTokens.length);
+            console.log("Total available PINTO:", totalAvailablePinto.toHuman());
           }
 
           // If pintosLeft is zero, this means the storage slot hasn't been initialized yet
@@ -882,103 +875,154 @@ export async function loadOrderbookData(
       return Number(tempA - tempB);
     });
 
+    // Log the initial state of the orderbook
+    console.log("\nInitial orderbook state:");
+    orderbookData.forEach((entry, i) => {
+      if (entry.decodedData) {
+        console.log(`\nOrder #${i + 1}:`);
+        console.log(`Publisher: ${entry.requisition.blueprint.publisher}`);
+        console.log(`Temperature: ${entry.decodedData.minTempAsString}%`);
+        console.log(`Pintos Left: ${entry.pintosLeftToSow.toHuman()}`);
+        console.log(`Initial Available PINTO: ${entry.totalAvailablePinto.toHuman()}`);
+      }
+    });
+
     // Second pass: Calculate available PINTO with temperature-based priority
-    orderbookData = orderbookData.map((entry, orderIndex) => {
+    // We'll track used withdrawal plans per publisher
+    const publisherWithdrawalPlans: { [publisher: string]: any[] } = {};
+
+    // Process orders sequentially instead of in parallel
+    for (let i = 0; i < orderbookData.length; i++) {
+      const entry = orderbookData[i];
       if (!entry.withdrawalPlan || !entry.decodedData) {
-        return entry;
+        continue;
       }
 
       const publisher = entry.requisition.blueprint.publisher;
-      console.log(`\n--- Processing Order #${orderIndex + 1} ---`);
+      console.log(`\n--- Processing Order #${i + 1} ---`);
       console.log(`Temperature: ${entry.decodedData.minTempAsString}%`);
       console.log(`Publisher: ${publisher}`);
       console.log(`Pintos Left to Sow: ${entry.pintosLeftToSow.toHuman()}`);
       
-      // Initialize deposits tracking for this publisher if needed
-      if (!usedDeposits[publisher]) {
-        usedDeposits[publisher] = {};
-      }
-
-      // Calculate available PINTO based on unused deposits
-      let availablePinto = TokenValue.ZERO;
+      // Get existing withdrawal plans for this publisher
+      const existingPlans = publisherWithdrawalPlans[publisher] || [];
+      console.log("Current state of publisherWithdrawalPlans:", publisherWithdrawalPlans);
+      console.log("Existing plans for publisher:", existingPlans);
       
-      // Process each token's deposits
-      entry.withdrawalPlan.sourceTokens.forEach((token, tokenIndex) => {
-        console.log(`\nChecking token: ${token}`);
-        
-        // Initialize deposits array for this token if it doesn't exist
-        if (!usedDeposits[publisher][token]) {
-          const stems = entry.withdrawalPlan!.stems[tokenIndex];
-          const amounts = entry.withdrawalPlan!.amounts[tokenIndex];
+      let combinedExistingPlan = null;
+      
+      // If we have existing plans, combine them
+      if (existingPlans.length > 0) {
+        console.log("Found existing plans for this publisher:", existingPlans);
+        try {
+          // Combine all existing withdrawal plans for this publisher
+          const combinedPlan = (await publicClient.readContract({
+            address: SILO_HELPERS_ADDRESS,
+            abi: siloHelpersABI,
+            functionName: 'combineWithdrawalPlans',
+            args: [existingPlans]
+          })) as any;
           
-          console.log('Initializing new deposits:');
-          usedDeposits[publisher][token] = [];
+          combinedExistingPlan = combinedPlan;
           
-          // Create a deposit entry for each stem/amount pair
-          for (let i = 0; i < stems.length; i++) {
-            usedDeposits[publisher][token].push({
-              stem: stems[i],
-              amount: amounts[i],
-              used: false
-            });
-            console.log(`- Stem ${stems[i].toString()}: ${TokenValue.fromBlockchain(amounts[i], 6).toHuman()} LP/PINTO (unused)`);
-          }
+          console.log("Combined existing plans for publisher:", publisher);
+          console.log("Total tokens in combined plan:", combinedPlan.sourceTokens.length);
+          console.log("Total available PINTO in combined plan:", 
+            TokenValue.fromBlockchain(combinedPlan.totalAvailableBeans, 6).toHuman());
+        } catch (error) {
+          console.error("Failed to combine withdrawal plans:", error);
+          // Fallback to no existing plan
+          combinedExistingPlan = null;
         }
-
-        // Calculate and log available amount from unused deposits
-        const unusedDeposits = usedDeposits[publisher][token].filter(deposit => !deposit.used);
+      } else {
+        console.log("No existing plans for this publisher");
+      }
+      
+      // Get a new withdrawal plan that excludes deposits already allocated to other orders
+      let updatedWithdrawalPlan;
+      try {
+        const emptyPlan = {
+          sourceTokens: [] as readonly `0x${string}`[],
+          stems: [] as readonly (readonly bigint[])[],
+          amounts: [] as readonly (readonly bigint[])[],
+          availableBeans: [] as readonly bigint[],
+          totalAvailableBeans: 0n
+        };
         
-        // Use availableBeans for this token from the withdrawal plan
-        const availableBeansForToken = entry.withdrawalPlan!.availableBeans[tokenIndex];
-        const unusedAmount = unusedDeposits.length > 0 ? availableBeansForToken : 0n;
+        updatedWithdrawalPlan = await publicClient.readContract({
+          address: SILO_HELPERS_ADDRESS,
+          abi: siloHelpersABI,
+          functionName: 'getWithdrawalPlan',
+          args: [
+            publisher,
+            entry.decodedData.sourceTokenIndices,
+            entry.decodedData.sowAmounts.totalAmountToSow,
+            entry.decodedData.maxGrownStalkPerBdv,
+            combinedExistingPlan || emptyPlan
+          ]
+        });
         
-        console.log(`Available from ${token}: ${TokenValue.fromBlockchain(unusedAmount, 6).toHuman()} PINTO`);
+        console.log("Got updated withdrawal plan excluding existing orders:");
+        console.log("Total tokens in plan:", updatedWithdrawalPlan.sourceTokens.length);
         
-        // Convert to PINTO equivalent
-        availablePinto = availablePinto.add(TokenValue.fromBlockchain(unusedAmount, 6));
-      });
+        // Log deposit details for each token
+        updatedWithdrawalPlan.sourceTokens.forEach((token, i) => {
+          console.log(`\nToken: ${token}`);
+          console.log(`Available beans: ${TokenValue.fromBlockchain(updatedWithdrawalPlan.availableBeans[i], 6).toHuman()} PINTO`);
+          
+          // Log stem and amount pairs
+          const stems = updatedWithdrawalPlan.stems[i];
+          const amounts = updatedWithdrawalPlan.amounts[i];
+          for (let j = 0; j < stems.length; j++) {
+            console.log(`- Stem ${stems[j].toString()}: ${TokenValue.fromBlockchain(amounts[j], 6).toHuman()} LP/PINTO (allocated)`);
+          }
+        });
+        
+      } catch (error: any) {
+        console.error("Failed to get updated withdrawal plan:", error);
+        // If the error is "No beans available", set the plan to empty
+        if (error.message?.includes("No beans available")) {
+          console.log("No beans available for this order, setting available PINTO to 0");
+          updatedWithdrawalPlan = {
+            sourceTokens: [] as readonly `0x${string}`[],
+            stems: [] as readonly (readonly bigint[])[],
+            amounts: [] as readonly (readonly bigint[])[],
+            availableBeans: [] as readonly bigint[],
+            totalAvailableBeans: 0n
+          };
+        } else {
+          // For other errors, fallback to the original plan
+          updatedWithdrawalPlan = entry.withdrawalPlan;
+        }
+      }
+      
+      // Calculate available PINTO based on the updated withdrawal plan
+      const availablePinto = updatedWithdrawalPlan 
+        ? TokenValue.fromBlockchain(updatedWithdrawalPlan.totalAvailableBeans, 6)
+        : TokenValue.ZERO;
+      
+      // Add this plan to the list of existing plans for future orders
+      if (updatedWithdrawalPlan && updatedWithdrawalPlan.sourceTokens.length > 0) {
+        if (!publisherWithdrawalPlans[publisher]) {
+          publisherWithdrawalPlans[publisher] = [];
+        }
+        publisherWithdrawalPlans[publisher].push(updatedWithdrawalPlan);
+        console.log("Added plan to publisherWithdrawalPlans. Current state:", publisherWithdrawalPlans);
+      }
 
       // Calculate how much PINTO this order can use
       const currentlySowable = TokenValue.min(entry.pintosLeftToSow, availablePinto);
       console.log(`\nTotal available PINTO: ${availablePinto.toHuman()}`);
       console.log(`Currently sowable: ${currentlySowable.toHuman()}`);
-
-      // Mark deposits as used based on the amount being used
-      if (currentlySowable.gt(TokenValue.ZERO)) {
-        let remainingToMark = currentlySowable.toBigInt();
-        console.log(`\nMarking deposits as used (need ${TokenValue.fromBlockchain(remainingToMark, 6).toHuman()} PINTO):`);
-        
-        entry.withdrawalPlan.sourceTokens.forEach((token) => {
-          const deposits = usedDeposits[publisher][token];
-          // Sort deposits by stem to use oldest deposits first
-          deposits.sort((a, b) => Number(a.stem - b.stem));
-          
-          for (const deposit of deposits) {
-            if (!deposit.used && remainingToMark > 0n) {
-              if (remainingToMark >= deposit.amount) {
-                // Use entire deposit
-                deposit.used = true;
-                console.log(`- Using entire deposit: Stem ${deposit.stem.toString()}, Amount: ${TokenValue.fromBlockchain(deposit.amount, 6).toHuman()} PINTO`);
-                remainingToMark -= deposit.amount;
-              } else {
-                // Use partial deposit
-                deposit.used = true;
-                console.log(`- Using partial deposit: Stem ${deposit.stem.toString()}, Amount: ${TokenValue.fromBlockchain(remainingToMark, 6).toHuman()} PINTO`);
-                remainingToMark = 0n;
-                break;
-              }
-            }
-          }
-        });
-      }
-
-      // Return updated entry
-      return {
+      
+      // Update the entry
+      orderbookData[i] = {
         ...entry,
         totalAvailablePinto: availablePinto,
         currentlySowable,
+        withdrawalPlan: updatedWithdrawalPlan 
       };
-    });
+    }
 
     // Remove processing data and return final result
     return orderbookData.map(({ decodedData, withdrawalPlan, ...entry }) => entry);

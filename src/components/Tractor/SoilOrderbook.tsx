@@ -2,7 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { usePublicClient } from "wagmi";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { toast } from "sonner";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { 
   OrderbookEntry, 
   loadOrderbookData, 
@@ -17,20 +17,51 @@ const BASESCAN_URL = "https://basescan.org/address/";
 export function SoilOrderbook() {
   const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
   const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
+  const isMounted = useRef(true);
+  const loadAttempted = useRef(false);
+
+  console.log("SoilOrderbook render - Dependencies:", {
+    protocolAddress,
+    publicClient: !!publicClient,
+    latestBlockInfo,
+    isLoading,
+    requisitionsCount: requisitions.length,
+    loadAttempted: loadAttempted.current
+  });
+
+  // Cleanup function to prevent state updates after unmount
+  useEffect(() => {
+    console.log("Setting up cleanup");
+    return () => {
+      console.log("Component unmounting, setting isMounted to false");
+      isMounted.current = false;
+    };
+  }, []);
 
   // Get latest block info once when component loads
   useEffect(() => {
     const fetchLatestBlock = async () => {
-      if (!publicClient) return;
+      console.log("Fetching latest block...");
+      if (!publicClient) {
+        console.log("No publicClient available");
+        return;
+      }
       try {
         const latestBlock = await publicClient.getBlock();
+        console.log("Got latest block:", {
+          number: latestBlock.number,
+          timestamp: latestBlock.timestamp
+        });
+        
         const blockInfo = {
           number: Number(latestBlock.number),
           timestamp: Number(latestBlock.timestamp) * 1000,
         };
         setLatestBlockInfo(blockInfo);
+        console.log("Updated latestBlockInfo:", blockInfo);
       } catch (error) {
         console.error("Failed to fetch latest block:", error);
       }
@@ -40,6 +71,11 @@ export function SoilOrderbook() {
 
   const getApproximateTimestamps = useCallback(
     (events: OrderbookEntry[]) => {
+      console.log("Calculating timestamps for events:", {
+        eventCount: events.length,
+        latestBlockInfo
+      });
+      
       if (!latestBlockInfo || events.length === 0) return events;
 
       return events.map((event) => {
@@ -55,9 +91,26 @@ export function SoilOrderbook() {
   );
 
   const loadAllRequisitions = useCallback(async () => {
+    console.log("loadAllRequisitions called with state:", {
+      isLoading,
+      hasPublicClient: !!publicClient,
+      hasProtocolAddress: !!protocolAddress,
+      isMounted: isMounted.current,
+      loadAttempted: loadAttempted.current
+    });
+
+    if (isLoading || !publicClient || !protocolAddress) {
+      console.log("Skipping load - conditions not met:", {
+        isLoading,
+        hasPublicClient: !!publicClient,
+        hasProtocolAddress: !!protocolAddress
+      });
+      return;
+    }
+    
+    setIsLoading(true);
     try {
-      if (!publicClient || !protocolAddress) return;
-      
+      console.log("Starting to load orderbook data...");
       // Use the new loadOrderbookData function
       const orderbookData = await loadOrderbookData(
         undefined, 
@@ -69,8 +122,14 @@ export function SoilOrderbook() {
         } : undefined
       );
 
+      console.log("Got orderbook data:", {
+        dataCount: orderbookData.length,
+        isMounted: isMounted.current
+      });
+
       // Get approximate timestamps
       const dataWithTimestamps = getApproximateTimestamps(orderbookData);
+      console.log("Added timestamps to data");
 
       // Sort by temperature
       const sortedData = dataWithTimestamps.sort((a, b) => {
@@ -85,16 +144,41 @@ export function SoilOrderbook() {
         }
       });
 
+      console.log("Setting requisitions state with sorted data");
       setRequisitions(sortedData);
+      loadAttempted.current = true;
     } catch (error) {
       console.error("Failed to load soil orderbook:", error);
       toast.error("Failed to load soil orderbook");
+    } finally {
+      setIsLoading(false);
     }
   }, [protocolAddress, publicClient, latestBlockInfo, getApproximateTimestamps]);
 
+  // Load requisitions once when component mounts and dependencies are ready
   useEffect(() => {
-    loadAllRequisitions();
-  }, [loadAllRequisitions]);
+    console.log("Main effect running with state:", {
+      protocolAddress,
+      hasPublicClient: !!publicClient,
+      latestBlockInfo,
+      isLoading,
+      isMounted: isMounted.current,
+      loadAttempted: loadAttempted.current
+    });
+
+    if (protocolAddress && publicClient && latestBlockInfo && !isLoading && !loadAttempted.current) {
+      console.log("All dependencies ready, calling loadAllRequisitions");
+      loadAllRequisitions();
+    } else {
+      console.log("Dependencies not ready or already attempted:", {
+        hasProtocolAddress: !!protocolAddress,
+        hasPublicClient: !!publicClient,
+        hasLatestBlockInfo: !!latestBlockInfo,
+        isLoading,
+        loadAttempted: loadAttempted.current
+      });
+    }
+  }, [protocolAddress, publicClient, latestBlockInfo, loadAllRequisitions, isLoading]);
 
   return (
     <div className="overflow-x-auto">
