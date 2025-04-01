@@ -5527,7 +5527,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.17.16":
+"@types/lodash@npm:^4":
   version: 4.17.16
   resolution: "@types/lodash@npm:4.17.16"
   checksum: 10c0/cf017901b8ab1d7aabc86d5189d9288f4f99f19a75caf020c0e2c77b8d4cead4db0d0b842d009b029339f92399f49f34377dd7c2721053388f251778b4c23534
@@ -9112,7 +9112,7 @@ __metadata:
     "@tanstack/react-query-devtools": "npm:5.51.1"
     "@tsparticles/engine": "npm:^3.5.0"
     "@tsparticles/react": "npm:^3.0.0"
-    "@types/lodash": "npm:^4.17.16"
+    "@types/lodash": "npm:^4"
     "@types/luxon": "npm:^3.4.2"
     "@types/node": "npm:^22.0.0"
     "@types/react": "npm:^18.3.1"
