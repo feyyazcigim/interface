@@ -25,14 +25,6 @@ const SiloExplorer = () => {
   const stalkData = useSeasonalStalk(Math.max(0, season - tabToSeasonalLookback(stalkTab)), season);
   const bdvData = useSeasonalBDV(Math.max(0, season - tabToSeasonalLookback(bdvTab)), season);
 
-  console.log('BDV Data:', {
-    isLoading: bdvData.isLoading,
-    isError: bdvData.isError,
-    data: bdvData.data,
-    season,
-    fromSeason: Math.max(0, season - tabToSeasonalLookback(bdvTab))
-  });
-
   return (
     <>
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
