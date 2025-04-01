@@ -21,13 +21,13 @@ jobs:
           node-version: 20
           cache: 'yarn'
       
-      # 3. Cache node_modules
-      - name: Cache Node Modules
-        id: node-modules-cache
+      # 3. Cache yarn
+      - name: Cache Yarn Modules
+        id: yarn-cache
         uses: actions/cache@v3
         with:
-          path: "**/node_modules"
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          path: ".yarn/cache"
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
 
       # 4. Install dependencies (only if no cache was found)
       - name: Install dependencies
@@ -55,15 +55,15 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
-      - name: Cache Node Modules
-        id: node-modules-cache-lint
+      - name: Cache Yarn Modules
+        id: yarn-cache-lint
         uses: actions/cache@v3
         with:
-          path: "**/node_modules"
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          path: ".yarn/cache"
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install dependencies (if needed)
-        if: steps.node-modules-cache-lint.outputs.cache-hit != 'true'
+        if: steps.yarn-cache-lint.outputs.cache-hit != 'true'
         run: yarn install
 
       - name: Check Linting errors
