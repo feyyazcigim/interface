@@ -215,6 +215,14 @@ export function useSeasonalStalk(fromSeason: number, toSeason: number): UseSeaso
   }));
 }
 
+export function useSeasonalBDV(fromSeason: number, toSeason: number): UseSeasonalResult {
+  return useSeasonalBeanstalkSiloSG(fromSeason, toSeason, (siloHourly, timestamp) => ({
+    season: Number(siloHourly.season),
+    value: TV.fromBlockchain(siloHourly.depositedBDV, PINTO.decimals).toNumber(),
+    timestamp,
+  }));
+}
+
 export function useSeasonalAvgSeeds(fromSeason: number, toSeason: number): UseSeasonalResult {
   return useSeasonalBeanstalkSiloSG(fromSeason, toSeason, (siloHourly, timestamp) => ({
     season: Number(siloHourly.season),
