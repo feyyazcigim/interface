@@ -254,3 +254,8 @@ export const chartFormatters = {
 export function truncateHex(hex: string, left: number = 4, right: number = 3) {
   return `${hex.slice(0, left)}...${hex.slice(-right)}`;
 }
+
+export function toFixedNumber(num: number, digits: number, base?: number) {
+  const pow = (base ?? 10) ** digits;
+  return Math.round(num * pow) / pow;
+}
