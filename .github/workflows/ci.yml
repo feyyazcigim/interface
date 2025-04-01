@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: "20"
           cache: 'yarn'
       
       # 3. Cache node_modules
@@ -32,7 +32,7 @@ jobs:
       # 4. Install dependencies (only if no cache was found)
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        run: yarn install
+        run: yarn install --immutable
       
       # 5. Build only if build artifacts aren't cached
       - name: Build
@@ -52,7 +52,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: "20"
           cache: 'yarn'
 
       - name: Cache Node Modules
@@ -64,7 +64,7 @@ jobs:
 
       - name: Install dependencies (if needed)
         if: steps.node-modules-cache-lint.outputs.cache-hit != 'true'
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Check Linting errors
         run: yarn lint:check-errors-only
