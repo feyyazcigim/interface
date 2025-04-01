@@ -18,21 +18,13 @@ interface ImportMetaEnv {
    */
   readonly VITE_CHAINS: string;
   /**
-   * URL for the apy endpoint
+   * main API endpoint for services
    */
-  readonly VITE_APY_ENDPOINT: string;
-  /**
-   *
-   */
-  readonly VITE_ROUTER_ENDPOINT: string;
+  readonly VITE_BASE_ENDPOINT: string;
   /**
    * RPC URL for the testnet
    */
   readonly VITE_TENDERLY_RPC_URL?: string;
-  /**
-   * Spectra API Endpoint
-   */
-  readonly VITE_SPECTRA_ENDPOINT?: string;
 }
 
 declare module "*.md";

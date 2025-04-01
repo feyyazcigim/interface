@@ -5,16 +5,15 @@ import pintoWethIcon from "@/assets/tokens/PINTO_WETH.png";
 import pintoWsolIcon from "@/assets/tokens/PINTO_WSOL.png";
 import pintoCbbtcIcon from "@/assets/tokens/PINTO_cbBTC.png";
 import pintoCbethIcon from "@/assets/tokens/PINTO_cbETH.png";
+import spectrasPintoLPIcon from "@/assets/tokens/SPECTRA-sPINTO-LP.png";
+import spectrasPintoPTIcon from "@/assets/tokens/SPECTRA-sPINTO-PT.png";
+import spectrasPintoYTIcon from "@/assets/tokens/SPECTRA-sPINTO-YT.png";
 import wsolIcon from "@/assets/tokens/WSOL.png";
 import crsPintoIcon from "@/assets/tokens/crsPINTO.png";
 import sPintoIcon from "@/assets/tokens/sPINTO.png";
-import spectrasPintoYTIcon from '@/assets/tokens/SPECTRA-sPINTO-YT.png'
-import spectrasPintoPTIcon from '@/assets/tokens/SPECTRA-sPINTO-PT.png'
-import spectrasPintoLPIcon from '@/assets/tokens/SPECTRA-sPINTO-LP.png'
 import { Token } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
 import { arbitrum, base } from "viem/chains";
-
 
 const defaultChain = base.id;
 
@@ -288,8 +287,8 @@ export const SPECTRA_YT: ChainLookup<Token> = {
     displayDecimals: 2,
     is3PSiloWrapped: true,
     logoURI: spectrasPintoYTIcon,
-  }
-}
+  },
+};
 
 export const SPECTRA_PT: ChainLookup<Token> = {
   [base.id]: {
@@ -301,8 +300,8 @@ export const SPECTRA_PT: ChainLookup<Token> = {
     displayDecimals: 2,
     is3PSiloWrapped: true,
     logoURI: spectrasPintoPTIcon,
-  }
-}
+  },
+};
 
 export const SPECTRA_LP: ChainLookup<Token> = {
   [base.id]: {
@@ -314,10 +313,8 @@ export const SPECTRA_LP: ChainLookup<Token> = {
     displayDecimals: 2,
     is3PSiloWrapped: true,
     logoURI: spectrasPintoLPIcon,
-  }
-}
-
-
+  },
+};
 
 // -------------------- AGGREGATED TOKEN LISTS --------------------
 

@@ -14,7 +14,6 @@ export interface SpectraCurvePool {
   token: Token;
 }
 
-
 export const SPECTRA_CURVE_POOLS: ChainLookup<SpectraCurvePool> = {
   [base.id]: {
     maturity: 1758153782,
@@ -25,8 +24,4 @@ export const SPECTRA_CURVE_POOLS: ChainLookup<SpectraCurvePool> = {
     underlying: MAIN_TOKEN[base.id],
     token: S_MAIN_TOKEN[base.id],
   },
-} as const;
-
-export const INTEGRATION_ENDPOINTS = {
-  SPECTRA: import.meta.env.VITE_SPECTRA_ENDPOINT,
 } as const;

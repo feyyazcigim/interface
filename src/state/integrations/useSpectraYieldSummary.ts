@@ -1,33 +1,27 @@
 import { TV } from "@/classes/TokenValue";
 import { spectraCurvePoolABI } from "@/constants/abi/integrations/spectraCurvePoolABI";
 import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
+import { API_SERVICES } from "@/constants/endpoints";
+import { SPECTRA_CURVE_POOLS } from "@/constants/integrations";
 import { S_MAIN_TOKEN } from "@/constants/tokens";
 import { getNowRounded } from "@/state/protocol/sun";
 import { useChainConstant, useResolvedChainId } from "@/utils/chain";
+import { base } from "viem/chains";
 import { useReadContracts } from "wagmi";
 import { ProtocolIntegrationQueryReturnType, SpectraCurvePool } from "./types";
-import { INTEGRATION_ENDPOINTS, SPECTRA_CURVE_POOLS } from "@/constants/integrations";
-import { base } from "viem/chains";
 
 type SpectraYieldSummaryResponse = { apr: TV };
-
-const spectraBaseEndpoint = INTEGRATION_ENDPOINTS.SPECTRA;
 
 const impliedAPYFetchOptions = {
   method: "GET",
   headers: new Headers({ "x-client-id": "Pinto" }),
-}
+};
 
 const urlParams = new URLSearchParams({ source: "Pinto" });
 
-const getSpectraPoolImpliedAPYEndpoint = (
-  chainId: number,
-  pool: SpectraCurvePool
-) => {
-  if (!spectraBaseEndpoint) return;
-
+const getSpectraPoolImpliedAPYEndpoint = (chainId: number, pool: SpectraCurvePool) => {
   if (chainId === base.id) {
-    const onlyURL = `${spectraBaseEndpoint}/base/implied-apy/${pool.pool}`;
+    const onlyURL = `${API_SERVICES.spectra}/base/implied-apy/${pool.pool}`;
     const url = `${onlyURL}?${urlParams.toString()}`;
 
     // https://app.spectra.finance/api/v1/base/implied-apy/0xd8E4662ffd6b202cF85e3783Fb7252ff0A423a72/?source=Pinto
@@ -35,13 +29,12 @@ const getSpectraPoolImpliedAPYEndpoint = (
 
     return {
       url,
-      options: impliedAPYFetchOptions
-    }
+      options: impliedAPYFetchOptions,
+    };
   }
 
   return;
 };
-
 
 export const useSpectraYieldSummary = (): ProtocolIntegrationQueryReturnType<SpectraYieldSummaryResponse> => {
   const siloWrappedToken = useChainConstant(S_MAIN_TOKEN);
@@ -84,7 +77,7 @@ export const useSpectraYieldSummary = (): ProtocolIntegrationQueryReturnType<Spe
         abi: siloedPintoABI,
         functionName: "previewWithdraw",
         args: [BigInt(10 ** siloWrappedToken.decimals)],
-      }
+      },
     ],
     allowFailure: false,
     query: {
@@ -109,20 +102,7 @@ const HOURS_PER_YEAR = 24 * 365;
 
 // ---------- FUNCTIONS ----------
 
-type SpectraCurvePoolQueryReturn = [
-  get_dy: bigint,
-  previewRedeem: bigint,
-  previewWithdraw: bigint
-];
-
-export function calculateSpectraApy(apr: number, expiration: number): number {
-  const now = Math.floor(Date.now() / 1000); // current time in seconds
-  const secondsRemaining = expiration - now;
-  const daysRemaining = secondsRemaining / 86400;
-  const t = daysRemaining / 365;
-
-  return Math.pow(1 + apr, t) - 1;
-}
+type SpectraCurvePoolQueryReturn = [get_dy: bigint, previewRedeem: bigint, previewWithdraw: bigint];
 
 const selectQuery = (response: SpectraCurvePoolQueryReturn, pool: SpectraCurvePool) => {
   const [get_dy, previewRedeem, previewWithdraw] = response;
@@ -138,9 +118,6 @@ const selectQuery = (response: SpectraCurvePoolQueryReturn, pool: SpectraCurvePo
 
   // simple APR calculation
   const apr = underlyingToPTRate.sub(1).div(hoursToMaturity).mul(HOURS_PER_YEAR);
-
-  const apy = calculateSpectraApy(apr.toNumber(), pool.maturity);
-  console.log("apy", { apy, apr });
 
   return {
     apr,
