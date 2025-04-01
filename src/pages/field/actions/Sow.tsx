@@ -69,6 +69,7 @@ function Sow({ isMorning }: SowProps) {
   // Form State
   const [tokenSource, setTokenSource] = useState<TokenSource>("balances");
 
+  // Preferred Tokens
   const preferredSiloDepositToken = usePreferredInputSiloDepositToken(farmerSilo, mainToken);
   const preferredBalanceToken = usePreferredInputToken({
     filterLP: true,
