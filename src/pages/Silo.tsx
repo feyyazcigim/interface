@@ -153,7 +153,7 @@ function Silo() {
                   fromTarget={`token-row-${convertFrom.address}`}
                   toTarget={`token-row-${convertTo.address}`}
                   color="#246645"
-                  capHeight={isSmallDesktop ? 52 : 68}
+                  capHeight={"4.25rem"}
                   extensionLength={isSmallDesktop ? 20 : 35}
                   componentOffset={10}
                   dotted={true}
@@ -262,7 +262,11 @@ function Silo() {
                         {`Deposit ${bestDeposit.name}`}
                       </div>
                       <div className="flex flex-col gap-4">
-                        <Text data-action-target="convert" variant="sm-light" className="text-pinto-gray-4 text-end">
+                        <Text
+                          data-action-target="convert"
+                          variant="sm-light"
+                          className="text-pinto-gray-4 text-end w-[12rem]"
+                        >
                           {`${bestDeposit.name} currently has the highest incentive for Depositors.`}
                         </Text>
                       </div>
