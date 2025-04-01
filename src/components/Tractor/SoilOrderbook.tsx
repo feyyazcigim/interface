@@ -11,6 +11,11 @@ import {
   getSowBlueprintDisplayData
 } from "@/lib/Tractor/utils";
 import { formatter } from "@/utils/format";
+import { getChainToken } from "@/utils/token";
+import { useChainId } from "wagmi";
+import { TokenValue } from "@/classes/TokenValue";
+import { PINTO } from "@/constants/tokens";
+import IconImage from "@/components/ui/IconImage";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
@@ -20,6 +25,7 @@ export function SoilOrderbook() {
   const [isLoading, setIsLoading] = useState(false);
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
+  const chainId = useChainId();
   const isMounted = useRef(true);
   const loadAttempted = useRef(false);
 
@@ -195,6 +201,7 @@ export function SoilOrderbook() {
             <TableHead>Remaining Pinto to sow</TableHead>
             <TableHead>Available Pinto</TableHead>
             <TableHead>Currently Sowable</TableHead>
+            <TableHead className="min-w-[300px]">Withdrawal Plan</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
@@ -214,6 +221,53 @@ export function SoilOrderbook() {
               minute: "2-digit",
               hourCycle: "h24",
             };
+
+            // Get withdrawal plan details
+            console.log("Withdrawal plan for order:", {
+              hasWithdrawalPlan: !!req.withdrawalPlan,
+              sourceTokens: req.withdrawalPlan?.sourceTokens,
+              availableBeans: req.withdrawalPlan?.availableBeans
+            });
+
+            const withdrawalPlanDetails = req.withdrawalPlan ? (
+              <div className="space-y-1">
+                {req.withdrawalPlan?.sourceTokens?.map((token, i) => {
+                  try {
+                    const tokenInfo = getChainToken(chainId, token);
+                    const amount = TokenValue.fromBlockchain(req.withdrawalPlan?.availableBeans[i] || 0n, 6);
+                    const formattedAmount = formatter.number(amount);
+                    return (
+                      <div key={i} className="text-sm flex items-center gap-1">
+                        <span className="flex items-center gap-1">
+                          <IconImage src={tokenInfo.logoURI} size={4} />
+                          {tokenInfo.symbol}:
+                        </span>
+                        {formattedAmount}
+                        <span className="flex items-center gap-1">
+                          <IconImage src={PINTO.logoURI} size={4} />
+                        </span>
+                      </div>
+                    );
+                  } catch (error) {
+                    console.error("Error getting token info:", error);
+                    // If we can't get the token info, show the address
+                    const amount = TokenValue.fromBlockchain(req.withdrawalPlan?.availableBeans[i] || 0n, 6);
+                    const formattedAmount = formatter.number(amount);
+                    return (
+                      <div key={i} className="text-sm flex items-center gap-1">
+                        <span>{token.slice(0, 6)}...{token.slice(-4)}:</span>
+                        {formattedAmount}
+                        <span className="flex items-center gap-1">
+                          <IconImage src={PINTO.logoURI} size={4} />
+                        </span>
+                      </div>
+                    );
+                  }
+                })}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">No withdrawal plan</div>
+            );
 
             console.log("Raw totalAvailablePinto:", req.totalAvailablePinto.toBigInt().toString());
             console.log("Formatted totalAvailablePinto:", formatter.number(req.totalAvailablePinto));
@@ -257,12 +311,15 @@ export function SoilOrderbook() {
                 <TableCell className="p-2 font-mono text-sm">
                   {`${formatter.number(req.currentlySowable)} PINTO`}
                 </TableCell>
+                <TableCell className="p-2 min-w-[300px]">
+                  {withdrawalPlanDetails}
+                </TableCell>
               </TableRow>
             );
           })}
           {requisitions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={8} className="p-4 text-center text-gray-500">
+              <TableCell colSpan={11} className="p-4 text-center text-gray-500">
                 No active requisitions found
               </TableCell>
             </TableRow>

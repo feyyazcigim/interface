@@ -766,12 +766,13 @@ export interface OrderbookEntry extends Omit<RequisitionEvent, 'decodedData'> {
   pintosLeftToSow: TokenValue;
   totalAvailablePinto: TokenValue;
   currentlySowable: TokenValue;
+  withdrawalPlan?: WithdrawalPlan;
 }
 
 // Then update the processing interface
 interface OrderbookEntryWithProcessingData extends Omit<OrderbookEntry, 'decodedData'> {
   decodedData: SowBlueprintData | null;
-  withdrawalPlan?: any; // Use any to avoid type errors
+  withdrawalPlan?: WithdrawalPlan;
 }
 
 // Add this type definition after the OrderbookEntryWithProcessingData interface
@@ -1025,7 +1026,7 @@ export async function loadOrderbookData(
     }
 
     // Remove processing data and return final result
-    return orderbookData.map(({ decodedData, withdrawalPlan, ...entry }) => entry);
+    return orderbookData.map(({ decodedData, ...entry }) => entry);
 
   } catch (error) {
     console.error("Error loading orderbook data:", error);
