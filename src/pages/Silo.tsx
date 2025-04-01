@@ -153,7 +153,7 @@ function Silo() {
                   fromTarget={`token-row-${convertFrom.address}`}
                   toTarget={`token-row-${convertTo.address}`}
                   color="#246645"
-                  capHeight={"4.25rem"}
+                  capHeight={isSmallDesktop ? 52 : 68}
                   extensionLength={isSmallDesktop ? 20 : 35}
                   componentOffset={10}
                   dotted={true}
@@ -246,6 +246,7 @@ function Silo() {
                   toTarget={`token-row-${bestDeposit.address}`}
                   color="#246645"
                   mode="singleLine"
+                  capHeight={isSmallDesktop ? 52 : 68}
                   extensionLength={40}
                   dotted={true}
                   endCapColor={bestDeposit.color}
