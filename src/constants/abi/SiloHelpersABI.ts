@@ -10,6 +10,16 @@ export const siloHelpersABI = [
         "internalType": "address",
         "name": "_beanstalkPrice",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_priceManipulation",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -176,6 +186,79 @@ export const siloHelpersABI = [
   {
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "address[]",
+            "name": "sourceTokens",
+            "type": "address[]"
+          },
+          {
+            "internalType": "int96[][]",
+            "name": "stems",
+            "type": "int96[][]"
+          },
+          {
+            "internalType": "uint256[][]",
+            "name": "amounts",
+            "type": "uint256[][]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "availableBeans",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalAvailableBeans",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SiloHelpers.WithdrawalPlan[]",
+        "name": "plans",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "combineWithdrawalPlans",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address[]",
+            "name": "sourceTokens",
+            "type": "address[]"
+          },
+          {
+            "internalType": "int96[][]",
+            "name": "stems",
+            "type": "int96[][]"
+          },
+          {
+            "internalType": "uint256[][]",
+            "name": "amounts",
+            "type": "uint256[][]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "availableBeans",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalAvailableBeans",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SiloHelpers.WithdrawalPlan",
+        "name": "combinedPlan",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "a",
         "type": "uint256"
@@ -296,6 +379,82 @@ export const siloHelpersABI = [
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int96",
+        "name": "minStem",
+        "type": "int96"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address[]",
+            "name": "sourceTokens",
+            "type": "address[]"
+          },
+          {
+            "internalType": "int96[][]",
+            "name": "stems",
+            "type": "int96[][]"
+          },
+          {
+            "internalType": "uint256[][]",
+            "name": "amounts",
+            "type": "uint256[][]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "availableBeans",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalAvailableBeans",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SiloHelpers.WithdrawalPlan",
+        "name": "existingPlan",
+        "type": "tuple"
+      }
+    ],
+    "name": "getDepositStemsAndAmountsToWithdraw",
+    "outputs": [
+      {
+        "internalType": "int96[]",
+        "name": "stems",
+        "type": "int96[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "availableAmount",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -521,6 +680,99 @@ export const siloHelpersABI = [
         "internalType": "address[]",
         "name": "depositedTokens",
         "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "tokenIndices",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "targetAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxGrownStalkPerBdv",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address[]",
+            "name": "sourceTokens",
+            "type": "address[]"
+          },
+          {
+            "internalType": "int96[][]",
+            "name": "stems",
+            "type": "int96[][]"
+          },
+          {
+            "internalType": "uint256[][]",
+            "name": "amounts",
+            "type": "uint256[][]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "availableBeans",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalAvailableBeans",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SiloHelpers.WithdrawalPlan",
+        "name": "existingPlan",
+        "type": "tuple"
+      }
+    ],
+    "name": "getWithdrawalPlan",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address[]",
+            "name": "sourceTokens",
+            "type": "address[]"
+          },
+          {
+            "internalType": "int96[][]",
+            "name": "stems",
+            "type": "int96[][]"
+          },
+          {
+            "internalType": "uint256[][]",
+            "name": "amounts",
+            "type": "uint256[][]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "availableBeans",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalAvailableBeans",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SiloHelpers.WithdrawalPlan",
+        "name": "plan",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -834,19 +1086,6 @@ export const siloHelpersABI = [
     "name": "renounceOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "sowBlueprintv0",
-    "outputs": [
-      {
-        "internalType": "contract SowBlueprintv0",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
