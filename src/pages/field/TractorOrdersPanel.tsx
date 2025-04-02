@@ -15,6 +15,9 @@ import { Blueprint } from "@/lib/Tractor/types";
 import { decodeFunctionData } from "viem";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
+import IconImage from "@/components/ui/IconImage";
+import pintoIcon from "@/assets/tokens/PINTO.png";
+import { CornerBottomLeftIcon } from "@radix-ui/react-icons";
 
 type ExecutionData = Awaited<ReturnType<typeof fetchTractorExecutions>>[number];
 
@@ -224,65 +227,94 @@ const TractorOrdersPanel = () => {
         return (
           <div 
             key={`requisition-${index}`} 
-            className={`p-4 rounded-[1rem] border ${isComplete ? 'border-pinto-green-4 bg-pinto-green-1' : 'border-pinto-gray-2 bg-pinto-off-white'} cursor-pointer hover:shadow-md transition-shadow`}
+            className="box-border flex flex-col p-4 gap-2 bg-white border border-pinto-gray-2 rounded-[24px] cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => handleOrderClick(req)}
           >
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className="bg-pinto-green-4 text-white px-4 py-1 rounded-full">Sow</div>
-                  <div className="flex items-center ml-2">
-                    <span className="ml-1">{formatter.number(totalAmount)} PINTO</span>
+            <div className="flex flex-col gap-2 w-full">
+              {/* Header row with all the pills and labels */}
+              <div className="flex justify-between items-center w-full">
+                <div className="flex items-center gap-3">
+                  {/* Withdraw pill */}
+                  <div className="flex items-center px-2 py-1 bg-pinto-green-4 rounded-xl">
+                    <span className="text-white text-sm font-antarctica font-normal">Withdraw</span>
+                  </div>
+                  {/* Divider */}
+                  <div className="border-t-2 border-pinto-gray-2 w-3"></div>
+                  {/* From label */}
+                  <div className="bg-[#F8F8F8] px-1 py-1 rounded-xl">
+                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">from Deposited Tokens</span>
+                  </div>
+                  {/* Divider */}
+                  <div className="border-t-2 border-pinto-gray-2 w-3"></div>
+                  {/* With best */}
+                  <div className="bg-[#F8F8F8] px-1 py-1 rounded-xl">
+                    <div className="flex items-center gap-1">
+                      <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">with Best</span>
+                      <IconImage src={pintoIcon} size={4} />
+                      <span className="text-black text-sm font-antarctica font-thin">PINTO Price</span>
+                    </div>
+                  </div>
+                  {/* Divider */}
+                  <div className="border-t-2 border-pinto-gray-2 w-3"></div>
+                  {/* Sow pill */}
+                  <div className="flex items-center px-2 py-1 bg-pinto-green-4 rounded-xl">
+                    <span className="text-white text-sm font-antarctica font-normal">Sow</span>
+                  </div>
+                  {/* Divider */}
+                  <div className="border-t-2 border-pinto-gray-2 w-3"></div>
+                  {/* Up to */}
+                  <div className="bg-[#F8F8F8] px-1 py-1 rounded-xl">
+                    <div className="flex items-center gap-1">
+                      <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">up to</span>
+                      <IconImage src={pintoIcon} size={4} />
+                      <span className="text-pinto-green-4 text-sm font-antarctica font-thin">{formatter.number(totalAmount)} PINTO</span>
+                    </div>
                   </div>
                 </div>
-                <div className="text-pinto-gray-4 text-sm">
-                  Run count: {executionCount}
+                <div className="flex items-center gap-2">
+                  <span className="text-pinto-gray-4 text-sm font-antarctica">Operator Tip:</span>
+                  <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl flex items-center gap-1">
+                    <IconImage src={pintoIcon} size={4} />
+                    <span className="text-pinto-green-4 text-sm font-antarctica font-thin">{formatter.number(TokenValue.fromBlockchain(data.operatorParams.operatorTipAmount, 6))} PINTO</span>
+                  </div>
                 </div>
               </div>
               
-              {/* Progress section */}
-              <div className="mt-2">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs text-pinto-gray-4">Progress</span>
-                  <span className="text-xs text-pinto-gray-4">
-                    {formatter.number(totalSown)} / {data.sowAmounts.totalAmountToSowAsString} PINTO sown ({Math.round(percentCompleteNumber)}%)
-                  </span>
+              {/* Execution conditions */}
+              <div className="flex justify-between items-end w-full">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center pl-6 gap-2">
+                    <CornerBottomLeftIcon
+                      className="h-4 w-4 text-pinto-gray-4"
+                    />
+                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">Execute when Temperature is at least {formatPercentage(data.minTemp)}</span>
+                  </div>
+                  <div className="flex items-center pl-6 gap-2">
+                    <CornerBottomLeftIcon
+                      className="h-4 w-4 text-pinto-gray-4"
+                    />
+                    <span className="text-pinto-gray-4 text-sm font-menlo">AND when Pod Line Length is at most {formatter.number(TokenValue.fromHuman(data.maxPodlineLengthAsString, 6))}</span>
+                  </div>
+                  <div className="flex items-center pl-6 gap-2">
+                    <CornerBottomLeftIcon
+                      className="h-4 w-4 text-pinto-gray-4"
+                    />
+                    <span className="text-pinto-gray-4 text-sm font-menlo">AND when Available Soil is at least {data.sowAmounts.minAmountToSowPerSeasonAsString}</span>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="flex items-center gap-1">
+                  <IconImage src={pintoIcon} size={4} />
+                  <span className="text-pinto-gray-4 text-sm font-antarctica">PINTO Sown through this Order: {formatter.number(totalSown)}/{formatter.number(totalAmount)}</span>
+                </div>
+              </div>
+              
+              {/* Progress bar - only show if not at the bottom of conditions */}
+              {!isComplete && (
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                   <div 
                     className="bg-pinto-green-4 h-2 rounded-full" 
                     style={{ width: `${percentCompleteNumber}%` }}
                   ></div>
-                </div>
-              </div>
-              
-              {/* Token strategy indicator */}
-              <div className="text-pinto-gray-4 flex gap-1 items-center">
-                <span className="text-xs bg-pinto-green-1 text-pinto-green-4 px-2 py-1 rounded-md">
-                  Strategy: {strategyText}
-                </span>
-              </div>
-              
-              <div className="text-pinto-gray-4 flex gap-1 items-center">
-                Execute only when I can sow at least {data.sowAmounts.minAmountToSowPerSeasonAsString} PINTO
-              </div>
-              
-              <div className="text-pinto-gray-4">
-                Execute only Temperature is at least {formatPercentage(data.minTemp)}
-              </div>
-
-              {/* Update podline length condition */}
-              <div className="text-pinto-gray-4">
-                Execute only when Pod Line Length ≤ {formatter.number(TokenValue.fromHuman(data.maxPodlineLengthAsString, 6))} PINTO
-              </div>
-              
-              {latestExecution && latestExecution.sowEvent && (
-                <div className="mt-2 p-2 bg-white rounded-lg border border-pinto-gray-2">
-                  <div className="text-xs text-pinto-gray-4">Last execution:</div>
-                  <div className="flex justify-between">
-                    <span>Sowed {formatter.number(TokenValue.fromBlockchain(latestExecution.sowEvent.beans, 6))} PINTO</span>
-                    <span>Got {formatter.number(TokenValue.fromBlockchain(latestExecution.sowEvent.pods, 6))} Pods</span>
-                  </div>
                 </div>
               )}
               
