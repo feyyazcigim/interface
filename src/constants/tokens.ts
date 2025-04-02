@@ -277,39 +277,39 @@ export const CREAM_S_MAIN_TOKEN: ChainLookup<Token> = {
   },
 } as const;
 
-export const SPECTRA_YT: ChainLookup<Token> = {
+export const SPECTRA_YT_TOKEN: ChainLookup<Token> = {
   [base.id]: {
     chainId: base.id,
-    name: "Cream Siloed Pinto",
-    symbol: "crsPINTO",
-    address: "0x98887ED12565cd9518f41A009d2EcE7c71ff271e",
-    decimals: 8,
+    name: "Yield Token: sPINTO",
+    symbol: "sPINTO YT",
+    address: "0xaF4f5bdF468861feF71Ed6f5ea0C01A75B62273d",
+    decimals: 18,
     displayDecimals: 2,
     is3PSiloWrapped: true,
     logoURI: spectrasPintoYTIcon,
   },
 };
 
-export const SPECTRA_PT: ChainLookup<Token> = {
+export const SPECTRA_PT_TOKEN: ChainLookup<Token> = {
   [base.id]: {
     chainId: base.id,
-    name: "Cream Siloed Pinto",
-    symbol: "crsPINTO",
-    address: "0x98887ED12565cd9518f41A009d2EcE7c71ff271e",
-    decimals: 8,
+    name: "Principal Token: sPINTO",
+    symbol: "sPINTO PT",
+    address: "0x42AF817725D8cda8E69540d72f35dBfB17345178",
+    decimals: 18,
     displayDecimals: 2,
     is3PSiloWrapped: true,
     logoURI: spectrasPintoPTIcon,
   },
 };
 
-export const SPECTRA_LP: ChainLookup<Token> = {
+export const SPECTRA_LP_TOKEN: ChainLookup<Token> = {
   [base.id]: {
     chainId: base.id,
-    name: "Cream Siloed Pinto",
-    symbol: "crsPINTO",
-    address: "0x98887ED12565cd9518f41A009d2EcE7c71ff271e",
-    decimals: 8,
+    name: "sPINTO Curve.fi Factory Crypto Pool: Spectra-PT/IBT",
+    symbol: "sPINTO-LP",
+    address: "0xba1F1eA8c269003aFe161aFAa0bd205E2c7F782a",
+    decimals: 18,
     displayDecimals: 2,
     is3PSiloWrapped: true,
     logoURI: spectrasPintoLPIcon,

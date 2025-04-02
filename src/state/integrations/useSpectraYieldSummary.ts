@@ -3,32 +3,117 @@ import { spectraCurvePoolABI } from "@/constants/abi/integrations/spectraCurvePo
 import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
 import { API_SERVICES } from "@/constants/endpoints";
 import { SPECTRA_CURVE_POOLS } from "@/constants/integrations";
-import { S_MAIN_TOKEN } from "@/constants/tokens";
+import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
 import { getNowRounded } from "@/state/protocol/sun";
-import { useChainConstant, useResolvedChainId } from "@/utils/chain";
-import { base } from "viem/chains";
-import { useReadContracts } from "wagmi";
+import { resolveChainId, useChainConstant } from "@/utils/chain";
+import { baseNetwork as base } from "@/utils/wagmi/chains";
+import { useChainId, useReadContract, useReadContracts } from "wagmi";
 import { ProtocolIntegrationQueryReturnType, SpectraCurvePool } from "./types";
+import { useQuery } from "@tanstack/react-query";
+import { defaultQuerySettings } from "@/constants/query";
+import { useSiloWrappedTokenExchangeRateQuery } from "../useSiloWrappedTokenData";
+import { useCallback, useMemo } from "react";
+import { useSeason } from "../useSunData";
+import { toFixedNumber } from "@/utils/format";
 
-type SpectraYieldSummaryResponse = { apr: TV };
+export type SpectraYieldSummaryResponse = { apy: number; maxLeverage: number };
 
-const impliedAPYFetchOptions = {
-  method: "GET",
-  headers: new Headers({ "x-client-id": "Pinto" }),
+const impliedAPYFetchOptions = { method: "GET" } as const;
+
+const urlParams = new URLSearchParams({ source: "pinto" });
+
+export const useSpectraYieldSummary = (): ProtocolIntegrationQueryReturnType<SpectraYieldSummaryResponse> => {
+  const siloWrappedToken = useChainConstant(S_MAIN_TOKEN);
+  const mainToken = useChainConstant(MAIN_TOKEN);
+  const chainId = useChainId();
+  const pool = SPECTRA_CURVE_POOLS[resolveChainId(chainId)];
+
+  const season = useSeason();
+
+  const endpoint = getSpectraPoolImpliedAPYEndpoint(chainId, pool);
+
+  const exchangeRateQuery = useSiloWrappedTokenExchangeRateQuery();
+
+  const apyQueryQueryKey = useMemo(() => ["spectra-yield-summary", chainId, season], [chainId, season]);
+
+  const apyQuery = useQuery({
+    queryKey: apyQueryQueryKey,
+    queryFn: async () => {
+      if (!endpoint?.url) return;
+      return fetch(endpoint.url, endpoint.options).then((r) => r.json());
+    },
+    enabled: !!endpoint?.url && !!season,
+    select: selectAPYQuery,
+    ...defaultQuerySettings,
+  });
+
+  const priceOracleQuery = useReadContract({
+    address: pool.pool,
+    abi: spectraCurvePoolABI,
+    functionName: "price_oracle",
+    scopeKey: season.toString(),
+    query: {
+      enabled: !!pool && !!season,
+      select: selectPriceOracle,
+      ...defaultQuerySettings,
+    },
+  });
+
+  const refetch = useCallback(
+    async () => Promise.all([apyQuery.refetch(), priceOracleQuery.refetch(), exchangeRateQuery.refetch()]),
+    [apyQuery, priceOracleQuery, exchangeRateQuery],
+  );
+
+  const queryKeys = useMemo(
+    () => [apyQueryQueryKey, priceOracleQuery.queryKey, exchangeRateQuery.queryKey],
+    [apyQueryQueryKey, priceOracleQuery.queryKey, exchangeRateQuery.queryKey],
+  );
+
+  const maxLeverage = (() => {
+    if (!exchangeRateQuery.data || !priceOracleQuery.data) return;
+
+    const priceOracle = priceOracleQuery.data;
+    const exchangeRate = exchangeRateQuery.data;
+
+    const mul = priceOracle.mul(exchangeRate);
+
+    const leverage = TV.ONE.div(TV.ONE.sub(mul));
+
+    return toFixedNumber(leverage.toNumber(), 2);
+  })();
+
+  const data =
+    maxLeverage && apyQuery.data
+      ? {
+        maxLeverage: maxLeverage,
+        apy: apyQuery.data,
+      }
+      : undefined;
+
+  return {
+    data,
+    isLoading: apyQuery.isLoading || priceOracleQuery.isLoading || exchangeRateQuery.isLoading,
+    isError: apyQuery.isError || priceOracleQuery.isError || exchangeRateQuery.isError,
+    integrationKey: "SPECTRA",
+    queryKeys,
+    refetch,
+  } as const;
 };
 
-const urlParams = new URLSearchParams({ source: "Pinto" });
+// ---------- FUNCTIONS ----------
+
+const selectPriceOracle = (response: bigint) => TV.fromBigInt(response, 18);
 
 const getSpectraPoolImpliedAPYEndpoint = (chainId: number, pool: SpectraCurvePool) => {
-  if (chainId === base.id) {
-    const onlyURL = `${API_SERVICES.spectra}/base/implied-apy/${pool.pool}`;
-    const url = `${onlyURL}?${urlParams.toString()}`;
+  if (!API_SERVICES.spectra) return;
+  const resolvedChainId = resolveChainId(chainId);
 
-    // https://app.spectra.finance/api/v1/base/implied-apy/0xd8E4662ffd6b202cF85e3783Fb7252ff0A423a72/?source=Pinto
-    // https://app.spectra.finance/api/v1/base/implied-apy/0xd8e4662ffd6b202cf85e3783fb7252ff0a423a72?source=Pinto
+  const poolAddress = pool.pool.toLowerCase();
 
+  if (resolvedChainId === base.id) {
+    const chainName = base.name.toLowerCase();
     return {
-      url,
+      url: `${API_SERVICES.spectra}/api/v1/${chainName}/implied-apy/${poolAddress}?${urlParams.toString()}`,
       options: impliedAPYFetchOptions,
     };
   }
@@ -36,90 +121,11 @@ const getSpectraPoolImpliedAPYEndpoint = (chainId: number, pool: SpectraCurvePoo
   return;
 };
 
-export const useSpectraYieldSummary = (): ProtocolIntegrationQueryReturnType<SpectraYieldSummaryResponse> => {
-  const siloWrappedToken = useChainConstant(S_MAIN_TOKEN);
-  const chainId = useResolvedChainId();
+const selectAPYQuery = (response: { time: number; value: number }[]) => {
+  const sorted = [...response].sort((a, b) => b.time - a.time);
+  const latest = sorted[sorted.length - 1];
 
-  const pool = SPECTRA_CURVE_POOLS[chainId];
+  if (!latest) return;
 
-  // const apyQuery = useQuery({
-  //   queryKey: ["spectra-yield-summary", chainId],
-  //   queryFn: async () => {
-  //     if (!endpoint) return;
-  //     console.log("endpoint", endpoint);
-  //     const response = await fetch(endpoint.url, endpoint.options);
-  //     console.log("response", response);
-  //     return response;
-  //   },
-  //   enabled: !!endpoint?.url,
-  //   staleTime: 1000 * 60 * 20,
-  //   refetchInterval: 1000 * 60 * 20,
-  // });
-
-  // console.log("apyQuery", apyQuery);
-
-  const query = useReadContracts({
-    contracts: [
-      {
-        address: pool.pool,
-        abi: spectraCurvePoolABI,
-        functionName: "get_dy",
-        args: [0n, 1n, BigInt(10 ** siloWrappedToken.decimals)],
-      },
-      {
-        address: siloWrappedToken.address,
-        abi: siloedPintoABI,
-        functionName: "previewRedeem",
-        args: [BigInt(10 ** siloWrappedToken.decimals)],
-      },
-      {
-        address: siloWrappedToken.address,
-        abi: siloedPintoABI,
-        functionName: "previewWithdraw",
-        args: [BigInt(10 ** siloWrappedToken.decimals)],
-      },
-    ],
-    allowFailure: false,
-    query: {
-      enabled: !!pool,
-      select: (response) => {
-        return selectQuery(response, pool);
-      },
-    },
-  });
-
-  return {
-    ...query,
-    integrationKey: "SPECTRA",
-  };
-};
-
-// ---------- CONSTANTS & INTERFACES ----------
-
-const SECONDS_PER_HOUR = 60 * 60;
-
-const HOURS_PER_YEAR = 24 * 365;
-
-// ---------- FUNCTIONS ----------
-
-type SpectraCurvePoolQueryReturn = [get_dy: bigint, previewRedeem: bigint, previewWithdraw: bigint];
-
-const selectQuery = (response: SpectraCurvePoolQueryReturn, pool: SpectraCurvePool) => {
-  const [get_dy, previewRedeem, previewWithdraw] = response;
-
-  const now = getNowRounded();
-
-  const ibt2PTRate = TV.fromBigInt(get_dy, 18);
-  const ibtToUnderlyingRate = TV.fromBigInt(previewRedeem, 6);
-  const underlyingToPTRate = ibt2PTRate.div(ibtToUnderlyingRate);
-
-  const secondsToMaturity = pool.maturity - now.toSeconds();
-  const hoursToMaturity = secondsToMaturity / SECONDS_PER_HOUR;
-
-  // simple APR calculation
-  const apr = underlyingToPTRate.sub(1).div(hoursToMaturity).mul(HOURS_PER_YEAR);
-
-  return {
-    apr,
-  };
+  return latest.value;
 };

@@ -1,13 +1,15 @@
 import { Token } from "@/utils/types";
+import { QueryKey } from "@tanstack/react-query";
 import { Address } from "viem";
-import { UseQueryReturnType } from "wagmi/query";
 
-export interface ProtocolIntegrationStatsReturn<T> {
+export type ProtocolIntegrationQueryReturnType<T = unknown> = {
+  data: T | undefined;
+  isLoading: boolean;
+  isError: boolean;
   integrationKey: ProtocolIntegration;
-}
-
-export type ProtocolIntegrationQueryReturnType<T = unknown> = UseQueryReturnType<T | undefined> &
-  ProtocolIntegrationStatsReturn<T>;
+  refetch: () => void;
+  queryKeys: QueryKey[];
+};
 
 export type ProtocolIntegration = "CREAM" | "SPECTRA";
 

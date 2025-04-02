@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import { useReadContract } from "wagmi";
 import { usePriceData } from "./usePriceData";
 import useTokenData from "./useTokenData";
+import { defaultQuerySettings } from "@/constants/query";
 
 const getExchangeRate = (mainToken: Token, siloWrappedToken: Token, amount: bigint) => {
   const baseAmount = TV.fromHuman(1, mainToken.decimals);
@@ -26,6 +27,7 @@ export const useSiloWrappedTokenExchangeRateQuery = () => {
     functionName: "previewDeposit",
     args: [BigInt(10 ** mainToken.decimals)],
     query: {
+      ...defaultQuerySettings,
       select: (data) => {
         return getExchangeRate(mainToken, siloWrappedToken, data);
       },

@@ -1,7 +1,7 @@
 import creamFinanceLogo from "@/assets/misc/cream-finance-logo.png";
 import spectraLogo from "@/assets/misc/spectra-token-logo.svg";
-import { TV } from "@/classes/TokenValue";
 import { ProtocolIntegration } from "@/state/integrations/types";
+import { SpectraYieldSummaryResponse } from "@/state/integrations/useSpectraYieldSummary";
 import { resolveChainId } from "@/utils/chain";
 import { formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
@@ -32,8 +32,17 @@ const baseIntegrations: IntegrationLookup = {
     name: "Spectra",
     url: "https://app.spectra.finance/pools/base:0xd8e4662ffd6b202cf85e3783fb7252ff0a423a72",
     logoURI: spectraLogo,
-    ctaMessage: (token: Token, data: { apr: TV } | undefined) =>
-      `Earn a Fixed APR of ${data?.apr ? `${formatter.pct(data.apr.mul(100))}` : "--%"} or trade yield with ${token.symbol} on Spectra`,
+    ctaMessage: (
+      token: Token,
+      data:
+        | SpectraYieldSummaryResponse
+        | undefined,
+    ) => {
+      const apy = data?.apy ? `${formatter.pct(data.apy * 100)}` : "--%";
+      const leverage = data?.maxLeverage ? `${data.maxLeverage}x leverage` : "leverage";
+
+      return `Earn a Max Fixed APY of ${apy} or trade yield with ${leverage} on Spectra`;
+    },
   },
 } as const;
 
