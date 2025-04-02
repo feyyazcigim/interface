@@ -277,6 +277,8 @@ export default function DevPage() {
                   setMockAddress(newAddress); // Always update the input
                   if (isAddress(newAddress)) {
                     localStorage.setItem("mockAddress", newAddress);
+                  } else if (!newAddress) {
+                    localStorage.removeItem("mockAddress");
                   }
                 }}
                 className={`flex-1 ${mockAddress && !isAddress(mockAddress) ? "border-pinto-red-2" : ""}`}
