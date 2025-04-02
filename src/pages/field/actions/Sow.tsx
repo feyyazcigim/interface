@@ -234,6 +234,8 @@ function Sow({ isMorning }: SowProps) {
         advFarm.push(withdrawStruct);
       }
 
+      const value = tokenIn.isNative ? TV.fromHuman(amountIn, tokenIn.decimals) : undefined;
+
       let clipboard: HashString | undefined = undefined;
 
       // If we are sowing w/ a non-Main Token, we need to build a swap
@@ -245,6 +247,7 @@ function Sow({ isMorning }: SowProps) {
 
         const result = await swapBuild.deriveClipboardWithOutputToken(mainToken, 0, account.address, {
           before: advFarm,
+          value,
         });
 
         clipboard = result.clipboard;
@@ -257,14 +260,12 @@ function Sow({ isMorning }: SowProps) {
       const sowCallStruct = sowWithMin(mainTokenAmount, minTemp, minSoil, FarmFromMode.INTERNAL, clipboard);
       advFarm.push(sowCallStruct);
 
-      const value = tokenIn.isNative ? TV.fromHuman(amountIn, tokenIn.decimals).toBigInt() : 0n;
-
       return writeWithEstimateGas({
         address: diamond,
         abi: beanstalkAbi,
         functionName: "advancedFarm",
         args: [advFarm],
-        value,
+        value: value?.toBigInt(),
       });
     } catch (e) {
       console.error(e);
