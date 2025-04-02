@@ -60,6 +60,12 @@ const formatOperatorTip = (amount: bigint | undefined): string => {
   return `${formatter.number(tokenAmount)} PINTO`;
 };
 
+// Helper function to format gas estimate
+const formatGasEstimate = (gas: bigint | undefined): string => {
+  if (!gas) return "0";
+  return Number(gas).toLocaleString();
+};
+
 export function Plow() {
   const [selectedRequisition, setSelectedRequisition] = useState<RequisitionEvent | null>(null);
   const protocolAddress = useProtocolAddress();
@@ -67,6 +73,9 @@ export function Plow() {
   const { data: latestBlock } = useLatestBlock();
   const queryClient = useQueryClient();
   
+  // Add state for gas estimates
+  const [gasEstimates, setGasEstimates] = useState<Map<string, bigint>>(new Map());
+
   const { data: requisitions = [], isLoading } = useQuery({
     queryKey: ["requisitions", protocolAddress, latestBlock?.number],
     queryFn: async () => {
@@ -105,6 +114,9 @@ export function Plow() {
   // Add state for tracking completed executions
   const [completedExecutions, setCompletedExecutions] = useState<Set<string>>(new Set());
 
+  // Add state for tracking which requisition is being executed
+  const [executingReq, setExecutingReq] = useState<string | null>(null);
+
   // Setup transaction handler
   const { writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
     successMessage: "Plow successful",
@@ -117,9 +129,6 @@ export function Plow() {
       queryClient.invalidateQueries({ queryKey: ["requisitions"] });
     },
   });
-
-  // Add state for tracking which requisition is being executed
-  const [executingReq, setExecutingReq] = useState<string | null>(null);
 
   // Add handler for simulating all requisitions
   const handleSimulateAll = useCallback(async () => {
@@ -161,6 +170,31 @@ export function Plow() {
             ] as const,
           });
 
+          // Get gas estimate separately
+          const gasEstimate = await publicClient.estimateContractGas({
+            address: protocolAddress,
+            abi: diamondABI,
+            functionName: "tractor",
+            args: [
+              {
+                blueprint: req.requisition.blueprint,
+                blueprintHash: req.requisition.blueprintHash,
+                signature: req.requisition.signature,
+              },
+              "0x",
+            ] as const,
+          });
+
+          // Debug log
+          console.log(`Gas estimate for ${req.requisition.blueprintHash}:`, gasEstimate.toString());
+
+          // Store gas estimate
+          setGasEstimates(prev => {
+            const next = new Map(prev);
+            next.set(req.requisition.blueprintHash, gasEstimate);
+            return next;
+          });
+
           console.log(`Simulation successful for ${req.requisition.blueprintHash}`);
           setSuccessfulSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
         } catch (error) {
@@ -186,7 +220,7 @@ export function Plow() {
     }
   }, [protocolAddress, publicClient, requisitions]);
 
-  // Update handleSimulate function to store error messages
+  // Update handleSimulate function to include gas estimation
   const handleSimulate = useCallback(async (req: RequisitionEvent) => {
     if (!protocolAddress || !publicClient) return;
     setSimulatingReq(req.requisition.blueprintHash);
@@ -206,9 +240,14 @@ export function Plow() {
       next.delete(req.requisition.blueprintHash);
       return next;
     });
+    setGasEstimates(prev => {
+      const next = new Map(prev);
+      next.delete(req.requisition.blueprintHash);
+      return next;
+    });
 
     try {
-      await publicClient.simulateContract({
+      const result = await publicClient.simulateContract({
         address: protocolAddress,
         abi: diamondABI,
         functionName: "tractor",
@@ -220,6 +259,31 @@ export function Plow() {
           },
           "0x",
         ] as const,
+      });
+
+      // Get gas estimate separately
+      const gasEstimate = await publicClient.estimateContractGas({
+        address: protocolAddress,
+        abi: diamondABI,
+        functionName: "tractor",
+        args: [
+          {
+            blueprint: req.requisition.blueprint,
+            blueprintHash: req.requisition.blueprintHash,
+            signature: req.requisition.signature,
+          },
+          "0x",
+        ] as const,
+      });
+
+      // Debug log
+      console.log("Gas estimate:", gasEstimate.toString());
+
+      // Store gas estimate
+      setGasEstimates(prev => {
+        const next = new Map(prev);
+        next.set(req.requisition.blueprintHash, gasEstimate);
+        return next;
       });
 
       toast.success("Simulation successful");
@@ -382,6 +446,16 @@ export function Plow() {
                                 : "Simulate"
                       }
                     </Button>
+                    {successfulSimulations.has(req.requisition.blueprintHash) && (
+                      <div className="flex items-center text-pinto-gray-4 flex-1 min-w-0">
+                        <div className="inline-flex items-center gap-1 text-xs">
+                          Est. Gas: {(() => {
+                            const gas = gasEstimates.get(req.requisition.blueprintHash);
+                            return formatter.number(gas ? gas.toString() : "0");
+                          })()}
+                        </div>
+                      </div>
+                    )}
                     {failedSimulations.has(req.requisition.blueprintHash) && simulationErrors.get(req.requisition.blueprintHash) && (
                       <div className="flex items-center text-pinto-red-4 flex-1 min-w-0">
                         <TooltipSimple
