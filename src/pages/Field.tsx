@@ -25,7 +25,7 @@ import { useFarmerField } from "@/state/useFarmerField";
 import { useHarvestableIndex, useHarvestableIndexLoading } from "@/state/useFieldData";
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import FieldActions from "./field/FieldActions";
 import FieldStats from "./field/FieldStats";
@@ -39,6 +39,7 @@ function Field() {
   const farmerField = useFarmerField();
   const harvestableIndex = useHarvestableIndex();
   const harvestableIndexLoading = useHarvestableIndexLoading();
+  const [activeTab, setActiveTab] = useState<'pods' | 'tractor'>('pods');
 
   const hasPods = farmerField.plots.length > 0;
   const totalPods = useMemo(
@@ -106,26 +107,52 @@ function Field() {
                   )}
                 </div>
                 <Button asChild variant={"outline"} className="rounded-full text-[1rem] sm:text-[1.25rem]">
-                  <Link to={"/explorer/field"}>View Data</Link>
+                  <Link to="/explorer/field">View Data</Link>
                 </Button>
               </div>
             </div>
           )}
+          
           {(!isMobile || (!currentAction && isMobile)) && (
-            <div className="flex flex-row justify-between items-center">
-              <div className="pinto-h3">My Pods</div>
-              <div className="flex flex-row gap-2 items-center">
-                <img src={podIcon} className="w-8 h-8" alt={"total pods"} />
-                {harvestableIndexLoading ? (
-                  <Skeleton className="w-6 h-8" />
-                ) : (
-                  <div className="pinto-h3">{formatter.number(totalPods)}</div>
+            <>
+              <div className="flex flex-row justify-between items-center">
+                <div className="flex space-x-1">
+                  <button 
+                    className={`pinto-h3 py-2 px-4 ${activeTab === 'pods' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    onClick={() => setActiveTab('pods')}
+                  >
+                    My Pods
+                  </button>
+                  <button 
+                    className={`pinto-h3 py-2 px-4 ${activeTab === 'tractor' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    onClick={() => setActiveTab('tractor')}
+                  >
+                    My Tractor Orders
+                  </button>
+                </div>
+                
+                {activeTab === 'pods' && (
+                  <div className="flex flex-row gap-2 items-center">
+                    <img src={podIcon} className="w-8 h-8" alt={"total pods"} />
+                    {harvestableIndexLoading ? (
+                      <Skeleton className="w-6 h-8" />
+                    ) : (
+                      <div className="pinto-h3">{formatter.number(totalPods)}</div>
+                    )}
+                  </div>
                 )}
               </div>
-            </div>
-          )}
-          {(!isMobile || (!currentAction && isMobile)) && (
-            <div>{hasPods ? <PlotsTable showClaimable disableHover /> : <EmptyTable type="plots-field" />}</div>
+              
+              {activeTab === 'pods' && (
+                <div>{hasPods ? <PlotsTable showClaimable disableHover /> : <EmptyTable type="plots-field" />}</div>
+              )}
+              
+              {activeTab === 'tractor' && (
+                <div className="w-full">
+                  <TractorOrdersPanel />
+                </div>
+              )}
+            </>
           )}
         </div>
         {/*
@@ -137,7 +164,6 @@ function Field() {
               <FieldActions />
             </OnlyMorningCard>
           )}
-          {!isMobile && <TractorOrdersPanel />}
           {!isMobile && (
             <div className="p-2 rounded-[1rem] bg-pinto-off-white border-pinto-gray-2 border flex flex-col gap-2">
               <Button
