@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogPortal } from "./ui/Dialog";
+import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
@@ -23,6 +23,8 @@ import { isDev } from "@/utils/utils"; // Only used for pre-filling form data fo
 import { Blueprint } from "@/lib/Tractor/types";
 import { InfoOutlinedIcon, WarningIcon } from "@/components/Icons";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import stalkIcon from "@/assets/protocol/Stalk.png";
+import seedIcon from "@/assets/protocol/Seed.png";
 
 interface SowOrderDialogProps {
   open: boolean;
@@ -48,6 +50,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const publicClient = usePublicClient();
+  const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
 
   // Get LP tokens
   const lpTokens = useMemo(() => whitelistedTokens.filter((t) => t.isLP), [whitelistedTokens]);
@@ -237,6 +240,19 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     }
   };
 
+  // Add a function to get the selected token display text
+  const getSelectedTokenDisplay = () => {
+    if (selectedTokenStrategy.type === "LOWEST_SEEDS") {
+      return "Token with Least Seeds";
+    } else if (selectedTokenStrategy.type === "LOWEST_PRICE") {
+      return "Token with Best Price";
+    } else if (selectedTokenStrategy.type === "SPECIFIC_TOKEN") {
+      const token = whitelistedTokens.find(t => t.address === selectedTokenStrategy.address);
+      return token?.symbol || "Select Token";
+    }
+    return "Select Deposited Silo Token";
+  };
+
   if (!open) return null;
 
   const inputIds = {
@@ -295,79 +311,15 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 <label htmlFor={inputIds.fundOrder} className="text-[#9C9C9C] text-base font-light">
                   Fund order using
                 </label>
-                <Select
-                  value={
-                    selectedTokenStrategy.type === "LOWEST_SEEDS"
-                      ? "LOWEST_SEEDS"
-                      : selectedTokenStrategy.type === "LOWEST_PRICE"
-                        ? "LOWEST_PRICE"
-                        : selectedTokenStrategy.type === "SPECIFIC_TOKEN"
-                          ? selectedTokenStrategy.address
-                          : ""
-                  }
-                  onValueChange={(value) => {
-                    console.log("Select value changed to:", value);
-                    if (value === "LOWEST_SEEDS") {
-                      console.log("Setting LOWEST_SEEDS strategy");
-                      setSelectedTokenStrategy({ type: "LOWEST_SEEDS" });
-                    } else if (value === "LOWEST_PRICE") {
-                      console.log("Setting LOWEST_PRICE strategy");
-                      setSelectedTokenStrategy({ type: "LOWEST_PRICE" });
-                    } else {
-                      const token = whitelistedTokens.find(t => t.address === value);
-                      console.log("Found token:", token, "with address:", value);
-                      if (token) {
-                        console.log("Setting SPECIFIC_TOKEN strategy with address:", token.address);
-                        setSelectedTokenStrategy({
-                          type: "SPECIFIC_TOKEN",
-                          address: token.address as `0x${string}`,
-                        });
-                      }
-                    }
-                  }}
+                <button
+                  className="flex items-center justify-between h-12 px-4 py-3 border border-[#D9D9D9] rounded-xl bg-white"
+                  onClick={() => setShowTokenSelectionDialog(true)}
                 >
-                  <SelectTrigger
-                    id={inputIds.fundOrder}
-                    className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-xl flex items-center"
-                  >
-                    <SelectValue placeholder="Select token" className="w-full flex-1 text-left min-w-0" />
-                  </SelectTrigger>
-                  <SelectContent className="w-full min-w-[var(--radix-select-trigger-width)]">
-                    <SelectItem value="LOWEST_SEEDS" className="w-full pr-3 [&>span]:w-full relative pl-8">
-                      <div className="w-full flex items-center justify-start">
-                        <span className="flex-1 truncate">Lowest Seeds Token</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="LOWEST_PRICE" className="w-full pr-3 [&>span]:w-full relative pl-8">
-                      <div className="w-full flex items-center">
-                        <span className="flex-1 truncate">Lowest Price Token</span>
-                      </div>
-                    </SelectItem>
-                    {whitelistedTokens.map((token) => {
-                      const deposit = farmerDeposits.get(token);
-                      const amount = deposit?.amount || TokenValue.ZERO;
-                      const pintoAmount = swapResults.get(token.address) || TokenValue.ZERO;
-
-                      return (
-                        <SelectItem
-                          key={token.address}
-                          value={token.address}
-                          className="w-full pr-3 [&>span]:w-full relative pl-8 [&>span[aria-hidden]]:left-2"
-                        >
-                          <div className="w-full flex items-center justify-start">
-                            <div className="flex mr-2">
-                              <IconImage src={token.logoURI} alt={token.symbol} size={6} className="rounded-full" />
-                            </div>
-                            <span className="flex-1 truncate">{token.name}</span>
-                            <span className="text-pinto-gray-4 shrink-0 pl-4">
-                              {token.isLP ? formatter.number(pintoAmount) : formatter.number(amount)}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                  <span className="text-[#404040]">{getSelectedTokenDisplay()}</span>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 7.5L10 12.5L15 7.5" stroke="#404040" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
               </div>
 
               {/* Execute if Available Soil is at least */}
@@ -595,6 +547,131 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
           </div>
         </div>
       </div>
+
+      {/* Token Selection Dialog */}
+      <Dialog open={showTokenSelectionDialog} onOpenChange={setShowTokenSelectionDialog}>
+        <DialogPortal>
+          <DialogOverlay className="backdrop-blur-sm bg-black/30" />
+          <DialogContent className="sm:max-w-[700px] mx-auto p-0 bg-white rounded-2xl">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-antarctica font-medium text-[20px] leading-[115%] text-black">
+                  Select Token from Silo Deposits
+                </h2>
+              </div>
+              <p className="text-gray-500 mb-6">Tractor allows you to fund Orders for Soil using Deposits</p>
+              
+              {/* Dynamic funding source options */}
+              <div className="flex flex-col gap-4 mb-6">
+                <div className="text-gray-500">Dynamic funding source</div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div 
+                    className={`flex items-center px-6 py-4 gap-2 rounded-[36px] cursor-pointer ${
+                      selectedTokenStrategy.type === "LOWEST_PRICE" 
+                        ? "bg-[#F8F8F8] border border-[#D9D9D9]" 
+                        : "bg-[#F8F8F8] border border-[#D9D9D9]"
+                    }`}
+                    onClick={() => {
+                      setSelectedTokenStrategy({ type: "LOWEST_PRICE" });
+                      setShowTokenSelectionDialog(false);
+                    }}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      selectedTokenStrategy.type === "LOWEST_PRICE" 
+                        ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]" 
+                        : "border border-[#D9D9D9]"
+                    }`}>
+                      {selectedTokenStrategy.type === "LOWEST_PRICE" && (
+                        <div className="w-3 h-3 bg-[#387F5C] rounded-full"></div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">Token with Best Price</span>
+                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">at time of execution</span>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className={`flex items-center px-6 py-4 gap-2 rounded-[36px] cursor-pointer ${
+                      selectedTokenStrategy.type === "LOWEST_SEEDS" 
+                        ? "bg-[#F8F8F8] border border-[#D9D9D9]" 
+                        : "bg-[#F8F8F8] border border-[#D9D9D9]"
+                    }`}
+                    onClick={() => {
+                      setSelectedTokenStrategy({ type: "LOWEST_SEEDS" });
+                      setShowTokenSelectionDialog(false);
+                    }}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      selectedTokenStrategy.type === "LOWEST_SEEDS" 
+                        ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]" 
+                        : "border border-[#D9D9D9]"
+                    }`}>
+                      {selectedTokenStrategy.type === "LOWEST_SEEDS" && (
+                        <div className="w-3 h-3 bg-[#387F5C] rounded-full"></div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">Token with Least Seeds</span>
+                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">at time of execution</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Deposited Tokens */}
+              <div className="flex flex-col gap-2">
+                <div className="text-gray-500">Deposited Tokens</div>
+                <div className="flex flex-col divide-y border rounded-xl">
+                  {whitelistedTokens.map((token) => {
+                    const deposit = farmerDeposits.get(token);
+                    const amount = deposit?.amount || TokenValue.ZERO;
+                    const pintoAmount = swapResults.get(token.address) || TokenValue.ZERO;
+                    const isSelected = selectedTokenStrategy.type === "SPECIFIC_TOKEN" && 
+                                      selectedTokenStrategy.address === token.address;
+
+                    return (
+                      <div 
+                        key={token.address}
+                        className={`flex items-center justify-between p-4 cursor-pointer ${
+                          isSelected ? "bg-green-50" : ""
+                        }`}
+                        onClick={() => {
+                          setSelectedTokenStrategy({
+                            type: "SPECIFIC_TOKEN",
+                            address: token.address as `0x${string}`,
+                          });
+                          setShowTokenSelectionDialog(false);
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <IconImage src={token.logoURI} alt={token.symbol} size={12} className="rounded-full" />
+                          <div className="flex flex-col">
+                            <div className="font-medium">{token.symbol}</div>
+                            <div className="flex items-center text-xs text-gray-500 gap-1">
+                              <IconImage src={stalkIcon} size={3} alt="Stalk" /> {formatter.number(deposit?.stalk?.total || 0)} Stalk 
+                              <IconImage src={seedIcon} size={3} alt="Seeds" className="ml-1" /> {formatter.number(deposit?.seeds || 0)} Seeds
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <div className="text-right text-xl font-medium">{formatter.number(amount)}</div>
+                          <div className="text-right text-gray-500 text-sm">${formatter.number(pintoAmount)}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-xs text-gray-500 flex items-center gap-1 mt-2">
+                  <InfoOutlinedIcon width={14} height={14} />
+                  Deposits with the least Grown Stalk will always be used first
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+
       {showReview && encodedData && operatorPasteInstructions && (
         <ReviewTractorOrderDialog
           open={showReview}
