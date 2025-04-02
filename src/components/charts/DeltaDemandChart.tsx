@@ -1,6 +1,8 @@
+import { diamondABI } from "@/constants/abi/diamondABI";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { SeasonsTableData } from "@/state/useSeasonsData";
 import { Separator } from "@radix-ui/react-separator";
+import { usePublicClient } from "wagmi";
 import { Button } from "../ui/Button";
 
 interface DeltaDemandChartProps {
@@ -13,14 +15,26 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
   const upperBound = 15000;
   const secondLowerBound = 24000;
   const secondUpperBound = 24000;
-
   const protocolAddress = useProtocolAddress();
+  const publicClient = usePublicClient();
 
-  const generateData = () => {
-    const bound1 = [prevSeasons[0].sunriseBlock, currentSeason.sunriseBlock];
-    console.info("🚀 ~ generateData ~ bound1:", bound1);
-    const bound2 = [prevSeasons[1].sunriseBlock, prevSeasons[0].sunriseBlock];
-    console.info("🚀 ~ generateData ~ bound2:", bound2);
+  const generateData = async () => {
+    const sowEventsCurrentSeason = await publicClient?.getContractEvents({
+      address: protocolAddress,
+      abi: diamondABI,
+      eventName: "Sow",
+      fromBlock: BigInt(prevSeasons[0].sunriseBlock),
+      toBlock: BigInt(currentSeason.sunriseBlock),
+    });
+    const sowEventsPrevSeason = await publicClient?.getContractEvents({
+      address: protocolAddress,
+      abi: diamondABI,
+      eventName: "Sow",
+      fromBlock: BigInt(prevSeasons[1].sunriseBlock),
+      toBlock: BigInt(prevSeasons[0].sunriseBlock),
+    });
+    console.info("🚀 ~ DeltaDemandChart ~ sowEventsCurrentSeason:", sowEventsCurrentSeason);
+    console.info("🚀 ~ DeltaDemandChart ~ sowEventsPrevSeason:", sowEventsPrevSeason);
   };
 
   return (
