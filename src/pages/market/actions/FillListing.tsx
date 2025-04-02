@@ -178,7 +178,9 @@ export default function FillListing() {
           ],
         });
       } else if (swapBuild?.advancedFarm.length) {
-        const { clipboard } = await swapBuild.deriveClipboardWithOutputToken(mainToken, 9, account.address);
+        const { clipboard } = await swapBuild.deriveClipboardWithOutputToken(mainToken, 9, account.address, {
+          value: value ?? TV.ZERO,
+        });
 
         const advFarm = [...swapBuild.advancedFarm];
         advFarm.push(
