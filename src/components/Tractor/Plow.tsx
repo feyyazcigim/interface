@@ -10,9 +10,55 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLatestBlock } from "@/hooks/useLatestBlock";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import useTransaction from "@/hooks/useTransaction";
+import { TokenValue } from "@/classes/TokenValue";
+import { formatter } from "@/utils/format";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+import TooltipSimple from "@/components/TooltipSimple";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 const UINT256_MAX = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
+
+// Helper function to extract error message from error
+const extractErrorMessage = (error: unknown): string => {
+  if (!error) return "Unknown error";
+  
+  if (typeof error === 'object' && error !== null) {
+    // Check for common error properties
+    if ('message' in error && typeof error.message === 'string') {
+      const message = error.message;
+      
+      // Extract the error message between "following reason:" and "Contract Call:"
+      const reasonPattern = /following reason:\s*(.*?)(?:\s*\n\s*Contract Call:|$)/s;
+      const reasonMatch = message.match(reasonPattern);
+      
+      if (reasonMatch && reasonMatch[1]) {
+        return reasonMatch[1].trim();
+      }
+      
+      // Fallback to simpler pattern
+      const simpleMatch = message.match(/execution reverted: (.+?)(?:\n|$)/);
+      if (simpleMatch && simpleMatch[1]) {
+        return simpleMatch[1].trim();
+      }
+      
+      return message;
+    }
+    
+    if ('reason' in error && typeof (error as any).reason === 'string') {
+      return (error as any).reason;
+    }
+  }
+  
+  return String(error);
+};
+
+// Helper function to format operator tip properly
+const formatOperatorTip = (amount: bigint | undefined): string => {
+  if (amount === undefined) return "Failed to decode";
+  // Convert the bigint amount to a TokenValue with 6 decimals (PINTO)
+  const tokenAmount = TokenValue.fromBlockchain(amount, 6);
+  return `${formatter.number(tokenAmount)} PINTO`;
+};
 
 export function Plow() {
   const [selectedRequisition, setSelectedRequisition] = useState<RequisitionEvent | null>(null);
@@ -46,6 +92,9 @@ export function Plow() {
 
   // Add state for tracking failed simulations
   const [failedSimulations, setFailedSimulations] = useState<Set<string>>(new Set());
+  
+  // Add state for tracking error messages for each failed simulation
+  const [simulationErrors, setSimulationErrors] = useState<Map<string, string>>(new Map());
 
   // Add state for tracking successful simulations
   const [successfulSimulations, setSuccessfulSimulations] = useState<Set<string>>(new Set());
@@ -91,6 +140,11 @@ export function Plow() {
           next.delete(req.requisition.blueprintHash);
           return next;
         });
+        setSimulationErrors(prev => {
+          const next = new Map(prev);
+          next.delete(req.requisition.blueprintHash);
+          return next;
+        });
 
         try {
           await publicClient.simulateContract({
@@ -112,6 +166,14 @@ export function Plow() {
         } catch (error) {
           console.error(`Simulation failed for ${req.requisition.blueprintHash}:`, error);
           setFailedSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
+          
+          // Store the error message
+          const errorMsg = extractErrorMessage(error);
+          setSimulationErrors(prev => {
+            const next = new Map(prev);
+            next.set(req.requisition.blueprintHash, errorMsg);
+            return next;
+          });
         }
         setSimulatingReq(null);
       }
@@ -124,7 +186,7 @@ export function Plow() {
     }
   }, [protocolAddress, publicClient, requisitions]);
 
-  // Update handleSimulate function
+  // Update handleSimulate function to store error messages
   const handleSimulate = useCallback(async (req: RequisitionEvent) => {
     if (!protocolAddress || !publicClient) return;
     setSimulatingReq(req.requisition.blueprintHash);
@@ -136,6 +198,11 @@ export function Plow() {
     });
     setSuccessfulSimulations(prev => {
       const next = new Set(prev);
+      next.delete(req.requisition.blueprintHash);
+      return next;
+    });
+    setSimulationErrors(prev => {
+      const next = new Map(prev);
       next.delete(req.requisition.blueprintHash);
       return next;
     });
@@ -159,8 +226,16 @@ export function Plow() {
       setSuccessfulSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
     } catch (error) {
       console.error("Simulation failed:", error);
-      toast.error(`Simulation failed: ${(error as Error).message}`);
+      toast.error(`Simulation failed: ${extractErrorMessage(error)}`);
       setFailedSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
+      
+      // Store the error message
+      const errorMsg = extractErrorMessage(error);
+      setSimulationErrors(prev => {
+        const next = new Map(prev);
+        next.set(req.requisition.blueprintHash, errorMsg);
+        return next;
+      });
     } finally {
       setSimulatingReq(null);
     }
@@ -264,48 +339,63 @@ export function Plow() {
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">{req.requisitionType}</TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {req.decodedData ? `${req.decodedData.operatorParams.operatorTipAmount} PINTO` : "Failed to decode"}
+                  {req.decodedData ? formatOperatorTip(req.decodedData.operatorParams.operatorTipAmount) : "Failed to decode"}
                 </TableCell>
                 <TableCell className="p-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (successfulSimulations.has(req.requisition.blueprintHash)) {
-                        handleExecute(req);
-                      } else {
-                        handleSimulate(req);
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (successfulSimulations.has(req.requisition.blueprintHash)) {
+                          handleExecute(req);
+                        } else {
+                          handleSimulate(req);
+                        }
+                      }}
+                      disabled={
+                        simulatingReq === req.requisition.blueprintHash || 
+                        failedSimulations.has(req.requisition.blueprintHash) ||
+                        executingReq === req.requisition.blueprintHash ||
+                        completedExecutions.has(req.requisition.blueprintHash)
                       }
-                    }}
-                    disabled={
-                      simulatingReq === req.requisition.blueprintHash || 
-                      failedSimulations.has(req.requisition.blueprintHash) ||
-                      executingReq === req.requisition.blueprintHash ||
-                      completedExecutions.has(req.requisition.blueprintHash)
-                    }
-                    className={`
-                      ${successfulSimulations.has(req.requisition.blueprintHash) && !completedExecutions.has(req.requisition.blueprintHash)
-                        ? 'bg-pinto-green-4 text-white hover:bg-pinto-green-5' 
-                        : completedExecutions.has(req.requisition.blueprintHash)
-                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'text-pinto-gray-4 hover:text-pinto-gray-5'
-                      } 
-                      ${failedSimulations.has(req.requisition.blueprintHash) ? 'opacity-50 cursor-not-allowed' : ''}
-                    `}
-                  >
-                    {simulatingReq === req.requisition.blueprintHash 
-                      ? "Simulating..." 
-                      : executingReq === req.requisition.blueprintHash
-                        ? "Executing..."
-                        : failedSimulations.has(req.requisition.blueprintHash)
-                          ? "Simulation Failed"
+                      className={`
+                        ${successfulSimulations.has(req.requisition.blueprintHash) && !completedExecutions.has(req.requisition.blueprintHash)
+                          ? 'bg-pinto-green-4 text-white hover:bg-pinto-green-5' 
                           : completedExecutions.has(req.requisition.blueprintHash)
-                            ? "Plowed"
-                            : successfulSimulations.has(req.requisition.blueprintHash)
-                              ? "Execute"
-                              : "Simulate"
-                    }
-                  </Button>
+                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            : 'text-pinto-gray-4 hover:text-pinto-gray-5'
+                        } 
+                        ${failedSimulations.has(req.requisition.blueprintHash) ? 'opacity-50 cursor-not-allowed' : ''}
+                      `}
+                    >
+                      {simulatingReq === req.requisition.blueprintHash 
+                        ? "Simulating..." 
+                        : executingReq === req.requisition.blueprintHash
+                          ? "Executing..."
+                          : failedSimulations.has(req.requisition.blueprintHash)
+                            ? "Simulation Failed"
+                            : completedExecutions.has(req.requisition.blueprintHash)
+                              ? "Plowed"
+                              : successfulSimulations.has(req.requisition.blueprintHash)
+                                ? "Execute"
+                                : "Simulate"
+                      }
+                    </Button>
+                    {failedSimulations.has(req.requisition.blueprintHash) && simulationErrors.get(req.requisition.blueprintHash) && (
+                      <div className="flex items-center text-pinto-red-4">
+                        <TooltipSimple
+                          content={simulationErrors.get(req.requisition.blueprintHash) || "Unknown error"}
+                          variant="gray"
+                        >
+                          <span className="flex items-center gap-1 text-xs text-pinto-red-4">
+                            <InfoCircledIcon className="h-4 w-4" />
+                            {simulationErrors.get(req.requisition.blueprintHash)?.substring(0, 15)}...
+                          </span>
+                        </TooltipSimple>
+                      </div>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="p-2">
                   <Button
