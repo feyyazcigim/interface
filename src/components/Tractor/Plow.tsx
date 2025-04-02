@@ -285,7 +285,7 @@ export function Plow() {
             <TableHead>Max Nonce</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Operator Tip</TableHead>
-            <TableHead>
+            <TableHead className="min-w-[200px]">
               <div className="flex items-center gap-2">
                 <span>Simulate</span>
                 <Button
@@ -374,7 +374,7 @@ export function Plow() {
                         : executingReq === req.requisition.blueprintHash
                           ? "Executing..."
                           : failedSimulations.has(req.requisition.blueprintHash)
-                            ? "Simulation Failed"
+                            ? "Reverted"
                             : completedExecutions.has(req.requisition.blueprintHash)
                               ? "Plowed"
                               : successfulSimulations.has(req.requisition.blueprintHash)
@@ -383,15 +383,15 @@ export function Plow() {
                       }
                     </Button>
                     {failedSimulations.has(req.requisition.blueprintHash) && simulationErrors.get(req.requisition.blueprintHash) && (
-                      <div className="flex items-center text-pinto-red-4">
+                      <div className="flex items-center text-pinto-red-4 flex-1 min-w-0">
                         <TooltipSimple
                           content={simulationErrors.get(req.requisition.blueprintHash) || "Unknown error"}
                           variant="gray"
                         >
-                          <span className="flex items-center gap-1 text-xs text-pinto-red-4">
-                            <InfoCircledIcon className="h-4 w-4" />
-                            {simulationErrors.get(req.requisition.blueprintHash)?.substring(0, 15)}...
-                          </span>
+                          <div className="inline-flex items-center gap-1 text-xs text-pinto-red-4 max-w-full">
+                            <InfoCircledIcon className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">{simulationErrors.get(req.requisition.blueprintHash)}</span>
+                          </div>
                         </TooltipSimple>
                       </div>
                     )}
