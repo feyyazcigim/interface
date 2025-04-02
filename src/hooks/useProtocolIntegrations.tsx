@@ -3,7 +3,7 @@ import spectraLogo from "@/assets/misc/spectra-token-logo.svg";
 import { ProtocolIntegration } from "@/state/integrations/types";
 import { SpectraYieldSummaryResponse } from "@/state/integrations/useSpectraYieldSummary";
 import { resolveChainId } from "@/utils/chain";
-import { formatter, toFixedNumber } from "@/utils/format";
+import { formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
 import { base } from "viem/chains";
@@ -14,7 +14,7 @@ export interface ProtocolIntegrationSummary {
   name: string;
   url: string;
   logoURI: string;
-  ctaMessage: string | ((token: Token, ...data: any[]) => string);
+  ctaMessage: string | ((token: Token, ...data: any[]) => string | JSX.Element);
 }
 
 type IntegrationLookup = Partial<Record<ProtocolIntegration, ProtocolIntegrationSummary>>;
@@ -35,7 +35,12 @@ const baseIntegrations: IntegrationLookup = {
     ctaMessage: (token, data: SpectraYieldSummaryResponse | undefined) => {
       const apy = data?.apy ? `${formatter.pct(data.apy)}` : "-%";
 
-      return `Earn a APY of ${apy} or trade yield with ${token.symbol} on Spectra`;
+      return (
+        <span>
+          Earn a APY of <span className={data?.apy ? "text-pinto-green-4" : ""}>{apy}</span> or trade yield with{" "}
+          {token.symbol} on Spectra
+        </span>
+      );
     },
   },
 } as const;
