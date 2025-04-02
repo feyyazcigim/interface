@@ -233,21 +233,21 @@ const TractorOrdersPanel = () => {
             <div className="flex flex-col gap-2 w-full">
               {/* Header row with all the pills and labels */}
               <div className="flex justify-between items-center w-full">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-0">
                   {/* Withdraw pill */}
                   <div className="flex items-center px-2 py-1 bg-pinto-green-4 rounded-xl">
                     <span className="text-white text-sm font-antarctica font-normal">Withdraw</span>
                   </div>
                   {/* Divider */}
-                  <div className="border-t-2 border-pinto-gray-2 w-3"></div>
+                  <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
                   {/* From label */}
-                  <div className="bg-[#F8F8F8] px-1 py-1 rounded-xl">
+                  <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
                     <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">from Deposited Tokens</span>
                   </div>
                   {/* Divider */}
-                  <div className="border-t-2 border-pinto-gray-2 w-3"></div>
+                  <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
                   {/* With best */}
-                  <div className="bg-[#F8F8F8] px-1 py-1 rounded-xl">
+                  <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
                     <div className="flex items-center gap-1">
                       <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">with Best</span>
                       <IconImage src={pintoIcon} size={4} />
@@ -255,15 +255,15 @@ const TractorOrdersPanel = () => {
                     </div>
                   </div>
                   {/* Divider */}
-                  <div className="border-t-2 border-pinto-gray-2 w-3"></div>
+                  <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
                   {/* Sow pill */}
                   <div className="flex items-center px-2 py-1 bg-pinto-green-4 rounded-xl">
                     <span className="text-white text-sm font-antarctica font-normal">Sow</span>
                   </div>
                   {/* Divider */}
-                  <div className="border-t-2 border-pinto-gray-2 w-3"></div>
+                  <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
                   {/* Up to */}
-                  <div className="bg-[#F8F8F8] px-1 py-1 rounded-xl">
+                  <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
                     <div className="flex items-center gap-1">
                       <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">up to</span>
                       <IconImage src={pintoIcon} size={4} />
@@ -287,7 +287,7 @@ const TractorOrdersPanel = () => {
                     <CornerBottomLeftIcon
                       className="h-4 w-4 text-pinto-gray-4"
                     />
-                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">Execute when Temperature is at least {formatPercentage(data.minTemp)}</span>
+                    <span className="text-pinto-gray-4 text-sm font-menlo font-thin">Execute when Temperature is at least {formatPercentage(data.minTemp)}</span>
                   </div>
                   <div className="flex items-center pl-6 gap-2">
                     <CornerBottomLeftIcon
