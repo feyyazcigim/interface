@@ -4,11 +4,37 @@ import { SeasonsTableData } from "@/state/useSeasonsData";
 import { Separator } from "@radix-ui/react-separator";
 import { usePublicClient } from "wagmi";
 import { Button } from "../ui/Button";
+import { useMemo, useState } from "react";
+import LineChart, { LineChartData } from "./LineChart";
+import { formatter } from "@/utils/format";
+import { metallicGreenStrokeGradientFn } from "./chartHelpers";
 
 interface DeltaDemandChartProps {
   currentSeason: SeasonsTableData;
   prevSeasons: SeasonsTableData[];
 }
+
+interface SowEvent {
+  eventName: "Sow";
+  address: string;
+  data: string;
+  args: {
+    account: string;
+    fieldId: bigint;
+    index: bigint;
+    beans: bigint;
+    pods: bigint;
+  };
+  blockHash: string;
+  blockNumber: bigint;
+  logIndex: number;
+  removed: boolean;
+  topics: string[];
+  transactionHash: string;
+  transactionIndex: number;
+}
+
+const makeLineGradients = [metallicGreenStrokeGradientFn];
 
 export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChartProps) => {
   const lowerBound = 15000;
@@ -17,6 +43,7 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
   const secondUpperBound = 24000;
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
+  const [sowEventTimings, setSowEventTimings] = useState<{ blocksSinceSunrise: bigint, timestampAsMin: number, sownBeans: number }[]>([]);
 
   const generateData = async () => {
     const sowEventsCurrentSeason = await publicClient?.getContractEvents({
@@ -25,17 +52,54 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
       eventName: "Sow",
       fromBlock: BigInt(prevSeasons[0].sunriseBlock),
       toBlock: BigInt(currentSeason.sunriseBlock),
-    });
+    }) as SowEvent[];
     const sowEventsPrevSeason = await publicClient?.getContractEvents({
       address: protocolAddress,
       abi: diamondABI,
       eventName: "Sow",
       fromBlock: BigInt(prevSeasons[1].sunriseBlock),
       toBlock: BigInt(prevSeasons[0].sunriseBlock),
+    }) as SowEvent[];
+    const sowEventTimings = sowEventsCurrentSeason.map((event) => {
+      const blocksSinceSunrise = event.blockNumber - BigInt(prevSeasons[0].sunriseBlock);
+      return {
+        sownBeans: Number(event.args.beans) / 1000000,
+        blocksSinceSunrise,
+        timestampAsMin: (Number(blocksSinceSunrise) * 2) / 60
+      };
     });
-    console.info("🚀 ~ DeltaDemandChart ~ sowEventsCurrentSeason:", sowEventsCurrentSeason);
-    console.info("🚀 ~ DeltaDemandChart ~ sowEventsPrevSeason:", sowEventsPrevSeason);
+    const secondSowEventTimings = sowEventsPrevSeason.map((event) => {
+      const blocksSinceSunrise = event.blockNumber - BigInt(prevSeasons[1].sunriseBlock);
+      return {
+        sownBeans: Number(event.args.beans) / 1000000,
+        blocksSinceSunrise,
+        timestampAsMin: (Number(blocksSinceSunrise) * 2) / 60
+      };
+    });
+    setSowEventTimings(sowEventTimings);
   };
+
+  const mappedData = useMemo(() => {
+    const labels: string[] = [];
+    const datas: LineChartData[] = [];
+    let indexesWithSowEvents: number[] = [];
+    let cumulativeSownBeans = 0;
+    for (let i = 0; i < 1800; i++) {
+      const sowEvent = sowEventTimings.find((timing) => timing.blocksSinceSunrise === BigInt(i));
+      const textInterval = `XX:${((Number(i) * 2) / 60).toFixed(2)}`
+      if (sowEvent) {
+        labels.push(textInterval);
+        cumulativeSownBeans += sowEvent.sownBeans;
+        datas.push({ values: [cumulativeSownBeans], interval: textInterval });
+        indexesWithSowEvents.push(i);
+      }
+      else {
+        labels.push(textInterval);
+        datas.push({ values: [cumulativeSownBeans], interval: textInterval });
+      }
+    }
+    return datas;
+  }, [sowEventTimings]);
 
   return (
     <div className="w-[600px] bg-white">
@@ -62,8 +126,15 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
         </span>
         <span className="text-pinto-gray-4">(100%)</span>
       </div>
-      <div className="w-full h-[200px] bg-pinto-gray-1 rounded-md mt-2">
-        Super Slick Chart here <Button onClick={generateData}>Click me to gen chart</Button>
+      <Button onClick={generateData}>Click me to gen chart</Button>
+      <div className="w-full h-[200px] rounded-md mt-2">
+        <LineChart
+          data={mappedData}
+          size="large"
+          xKey="interval"
+          makeLineGradients={makeLineGradients}
+          valueFormatter={formatter.number}
+        />
       </div>
       <Separator className="my-4" />
       <div className="flex flex-col">
