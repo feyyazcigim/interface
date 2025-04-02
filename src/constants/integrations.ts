@@ -1,4 +1,4 @@
-import { MAIN_TOKEN, S_MAIN_TOKEN, SPECTRA_LP_TOKEN, SPECTRA_PT_TOKEN, SPECTRA_YT_TOKEN } from "@/constants/tokens";
+import { MAIN_TOKEN, SPECTRA_LP_TOKEN, SPECTRA_PT_TOKEN, SPECTRA_YT_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
 import { Token } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
 import { Address } from "viem";

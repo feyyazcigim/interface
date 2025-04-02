@@ -11,7 +11,7 @@ import spectrasPintoYTIcon from "@/assets/tokens/SPECTRA-sPINTO-YT.png";
 import wsolIcon from "@/assets/tokens/WSOL.png";
 import crsPintoIcon from "@/assets/tokens/crsPINTO.png";
 import sPintoIcon from "@/assets/tokens/sPINTO.png";
-import { Token } from "@/utils/types";
+import { Token, Token3PIntegration } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
 import { arbitrum, base } from "viem/chains";
 
@@ -262,7 +262,8 @@ export const S_MAIN_TOKEN: ChainLookup<Token> = {
 
 // -------------------- THIRD-PARTY INTEGRATIONS --------------------
 
-export const CREAM_S_MAIN_TOKEN: ChainLookup<Token> = {
+// Cream
+export const CREAM_S_MAIN_TOKEN: ChainLookup<Token3PIntegration> = {
   [base.id]: {
     chainId: base.id,
     name: "Cream Siloed Pinto",
@@ -272,12 +273,14 @@ export const CREAM_S_MAIN_TOKEN: ChainLookup<Token> = {
     displayDecimals: 2,
     is3PSiloWrapped: true,
     logoURI: crsPintoIcon,
+    integration: "CREAM",
     description:
       "crsPINTO is a yield-bearing, ERC-20 representation of a PINTO Silo Deposit, integrated by Cream Finance.",
   },
 } as const;
 
-export const SPECTRA_YT_TOKEN: ChainLookup<Token> = {
+// Spectra
+export const SPECTRA_YT_TOKEN: ChainLookup<Token3PIntegration> = {
   [base.id]: {
     chainId: base.id,
     name: "Yield Token: sPINTO",
@@ -287,10 +290,11 @@ export const SPECTRA_YT_TOKEN: ChainLookup<Token> = {
     displayDecimals: 2,
     is3PSiloWrapped: true,
     logoURI: spectrasPintoYTIcon,
+    integration: "SPECTRA",
   },
 };
 
-export const SPECTRA_PT_TOKEN: ChainLookup<Token> = {
+export const SPECTRA_PT_TOKEN: ChainLookup<Token3PIntegration> = {
   [base.id]: {
     chainId: base.id,
     name: "Principal Token: sPINTO",
@@ -300,19 +304,21 @@ export const SPECTRA_PT_TOKEN: ChainLookup<Token> = {
     displayDecimals: 2,
     is3PSiloWrapped: true,
     logoURI: spectrasPintoPTIcon,
+    integration: "SPECTRA",
   },
 };
 
-export const SPECTRA_LP_TOKEN: ChainLookup<Token> = {
+export const SPECTRA_LP_TOKEN: ChainLookup<Token3PIntegration> = {
   [base.id]: {
     chainId: base.id,
     name: "sPINTO Curve.fi Factory Crypto Pool: Spectra-PT/IBT",
-    symbol: "sPINTO-LP",
+    symbol: "sPINTO LP",
     address: "0xba1F1eA8c269003aFe161aFAa0bd205E2c7F782a",
     decimals: 18,
     displayDecimals: 2,
     is3PSiloWrapped: true,
     logoURI: spectrasPintoLPIcon,
+    integration: "SPECTRA",
   },
 };
 
@@ -349,6 +355,15 @@ export const LP_TOKENS: ChainLookup<Token[]> = {
     PINTO_CBETH_TOKEN[base.id],
     PINTO_CBBTC_TOKEN[base.id],
     PINTO_WSOL_TOKEN[base.id],
+  ],
+} as const;
+
+export const PROTOCOL_INTEGRATION_TOKENS: ChainLookup<Token[]> = {
+  [base.id]: [
+    CREAM_S_MAIN_TOKEN[base.id],
+    SPECTRA_YT_TOKEN[base.id],
+    SPECTRA_PT_TOKEN[base.id],
+    SPECTRA_LP_TOKEN[base.id],
   ],
 } as const;
 

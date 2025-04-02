@@ -3,7 +3,7 @@ import spectraLogo from "@/assets/misc/spectra-token-logo.svg";
 import { ProtocolIntegration } from "@/state/integrations/types";
 import { SpectraYieldSummaryResponse } from "@/state/integrations/useSpectraYieldSummary";
 import { resolveChainId } from "@/utils/chain";
-import { formatter } from "@/utils/format";
+import { formatter, toFixedNumber } from "@/utils/format";
 import { Token } from "@/utils/types";
 import { ChainLookup } from "@/utils/types.generic";
 import { base } from "viem/chains";
@@ -14,7 +14,7 @@ export interface ProtocolIntegrationSummary {
   name: string;
   url: string;
   logoURI: string;
-  ctaMessage: string | ((...data: any[]) => string);
+  ctaMessage: string | ((token: Token, ...data: any[]) => string);
 }
 
 type IntegrationLookup = Partial<Record<ProtocolIntegration, ProtocolIntegrationSummary>>;
@@ -32,16 +32,10 @@ const baseIntegrations: IntegrationLookup = {
     name: "Spectra",
     url: "https://app.spectra.finance/pools/base:0xd8e4662ffd6b202cf85e3783fb7252ff0a423a72",
     logoURI: spectraLogo,
-    ctaMessage: (
-      token: Token,
-      data:
-        | SpectraYieldSummaryResponse
-        | undefined,
-    ) => {
-      const apy = data?.apy ? `${formatter.pct(data.apy * 100)}` : "--%";
-      const leverage = data?.maxLeverage ? `${data.maxLeverage}x leverage` : "leverage";
+    ctaMessage: (token, data: SpectraYieldSummaryResponse | undefined) => {
+      const apy = data?.apy ? `${formatter.pct(data.apy)}` : "-%";
 
-      return `Earn a Max Fixed APY of ${apy} or trade yield with ${leverage} on Spectra`;
+      return `Earn a APY of ${apy} or trade yield with ${token.symbol} on Spectra`;
     },
   },
 } as const;

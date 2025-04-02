@@ -1,15 +1,11 @@
-import { Token } from "@/utils/types";
-import { QueryKey } from "@tanstack/react-query";
+import { MinimumViableUseQueryResult, Token } from "@/utils/types";
 import { Address } from "viem";
 
-export type ProtocolIntegrationQueryReturnType<T = unknown> = {
-  data: T | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  integrationKey: ProtocolIntegration;
-  refetch: () => void;
-  queryKeys: QueryKey[];
+export type IProtocolIntegration = {
+  integration: ProtocolIntegration;
 };
+
+export type ProtocolIntegrationQueryReturnType<T = unknown> = MinimumViableUseQueryResult<T> & IProtocolIntegration;
 
 export type ProtocolIntegration = "CREAM" | "SPECTRA";
 

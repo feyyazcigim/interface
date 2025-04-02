@@ -251,7 +251,9 @@ const BalanceSection = ({ token, tokenPrices, farmerBalances, loading }: IBalanc
   );
 };
 
-type ProtocolIntegrationToQueryLookup = Partial<Record<ProtocolIntegration, ProtocolIntegrationQueryReturnType>>;
+type ProtocolIntegrationToQueryLookup = Partial<
+  Record<ProtocolIntegration, ProtocolIntegrationQueryReturnType["data"]>
+>;
 
 const IntegrationLinks = ({ token }: { token: Token }) => {
   const integrations = useProtocolIntegrationLinks();
@@ -260,8 +262,8 @@ const IntegrationLinks = ({ token }: { token: Token }) => {
 
   const queries = [spectra];
 
-  const byIntegrationKey: ProtocolIntegrationToQueryLookup = queries.reduce((acc, query) => {
-    acc[query.integrationKey] = query;
+  const byIntegration: ProtocolIntegrationToQueryLookup = queries.reduce((acc, query) => {
+    acc[query.integration] = query.data;
     return acc;
   }, {});
 
@@ -270,12 +272,12 @@ const IntegrationLinks = ({ token }: { token: Token }) => {
   return (
     <div className="flex flex-col gap-4">
       {Object.entries(integrations).map(([key, integration]) => {
-        const queryData = byIntegrationKey[key as ProtocolIntegration]?.data;
+        const queryData = byIntegration[key as ProtocolIntegration];
 
         return (
           <div
             key={`protocol-integration-${key}`}
-            className="flex flex-row items-center justify-between p-4 box-border rounded-[1.25rem] bg-pinto-off-white border-pinto-gray-2 border"
+            className="flex flex-row items-center justify-between p-4 box-border rounded-[1.25rem] bg-pinto-off-white border-pinto-gray-2 border gap-2"
           >
             <div className="pinto-sm-light text-pinto-light">
               {typeof integration.ctaMessage === "function"
