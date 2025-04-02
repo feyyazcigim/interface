@@ -399,17 +399,16 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
             )}
             {slippageWarning}
             <div className="flex justify-center mt-4">
-              <Link
-                onClick={(e) => {
-                  e.preventDefault();
-                  onShowOrder();
-                }}
-                to="/tractor"
-                className="flex items-center gap-2 text-sm text-pinto-dark hover:underline"
+              <button
+                onClick={() => onShowOrder()}
+                className="box-border flex flex-col items-start p-4 gap-1 w-full bg-[#F8F8F8] border border-[#D9D9D9] rounded-xl hover:bg-[#EFEFEF] transition-colors duration-200"
               >
-                <LightningIcon className="w-5 h-5" />
-                Set up an order to sow automatically using Tractor
-              </Link>
+                <div className="flex flex-row justify-center items-center gap-1">
+                  <LightningIcon className="w-4 h-4 text-[#404040]" />
+                  <span className="font-antarctica font-[340] text-[20px] leading-[110%] text-[#404040]">Want to Sow with size?</span>
+                </div>
+                <span className="font-antarctica font-[340] text-base leading-[110%] text-[#9C9C9C]">Use 🚜 Tractor to set up an order for Pods over time</span>
+              </button>
             </div>
           </div>
           <div className="hidden sm:flex flex-row gap-2">
