@@ -14,9 +14,20 @@ import { TokenValue } from "@/classes/TokenValue";
 import { formatter } from "@/utils/format";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import TooltipSimple from "@/components/TooltipSimple";
+import { usePriceData } from "@/state/usePriceData";
+import useTokenData from "@/state/useTokenData";
+import { createPublicClient, http } from "viem";
+import { base } from "viem/chains";
+import { BASE_RPC_URL } from "@/utils/wagmi/chains";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 const UINT256_MAX = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
+
+// Create a client specifically for fetching Base network gas price
+const baseGasClient = createPublicClient({
+  chain: base,
+  transport: http(BASE_RPC_URL),
+});
 
 // Helper function to extract error message from error
 const extractErrorMessage = (error: unknown): string => {
@@ -72,9 +83,32 @@ export function Plow() {
   const publicClient = usePublicClient();
   const { data: latestBlock } = useLatestBlock();
   const queryClient = useQueryClient();
+  const { tokenPrices } = usePriceData();
+  const { nativeToken } = useTokenData();
   
   // Add state for gas estimates
   const [gasEstimates, setGasEstimates] = useState<Map<string, bigint>>(new Map());
+  const [gasPrice, setGasPrice] = useState<bigint | null>(null);
+
+  // Fetch gas price periodically
+  useEffect(() => {
+    const fetchGasPrice = async () => {
+      try {
+        // Use the baseGasClient to fetch gas price from Base network
+        const price = await baseGasClient.getGasPrice();
+        console.log("Current Base network gas price:", price.toString(), "wei");
+        console.log("Current Base network gas price:", (Number(price) / 1e9).toFixed(2), "gwei");
+        setGasPrice(price);
+      } catch (error) {
+        console.error("Failed to fetch gas price:", error);
+      }
+    };
+    
+    fetchGasPrice();
+    const interval = setInterval(fetchGasPrice, 30000); // Update every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const { data: requisitions = [], isLoading } = useQuery({
     queryKey: ["requisitions", protocolAddress, latestBlock?.number],
@@ -350,17 +384,25 @@ export function Plow() {
             <TableHead>Type</TableHead>
             <TableHead>Operator Tip</TableHead>
             <TableHead className="min-w-[200px]">
-              <div className="flex items-center gap-2">
-                <span>Simulate</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSimulateAll}
-                  disabled={simulatingAll || requisitions.length === 0}
-                  className="text-pinto-gray-4 hover:text-pinto-gray-5"
-                >
-                  {simulatingAll ? "Simulating All..." : "Simulate All"}
-                </Button>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span>Simulate</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSimulateAll}
+                    disabled={simulatingAll || requisitions.length === 0}
+                    className="text-pinto-gray-4 hover:text-pinto-gray-5"
+                  >
+                    {simulatingAll ? "Simulating All..." : "Simulate All"}
+                  </Button>
+                </div>
+                <div className="text-xs text-pinto-gray-4">
+                  {(() => {
+                    if (!gasPrice) return "Loading gas price...";
+                    return `Gas Price: ${(Number(gasPrice) / 1e9).toFixed(6)} gwei`;
+                  })()}
+                </div>
               </div>
             </TableHead>
             <TableHead>Plow</TableHead>
@@ -451,7 +493,35 @@ export function Plow() {
                         <div className="inline-flex items-center gap-1 text-xs">
                           Est. Gas: {(() => {
                             const gas = gasEstimates.get(req.requisition.blueprintHash);
-                            return formatter.number(gas ? gas.toString() : "0");
+                            if (!gas) return "0";
+                            
+                            // Get ETH price in USD
+                            const ethPrice = tokenPrices.get(nativeToken)?.instant;
+                            if (!ethPrice) return formatter.number(gas.toString());
+                            
+                            // Use current gas price from network, fallback to 1 gwei if not available
+                            const currentGasPrice = gasPrice || BigInt(1_000_000_000);
+                            
+                            // Debug log the values
+                            console.log("Gas estimate:", gas.toString());
+                            console.log("Gas price:", currentGasPrice.toString());
+                            console.log("ETH price:", ethPrice.toString());
+                            
+                            // Calculate gas cost in wei, then convert to USD
+                            const gasCostInWei = gas * currentGasPrice;
+                            // Convert wei to ETH (as a number) for calculation and display
+                            const gasCostInEth = Number(gasCostInWei) / 1e18;
+                            // Convert ETH price from its stored format (with 6 decimals) to actual USD
+                            const ethPriceInUsd = Number(ethPrice.toString()) / 1e6;
+                            // Calculate USD directly from ETH amount
+                            const gasCostInUsd = gasCostInEth * ethPriceInUsd;
+                            
+                            console.log("Gas cost in Wei:", gasCostInWei.toString());
+                            console.log("Gas cost in ETH:", gasCostInEth.toFixed(18));
+                            console.log("ETH price in USD:", ethPriceInUsd.toFixed(2));
+                            console.log("Gas cost in USD:", gasCostInUsd.toFixed(6));
+                            
+                            return `${formatter.number(gas.toString())} ($${gasCostInUsd.toFixed(6)})`;
                           })()}
                         </div>
                       </div>
