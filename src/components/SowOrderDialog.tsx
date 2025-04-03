@@ -25,6 +25,7 @@ import { InfoOutlinedIcon, WarningIcon } from "@/components/Icons";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import stalkIcon from "@/assets/protocol/Stalk.png";
 import seedIcon from "@/assets/protocol/Seed.png";
+import { usePriceData } from "@/state/usePriceData";
 
 interface SowOrderDialogProps {
   open: boolean;
@@ -37,6 +38,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const farmerSilo = useFarmerSiloNew();
   const farmerDeposits = farmerSilo.deposits;
   const { whitelistedTokens } = useTokenData();
+  const priceData = usePriceData();
   const [minSoil, setMinSoil] = useState("");
   const [maxPerSeason, setMaxPerSeason] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -253,6 +255,41 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     return "Select Deposited Silo Token";
   };
 
+  // Add a function to get the dollar value for the selected strategy
+  const getSelectedTokenDollarValue = () => {
+    if (selectedTokenStrategy.type === "SPECIFIC_TOKEN" && selectedTokenStrategy.address) {
+      const token = whitelistedTokens.find(t => t.address === selectedTokenStrategy.address);
+      
+      // If it's PINTO token, use its direct value multiplied by price
+      if (token?.symbol === "PINTO") {
+        const pintoDeposit = farmerDeposits.get(token);
+        return pintoDeposit?.amount ? pintoDeposit.amount.mul(priceData.price) : TokenValue.ZERO;
+      }
+      
+      return swapResults.get(selectedTokenStrategy.address) || TokenValue.ZERO;
+    } else if (selectedTokenStrategy.type === "LOWEST_PRICE" || selectedTokenStrategy.type === "LOWEST_SEEDS") {
+      // Sum all token dollar values
+      let totalValue = TokenValue.ZERO;
+      
+      // Include PINTO tokens in the calculation
+      const pintoToken = whitelistedTokens.find(t => t.symbol === "PINTO");
+      if (pintoToken) {
+        const pintoDeposit = farmerDeposits.get(pintoToken);
+        if (pintoDeposit?.amount) {
+          totalValue = totalValue.add(pintoDeposit.amount.mul(priceData.price));
+        }
+      }
+      
+      // Add all LP token values
+      swapResults.forEach((value) => {
+        totalValue = totalValue.add(value);
+      });
+      
+      return totalValue;
+    }
+    return TokenValue.ZERO;
+  };
+
   if (!open) return null;
 
   const inputIds = {
@@ -315,7 +352,14 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   className="flex items-center justify-between h-12 px-4 py-3 border border-[#D9D9D9] rounded-xl bg-white"
                   onClick={() => setShowTokenSelectionDialog(true)}
                 >
-                  <span className="text-[#404040]">{getSelectedTokenDisplay()}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#404040]">{getSelectedTokenDisplay()}</span>
+                    {getSelectedTokenDollarValue().gt(0) && (
+                      <span className="text-[#9C9C9C] text-sm">
+                        (${formatter.number(getSelectedTokenDollarValue(), { minDecimals: 2, maxDecimals: 2 })})
+                      </span>
+                    )}
+                  </div>
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M5 7.5L10 12.5L15 7.5" stroke="#404040" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -626,7 +670,12 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   {whitelistedTokens.map((token) => {
                     const deposit = farmerDeposits.get(token);
                     const amount = deposit?.amount || TokenValue.ZERO;
-                    const pintoAmount = swapResults.get(token.address) || TokenValue.ZERO;
+                    
+                    // Calculate dollar value - use price for PINTO, swap results for LP tokens
+                    const pintoAmount = token.symbol === "PINTO" 
+                      ? amount.mul(priceData.price) 
+                      : swapResults.get(token.address) || TokenValue.ZERO;
+                      
                     const isSelected = selectedTokenStrategy.type === "SPECIFIC_TOKEN" && 
                                       selectedTokenStrategy.address === token.address;
 
