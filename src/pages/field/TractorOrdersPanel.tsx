@@ -237,20 +237,20 @@ const TractorOrdersPanel = () => {
                 <div className="flex items-center gap-0">
                   {/* Withdraw pill */}
                   <div className="flex items-center px-2 py-1 bg-pinto-green-4 rounded-xl">
-                    <span className="text-white text-sm font-antarctica font-normal">Withdraw</span>
+                    <span className="text-white text-sm font-antarctica font-normal whitespace-nowrap">Withdraw</span>
                   </div>
                   {/* Divider */}
                   <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
                   {/* From label */}
                   <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
-                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">from Deposited Tokens</span>
+                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap">from Deposited Tokens</span>
                   </div>
                   {/* Divider */}
                   <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
                   {/* With best */}
                   <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
                     <div className="flex items-center gap-1">
-                      <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">
+                      <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap">
                         {data.sourceTokenIndices.includes(255) 
                           ? "with Lowest" 
                           : data.sourceTokenIndices.includes(254) 
@@ -258,7 +258,7 @@ const TractorOrdersPanel = () => {
                             : "with Specific"}
                       </span>
                       <IconImage src={pintoIcon} size={4} />
-                      <span className="text-black text-sm font-antarctica font-thin">
+                      <span className="text-black text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">
                         {getTokenNameByIndex(data.sourceTokenIndices[0])}
                       </span>
                     </div>
@@ -267,24 +267,24 @@ const TractorOrdersPanel = () => {
                   <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
                   {/* Sow pill */}
                   <div className="flex items-center px-2 py-1 bg-pinto-green-4 rounded-xl">
-                    <span className="text-white text-sm font-antarctica font-normal">Sow</span>
+                    <span className="text-white text-sm font-antarctica font-normal whitespace-nowrap">Sow</span>
                   </div>
                   {/* Divider */}
                   <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
                   {/* Up to */}
                   <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
                     <div className="flex items-center gap-1">
-                      <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">up to</span>
+                      <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap">up to</span>
                       <IconImage src={pintoIcon} size={4} />
-                      <span className="text-pinto-green-4 text-sm font-antarctica font-thin">{formatter.number(totalAmount)} PINTO</span>
+                      <span className="text-pinto-green-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">{formatter.number(totalAmount)} PINTO</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-pinto-gray-4 text-sm font-antarctica">Operator Tip:</span>
+                  <span className="text-pinto-gray-4 text-sm font-antarctica whitespace-nowrap">Operator Tip:</span>
                   <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl flex items-center gap-1">
                     <IconImage src={pintoIcon} size={4} />
-                    <span className="text-pinto-green-4 text-sm font-antarctica font-thin">{formatter.number(TokenValue.fromBlockchain(data.operatorParams.operatorTipAmount, 6))} PINTO</span>
+                    <span className="text-pinto-green-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">{formatter.number(TokenValue.fromBlockchain(data.operatorParams.operatorTipAmount, 6))} PINTO</span>
                   </div>
                 </div>
               </div>
@@ -296,24 +296,24 @@ const TractorOrdersPanel = () => {
                     <CornerBottomLeftIcon
                       className="h-4 w-4 text-pinto-gray-4"
                     />
-                    <span className="text-pinto-gray-4 text-sm font-menlo font-thin">Execute when Temperature is at least {formatPercentage(data.minTemp)}</span>
+                    <span className="text-pinto-gray-4 text-sm font-menlo font-thin whitespace-nowrap overflow-hidden text-ellipsis">Execute when Temperature is at least {formatPercentage(data.minTemp)}</span>
                   </div>
                   <div className="flex items-center pl-6 gap-2">
                     <CornerBottomLeftIcon
                       className="h-4 w-4 text-pinto-gray-4"
                     />
-                    <span className="text-pinto-gray-4 text-sm font-menlo">AND when Pod Line Length is at most {formatter.number(TokenValue.fromHuman(data.maxPodlineLengthAsString, 6))}</span>
+                    <span className="text-pinto-gray-4 text-sm font-menlo whitespace-nowrap overflow-hidden text-ellipsis">AND when Pod Line Length is at most {formatter.number(TokenValue.fromHuman(data.maxPodlineLengthAsString, 6))}</span>
                   </div>
                   <div className="flex items-center pl-6 gap-2">
                     <CornerBottomLeftIcon
                       className="h-4 w-4 text-pinto-gray-4"
                     />
-                    <span className="text-pinto-gray-4 text-sm font-menlo">AND when Available Soil is at least {data.sowAmounts.minAmountToSowPerSeasonAsString}</span>
+                    <span className="text-pinto-gray-4 text-sm font-menlo whitespace-nowrap overflow-hidden text-ellipsis">AND when Available Soil is at least {data.sowAmounts.minAmountToSowPerSeasonAsString}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <IconImage src={pintoIcon} size={4} />
-                  <span className="text-pinto-gray-4 text-sm font-antarctica">PINTO Sown through this Order: {formatter.number(totalSown)}/{formatter.number(totalAmount)}</span>
+                  <span className="text-pinto-gray-4 text-sm font-antarctica whitespace-nowrap overflow-hidden text-ellipsis">PINTO Sown through this Order: {formatter.number(totalSown)}/{formatter.number(totalAmount)}</span>
                 </div>
               </div>
               
