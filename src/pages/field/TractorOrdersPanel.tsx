@@ -18,6 +18,7 @@ import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import IconImage from "@/components/ui/IconImage";
 import pintoIcon from "@/assets/tokens/PINTO.png";
 import { CornerBottomLeftIcon } from "@radix-ui/react-icons";
+import { getTokenNameByIndex } from "@/utils/token";
 
 type ExecutionData = Awaited<ReturnType<typeof fetchTractorExecutions>>[number];
 
@@ -249,9 +250,17 @@ const TractorOrdersPanel = () => {
                   {/* With best */}
                   <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
                     <div className="flex items-center gap-1">
-                      <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">with Best</span>
+                      <span className="text-pinto-gray-4 text-sm font-antarctica font-thin">
+                        {data.sourceTokenIndices.includes(255) 
+                          ? "with Lowest" 
+                          : data.sourceTokenIndices.includes(254) 
+                            ? "with Best" 
+                            : "with Specific"}
+                      </span>
                       <IconImage src={pintoIcon} size={4} />
-                      <span className="text-black text-sm font-antarctica font-thin">PINTO Price</span>
+                      <span className="text-black text-sm font-antarctica font-thin">
+                        {getTokenNameByIndex(data.sourceTokenIndices[0])}
+                      </span>
                     </div>
                   </div>
                   {/* Divider */}
