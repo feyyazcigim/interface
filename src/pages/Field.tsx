@@ -32,6 +32,7 @@ import FieldStats from "./field/FieldStats";
 import MorningPanel from "./field/MorningPanel";
 import TemperatureChart from "./field/Temperature";
 import TractorOrdersPanel from "./field/TractorOrdersPanel";
+import FieldActivity from "./field/FieldActivity";
 
 function Field() {
   useUpdateMorningTemperatureOnInterval();
@@ -39,7 +40,7 @@ function Field() {
   const farmerField = useFarmerField();
   const harvestableIndex = useHarvestableIndex();
   const harvestableIndexLoading = useHarvestableIndexLoading();
-  const [activeTab, setActiveTab] = useState<'pods' | 'tractor'>('pods');
+  const [activeTab, setActiveTab] = useState<'activity' | 'pods' | 'tractor'>('activity');
 
   const hasPods = farmerField.plots.length > 0;
   const totalPods = useMemo(
@@ -118,6 +119,12 @@ function Field() {
               <div className="flex flex-row justify-between items-center">
                 <div className="flex space-x-1">
                   <button 
+                    className={`pinto-h3 py-2 px-4 ${activeTab === 'activity' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    onClick={() => setActiveTab('activity')}
+                  >
+                    Field Activity
+                  </button>
+                  <button 
                     className={`pinto-h3 py-2 px-4 ${activeTab === 'pods' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
                     onClick={() => setActiveTab('pods')}
                   >
@@ -142,6 +149,10 @@ function Field() {
                   </div>
                 )}
               </div>
+              
+              {activeTab === 'activity' && (
+                <FieldActivity />
+              )}
               
               {activeTab === 'pods' && (
                 <div>{hasPods ? <PlotsTable showClaimable disableHover /> : <EmptyTable type="plots-field" />}</div>
