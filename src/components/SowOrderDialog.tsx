@@ -4,7 +4,7 @@ import { Input } from "./ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 import { usePodLine } from "@/state/useFieldData";
 import { TokenValue } from "@/classes/TokenValue";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { formatter } from "@/utils/format";
 import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
 import useTokenData from "@/state/useTokenData";
@@ -35,6 +35,8 @@ interface SowOrderDialogProps {
 export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogProps) {
   const podLine = usePodLine();
   const [podLineLength, setPodLineLength] = useState("");
+  const [rawPodLineLength, setRawPodLineLength] = useState(""); // Track raw input
+  const podLineLengthTimeoutRef = useRef<NodeJS.Timeout | null>(null); // For debounce
   const farmerSilo = useFarmerSiloNew();
   const farmerDeposits = farmerSilo.deposits;
   const { whitelistedTokens } = useTokenData();
@@ -89,15 +91,51 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   // Add state for the review dialog
   const [showReview, setShowReview] = useState(false);
 
+  // Function to format number with commas
+  const formatNumberWithCommas = (value: string) => {
+    // Remove any existing commas
+    const cleanValue = value.replace(/,/g, "");
+    // Format with commas but preserve decimal portion
+    const parts = cleanValue.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join('.');
+  };
+
+  // Handle debounced formatting for pod line length
+  useEffect(() => {
+    if (rawPodLineLength) {
+      // Clear existing timeout
+      if (podLineLengthTimeoutRef.current) {
+        clearTimeout(podLineLengthTimeoutRef.current);
+      }
+      
+      // Set new timeout
+      podLineLengthTimeoutRef.current = setTimeout(() => {
+        setPodLineLength(formatNumberWithCommas(rawPodLineLength));
+      }, 500); // 500ms debounce
+    }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (podLineLengthTimeoutRef.current) {
+        clearTimeout(podLineLengthTimeoutRef.current);
+      }
+    };
+  }, [rawPodLineLength]);
+
   const handlePodLineSelect = (increment: number) => {
     if (increment === 0) {
       // Set to current pod line length in human readable format
-      setPodLineLength(formatter.number(podLine));
+      const formattedValue = formatter.number(podLine);
+      setPodLineLength(formattedValue);
+      setRawPodLineLength(formattedValue.replace(/,/g, ""));
     } else {
       // Calculate new value with percentage increase
       const increase = podLine.mul(increment).div(100);
       const newValue = podLine.add(increase);
-      setPodLineLength(formatter.number(newValue));
+      const formattedValue = formatter.number(newValue);
+      setPodLineLength(formattedValue);
+      setRawPodLineLength(formattedValue.replace(/,/g, ""));
     }
   };
 
@@ -133,7 +171,9 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   useEffect(() => {
     const increase = podLine.mul(100).div(100); // Calculate 100% increase
     const newValue = podLine.add(increase);
-    setPodLineLength(formatter.number(newValue));
+    const formattedValue = formatter.number(newValue);
+    setPodLineLength(formattedValue);
+    setRawPodLineLength(formattedValue.replace(/,/g, ""));
   }, [podLine]); // Only run when podLine changes
 
   // Add a function to calculate what the value would be for a given percentage
@@ -442,7 +482,19 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   } rounded-xl`}
                   placeholder="9,000,000"
                   value={podLineLength}
-                  onChange={(e) => setPodLineLength(e.target.value)}
+                  onChange={(e) => {
+                    // Allow numbers, commas, and at most one decimal point
+                    const value = e.target.value.replace(/[^\d,\.]/g, "");
+                    // Ensure at most one decimal point
+                    const decimalCount = (value.match(/\./g) || []).length;
+                    const sanitizedValue = decimalCount > 1 
+                      ? value.replace(/\./g, (match, index) => index === value.indexOf('.') ? match : '')
+                      : value;
+                    
+                    // Store raw input and update displayed value
+                    setRawPodLineLength(sanitizedValue.replace(/,/g, ""));
+                    setPodLineLength(sanitizedValue);
+                  }}
                 />
                 {!isPodLineLengthValid() && (
                   <div className="bg-red-100 border border-red-300 text-red-600 px-4 py-3 rounded-lg flex items-start gap-2">
