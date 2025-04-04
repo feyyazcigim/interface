@@ -353,6 +353,14 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   onClick={() => setShowTokenSelectionDialog(true)}
                 >
                   <div className="flex items-center gap-2">
+                    {selectedTokenStrategy.type === "SPECIFIC_TOKEN" && (
+                      <IconImage 
+                        src={whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.logoURI || ""} 
+                        alt="token" 
+                        size={6} 
+                        className="rounded-full"
+                      />
+                    )}
                     <span className="text-[#404040]">{getSelectedTokenDisplay()}</span>
                     {getSelectedTokenDollarValue().gt(0) && (
                       <span className="text-[#9C9C9C] text-sm">
