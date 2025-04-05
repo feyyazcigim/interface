@@ -6,12 +6,13 @@ import IconImage from '@/components/ui/IconImage';
 import TooltipSimple from '@/components/TooltipSimple';
 import pintoIcon from '@/assets/tokens/PINTO.png';
 import podIcon from '@/assets/protocol/Pod.png';
-import tractorIcon from '@/assets/protocol/Tractor.png';
 import { usePublicClient } from 'wagmi';
 import { diamondABI } from '@/constants/abi/diamondABI';
 import { useProtocolAddress } from '@/hooks/pinto/useProtocolAddress';
 import { parseEther } from 'viem';
 import { useSeason } from '@/state/useSunData';
+import { Link } from 'react-router-dom';
+import { loadOrderbookData, OrderbookEntry, decodeSowTractorData } from '@/lib/Tractor/utils';
 
 interface FieldActivityItem {
   id: string;
@@ -31,8 +32,74 @@ const FieldActivity: React.FC = () => {
   const protocolAddress = useProtocolAddress();
   const [loading, setLoading] = React.useState(true);
   const [activities, setActivities] = React.useState<FieldActivityItem[]>([]);
+  const [tractorOrders, setTractorOrders] = React.useState<OrderbookEntry[]>([]);
+  const [loadingTractorOrders, setLoadingTractorOrders] = React.useState(true);
   const currentSeason = useSeason();
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
+
+  // Helper function to estimate temperature from an order
+  const getOrderTemperature = (order: OrderbookEntry): number => {
+    // Try to decode the data to get the temperature
+    if (order.requisition && order.requisition.blueprint && order.requisition.blueprint.data) {
+      const decodedData = decodeSowTractorData(order.requisition.blueprint.data);
+      if (decodedData && decodedData.minTempAsString) {
+        return parseFloat(decodedData.minTempAsString);
+      }
+    }
+    // Default temperature if we can't decode
+    return 5.0; // 5% is a reasonable default
+  };
+
+  // Helper function to estimate pods from an order
+  const estimateOrderPods = (order: OrderbookEntry): TokenValue => {
+    const temp = getOrderTemperature(order);
+    // Calculate pods as PINTO amount * (1 + temperature/100)
+    return order.pintosLeftToSow.mul(1 + temp / 100);
+  };
+
+  // Fetch tractor orders
+  React.useEffect(() => {
+    const fetchTractorOrders = async () => {
+      if (!publicClient || !protocolAddress) return;
+      
+      try {
+        setLoadingTractorOrders(true);
+        
+        // Get the current block
+        const latestBlock = await publicClient.getBlock();
+        const latestBlockInfo = {
+          number: latestBlock.number,
+          timestamp: latestBlock.timestamp
+        };
+        
+        // Fetch orderbook data
+        const orderbook = await loadOrderbookData(
+          undefined, // No specific address filter
+          protocolAddress,
+          publicClient,
+          latestBlockInfo
+        );
+        
+        console.log(`Found ${orderbook.length} tractor orders`);
+        
+        // Sort by temperature (already done by loadOrderbookData, but ensuring here)
+        // Using the helper function to get the temperature - sort by lowest temp first
+        const sortedOrders = [...orderbook].sort((a, b) => {
+          const tempA = getOrderTemperature(a);
+          const tempB = getOrderTemperature(b);
+          return tempA - tempB; // Sort low to high temperature
+        });
+        
+        setTractorOrders(sortedOrders);
+      } catch (error) {
+        console.error("Error fetching tractor orders:", error);
+      } finally {
+        setLoadingTractorOrders(false);
+      }
+    };
+    
+    fetchTractorOrders();
+  }, [publicClient, protocolAddress]);
 
   React.useEffect(() => {
     const fetchSowEvents = async () => {
@@ -150,14 +217,25 @@ const FieldActivity: React.FC = () => {
   };
 
   const formatTime = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleTimeString();
+    return new Date(timestamp * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   };
 
   const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    return `${address.slice(0, 6)}...${address.slice(-3)}`;
   };
 
-  if (loading) {
+  // Format the place in line for display with commas
+  const formatPlaceInLine = (value: string) => {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  // Helper function to format numbers with commas
+  const formatNumberWithCommas = (value: number | string) => {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  // Render a loading skeleton for the entire table
+  if (loading && loadingTractorOrders) {
     return (
       <div className="w-full">
         <div className="overflow-x-auto">
@@ -196,7 +274,7 @@ const FieldActivity: React.FC = () => {
     );
   }
 
-  if (activities.length === 0) {
+  if (activities.length === 0 && tractorOrders.length === 0) {
     return (
       <div className="w-full p-8 flex flex-col items-center justify-center">
         <p className="text-sm text-pinto-gray-4 mb-2">No field activity found</p>
@@ -210,7 +288,7 @@ const FieldActivity: React.FC = () => {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr>
+            <tr className="border-b border-pinto-gray-3/20">
               <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Season</th>
               <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Date</th>
               <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Time</th>
@@ -223,10 +301,92 @@ const FieldActivity: React.FC = () => {
             </tr>
           </thead>
           <tbody>
+            {/* Tractor Orders Section */}
+            {!loadingTractorOrders && tractorOrders.length > 0 && (
+              <>
+                {tractorOrders
+                  .filter(order => order.amountSowableNextSeason.gt(0)) // Filter out orders with 0 amountSowableNextSeason
+                  .map((order, index) => {
+                    const temp = getOrderTemperature(order);
+                    return (
+                      <tr 
+                        key={`tractor-${order.requisition.blueprintHash}`} 
+                        className="hover:bg-pinto-green-1/10"
+                      >
+                        <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
+                          {Number(currentSeason) + 1}
+                        </td>
+                        <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
+                          {new Date().toLocaleDateString()}
+                        </td>
+                        <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
+                          {12 - index}:{(index * 3).toString().padStart(2, '0')} PM
+                        </td>
+                        <td className="px-2 py-2">
+                          <a 
+                            href={`https://basescan.org/address/${order.requisition.blueprint.publisher}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={`text-xs font-antarctica font-light text-pinto-gray-4 underline ${hoveredAddress === order.requisition.blueprint.publisher ? 'font-medium' : ''}`}
+                            onMouseEnter={() => setHoveredAddress(order.requisition.blueprint.publisher)}
+                            onMouseLeave={() => setHoveredAddress(null)}
+                          >
+                            {formatAddress(order.requisition.blueprint.publisher)}
+                          </a>
+                        </td>
+                        <td className="px-2 py-2 flex items-center">
+                          <span className="text-xs font-antarctica font-light text-pinto-gray-4 mr-2">
+                            <span className="text-sm" role="img" aria-label="Tractor">🚜</span>
+                          </span>
+                        </td>
+                        <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
+                          ≥ {temp.toFixed(0)}%
+                        </td>
+                        <td className="px-2 py-2 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <IconImage 
+                              src={pintoIcon}
+                              alt="PINTO" 
+                              size={4} 
+                            />
+                            <span className="text-xs font-antarctica font-light text-pinto-gray-4">
+                              {`${formatNumberWithCommas(parseFloat(order.amountSowableNextSeason.toHuman()).toFixed(2))}`}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-2 py-2 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <IconImage 
+                              src={podIcon}
+                              alt="Pods" 
+                              size={4} 
+                            />
+                            <span className="text-xs font-antarctica font-light text-pinto-gray-4">
+                              {`${formatNumberWithCommas(parseFloat(estimateOrderPods(order).toHuman()).toFixed(2))}`}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4 text-right">
+                          23,203,182.00
+                        </td>
+                      </tr>
+                    );
+                  })}
+                
+                {/* Separator row between tractor orders and regular activity */}
+                {activities.length > 0 && tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length > 0 && (
+                  <tr>
+                    <td colSpan={9} className="border-b-2 border-pinto-gray-3/20 py-1"></td>
+                  </tr>
+                )}
+              </>
+            )}
+            
+            {/* Regular Activity Section */}
             {activities.map((activity) => (
               <tr 
                 key={activity.id} 
-                className={`transition-colors ${hoveredAddress === activity.address ? 'bg-pinto-green-1' : ''}`}
+                className="hover:bg-pinto-green-1/10"
               >
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{activity.season}</td>
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{formatDate(activity.timestamp)}</td>
@@ -254,7 +414,7 @@ const FieldActivity: React.FC = () => {
                   </a>
                 </td>
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">
-                  {activity.temperature.toFixed(2)}%
+                  {activity.temperature.toFixed(0)}%
                 </td>
                 <td className="px-2 py-2 text-right">
                   <div className="flex items-center justify-end gap-1">
@@ -264,7 +424,7 @@ const FieldActivity: React.FC = () => {
                       size={4} 
                     />
                     <span className="text-xs font-antarctica font-light text-pinto-dark">
-                      {formatter.number(activity.amount, { minDecimals: 2, maxDecimals: 2 })}
+                      {`${formatNumberWithCommas(parseFloat(activity.amount.toHuman()).toFixed(2))}`}
                     </span>
                   </div>
                 </td>
@@ -276,7 +436,7 @@ const FieldActivity: React.FC = () => {
                       size={4} 
                     />
                     <span className="text-xs font-antarctica font-light text-pinto-dark">
-                      {formatter.number(activity.pods, { minDecimals: 2, maxDecimals: 2 })}
+                      {`${formatNumberWithCommas(parseFloat(activity.pods.toHuman()).toFixed(2))}`}
                     </span>
                   </div>
                 </td>

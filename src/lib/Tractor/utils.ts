@@ -766,6 +766,7 @@ export interface OrderbookEntry extends Omit<RequisitionEvent, 'decodedData'> {
   pintosLeftToSow: TokenValue;
   totalAvailablePinto: TokenValue;
   currentlySowable: TokenValue;
+  amountSowableNextSeason: TokenValue;
   withdrawalPlan?: WithdrawalPlan;
 }
 
@@ -917,10 +918,10 @@ export async function loadOrderbookData(
               publisherWithdrawalPlans[publisher].push(withdrawalPlan);
             }
             
-          } catch (error: any) {
+          } catch (error) {
             console.error("Failed to get updated withdrawal plan:", error);
             // If the error is "No beans available", set the plan to empty
-            if (error.message?.includes("No beans available")) {
+            if (error instanceof Error && error.message?.includes("No beans available")) {
               console.log("No beans available for this order, setting available PINTO to 0");
               withdrawalPlan = {
                 sourceTokens: [] as readonly `0x${string}`[],
@@ -939,11 +940,21 @@ export async function loadOrderbookData(
         console.log(`Total available PINTO: ${totalAvailablePinto.toHuman()}`);
         console.log(`Currently sowable: ${currentlySowable.toHuman()}`);
         
+        // Calculate amountSowableNextSeason as the lesser of currentlySowable and minAmountToSowPerSeason
+        let amountSowableNextSeason = currentlySowable;
+        if (decodedData && decodedData.sowAmounts.minAmountToSowPerSeason) {
+          const minAmountPerSeason = TokenValue.fromBlockchain(decodedData.sowAmounts.minAmountToSowPerSeason, 6);
+          amountSowableNextSeason = TokenValue.min(currentlySowable, minAmountPerSeason);
+          console.log(`Min amount to sow per season: ${minAmountPerSeason.toHuman()}`);
+          console.log(`Amount sowable next season: ${amountSowableNextSeason.toHuman()}`);
+        }
+        
         orderbookData.push({
           ...requisition,
           pintosLeftToSow: finalPintosLeft,
           totalAvailablePinto,
           currentlySowable,
+          amountSowableNextSeason,
           withdrawalPlan
         });
         
@@ -954,6 +965,7 @@ export async function loadOrderbookData(
           pintosLeftToSow: TokenValue.ZERO,
           totalAvailablePinto: TokenValue.ZERO,
           currentlySowable: TokenValue.ZERO,
+          amountSowableNextSeason: TokenValue.ZERO,
           withdrawalPlan: undefined,
         });
       }
