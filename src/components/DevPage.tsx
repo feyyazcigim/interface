@@ -23,7 +23,7 @@ import Text from "./ui/Text";
 import { mockAddressAtom } from "@/Web3Provider";
 import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
-import { siloHelpersABI } from "@/constants/abi/SiloHelpersABI";
+import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
@@ -38,7 +38,7 @@ const publicClient = createPublicClient({
 });
 
 // Merge the ABIs
-const combinedABI = [...beanstalkAbi, ...sowBlueprintv0ABI, ...siloHelpersABI, ...erc20Abi];
+const combinedABI = [...beanstalkAbi, ...sowBlueprintv0ABI, ...tractorHelpersABI, ...erc20Abi];
 
 export default function DevPage() {
   const { address } = useAccount();
@@ -394,7 +394,7 @@ export default function DevPage() {
               <Button onClick={() => executeTask("updateOracleTimeouts")} disabled={loading === "updateOracleTimeouts"}>
                 Update Oracle Timeouts
               </Button>
-              <Button onClick={() => executeTask("deploySiloHelpers")} disabled={loading === "deploySiloHelpers"}>
+              <Button onClick={() => executeTask("TractorHelpers")} disabled={loading === "TractorHelpers"}>
                 Deploy Tractor Stuff
               </Button>
               <Button

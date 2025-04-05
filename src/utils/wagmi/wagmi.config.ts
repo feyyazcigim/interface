@@ -28,7 +28,7 @@ import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
  */
 import { viewSeasonABI } from "@/constants/abi/viewSeasonABI";
 import { viewSiloABI } from "@/constants/abi/viewSiloABI";
-import { siloHelpersABI } from "@/constants/abi/SiloHelpersABI";
+import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 
 // Export these constants so they can be imported elsewhere
 export const SILO_HELPERS_ADDRESS = "0x8D75F9F7f4F4C4eFAB9402261bC864f21DF0c649" as const;
@@ -122,7 +122,7 @@ const config = defineConfig(() => {
       },
       {
         name: "siloHelpers",
-        abi: siloHelpersABI as Abi,
+        abi: tractorHelpersABI as Abi,
         address: {
           [mainnet.id]: SILO_HELPERS_ADDRESS,
           [arbitrum.id]: SILO_HELPERS_ADDRESS,

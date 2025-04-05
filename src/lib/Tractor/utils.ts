@@ -10,7 +10,7 @@ import { PublicClient } from "viem";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import { SILO_HELPERS_ADDRESS, SOW_BLUEPRINT_V0_ADDRESS, SOW_BLUEPRINT_V0_SELECTOR } from "@/constants/address";
-import { siloHelpersABI } from "@/constants/abi/SiloHelpersABI";
+import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 
 /**
  * Encodes three uint80 values into a bytes32 value in the format:
@@ -44,7 +44,7 @@ export type TokenStrategy =
 async function getTokenIndex(publicClient: PublicClient, tokenAddress: `0x${string}`): Promise<number> {
   const index = await publicClient.readContract({
     address: SILO_HELPERS_ADDRESS,
-    abi: siloHelpersABI,
+    abi: tractorHelpersABI,
     functionName: 'getTokenIndex',
     args: [tokenAddress]
   });
@@ -823,7 +823,7 @@ export async function loadOrderbookData(
           if (decodedData) {
             withdrawalPlan = await publicClient.readContract({
               address: SILO_HELPERS_ADDRESS,
-              abi: siloHelpersABI,
+              abi: tractorHelpersABI,
               functionName: 'getWithdrawalPlan',
               args: [
                 requisition.requisition.blueprint.publisher,
@@ -919,7 +919,7 @@ export async function loadOrderbookData(
           // Combine all existing withdrawal plans for this publisher
           const combinedPlan = (await publicClient.readContract({
             address: SILO_HELPERS_ADDRESS,
-            abi: siloHelpersABI,
+            abi: tractorHelpersABI,
             functionName: 'combineWithdrawalPlans',
             args: [existingPlans]
           })) as any;
@@ -952,7 +952,7 @@ export async function loadOrderbookData(
         
         updatedWithdrawalPlan = await publicClient.readContract({
           address: SILO_HELPERS_ADDRESS,
-          abi: siloHelpersABI,
+          abi: tractorHelpersABI,
           functionName: 'getWithdrawalPlan',
           args: [
             publisher,
