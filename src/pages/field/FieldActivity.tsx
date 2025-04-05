@@ -12,7 +12,7 @@ import { useProtocolAddress } from '@/hooks/pinto/useProtocolAddress';
 import { parseEther } from 'viem';
 import { useSeason } from '@/state/useSunData';
 import { Link } from 'react-router-dom';
-import { loadOrderbookData, OrderbookEntry, decodeSowTractorData } from '@/lib/Tractor/utils';
+import { loadOrderbookData, OrderbookEntry, decodeSowTractorData, SowBlueprintData } from '@/lib/Tractor/utils';
 import { useHarvestableIndex } from '@/state/useFieldData';
 
 interface FieldActivityItem {
@@ -50,6 +50,38 @@ const FieldActivity: React.FC = () => {
     }
     // Default temperature if we can't decode
     return 5.0; // 5% is a reasonable default
+  };
+
+  // Helper function to get the decoded tractor data
+  const getDecodedTractorData = (order: OrderbookEntry): SowBlueprintData | null => {
+    if (order.requisition && order.requisition.blueprint && order.requisition.blueprint.data) {
+      return decodeSowTractorData(order.requisition.blueprint.data);
+    }
+    return null;
+  };
+
+  // Helper function to estimate execution time based on runBlocksAfterSunrise
+  const estimateExecutionTime = (order: OrderbookEntry): string => {
+    const decodedData = getDecodedTractorData(order);
+    
+    if (decodedData && decodedData.runBlocksAfterSunriseAsString) {
+      const runBlocks = parseInt(decodedData.runBlocksAfterSunriseAsString);
+      
+      // Estimate execution time as next hour + 2 seconds × runBlocksAfterSunrise
+      const now = new Date();
+      const nextHour = new Date(now);
+      nextHour.setHours(nextHour.getHours() + 1);
+      nextHour.setMinutes(0);
+      nextHour.setSeconds(0);
+      nextHour.setMilliseconds(0);
+      
+      // Add delay based on runBlocksAfterSunrise (2 seconds per block)
+      const estimatedTime = new Date(nextHour.getTime() + (runBlocks * 2 * 1000));
+      
+      return estimatedTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+    
+    return "-"; // Fallback value if we can't estimate
   };
 
   // Helper function to estimate pods from an order
@@ -331,7 +363,7 @@ const FieldActivity: React.FC = () => {
                           {new Date().toLocaleDateString()}
                         </td>
                         <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
-                          {12 - index}:{(index * 3).toString().padStart(2, '0')} PM
+                          {estimateExecutionTime(order)}
                         </td>
                         <td className="px-2 py-2">
                           <a 
