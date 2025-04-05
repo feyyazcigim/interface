@@ -767,6 +767,7 @@ export interface OrderbookEntry extends Omit<RequisitionEvent, 'decodedData'> {
   totalAvailablePinto: TokenValue;
   currentlySowable: TokenValue;
   amountSowableNextSeason: TokenValue;
+  estimatedPlaceInLine: TokenValue;
   withdrawalPlan?: WithdrawalPlan;
 }
 
@@ -794,6 +795,34 @@ export async function loadOrderbookData(
   if (!protocolAddress || !publicClient) return [];
 
   try {
+    // First, get the current pod line from the protocol
+    let currentPodLine = TokenValue.ZERO;
+    try {
+      // Get the current pod index and harvestable index to calculate the current pod line
+      const podIndexResult = await publicClient.readContract({
+        address: protocolAddress,
+        abi: diamondABI,
+        functionName: "podIndex",
+        args: [0n]
+      });
+      
+      const harvestableIndexResult = await publicClient.readContract({
+        address: protocolAddress,
+        abi: diamondABI,
+        functionName: "harvestableIndex",
+        args: [0n]
+      });
+      
+      if (podIndexResult && harvestableIndexResult) {
+        // Pod line is podIndex - harvestableIndex
+        currentPodLine = TokenValue.fromBlockchain(podIndexResult - harvestableIndexResult, 6);
+        console.log(`Current Pod Line: ${currentPodLine.toHuman()}`);
+      }
+    } catch (error) {
+      console.error("Failed to get current pod line:", error);
+      // Continue with zero if we can't get the current pod line
+    }
+
     const requisitions = await loadPublishedRequisitions(
       address,
       protocolAddress,
@@ -824,6 +853,9 @@ export async function loadOrderbookData(
     const orderbookData: OrderbookEntry[] = [];
     
     console.log("\nProcessing orderbook data:");
+
+    // Running total of place in line, starting with current pod line
+    let runningPlaceInLine = currentPodLine;
     
     for (let i = 0; i < requisitionsWithTemperature.length; i++) {
       const { requisition, decodedData } = requisitionsWithTemperature[i];
@@ -948,6 +980,27 @@ export async function loadOrderbookData(
           console.log(`Min amount to sow per season: ${minAmountPerSeason.toHuman()}`);
           console.log(`Amount sowable next season: ${amountSowableNextSeason.toHuman()}`);
         }
+
+        // Calculate the place in line for this order
+        const estimatedPlaceInLine = TokenValue.fromBlockchain(runningPlaceInLine.toBigInt(), 6);
+        console.log(`Estimated place in line: ${estimatedPlaceInLine.toHuman()}`);
+        
+        // If this order will have some pods sown next season, update the running place in line
+        // for future orders by adding this order's pod amount
+        if (amountSowableNextSeason.gt(0)) {
+          // Get the temperature for this order
+          const temp = decodedData 
+            ? parseFloat(decodedData.minTempAsString) 
+            : 0;
+          
+          // Calculate the pods that will be minted (PINTO amount * (1 + temperature/100))
+          const podsToMint = amountSowableNextSeason.mul(1 + temp / 100);
+          console.log(`Estimated pods to mint: ${podsToMint.toHuman()} (temp: ${temp}%)`);
+          
+          // Update the running place in line for the next order
+          runningPlaceInLine = runningPlaceInLine.add(podsToMint);
+          console.log(`Updated running place in line: ${runningPlaceInLine.toHuman()}`);
+        }
         
         orderbookData.push({
           ...requisition,
@@ -955,6 +1008,7 @@ export async function loadOrderbookData(
           totalAvailablePinto,
           currentlySowable,
           amountSowableNextSeason,
+          estimatedPlaceInLine,
           withdrawalPlan
         });
         
@@ -966,6 +1020,7 @@ export async function loadOrderbookData(
           totalAvailablePinto: TokenValue.ZERO,
           currentlySowable: TokenValue.ZERO,
           amountSowableNextSeason: TokenValue.ZERO,
+          estimatedPlaceInLine: TokenValue.fromBlockchain(runningPlaceInLine.toBigInt(), 6),
           withdrawalPlan: undefined,
         });
       }

@@ -13,6 +13,7 @@ import { parseEther } from 'viem';
 import { useSeason } from '@/state/useSunData';
 import { Link } from 'react-router-dom';
 import { loadOrderbookData, OrderbookEntry, decodeSowTractorData } from '@/lib/Tractor/utils';
+import { useHarvestableIndex } from '@/state/useFieldData';
 
 interface FieldActivityItem {
   id: string;
@@ -36,6 +37,7 @@ const FieldActivity: React.FC = () => {
   const [loadingTractorOrders, setLoadingTractorOrders] = React.useState(true);
   const currentSeason = useSeason();
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
+  const harvestableIndex = useHarvestableIndex();
 
   // Helper function to estimate temperature from an order
   const getOrderTemperature = (order: OrderbookEntry): number => {
@@ -54,7 +56,7 @@ const FieldActivity: React.FC = () => {
   const estimateOrderPods = (order: OrderbookEntry): TokenValue => {
     const temp = getOrderTemperature(order);
     // Calculate pods as PINTO amount * (1 + temperature/100)
-    return order.pintosLeftToSow.mul(1 + temp / 100);
+    return order.amountSowableNextSeason.mul(1 + temp / 100);
   };
 
   // Fetch tractor orders
@@ -163,8 +165,17 @@ const FieldActivity: React.FC = () => {
           // In a real implementation, you would get the actual season from the block timestamp
           const mockSeason = Math.max(Number(currentSeason) - 5 + index, 1);
           
-          // Place in line is 1e6 precision, so divide by 1e6
-          const placeInLine = formatter.number(Number(podIndex) / 1e6);
+          // Convert the podIndex to a TokenValue
+          const podIndexTV = TokenValue.fromBlockchain(podIndex, 6);
+          
+          // Get the harvestable index for calculating the place in line
+          const harvestableIndexValue = harvestableIndex || TokenValue.ZERO;
+          
+          // Calculate the actual place in line by subtracting the harvestable index
+          const actualPlaceInLine = podIndexTV.sub(harvestableIndexValue);
+          
+          // Format the place in line for display
+          const placeInLine = formatter.number(Math.max(0, Number(actualPlaceInLine.toHuman())));
           
           // Calculate temperature from the ratio of pods to beans
           // This represents the bonus percentage (pods/beans - 100%)
@@ -201,7 +212,7 @@ const FieldActivity: React.FC = () => {
     };
     
     fetchSowEvents();
-  }, [publicClient, protocolAddress, currentSeason]);
+  }, [publicClient, protocolAddress, currentSeason, harvestableIndex]);
 
   const formatType = (type: string) => {
     switch (type) {
@@ -367,7 +378,7 @@ const FieldActivity: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4 text-right">
-                          23,203,182.00
+                          {formatter.number(order.estimatedPlaceInLine.toNumber())}
                         </td>
                       </tr>
                     );
