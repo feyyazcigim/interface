@@ -73,8 +73,11 @@ const FieldActivity: React.FC = () => {
         // Limit to 100 events
         const limitedEvents = reversedEvents.slice(0, 100);
         
-        // Convert events to activity items
-        const activityItems: FieldActivityItem[] = limitedEvents.map((event, index) => {
+        // Process events one-at-a-time to ensure order-dependent calculations
+        const activityItems: FieldActivityItem[] = [];
+        
+        for (let index = 0; index < limitedEvents.length; index++) {
+          const event = limitedEvents[index];
           const { args, blockNumber, transactionHash } = event;
           
           // From the ABI, Sow event has: account, fieldId, index, beans, pods
@@ -107,7 +110,8 @@ const FieldActivity: React.FC = () => {
           // Subtract 100% to get the bonus percentage
           const temperature = Math.max(0, rawTemperature - 100);
           
-          return {
+          // Add to activity items in sequence
+          activityItems.push({
             id: `${transactionHash}-${index}`,
             timestamp,
             season: mockSeason,
@@ -118,8 +122,8 @@ const FieldActivity: React.FC = () => {
             placeInLine,
             address: account as string,
             txHash: transactionHash
-          };
-        });
+          });
+        }
         
         setActivities(activityItems);
       } catch (error) {

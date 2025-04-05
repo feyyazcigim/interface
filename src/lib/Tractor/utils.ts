@@ -802,231 +802,164 @@ export async function loadOrderbookData(
     );
 
     const activeRequisitions = requisitions.filter(req => !req.isCancelled);
+    
+    // Decode data and sort requisitions by temperature (lowest first)
+    const requisitionsWithTemperature = activeRequisitions.map(requisition => {
+      const decodedData = decodeSowTractorData(requisition.requisition.blueprint.data);
+      return {
+        requisition,
+        temperature: decodedData?.minTemp || 0n,
+        decodedData
+      };
+    });
+    
+    // Sort requisitions by temperature
+    requisitionsWithTemperature.sort((a, b) => Number(a.temperature - b.temperature));
+    
+    // Track used withdrawal plans per publisher for allocation priority
+    const publisherWithdrawalPlans: { [publisher: string]: any[] } = {};
+    
+    // Process requisitions in a single loop (already sorted by temperature)
+    const orderbookData: OrderbookEntry[] = [];
+    
+    console.log("\nProcessing orderbook data:");
+    
+    for (let i = 0; i < requisitionsWithTemperature.length; i++) {
+      const { requisition, decodedData } = requisitionsWithTemperature[i];
+      const publisher = requisition.requisition.blueprint.publisher;
+      
+      console.log(`\n--- Processing Order #${i + 1} ---`);
+      if (decodedData) {
+        console.log(`Temperature: ${decodedData.minTempAsString}%`);
+      }
+      console.log(`Publisher: ${publisher}`);
+      
+      try {
+        // Get pintos left to sow
+        const pintosLeft = await publicClient.readContract({
+          address: SOW_BLUEPRINT_V0_ADDRESS,
+          abi: sowBlueprintv0ABI,
+          functionName: 'getPintosLeftToSow',
+          args: [requisition.requisition.blueprintHash]
+        });
 
-    // First pass: Get all data and sort by temperature
-    let orderbookData = await Promise.all(
-      activeRequisitions.map(async (requisition): Promise<OrderbookEntryWithProcessingData> => {
-        try {
-          // Get pintos left to sow
-          const pintosLeft = await publicClient.readContract({
-            address: SOW_BLUEPRINT_V0_ADDRESS,
-            abi: sowBlueprintv0ABI,
-            functionName: 'getPintosLeftToSow',
-            args: [requisition.requisition.blueprintHash]
-          });
+        // If pintosLeft is zero, this means the storage slot hasn't been initialized yet
+        const finalPintosLeft = pintosLeft === 0n && decodedData
+          ? TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6)
+          : TokenValue.fromBlockchain(pintosLeft, 6);
+          
+        console.log(`Pintos Left to Sow: ${finalPintosLeft.toHuman()}`);
 
-          // Get withdrawal plan
-          const decodedData = decodeSowTractorData(requisition.requisition.blueprint.data);
-          let totalAvailablePinto = TokenValue.ZERO;
-          let withdrawalPlan;
-
-          if (decodedData) {
+        // Handle withdrawal plan calculation with temperature priority
+        let withdrawalPlan;
+        let totalAvailablePinto = TokenValue.ZERO;
+        
+        if (decodedData) {
+          // Get existing withdrawal plans for this publisher
+          const existingPlans = publisherWithdrawalPlans[publisher] || [];
+          console.log("Existing plans for publisher:", existingPlans.length);
+          
+          let combinedExistingPlan = null;
+          
+          // If we have existing plans, combine them
+          if (existingPlans.length > 0) {
+            try {
+              // Combine all existing withdrawal plans for this publisher
+              const combinedPlan = (await publicClient.readContract({
+                address: SILO_HELPERS_ADDRESS,
+                abi: tractorHelpersABI,
+                functionName: 'combineWithdrawalPlans',
+                args: [existingPlans]
+              })) as any;
+              
+              combinedExistingPlan = combinedPlan;
+              
+              console.log("Combined existing plans for publisher:", publisher);
+              console.log("Total available PINTO in combined plan:", 
+                TokenValue.fromBlockchain(combinedPlan.totalAvailableBeans, 6).toHuman());
+            } catch (error) {
+              console.error("Failed to combine withdrawal plans:", error);
+              combinedExistingPlan = null;
+            }
+          }
+          
+          // Get a new withdrawal plan that excludes deposits already allocated to other orders
+          try {
+            const emptyPlan = {
+              sourceTokens: [] as readonly `0x${string}`[],
+              stems: [] as readonly (readonly bigint[])[],
+              amounts: [] as readonly (readonly bigint[])[],
+              availableBeans: [] as readonly bigint[],
+              totalAvailableBeans: 0n
+            };
+            
             withdrawalPlan = await publicClient.readContract({
               address: SILO_HELPERS_ADDRESS,
               abi: tractorHelpersABI,
-              functionName: 'getWithdrawalPlan',
+              functionName: 'getWithdrawalPlanExcludingPlan',
               args: [
-                requisition.requisition.blueprint.publisher,
+                publisher,
                 decodedData.sourceTokenIndices,
                 decodedData.sowAmounts.totalAmountToSow,
                 decodedData.maxGrownStalkPerBdv,
+                combinedExistingPlan || emptyPlan
               ]
             });
-
-            // Fix: Ensure we're using the correct scaling for totalAvailableBeans
+            
+            console.log("Got updated withdrawal plan excluding existing orders");
             totalAvailablePinto = TokenValue.fromBlockchain(withdrawalPlan.totalAvailableBeans, 6);
             
-            // Add debug logging to help diagnose the issue
-            console.log(`Initial withdrawal plan for ${requisition.requisition.blueprint.publisher}:`);
-            console.log("Total tokens:", withdrawalPlan.sourceTokens.length);
-            console.log("Total available PINTO:", totalAvailablePinto.toHuman());
+            // Add this plan to the list of existing plans for future orders
+            if (withdrawalPlan.sourceTokens.length > 0) {
+              if (!publisherWithdrawalPlans[publisher]) {
+                publisherWithdrawalPlans[publisher] = [];
+              }
+              publisherWithdrawalPlans[publisher].push(withdrawalPlan);
+            }
+            
+          } catch (error: any) {
+            console.error("Failed to get updated withdrawal plan:", error);
+            // If the error is "No beans available", set the plan to empty
+            if (error.message?.includes("No beans available")) {
+              console.log("No beans available for this order, setting available PINTO to 0");
+              withdrawalPlan = {
+                sourceTokens: [] as readonly `0x${string}`[],
+                stems: [] as readonly (readonly bigint[])[],
+                amounts: [] as readonly (readonly bigint[])[],
+                availableBeans: [] as readonly bigint[],
+                totalAvailableBeans: 0n
+              };
+              totalAvailablePinto = TokenValue.ZERO;
+            }
           }
-
-          // If pintosLeft is zero, this means the storage slot hasn't been initialized yet
-          const finalPintosLeft = pintosLeft === 0n && decodedData
-            ? TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6)
-            : TokenValue.fromBlockchain(pintosLeft, 6);
-
-          return {
-            ...requisition,
-            pintosLeftToSow: finalPintosLeft,
-            totalAvailablePinto,
-            currentlySowable: TokenValue.min(finalPintosLeft, totalAvailablePinto),
-            decodedData,
-            withdrawalPlan,
-          };
-        } catch (error) {
-          console.error(`Failed to get data for requisition ${requisition.requisition.blueprintHash}:`, error);
-          return {
-            ...requisition,
-            pintosLeftToSow: TokenValue.ZERO,
-            totalAvailablePinto: TokenValue.ZERO,
-            currentlySowable: TokenValue.ZERO,
-            decodedData: null,
-            withdrawalPlan: undefined,
-          };
         }
-      })
-    );
 
-    // Sort by temperature first
-    orderbookData = orderbookData.sort((a, b) => {
-      const tempA = a.decodedData?.minTemp || 0n;
-      const tempB = b.decodedData?.minTemp || 0n;
-      return Number(tempA - tempB);
-    });
-
-    // Log the initial state of the orderbook
-    console.log("\nInitial orderbook state:");
-    orderbookData.forEach((entry, i) => {
-      if (entry.decodedData) {
-        console.log(`\nOrder #${i + 1}:`);
-        console.log(`Publisher: ${entry.requisition.blueprint.publisher}`);
-        console.log(`Temperature: ${entry.decodedData.minTempAsString}%`);
-        console.log(`Pintos Left: ${entry.pintosLeftToSow.toHuman()}`);
-        console.log(`Initial Available PINTO: ${entry.totalAvailablePinto.toHuman()}`);
-      }
-    });
-
-    // Second pass: Calculate available PINTO with temperature-based priority
-    // We'll track used withdrawal plans per publisher
-    const publisherWithdrawalPlans: { [publisher: string]: any[] } = {};
-
-    // Process orders sequentially instead of in parallel
-    for (let i = 0; i < orderbookData.length; i++) {
-      const entry = orderbookData[i];
-      if (!entry.withdrawalPlan || !entry.decodedData) {
-        continue;
-      }
-
-      const publisher = entry.requisition.blueprint.publisher;
-      console.log(`\n--- Processing Order #${i + 1} ---`);
-      console.log(`Temperature: ${entry.decodedData.minTempAsString}%`);
-      console.log(`Publisher: ${publisher}`);
-      console.log(`Pintos Left to Sow: ${entry.pintosLeftToSow.toHuman()}`);
-      
-      // Get existing withdrawal plans for this publisher
-      const existingPlans = publisherWithdrawalPlans[publisher] || [];
-      console.log("Current state of publisherWithdrawalPlans:", publisherWithdrawalPlans);
-      console.log("Existing plans for publisher:", existingPlans);
-      
-      let combinedExistingPlan = null;
-      
-      // If we have existing plans, combine them
-      if (existingPlans.length > 0) {
-        console.log("Found existing plans for this publisher:", existingPlans);
-        try {
-          // Combine all existing withdrawal plans for this publisher
-          const combinedPlan = (await publicClient.readContract({
-            address: SILO_HELPERS_ADDRESS,
-            abi: tractorHelpersABI,
-            functionName: 'combineWithdrawalPlans',
-            args: [existingPlans]
-          })) as any;
-          
-          combinedExistingPlan = combinedPlan;
-          
-          console.log("Combined existing plans for publisher:", publisher);
-          console.log("Total tokens in combined plan:", combinedPlan.sourceTokens.length);
-          console.log("Total available PINTO in combined plan:", 
-            TokenValue.fromBlockchain(combinedPlan.totalAvailableBeans, 6).toHuman());
-        } catch (error) {
-          console.error("Failed to combine withdrawal plans:", error);
-          // Fallback to no existing plan
-          combinedExistingPlan = null;
-        }
-      } else {
-        console.log("No existing plans for this publisher");
-      }
-      
-      // Get a new withdrawal plan that excludes deposits already allocated to other orders
-      let updatedWithdrawalPlan;
-      try {
-        const emptyPlan = {
-          sourceTokens: [] as readonly `0x${string}`[],
-          stems: [] as readonly (readonly bigint[])[],
-          amounts: [] as readonly (readonly bigint[])[],
-          availableBeans: [] as readonly bigint[],
-          totalAvailableBeans: 0n
-        };
+        // Calculate how much PINTO this order can use
+        const currentlySowable = TokenValue.min(finalPintosLeft, totalAvailablePinto);
+        console.log(`Total available PINTO: ${totalAvailablePinto.toHuman()}`);
+        console.log(`Currently sowable: ${currentlySowable.toHuman()}`);
         
-        updatedWithdrawalPlan = await publicClient.readContract({
-          address: SILO_HELPERS_ADDRESS,
-          abi: tractorHelpersABI,
-          functionName: 'getWithdrawalPlan',
-          args: [
-            publisher,
-            entry.decodedData.sourceTokenIndices,
-            entry.decodedData.sowAmounts.totalAmountToSow,
-            entry.decodedData.maxGrownStalkPerBdv,
-            combinedExistingPlan || emptyPlan
-          ]
+        orderbookData.push({
+          ...requisition,
+          pintosLeftToSow: finalPintosLeft,
+          totalAvailablePinto,
+          currentlySowable,
+          withdrawalPlan
         });
         
-        console.log("Got updated withdrawal plan excluding existing orders:");
-        console.log("Total tokens in plan:", updatedWithdrawalPlan.sourceTokens.length);
-        
-        // Log deposit details for each token
-        updatedWithdrawalPlan.sourceTokens.forEach((token, i) => {
-          console.log(`\nToken: ${token}`);
-          console.log(`Available beans: ${TokenValue.fromBlockchain(updatedWithdrawalPlan.availableBeans[i], 6).toHuman()} PINTO`);
-          
-          // Log stem and amount pairs
-          const stems = updatedWithdrawalPlan.stems[i];
-          const amounts = updatedWithdrawalPlan.amounts[i];
-          for (let j = 0; j < stems.length; j++) {
-            console.log(`- Stem ${stems[j].toString()}: ${TokenValue.fromBlockchain(amounts[j], 6).toHuman()} LP/PINTO (allocated)`);
-          }
+      } catch (error) {
+        console.error(`Failed to get data for requisition ${requisition.requisition.blueprintHash}:`, error);
+        orderbookData.push({
+          ...requisition,
+          pintosLeftToSow: TokenValue.ZERO,
+          totalAvailablePinto: TokenValue.ZERO,
+          currentlySowable: TokenValue.ZERO,
+          withdrawalPlan: undefined,
         });
-        
-      } catch (error: any) {
-        console.error("Failed to get updated withdrawal plan:", error);
-        // If the error is "No beans available", set the plan to empty
-        if (error.message?.includes("No beans available")) {
-          console.log("No beans available for this order, setting available PINTO to 0");
-          updatedWithdrawalPlan = {
-            sourceTokens: [] as readonly `0x${string}`[],
-            stems: [] as readonly (readonly bigint[])[],
-            amounts: [] as readonly (readonly bigint[])[],
-            availableBeans: [] as readonly bigint[],
-            totalAvailableBeans: 0n
-          };
-        } else {
-          // For other errors, fallback to the original plan
-          updatedWithdrawalPlan = entry.withdrawalPlan;
-        }
       }
-      
-      // Calculate available PINTO based on the updated withdrawal plan
-      const availablePinto = updatedWithdrawalPlan 
-        ? TokenValue.fromBlockchain(updatedWithdrawalPlan.totalAvailableBeans, 6)
-        : TokenValue.ZERO;
-      
-      // Add this plan to the list of existing plans for future orders
-      if (updatedWithdrawalPlan && updatedWithdrawalPlan.sourceTokens.length > 0) {
-        if (!publisherWithdrawalPlans[publisher]) {
-          publisherWithdrawalPlans[publisher] = [];
-        }
-        publisherWithdrawalPlans[publisher].push(updatedWithdrawalPlan);
-        console.log("Added plan to publisherWithdrawalPlans. Current state:", publisherWithdrawalPlans);
-      }
-
-      // Calculate how much PINTO this order can use
-      const currentlySowable = TokenValue.min(entry.pintosLeftToSow, availablePinto);
-      console.log(`\nTotal available PINTO: ${availablePinto.toHuman()}`);
-      console.log(`Currently sowable: ${currentlySowable.toHuman()}`);
-      
-      // Update the entry
-      orderbookData[i] = {
-        ...entry,
-        totalAvailablePinto: availablePinto,
-        currentlySowable,
-        withdrawalPlan: updatedWithdrawalPlan 
-      };
     }
 
-    // Remove processing data and return final result
-    return orderbookData.map(({ decodedData, ...entry }) => entry);
+    return orderbookData;
 
   } catch (error) {
     console.error("Error loading orderbook data:", error);
