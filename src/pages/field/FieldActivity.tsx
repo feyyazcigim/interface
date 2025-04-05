@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { TokenValue } from '@/classes/TokenValue';
 import { formatter } from '@/utils/format';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -32,7 +32,6 @@ const FieldActivity: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [activities, setActivities] = React.useState<FieldActivityItem[]>([]);
   const currentSeason = useSeason();
-  const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
 
   React.useEffect(() => {
     const fetchSowEvents = async () => {
@@ -41,17 +40,19 @@ const FieldActivity: React.FC = () => {
       try {
         setLoading(true);
         
-        // Get the current block number
-        const currentBlock = await publicClient.getBlockNumber();
+        // Get the current block number and timestamp
+        const latestBlock = await publicClient.getBlock();
+        const latestBlockNumber = Number(latestBlock.number);
+        const latestBlockTimestamp = Number(latestBlock.timestamp);
         
         // Calculate a fromBlock value for 30 days worth of blocks on Base
         // Base has a 2-second block time
         // 30 days = 30 * 24 * 60 * 60 = 2,592,000 seconds
         // At 2 seconds per block: 2,592,000 / 2 = 1,296,000 blocks
         const lookbackBlocks = 1_296_000n; 
-        const fromBlock = currentBlock > lookbackBlocks ? currentBlock - lookbackBlocks : 0n;
+        const fromBlock = latestBlock.number > lookbackBlocks ? latestBlock.number - lookbackBlocks : 0n;
         
-        console.log(`Fetching events from block ${fromBlock} to ${currentBlock} (30 days of Base blocks)`);
+        console.log(`Fetching events from block ${fromBlock} to ${latestBlock.number} (30 days of Base blocks)`);
         
         // Fetch the most recent sow events
         const sowEvents = await publicClient.getContractEvents({
@@ -81,13 +82,18 @@ const FieldActivity: React.FC = () => {
           const podIndex = args.index || BigInt(0);
           const beans = args.beans || BigInt(0); // PINTO amount in beans
           const pods = args.pods || BigInt(0);
-
-          // Place in line is 1e6 precision, so divide by 1e6
-          const placeInLine = formatter.number(Number(podIndex) / 1e6);
+          
+          // Calculate timestamp using block number difference and 2-second block time
+          // Base has 2 second blocks
+          const blockDiff = latestBlockNumber - Number(blockNumber);
+          const timestamp = latestBlockTimestamp - blockDiff * 2;
           
           // We'll use newer events with more recent seasons
           // In a real implementation, you would get the actual season from the block timestamp
           const mockSeason = Math.max(Number(currentSeason) - 5 + index, 1);
+          
+          // Place in line is 1e6 precision, so divide by 1e6
+          const placeInLine = formatter.number(Number(podIndex) / 1e6);
           
           // Calculate temperature from the ratio of pods to beans
           // This represents the bonus percentage (pods/beans - 100%)
@@ -100,10 +106,6 @@ const FieldActivity: React.FC = () => {
           // Subtract 100% to get the bonus percentage
           const temperature = Math.max(0, rawTemperature - 100);
           
-          // Create timestamps with newer events being more recent
-          // Current time - a decreasing offset based on index
-          const timestamp = Math.floor(Date.now() / 1000) - ((limitedEvents.length - index) * 86400);
-          
           return {
             id: `${transactionHash}-${index}`,
             timestamp,
@@ -112,7 +114,7 @@ const FieldActivity: React.FC = () => {
             amount: beanAmount,
             pods: podAmount,
             temperature, // Calculated temperature percentage
-            placeInLine: placeInLine,
+            placeInLine,
             address: account as string,
             txHash: transactionHash
           };
@@ -217,10 +219,7 @@ const FieldActivity: React.FC = () => {
           </thead>
           <tbody>
             {activities.map((activity) => (
-              <tr 
-                key={activity.id} 
-                className={`transition-colors ${hoveredAddress === activity.address ? 'bg-pinto-green-1' : ''}`}
-              >
+              <tr key={activity.id} className="transition-colors">
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{activity.season}</td>
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{formatDate(activity.timestamp)}</td>
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{formatTime(activity.timestamp)}</td>
@@ -229,9 +228,7 @@ const FieldActivity: React.FC = () => {
                     href={`https://basescan.org/address/${activity.address}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className={`text-xs font-antarctica font-light text-pinto-dark underline ${hoveredAddress === activity.address ? 'font-medium' : ''}`}
-                    onMouseEnter={() => setHoveredAddress(activity.address)}
-                    onMouseLeave={() => setHoveredAddress(null)}
+                    className="text-xs font-antarctica font-light text-pinto-dark underline"
                   >
                     {formatAddress(activity.address)}
                   </a>
