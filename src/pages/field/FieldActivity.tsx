@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TokenValue } from '@/classes/TokenValue';
 import { formatter } from '@/utils/format';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -32,6 +32,7 @@ const FieldActivity: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [activities, setActivities] = React.useState<FieldActivityItem[]>([]);
   const currentSeason = useSeason();
+  const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
 
   React.useEffect(() => {
     const fetchSowEvents = async () => {
@@ -219,7 +220,10 @@ const FieldActivity: React.FC = () => {
           </thead>
           <tbody>
             {activities.map((activity) => (
-              <tr key={activity.id} className="transition-colors">
+              <tr 
+                key={activity.id} 
+                className={`transition-colors ${hoveredAddress === activity.address ? 'bg-pinto-green-1' : ''}`}
+              >
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{activity.season}</td>
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{formatDate(activity.timestamp)}</td>
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{formatTime(activity.timestamp)}</td>
@@ -228,7 +232,9 @@ const FieldActivity: React.FC = () => {
                     href={`https://basescan.org/address/${activity.address}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-xs font-antarctica font-light text-pinto-dark underline"
+                    className={`text-xs font-antarctica font-light text-pinto-dark underline ${hoveredAddress === activity.address ? 'font-medium' : ''}`}
+                    onMouseEnter={() => setHoveredAddress(activity.address)}
+                    onMouseLeave={() => setHoveredAddress(null)}
                   >
                     {formatAddress(activity.address)}
                   </a>
