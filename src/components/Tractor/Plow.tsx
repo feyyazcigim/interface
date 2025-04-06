@@ -114,7 +114,15 @@ export function Plow() {
       const events = await loadPublishedRequisitions(undefined, protocolAddress, publicClient, latestBlock, "sowBlueprintv0");
       console.log("Loaded requisitions:", events);
 
-      return events;
+      // Filter out requisitions with zero or negative tip
+      const filteredEvents = events.filter(req => {
+        if (!req.decodedData || !req.decodedData.operatorParams) return false;
+        const tipAmount = req.decodedData.operatorParams.operatorTipAmount;
+        return tipAmount > 0n;
+      });
+      console.log("Filtered requisitions (positive tips only):", filteredEvents.length);
+
+      return filteredEvents;
     },
     enabled: !!protocolAddress && !!publicClient && !!latestBlock,
     staleTime: 30_000,
