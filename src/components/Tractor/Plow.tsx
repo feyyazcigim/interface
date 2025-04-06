@@ -19,6 +19,7 @@ import useTokenData from "@/state/useTokenData";
 import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 import { BASE_RPC_URL } from "@/utils/wagmi/chains";
+import { Token } from "@/utils/types";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 const UINT256_MAX = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
@@ -63,14 +64,63 @@ const extractErrorMessage = (error: unknown): string => {
   return String(error);
 };
 
-// Helper function to format operator tip properly
-const formatOperatorTip = (amount: bigint | undefined): string => {
-  if (amount === undefined) return "Failed to decode";
-  // Convert the bigint amount to a TokenValue with 6 decimals (PINTO)
-  const tokenAmount = TokenValue.fromBlockchain(amount, 6);
-  return `${formatter.number(tokenAmount)} PINTO`;
+// Helper function to calculate USD value of PINTO amount
+const calculateUsdValue = (amount: bigint | TokenValue, pintoToken: Token, prices: Map<Token, { instant: TokenValue; twa: TokenValue }>): { tokenAmount: TokenValue; usdValue: TokenValue; usdValueNumber: number } | null => {
+  // Convert to TokenValue if bigint
+  const tokenAmount = amount instanceof TokenValue ? amount : TokenValue.fromBlockchain(amount, 6);
+  
+  // Get PINTO price in USD
+  const pintoPrice = prices.get(pintoToken)?.instant;
+  if (!pintoPrice) return null;
+  
+  // Calculate USD value
+  const usdValue = tokenAmount.mul(pintoPrice).reDecimal(6);
+  return {
+    tokenAmount,
+    usdValue,
+    usdValueNumber: Number(usdValue.toHuman())
+  };
 };
 
+// Helper function to format operator tip properly
+const formatOperatorTip = (amount: bigint | undefined, pintoToken: Token, tokenPrices: Map<Token, { instant: TokenValue; twa: TokenValue }>): string => {
+  if (amount === undefined) return "Failed to decode";
+  
+  const usdData = calculateUsdValue(amount, pintoToken, tokenPrices);
+  if (!usdData) {
+    return `${formatter.number(TokenValue.fromBlockchain(amount, 6))} PINTO`;
+  }
+  
+  return `${formatter.number(usdData.tokenAmount)} PINTO (${formatter.usd(usdData.usdValue)})`;
+};
+
+// Helper function to calculate profit for a requisition
+const calculateProfit = (req: RequisitionEvent, successfulSimulations: Set<string>, gasEstimates: Map<string, bigint>, gasPrice: bigint | null, mainToken: Token, nativeToken: Token, tokenPrices: Map<Token, { instant: TokenValue; twa: TokenValue }>): number => {
+  if (!successfulSimulations.has(req.requisition.blueprintHash) || !req.decodedData) {
+    return -Infinity; // Unsimulated items go to the bottom
+  }
+  
+  const gas = gasEstimates.get(req.requisition.blueprintHash);
+  if (!gas) return -Infinity;
+  
+  // Get ETH price in USD
+  const ethPrice = tokenPrices.get(nativeToken)?.instant;
+  if (!ethPrice) return -Infinity;
+  
+  // Calculate gas cost in USD
+  const currentGasPrice = gasPrice || BigInt(1_000_000_000);
+  const gasCostInWei = gas * currentGasPrice;
+  const gasCostInEth = Number(gasCostInWei) / 1e18;
+  const ethPriceInUsd = Number(ethPrice.toString()) / 1e6;
+  const gasCostInUsd = gasCostInEth * ethPriceInUsd;
+  
+  // Calculate tip amount in USD using our reusable function
+  const tipData = calculateUsdValue(req.decodedData.operatorParams.operatorTipAmount, mainToken, tokenPrices);
+  if (!tipData) return -Infinity;
+  
+  // Calculate profit (tip - gas cost)
+  return tipData.usdValueNumber - gasCostInUsd;
+};
 
 export function Plow() {
   const [selectedRequisition, setSelectedRequisition] = useState<RequisitionEvent | null>(null);
@@ -79,11 +129,15 @@ export function Plow() {
   const { data: latestBlock } = useLatestBlock();
   const queryClient = useQueryClient();
   const { tokenPrices } = usePriceData();
-  const { nativeToken } = useTokenData();
+  const { mainToken, nativeToken } = useTokenData();
   
   // Add state for gas estimates
   const [gasEstimates, setGasEstimates] = useState<Map<string, bigint>>(new Map());
   const [gasPrice, setGasPrice] = useState<bigint | null>(null);
+  
+  // Add state for sorted requisitions
+  const [sortedRequisitions, setSortedRequisitions] = useState<RequisitionEvent[]>([]);
+  const [sortingEnabled, setSortingEnabled] = useState(false);
 
   // Fetch gas price periodically
   useEffect(() => {
@@ -167,7 +221,61 @@ export function Plow() {
     },
   });
 
-  // Add handler for simulating all requisitions
+  // Helper function reference for component use
+  const calculateReqProfit = useCallback((req: RequisitionEvent): number => {
+    return calculateProfit(
+      req,
+      successfulSimulations,
+      gasEstimates,
+      gasPrice,
+      mainToken,
+      nativeToken,
+      tokenPrices
+    );
+  }, [successfulSimulations, gasEstimates, gasPrice, mainToken, nativeToken, tokenPrices]);
+
+  // Sort requisitions by profit when needed
+  useEffect(() => {
+    // Only sort if we have requisitions and simulations
+    if (!sortingEnabled || requisitions.length === 0 || successfulSimulations.size === 0) {
+      setSortedRequisitions(requisitions);
+      return;
+    }
+    
+    console.log("Sorting requisitions by profit");
+    
+    // Use a stable sort to avoid unnecessary reordering
+    const sorted = [...requisitions].sort((a, b) => {
+      // Use the function hash instead of recalculating for stability
+      const aHash = a.requisition.blueprintHash;
+      const bHash = b.requisition.blueprintHash;
+      
+      // If both requisitions are successful, sort by profit
+      if (successfulSimulations.has(aHash) && successfulSimulations.has(bHash)) {
+        return calculateReqProfit(b) - calculateReqProfit(a); // Higher profit first
+      }
+      
+      // If only one is successful, prioritize it
+      if (successfulSimulations.has(aHash)) return 1;
+      if (successfulSimulations.has(bHash)) return -1;
+      
+      // Otherwise, keep original order
+      return 0;
+    });
+    
+    setSortedRequisitions(sorted);
+  }, [
+    requisitions, 
+    // Only re-sort when these specific values change
+    successfulSimulations.size,
+    sortingEnabled,
+    // calculateReqProfit is a derived value, don't include it in deps
+    // Instead, include its dependencies explicitly
+    gasEstimates.size,
+    !!gasPrice
+  ]);
+
+  // Update handleSimulateAll function to enable sorting after completion
   const handleSimulateAll = useCallback(async () => {
     if (!protocolAddress || !publicClient || simulatingAll) return;
     setSimulatingAll(true);
@@ -249,6 +357,8 @@ export function Plow() {
         setSimulatingReq(null);
       }
       toast.success("Completed simulating all requisitions");
+      // Enable sorting after simulations are complete
+      setSortingEnabled(true);
     } catch (error) {
       console.error("Failed during simulate all:", error);
       toast.error("Failed to simulate all requisitions");
@@ -374,7 +484,7 @@ export function Plow() {
     return <div>Loading requisitions...</div>;
   }
 
-  // Rest of the component is identical to SoilOrderbook
+  // Return the sorted requisitions in the table
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -384,7 +494,10 @@ export function Plow() {
             <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Publisher</TableHead>
             <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Blueprint Hash</TableHead>
             <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Type</TableHead>
-            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Operator Tip</TableHead>
+            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[220px]">Operator Tip</TableHead>
+            {successfulSimulations.size > 0 && (
+              <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Estimated Profit</TableHead>
+            )}
             <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[200px]">
               <div className="flex flex-col gap-2">
                 <span>Simulate</span>
@@ -400,8 +513,7 @@ export function Plow() {
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
-          {/* Rest of the JSX is identical to SoilOrderbook */}
-          {requisitions.map((req, index) => {
+          {sortedRequisitions.map((req, index) => {
             const dateOptions: Intl.DateTimeFormatOptions = {
               year: "2-digit",
               month: "2-digit",
@@ -412,7 +524,10 @@ export function Plow() {
             };
 
             return (
-              <TableRow key={index} className="h-[4.5rem] bg-transparent items-center hover:bg-pinto-green-1/50">
+              <TableRow
+                key={index}
+                className="h-[4.5rem] bg-transparent items-center hover:bg-pinto-green-1/50"
+              >
                 <TableCell className="p-2">
                   {req.timestamp ? new Date(req.timestamp).toLocaleString(undefined, dateOptions) : "Unknown"}
                 </TableCell>
@@ -431,8 +546,28 @@ export function Plow() {
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">{req.requisitionType}</TableCell>
                 <TableCell className="p-2 font-mono text-sm">
-                  {req.decodedData ? formatOperatorTip(req.decodedData.operatorParams.operatorTipAmount) : "Failed to decode"}
+                  {req.decodedData ? formatOperatorTip(req.decodedData.operatorParams.operatorTipAmount, mainToken, tokenPrices) : "Failed to decode"}
                 </TableCell>
+                {successfulSimulations.size > 0 && (
+                  <TableCell className="p-2 font-mono text-sm">
+                    {(() => {
+                      // Skip if this simulation hasn't been run yet
+                      if (!successfulSimulations.has(req.requisition.blueprintHash) || !req.decodedData) {
+                        return "-";
+                      }
+                      
+                      const profit = calculateReqProfit(req);
+                      if (profit === -Infinity) return "-";
+                      
+                      // Format with color based on profit/loss
+                      const isPositive = profit >= 0;
+                      const color = isPositive ? "text-pinto-green-4" : "text-pinto-red-2";
+                      const sign = isPositive ? "+" : "";
+                      
+                      return <span className={color}>{sign}${profit.toFixed(6)}</span>;
+                    })()}
+                  </TableCell>
+                )}
                 <TableCell className="p-2">
                   <div className="flex items-center gap-2">
                     <Button
