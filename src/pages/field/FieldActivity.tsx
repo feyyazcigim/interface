@@ -345,7 +345,13 @@ const FieldActivity: React.FC = () => {
           </thead>
           <tbody>
             {/* Tractor Orders Section */}
-            {!loadingTractorOrders && tractorOrders.length > 0 && (
+            {loadingTractorOrders ? (
+              <tr>
+                <td colSpan={9} className="px-2 py-4 text-center text-xs font-antarctica font-light text-pinto-gray-4">
+                  Loading Tractor orders...
+                </td>
+              </tr>
+            ) : tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length > 0 ? (
               <>
                 {tractorOrders
                   .filter(order => order.amountSowableNextSeason.gt(0)) // Filter out orders with 0 amountSowableNextSeason
@@ -415,14 +421,20 @@ const FieldActivity: React.FC = () => {
                       </tr>
                     );
                   })}
-                
-                {/* Separator row between tractor orders and regular activity */}
-                {activities.length > 0 && tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length > 0 && (
-                  <tr>
-                    <td colSpan={9} className="border-b-2 border-pinto-gray-3/20 py-1"></td>
-                  </tr>
-                )}
               </>
+            ) : (
+              <tr>
+                <td colSpan={9} className="px-2 py-4 text-center text-xs font-antarctica font-light text-pinto-gray-4">
+                  No Tractor orders executable next Season
+                </td>
+              </tr>
+            )}
+            
+            {/* Separator row between tractor orders and regular activity */}
+            {activities.length > 0 && tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length > 0 && (
+              <tr>
+                <td colSpan={9} className="border-b-2 border-pinto-gray-3/20 py-1"></td>
+              </tr>
             )}
             
             {/* Regular Activity Section */}
