@@ -71,11 +71,6 @@ const formatOperatorTip = (amount: bigint | undefined): string => {
   return `${formatter.number(tokenAmount)} PINTO`;
 };
 
-// Helper function to format gas estimate
-const formatGasEstimate = (gas: bigint | undefined): string => {
-  if (!gas) return "0";
-  return Number(gas).toLocaleString();
-};
 
 export function Plow() {
   const [selectedRequisition, setSelectedRequisition] = useState<RequisitionEvent | null>(null);
@@ -116,7 +111,7 @@ export function Plow() {
       console.log("Loading requisitions...");
       if (!publicClient || !protocolAddress) return [];
 
-      const events = await loadPublishedRequisitions(undefined, protocolAddress, publicClient, latestBlock);
+      const events = await loadPublishedRequisitions(undefined, protocolAddress, publicClient, latestBlock, "sowBlueprintv0");
       console.log("Loaded requisitions:", events);
 
       return events;
@@ -376,27 +371,15 @@ export function Plow() {
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>Created At</TableHead>
-            <TableHead>Publisher</TableHead>
-            <TableHead>Blueprint Hash</TableHead>
-            <TableHead>Max Nonce</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Operator Tip</TableHead>
-            <TableHead className="min-w-[200px]">
+          <TableRow className="border-b border-pinto-gray-3/20">
+            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Created At</TableHead>
+            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Publisher</TableHead>
+            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Blueprint Hash</TableHead>
+            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Type</TableHead>
+            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Operator Tip</TableHead>
+            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[200px]">
               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <span>Simulate</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSimulateAll}
-                    disabled={simulatingAll || requisitions.length === 0}
-                    className="text-pinto-gray-4 hover:text-pinto-gray-5"
-                  >
-                    {simulatingAll ? "Simulating All..." : "Simulate All"}
-                  </Button>
-                </div>
+                <span>Simulate</span>
                 <div className="text-xs text-pinto-gray-4">
                   {(() => {
                     if (!gasPrice) return "Loading gas price...";
@@ -405,7 +388,7 @@ export function Plow() {
                 </div>
               </div>
             </TableHead>
-            <TableHead>Plow</TableHead>
+            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Details</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
@@ -437,11 +420,6 @@ export function Plow() {
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
                   {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
-                </TableCell>
-                <TableCell className="p-2">
-                  {req.requisition.blueprint.maxNonce === UINT256_MAX
-                    ? "Max uint256"
-                    : req.requisition.blueprint.maxNonce.toString()}
                 </TableCell>
                 <TableCell className="p-2 font-mono text-sm">{req.requisitionType}</TableCell>
                 <TableCell className="p-2 font-mono text-sm">
@@ -548,7 +526,7 @@ export function Plow() {
                     onClick={() => handlePlow(req)}
                     className="text-pinto-gray-4 hover:text-pinto-gray-5"
                   >
-                    Plow
+                    Details
                   </Button>
                 </TableCell>
               </TableRow>
@@ -568,6 +546,25 @@ export function Plow() {
         isOpen={selectedRequisition !== null}
         onClose={() => setSelectedRequisition(null)}
       />
+      
+      <div className="mt-6 py-4 flex justify-between items-center">
+        <div className="text-sm font-antarctica font-light text-pinto-gray-4">
+          Select Soil Orders to Simulate and Execute for a tip
+        </div>
+        <div className="flex gap-4">
+          <Button
+            variant="gradient"
+            onClick={handleSimulateAll}
+            disabled={simulatingAll || requisitions.length === 0}
+            size="xxl"
+            rounded="full"
+          >
+            {simulatingAll ? "Simulating All..." : "Simulate all transactions"}
+          </Button>
+          
+          {/* You can add additional buttons like "Simulate 2 Transactions" or "Execute 2 Soil Orders" here later */}
+        </div>
+      </div>
     </div>
   );
 }

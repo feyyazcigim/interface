@@ -320,7 +320,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl w-[95vw] bg-gray-50 border border-gray-200">
-        <DialogHeader className="border-b pb-4">
+        <DialogHeader className="pb-4">
           <DialogTitle className="text-xl font-antarctica font-bold">Tractor</DialogTitle>
         </DialogHeader>
         
