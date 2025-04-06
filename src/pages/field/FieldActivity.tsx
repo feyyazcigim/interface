@@ -14,6 +14,7 @@ import { useSeason } from '@/state/useSunData';
 import { Link } from 'react-router-dom';
 import { loadOrderbookData, OrderbookEntry, decodeSowTractorData, SowBlueprintData } from '@/lib/Tractor/utils';
 import { useHarvestableIndex } from '@/state/useFieldData';
+import { SoilOrderbookDialog } from '@/components/Tractor/SoilOrderbook';
 
 interface FieldActivityItem {
   id: string;
@@ -38,6 +39,7 @@ const FieldActivity: React.FC = () => {
   const currentSeason = useSeason();
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
   const harvestableIndex = useHarvestableIndex();
+  const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
 
   // Helper function to estimate temperature from an order
   const getOrderTemperature = (order: OrderbookEntry): number => {
@@ -327,7 +329,28 @@ const FieldActivity: React.FC = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
+      {/* Add Tractor Orders label and link */}
+      {!loadingTractorOrders && tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length > 0 && (
+        <div style={{ position: 'absolute', right: '-17rem', top: '3rem' }} className="flex flex-col items-start">
+          <span className="text-sm font-antarctica font-light text-pinto-dark mb-2">
+            Tractor Soil Orders for next Season
+          </span>
+          <button 
+            onClick={() => setShowTractorOrdersDialog(true)}
+            className="text-sm font-antarctica font-light text-pinto-green-4 hover:text-pinto-green-5 hover:underline text-left"
+          >
+            See all Tractor Orders
+          </button>
+        </div>
+      )}
+      
+      {/* Tractor Orders Dialog */}
+      <SoilOrderbookDialog 
+        open={showTractorOrdersDialog} 
+        onOpenChange={setShowTractorOrdersDialog} 
+      />
+      
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>

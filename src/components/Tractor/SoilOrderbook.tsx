@@ -16,10 +16,13 @@ import { useChainId } from "wagmi";
 import { TokenValue } from "@/classes/TokenValue";
 import { PINTO } from "@/constants/tokens";
 import IconImage from "@/components/ui/IconImage";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
-export function SoilOrderbook() {
+// Shared logic for loading and displaying the orderbook data
+export function SoilOrderbookContent() {
   const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
   const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -186,25 +189,37 @@ export function SoilOrderbook() {
     }
   }, [protocolAddress, publicClient, latestBlockInfo, loadAllRequisitions, isLoading]);
 
+  const formatDate = (timestamp: number | undefined) => {
+    if (!timestamp) return "Unknown";
+    const date = new Date(timestamp);
+    
+    // Format: MM/DD/YY hh:mmAM/PM
+    return date.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: '2-digit'
+    }) + ' ' + date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).replace(' ', '');
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>Created At</TableHead>
-            <TableHead>Publisher</TableHead>
-            <TableHead>Blueprint Hash</TableHead>
-            <TableHead>Max Pinto</TableHead>
-            <TableHead>Min Pinto</TableHead>
-            <TableHead>Temperature</TableHead>
-            <TableHead>Operator Tip</TableHead>
-            <TableHead>Remaining Pinto to sow</TableHead>
-            <TableHead>Available Pinto</TableHead>
-            <TableHead>Currently Sowable</TableHead>
-            <TableHead className="min-w-[300px]">Withdrawal Plan</TableHead>
+          <TableRow className="bg-gray-50">
+            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Temperature</TableHead>
+            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Place In Line</TableHead>
+            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Total Soil Order Size</TableHead>
+            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Available Pinto</TableHead>
+            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Blueprint Hash</TableHead>
+            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Publisher</TableHead>
+            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Created at</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
+        <TableBody>
           {requisitions.map((req, index) => {
             let decodedData: SowBlueprintData | null = null;
             try {
@@ -213,119 +228,125 @@ export function SoilOrderbook() {
               console.error("Failed to decode data for requisition:", error);
             }
 
-            const dateOptions: Intl.DateTimeFormatOptions = {
-              year: "2-digit",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-              hourCycle: "h24",
-            };
+            // Get temperature
+            const temperature = decodedData ? parseFloat(decodedData.minTempAsString) : 0;
+            
+            // Total order size
+            const totalSize = decodedData ? 
+              formatter.number(TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6)) : 
+              "Unknown";
 
-            // Get withdrawal plan details
-            console.log("Withdrawal plan for order:", {
-              hasWithdrawalPlan: !!req.withdrawalPlan,
-              sourceTokens: req.withdrawalPlan?.sourceTokens,
-              availableBeans: req.withdrawalPlan?.availableBeans
-            });
-
-            const withdrawalPlanDetails = req.withdrawalPlan ? (
-              <div className="space-y-1">
-                {req.withdrawalPlan?.sourceTokens?.map((token, i) => {
-                  try {
-                    const tokenInfo = getChainToken(chainId, token);
-                    const amount = TokenValue.fromBlockchain(req.withdrawalPlan?.availableBeans[i] || 0n, 6);
-                    const formattedAmount = formatter.number(amount);
-                    return (
-                      <div key={i} className="text-sm flex items-center gap-1">
-                        <span className="flex items-center gap-1">
-                          <IconImage src={tokenInfo.logoURI} size={4} />
-                          {tokenInfo.symbol}:
-                        </span>
-                        {formattedAmount}
-                        <span className="flex items-center gap-1">
-                          <IconImage src={PINTO.logoURI} size={4} />
-                        </span>
-                      </div>
-                    );
-                  } catch (error) {
-                    console.error("Error getting token info:", error);
-                    // If we can't get the token info, show the address
-                    const amount = TokenValue.fromBlockchain(req.withdrawalPlan?.availableBeans[i] || 0n, 6);
-                    const formattedAmount = formatter.number(amount);
-                    return (
-                      <div key={i} className="text-sm flex items-center gap-1">
-                        <span>{token.slice(0, 6)}...{token.slice(-4)}:</span>
-                        {formattedAmount}
-                        <span className="flex items-center gap-1">
-                          <IconImage src={PINTO.logoURI} size={4} />
-                        </span>
-                      </div>
-                    );
-                  }
-                })}
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500">No withdrawal plan</div>
-            );
-
-            console.log("Raw totalAvailablePinto:", req.totalAvailablePinto.toBigInt().toString());
-            console.log("Formatted totalAvailablePinto:", formatter.number(req.totalAvailablePinto));
+            // Available Pinto
+            const availablePinto = formatter.number(req.currentlySowable);
 
             return (
-              <TableRow key={index} className="h-[4.5rem] bg-transparent items-center hover:bg-pinto-green-1/50">
-                <TableCell className="p-2">
-                  {req.timestamp ? new Date(req.timestamp).toLocaleString(undefined, dateOptions) : "Unknown"}
+              <TableRow key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                <TableCell className="py-3">
+                  ≥ {temperature.toFixed(0)}%
                 </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
+                <TableCell className="py-3">
+                  ≥ {formatter.number(req.estimatedPlaceInLine.toNumber())}
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex items-center gap-1">
+                    <IconImage 
+                      src={PINTO.logoURI}
+                      alt="PINTO" 
+                      size={5} 
+                    />
+                    {totalSize}
+                  </div>
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex items-center gap-1">
+                    <IconImage 
+                      src={PINTO.logoURI}
+                      alt="PINTO" 
+                      size={5} 
+                    />
+                    {availablePinto}
+                  </div>
+                </TableCell>
+                <TableCell className="py-3 text-pinto-dark">
+                  {`0x${req.requisition.blueprintHash.slice(2, 7)}...${req.requisition.blueprintHash.slice(-4)}`}
+                </TableCell>
+                <TableCell className="py-3">
                   <a
                     href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-pinto-green-4 hover:text-pinto-green-5 hover:underline"
+                    className="text-pinto-dark underline hover:opacity-80"
                   >
-                    {`${req.requisition.blueprint.publisher.slice(0, 6)}...${req.requisition.blueprint.publisher.slice(-4)}`}
+                    {`0x${req.requisition.blueprint.publisher.slice(2, 7)}...${req.requisition.blueprint.publisher.slice(-4)}`}
                   </a>
                 </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
-                  {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
-                </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.sowAmounts.totalAmountToSowAsString} PINTO` : "Failed to decode"}
-                </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.sowAmounts.minAmountToSowPerSeasonAsString} PINTO` : "Failed to decode"}
-                </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.minTempAsString}%` : "Failed to decode"}
-                </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
-                  {decodedData ? `${decodedData.operatorParams.operatorTipAmountAsString} PINTO` : "Failed to decode"}
-                </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
-                  {`${formatter.number(req.pintosLeftToSow)} PINTO`}
-                </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
-                  {`${formatter.number(req.totalAvailablePinto)} PINTO`}
-                </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
-                  {`${formatter.number(req.currentlySowable)} PINTO`}
-                </TableCell>
-                <TableCell className="p-2 min-w-[300px]">
-                  {withdrawalPlanDetails}
+                <TableCell className="py-3">
+                  {formatDate(req.timestamp)}
                 </TableCell>
               </TableRow>
             );
           })}
           {requisitions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={11} className="p-4 text-center text-gray-500">
-                No active requisitions found
+              <TableCell colSpan={7} className="p-4 text-center text-gray-500">
+                {isLoading ? "Loading tractor orders..." : "No active requisitions found"}
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+// Original standalone component
+export function SoilOrderbook() {
+  return <SoilOrderbookContent />;
+}
+
+// Dialog version of the component
+interface SoilOrderbookDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogProps) {
+  const [activeTab, setActiveTab] = useState<"view" | "execute">("view");
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-7xl w-[95vw] bg-gray-50 border border-gray-200">
+        <DialogHeader className="border-b pb-4">
+          <DialogTitle className="text-xl font-antarctica font-bold">Tractor</DialogTitle>
+        </DialogHeader>
+        
+        <div className="w-full">
+          <div className="flex gap-4 border-b">
+            <button
+              className={`pb-2 font-antarctica ${activeTab === "view" ? "border-b-2 border-green-600 font-medium" : "text-gray-500"}`}
+              onClick={() => setActiveTab("view")}
+            >
+              View Soil Orders
+            </button>
+            <button
+              className={`pb-2 font-antarctica ${activeTab === "execute" ? "border-b-2 border-green-600 font-medium" : "text-gray-500"}`}
+              onClick={() => setActiveTab("execute")}
+            >
+              Execute Soil Orders
+            </button>
+          </div>
+          
+          <div className="pt-6">
+            {activeTab === "view" ? (
+              <SoilOrderbookContent />
+            ) : (
+              <div className="py-8 text-center text-gray-400">
+                Execute Soil Orders functionality not implemented yet
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
