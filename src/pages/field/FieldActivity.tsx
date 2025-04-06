@@ -383,7 +383,7 @@ const FieldActivity: React.FC = () => {
                     return (
                       <tr 
                         key={`tractor-${order.requisition.blueprintHash}`} 
-                        className="hover:bg-pinto-green-1/10"
+                        className={`hover:bg-pinto-green-1 transition-colors ${hoveredAddress === order.requisition.blueprint.publisher ? 'bg-pinto-green-1' : ''}`}
                       >
                         <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
                           {Number(currentSeason) + 1}
@@ -464,7 +464,7 @@ const FieldActivity: React.FC = () => {
             {activities.map((activity) => (
               <tr 
                 key={activity.id} 
-                className="hover:bg-pinto-green-1/10"
+                className={`hover:bg-pinto-green-1 transition-colors ${hoveredAddress === activity.address ? 'bg-pinto-green-1' : ''}`}
               >
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{activity.season}</td>
                 <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{formatDate(activity.timestamp)}</td>
