@@ -34,6 +34,15 @@ interface SowEvent {
   transactionIndex: number;
 }
 
+interface SowEventTimings {
+  events: {
+    blocksSinceSunrise: bigint;
+    timestampAsMin: number;
+    sownBeans: number;
+  }[];
+  availableSoil: number;
+}
+
 const makeLineGradients = [metallicGreenStrokeGradientFn];
 
 export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChartProps) => {
@@ -43,7 +52,8 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
   const secondUpperBound = 24000;
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
-  const [sowEventTimings, setSowEventTimings] = useState<{ blocksSinceSunrise: bigint, timestampAsMin: number, sownBeans: number }[]>([]);
+  const previouslyGeneratedData = JSON.parse(localStorage.getItem("sowEventTimings") || "{}");
+  const [sowEventTimings, setSowEventTimings] = useState<SowEventTimings>(previouslyGeneratedData[currentSeason.season] || { events: [], availableSoil: 0 });
 
   const generateData = async () => {
     const sowEventsCurrentSeason = await publicClient?.getContractEvents({
@@ -60,22 +70,27 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
       fromBlock: BigInt(prevSeasons[1].sunriseBlock),
       toBlock: BigInt(prevSeasons[0].sunriseBlock),
     }) as SowEvent[];
-    const sowEventTimings = sowEventsCurrentSeason.map((event) => {
-      const blocksSinceSunrise = event.blockNumber - BigInt(prevSeasons[0].sunriseBlock);
-      return {
-        sownBeans: Number(event.args.beans) / 1000000,
-        blocksSinceSunrise,
-        timestampAsMin: (Number(blocksSinceSunrise) * 2) / 60
-      };
-    });
-    const secondSowEventTimings = sowEventsPrevSeason.map((event) => {
-      const blocksSinceSunrise = event.blockNumber - BigInt(prevSeasons[1].sunriseBlock);
-      return {
-        sownBeans: Number(event.args.beans) / 1000000,
-        blocksSinceSunrise,
-        timestampAsMin: (Number(blocksSinceSunrise) * 2) / 60
-      };
-    });
+    const sowEventTimings = {
+      events: sowEventsCurrentSeason.map((event) => {
+        const blocksSinceSunrise = event.blockNumber - BigInt(prevSeasons[0].sunriseBlock);
+        return {
+          sownBeans: Number(event.args.beans) / 1000000,
+          blocksSinceSunrise,
+          timestampAsMin: (Number(blocksSinceSunrise) * 2) / 60
+        };
+      }), availableSoil: prevSeasons[0].issuedSoil.toNumber()
+    };
+    const secondSowEventTimings = {
+      events: sowEventsPrevSeason.map((event) => {
+        const blocksSinceSunrise = event.blockNumber - BigInt(prevSeasons[1].sunriseBlock);
+        return {
+          sownBeans: Number(event.args.beans) / 1000000,
+          blocksSinceSunrise,
+          timestampAsMin: (Number(blocksSinceSunrise) * 2) / 60
+        };
+      }), availableSoil: prevSeasons[1].issuedSoil.toNumber()
+    };
+    localStorage.setItem("sowEventTimings", JSON.stringify({ ...previouslyGeneratedData, [currentSeason.season]: sowEventTimings }));
     setSowEventTimings(sowEventTimings);
   };
 
@@ -84,22 +99,25 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
     const datas: LineChartData[] = [];
     let indexesWithSowEvents: number[] = [];
     let cumulativeSownBeans = 0;
-    for (let i = 0; i < 1800; i++) {
-      const sowEvent = sowEventTimings.find((timing) => timing.blocksSinceSunrise === BigInt(i));
+    // number of blocks is not necessarily 1,800, depends when gm was called
+    const numBlocks = Math.max(currentSeason.sunriseBlock - prevSeasons[0].sunriseBlock, prevSeasons[0].sunriseBlock - prevSeasons[1].sunriseBlock);
+    for (let i = 0; i < numBlocks; i++) {
+      const sowEvent = sowEventTimings.events.find((timing) => BigInt(timing.blocksSinceSunrise) === BigInt(i));
       const textInterval = `XX:${((Number(i) * 2) / 60).toFixed(2)}`
       if (sowEvent) {
-        labels.push(textInterval);
+        labels.push('XX');
         cumulativeSownBeans += sowEvent.sownBeans;
-        datas.push({ values: [cumulativeSownBeans], interval: textInterval });
+
+        datas.push({ values: [cumulativeSownBeans / sowEventTimings.availableSoil], interval: textInterval });
         indexesWithSowEvents.push(i);
       }
       else {
         labels.push(textInterval);
-        datas.push({ values: [cumulativeSownBeans], interval: textInterval });
+        datas.push({ values: [cumulativeSownBeans / sowEventTimings.availableSoil], interval: textInterval });
       }
     }
     return datas;
-  }, [sowEventTimings]);
+  }, [sowEventTimings.events.length]);
 
   return (
     <div className="w-[600px] bg-white">
