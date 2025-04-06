@@ -84,12 +84,21 @@ export async function createSowTractorData({
   console.log("tokenStrategy received:", tokenStrategy);
   console.log("tokenStrategy.type:", tokenStrategy.type);
   console.log("tokenStrategy.address:", tokenStrategy.type === "SPECIFIC_TOKEN" ? tokenStrategy.address : "N/A");
-  
+
+
   // Convert inputs to appropriate types
   const totalAmount = BigInt(Math.floor(parseFloat(totalAmountToSow) * 1e6));
   const minAmount = BigInt(Math.floor(parseFloat(minAmountPerSeason) * 1e6));
   const maxAmount = BigInt(Math.floor(parseFloat(maxAmountToSowPerSeason) * 1e6));
-  const maxPodline = BigInt(Math.floor(parseFloat(maxPodlineLength) * 1e6));
+  
+  // Fix for maxPodlineLength - convert to a full number without truncation
+  // Remove commas, parse as float, multiply by 1e6 to get the raw value without truncation
+  const cleanMaxPodlineLength = maxPodlineLength.replace(/,/g, '');
+  // Use string operations to avoid floating point precision issues
+  const [whole, decimal = ''] = cleanMaxPodlineLength.split('.');
+  const paddedDecimal = decimal.padEnd(6, '0').slice(0, 6);  // Ensure 6 decimal places
+  const maxPodlineBigInt = BigInt(whole + paddedDecimal);
+  
   const maxGrownStalk = BigInt(Math.floor(parseFloat(maxGrownStalkPerBdv) * 1e6));
   const runBlocks = BigInt(runBlocksAfterSunrise === "true" ? 0 : 300); // 0 for morning auction, 300 otherwise
   const temp = BigInt(Math.floor(parseFloat(temperature) * 1e6));
@@ -126,7 +135,7 @@ export async function createSowTractorData({
         maxAmountToSowPerSeason: maxAmount,
       },
       minTemp: temp,
-      maxPodlineLength: maxPodline,
+      maxPodlineLength: maxPodlineBigInt,
       maxGrownStalkPerBdv: maxGrownStalk,
       runBlocksAfterSunrise: runBlocks,
       slippageRatio: BigInt(1e18),

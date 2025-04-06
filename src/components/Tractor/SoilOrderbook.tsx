@@ -18,6 +18,7 @@ import { PINTO } from "@/constants/tokens";
 import IconImage from "@/components/ui/IconImage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Plow } from "./Plow";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
@@ -211,7 +212,7 @@ export function SoilOrderbookContent() {
         <TableHeader>
           <TableRow className="bg-gray-50">
             <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Temperature</TableHead>
-            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Place In Line</TableHead>
+            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Max Podline Length</TableHead>
             <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Total Soil Order Size</TableHead>
             <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Available Pinto</TableHead>
             <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Blueprint Hash</TableHead>
@@ -231,6 +232,9 @@ export function SoilOrderbookContent() {
             // Get temperature
             const temperature = decodedData ? parseFloat(decodedData.minTempAsString) : 0;
             
+            // Get max pod line length
+            const maxPodLineLength = decodedData ? decodedData.maxPodlineLengthAsString : "Unknown";
+            
             // Total order size
             const totalSize = decodedData ? 
               formatter.number(TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6)) : 
@@ -245,7 +249,7 @@ export function SoilOrderbookContent() {
                   ≥ {temperature.toFixed(0)}%
                 </TableCell>
                 <TableCell className="py-3">
-                  ≥ {formatter.number(req.estimatedPlaceInLine.toNumber())}
+                  ≤ {maxPodLineLength}
                 </TableCell>
                 <TableCell className="py-3">
                   <div className="flex items-center gap-1">
@@ -340,9 +344,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
             {activeTab === "view" ? (
               <SoilOrderbookContent />
             ) : (
-              <div className="py-8 text-center text-gray-400">
-                Execute Soil Orders functionality not implemented yet
-              </div>
+              <Plow />
             )}
           </div>
         </div>
