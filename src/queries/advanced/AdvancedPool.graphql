@@ -1,0 +1,13 @@
+query AdvancedPool($first: Int, $seasonNumber_gte: Int, $pool: String!) {
+  seasons: poolHourlySnapshots(
+    where: {seasonNumber_gte: $seasonNumber_gte, pool_starts_with_nocase: $pool}
+    first: $first
+    orderBy: seasonNumber
+    orderDirection: desc
+  ) {
+    id
+    liquidityUSD
+    seasonNumber
+    createdTimestamp
+  }
+}

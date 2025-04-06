@@ -1,0 +1,33 @@
+query AdvancedField($season_gte: Int, $first: Int, $field: String) {
+  seasons: fieldHourlySnapshots(
+    where: {
+      season_gte: $season_gte,
+      field: $field,
+    }
+    first: $first
+    orderBy: season
+    orderDirection: desc
+  ) {
+    id
+    season
+    createdAt
+    temperature
+    blocksToSoldOutSoil
+    cultivationFactor
+    harvestableIndex
+    harvestablePods
+    harvestedPods
+    issuedSoil
+    numberOfSowers
+    numberOfSows
+    podIndex
+    podRate
+    realRateOfReturn
+    seasonBlock
+    soil
+    soilSoldOut
+    sownBeans
+    unharvestablePods
+    updatedAt
+  }
+}
