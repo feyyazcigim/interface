@@ -10,7 +10,7 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import useFieldSnapshots from "@/state/useFieldSnapshots";
 import { usePriceData, useTwaDeltaBLPQuery, useTwaDeltaBQuery } from "@/state/usePriceData";
 import useSiloSnapshots from "@/state/useSiloSnapshots";
-import { useInvalidateSun } from "@/state/useSunData";
+import { useInvalidateSun, useSeason } from "@/state/useSunData";
 import { cn } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -19,14 +19,25 @@ import { useAtom } from "jotai";
 import { useCallback, useRef } from "react";
 import { useMatch } from "react-router-dom";
 import { useAccount } from "wagmi";
+
+import chevronDown from "@/assets/misc/ChevronDown.svg";
+import sunIcon from "@/assets/protocol/Sun.png";
+import { default as pintoIcon, default as pintoIconOriginal } from "@/assets/tokens/PINTO.png";
+import { Button } from "@/components/ui/Button";
+import IconImage from "@/components/ui/IconImage";
+import Panel from "@/components/ui/Panel";
+import { Skeleton } from "@/components/ui/Skeleton";
+import useIsMobile from "@/hooks/display/useIsMobile";
+import useSupplySnapshots from "@/state/useSupplySnapshots";
 import WalletButton from "../../WalletButton";
 import Backdrop from "../../ui/Backdrop";
-import PriceButton from "../PriceButton";
-import SeasonsButton from "../SeasonsButton";
+import ChartSelectPanel from "../ChartSelectPanel";
+import PricePanel from "../PricePanel";
+import SeasonsPanel from "../SeasonsPanel";
 import Navi from "./Navi.desktop";
 import MobileNavi from "./Navi.mobile";
 
-type Panel = "price" | "seasons" | "wallet" | "mobile-navi";
+type PanelTypes = "price" | "seasons" | "wallet" | "mobile-navi";
 
 const DURATION = 150;
 
@@ -39,6 +50,7 @@ const Navbar = () => {
   const queryClient = useQueryClient();
 
   const account = useAccount();
+  const season = useSeason();
   const farmerActions = useFarmerActions();
   const farmerBalances = useFarmerBalances();
   const priceData = usePriceData();
@@ -61,6 +73,19 @@ const Navbar = () => {
   const { address, hasDeposits, hasPlots, loading, didLoad } = useFarmerStatus();
   const isNewUser = !address || (!hasDeposits && !hasPlots);
   const showWalletHelper = (isOverview || isSilo) && !isNewUser && !loading && didLoad;
+
+  const isSeasonsPanelOpen = panelState.openPanel === "seasons";
+  const isPricePanelOpen = panelState.openPanel === "price";
+  const isChartSelectPanelOpen = panelState.openPanel === "chart-select";
+
+  const isLeftPanelOpen = isSeasonsPanelOpen || isPricePanelOpen || isChartSelectPanelOpen;
+
+  const isMobile = useIsMobile();
+
+  const supplySnapshots = useSupplySnapshots();
+  const hasFloodOrRain = !!supplySnapshots.data.find(
+    (seasonData) => seasonData.floodFieldBeans.gt(0) || seasonData.floodSiloBeans.gt(0),
+  );
 
   const closePanel = () => {
     setPanelState({
@@ -138,7 +163,7 @@ const Navbar = () => {
     });
   };
 
-  const invalidateData = (panel: Panel) => {
+  const invalidateData = (panel: PanelTypes) => {
     if (panel === "wallet") {
       const allQueryKeys = [...priceData.queryKeys, ...farmerSilo.queryKeys, ...farmerBalances.queryKeys];
       allQueryKeys.forEach((query) => queryClient.invalidateQueries({ queryKey: query, refetchType: "active" }));
@@ -166,19 +191,64 @@ const Navbar = () => {
         )}
       >
         <div className="flex flex-row gap-4">
-          <div className={`transition-all duration-100 ${panelState.openPanel === "price" && "z-[51]"}`}>
-            <PriceButton
-              isOpen={panelState.openPanel === "price"}
-              togglePanel={() => togglePanel("price")}
+          <Panel
+            isOpen={isLeftPanelOpen}
+            side="left"
+            panelProps={{
+              className: cn(
+                isSeasonsPanelOpen
+                  ? hasFloodOrRain
+                    ? "max-w-panel-seasons w-panel-seasons"
+                    : "max-w-panel-seasons-sm w-panel-seasons-sm"
+                  : "max-w-panel-price w-panel-price",
+                "mt-14",
+              ),
+            }}
+            trigger={<></>}
+            toggle={() => null}
+          >
+            {isPricePanelOpen && <PricePanel />}
+            {isSeasonsPanelOpen && <SeasonsPanel />}
+            {isChartSelectPanelOpen && <ChartSelectPanel />}
+          </Panel>
+          <div className={`transition-all duration-100 ${isPricePanelOpen && "z-[51]"}`}>
+            <Button
+              variant="outline-primary"
+              size="default"
+              rounded="full"
+              onClick={() => togglePanel("price")}
               onMouseEnter={() => refetchPriceData()}
-            />
+              noShrink
+              className={cn(`flex flex-row gap-0.5 sm:gap-2 ${isPricePanelOpen && "border-pinto-green"}`)}
+            >
+              <IconImage src={pintoIcon} size={6} alt="pinto icon" />
+              {priceData.loading ? (
+                <Skeleton className="w-14 h-6" />
+              ) : (
+                <>${Number(priceData.price.toHuman()).toFixed(isMobile ? 3 : 4)}</>
+              )}
+              <IconImage src={chevronDown} size={4} mobileSize={2.5} alt="chevron down" />
+            </Button>
           </div>
-          <div className={`transition-all duration-100 ${panelState.openPanel === "seasons" && "z-[51]"}`}>
-            <SeasonsButton
-              isOpen={panelState.openPanel === "seasons"}
-              togglePanel={() => togglePanel("seasons")}
+          <div className={`transition-all duration-100 ${isSeasonsPanelOpen && "z-[51]"}`}>
+            <Button
+              variant="outline-secondary"
+              onClick={() => togglePanel("seasons")}
               onMouseEnter={() => invalidateData("seasons")}
-            />
+              noShrink
+              rounded="full"
+              className={cn(`flex flex-row gap-0.5 sm:gap-2 ${isSeasonsPanelOpen && "border-pinto-green"}`)}
+            >
+              <IconImage src={sunIcon} size={6} />
+              {season === 0 ? (
+                <div className="hidden sm:block">
+                  <Skeleton className="w-14 h-6" />
+                </div>
+              ) : (
+                <div className="hidden sm:block">Season {season}</div>
+              )}
+              <IconImage src={chevronDown} size={4} mobileSize={2.5} />
+            </Button>
           </div>
         </div>
         <div className="hidden lg:flex lg:justify-center pr-[208px]">
@@ -232,7 +302,12 @@ const Navbar = () => {
             </div>
           </div>
           <div className="hidden sm:block">
-            <Backdrop active={panelState.backdropVisible} onClick={closePanel} transitionDuration={DURATION} />
+            <Backdrop
+              active={panelState.backdropVisible}
+              noBlur={panelState.openPanel === "chart-select"}
+              onClick={closePanel}
+              transitionDuration={DURATION}
+            />
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 
-export type NavbarPanelType = "price" | "seasons" | "wallet" | "mobile-navi";
+export type NavbarPanelType = "price" | "seasons" | "wallet" | "mobile-navi" | "chart-select";
 
 // Define specific view states for each panel type
 export interface WalletPanelState {
