@@ -305,7 +305,6 @@ export const navLinks = {
   wrap: "/wrap",
   podmarket: "/market/pods",
   explorer: "/explorer",
-  tractor: "/tractor/createblueprint",
   whitepaper: "/whitepaper",
   twitter: "https://x.com/pintocommunity",
   docs: "https://docs.pinto.money/",

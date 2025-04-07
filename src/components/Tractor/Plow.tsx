@@ -692,7 +692,8 @@ export function Plow() {
       
       <div className="mt-6 py-4 flex justify-between items-center">
         <div className="text-sm font-antarctica font-light text-pinto-gray-4">
-          Select Soil Orders to Simulate and Execute for a tip
+          <div>Select Soil Orders to Simulate and Execute for a tip</div>
+          <div className="mt-1">Note that executing an order will likely affect the ability to execute another order.</div>
         </div>
         <div className="flex gap-4">
           <Button

@@ -77,9 +77,6 @@ const AppNavi = () => {
           <NavigationMenuItem>
             <Link href={navLinks.podmarket}>Pod Market</Link>
           </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.tractor}>Tractor</Link>
-          </NavigationMenuItem>
           {isDev() && (
             <NavigationMenuItem>
               <Link href="/dev">Dev</Link>

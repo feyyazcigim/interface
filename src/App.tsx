@@ -17,7 +17,7 @@ import Swap from "./pages/Swap";
 import Transfer from "./pages/Transfer";
 import Whitepaper from "./pages/Whitepaper";
 import NewUserView from "./pages/overview/NewUserView";
-import Tractor from "./components/Tractor/Tractor";
+
 import { useMetaCRM } from "./utils/meta-crm";
 import { externalLinks } from "./constants/links";
 
@@ -137,14 +137,6 @@ function ProtectedLayout() {
         element={
           <PageMetaWrapper metaKey="404">
             <Error404 />
-          </PageMetaWrapper>
-        }
-      />
-      <Route
-        path="/tractor/:tab"
-        element={
-          <PageMetaWrapper metaKey="tractor">
-            <Tractor />
           </PageMetaWrapper>
         }
       />
