@@ -30,6 +30,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import TractorOrdersPanel from "../field/TractorOrdersPanel";
 
 const Overview = () => {
   // Hooks
@@ -81,7 +82,7 @@ const Overview = () => {
   const enablePintoToLPHelper = farmerSilo.deposits.get(mainToken)?.convertibleAmount.gt(0) && priceData.deltaB.gt(100);
 
   // State
-  const [currentTab, setCurrentTab] = useState(hasOnlyPods ? "pods" : "deposits");
+  const [currentTab, setCurrentTab] = useState<"deposits" | "pods" | "tractor">(hasOnlyPods ? "pods" : "deposits");
   const [hoveredButton, setHoveredButton] = useState("");
 
   const [hoveredId, setHoveredId] = useAtom(hoveredIdAtom);
@@ -310,7 +311,7 @@ const Overview = () => {
         ) : null}
       </AnimatePresence>
       <div className="flex flex-col items-center">
-        <Tabs defaultValue="deposits" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
+        <Tabs defaultValue="deposits" className="w-full" value={currentTab} onValueChange={(value) => setCurrentTab(value as "deposits" | "pods" | "tractor")}>
           <TabsList
             className={`h-0 bg-transparent p-0 border-0 -ml-3 flex ${hasOnlyPods ? "flex-row-reverse justify-end" : "flex-row justify-start"}`}
           >
@@ -325,6 +326,12 @@ const Overview = () => {
               value="pods"
             >
               My Pods
+            </TabsTrigger>
+            <TabsTrigger
+              className="font-[400] text-[1.5rem] sm:text-[2rem] text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
+              value="tractor"
+            >
+              My Tractor Orders
             </TabsTrigger>
           </TabsList>
           {/*convertEnabled && convertFrom && convertTo && currentTab === "deposits" && (
@@ -431,6 +438,11 @@ const Overview = () => {
             ) : (
               <EmptyTable type="plots" />
             )}
+          </TabsContent>
+          <TabsContent className="mt-8" value="tractor">
+            <div className="overflow-visible">
+              <TractorOrdersPanel />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

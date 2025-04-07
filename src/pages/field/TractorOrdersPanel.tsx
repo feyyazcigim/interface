@@ -21,6 +21,7 @@ import { CornerBottomLeftIcon, Cross1Icon, ClockIcon } from "@radix-ui/react-ico
 import { getTokenNameByIndex } from "@/utils/token";
 import useTransaction from "@/hooks/useTransaction";
 import { diamondABI } from "@/constants/abi/diamondABI";
+import EmptyTable from "@/components/EmptyTable";
 
 type ExecutionData = Awaited<ReturnType<typeof fetchTractorExecutions>>[number];
 
@@ -179,16 +180,17 @@ const TractorOrdersPanel = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-4 w-full">
-        <div>Loading Tractor Orders...</div>
+      <div className="flex flex-col gap-6 justify-center items-center w-full h-[22.5rem] border rounded-[0.75rem] bg-pinto-off-white border-pinto-gray-2">
+        <div className="pinto-body-light text-pinto-light">Loading Tractor Orders...</div>
+        <Skeleton className="h-6 w-48" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col gap-4 w-full">
-        <div>Error loading tractor orders</div>
+      <div className="flex flex-col gap-6 justify-center items-center w-full h-[22.5rem] border rounded-[0.75rem] bg-pinto-off-white border-pinto-gray-2">
+        <div className="pinto-body-light text-pinto-red-2">Error loading tractor orders</div>
         <div className="p-4 rounded-[1rem] border border-pinto-red-2 bg-white text-pinto-red-2">
           {error}
         </div>
@@ -197,7 +199,7 @@ const TractorOrdersPanel = () => {
   }
 
   if (requisitions.length === 0 && executions.length === 0) {
-    return null; // Don't show the component if there are no active orders
+    return <EmptyTable type="tractor" />;
   }
 
   return (
