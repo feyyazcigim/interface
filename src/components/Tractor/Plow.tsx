@@ -20,6 +20,7 @@ import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 import { BASE_RPC_URL } from "@/utils/wagmi/chains";
 import { Token } from "@/utils/types";
+import { useTemperature } from "@/state/useFieldData";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 const UINT256_MAX = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
@@ -130,6 +131,7 @@ export function Plow() {
   const queryClient = useQueryClient();
   const { tokenPrices } = usePriceData();
   const { mainToken, nativeToken } = useTokenData();
+  const temperatures = useTemperature();
   
   // Add state for gas estimates
   const [gasEstimates, setGasEstimates] = useState<Map<string, bigint>>(new Map());
@@ -160,7 +162,7 @@ export function Plow() {
   }, []);
 
   const { data: requisitions = [], isLoading } = useQuery({
-    queryKey: ["requisitions", protocolAddress, latestBlock?.number],
+    queryKey: ["requisitions", protocolAddress, latestBlock?.number, temperatures.scaled?.toString()],
     queryFn: async () => {
       console.log("Loading requisitions...");
       if (!publicClient || !protocolAddress) return [];
@@ -168,13 +170,32 @@ export function Plow() {
       const events = await loadPublishedRequisitions(undefined, protocolAddress, publicClient, latestBlock, "sowBlueprintv0");
       console.log("Loaded requisitions:", events);
 
-      // Filter out requisitions with zero or negative tip
+      // Get current temperature
+      const currentTemperature = temperatures.scaled;
+      console.log("Current temperature:", currentTemperature?.toHuman ? `${currentTemperature.toHuman()}%` : "Unknown");
+
+      // Filter out requisitions with zero or negative tip, cancelled requisitions, 
+      // and those with minTemp higher than current temperature
       const filteredEvents = events.filter(req => {
+        // Skip cancelled requisitions
+        if (req.isCancelled) return false;
+        
+        // Skip requisitions with invalid data or non-positive tip
         if (!req.decodedData || !req.decodedData.operatorParams) return false;
         const tipAmount = req.decodedData.operatorParams.operatorTipAmount;
+
+        // Skip requisitions with temperature requirements higher than current temperature
+        if (currentTemperature && req.decodedData.minTemp) {
+          const reqMinTemp = TokenValue.fromBlockchain(req.decodedData.minTemp, 6);
+          if (reqMinTemp.gt(currentTemperature)) {
+            console.log(`Filtered out requisition with minTemp ${reqMinTemp.toHuman()}% > current temp ${currentTemperature.toHuman()}%`);
+            return false;
+          }
+        }
+        
         return tipAmount > 0n;
       });
-      console.log("Filtered requisitions (positive tips only):", filteredEvents.length);
+      console.log("Filtered requisitions (executable with positive tips):", filteredEvents.length);
 
       return filteredEvents;
     },
@@ -493,7 +514,7 @@ export function Plow() {
             <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Created At</TableHead>
             <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Publisher</TableHead>
             <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Blueprint Hash</TableHead>
-            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Type</TableHead>
+            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Temperature</TableHead>
             <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[220px]">Operator Tip</TableHead>
             {successfulSimulations.size > 0 && (
               <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Estimated Profit</TableHead>
@@ -544,7 +565,9 @@ export function Plow() {
                 <TableCell className="p-2 font-mono text-sm">
                   {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
-                <TableCell className="p-2 font-mono text-sm">{req.requisitionType}</TableCell>
+                <TableCell className="p-2 font-mono text-sm">
+                  {req.decodedData ? `${(Number(req.decodedData.minTemp) / 1e6).toFixed(2)}%` : "Unknown"}
+                </TableCell>
                 <TableCell className="p-2 font-mono text-sm">
                   {req.decodedData ? formatOperatorTip(req.decodedData.operatorParams.operatorTipAmount, mainToken, tokenPrices) : "Failed to decode"}
                 </TableCell>
@@ -692,7 +715,7 @@ export function Plow() {
       
       <div className="mt-6 py-4 flex justify-between items-center">
         <div className="text-sm font-antarctica font-light text-pinto-gray-4">
-          <div>Select Soil Orders to Simulate and Execute for a tip</div>
+          <div>Select Soil Orders to Simulate and Execute for a tip.</div>
           <div className="mt-1">Note that executing an order will likely affect the ability to execute another order.</div>
         </div>
         <div className="flex gap-4">
