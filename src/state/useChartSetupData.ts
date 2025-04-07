@@ -188,8 +188,8 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     documentEntity: "seasons",
     valueAxisType: "priceTargetCrosses",
     valueFormatter: (v: number) => v,
-    tickFormatter: (v: number) => v.toString(),
-    shortTickFormatter: (v: number) => v.toString(),
+    tickFormatter: (v: number) => v.toFixed(0),
+    shortTickFormatter: (v: number) => v.toFixed(0),
   },
   {
     id: "priceTwaPINTO",
