@@ -401,13 +401,13 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
             <div className="flex justify-center mt-4">
               <button
                 onClick={() => onShowOrder()}
-                className="box-border flex flex-col items-start p-4 gap-1 w-full bg-[#F8F8F8] border border-[#D9D9D9] rounded-xl hover:bg-[#EFEFEF] transition-colors duration-200"
+                className="group box-border flex flex-col items-start p-4 gap-1 w-full bg-[#F8F8F8] border border-[#D9D9D9] rounded-xl hover:bg-[#E5F5E5] hover:border-pinto-green-4 transition-colors duration-200"
               >
                 <div className="flex flex-row justify-center items-center gap-1">
-                  <LightningIcon className="w-4 h-4 text-[#404040]" />
-                  <span className="font-antarctica font-[340] text-[20px] leading-[110%] text-[#404040]">Want to Sow with size?</span>
+                  <LightningIcon className="w-4 h-4 text-[#404040] group-hover:text-pinto-green-4" />
+                  <span className="font-antarctica font-[340] text-[20px] leading-[110%] text-[#404040] group-hover:text-pinto-green-4">Want to Sow with size?</span>
                 </div>
-                <span className="font-antarctica font-[340] text-base leading-[110%] text-[#9C9C9C]">Use 🚜 Tractor to set up an order for Pods over time</span>
+                <span className="font-antarctica font-[340] text-base leading-[110%] text-[#9C9C9C] group-hover:text-pinto-green-3">Use 🚜 Tractor to set up an order for Pods over time</span>
               </button>
             </div>
           </div>
