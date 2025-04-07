@@ -240,7 +240,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
       leftPriceScale: !secondPriceScale
         ? undefined
         : {
-            borderVisible: false,
+            borderVisible: true,
             mode: leftPriceScaleMode,
             visible: size === "full",
           },
@@ -502,10 +502,10 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                       } ${selected.length > 1 ? "pl-3" : "pl-0"}`}
                       style={{ borderColor: chartColors[index].lineColor }}
                     >
-                      {/*
                       <div className="flex flex-row">
                         <div className="flex">
-                          <p className="pinto-body-light text-pinto-gray-4">{tooltipTitle}</p>
+                          <div className="pinto-body-light text-pinto-gray-4">{tooltipTitle}</div>
+                          {/*
                           {tooltipHoverText && (
                             <div
                               className="tooltip"
@@ -514,10 +514,11 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                             >
                               <div className="text-secondary inline mb-2 text-[11px]">HELP</div>
                             </div>
+                            
                           )}
+                            */}
                         </div>
                       </div>
-                      */}
                       <div className="pinto-h3 text-black">
                         {value ? chartSetupData[chartId].tickFormatter(value) : "-"}
                       </div>
@@ -575,7 +576,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
             </div>
           )}
         </div>
-        <div ref={chartContainerRef} id="container" style={{ height: height - 200 }} />
+        <div ref={chartContainerRef} id="container" style={{ height: height }} />
         {/* <>
           <button
             onClick={(e) => handleToggleMenu(e, "right")}
