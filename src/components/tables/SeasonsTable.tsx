@@ -20,6 +20,10 @@ export const nonHideableFields = ["season"];
 const paginationPadding = 50;
 
 export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsTableProps) => {
+  // We are overfetching by 2 seasons to calculate the delta demand chart
+  // but on the final page we'd like to show all the seasons, not cut off 1 and 2
+  const displaySeasonsData =
+    seasonsData[seasonsData.length - 1]?.season === 1 ? seasonsData : seasonsData.slice(0, seasonsData.length - 2);
   const tableRef = useRef<HTMLTableElement>(null);
   const [height, setHeight] = useState(500);
 
@@ -58,10 +62,10 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
 
   useEffect(() => {
     calculateHeight();
-  }, [seasonsData]);
+  }, [displaySeasonsData]);
 
   const RenderRow = React.memo(({ index, style }: ListChildComponentProps<SeasonsTableData>) => {
-    const data = seasonsData[index];
+    const data = displaySeasonsData[index];
     const { cropScalar, cropRatio } = calculateCropScales(data.beanToMaxLpGpPerBdvRatio, data.raining, data.season);
     const deltaCropScalar = (data.deltaBeanToMaxLpGpPerBdvRatio / 1e18).toFixed(1);
     return (
@@ -128,7 +132,9 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           subValue={caseIdToDescriptiveText(data.caseId, "soil_demand")}
           hiddenFields={hiddenFields}
           hoverContent={
-            <DeltaDemandChart currentSeason={data} prevSeasons={[seasonsData[index + 1], seasonsData[index + 2]]} />
+            data.season > 5 && (
+              <DeltaDemandChart currentSeason={data} prevSeasons={[seasonsData[index + 1], seasonsData[index + 2]]} />
+            )
           }
         />
         <SeasonsTableCell
@@ -201,7 +207,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
         <VariableSizeList
           className="overscroll-auto mb-[50px] scrollbar-none"
           height={height}
-          itemCount={seasonsData.length}
+          itemCount={displaySeasonsData.length}
           itemSize={() => 50}
           width={calculatedWidth}
           overscanCount={4}

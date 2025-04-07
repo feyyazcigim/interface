@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { usePublicClient } from "wagmi";
 import { Button } from "../ui/Button";
 import LineChart, { LineChartData } from "./LineChart";
+import MultiLineChart from "./MultiLineChart";
 import { metallicGreenStrokeGradientFn } from "./chartHelpers";
 
 interface DeltaDemandChartProps {
@@ -49,9 +50,10 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
   const previouslyGeneratedData = JSON.parse(localStorage.getItem("sowEventTimings") || "{}");
-  const [sowEventTimings, setSowEventTimings] = useState<SowEventTimings>(
-    previouslyGeneratedData[currentSeason.season] || { events: [], availableSoil: 0 },
-  );
+  const [sowEventTimings, setSowEventTimings] = useState<Record<string, SowEventTimings>>({
+    [currentSeason.season]: previouslyGeneratedData[currentSeason.season],
+    [prevSeasons[0].season]: previouslyGeneratedData[prevSeasons[0].season],
+  });
 
   const generateData = async () => {
     const sowEventsCurrentSeason = (await publicClient?.getContractEvents({
@@ -90,39 +92,59 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
       }),
       availableSoil: prevSeasons[1].issuedSoil.toNumber(),
     };
-    localStorage.setItem(
-      "sowEventTimings",
-      JSON.stringify({ ...previouslyGeneratedData, [currentSeason.season]: sowEventTimings }),
-    );
-    setSowEventTimings(sowEventTimings);
+    const newSowEventTimings = {
+      [currentSeason.season]: sowEventTimings,
+      [prevSeasons[0].season]: secondSowEventTimings,
+    };
+    setSowEventTimings(newSowEventTimings);
+    localStorage.setItem("sowEventTimings", JSON.stringify({ ...previouslyGeneratedData, ...newSowEventTimings }));
   };
 
   const mappedData = useMemo(() => {
+    const hasTwoLines = Object.values(sowEventTimings).every((timings) => !!timings);
+    const calculatedSowEventTimings = hasTwoLines
+      ? sowEventTimings
+      : {
+          [currentSeason.season]: { events: [], availableSoil: 0 },
+          [prevSeasons[0].season]: { events: [], availableSoil: 0 },
+        };
     const labels: string[] = [];
-    const datas: LineChartData[] = [];
+    const datas: Record<number, LineChartData[]> = {};
     const indexesWithSowEvents: number[] = [];
-    let cumulativeSownBeans = 0;
     // number of blocks is not necessarily 1,800, depends when gm was called
     const numBlocks = Math.max(
       currentSeason.sunriseBlock - prevSeasons[0].sunriseBlock,
       prevSeasons[0].sunriseBlock - prevSeasons[1].sunriseBlock,
     );
-    for (let i = 0; i < numBlocks; i++) {
-      const sowEvent = sowEventTimings.events.find((timing) => BigInt(timing.blocksSinceSunrise) === BigInt(i));
-      const textInterval = `XX:${((Number(i) * 2) / 60).toFixed(2)}`;
-      if (sowEvent) {
-        labels.push("XX");
-        cumulativeSownBeans += sowEvent.sownBeans;
 
-        datas.push({ values: [(cumulativeSownBeans / sowEventTimings.availableSoil) * 100], interval: textInterval });
-        indexesWithSowEvents.push(i);
-      } else {
-        labels.push(textInterval);
-        datas.push({ values: [(cumulativeSownBeans / sowEventTimings.availableSoil) * 100], interval: textInterval });
+    Object.entries(calculatedSowEventTimings).forEach(([key, timings], idx) => {
+      if (!datas[idx]) {
+        datas[idx] = [];
       }
-    }
+      let cumulativeSownBeans = 0;
+      for (let i = 0; i < numBlocks; i++) {
+        const sowEvent = timings.events.find((timing) => BigInt(timing.blocksSinceSunrise) === BigInt(i));
+        const timePrefix = i < 1800 ? "XX" : "XY";
+        const textInterval = `${timePrefix}:${Math.trunc((Number(i) * 2) / 60)}`;
+        if (sowEvent) {
+          labels.push("XX");
+          cumulativeSownBeans += sowEvent.sownBeans;
+          datas[idx].push({
+            values: [(cumulativeSownBeans / timings.availableSoil) * 100 || 0],
+            interval: textInterval,
+          });
+          indexesWithSowEvents.push(i);
+        } else {
+          labels.push(textInterval);
+          datas[idx].push({
+            values: [(cumulativeSownBeans / timings.availableSoil) * 100 || 0],
+            interval: textInterval,
+          });
+        }
+      }
+    });
     return datas;
-  }, [sowEventTimings.events.length]);
+  }, [sowEventTimings]);
 
   return (
     <div className="w-[600px] bg-white">
@@ -137,7 +159,7 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
           {prevSeasons[0].deltaSownBeans.toNumber().toFixed(2)}/{prevSeasons[0].issuedSoil.toNumber().toFixed(2)}
         </span>
         <span className="text-pinto-gray-4">
-          ({(prevSeasons[0].deltaSownBeans.toNumber() / prevSeasons[0].issuedSoil.toNumber()) * 100}%)
+          ({((prevSeasons[0].deltaSownBeans.toNumber() / prevSeasons[0].issuedSoil.toNumber()) * 100).toFixed(2)}%)
         </span>
       </div>
       <div className="flex text-sm mt-2 gap-1 items-center">
@@ -150,12 +172,12 @@ export const DeltaDemandChart = ({ currentSeason, prevSeasons }: DeltaDemandChar
           {prevSeasons[1].deltaSownBeans.toNumber().toFixed(2)}/{prevSeasons[1].issuedSoil.toNumber().toFixed(2)}
         </span>
         <span className="text-pinto-gray-4">
-          ({(prevSeasons[1].deltaSownBeans.toNumber() / prevSeasons[1].issuedSoil.toNumber()) * 100}%)
+          ({((prevSeasons[1].deltaSownBeans.toNumber() / prevSeasons[1].issuedSoil.toNumber()) * 100).toFixed(2)}%)
         </span>
       </div>
       <Button onClick={generateData}>Click me to gen chart</Button>
       <div className="w-full h-[200px] rounded-md mt-2">
-        <LineChart
+        <MultiLineChart
           data={mappedData}
           size="large"
           xKey="interval"

@@ -71,7 +71,10 @@ const SeasonsExplorer = () => {
     if (seasonsData?.data?.length && page * PAGE_SIZE > seasonsData?.data?.length) {
       setFromSeason(Math.max(0, fromSeason - 1000));
     }
-    setSeasons(seasonsData?.data?.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE));
+    // padded to include 2 extra seasons for calculation of delta demand chart
+    // SeasonsTable has displaySeasonData will slice the data to exclude the last 2 seasons
+    // for rendering
+    setSeasons(seasonsData?.data?.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE + 2));
   }, [seasonsData?.data?.length, page, seasonsData?.isFetching]);
 
   useEffect(() => {
