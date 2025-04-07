@@ -169,6 +169,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
         fontFamily: "Pinto",
         background: { color: "rgba(0, 0, 0, 0)" },
         textColor: hexToRgba("#9C9C9C"),
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: hexToRgba("#D9D9D9"), visible: true },
