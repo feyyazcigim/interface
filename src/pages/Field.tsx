@@ -107,10 +107,10 @@ function Field() {
                     formatter.noDec(harvestableIndex)
                   )}
                 </div>
-                <Button asChild variant={"outline"} className="rounded-full text-[1rem] sm:text-[1.25rem]">
-                  <Link to="/explorer/field">View Data</Link>
-                </Button>
               </div>
+              <Button asChild variant={"outline"} className="rounded-full text-[1rem] sm:text-[1.25rem]">
+                <Link to="/explorer/field">View Data</Link>
+              </Button>
             </div>
           )}
           
