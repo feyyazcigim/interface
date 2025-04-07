@@ -242,6 +242,8 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
         : {
             borderVisible: true,
             mode: leftPriceScaleMode,
+            borderColor: hexToRgba("#D9D9D9"),
+            textColor: hexToRgba("#9C9C9C"),
             visible: size === "full",
           },
     });
