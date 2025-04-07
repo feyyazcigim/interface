@@ -312,7 +312,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
     }
 
     setIsInitialized(true);
-  }, [selected, secondPriceScale, chartColors, chartSetupData, leftPriceScaleMode]);
+  }, [selected, secondPriceScale, chartColors, leftPriceScaleMode]);
 
   /*
   // Update price scale modes
@@ -330,7 +330,15 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
       },
     });
   }, [rightPriceScaleMode, leftPriceScaleMode, secondPriceScale]);
+
+
 */
+
+  // Handle time period changes
+  useEffect(() => {
+    if (!lastDataPoint || !isInitialized) return;
+    setTimePeriod(chart, timePeriod);
+  }, [timePeriod, lastDataPoint, isInitialized]);
 
   // Set data and subscribe to events
   useEffect(() => {
@@ -446,6 +454,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
       // Ensure time scale is properly set
       if (timePeriod) {
         // Apply time period
+        setTimePeriod(chart, timePeriod);
       } else {
         // Default to fitting all content
         chart.current.timeScale().fitContent();
@@ -484,6 +493,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                     ? lastDataPoint?.value[index]
                     : undefined;
               if (!isMobile || selected.length < 3) {
+                console.log("value: ", value);
                 return (
                   <div key={`selectedTVChart${chartId}`} className={`flex flex-col gap-2`}>
                     <div
@@ -492,6 +502,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                       } ${selected.length > 1 ? "pl-3" : "pl-0"}`}
                       style={{ borderColor: chartColors[index].lineColor }}
                     >
+                      {/*
                       <div className="flex flex-row">
                         <div className="flex">
                           <p className="pinto-body-light text-pinto-gray-4">{tooltipTitle}</p>
@@ -506,10 +517,10 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                           )}
                         </div>
                       </div>
-
-                      <h2 className="pinto-h3 text-black">
+                      */}
+                      <div className="pinto-h3 text-black">
                         {value ? chartSetupData[chartId].tickFormatter(value) : "-"}
-                      </h2>
+                      </div>
                     </div>
                     {index === 0 && (
                       <>
@@ -536,6 +547,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                     <div className="flex flex-grow">
                       <div className="flex flex-grow">
                         <p className="text-[15px]">{tooltipTitle}</p>
+                        {/*
                         {tooltipHoverText && (
                           <div
                             className="tooltip"
@@ -545,10 +557,11 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                             <div className="text-secondary inline mb-2 text-[11px]">HELP</div>
                           </div>
                         )}
+                          */}
                       </div>
-                      <p className="text-base font-semibold justify-items-end">
+                      <div className="text-base font-semibold justify-items-end">
                         {value ? chartSetupData[chartId].tickFormatter(value) : "-"}
-                      </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -563,7 +576,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
           )}
         </div>
         <div ref={chartContainerRef} id="container" style={{ height: height - 200 }} />
-        <>
+        {/* <>
           <button
             onClick={(e) => handleToggleMenu(e, "right")}
             className={`p-0 absolute ${isMobile ? "bottom-16" : "bottom-20"} right-6`}
@@ -599,6 +612,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
               </div>
             </div>
           )}
+
         </>
         {secondPriceScale && (
           <>
@@ -639,6 +653,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
             )}
           </>
         )}
+                      */}
       </div>
     </>
   );
