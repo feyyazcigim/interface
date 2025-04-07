@@ -17,8 +17,10 @@ import { beanstalkAbi } from "@/generated/contractHooks";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import IconImage from "@/components/ui/IconImage";
 import pintoIcon from "@/assets/tokens/PINTO.png";
-import { CornerBottomLeftIcon } from "@radix-ui/react-icons";
+import { CornerBottomLeftIcon, Cross1Icon, ClockIcon } from "@radix-ui/react-icons";
 import { getTokenNameByIndex } from "@/utils/token";
+import useTransaction from "@/hooks/useTransaction";
+import { diamondABI } from "@/constants/abi/diamondABI";
 
 type ExecutionData = Awaited<ReturnType<typeof fetchTractorExecutions>>[number];
 
@@ -36,49 +38,76 @@ const TractorOrdersPanel = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [rawSowBlueprintCall, setRawSowBlueprintCall] = useState<`0x${string}` | null>(null);
 
+  // Add transaction handling for cancel order
+  const { writeWithEstimateGas, submitting } = useTransaction({
+    successMessage: "Order cancelled successfully",
+    errorMessage: "Failed to cancel order",
+    successCallback: () => {
+      // Refresh data after cancellation
+      fetchData();
+    },
+  });
+
+  const handleCancelBlueprint = async (req: RequisitionEvent, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the order dialog
+    
+    if (!address || !protocolAddress) return;
+
+    try {
+      await writeWithEstimateGas({
+        address: protocolAddress,
+        abi: diamondABI,
+        functionName: "cancelBlueprint",
+        args: [req.requisition],
+      });
+    } catch (error) {
+      console.error("Error cancelling blueprint:", error);
+    }
+  };
+
+  const fetchData = async () => {
+    if (!address || !protocolAddress || !publicClient) {
+      setRequisitions([]);
+      setExecutions([]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch published requisitions, filtered to sowBlueprintv0 type
+      const latestBlock = await publicClient.getBlock({ blockTag: 'latest' });
+      const userRequisitions = await loadPublishedRequisitions(
+        address,
+        protocolAddress,
+        publicClient,
+        { number: latestBlock.number, timestamp: latestBlock.timestamp },
+        "sowBlueprintv0"  // Only get sow blueprint requisitions
+      );
+      
+      // Filter out cancelled requisitions
+      const activeRequisitions = userRequisitions.filter(req => !req.isCancelled);
+      
+      // Fetch executions
+      const userExecutions = await fetchTractorExecutions(
+        publicClient,
+        protocolAddress,
+        address
+      );
+      
+      setRequisitions(activeRequisitions);
+      setExecutions(userExecutions);
+    } catch (err) {
+      console.error("Failed to load tractor orders:", err);
+      setError("Failed to load tractor orders");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      if (!address || !protocolAddress || !publicClient) {
-        setRequisitions([]);
-        setExecutions([]);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Fetch published requisitions, filtered to sowBlueprintv0 type
-        const latestBlock = await publicClient.getBlock({ blockTag: 'latest' });
-        const userRequisitions = await loadPublishedRequisitions(
-          address,
-          protocolAddress,
-          publicClient,
-          { number: latestBlock.number, timestamp: latestBlock.timestamp },
-          "sowBlueprintv0"  // Only get sow blueprint requisitions
-        );
-        
-        // Filter out cancelled requisitions
-        const activeRequisitions = userRequisitions.filter(req => !req.isCancelled);
-        
-        // Fetch executions
-        const userExecutions = await fetchTractorExecutions(
-          publicClient,
-          protocolAddress,
-          address
-        );
-        
-        setRequisitions(activeRequisitions);
-        setExecutions(userExecutions);
-      } catch (err) {
-        console.error("Failed to load tractor orders:", err);
-        setError("Failed to load tractor orders");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, [address, protocolAddress, publicClient]);
 
@@ -228,7 +257,7 @@ const TractorOrdersPanel = () => {
         return (
           <div 
             key={`requisition-${index}`} 
-            className="box-border flex flex-col p-4 gap-2 bg-white border border-pinto-gray-2 rounded-[24px] cursor-pointer hover:shadow-md transition-shadow"
+            className="box-border flex flex-col p-4 gap-2 bg-white border border-pinto-gray-2 rounded-[24px] cursor-pointer hover:shadow-md transition-shadow relative"
             onClick={() => handleOrderClick(req)}
           >
             <div className="flex flex-col gap-2 w-full">
@@ -332,6 +361,22 @@ const TractorOrdersPanel = () => {
                   Order Completed!
                 </div>
               )}
+            </div>
+
+            {/* External actions - positioned outside the cell */}
+            <div className="absolute right-[-170px] top-0 h-full flex flex-col justify-center gap-4 pl-2">
+              <div className="flex items-center gap-2 text-pinto-gray-4 font-antarctica text-sm">
+                <ClockIcon className="h-4 w-4" />
+                <span>Executed {executionCount} time{executionCount !== 1 ? 's' : ''}</span>
+              </div>
+              <button 
+                className="flex items-center gap-2 text-pinto-red-2 font-antarctica text-sm hover:text-pinto-red-5"
+                onClick={(e) => handleCancelBlueprint(req, e)}
+                disabled={submitting}
+              >
+                <Cross1Icon className="h-4 w-4" />
+                <span>Cancel</span>
+              </button>
             </div>
           </div>
         );
