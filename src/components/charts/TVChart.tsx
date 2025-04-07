@@ -113,6 +113,8 @@ function setTimePeriod(chart: MutableRefObject<IChartApi | undefined>, timePerio
   }
 }
 
+const headerOffset = 200;
+
 const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartProps) => {
   const chartContainerRef = useRef<any>(undefined);
   const chart = useRef<IChartApi>();
@@ -201,7 +203,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
         textColor: hexToRgba("#9C9C9C"),
       },
       width: chartContainerRef.current.clientWidth,
-      height: chartContainerRef.current.clientHeight,
+      height: height - headerOffset,
     };
 
     chart.current = createChart(chartContainerRef.current, chartOptions);
@@ -210,7 +212,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
       if (chart.current && chartContainerRef.current) {
         chart.current.applyOptions({
           width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight,
+          height: height - headerOffset,
         });
       }
     };
@@ -340,7 +342,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
   useEffect(() => {
     if (!lastDataPoint || !isInitialized) return;
     setTimePeriod(chart, timePeriod);
-  }, [timePeriod, lastDataPoint, isInitialized]);
+  }, [timePeriod, isInitialized]);
 
   // Set data and subscribe to events
   useEffect(() => {
@@ -473,6 +475,18 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
     };
   }, [formattedData, selected, isInitialized]);
 
+  // Handle height changes
+  useEffect(() => {
+    if (chart.current && chartContainerRef.current) {
+      // Apply the new height directly to both the container and the chart
+      chartContainerRef.current.style.height = `${height - headerOffset}px`;
+      chart.current.applyOptions({
+        height: height - headerOffset,
+      });
+      chart.current.timeScale().fitContent(); // Re-fit content after size change
+    }
+  }, [height]);
+
   return (
     <>
       <div className="relative h-full">
@@ -578,7 +592,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
             </div>
           )}
         </div>
-        <div ref={chartContainerRef} id="container" style={{ height: height }} />
+        <div ref={chartContainerRef} id="container" style={{ height: height - 200 }} />
         {/* <>
           <button
             onClick={(e) => handleToggleMenu(e, "right")}
