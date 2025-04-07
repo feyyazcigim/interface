@@ -562,9 +562,9 @@ export function Plow() {
                       // Format with color based on profit/loss
                       const isPositive = profit >= 0;
                       const color = isPositive ? "text-pinto-green-4" : "text-pinto-red-2";
-                      const sign = isPositive ? "+" : "";
+                      const sign = isPositive ? "+" : "-";
                       
-                      return <span className={color}>{sign}${profit.toFixed(6)}</span>;
+                      return <span className={color}>{isPositive ? `${sign}$${profit.toFixed(6)}` : `${sign}$${Math.abs(profit).toFixed(6)}`}</span>;
                     })()}
                   </TableCell>
                 )}
