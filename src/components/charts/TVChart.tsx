@@ -203,6 +203,13 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
         borderColor: hexToRgba("#D9D9D9"),
         textColor: hexToRgba("#9C9C9C"),
       },
+      leftPriceScale: {
+        borderVisible: true,
+        mode: 0,
+        borderColor: hexToRgba("#D9D9D9"),
+        textColor: hexToRgba("#9C9C9C"),
+        visible: false,
+      },
       width: chartContainerRef.current.clientWidth,
       height: height - headerOffset,
     };
@@ -240,15 +247,10 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
 
     // Handle second price scale
     chart.current.applyOptions({
-      leftPriceScale: !secondPriceScale
-        ? undefined
-        : {
-            borderVisible: true,
-            mode: leftPriceScaleMode,
-            borderColor: hexToRgba("#D9D9D9"),
-            textColor: hexToRgba("#9C9C9C"),
-            visible: size === "full",
-          },
+      leftPriceScale: {
+        mode: leftPriceScaleMode,
+        visible: size === "full" && secondPriceScale,
+      },
     });
 
     // Create new series
@@ -510,7 +512,6 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                     ? lastDataPoint?.value[index]
                     : undefined;
               if (!isMobile || selected.length < 3) {
-                console.log("value: ", value);
                 return (
                   <div key={`selectedTVChart${chartId}`} className={`flex flex-col gap-2`}>
                     <div
