@@ -65,7 +65,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
   }, [displaySeasonsData]);
 
   const RenderRow = React.memo(({ index, style }: ListChildComponentProps<SeasonsTableData>) => {
-    const data = displaySeasonsData[index];
+    const data = seasonsData[index];
     const { cropScalar, cropRatio } = calculateCropScales(data.beanToMaxLpGpPerBdvRatio, data.raining, data.season);
     const deltaCropScalar = (data.deltaBeanToMaxLpGpPerBdvRatio / 1e18).toFixed(1);
     return (
