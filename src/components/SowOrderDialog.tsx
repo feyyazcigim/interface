@@ -530,10 +530,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`rounded-full px-4 py-2 ${
+                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2.5rem] sm:h-[2.75rem] text-[1rem] leading-[1.1rem] sm:text-[1.25rem] sm:leading-[1.3875rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                       isButtonActive(5)
-                        ? "bg-gradient-to-r from-[#46A955] to-[#1F9C5A] text-white border-transparent"
-                        : "bg-pinto-off-white border-pinto-gray-2 text-pinto-gray-4"
+                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                     } flex-1`}
                     onClick={() => handlePodLineSelect(5)}
                   >
@@ -542,10 +542,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`rounded-full px-4 py-2 ${
+                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2.5rem] sm:h-[2.75rem] text-[1rem] leading-[1.1rem] sm:text-[1.25rem] sm:leading-[1.3875rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                       isButtonActive(10)
-                        ? "bg-gradient-to-r from-[#46A955] to-[#1F9C5A] text-white border-transparent"
-                        : "bg-pinto-off-white border-pinto-gray-2 text-pinto-gray-4"
+                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                     } flex-1`}
                     onClick={() => handlePodLineSelect(10)}
                   >
@@ -554,10 +554,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`rounded-full px-4 py-2 ${
+                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2.5rem] sm:h-[2.75rem] text-[1rem] leading-[1.1rem] sm:text-[1.25rem] sm:leading-[1.3875rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                       isButtonActive(25)
-                        ? "bg-gradient-to-r from-[#46A955] to-[#1F9C5A] text-white border-transparent"
-                        : "bg-pinto-off-white border-pinto-gray-2 text-pinto-gray-4"
+                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                     } flex-1`}
                     onClick={() => handlePodLineSelect(25)}
                   >
@@ -566,10 +566,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`rounded-full px-4 py-2 ${
+                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2.5rem] sm:h-[2.75rem] text-[1rem] leading-[1.1rem] sm:text-[1.25rem] sm:leading-[1.3875rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                       isButtonActive(50)
-                        ? "bg-gradient-to-r from-[#46A955] to-[#1F9C5A] text-white border-transparent"
-                        : "bg-pinto-off-white border-pinto-gray-2 text-pinto-gray-4"
+                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                     } flex-1`}
                     onClick={() => handlePodLineSelect(50)}
                   >
@@ -578,10 +578,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`rounded-full px-4 py-2 ${
+                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2.5rem] sm:h-[2.75rem] text-[1rem] leading-[1.1rem] sm:text-[1.25rem] sm:leading-[1.3875rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                       isButtonActive(100)
-                        ? "bg-gradient-to-r from-[#46A955] to-[#1F9C5A] text-white border-transparent"
-                        : "bg-pinto-off-white border-pinto-gray-2 text-pinto-gray-4"
+                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                     } flex-1`}
                     onClick={() => handlePodLineSelect(100)}
                   >
@@ -598,22 +598,24 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 <div className="flex justify-between gap-2 w-full">
                   <Button
                     variant="outline"
-                    className={`rounded-full px-4 py-2 flex-1 ${
+                    size="sm"
+                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2.5rem] sm:h-[2.75rem] text-[1rem] leading-[1.1rem] sm:text-[1.25rem] sm:leading-[1.3875rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                       morningAuction
-                        ? "bg-gradient-to-r from-[#46A955] to-[#1F9C5A] text-white"
-                        : "bg-pinto-off-white border-pinto-gray-2 text-pinto-gray-4"
-                    }`}
+                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                    } flex-1`}
                     onClick={() => setMorningAuction(true)}
                   >
                     Yes
                   </Button>
                   <Button
                     variant="outline"
-                    className={`rounded-full px-4 py-2 flex-1 ${
+                    size="sm"
+                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2.5rem] sm:h-[2.75rem] text-[1rem] leading-[1.1rem] sm:text-[1.25rem] sm:leading-[1.3875rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                       !morningAuction
-                        ? "bg-gradient-to-r from-[#46A955] to-[#1F9C5A] text-white"
-                        : "bg-pinto-off-white border-pinto-gray-2 text-pinto-gray-4"
-                    }`}
+                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                    } flex-1`}
                     onClick={() => setMorningAuction(false)}
                   >
                     No
