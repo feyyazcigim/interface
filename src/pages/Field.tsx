@@ -138,16 +138,14 @@ function Field() {
                   </button>
                 </div>
                 
-                {activeTab === 'pods' && (
-                  <div className="flex flex-row gap-2 items-center">
-                    <img src={podIcon} className="w-8 h-8" alt={"total pods"} />
-                    {harvestableIndexLoading ? (
-                      <Skeleton className="w-6 h-8" />
-                    ) : (
-                      <div className="pinto-h3">{formatter.number(totalPods)}</div>
-                    )}
-                  </div>
-                )}
+                <div className="flex flex-row gap-2 items-center">
+                  <img src={podIcon} className="w-8 h-8" alt={"total pods"} />
+                  {harvestableIndexLoading ? (
+                    <Skeleton className="w-6 h-8" />
+                  ) : (
+                    <div className="pinto-h3">{formatter.number(totalPods)}</div>
+                  )}
+                </div>
               </div>
               
               {activeTab === 'activity' && (
