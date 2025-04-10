@@ -3,22 +3,22 @@ import { cn } from "@/utils/utils";
 
 interface TwoColumnCellProps {
   className: string;
+  columnKey: string;
   value: any;
   subValue: any;
   hoverContent?: any;
-  hiddenFields: string[];
 }
 
 export const TwoColumnCell = ({
   className,
+  columnKey,
   value,
   subValue,
   hoverContent,
-  hiddenFields,
 }: TwoColumnCellProps): JSX.Element | null => {
-  if (hiddenFields.includes(value)) return null;
+  const itemAlignment = columnKey === "season" ? "items-start" : "items-end";
   const cellContent = (
-    <div className="flex flex-col items-end">
+    <div className={`flex flex-col ${itemAlignment}`}>
       <span>{value}</span>
       <span className="text-xs break-keep text-pinto-gray-4">{subValue}</span>
     </div>

@@ -18,7 +18,7 @@ export interface SeasonColumn {
 export const nonHideableFields = ["season"];
 
 export const seasonColumns: SeasonColumn[] = [
-  { id: "season", name: "Season", classes: "text-left  w-[100px]", width: 100 },
+  { id: "season", name: "Season", classes: "text-left  w-[150px]", width: 150 },
   {
     id: "instantDeltaP",
     name: "Instant. ∆P",
@@ -28,7 +28,7 @@ export const seasonColumns: SeasonColumn[] = [
   },
   { id: "twaDeltaP", name: "TWA ∆P", classes: "text-right  w-[125px]", width: 125 },
   { id: "pintoSupply", name: "Pinto Supply", classes: "text-right  w-[135px]", width: 135 },
-  { id: "totalSoil", name: "Total Soil", classes: "text-right  w-[125px]", width: 125 },
+  { id: "totalSoil", name: "Total Soil", classes: "text-right  w-[110px]", width: 110 },
   { id: "soilSown", name: "Soil Sown", classes: "text-right  w-[125px]", width: 125 },
   { id: "timeSown", name: "Time All Sown", classes: "text-right  w-[150px]", width: 150 },
   { id: "price", name: "Price", classes: "text-right  w-[125px]", width: 125 },
