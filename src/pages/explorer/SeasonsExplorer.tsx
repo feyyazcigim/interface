@@ -18,7 +18,7 @@ export interface SeasonColumn {
 export const nonHideableFields = ["season"];
 
 export const seasonColumns: SeasonColumn[] = [
-  { id: "season", name: "Season", classes: "text-left  w-[160px]", width: 160 },
+  { id: "season", name: "Season", classes: "text-left  w-[150px]", width: 150 },
   {
     id: "instantDeltaP",
     name: "Instant. ∆P",
@@ -144,7 +144,6 @@ const SeasonsExplorer = () => {
     <>
       <div className="flex flex-row gap-x-2 ml-4">
         <HideColumnDropdown
-          seasonColumns={seasonColumns}
           hiddenFields={hiddenFields}
           toggleColumn={toggleColumn}
           resetAllHiddenColumns={resetAllHiddenColumns}

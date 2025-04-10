@@ -17,10 +17,11 @@ export const TwoColumnCell = ({
   hoverContent,
 }: TwoColumnCellProps): JSX.Element | null => {
   const itemAlignment = columnKey === "season" ? "items-start" : "items-end";
+  const subValueSize = columnKey === "season" ? "text-[0.75rem]" : "text-sm";
   const cellContent = (
     <div className={`flex flex-col ${itemAlignment}`}>
       <span>{value}</span>
-      <span className="text-xs break-keep text-pinto-gray-4">{subValue}</span>
+      <span className={`${subValueSize} break-keep text-pinto-gray-4`}>{subValue}</span>
     </div>
   );
 
