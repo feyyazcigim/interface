@@ -452,7 +452,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
               {/* Fund order using */}
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
-                  <div className="pinto-subheading-medium">Fund order using</div>
+                  <div className="text-[#9C9C9C] text-base font-light">Fund order using</div>
                   <Button 
                     variant="outline-gray-shadow" 
                     size="xl" 
@@ -477,13 +477,13 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
 
               {/* Execute when Temperature is at least */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-row items-center justify-between gap-4">
                 <label htmlFor={inputIds.temperature} className="text-[#9C9C9C] text-base font-light">
                   Execute when Temperature is at least
                 </label>
                 <Input
                   id={inputIds.temperature}
-                  className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-xl"
+                  className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-xl w-[140px]"
                   placeholder={`${Math.max(10, Math.floor(currentTemperature.scaled?.toNumber() || 0) + 1)}%`}
                   value={temperature}
                   onChange={(e) => setTemperature(e.target.value.replace(/[^0-9.,]/g, ""))}
