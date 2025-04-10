@@ -8,6 +8,7 @@ import { DateTime } from "luxon";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ListChildComponentProps, VariableSizeList, areEqual } from "react-window";
 import { SeasonsTableCell, SeasonsTableCellType } from "./SeasonsTableCell";
+import { trulyTheBestTimeFormat } from "@/utils/format";
 
 interface SeasonsTableProps {
   seasonsData: SeasonsTableData[];
@@ -71,7 +72,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           className="text-left"
           columnKey="season"
           value={data.season}
-          subValue={DateTime.fromSeconds(data.timestamp).toFormat("yyyy MMM dd t")}
+          subValue={DateTime.fromSeconds(data.timestamp).toFormat(trulyTheBestTimeFormat)}
           hiddenFields={hiddenFields}
         />
         <SeasonsTableCell
