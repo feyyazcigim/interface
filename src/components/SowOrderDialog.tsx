@@ -58,6 +58,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const publicClient = usePublicClient();
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
   const [formStep, setFormStep] = useState(1); // Track which step of the form we're on
+  const [activeTipButton, setActiveTipButton] = useState<"down5" | "down1" | "average" | "up1" | "up5" | null>("average");
 
   // Get LP tokens
   const lpTokens = useMemo(() => whitelistedTokens.filter((t) => t.isLP), [whitelistedTokens]);
@@ -348,6 +349,36 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       return totalValue;
     }
     return TokenValue.ZERO;
+  };
+
+  // Helper function to calculate tip values for different percentages
+  const getTipValue = (type: "down5" | "down1" | "average" | "up1" | "up5") => {
+    const baseValue = 1;
+    switch (type) {
+      case "down5": return (baseValue * 0.95).toFixed(2);
+      case "down1": return (baseValue * 0.99).toFixed(2);
+      case "average": return "1.00";
+      case "up1": return (baseValue * 1.01).toFixed(2);
+      case "up5": return (baseValue * 1.05).toFixed(2);
+    }
+  };
+
+  // Helper function to check which button should be active based on current tip value
+  const checkActiveTipButton = (tipValue: string) => {
+    const normalizedTip = parseFloat(tipValue).toFixed(2);
+    if (normalizedTip === getTipValue("down5")) return "down5";
+    if (normalizedTip === getTipValue("down1")) return "down1";
+    if (normalizedTip === "1.00") return "average";
+    if (normalizedTip === getTipValue("up1")) return "up1";
+    if (normalizedTip === getTipValue("up5")) return "up5";
+    return null;
+  };
+
+  // Handler for tip button clicks
+  const handleTipButtonClick = (type: "down5" | "down1" | "average" | "up1" | "up5") => {
+    setActiveTipButton(type);
+    const newValue = getTipValue(type);
+    setOperatorTip(newValue);
   };
 
   if (!open) return null;
@@ -656,7 +687,13 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         className="h-12 px-3 py-1.5 flex-1 rounded-l-xl focus:outline-none text-base font-light"
                         placeholder="0.00"
                         value={operatorTip}
-                        onChange={(e) => setOperatorTip(e.target.value.replace(/[^0-9.,]/g, ""))}
+                        onChange={(e) => {
+                          const newValue = e.target.value.replace(/[^0-9.,]/g, "");
+                          setOperatorTip(newValue);
+                          // Check if the new value matches any of our buttons
+                          const activeButton = checkActiveTipButton(newValue);
+                          setActiveTipButton(activeButton);
+                        }}
                         type="text"
                       />
                       <div className="flex items-center gap-2 px-4 rounded-r-xl bg-white">
@@ -669,74 +706,60 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                          operatorTip === (parseFloat(operatorTip || "1") * 0.95).toFixed(2)
-                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
+                          activeTipButton === "down5"
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                        } flex-1`}
-                        onClick={() => {
-                          const currentTip = parseFloat(operatorTip || "1");
-                          setOperatorTip(Math.max(0, currentTip * 0.95).toFixed(2));
-                        }}
+                        }`}
+                        onClick={() => handleTipButtonClick("down5")}
                       >
                         5% ↓
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                          operatorTip === (parseFloat(operatorTip || "1") * 0.99).toFixed(2)
-                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
+                          activeTipButton === "down1"
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                        } flex-1`}
-                        onClick={() => {
-                          const currentTip = parseFloat(operatorTip || "1");
-                          setOperatorTip(Math.max(0, currentTip * 0.99).toFixed(2));
-                        }}
+                        }`}
+                        onClick={() => handleTipButtonClick("down1")}
                       >
                         1% ↓
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                          operatorTip === "1"
-                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
+                          activeTipButton === "average"
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                        } flex-1`}
-                        onClick={() => {
-                          setOperatorTip("1");
-                        }}
+                        }`}
+                        onClick={() => handleTipButtonClick("average")}
                       >
                         Average
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                          operatorTip === (parseFloat(operatorTip || "1") * 1.01).toFixed(2)
-                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
+                          activeTipButton === "up1"
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                        } flex-1`}
-                        onClick={() => {
-                          const currentTip = parseFloat(operatorTip || "1");
-                          setOperatorTip((currentTip * 1.01).toFixed(2));
-                        }}
+                        }`}
+                        onClick={() => handleTipButtonClick("up1")}
                       >
                         1% ↑
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                          operatorTip === (parseFloat(operatorTip || "1") * 1.05).toFixed(2)
-                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
+                          activeTipButton === "up5"
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                        } flex-1`}
-                        onClick={() => {
-                          const currentTip = parseFloat(operatorTip || "1");
-                          setOperatorTip((currentTip * 1.05).toFixed(2));
-                        }}
+                        }`}
+                        onClick={() => handleTipButtonClick("up5")}
                       >
                         5% ↑
                       </Button>
