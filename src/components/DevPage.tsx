@@ -394,8 +394,8 @@ export default function DevPage() {
               <Button onClick={() => executeTask("updateOracleTimeouts")} disabled={loading === "updateOracleTimeouts"}>
                 Update Oracle Timeouts
               </Button>
-              <Button onClick={() => executeTask("TractorHelpers")} disabled={loading === "TractorHelpers"}>
-                Deploy Tractor Stuff
+              <Button onClick={() => executeTask("PI-8")} disabled={loading === "TractorHelpers"}>
+                Deploy PI-8
               </Button>
               <Button
                 onClick={handleQuickMint}
