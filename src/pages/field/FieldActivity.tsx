@@ -287,29 +287,29 @@ const FieldActivity: React.FC = () => {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Season</th>
-                <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Date</th>
-                <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Time</th>
-                <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Address</th>
-                <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Txn Hash</th>
-                <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Temp</th>
-                <th className="px-2 py-2 text-right text-xs font-antarctica font-light text-pinto-gray-4">Amount Sown</th>
-                <th className="px-2 py-2 text-right text-xs font-antarctica font-light text-pinto-gray-4">Pods minted</th>
-                <th className="px-2 py-2 text-right text-xs font-antarctica font-light text-pinto-gray-4">Place in Line</th>
+                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Season</th>
+                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Date</th>
+                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Time</th>
+                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Address</th>
+                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Txn Hash</th>
+                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Temp</th>
+                <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Amount Sown</th>
+                <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Pods minted</th>
+                <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Place in Line</th>
               </tr>
             </thead>
             <tbody>
               {Array(5).fill(0).map((_, index) => (
                 <tr key={index}>
-                  <td className="px-2 py-2"><Skeleton className="h-4 w-12" /></td>
-                  <td className="px-2 py-2"><Skeleton className="h-4 w-24" /></td>
-                  <td className="px-2 py-2"><Skeleton className="h-4 w-20" /></td>
-                  <td className="px-2 py-2"><Skeleton className="h-4 w-28" /></td>
-                  <td className="px-2 py-2"><Skeleton className="h-4 w-28" /></td>
-                  <td className="px-2 py-2"><Skeleton className="h-4 w-14" /></td>
-                  <td className="px-2 py-2"><Skeleton className="h-4 w-20" /></td>
-                  <td className="px-2 py-2"><Skeleton className="h-4 w-20" /></td>
-                  <td className="px-2 py-2"><Skeleton className="h-4 w-24" /></td>
+                  <td className="px-2 py-1"><Skeleton className="h-3 w-12" /></td>
+                  <td className="px-2 py-1"><Skeleton className="h-3 w-24" /></td>
+                  <td className="px-2 py-1"><Skeleton className="h-3 w-20" /></td>
+                  <td className="px-2 py-1"><Skeleton className="h-3 w-28" /></td>
+                  <td className="px-2 py-1"><Skeleton className="h-3 w-28" /></td>
+                  <td className="px-2 py-1"><Skeleton className="h-3 w-14" /></td>
+                  <td className="px-2 py-1"><Skeleton className="h-3 w-20" /></td>
+                  <td className="px-2 py-1"><Skeleton className="h-3 w-20" /></td>
+                  <td className="px-2 py-1"><Skeleton className="h-3 w-24" /></td>
                 </tr>
               ))}
             </tbody>
@@ -332,7 +332,7 @@ const FieldActivity: React.FC = () => {
     <div className="w-full relative">
       {/* Add Tractor Orders label and link */}
       {!loadingTractorOrders && tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length > 0 && (
-        <div style={{ position: 'absolute', right: '-17rem', top: '3rem' }} className="flex flex-col items-start">
+        <div style={{ position: 'absolute', right: '-18rem', top: '3rem' }} className="flex flex-col items-start">
           <span className="text-sm font-antarctica font-light text-pinto-dark mb-2">
             Tractor Soil Orders for next Season
           </span>
@@ -345,6 +345,7 @@ const FieldActivity: React.FC = () => {
         </div>
       )}
       
+      
       {/* Tractor Orders Dialog */}
       <SoilOrderbookDialog 
         open={showTractorOrdersDialog} 
@@ -352,25 +353,26 @@ const FieldActivity: React.FC = () => {
       />
       
       <div className="overflow-x-auto">
+
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-pinto-gray-3/20">
-              <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Season</th>
-              <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Date</th>
-              <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Time</th>
-              <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Address</th>
-              <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Txn Hash</th>
-              <th className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Temp</th>
-              <th className="px-2 py-2 text-right text-xs font-antarctica font-light text-pinto-gray-4">Amount Sown</th>
-              <th className="px-2 py-2 text-right text-xs font-antarctica font-light text-pinto-gray-4">Pods minted</th>
-              <th className="px-2 py-2 text-right text-xs font-antarctica font-light text-pinto-gray-4">Place in Line</th>
+              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Season</th>
+              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Date</th>
+              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Time</th>
+              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Address</th>
+              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Txn Hash</th>
+              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Temp</th>
+              <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Amount Sown</th>
+              <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Pods minted</th>
+              <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Place in Line</th>
             </tr>
           </thead>
           <tbody>
             {/* Tractor Orders Section */}
             {loadingTractorOrders ? (
               <tr>
-                <td colSpan={9} className="px-2 py-4 text-center text-xs font-antarctica font-light text-pinto-gray-4">
+                <td colSpan={9} className="px-2 py-2 text-center text-xs font-antarctica font-light text-pinto-gray-4">
                   Loading Tractor orders...
                 </td>
               </tr>
@@ -385,16 +387,16 @@ const FieldActivity: React.FC = () => {
                         key={`tractor-${order.requisition.blueprintHash}`} 
                         className={`hover:bg-pinto-green-1 transition-colors ${hoveredAddress === order.requisition.blueprint.publisher ? 'bg-pinto-green-1' : ''}`}
                       >
-                        <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
+                        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
                           {Number(currentSeason) + 1}
                         </td>
-                        <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
+                        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
                           {new Date().toLocaleDateString()}
                         </td>
-                        <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
+                        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
                           {estimateExecutionTime(order)}
                         </td>
-                        <td className="px-2 py-2">
+                        <td className="px-2 py-1">
                           <a 
                             href={`https://basescan.org/address/${order.requisition.blueprint.publisher}`} 
                             target="_blank" 
@@ -406,39 +408,39 @@ const FieldActivity: React.FC = () => {
                             {formatAddress(order.requisition.blueprint.publisher)}
                           </a>
                         </td>
-                        <td className="px-2 py-2 flex items-center">
+                        <td className="px-2 py-1 flex items-center">
                           <span className="text-xs font-antarctica font-light text-pinto-gray-4 mr-2">
-                            <span className="text-sm" role="img" aria-label="Tractor">🚜</span>
+                            <span className="text-xs" role="img" aria-label="Tractor">🚜</span>
                           </span>
                         </td>
-                        <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
+                        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
                           ≥ {temp.toFixed(0)}%
                         </td>
-                        <td className="px-2 py-2 text-right">
+                        <td className="px-2 py-1 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <IconImage 
                               src={pintoIcon}
                               alt="PINTO" 
-                              size={4} 
+                              size={3} 
                             />
                             <span className="text-xs font-antarctica font-light text-pinto-gray-4">
                               {`${formatNumberWithCommas(parseFloat(order.amountSowableNextSeason.toHuman()).toFixed(2))}`}
                             </span>
                           </div>
                         </td>
-                        <td className="px-2 py-2 text-right">
+                        <td className="px-2 py-1 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <IconImage 
                               src={podIcon}
                               alt="Pods" 
-                              size={4} 
+                              size={3} 
                             />
                             <span className="text-xs font-antarctica font-light text-pinto-gray-4">
                               {`${formatNumberWithCommas(parseFloat(estimateOrderPods(order).toHuman()).toFixed(2))}`}
                             </span>
                           </div>
                         </td>
-                        <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4 text-right">
+                        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4 text-right">
                           {formatter.number(order.estimatedPlaceInLine.toNumber())}
                         </td>
                       </tr>
@@ -466,10 +468,10 @@ const FieldActivity: React.FC = () => {
                 key={activity.id} 
                 className={`hover:bg-pinto-green-1 transition-colors ${hoveredAddress === activity.address ? 'bg-pinto-green-1' : ''}`}
               >
-                <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{activity.season}</td>
-                <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{formatDate(activity.timestamp)}</td>
-                <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">{formatTime(activity.timestamp)}</td>
-                <td className="px-2 py-2">
+                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{activity.season}</td>
+                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatDate(activity.timestamp)}</td>
+                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatTime(activity.timestamp)}</td>
+                <td className="px-2 py-1">
                   <a 
                     href={`https://basescan.org/address/${activity.address}`} 
                     target="_blank" 
@@ -481,7 +483,7 @@ const FieldActivity: React.FC = () => {
                     {formatAddress(activity.address)}
                   </a>
                 </td>
-                <td className="px-2 py-2">
+                <td className="px-2 py-1">
                   <a 
                     href={`https://basescan.org/tx/${activity.txHash}`} 
                     target="_blank" 
@@ -491,34 +493,34 @@ const FieldActivity: React.FC = () => {
                     {formatAddress(activity.txHash)}
                   </a>
                 </td>
-                <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark">
+                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
                   {activity.temperature.toFixed(0)}%
                 </td>
-                <td className="px-2 py-2 text-right">
+                <td className="px-2 py-1 text-right">
                   <div className="flex items-center justify-end gap-1">
                     <IconImage 
                       src={pintoIcon}
                       alt="PINTO" 
-                      size={4} 
+                      size={3} 
                     />
                     <span className="text-xs font-antarctica font-light text-pinto-dark">
                       {`${formatNumberWithCommas(parseFloat(activity.amount.toHuman()).toFixed(2))}`}
                     </span>
                   </div>
                 </td>
-                <td className="px-2 py-2 text-right">
+                <td className="px-2 py-1 text-right">
                   <div className="flex items-center justify-end gap-1">
                     <IconImage 
                       src={podIcon}
                       alt="Pods" 
-                      size={4} 
+                      size={3} 
                     />
                     <span className="text-xs font-antarctica font-light text-pinto-dark">
                       {`${formatNumberWithCommas(parseFloat(activity.pods.toHuman()).toFixed(2))}`}
                     </span>
                   </div>
                 </td>
-                <td className="px-2 py-2 text-xs font-antarctica font-light text-pinto-dark text-right">{activity.placeInLine}</td>
+                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark text-right">{activity.placeInLine}</td>
               </tr>
             ))}
           </tbody>
