@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog"
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
-import { usePodLine } from "@/state/useFieldData";
+import { usePodLine, useTemperature } from "@/state/useFieldData";
 import { TokenValue } from "@/classes/TokenValue";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { formatter } from "@/utils/format";
@@ -34,6 +34,7 @@ interface SowOrderDialogProps {
 
 export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogProps) {
   const podLine = usePodLine();
+  const currentTemperature = useTemperature();
   const [podLineLength, setPodLineLength] = useState("");
   const [rawPodLineLength, setRawPodLineLength] = useState(""); // Track raw input
   const podLineLengthTimeoutRef = useRef<NodeJS.Timeout | null>(null); // For debounce
@@ -188,8 +189,8 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     return podLineLength === calculatePodLineValue(increment);
   };
 
-  // Update the dev mode defaults
-  useEffect(() => {
+  // This code is used to generate random numbers for quick order creation in dev mode
+  /*useEffect(() => {
     if (isDev()) {
       // Generate random numbers within specified ranges
       const randomTotal = Math.floor(Math.random() * (10000 - 1000) + 1000);
@@ -206,7 +207,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       setMaxPerSeason(randomMaxSeason.toString());
       setSelectedTokenStrategy({ type: "LOWEST_SEEDS" });
     }
-  }, [isDev]);
+  }, [isDev]);*/
 
   // Add this function to check if the pod line length is valid
   const isPodLineLengthValid = () => {
@@ -463,7 +464,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 <Input
                   id={inputIds.temperature}
                   className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-xl"
-                  placeholder="400%"
+                  placeholder={`${Math.max(10, Math.floor(currentTemperature.scaled?.toNumber() || 0) + 1)}%`}
                   value={temperature}
                   onChange={(e) => setTemperature(e.target.value.replace(/[^0-9.,]/g, ""))}
                   type="text"
