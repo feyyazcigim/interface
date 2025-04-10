@@ -49,6 +49,45 @@ const firstCaseExpected = {
   },
 };
 
+const firstCaseExpectedRaining = {
+  0: {
+    cropScalar: 0,
+    cropRatio: 33,
+  },
+  [onePercentScalar]: {
+    cropScalar: 1,
+    cropRatio: 33.7,
+  },
+  [twoPercentScalar]: {
+    cropScalar: 2,
+    cropRatio: 34.3,
+  },
+  [twentyFivePercentScalar]: {
+    cropScalar: 25,
+    cropRatio: 49.8,
+  },
+  [thirtyThreePercentScalar]: {
+    cropScalar: 33,
+    cropRatio: 55.1,
+  },
+  [fiftyPercentScalar]: {
+    cropScalar: 50,
+    cropRatio: 66.5,
+  },
+  [seventyFivePercentScalar]: {
+    cropScalar: 75,
+    cropRatio: 83.3,
+  },
+  [ninetyNinePercentScalar]: {
+    cropScalar: 99,
+    cropRatio: 99.3,
+  },
+  1e20: {
+    cropScalar: 100,
+    cropRatio: 100,
+  },
+};
+
 //crop ratio max 150%
 const secondCaseExpected = {
   0: {
@@ -135,6 +174,14 @@ describe("calculateCropScales", () => {
     (cropScalarInput) => {
       const expectedCropScales = firstCaseExpected[cropScalarInput];
       const cropScales = calculateCropScales(Number(cropScalarInput), false, 1);
+      expect(cropScales).toEqual(expectedCropScales);
+    },
+  );
+  it.each(Object.keys(firstCaseExpectedRaining))(
+    "should calculate crop scalars correctly for seasons where crop ratio max is 100% and it is raining",
+    (cropScalarInput) => {
+      const expectedCropScales = firstCaseExpectedRaining[cropScalarInput];
+      const cropScales = calculateCropScales(Number(cropScalarInput), true, 1);
       expect(cropScales).toEqual(expectedCropScales);
     },
   );
