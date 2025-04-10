@@ -5,12 +5,18 @@ interface TableRowCornersProps {
   rowNumber: number; // Zero index
   active?: boolean;
   standalone?: boolean; // Add new prop for standalone usage
+  cornerRadius?: string; // Add prop for corner radius
 }
 
 /**
  * Component designed to add animated corners to table rows or standalone elements
  */
-const CornerBorders: FC<TableRowCornersProps> = ({ rowNumber = 0, active = true, standalone = false }) => {
+const CornerBorders: FC<TableRowCornersProps> = ({ 
+  rowNumber = 0, 
+  active = true, 
+  standalone = false,
+  cornerRadius = "0" // Default radius set to 0 for square corners
+}) => {
   // Animation variants
   const cornerVariants: Variants = {
     // Top left corner
@@ -63,6 +69,7 @@ const CornerBorders: FC<TableRowCornersProps> = ({ rowNumber = 0, active = true,
           animate="topLeftIn"
           variants={cornerVariants}
           className="absolute mt-[1px] top-0 left-0 border-pinto-green-4 w-6 h-6 border-t-2 border-l-2"
+          style={{ borderTopLeftRadius: cornerRadius }}
         />
 
         {/* Top Right Corner */}
@@ -72,6 +79,7 @@ const CornerBorders: FC<TableRowCornersProps> = ({ rowNumber = 0, active = true,
           variants={cornerVariants}
           transition={{ delay: 0.5 }}
           className="absolute mt-[1px] top-0 right-0 border-pinto-green-4 w-6 h-6 border-t-2 border-r-2"
+          style={{ borderTopRightRadius: cornerRadius }}
         />
 
         {/* Bottom Left Corner */}
@@ -81,6 +89,7 @@ const CornerBorders: FC<TableRowCornersProps> = ({ rowNumber = 0, active = true,
           variants={cornerVariants}
           transition={{ delay: 1.0 }}
           className="absolute -mb-[1px] bottom-0 left-0 border-pinto-green-4 w-6 h-6 border-l-2 border-b-2"
+          style={{ borderBottomLeftRadius: cornerRadius }}
         />
 
         {/* Bottom Right Corner */}
@@ -90,6 +99,7 @@ const CornerBorders: FC<TableRowCornersProps> = ({ rowNumber = 0, active = true,
           variants={cornerVariants}
           transition={{ delay: 1.5 }}
           className="absolute -mb-[1px] bottom-0 right-0 border-pinto-green-4 w-6 h-6 border-r-2 border-b-2"
+          style={{ borderBottomRightRadius: cornerRadius }}
         />
       </div>
     </>

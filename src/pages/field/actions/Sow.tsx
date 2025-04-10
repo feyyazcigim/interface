@@ -414,7 +414,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
                   </div>
                   <span className="font-antarctica font-[340] text-base leading-[110%] text-[#9C9C9C] group-hover:text-pinto-green-3">Use 🚜 Tractor to set up an order for Pods over time</span>
                 </button>
-                <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} />
+                <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="0.75rem" />
               </div>
             </div>
           </div>
