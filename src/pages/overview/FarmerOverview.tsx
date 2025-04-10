@@ -313,20 +313,42 @@ const Overview = () => {
       <div className="flex flex-col items-center">
         <Tabs defaultValue="deposits" className="w-full" value={currentTab} onValueChange={(value) => setCurrentTab(value as "deposits" | "pods" | "tractor")}>
           <TabsList
-            className={`h-0 bg-transparent p-0 border-0 -ml-3 flex ${hasOnlyPods ? "flex-row-reverse justify-end" : "flex-row justify-start"}`}
+            className="h-0 bg-transparent p-0 border-0 -ml-3 flex flex-row justify-start"
           >
-            <TabsTrigger
-              className="font-[400] text-[1.5rem] sm:text-[2rem]  text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
-              value="deposits"
-            >
-              My Deposits
-            </TabsTrigger>
-            <TabsTrigger
-              className="font-[400] text-[1.5rem] sm:text-[2rem] text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
-              value="pods"
-            >
-              My Pods
-            </TabsTrigger>
+            {/* Conditionally render My Deposits and My Pods based on hasOnlyPods */}
+            {hasOnlyPods ? (
+              <>
+                <TabsTrigger
+                  className="font-[400] text-[1.5rem] sm:text-[2rem] text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
+                  value="pods"
+                >
+                  My Pods
+                </TabsTrigger>
+                <TabsTrigger
+                  className="font-[400] text-[1.5rem] sm:text-[2rem] text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
+                  value="deposits"
+                >
+                  My Deposits
+                </TabsTrigger>
+              </>
+            ) : (
+              <>
+                <TabsTrigger
+                  className="font-[400] text-[1.5rem] sm:text-[2rem] text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
+                  value="deposits"
+                >
+                  My Deposits
+                </TabsTrigger>
+                <TabsTrigger
+                  className="font-[400] text-[1.5rem] sm:text-[2rem] text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
+                  value="pods"
+                >
+                  My Pods
+                </TabsTrigger>
+              </>
+            )}
+            
+            {/* Always render My Tractor Orders last */}
             <TabsTrigger
               className="font-[400] text-[1.5rem] sm:text-[2rem] text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
               value="tractor"
