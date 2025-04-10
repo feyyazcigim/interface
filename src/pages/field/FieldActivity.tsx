@@ -518,7 +518,7 @@ const FieldActivity: React.FC = () => {
             {/* Separator row between tractor orders and regular activity */}
             {activities.length > 0 && tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length > 0 && (
               <tr>
-                <td colSpan={9} className="border-b-2 border-pinto-gray-3/20 py-1"></td>
+                <td colSpan={9} className="border-b-2 border-pinto-gray-3/20 py-0"></td>
               </tr>
             )}
             
