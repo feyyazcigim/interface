@@ -58,6 +58,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [isLoading, setIsLoading] = useState(false);
   const publicClient = usePublicClient();
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
+  const [formStep, setFormStep] = useState(1); // Track which step of the form we're on
 
   // Get LP tokens
   const lpTokens = useMemo(() => whitelistedTokens.filter((t) => t.isLP), [whitelistedTokens]);
@@ -224,7 +225,15 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     }
   };
 
+  // Update handleNext to create two different steps
   const handleNext = async () => {
+    // First step just moves to the next form view
+    if (formStep === 1) {
+      setFormStep(2);
+      return;
+    }
+
+    // Second step (operator tip) submits the form
     try {
       console.time("handleNext total");
       setIsLoading(true);
@@ -282,6 +291,15 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       console.error("Error creating sow tractor data:", e);
       toast.error("Failed to create order");
       setIsLoading(false);
+    }
+  };
+
+  // Add handle back function
+  const handleBack = () => {
+    if (formStep === 2) {
+      setFormStep(1);
+    } else {
+      onOpenChange(false);
     }
   };
 
@@ -365,309 +383,416 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
             {/* Form Fields */}
             <div className="flex flex-col gap-6 flex-1">
-              {/* I want to Sow up to */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor={inputIds.totalAmount} className="text-[#9C9C9C] text-base font-light">
-                  I want to Sow up to
-                </label>
-                <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
-                  <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
+              {formStep === 1 ? (
+                // Step 1 - Main Form
+                <>
+                  {/* I want to Sow up to */}
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor={inputIds.totalAmount} className="text-[#9C9C9C] text-base font-light">
+                      I want to Sow up to
+                    </label>
+                    <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
+                      <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
+                        <Input
+                          id={inputIds.totalAmount}
+                          className="h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                          placeholder="0.00"
+                          value={totalAmount}
+                          onChange={(e) => setTotalAmount(e.target.value.replace(/[^0-9.,]/g, ""))}
+                          type="text"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
+                        <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
+                        <span className="text-black">PINTO</span>
+                      </div>
+                    </div>
+                  </div>
+
+
+                  {/* Min and Max per Season - combined in a single row */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-4">
+                      {/* Min per Season */}
+                      <div className="flex flex-col gap-2 flex-1">
+                        <label htmlFor={inputIds.minPerSeason} className="text-[#9C9C9C] text-base font-light">
+                          Min per Season
+                        </label>
+                        <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
+                          <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
+                            <Input
+                              id={inputIds.minPerSeason}
+                              className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
+                              placeholder="0.00"
+                              value={minSoil}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^0-9.,]/g, "");
+                                setMinSoil(value);
+                              }}
+                              type="text"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
+                            <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
+                            <span className="text-black">PINTO</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Max per Season */}
+                      <div className="flex flex-col gap-2 flex-1">
+                        <label htmlFor={inputIds.maxPerSeason} className="text-[#9C9C9C] text-base font-light">
+                          Max per Season
+                        </label>
+                        <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
+                          <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
+                            <Input
+                              id={inputIds.maxPerSeason}
+                              className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
+                              placeholder="0.00"
+                              value={maxPerSeason}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^0-9.,]/g, "");
+                                setMaxPerSeason(value);
+                              }}
+                              type="text"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
+                            <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
+                            <span className="text-black">PINTO</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Error message */}
+                  {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
+
+                  {/* Fund order using */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <div className="text-[#9C9C9C] text-base font-light">Fund order using</div>
+                      <Button 
+                        variant="outline-gray-shadow" 
+                        size="xl" 
+                        rounded="full"
+                        onClick={() => setShowTokenSelectionDialog(true)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {selectedTokenStrategy.type === "SPECIFIC_TOKEN" && (
+                            <IconImage 
+                              src={whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.logoURI || ""} 
+                              alt="token" 
+                              size={6} 
+                              className="rounded-full"
+                            />
+                          )}
+                          <div className="pinto-body-light">{getSelectedTokenDisplay()}</div>
+                          <IconImage src={arrowDown} size={3} alt="open token select dialog" />
+                        </div>
+                      </Button>
+                    </div>
+                  </div>
+
+
+                  {/* Execute when Temperature is at least */}
+                  <div className="flex flex-row items-center justify-between gap-4">
+                    <label htmlFor={inputIds.temperature} className="text-[#9C9C9C] text-base font-light">
+                      Execute when Temperature is at least
+                    </label>
                     <Input
-                      id={inputIds.totalAmount}
-                      className="h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
-                      placeholder="0.00"
-                      value={totalAmount}
-                      onChange={(e) => setTotalAmount(e.target.value.replace(/[^0-9.,]/g, ""))}
+                      id={inputIds.temperature}
+                      className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-xl w-[140px]"
+                      placeholder={`${Math.max(10, Math.floor(currentTemperature.scaled?.toNumber() || 0) + 1)}%`}
+                      value={temperature}
+                      onChange={(e) => setTemperature(e.target.value.replace(/[^0-9.,]/g, ""))}
                       type="text"
                     />
                   </div>
-                  <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
-                    <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
-                    <span className="text-black">PINTO</span>
-                  </div>
-                </div>
-              </div>
 
-
-              {/* Min and Max per Season - combined in a single row */}
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-4">
-                  {/* Min per Season */}
-                  <div className="flex flex-col gap-2 flex-1">
-                    <label htmlFor={inputIds.minPerSeason} className="text-[#9C9C9C] text-base font-light">
-                      Min per Season
+                  {/* Execute when the length of the Pod Line is at most */}
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor={inputIds.podLineLength} className="text-[#9C9C9C] text-base font-light">
+                      Execute when the length of the Pod Line is at most
                     </label>
-                    <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
-                      <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
-                        <Input
-                          id={inputIds.minPerSeason}
-                          className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
-                          placeholder="0.00"
-                          value={minSoil}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9.,]/g, "");
-                            setMinSoil(value);
-                          }}
-                          type="text"
-                        />
+                    <Input
+                      id={inputIds.podLineLength}
+                      className={`h-12 px-3 py-1.5 border ${
+                        !isPodLineLengthValid() ? "border-red-500" : "border-[#D9D9D9]"
+                      } rounded-xl`}
+                      placeholder="9,000,000"
+                      value={podLineLength}
+                      onChange={(e) => {
+                        // Allow numbers, commas, and at most one decimal point
+                        const value = e.target.value.replace(/[^\d,\.]/g, "");
+                        // Ensure at most one decimal point
+                        const decimalCount = (value.match(/\./g) || []).length;
+                        const sanitizedValue = decimalCount > 1 
+                          ? value.replace(/\./g, (match, index) => index === value.indexOf('.') ? match : '')
+                          : value;
+                        
+                        // Store raw input and update displayed value
+                        setRawPodLineLength(sanitizedValue.replace(/,/g, ""));
+                        setPodLineLength(sanitizedValue);
+                      }}
+                    />
+                    {!isPodLineLengthValid() && (
+                      <div className="bg-red-100 border border-red-300 text-red-600 px-4 py-3 rounded-lg flex items-start gap-2">
+                        <WarningIcon color="#DC2626" width={25} height={25} />
+                        <span>
+                          Pod Line is length is {formatter.number(podLine)}, this order cannot execute under current
+                          conditions.
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
-                        <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
-                        <span className="text-black">PINTO</span>
-                      </div>
+                    )}
+                    <div className="flex justify-between gap-2 mt-1 w-full">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          isButtonActive(5)
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => handlePodLineSelect(5)}
+                      >
+                        5% ↑
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          isButtonActive(10)
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => handlePodLineSelect(10)}
+                      >
+                        10% ↑
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          isButtonActive(25)
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => handlePodLineSelect(25)}
+                      >
+                        25% ↑
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          isButtonActive(50)
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => handlePodLineSelect(50)}
+                      >
+                        50% ↑
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          isButtonActive(100)
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => handlePodLineSelect(100)}
+                      >
+                        100% ↑
+                      </Button>
                     </div>
                   </div>
 
-                  {/* Max per Season */}
-                  <div className="flex flex-col gap-2 flex-1">
-                    <label htmlFor={inputIds.maxPerSeason} className="text-[#9C9C9C] text-base font-light">
-                      Max per Season
+                  {/* Execute during the Morning Auction */}
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor={inputIds.morningAuction} className="text-[#9C9C9C] text-base font-light">
+                      Execute during the Morning Auction
                     </label>
-                    <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
-                      <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
-                        <Input
-                          id={inputIds.maxPerSeason}
-                          className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
-                          placeholder="0.00"
-                          value={maxPerSeason}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9.,]/g, "");
-                            setMaxPerSeason(value);
-                          }}
-                          type="text"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
-                        <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
-                        <span className="text-black">PINTO</span>
-                      </div>
+                    <div className="flex justify-between gap-2 w-full">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          morningAuction
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => setMorningAuction(true)}
+                      >
+                        Yes
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          !morningAuction
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => setMorningAuction(false)}
+                      >
+                        No
+                      </Button>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Error message */}
-              {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
-
-              {/* Fund order using */}
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <div className="text-[#9C9C9C] text-base font-light">Fund order using</div>
-                  <Button 
-                    variant="outline-gray-shadow" 
-                    size="xl" 
-                    rounded="full"
-                    onClick={() => setShowTokenSelectionDialog(true)}
-                  >
-                    <div className="flex items-center gap-2">
-                      {selectedTokenStrategy.type === "SPECIFIC_TOKEN" && (
-                        <IconImage 
-                          src={whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.logoURI || ""} 
-                          alt="token" 
-                          size={6} 
-                          className="rounded-full"
-                        />
-                      )}
-                      <div className="pinto-body-light">{getSelectedTokenDisplay()}</div>
-                      <IconImage src={arrowDown} size={3} alt="open token select dialog" />
+                </>
+              ) : (
+                // Step 2 - Operator Tip
+                <div className="flex flex-col gap-6 mt-6">
+                  <div className="flex flex-col">
+                    <div className="text-[#9C9C9C] text-base font-light mb-4">
+                      I'm willing to pay someone
                     </div>
-                  </Button>
-                </div>
-              </div>
-
-
-              {/* Execute when Temperature is at least */}
-              <div className="flex flex-row items-center justify-between gap-4">
-                <label htmlFor={inputIds.temperature} className="text-[#9C9C9C] text-base font-light">
-                  Execute when Temperature is at least
-                </label>
-                <Input
-                  id={inputIds.temperature}
-                  className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-xl w-[140px]"
-                  placeholder={`${Math.max(10, Math.floor(currentTemperature.scaled?.toNumber() || 0) + 1)}%`}
-                  value={temperature}
-                  onChange={(e) => setTemperature(e.target.value.replace(/[^0-9.,]/g, ""))}
-                  type="text"
-                />
-              </div>
-
-              {/* Execute when the length of the Pod Line is at most */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor={inputIds.podLineLength} className="text-[#9C9C9C] text-base font-light">
-                  Execute when the length of the Pod Line is at most
-                </label>
-                <Input
-                  id={inputIds.podLineLength}
-                  className={`h-12 px-3 py-1.5 border ${
-                    !isPodLineLengthValid() ? "border-red-500" : "border-[#D9D9D9]"
-                  } rounded-xl`}
-                  placeholder="9,000,000"
-                  value={podLineLength}
-                  onChange={(e) => {
-                    // Allow numbers, commas, and at most one decimal point
-                    const value = e.target.value.replace(/[^\d,\.]/g, "");
-                    // Ensure at most one decimal point
-                    const decimalCount = (value.match(/\./g) || []).length;
-                    const sanitizedValue = decimalCount > 1 
-                      ? value.replace(/\./g, (match, index) => index === value.indexOf('.') ? match : '')
-                      : value;
                     
-                    // Store raw input and update displayed value
-                    setRawPodLineLength(sanitizedValue.replace(/,/g, ""));
-                    setPodLineLength(sanitizedValue);
-                  }}
-                />
-                {!isPodLineLengthValid() && (
-                  <div className="bg-red-100 border border-red-300 text-red-600 px-4 py-3 rounded-lg flex items-start gap-2">
-                    <WarningIcon color="#DC2626" width={25} height={25} />
-                    <span>
-                      Pod Line is length is {formatter.number(podLine)}, this order cannot execute under current
-                      conditions.
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between gap-2 mt-1 w-full">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                      isButtonActive(5)
-                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
-                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                    } flex-1`}
-                    onClick={() => handlePodLineSelect(5)}
-                  >
-                    5% ↑
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                      isButtonActive(10)
-                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
-                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                    } flex-1`}
-                    onClick={() => handlePodLineSelect(10)}
-                  >
-                    10% ↑
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                      isButtonActive(25)
-                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
-                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                    } flex-1`}
-                    onClick={() => handlePodLineSelect(25)}
-                  >
-                    25% ↑
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                      isButtonActive(50)
-                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
-                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                    } flex-1`}
-                    onClick={() => handlePodLineSelect(50)}
-                  >
-                    50% ↑
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                      isButtonActive(100)
-                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
-                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                    } flex-1`}
-                    onClick={() => handlePodLineSelect(100)}
-                  >
-                    100% ↑
-                  </Button>
-                </div>
-              </div>
-
-              {/* Execute during the Morning Auction */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor={inputIds.morningAuction} className="text-[#9C9C9C] text-base font-light">
-                  Execute during the Morning Auction
-                </label>
-                <div className="flex justify-between gap-2 w-full">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                      morningAuction
-                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
-                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                    } flex-1`}
-                    onClick={() => setMorningAuction(true)}
-                  >
-                    Yes
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
-                      !morningAuction
-                        ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
-                        : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
-                    } flex-1`}
-                    onClick={() => setMorningAuction(false)}
-                  >
-                    No
-                  </Button>
-                </div>
-              </div>
-
-              {/* After Morning Auction buttons */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor={inputIds.operatorTip} className="text-[#9C9C9C] text-base font-light">
-                  Operator Tip
-                </label>
-                <div className="flex items-center border border-[#D9D9D9] rounded-xl bg-white">
-                  <Input
-                    id={inputIds.operatorTip}
-                    className="h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1"
-                    placeholder="0.00"
-                    value={operatorTip}
-                    onChange={(e) => setOperatorTip(e.target.value.replace(/[^0-9.,]/g, ""))}
-                    type="text"
-                  />
-                  <div className="flex items-center gap-2 px-4">
-                    <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
-                    <span className="text-black">PINTO</span>
+                    <div className="flex rounded-xl border border-[#D9D9D9] mb-4">
+                      <input
+                        className="h-12 px-3 py-1.5 flex-1 rounded-l-xl focus:outline-none text-base font-light"
+                        placeholder="0.00"
+                        value={operatorTip}
+                        onChange={(e) => setOperatorTip(e.target.value.replace(/[^0-9.,]/g, ""))}
+                        type="text"
+                      />
+                      <div className="flex items-center gap-2 px-4 rounded-r-xl bg-white">
+                        <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
+                        <span className="text-base font-normal">PINTO</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between gap-2 mb-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          operatorTip === (parseFloat(operatorTip || "1") * 0.95).toFixed(2)
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => {
+                          const currentTip = parseFloat(operatorTip || "1");
+                          setOperatorTip(Math.max(0, currentTip * 0.95).toFixed(2));
+                        }}
+                      >
+                        5% ↓
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          operatorTip === (parseFloat(operatorTip || "1") * 0.99).toFixed(2)
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => {
+                          const currentTip = parseFloat(operatorTip || "1");
+                          setOperatorTip(Math.max(0, currentTip * 0.99).toFixed(2));
+                        }}
+                      >
+                        1% ↓
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          operatorTip === "1"
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => {
+                          setOperatorTip("1");
+                        }}
+                      >
+                        Average
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          operatorTip === (parseFloat(operatorTip || "1") * 1.01).toFixed(2)
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => {
+                          const currentTip = parseFloat(operatorTip || "1");
+                          setOperatorTip((currentTip * 1.01).toFixed(2));
+                        }}
+                      >
+                        1% ↑
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                          operatorTip === (parseFloat(operatorTip || "1") * 1.05).toFixed(2)
+                            ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C]"
+                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                        } flex-1`}
+                        onClick={() => {
+                          const currentTip = parseFloat(operatorTip || "1");
+                          setOperatorTip((currentTip * 1.05).toFixed(2));
+                        }}
+                      >
+                        5% ↑
+                      </Button>
+                    </div>
+                    
+                    <div className="text-[#9C9C9C] text-base font-light mb-6">
+                      each time they Sow part of my Tractor Order.
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 mb-6">
+                      <div className="flex justify-between">
+                        <div className="text-[#9C9C9C] text-base font-light">
+                          Estimated total number of executions
+                        </div>
+                        <div className="text-black text-base font-light">
+                          ~10-20
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="text-[#9C9C9C] text-base font-light">
+                          Estimated total tip
+                        </div>
+                        <div className="flex items-center text-black text-base font-light">
+                          ~10-20 
+                          <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-5 h-5 mx-1" /> 
+                          PINTO
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex gap-6 mt-6">
                 <Button
                   variant="outline"
                   className="flex-1 h-[60px] rounded-full text-2xl font-medium text-[#404040] bg-[#F8F8F8]"
-                  onClick={() => onOpenChange(false)}
+                  onClick={handleBack}
                 >
                   ← Back
                 </Button>
                 <Button
                   className={`flex-1 h-[60px] rounded-full text-2xl font-medium ${
-                    error || !isPodLineLengthValid()
+                    (formStep === 1 && (error || !isPodLineLengthValid())) || isLoading
                       ? "bg-[#D9D9D9] text-[#9C9C9C]"
                       : "bg-gradient-to-r from-[#46A955] to-[#1F9C5A] text-white"
                   }`}
-                  disabled={!!error || !isPodLineLengthValid() || isLoading}
+                  disabled={(formStep === 1 && (!!error || !isPodLineLengthValid())) || isLoading}
                   onClick={handleNext}
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
                     </div>
-                  ) : (
-                    "Next"
-                  )}
+                  ) : formStep === 1 ? "Next" : "Review"}
                 </Button>
               </div>
             </div>
