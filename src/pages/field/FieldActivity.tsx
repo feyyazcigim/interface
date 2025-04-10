@@ -41,6 +41,7 @@ const FieldActivity: React.FC = () => {
   const harvestableIndex = useHarvestableIndex();
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const tractorLinksRef = useRef<HTMLDivElement>(null);
 
   // Helper function to estimate temperature from an order
   const getOrderTemperature = (order: OrderbookEntry): number => {
@@ -285,6 +286,15 @@ const FieldActivity: React.FC = () => {
         pointer-events: none;
       `;
       tableContainerRef.current.appendChild(bar);
+
+      // Calculate the vertical center of the tractor rows
+      const centerY = spanStartY + (totalHeight / 2);
+      
+      // Position the links container vertically centered
+      if (tractorLinksRef.current) {
+        const linksHeight = tractorLinksRef.current.offsetHeight;
+        tractorLinksRef.current.style.top = `${centerY - (linksHeight / 2)}px`;
+      }
     }, 100);
 
     // Cleanup
@@ -378,7 +388,11 @@ const FieldActivity: React.FC = () => {
     <div className="w-full relative">
       {/* Add Tractor Orders label and link */}
       {!loadingTractorOrders && tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length > 0 && (
-        <div style={{ position: 'absolute', right: '-18rem', top: '3rem' }} className="flex flex-col items-start">
+        <div 
+          ref={tractorLinksRef} 
+          style={{ position: 'absolute', right: '-18rem' }} 
+          className="flex flex-col items-start transition-all duration-300"
+        >
           <span className="text-sm font-antarctica font-light text-pinto-dark mb-2">
             Tractor Soil Orders for next Season
           </span>
