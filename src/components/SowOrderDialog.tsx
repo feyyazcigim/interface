@@ -26,6 +26,8 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import stalkIcon from "@/assets/protocol/Stalk.png";
 import seedIcon from "@/assets/protocol/Seed.png";
 import { usePriceData } from "@/state/usePriceData";
+import arrowDown from "@/assets/misc/ChevronDown.svg";
+import { TokenSelectionDialog } from "@/components/TokenSelectionDialog";
 
 interface SowOrderDialogProps {
   open: boolean;
@@ -449,33 +451,28 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
               {/* Fund order using */}
               <div className="flex flex-col gap-2">
-                <label htmlFor={inputIds.fundOrder} className="text-[#9C9C9C] text-base font-light">
-                  Fund order using
-                </label>
-                <button
-                  className="flex items-center justify-between h-12 px-4 py-3 border border-[#D9D9D9] rounded-xl bg-white"
-                  onClick={() => setShowTokenSelectionDialog(true)}
-                >
-                  <div className="flex items-center gap-2">
-                    {selectedTokenStrategy.type === "SPECIFIC_TOKEN" && (
-                      <IconImage 
-                        src={whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.logoURI || ""} 
-                        alt="token" 
-                        size={6} 
-                        className="rounded-full"
-                      />
-                    )}
-                    <span className="text-[#404040]">{getSelectedTokenDisplay()}</span>
-                    {getSelectedTokenDollarValue().gt(0) && (
-                      <span className="text-[#9C9C9C] text-sm">
-                        (${formatter.number(getSelectedTokenDollarValue(), { minDecimals: 2, maxDecimals: 2 })})
-                      </span>
-                    )}
-                  </div>
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 7.5L10 12.5L15 7.5" stroke="#404040" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
+                <div className="flex justify-between items-center">
+                  <div className="pinto-subheading-medium">Fund order using</div>
+                  <Button 
+                    variant="outline-gray-shadow" 
+                    size="xl" 
+                    rounded="full"
+                    onClick={() => setShowTokenSelectionDialog(true)}
+                  >
+                    <div className="flex items-center gap-2">
+                      {selectedTokenStrategy.type === "SPECIFIC_TOKEN" && (
+                        <IconImage 
+                          src={whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.logoURI || ""} 
+                          alt="token" 
+                          size={6} 
+                          className="rounded-full"
+                        />
+                      )}
+                      <div className="pinto-body-light">{getSelectedTokenDisplay()}</div>
+                      <IconImage src={arrowDown} size={3} alt="open token select dialog" />
+                    </div>
+                  </Button>
+                </div>
               </div>
 
 
