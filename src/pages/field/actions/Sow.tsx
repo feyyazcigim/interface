@@ -50,6 +50,7 @@ import { getBalanceFromMode } from "@/utils/utils";
 import { Link } from "react-router-dom";
 import { LightningIcon } from "@/components/Icons";
 import SowOrderDialog from "@/components/SowOrderDialog";
+import CornerBorders from "@/components/CornerBorders";
 
 type SowProps = {
   isMorning: boolean;
@@ -84,6 +85,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
   const mainToken = useTokenData().mainToken;
   const queryClient = useQueryClient();
   const filterTokens = useFilterTokens(farmerBalances.balances);
+  const [hoveredTractor, setHoveredTractor] = useState(false);
 
   const { preferredToken, loading: preferredLoading } = usePreferredInputToken({
     filterLP: true,
@@ -398,17 +400,22 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
               />
             )}
             {slippageWarning}
-            <div className="flex justify-center mt-4">
-              <button
-                onClick={() => onShowOrder()}
-                className="group box-border flex flex-col items-start p-4 gap-1 w-full bg-[#F8F8F8] border border-[#D9D9D9] rounded-xl hover:bg-[#E5F5E5] hover:border-pinto-green-4 transition-colors duration-200"
-              >
-                <div className="flex flex-row justify-center items-center gap-1">
-                  <LightningIcon className="w-4 h-4 text-[#404040] group-hover:text-pinto-green-4" />
-                  <span className="font-antarctica font-[340] text-[20px] leading-[110%] text-[#404040] group-hover:text-pinto-green-4">Want to Sow with size?</span>
-                </div>
-                <span className="font-antarctica font-[340] text-base leading-[110%] text-[#9C9C9C] group-hover:text-pinto-green-3">Use 🚜 Tractor to set up an order for Pods over time</span>
-              </button>
+            <div className="flex justify-center mt-4 relative">
+              <div className="relative w-full">
+                <button
+                  onClick={() => onShowOrder()}
+                  className="group box-border flex flex-col items-start p-4 gap-1 w-full bg-[#F8F8F8] border border-[#D9D9D9] rounded-[0.75rem] hover:bg-[#E5F5E5] hover:border-pinto-green-4 transition-colors duration-200"
+                  onMouseEnter={() => setHoveredTractor(true)}
+                  onMouseLeave={() => setHoveredTractor(false)}
+                >
+                  <div className="flex flex-row justify-center items-center gap-1">
+                    <LightningIcon className="w-4 h-4 text-[#404040] group-hover:text-pinto-green-4" />
+                    <span className="font-antarctica font-[340] text-[20px] leading-[110%] text-[#404040] group-hover:text-pinto-green-4">Want to Sow with size?</span>
+                  </div>
+                  <span className="font-antarctica font-[340] text-base leading-[110%] text-[#9C9C9C] group-hover:text-pinto-green-3">Use 🚜 Tractor to set up an order for Pods over time</span>
+                </button>
+                <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} />
+              </div>
             </div>
           </div>
           <div className="hidden sm:flex flex-row gap-2">

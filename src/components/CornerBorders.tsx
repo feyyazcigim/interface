@@ -4,12 +4,13 @@ import { FC } from "react";
 interface TableRowCornersProps {
   rowNumber: number; // Zero index
   active?: boolean;
+  standalone?: boolean; // Add new prop for standalone usage
 }
 
 /**
- * Component specifically designed to add animated corners to table rows
+ * Component designed to add animated corners to table rows or standalone elements
  */
-const CornerBorders: FC<TableRowCornersProps> = ({ rowNumber = 0, active = true }) => {
+const CornerBorders: FC<TableRowCornersProps> = ({ rowNumber = 0, active = true, standalone = false }) => {
   // Animation variants
   const cornerVariants: Variants = {
     // Top left corner
@@ -45,23 +46,16 @@ const CornerBorders: FC<TableRowCornersProps> = ({ rowNumber = 0, active = true 
     bottomRightOut: { bottom: 0, right: 0 },
   };
 
-  // Calculate position in rem
+  // Calculate position in rem for table row mode
   const rowPositionRem = rowNumber * 4.5;
 
-  // The corner elements with animation
   return (
     <>
-      {/*
       <div
-        className={`absolute left-0 w-full h-[4.5rem] flex justify-center pointer-events-none overflow-visible z-10 mt-[3.5rem] transition-opacity ${active ? "opacity-100" : "opacity-0"} text-pinto-gray-5 pinto-body`}
-        style={{ top: `${rowPositionRem - 2}rem` }}
-      >
-        Wrap your Deposited Pinto to sPINTO and use it across DeFi
-      </div>
-    */}
-      <div
-        className={`absolute left-0 w-full h-[4.5rem] pointer-events-none overflow-visible z-10 mt-[3.5rem] transition-opacity ${active ? "opacity-100" : "opacity-0"}`}
-        style={{ top: `${rowPositionRem}rem` }}
+        className={`absolute left-0 w-full pointer-events-none overflow-visible z-10 transition-opacity ${active ? "opacity-100" : "opacity-0"} ${
+          standalone ? "top-0 bottom-0 right-0" : `h-[4.5rem] mt-[3.5rem]`
+        }`}
+        style={standalone ? {} : { top: `${rowPositionRem}rem` }}
       >
         {/* Top Left Corner */}
         <motion.div
