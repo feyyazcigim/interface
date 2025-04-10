@@ -153,7 +153,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
 
       if (min.gt(max)) {
-        setError("Available Soil must be greater than or equal to Max amount per Season");
+        setError("Min per Season must be greater than or equal to Max per Season");
       } else {
         setError(null);
       }
@@ -384,6 +384,63 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 </div>
               </div>
 
+
+              {/* Min and Max per Season - combined in a single row */}
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-4">
+                  {/* Min per Season */}
+                  <div className="flex flex-col gap-2 flex-1">
+                    <label htmlFor={inputIds.minPerSeason} className="text-[#9C9C9C] text-base font-light">
+                      Min per Season
+                    </label>
+                    <div className="flex items-center border border-[#D9D9D9] rounded-xl bg-white">
+                      <Input
+                        id={inputIds.minPerSeason}
+                        className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 ${error ? "border-red-500" : ""}`}
+                        placeholder="0.00"
+                        value={minSoil}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9.,]/g, "");
+                          setMinSoil(value);
+                        }}
+                        type="text"
+                      />
+                      <div className="flex items-center gap-2 px-4">
+                        <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
+                        <span className="text-black">PINTO</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Max per Season */}
+                  <div className="flex flex-col gap-2 flex-1">
+                    <label htmlFor={inputIds.maxPerSeason} className="text-[#9C9C9C] text-base font-light">
+                      Max per Season
+                    </label>
+                    <div className="flex items-center border border-[#D9D9D9] rounded-xl bg-white">
+                      <Input
+                        id={inputIds.maxPerSeason}
+                        className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 ${error ? "border-red-500" : ""}`}
+                        placeholder="0.00"
+                        value={maxPerSeason}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9.,]/g, "");
+                          setMaxPerSeason(value);
+                        }}
+                        type="text"
+                      />
+                      <div className="flex items-center gap-2 px-4">
+                        <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
+                        <span className="text-black">PINTO</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error message */}
+              {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
+
               {/* Fund order using */}
               <div className="flex flex-col gap-2">
                 <label htmlFor={inputIds.fundOrder} className="text-[#9C9C9C] text-base font-light">
@@ -415,46 +472,6 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 </button>
               </div>
 
-              {/* Execute if Available Soil is at least */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor={inputIds.minPerSeason} className="text-[#9C9C9C] text-base font-light">
-                  Execute if Available Soil is at least
-                </label>
-                <Input
-                  id={inputIds.minPerSeason}
-                  className={`h-12 px-3 py-1.5 border ${error ? "border-red-500" : "border-[#D9D9D9]"} rounded-xl`}
-                  placeholder="0.00"
-                  value={minSoil}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9.,]/g, "");
-                    setMinSoil(value);
-                  }}
-                  type="text"
-                />
-              </div>
-
-              {/* Max amount to sow per Season */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor={inputIds.maxPerSeason} className="text-[#9C9C9C] text-base font-light">
-                  Max amount to sow per Season
-                </label>
-                <div className="flex items-center border border-[#D9D9D9] rounded-xl bg-white">
-                  <Input
-                    id={inputIds.maxPerSeason}
-                    className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 ${error ? "border-red-500" : ""}`}
-                    placeholder="0.00"
-                    value={maxPerSeason}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9.,]/g, "");
-                      setMaxPerSeason(value);
-                    }}
-                    type="text"
-                  />
-                </div>
-              </div>
-
-              {/* Error message */}
-              {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
 
               {/* Execute when Temperature is at least */}
               <div className="flex flex-col gap-2">
