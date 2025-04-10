@@ -18,7 +18,7 @@ export interface SeasonColumn {
 export const nonHideableFields = ["season"];
 
 export const seasonColumns: SeasonColumn[] = [
-  { id: "season", name: "Season", classes: "text-left  w-[150px]", width: 150 },
+  { id: "season", name: "Season", classes: "text-left  w-[160px]", width: 160 },
   {
     id: "instantDeltaP",
     name: "Instant. ∆P",

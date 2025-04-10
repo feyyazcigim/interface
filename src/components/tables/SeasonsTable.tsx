@@ -1,7 +1,6 @@
 import eyeballCrossed from "@/assets/misc/eyeball-crossed.svg";
 import IconImage from "@/components/ui/IconImage";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
-import useIsMobile from "@/hooks/display/useIsMobile";
 import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
 import { SeasonsTableData } from "@/state/useSeasonsData";
 import { calculateCropScales, caseIdToDescriptiveText, convertDeltaDemandToPercentage } from "@/utils/season";
@@ -72,10 +71,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           className="text-left"
           columnKey="season"
           value={data.season}
-          subValue={DateTime.fromSeconds(data.timestamp).toLocaleString({
-            ...DateTime.TIME_24_SIMPLE,
-            ...DateTime.DATETIME_MED,
-          })}
+          subValue={DateTime.fromSeconds(data.timestamp).toFormat("yyyy MMM dd t")}
           hiddenFields={hiddenFields}
         />
         <SeasonsTableCell
