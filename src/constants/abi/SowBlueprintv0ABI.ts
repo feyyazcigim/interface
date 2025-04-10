@@ -448,7 +448,7 @@ export const sowBlueprintv0ABI = [
             "type": "uint256"
           }
         ],
-        "internalType": "struct SiloHelpers.WithdrawalPlan",
+        "internalType": "struct TractorHelpers.WithdrawalPlan",
         "name": "plan",
         "type": "tuple"
       }

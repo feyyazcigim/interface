@@ -9,7 +9,7 @@ import { PINTO } from "@/constants/tokens";
 import { PublicClient } from "viem";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
-import { SILO_HELPERS_ADDRESS, SOW_BLUEPRINT_V0_ADDRESS, SOW_BLUEPRINT_V0_SELECTOR } from "@/constants/address";
+import { TRACTOR_HELPERS_ADDRESS, SOW_BLUEPRINT_V0_ADDRESS, SOW_BLUEPRINT_V0_SELECTOR } from "@/constants/address";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 
 /**
@@ -43,7 +43,7 @@ export type TokenStrategy =
 // Add this helper function outside createSowTractorData
 async function getTokenIndex(publicClient: PublicClient, tokenAddress: `0x${string}`): Promise<number> {
   const index = await publicClient.readContract({
-    address: SILO_HELPERS_ADDRESS,
+    address: TRACTOR_HELPERS_ADDRESS,
     abi: tractorHelpersABI,
     functionName: 'getTokenIndex',
     args: [tokenAddress]
@@ -908,7 +908,7 @@ export async function loadOrderbookData(
             try {
               // Combine all existing withdrawal plans for this publisher
               const combinedPlan = (await publicClient.readContract({
-                address: SILO_HELPERS_ADDRESS,
+                address: TRACTOR_HELPERS_ADDRESS,
                 abi: tractorHelpersABI,
                 functionName: 'combineWithdrawalPlans',
                 args: [existingPlans]
@@ -936,7 +936,7 @@ export async function loadOrderbookData(
             };
             
             withdrawalPlan = await publicClient.readContract({
-              address: SILO_HELPERS_ADDRESS,
+              address: TRACTOR_HELPERS_ADDRESS,
               abi: tractorHelpersABI,
               functionName: 'getWithdrawalPlanExcludingPlan',
               args: [

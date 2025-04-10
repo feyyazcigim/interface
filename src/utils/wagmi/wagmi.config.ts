@@ -31,8 +31,8 @@ import { viewSiloABI } from "@/constants/abi/viewSiloABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 
 // Export these constants so they can be imported elsewhere
-export const SILO_HELPERS_ADDRESS = "0x8D75F9F7f4F4C4eFAB9402261bC864f21DF0c649" as const;
-export const SOW_BLUEPRINT_V0_ADDRESS = "0x30760501864c379788FD6A303fb7b9Cf391fE5De" as const;
+export const TRACTOR_HELPERS_ADDRESS = "0x205Cfc23ef26922E116135500abb4B12Ab6d4668" as const;
+export const SOW_BLUEPRINT_V0_ADDRESS = "0xbB57FE325e769DEDB1236525a91cDEd842143fA7" as const;
 
 const TESTNET_CHAIN_ID = 41337;
 
@@ -121,15 +121,15 @@ const config = defineConfig(() => {
         },
       },
       {
-        name: "siloHelpers",
+        name: "tractorHelpers",
         abi: tractorHelpersABI as Abi,
         address: {
-          [mainnet.id]: SILO_HELPERS_ADDRESS,
-          [arbitrum.id]: SILO_HELPERS_ADDRESS,
-          [base.id]: SILO_HELPERS_ADDRESS,
-          [localhost.id]: SILO_HELPERS_ADDRESS,
-          [TESTNET_CHAIN_ID]: SILO_HELPERS_ADDRESS,
-          [foundry.id]: SILO_HELPERS_ADDRESS,
+          [mainnet.id]: TRACTOR_HELPERS_ADDRESS,
+          [arbitrum.id]: TRACTOR_HELPERS_ADDRESS,
+          [base.id]: TRACTOR_HELPERS_ADDRESS,
+          [localhost.id]: TRACTOR_HELPERS_ADDRESS,
+          [TESTNET_CHAIN_ID]: TRACTOR_HELPERS_ADDRESS,
+          [foundry.id]: TRACTOR_HELPERS_ADDRESS,
         },
       },
       {
