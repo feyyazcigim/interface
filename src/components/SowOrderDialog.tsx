@@ -368,16 +368,18 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 <label htmlFor={inputIds.totalAmount} className="text-[#9C9C9C] text-base font-light">
                   I want to Sow up to
                 </label>
-                <div className="flex items-center border border-[#D9D9D9] rounded-xl bg-white">
-                  <Input
-                    id={inputIds.totalAmount}
-                    className="h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1"
-                    placeholder="0.00"
-                    value={totalAmount}
-                    onChange={(e) => setTotalAmount(e.target.value.replace(/[^0-9.,]/g, ""))}
-                    type="text"
-                  />
-                  <div className="flex items-center gap-2 px-4">
+                <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
+                  <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
+                    <Input
+                      id={inputIds.totalAmount}
+                      className="h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      placeholder="0.00"
+                      value={totalAmount}
+                      onChange={(e) => setTotalAmount(e.target.value.replace(/[^0-9.,]/g, ""))}
+                      type="text"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
                     <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
                     <span className="text-black">PINTO</span>
                   </div>
@@ -393,19 +395,21 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     <label htmlFor={inputIds.minPerSeason} className="text-[#9C9C9C] text-base font-light">
                       Min per Season
                     </label>
-                    <div className="flex items-center border border-[#D9D9D9] rounded-xl bg-white">
-                      <Input
-                        id={inputIds.minPerSeason}
-                        className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 ${error ? "border-red-500" : ""}`}
-                        placeholder="0.00"
-                        value={minSoil}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/[^0-9.,]/g, "");
-                          setMinSoil(value);
-                        }}
-                        type="text"
-                      />
-                      <div className="flex items-center gap-2 px-4">
+                    <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
+                      <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
+                        <Input
+                          id={inputIds.minPerSeason}
+                          className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
+                          placeholder="0.00"
+                          value={minSoil}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9.,]/g, "");
+                            setMinSoil(value);
+                          }}
+                          type="text"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
                         <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
                         <span className="text-black">PINTO</span>
                       </div>
@@ -417,19 +421,21 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     <label htmlFor={inputIds.maxPerSeason} className="text-[#9C9C9C] text-base font-light">
                       Max per Season
                     </label>
-                    <div className="flex items-center border border-[#D9D9D9] rounded-xl bg-white">
-                      <Input
-                        id={inputIds.maxPerSeason}
-                        className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 ${error ? "border-red-500" : ""}`}
-                        placeholder="0.00"
-                        value={maxPerSeason}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/[^0-9.,]/g, "");
-                          setMaxPerSeason(value);
-                        }}
-                        type="text"
-                      />
-                      <div className="flex items-center gap-2 px-4">
+                    <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
+                      <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
+                        <Input
+                          id={inputIds.maxPerSeason}
+                          className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
+                          placeholder="0.00"
+                          value={maxPerSeason}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9.,]/g, "");
+                            setMaxPerSeason(value);
+                          }}
+                          type="text"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
                         <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
                         <span className="text-black">PINTO</span>
                       </div>
