@@ -27,7 +27,6 @@ import stalkIcon from "@/assets/protocol/Stalk.png";
 import seedIcon from "@/assets/protocol/Seed.png";
 import { usePriceData } from "@/state/usePriceData";
 import arrowDown from "@/assets/misc/ChevronDown.svg";
-import { TokenSelectionDialog } from "@/components/TokenSelectionDialog";
 
 interface SowOrderDialogProps {
   open: boolean;
