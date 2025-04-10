@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { TokenValue } from '@/classes/TokenValue';
 import { formatter } from '@/utils/format';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -40,6 +40,7 @@ const FieldActivity: React.FC = () => {
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
   const harvestableIndex = useHarvestableIndex();
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   // Helper function to estimate temperature from an order
   const getOrderTemperature = (order: OrderbookEntry): number => {
@@ -248,6 +249,51 @@ const FieldActivity: React.FC = () => {
     fetchSowEvents();
   }, [publicClient, protocolAddress, currentSeason, harvestableIndex]);
 
+  // Effect for creating the vertical bar
+  useEffect(() => {
+    if (loadingTractorOrders || tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length === 0) {
+      return;
+    }
+
+    // Remove any existing bars
+    const existingBars = document.querySelectorAll('.vertical-tractor-bar');
+    existingBars.forEach(bar => bar.remove());
+
+    // Wait for next render cycle to ensure rows are fully rendered
+    setTimeout(() => {
+      const rows = document.querySelectorAll('.tractor-order-row');
+      if (rows.length === 0 || !tableContainerRef.current) return;
+
+      let spanStartY = (rows[0] as HTMLElement).offsetTop;
+      let totalHeight = 0;
+
+      rows.forEach((row) => {
+        totalHeight += (row as HTMLElement).offsetHeight;
+      });
+
+      // Create the vertical bar
+      const bar = document.createElement('div');
+      bar.className = 'vertical-tractor-bar';
+      bar.style.cssText = `
+        position: absolute;
+        right: -1rem;
+        top: ${spanStartY}px;
+        height: ${totalHeight}px;
+        width: 1px;
+        background-color: #9CA3AF; /* pinto-gray-4 color */
+        z-index: 10;
+        pointer-events: none;
+      `;
+      tableContainerRef.current.appendChild(bar);
+    }, 100);
+
+    // Cleanup
+    return () => {
+      const bars = document.querySelectorAll('.vertical-tractor-bar');
+      bars.forEach(bar => bar.remove());
+    };
+  }, [tractorOrders, loadingTractorOrders]);
+
   const formatType = (type: string) => {
     switch (type) {
       case 'sow': return 'Sow';
@@ -352,7 +398,7 @@ const FieldActivity: React.FC = () => {
         onOpenChange={setShowTractorOrdersDialog} 
       />
       
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" ref={tableContainerRef}>
 
         <table className="w-full border-collapse">
           <thead>
@@ -385,7 +431,7 @@ const FieldActivity: React.FC = () => {
                     return (
                       <tr 
                         key={`tractor-${order.requisition.blueprintHash}`} 
-                        className={`hover:bg-pinto-green-1 transition-colors ${hoveredAddress === order.requisition.blueprint.publisher ? 'bg-pinto-green-1' : ''}`}
+                        className={`tractor-order-row hover:bg-pinto-green-1 transition-colors ${hoveredAddress === order.requisition.blueprint.publisher ? 'bg-pinto-green-1' : ''}`}
                       >
                         <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
                           {Number(currentSeason) + 1}
