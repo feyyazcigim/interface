@@ -44,10 +44,8 @@ export function convertDeltaDemandToPercentage(deltaDemand: number) {
 export function caseIdToDescriptiveText(caseId: number, column: "price" | "soil_demand" | "pod_rate" | "l2sr") {
   switch (column) {
     case "price":
-      if ((caseId % 36) % 9 < 3) return "P < $1.00";
-      else if ((caseId % 36) % 9 < 6) return "P > $1.00";
-      //(caseId % 36 < 9)
-      else return "P > Q";
+      if ((caseId % 36) % 9 >= 6) return "P > Q";
+      else return undefined;
     case "soil_demand":
       if (caseId % 3 === 0) return "Decreasing";
       else if (caseId % 3 === 1) return "Steady";
