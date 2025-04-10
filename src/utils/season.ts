@@ -1,15 +1,29 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { toFixedNumber } from "./format";
+
+export const seasonCutOffFor150 = 2710;
+export const seasonCutOffFor200 = 5000; // placeholder value, will likely be in the 3400-3600 range
+
+const getMaxCropRatioBySeason = (season: number) => {
+  if (season >= seasonCutOffFor150 && season < seasonCutOffFor200) {
+    return 150;
+  }
+  if (season >= seasonCutOffFor200) {
+    return 200;
+  }
+  return 100;
+};
+
 export function calculateCropScales(value: number, isRaining: boolean, season: number) {
   const maxInput = 1e18;
-  const maxOutput = season >= 2710 ? 150 : 100;
+  const maxOutput = getMaxCropRatioBySeason(season);
 
-  // Calculate crop scalar
   const cropScalar = toFixedNumber(value / maxInput, 1);
-
-  // Calculate crop ratio
+  const asAScalar = value / maxInput / 100;
   const minCropRatio = isRaining ? 33 : 50;
-  const cropRatio = Math.min(maxOutput, Math.max(minCropRatio, (cropScalar / 100) * maxOutput)).toFixed(1);
+
+  // round to nearest one decimal without converting to string or adding trailing zeroes to integers
+  const cropRatio = Math.round((asAScalar * (maxOutput - minCropRatio) + minCropRatio) * 10) / 10;
 
   return {
     cropScalar,
