@@ -48,6 +48,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [error, setError] = useState<string | null>(null);
   const [totalAmount, setTotalAmount] = useState("");
   const [temperature, setTemperature] = useState("");
+  const [displayTemperature, setDisplayTemperature] = useState("");
   const [morningAuction, setMorningAuction] = useState(false);
   const [operatorTip, setOperatorTip] = useState("1");
   const { address } = useAccount();
@@ -59,6 +60,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
   const [formStep, setFormStep] = useState(1); // Track which step of the form we're on
   const [activeTipButton, setActiveTipButton] = useState<"down5" | "down1" | "average" | "up1" | "up5" | null>("average");
+  const temperatureInputRef = useRef<HTMLInputElement>(null);
 
   // Get LP tokens
   const lpTokens = useMemo(() => whitelistedTokens.filter((t) => t.isLP), [whitelistedTokens]);
@@ -484,6 +486,100 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     }
   };
 
+  // Function to handle temperature input and ensure it displays with %
+  const handleTemperatureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Get the cursor position before making changes
+    const cursorPosition = e.target.selectionStart || 0;
+    const value = e.target.value;
+    const hadPercentSign = value.includes('%');
+    
+    // Check if user is deleting the % sign
+    if (value.endsWith('%') && cursorPosition === value.length) {
+      // If cursor is at the end (after %), move it back one position
+      setTimeout(() => {
+        if (temperatureInputRef.current) {
+          temperatureInputRef.current.setSelectionRange(cursorPosition - 1, cursorPosition - 1);
+        }
+      }, 0);
+      return;
+    }
+
+    // Remove % and any non-numeric characters except decimal
+    const cleanValue = value.replace(/[^0-9.,]/g, "");
+    setTemperature(cleanValue); // Store clean value without %
+    
+    // Add % for display
+    const newDisplayValue = `${cleanValue}%`;
+    setDisplayTemperature(newDisplayValue);
+    
+    // Calculate where the cursor should be
+    let newPosition = cursorPosition;
+    
+    // If we're deleting a character (current value is shorter than previous + adjustment for % sign)
+    if (cleanValue.length < temperature.length) {
+      newPosition = cursorPosition;
+    } else if (!hadPercentSign && cleanValue.length > 0) {
+      // If we didn't have a % sign before but now we do, adjust accordingly
+      newPosition = cursorPosition;
+    }
+    
+    // Ensure cursor position is clamped to a valid range and before %
+    newPosition = Math.min(newPosition, cleanValue.length);
+    
+    // Set cursor position with a timeout to ensure it happens after React's rendering
+    setTimeout(() => {
+      if (temperatureInputRef.current) {
+        temperatureInputRef.current.setSelectionRange(newPosition, newPosition);
+      }
+    }, 0);
+  };
+
+  // Function to handle temperature input blur
+  const handleTemperatureBlur = () => {
+    if (temperature) {
+      setDisplayTemperature(`${temperature}%`);
+    }
+  };
+
+  // Function to handle temperature input focus
+  const handleTemperatureFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // If cursor is at the end, move it before the % sign
+    if (e.target.value.endsWith('%')) {
+      setTimeout(() => {
+        if (temperatureInputRef.current) {
+          const pos = e.target.value.length - 1;
+          temperatureInputRef.current.setSelectionRange(pos, pos);
+        }
+      }, 0);
+    }
+  };
+
+  // Function to handle temperature input keydown
+  const handleTemperatureKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const cursorPosition = e.currentTarget.selectionStart || 0;
+    const value = e.currentTarget.value;
+    
+    // If backspace is pressed and cursor is after the last number (right before or at %)
+    if (e.key === 'Backspace' && cursorPosition >= value.length - 1) {
+      const newValue = temperature.slice(0, -1);
+      setTemperature(newValue);
+      setDisplayTemperature(newValue ? `${newValue}%` : '');
+      
+      // Position cursor at the end of the number portion
+      setTimeout(() => {
+        if (temperatureInputRef.current) {
+          temperatureInputRef.current.setSelectionRange(newValue.length, newValue.length);
+        }
+      }, 0);
+      
+      e.preventDefault();
+    } 
+    // If delete key is pressed and cursor is right before %
+    else if (e.key === 'Delete' && cursorPosition === value.length - 1) {
+      e.preventDefault();
+    }
+  };
+
   if (!open) return null;
 
   const inputIds = {
@@ -639,8 +735,12 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       id={inputIds.temperature}
                       className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-xl w-[140px]"
                       placeholder={`${Math.max(10, Math.floor(currentTemperature.scaled?.toNumber() || 0) + 1)}%`}
-                      value={temperature}
-                      onChange={(e) => setTemperature(e.target.value.replace(/[^0-9.,]/g, ""))}
+                      value={displayTemperature}
+                      onChange={handleTemperatureChange}
+                      onBlur={handleTemperatureBlur}
+                      onFocus={handleTemperatureFocus}
+                      onKeyDown={handleTemperatureKeyDown}
+                      ref={temperatureInputRef}
                       type="text"
                     />
                   </div>
