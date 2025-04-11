@@ -381,6 +381,89 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     setOperatorTip(newValue);
   };
 
+  // Add this function after other calculation functions (like handlePodLineSelect, calculatePodLineValue, etc.)
+  // Calculate the estimated number of executions
+  const calculateEstimatedExecutions = () => {
+    // If any of the required values are missing, return a default
+    if (!totalAmount || !minSoil || !maxPerSeason) {
+      return "~0";
+    }
+
+    try {
+      // Remove commas and convert to numbers
+      const totalClean = totalAmount.replace(/,/g, "");
+      const minClean = minSoil.replace(/,/g, "");
+      const maxClean = maxPerSeason.replace(/,/g, "");
+
+      // Convert to TokenValue for precision math
+      const total = TokenValue.fromHuman(totalClean, PINTO.decimals);
+      const min = TokenValue.fromHuman(minClean, PINTO.decimals);
+      const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
+
+      // Check for zero values to avoid division by zero
+      if (min.eq(0) || max.eq(0) || total.eq(0)) {
+        return "~0";
+      }
+
+      // Calculate the bounds
+      // Lower bound: total / max (fewer executions when each execution is larger)
+      // Upper bound: total / min (more executions when each execution is smaller)
+      let lowerBound = Math.floor(total.div(max).toNumber());
+      let upperBound = Math.ceil(total.div(min).toNumber());
+
+      // Handle edge cases and ensure sensible values
+      lowerBound = Math.max(1, lowerBound);
+      upperBound = Math.max(lowerBound, upperBound);
+
+      // Format the result
+      if (lowerBound === upperBound) {
+        return `~${lowerBound}`;
+      } else {
+        return `~${lowerBound}-${upperBound}`;
+      }
+    } catch (e) {
+      console.error("Error calculating executions:", e);
+      return "~0";
+    }
+  };
+
+  // Also add a function to calculate the estimated total tip
+  const calculateEstimatedTotalTip = () => {
+    const executions = calculateEstimatedExecutions();
+    if (executions === "~0" || !operatorTip) {
+      return "~0";
+    }
+
+    try {
+      // Parse the operator tip
+      const tipValue = parseFloat(operatorTip);
+      
+      // Parse the execution range
+      let lowerBound, upperBound;
+      if (executions.includes("-")) {
+        const [lower, upper] = executions.replace("~", "").split("-");
+        lowerBound = parseInt(lower);
+        upperBound = parseInt(upper);
+      } else {
+        lowerBound = upperBound = parseInt(executions.replace("~", ""));
+      }
+
+      // Calculate the total tip range
+      const lowerTip = lowerBound * tipValue;
+      const upperTip = upperBound * tipValue;
+
+      // Format the result
+      if (lowerTip === upperTip) {
+        return `~${lowerTip.toFixed(2)}`;
+      } else {
+        return `~${lowerTip.toFixed(2)}-${upperTip.toFixed(2)}`;
+      }
+    } catch (e) {
+      console.error("Error calculating total tip:", e);
+      return "~0";
+    }
+  };
+
   if (!open) return null;
 
   const inputIds = {
@@ -775,7 +858,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                           Estimated total number of executions
                         </div>
                         <div className="text-black text-base font-light">
-                          ~10-20
+                          {calculateEstimatedExecutions()}
                         </div>
                       </div>
                       <div className="flex justify-between items-center">
@@ -783,7 +866,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                           Estimated total tip
                         </div>
                         <div className="flex items-center text-black text-base font-light">
-                          ~10-20 
+                          {calculateEstimatedTotalTip()} 
                           <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-5 h-5 mx-1" /> 
                           PINTO
                         </div>
