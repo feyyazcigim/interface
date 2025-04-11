@@ -1028,7 +1028,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       {/* Token Selection Dialog */}
       <Dialog open={showTokenSelectionDialog} onOpenChange={setShowTokenSelectionDialog}>
         <DialogPortal>
-          <DialogOverlay className="backdrop-blur-sm bg-black/30" />
+          <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
           <DialogContent 
             className="sm:max-w-[700px] mx-auto p-0 bg-white rounded-2xl border border-[#D9D9D9]"
             style={{ padding: 0, gap: 0 }}
