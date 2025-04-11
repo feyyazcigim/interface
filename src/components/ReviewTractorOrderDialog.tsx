@@ -17,6 +17,7 @@ import { formatter } from "@/utils/format";
 import { format } from "date-fns";
 import baseLogo from "@/assets/misc/base-logo-alt.png";
 import IconImage from "@/components/ui/IconImage";
+import SmartSubmitButton from "@/components/SmartSubmitButton";
 
 // Define the execution data type
 export interface ExecutionData {
@@ -557,23 +558,21 @@ export default function ReviewTractorOrderDialog({
                   conditions or until Order cancellation
                 </p>
                 <div className="flex gap-2">
-                  <Button
-                    onClick={handleSignBlueprint}
+                  <SmartSubmitButton
+                    variant="gradient"
                     disabled={signing || !!signedRequisitionData}
-                    className="bg-pinto-green-4 hover:bg-pinto-green-5 text-white px-6 py-2 rounded-full"
-                  >
-                    {signing ? "Signing..." : signedRequisitionData ? "Signed" : "Sign Order"}
-                  </Button>
+                    submitFunction={handleSignBlueprint}
+                    submitButtonText={signing ? "Signing..." : signedRequisitionData ? "Signed" : "Sign Order"}
+                    className="w-40"
+                  />
 
-                  <Button
-                    onClick={handlePublishRequisition}
+                  <SmartSubmitButton
+                    variant="gradient"
                     disabled={submitting || !signedRequisitionData}
-                    className={`${
-                      signedRequisitionData ? "bg-pinto-green-4 hover:bg-pinto-green-5" : "bg-gray-300"
-                    } text-white px-6 py-2 rounded-full`}
-                  >
-                    {submitting ? "Publishing..." : "Publish Order"}
-                  </Button>
+                    submitFunction={handlePublishRequisition}
+                    submitButtonText={submitting ? "Publishing..." : "Publish Order"}
+                    className="w-50"
+                  />
                 </div>
               </div>
             ) : null}
