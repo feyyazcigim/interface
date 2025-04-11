@@ -620,18 +620,18 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     <label htmlFor={inputIds.totalAmount} className="text-[#9C9C9C] text-base font-light">
                       I want to Sow up to
                     </label>
-                    <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
-                      <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
+                    <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
+                      <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                         <Input
                           id={inputIds.totalAmount}
-                          className="h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                           placeholder="0.00"
                           value={totalAmount}
                           onChange={(e) => setTotalAmount(e.target.value.replace(/[^0-9.,]/g, ""))}
                           type="text"
                         />
                       </div>
-                      <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
+                      <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-[12px] bg-white group-focus-within:border-[#2F8957]">
                         <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
                         <span className="text-black">PINTO</span>
                       </div>
@@ -647,11 +647,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         <label htmlFor={inputIds.minPerSeason} className="text-[#9C9C9C] text-base font-light">
                           Min per Season
                         </label>
-                        <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
-                          <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
+                        <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
+                          <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                             <Input
                               id={inputIds.minPerSeason}
-                              className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
+                              className={`h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
                               placeholder="0.00"
                               value={minSoil}
                               onChange={(e) => {
@@ -661,7 +661,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                               type="text"
                             />
                           </div>
-                          <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
+                          <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-[12px] bg-white group-focus-within:border-[#2F8957]">
                             <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
                             <span className="text-black">PINTO</span>
                           </div>
@@ -673,11 +673,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         <label htmlFor={inputIds.maxPerSeason} className="text-[#9C9C9C] text-base font-light">
                           Max per Season
                         </label>
-                        <div className="flex rounded-xl group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
-                          <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-xl group-focus-within:border-[#2F8957]">
+                        <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
+                          <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                             <Input
                               id={inputIds.maxPerSeason}
-                              className={`h-12 px-3 py-1.5 border-0 rounded-l-xl flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
+                              className={`h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
                               placeholder="0.00"
                               value={maxPerSeason}
                               onChange={(e) => {
@@ -687,7 +687,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                               type="text"
                             />
                           </div>
-                          <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-xl bg-white group-focus-within:border-[#2F8957]">
+                          <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-[12px] bg-white group-focus-within:border-[#2F8957]">
                             <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
                             <span className="text-black">PINTO</span>
                           </div>
@@ -733,7 +733,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     </label>
                     <Input
                       id={inputIds.temperature}
-                      className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-xl w-[140px]"
+                      className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-[12px] w-[140px]"
                       placeholder={`${Math.max(10, Math.floor(currentTemperature.scaled?.toNumber() || 0) + 1)}%`}
                       value={displayTemperature}
                       onChange={handleTemperatureChange}
@@ -754,7 +754,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       id={inputIds.podLineLength}
                       className={`h-12 px-3 py-1.5 border ${
                         !isPodLineLengthValid() ? "border-red-500" : "border-[#D9D9D9]"
-                      } rounded-xl`}
+                      } rounded-[12px]`}
                       placeholder="9,000,000"
                       value={podLineLength}
                       onChange={(e) => {
@@ -885,9 +885,9 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       I'm willing to pay someone
                     </div>
                     
-                    <div className="flex rounded-xl border border-[#D9D9D9] mb-4">
+                    <div className="flex rounded-[12px] border border-[#D9D9D9] mb-4">
                       <input
-                        className="h-12 px-3 py-1.5 flex-1 rounded-l-xl focus:outline-none text-base font-light"
+                        className="h-12 px-3 py-1.5 flex-1 rounded-l-[12px] focus:outline-none text-base font-light"
                         placeholder="0.00"
                         value={operatorTip}
                         onChange={(e) => {
@@ -899,7 +899,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         }}
                         type="text"
                       />
-                      <div className="flex items-center gap-2 px-4 rounded-r-xl bg-white">
+                      <div className="flex items-center gap-2 px-4 rounded-r-[12px] bg-white">
                         <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
                         <span className="text-base font-normal">PINTO</span>
                       </div>
