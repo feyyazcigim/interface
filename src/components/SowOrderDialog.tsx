@@ -381,18 +381,17 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     setOperatorTip(newValue);
   };
 
-  // Add this function after other calculation functions (like handlePodLineSelect, calculatePodLineValue, etc.)
   // Calculate the estimated number of executions
   const calculateEstimatedExecutions = () => {
     // If any of the required values are missing, return a default
-    if (!totalAmount || !minSoil || !maxPerSeason) {
+    if (!totalAmount || !maxPerSeason) {
       return "~0";
     }
 
     try {
       // Remove commas and convert to numbers
       const totalClean = totalAmount.replace(/,/g, "");
-      const minClean = minSoil.replace(/,/g, "");
+      const minClean = minSoil ? minSoil.replace(/,/g, "") : "0";
       const maxClean = maxPerSeason.replace(/,/g, "");
 
       // Convert to TokenValue for precision math
@@ -401,13 +400,19 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
 
       // Check for zero values to avoid division by zero
-      if (min.eq(0) || max.eq(0) || total.eq(0)) {
+      if (total.eq(0) || max.eq(0)) {
         return "~0";
       }
 
-      // Calculate the bounds
-      // Lower bound: total / max (fewer executions when each execution is larger)
-      // Upper bound: total / min (more executions when each execution is smaller)
+      // If min is zero, upper bound is infinity
+      if (min.eq(0)) {
+        // Calculate only the lower bound
+        let lowerBound = Math.floor(total.div(max).toNumber());
+        lowerBound = Math.max(1, lowerBound);
+        return `~${lowerBound}-∞`;
+      }
+
+      // Calculate both bounds
       let lowerBound = Math.floor(total.div(max).toNumber());
       let upperBound = Math.ceil(total.div(min).toNumber());
 
@@ -429,27 +434,42 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
   // Also add a function to calculate the estimated total tip
   const calculateEstimatedTotalTip = () => {
-    const executions = calculateEstimatedExecutions();
-    if (executions === "~0" || !operatorTip) {
+    if (!operatorTip || !totalAmount || !maxPerSeason) {
       return "~0";
     }
 
     try {
+      // Remove commas and convert to numbers
+      const totalClean = totalAmount.replace(/,/g, "");
+      const minClean = minSoil ? minSoil.replace(/,/g, "") : "0";
+      const maxClean = maxPerSeason.replace(/,/g, "");
+
+      // Convert to TokenValue for precision math
+      const total = TokenValue.fromHuman(totalClean, PINTO.decimals);
+      const min = TokenValue.fromHuman(minClean, PINTO.decimals);
+      const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
+      
       // Parse the operator tip
       const tipValue = parseFloat(operatorTip);
-      
-      // Parse the execution range
-      let lowerBound, upperBound;
-      if (executions.includes("-")) {
-        const [lower, upper] = executions.replace("~", "").split("-");
-        lowerBound = parseInt(lower);
-        upperBound = parseInt(upper);
-      } else {
-        lowerBound = upperBound = parseInt(executions.replace("~", ""));
+
+      // Check for zero values
+      if (total.eq(0) || max.eq(0) || isNaN(tipValue)) {
+        return "~0";
       }
 
-      // Calculate the total tip range
+      // Calculate lower bound (based on max per season)
+      let lowerBound = Math.floor(total.div(max).toNumber());
+      lowerBound = Math.max(1, lowerBound);
       const lowerTip = lowerBound * tipValue;
+
+      // If min is zero, upper bound is infinity
+      if (min.eq(0)) {
+        return `~${lowerTip.toFixed(2)}-∞`;
+      }
+
+      // Calculate upper bound
+      let upperBound = Math.ceil(total.div(min).toNumber());
+      upperBound = Math.max(lowerBound, upperBound);
       const upperTip = upperBound * tipValue;
 
       // Format the result
