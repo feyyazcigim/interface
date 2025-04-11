@@ -252,7 +252,7 @@ const FieldActivity: React.FC = () => {
 
   // Effect for creating the vertical bar
   useEffect(() => {
-    if (loadingTractorOrders || tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length === 0) {
+    if (loadingTractorOrders) {
       return;
     }
 
@@ -262,15 +262,47 @@ const FieldActivity: React.FC = () => {
 
     // Wait for next render cycle to ensure rows are fully rendered
     setTimeout(() => {
+      if (!tableContainerRef.current) return;
+      
+      // Get tractor order rows if they exist
       const rows = document.querySelectorAll('.tractor-order-row');
-      if (rows.length === 0 || !tableContainerRef.current) return;
-
-      let spanStartY = (rows[0] as HTMLElement).offsetTop;
-      let totalHeight = 0;
-
-      rows.forEach((row) => {
-        totalHeight += (row as HTMLElement).offsetHeight;
-      });
+      
+      let spanStartY, totalHeight;
+      
+      if (rows.length > 0) {
+        // If we have tractor order rows, use their position and height
+        spanStartY = (rows[0] as HTMLElement).offsetTop;
+        totalHeight = 0;
+        
+        rows.forEach((row) => {
+          totalHeight += (row as HTMLElement).offsetHeight;
+        });
+      } else {
+        // If no tractor orders, use the "No Tractor orders" row or the first available row
+        const noOrdersRow = document.querySelector('tr td[colspan="9"]');
+        if (noOrdersRow) {
+          const rowElement = noOrdersRow.closest('tr') as HTMLElement;
+          if (rowElement) {
+            spanStartY = rowElement.offsetTop;
+            totalHeight = rowElement.offsetHeight;
+          } else {
+            // Fallback position if no rows at all
+            spanStartY = 100;
+            totalHeight = 40;
+          }
+        } else {
+          // Fallback position if no specific row found
+          const firstRow = document.querySelector('tbody tr') as HTMLElement;
+          if (firstRow) {
+            spanStartY = firstRow.offsetTop;
+            totalHeight = firstRow.offsetHeight;
+          } else {
+            // Default values if no rows found
+            spanStartY = 100;
+            totalHeight = 40;
+          }
+        }
+      }
 
       // Create the vertical bar
       const bar = document.createElement('div');
@@ -287,7 +319,7 @@ const FieldActivity: React.FC = () => {
       `;
       tableContainerRef.current.appendChild(bar);
 
-      // Calculate the vertical center of the tractor rows
+      // Calculate the vertical center of the bar
       const centerY = spanStartY + (totalHeight / 2);
       
       // Position the links container vertically centered
@@ -387,7 +419,7 @@ const FieldActivity: React.FC = () => {
   return (
     <div className="w-full relative">
       {/* Add Tractor Orders label and link */}
-      {!loadingTractorOrders && tractorOrders.filter(order => order.amountSowableNextSeason.gt(0)).length > 0 && (
+      {!loadingTractorOrders && (
         <div 
           ref={tractorLinksRef} 
           style={{ position: 'absolute', right: '-18rem' }} 

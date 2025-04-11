@@ -31,8 +31,8 @@ import { viewSiloABI } from "@/constants/abi/viewSiloABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 
 // Export these constants so they can be imported elsewhere
-export const TRACTOR_HELPERS_ADDRESS = "0x205Cfc23ef26922E116135500abb4B12Ab6d4668" as const;
-export const SOW_BLUEPRINT_V0_ADDRESS = "0xbB57FE325e769DEDB1236525a91cDEd842143fA7" as const;
+export const TRACTOR_HELPERS_ADDRESS = "0xD69BC314bdaa329EB18F36E4897D96A3A48C3eeF" as const;
+export const SOW_BLUEPRINT_V0_ADDRESS = "0x6712008CCD96751d586FdBa0DEf5495E0E22D904" as const;
 
 const TESTNET_CHAIN_ID = 41337;
 
