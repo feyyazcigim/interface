@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import baseLogo from "@/assets/misc/base-logo-alt.png";
 import IconImage from "@/components/ui/IconImage";
 import SmartSubmitButton from "@/components/SmartSubmitButton";
+import { useNavigate } from "react-router-dom";
 
 // Define the execution data type
 export interface ExecutionData {
@@ -75,6 +76,7 @@ export default function ReviewTractorOrderDialog({
   const [decodeAbi, setDecodeAbi] = useState(false);
   const [signedRequisitionData, setSignedRequisitionData] = useState<any>(null);
   const protocolAddress = useProtocolAddress();
+  const navigate = useNavigate();
 
   const { writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
     successMessage: "Order published successfully",
@@ -125,11 +127,16 @@ export default function ReviewTractorOrderDialog({
         args: [signedRequisitionData],
       });
 
-      // Explicitly close the dialog after successful transaction
+      // Success handling
       toast.success("Order published successfully");
+      
+      // Close the dialog
       onOpenChange(false);
-
-      // Call the parent success callback to close the parent dialog
+      
+      // Navigate to the Field page with tractor tab active
+      navigate("/field?tab=tractor");
+      
+      // Call the parent success callback to refresh data
       if (onSuccess) {
         onSuccess();
       }

@@ -41,6 +41,15 @@ function Field() {
   const harvestableIndex = useHarvestableIndex();
   const harvestableIndexLoading = useHarvestableIndexLoading();
   const [activeTab, setActiveTab] = useState<'activity' | 'pods' | 'tractor'>('activity');
+  const [searchParams] = useSearchParams();
+
+  // Set the active tab based on URL query parameter if present
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'activity' || tabParam === 'pods' || tabParam === 'tractor') {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   const hasPods = farmerField.plots.length > 0;
   const totalPods = useMemo(
@@ -58,8 +67,7 @@ function Field() {
   const navigate = useNavigate();
 
   const isMobile = useIsMobile();
-  const [params] = useSearchParams();
-  const currentAction = params.get("action");
+  const currentAction = searchParams.get("action");
 
   const morning = useMorning();
 
