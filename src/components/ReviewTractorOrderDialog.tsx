@@ -176,14 +176,14 @@ export default function ReviewTractorOrderDialog({
             {/* Tabs */}
             <div className="flex gap-4 border-b">
               <button
-                className={`pb-2 ${activeTab === "order" ? "border-b-2 border-green-600 font-medium" : "text-gray-500"}`}
+                className={`pb-2 ${activeTab === "order" ? "border-b-2 border-pinto-green-4 font-medium" : "text-gray-500"}`}
                 onClick={() => setActiveTab("order")}
               >
                 View Order
               </button>
               <button
                 className={`pb-2 ${
-                  activeTab === "blueprint" ? "border-b-2 border-green-600 font-medium" : "text-gray-500"
+                  activeTab === "blueprint" ? "border-b-2 border-pinto-green-4 font-medium" : "text-gray-500"
                 }`}
                 onClick={() => setActiveTab("blueprint")}
               >
@@ -192,7 +192,7 @@ export default function ReviewTractorOrderDialog({
               {isViewOnly && executionHistory.length > 0 && (
                 <button
                   className={`pb-2 ${
-                    activeTab === "executions" ? "border-b-2 border-green-600 font-medium" : "text-gray-500"
+                    activeTab === "executions" ? "border-b-2 border-pinto-green-4 font-medium" : "text-gray-500"
                   }`}
                   onClick={() => setActiveTab("executions")}
                 >
