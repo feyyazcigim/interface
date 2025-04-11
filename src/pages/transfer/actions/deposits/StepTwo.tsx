@@ -172,6 +172,10 @@ export default function StepTwo({
         ) : (
           transferData.map((data, index) => {
             const deposits = depositedBalances.get(data.token)?.deposits.length || 0;
+            const showDepositOrderMessage =
+              Number(data.amount) > 0 &&
+              Number(data.amount) < Number(customMaxAmounts.get(data.token.address)?.toHuman()) &&
+              deposits > 1;
             return (
               <div className="flex flex-col gap-2" key={`depositSelect_${data.token.address}`}>
                 <div className="flex flex-row items-center justify-between">
@@ -198,13 +202,11 @@ export default function StepTwo({
                   <div className="sm:hidden">
                     {deposits > 1 && <DepositSelect setTransferData={setTransferData} token={data.token} />}
                   </div>
-                  {Number(data.amount) > 0 &&
-                    Number(data.amount) < Number(customMaxAmounts.get(data.token.address)?.toHuman()) &&
-                    data.deposits.length > 1 && (
-                      <div className="pinto-sm-light text-pinto-light">
-                        Deposits with the least Grown Stalk will be sent first.
-                      </div>
-                    )}
+                  {showDepositOrderMessage && (
+                    <div className="pinto-sm-light text-pinto-light">
+                      Deposits with the least Grown Stalk will be sent first.
+                    </div>
+                  )}
                 </div>
               </div>
             );
