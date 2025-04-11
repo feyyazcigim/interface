@@ -1008,7 +1008,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   className={`flex-1 h-[60px] rounded-full text-2xl font-medium ${
                     (formStep === 1 && (error || !isPodLineLengthValid())) || isLoading
                       ? "bg-[#D9D9D9] text-[#9C9C9C]"
-                      : "bg-gradient-to-r from-[#46A955] to-[#1F9C5A] text-white"
+                      : "bg-[#2F8957] text-white"
                   }`}
                   disabled={(formStep === 1 && (!!error || !isPodLineLengthValid())) || isLoading}
                   onClick={handleNext}
