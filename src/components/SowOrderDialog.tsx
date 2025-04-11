@@ -500,7 +500,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   return (
     <>
       <div className="h-auto w-full flex flex-col">
-        <div className="px-6 py-4 pb-0">
+        <div className="py-4 pb-0">
           <div className="flex flex-col gap-6">
             {/* Title */}
             <div className="flex flex-col gap-6">
@@ -933,7 +933,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
             className="sm:max-w-[700px] mx-auto p-0 bg-white rounded-2xl border border-[#D9D9D9]"
             style={{ padding: 0, gap: 0 }}
           >
-            <div className="p-6">
+            <div className="p-3">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="font-antarctica font-medium text-[20px] leading-[115%] text-black">
                   Select Token from Silo Deposits
@@ -1027,7 +1027,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         <div className="flex items-center gap-3">
                           <IconImage src={token.logoURI} alt={token.symbol} size={12} className="rounded-full" />
                           <div className="flex flex-col">
-                            <div className="font-medium">{token.symbol}</div>
+                            <div className="font-medium text-lg mb-1">{token.symbol}</div>
                             <div className="flex items-center text-xs text-gray-500 gap-1">
                               <IconImage src={stalkIcon} size={3} alt="Stalk" /> {formatter.number(deposit?.stalk?.total || 0)} Stalk 
                               <IconImage src={seedIcon} size={3} alt="Seeds" className="ml-1" /> {formatter.number(deposit?.seeds || 0)} Seeds
