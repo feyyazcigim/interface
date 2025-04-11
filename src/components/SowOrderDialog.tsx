@@ -396,9 +396,9 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
   return (
     <>
-      <div className="absolute inset-0 flex flex-col">
-        <div className="flex-1 p-6 flex flex-col">
-          <div className="flex flex-col gap-9 flex-1">
+      <div className="h-auto w-full flex flex-col">
+        <div className="px-6 py-4 pb-0">
+          <div className="flex flex-col gap-6">
             {/* Title */}
             <div className="flex flex-col gap-6">
               <div className="flex flex-col gap-3">
@@ -412,7 +412,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
             </div>
 
             {/* Form Fields */}
-            <div className="flex flex-col gap-6 flex-1">
+            <div className="flex flex-col gap-6">
               {formStep === 1 ? (
                 // Step 1 - Main Form
                 <>
