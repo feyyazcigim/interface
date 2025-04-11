@@ -15,6 +15,8 @@ import { diamondABI } from "@/constants/abi/diamondABI";
 import { TokenValue } from "@/classes/TokenValue";
 import { formatter } from "@/utils/format";
 import { format } from "date-fns";
+import baseLogo from "@/assets/misc/base-logo-alt.png";
+import IconImage from "@/components/ui/IconImage";
 
 // Define the execution data type
 export interface ExecutionData {
@@ -168,8 +170,23 @@ export default function ReviewTractorOrderDialog({
           <DialogTitle>{isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}</DialogTitle>
           <DialogDescription>
             {isViewOnly 
-              ? "This is your active Tractor Order. It allows an Operator to execute a transaction for you on the Base network when the conditions are met."
-              : "A Tractor Order allows you to pay an Operator to execute a transaction for you on the Base network. This allows you to interact with the Pinto protocol autonomously when the conditions of your Order are met."
+              ? (
+                <div className="flex items-center">
+                  <span>This is your active Tractor Order. It allows an Operator to execute a transaction for you on the </span>
+                  <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
+                  <span>Base network when the conditions are met.</span>
+                </div>
+              )
+              : (
+                <div className="flex flex-col gap-3">
+                  <p className="flex items-center">
+                    A Tractor Order allows you to pay an Operator to execute a transaction for you on the
+                    <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
+                    Base network.
+                  </p>
+                  <p>This allows you to interact with the Pinto protocol autonomously when the conditions of your Order are met.</p>
+                </div>
+              )
             }
           </DialogDescription>
           <div className="flex flex-col gap-6">
