@@ -929,14 +929,18 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       <Dialog open={showTokenSelectionDialog} onOpenChange={setShowTokenSelectionDialog}>
         <DialogPortal>
           <DialogOverlay className="backdrop-blur-sm bg-black/30" />
-          <DialogContent className="sm:max-w-[700px] mx-auto p-0 bg-white rounded-2xl">
+          <DialogContent 
+            className="sm:max-w-[700px] mx-auto p-0 bg-white rounded-2xl border border-[#D9D9D9]"
+            style={{ padding: 0, gap: 0 }}
+          >
             <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-2">
                 <h2 className="font-antarctica font-medium text-[20px] leading-[115%] text-black">
                   Select Token from Silo Deposits
                 </h2>
               </div>
-              <p className="text-gray-500 mb-6">Tractor allows you to fund Orders for Soil using Deposits</p>
+              <p className="text-gray-500 mb-2">Tractor allows you to fund Orders for Soil using Deposits</p>
+              <div className="w-full h-[1px] bg-[#D9D9D9] mb-6" />
               
               {/* Dynamic funding source options */}
               <div className="flex flex-col gap-4 mb-6">
@@ -993,7 +997,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
               {/* Deposited Tokens */}
               <div className="flex flex-col gap-2">
                 <div className="text-gray-500">Deposited Tokens</div>
-                <div className="flex flex-col divide-y border rounded-xl">
+                <div className="flex flex-col space-y-1 bg-white rounded-xl">
                   {whitelistedTokens.map((token) => {
                     const deposit = farmerDeposits.get(token);
                     const amount = deposit?.amount || TokenValue.ZERO;
@@ -1009,8 +1013,8 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     return (
                       <div 
                         key={token.address}
-                        className={`flex items-center justify-between p-4 cursor-pointer ${
-                          isSelected ? "bg-green-50" : ""
+                        className={`flex items-center justify-between py-4 cursor-pointer rounded-lg ${
+                          isSelected ? "bg-green-50" : "bg-white"
                         }`}
                         onClick={() => {
                           setSelectedTokenStrategy({
