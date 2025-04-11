@@ -213,23 +213,25 @@ export default function ReviewTractorOrderDialog({
                 <div className="z-10 relative">
                   {/* Withdraw Section */}
                   <div className="flex items-center justify-center mb-4">
-                    <div className="bg-white rounded-xl px-6 py-2 shadow-sm flex flex-col gap-2 border border-gray-200">
-                      <div className="flex items-center gap-2">
+                    <div className="bg-white rounded-xl px-2 py-2 shadow-sm flex flex-col gap-2 border border-gray-200">
+                      <div className="flex items-center gap-0">
                         <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Withdraw</div>
-                        <span className="text-gray-400">—</span>
+                        <div className="border-t-2 border-gray-300 w-6 flex-shrink-0"></div>
 
-                          <span className="text-box rounded-full">
-                        <span>Deposited Tokens</span>
+                        <span className="text-box rounded-full">
+                          <span>Deposited Tokens</span>
                         </span>
-                        <span className="text-gray-400">—</span>
-                        <span>as</span>
-                        <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-5 h-5" />
-                        <span className="font-medium">PINTO</span>
+                        <div className="border-t-2 border-gray-300 w-6 flex-shrink-0"></div>
+                        <span className="text-box rounded-full flex items-center">
+                          <span>as</span>
+                          <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-5 h-5 mx-1" />
+                          <span className="font-medium">PINTO</span>
+                        </span>
                       </div>
                       
                       <div className="text-gray-500 text-sm">
                         <div className="flex items-center gap-1">
-                          <CornerBottomLeftIcon className="text-gray-300" />
+                          <CornerBottomLeftIcon className="text-gray-300 ml-4" />
                           <span className="font-antarctica font-light text-[#9C9C9C]">Withdraw Deposited Tokens from the Silo with the {
                             orderData.tokenStrategy === "LOWEST_SEEDS" ? "Lowest Seeds" : 
                             orderData.tokenStrategy === "LOWEST_PRICE" ? "Best Price" : 
@@ -242,11 +244,11 @@ export default function ReviewTractorOrderDialog({
 
                   {/* Sow Section */}
                   <div className="flex flex-col items-center gap-4 mt-8">
-                    <div className="bg-white rounded-xl px-6 py-2 shadow-sm border border-gray-200">
+                    <div className="bg-white rounded-xl px-2 py-2 shadow-sm border border-gray-200">
                       <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-0">
                           <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Sow</div>
-                          <span className="text-gray-300">—</span>
+                          <div className="border-t-2 border-gray-300 w-6 flex-shrink-0"></div>
                           <span className="text-box rounded-full">
                             up to <span className="text-pinto-green-4">{orderData.totalAmount}</span>{" "}
                             <span className="text-pinto-green-4">PINTO</span>
@@ -254,7 +256,7 @@ export default function ReviewTractorOrderDialog({
                         </div>
                         <ul className="list-none space-y-2">
                           <li className="flex items-center gap-2">
-                            <CornerBottomLeftIcon className="text-gray-300" />
+                            <CornerBottomLeftIcon className="text-gray-300 ml-4" />
                             <span className="font-antarctica font-light text-[#9C9C9C]">
                               Execute when Temperature is at least{" "}
                               <span className="text-pinto-green-4">{orderData.temperature}</span>
@@ -262,7 +264,7 @@ export default function ReviewTractorOrderDialog({
                             </span>
                           </li>
                           <li className="flex items-center gap-2">
-                            <CornerBottomLeftIcon className="text-gray-300" />
+                            <CornerBottomLeftIcon className="text-gray-300 ml-4" />
                             <span className="font-antarctica font-light text-[#9C9C9C]">
                               AND when Pod Line Length is at most{" "}
                               <span className="text-pinto-green-4">
@@ -273,7 +275,7 @@ export default function ReviewTractorOrderDialog({
                             </span>
                           </li>
                           <li className="flex items-center gap-2">
-                            <CornerBottomLeftIcon className="text-gray-300" />
+                            <CornerBottomLeftIcon className="text-gray-300 ml-4" />
                             <span className="font-antarctica font-light text-[#9C9C9C]">
                               AND when Available Soil is at least{" "}
                               <span className="text-pinto-green-4">{orderData.minSoil}</span>
@@ -286,15 +288,14 @@ export default function ReviewTractorOrderDialog({
 
                   {/* Tip Section */}
                   <div className="flex items-center justify-center mt-8">
-                    <div className="bg-white rounded-xl px-6 py-2 shadow-sm flex items-center gap-2 border border-gray-200">
+                    <div className="bg-white rounded-xl px-2 py-2 shadow-sm flex items-center gap-0 border border-gray-200">
                       <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Tip</div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-box rounded-full">
-                          <span className="text-pinto-green-4">{orderData.operatorTip} PINTO</span>
-                        </span>
-                        <span className="text-gray-300">—</span>
-                        <span className="text-box rounded-full">to Operator</span>
-                      </div>
+                      <div className="border-t-2 border-gray-300 w-6 flex-shrink-0"></div>
+                      <span className="text-box rounded-full">
+                        <span className="text-pinto-green-4">{orderData.operatorTip} PINTO</span>
+                      </span>
+                      <div className="border-t-2 border-gray-300 w-6 flex-shrink-0"></div>
+                      <span className="text-box rounded-full">to Operator</span>
                     </div>
                   </div>
 
