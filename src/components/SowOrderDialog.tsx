@@ -953,14 +953,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       setShowTokenSelectionDialog(false);
                     }}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    <div className={`w-10 h-10 rounded-full ${
                       selectedTokenStrategy.type === "LOWEST_PRICE" 
                         ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]" 
                         : "border border-[#D9D9D9]"
                     }`}>
-                      {selectedTokenStrategy.type === "LOWEST_PRICE" && (
-                        <div className="w-3 h-3 bg-[#387F5C] rounded-full"></div>
-                      )}
                     </div>
                     <div className="flex flex-col gap-1">
                       <span className="font-antarctica text-base font-normal leading-[110%] text-black">Token with Best Price</span>
@@ -979,14 +976,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       setShowTokenSelectionDialog(false);
                     }}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    <div className={`w-10 h-10 rounded-full ${
                       selectedTokenStrategy.type === "LOWEST_SEEDS" 
                         ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]" 
                         : "border border-[#D9D9D9]"
                     }`}>
-                      {selectedTokenStrategy.type === "LOWEST_SEEDS" && (
-                        <div className="w-3 h-3 bg-[#387F5C] rounded-full"></div>
-                      )}
                     </div>
                     <div className="flex flex-col gap-1">
                       <span className="font-antarctica text-base font-normal leading-[110%] text-black">Token with Least Seeds</span>
