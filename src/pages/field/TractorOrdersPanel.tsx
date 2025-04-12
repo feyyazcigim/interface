@@ -274,25 +274,7 @@ const TractorOrdersPanel = () => {
                   <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
                   {/* From label */}
                   <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
-                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap">from Deposited Tokens</span>
-                  </div>
-                  {/* Divider */}
-                  <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
-                  {/* With best */}
-                  <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
-                    <div className="flex items-center gap-1">
-                      <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap">
-                        {data.sourceTokenIndices.includes(255) 
-                          ? "with Lowest" 
-                          : data.sourceTokenIndices.includes(254) 
-                            ? "with Best" 
-                            : "with Specific"}
-                      </span>
-                      <IconImage src={pintoIcon} size={4} />
-                      <span className="text-black text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">
-                        {getTokenNameByIndex(data.sourceTokenIndices[0])}
-                      </span>
-                    </div>
+                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap">from Silo</span>
                   </div>
                   {/* Divider */}
                   <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0"></div>
@@ -318,6 +300,20 @@ const TractorOrdersPanel = () => {
                     <span className="text-pinto-green-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">{formatter.number(TokenValue.fromBlockchain(data.operatorParams.operatorTipAmount, 6))} PINTO</span>
                   </div>
                 </div>
+              </div>
+              
+              {/* Strategy description - new row */}
+              <div className="flex items-center pl-6 gap-2">
+                <CornerBottomLeftIcon className="h-4 w-4 text-pinto-gray-4" />
+                <span className="text-pinto-gray-4 text-sm font-antarctica font-light">
+                  Withdraw Deposited Tokens from the Silo with the {
+                    data.sourceTokenIndices.includes(255) 
+                      ? "Lowest Seeds" 
+                      : data.sourceTokenIndices.includes(254) 
+                        ? "Best Price" 
+                        : getTokenNameByIndex(data.sourceTokenIndices[0])
+                  }
+                </span>
               </div>
               
               {/* Execution conditions */}
