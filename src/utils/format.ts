@@ -191,11 +191,12 @@ export const formatTokenAmount = (val: NumberPrimitive, token: Token | InternalT
   const solish = tokensEqual(token, WSOL) || tokensEqual(token, PINTOWSOL);
 
   if (btcish || solish) {
-    return formatNum(normalizeTokenAmount(val, token), {
-      minDecimals: 6,
-      maxDecimals: 6,
+    const normalized = normalizeTokenAmount(val, token);
+    return formatNum(normalized, {
+      minDecimals: normalized ? 6 : 2,
+      maxDecimals: normalized ? 6 : 2,
       defaultValue: "0.00",
-      minValue: 0.000001,
+      minValue: normalized ? 0.000001 : 0.01,
       allowZero: true,
       showPositiveSign: options?.showPositiveSign,
       showPlusOnZero: options?.showPlusOnZero,
@@ -258,3 +259,5 @@ export function toFixedNumber(num: number, digits: number, base?: number) {
   const pow = (base ?? 10) ** digits;
   return Math.round(num * pow) / pow;
 }
+
+export const trulyTheBestTimeFormat = "yyyy MMM dd, t";

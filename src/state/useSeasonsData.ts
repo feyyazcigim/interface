@@ -22,6 +22,7 @@ import useTokenData from "./useTokenData";
 
 export interface SeasonsTableData {
   season: number;
+  timestamp: number;
   caseId: number;
   sunriseBlock: number;
   beanToMaxLpGpPerBdvRatio: number;
@@ -164,6 +165,7 @@ export default function useSeasonsData(fromSeason: number, toSeason: number) {
       acc.push({
         ...acc[season.beanHourlySnapshot.season.season],
         season: season.beanHourlySnapshot.season.season,
+        timestamp: Number(season.timestamp),
         caseId: Number(currFieldHourlySnapshots.caseId || 0),
         sunriseBlock: Number(currStalkSeasons.sunriseBlock),
         instDeltaB: TokenValue.fromHuman(season.beanHourlySnapshot.instDeltaB, tokenData.mainToken.decimals),

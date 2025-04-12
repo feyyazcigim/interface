@@ -1,6 +1,7 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 import { PlotSource } from "@/generated/gql/graphql";
+import { ProtocolIntegration } from "@/state/integrations/types";
 import { QueryKey, UseQueryOptions } from "@tanstack/react-query";
 import { DateTime } from "luxon";
 import { ReactNode } from "react";
@@ -36,6 +37,10 @@ export interface Token {
   color?: string;
   tokens?: Address[];
   description?: string;
+}
+
+export interface Token3PIntegration extends Token {
+  integration: ProtocolIntegration;
 }
 
 export interface InternalToken {
@@ -325,6 +330,13 @@ export type ConstrainedUseQueryArgs<TData, TSelect = TData> = Omit<
 export type ConstrainedUseQueryArgsWithSelect<TData, TSelect = TData> = ConstrainedUseQueryArgs<TData, TSelect> & {
   select?: (data: TData) => TSelect;
 };
+
+export interface MinimumViableUseQueryResult<T> {
+  data: T | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => void;
+}
 
 export type FailableUseContractsResult<T> = (
   | {

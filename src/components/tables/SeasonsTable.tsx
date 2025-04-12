@@ -1,10 +1,11 @@
 import eyeballCrossed from "@/assets/misc/eyeball-crossed.svg";
 import IconImage from "@/components/ui/IconImage";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
-import useIsMobile from "@/hooks/display/useIsMobile";
 import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
 import { SeasonsTableData } from "@/state/useSeasonsData";
+import { trulyTheBestTimeFormat } from "@/utils/format";
 import { calculateCropScales, caseIdToDescriptiveText, convertDeltaDemandToPercentage } from "@/utils/season";
+import { DateTime } from "luxon";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ListChildComponentProps, VariableSizeList, areEqual } from "react-window";
 import { DeltaDemandChart } from "../charts/DeltaDemandChart";
@@ -68,12 +69,15 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
     const data = seasonsData[index];
     const { cropScalar, cropRatio } = calculateCropScales(data.beanToMaxLpGpPerBdvRatio, data.raining, data.season);
     const deltaCropScalar = (data.deltaBeanToMaxLpGpPerBdvRatio / 1e18).toFixed(1);
+    const priceDescriptiveText = caseIdToDescriptiveText(data.caseId, "price");
     return (
       <TableRow key={data.season} style={style} noHoverMute>
         <SeasonsTableCell
+          cellType={SeasonsTableCellType.TwoColumn}
           className="text-left h-[50px]"
           columnKey="season"
           value={data.season}
+          subValue={DateTime.fromSeconds(data.timestamp).toFormat(trulyTheBestTimeFormat)}
           hiddenFields={hiddenFields}
         />
         <SeasonsTableCell
@@ -108,11 +112,11 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           hiddenFields={hiddenFields}
         />
         <SeasonsTableCell
-          cellType={SeasonsTableCellType.TwoColumn}
+          cellType={priceDescriptiveText ? SeasonsTableCellType.TwoColumn : SeasonsTableCellType.Default}
           columnKey="twaPrice"
           notApplicable={data.season <= 3}
           value={`$${data.twaPrice.toHuman("short")}`}
-          subValue={caseIdToDescriptiveText(data.caseId, "price")}
+          subValue={priceDescriptiveText}
           hiddenFields={hiddenFields}
         />
         <SeasonsTableCell
