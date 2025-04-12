@@ -69,7 +69,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
       <TableRow key={data.season} style={style} noHoverMute>
         <SeasonsTableCell
           cellType={SeasonsTableCellType.TwoColumn}
-          className="text-left"
+          className="text-left h-[50px]"
           columnKey="season"
           value={data.season}
           subValue={DateTime.fromSeconds(data.timestamp).toFormat(trulyTheBestTimeFormat)}
@@ -135,9 +135,9 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           value={convertDeltaDemandToPercentage(data.deltaPodDemand.toNumber())}
           subValue={caseIdToDescriptiveText(data.caseId, "soil_demand")}
           hiddenFields={hiddenFields}
-          // hoverContent={
-          //   <DeltaDemandChart />
-          // }
+        // hoverContent={
+        //   <DeltaDemandChart />
+        // }
         />
         <SeasonsTableCell
           columnKey="cropScalar"
