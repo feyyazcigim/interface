@@ -348,16 +348,6 @@ const TractorOrdersPanel = () => {
                 </div>
               </div>
               
-              {/* Progress bar - only show if not at the bottom of conditions */}
-              {!isComplete && (
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                  <div 
-                    className="bg-pinto-green-4 h-2 rounded-full" 
-                    style={{ width: `${percentCompleteNumber}%` }}
-                  ></div>
-                </div>
-              )}
-              
               {isComplete && (
                 <div className="mt-2 p-2 bg-pinto-green-1 rounded-lg border border-pinto-green-4 text-pinto-green-4 text-center font-medium">
                   Order Completed!
