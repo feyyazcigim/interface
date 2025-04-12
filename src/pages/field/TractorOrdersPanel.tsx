@@ -305,7 +305,7 @@ const TractorOrdersPanel = () => {
               {/* Strategy description - new row */}
               <div className="flex items-center pl-6 gap-2">
                 <CornerBottomLeftIcon className="h-4 w-4 text-pinto-gray-4" />
-                <span className="text-pinto-gray-4 text-sm font-antarctica font-light">
+                <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">
                   Withdraw Deposited Tokens from the Silo with the {
                     data.sourceTokenIndices.includes(255) 
                       ? "Lowest Seeds" 
@@ -323,19 +323,19 @@ const TractorOrdersPanel = () => {
                     <CornerBottomLeftIcon
                       className="h-4 w-4 text-pinto-gray-4"
                     />
-                    <span className="text-pinto-gray-4 text-sm font-menlo font-thin whitespace-nowrap overflow-hidden text-ellipsis">Execute when Temperature is at least {formatPercentage(data.minTemp)}</span>
+                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">Execute when Temperature is at least {formatPercentage(data.minTemp)}</span>
                   </div>
                   <div className="flex items-center pl-6 gap-2">
                     <CornerBottomLeftIcon
                       className="h-4 w-4 text-pinto-gray-4"
                     />
-                    <span className="text-pinto-gray-4 text-sm font-menlo whitespace-nowrap overflow-hidden text-ellipsis">AND when Pod Line Length is at most {formatter.number(TokenValue.fromHuman(data.maxPodlineLengthAsString, 6))}</span>
+                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">AND when Pod Line Length is at most {formatter.number(TokenValue.fromHuman(data.maxPodlineLengthAsString, 6))}</span>
                   </div>
                   <div className="flex items-center pl-6 gap-2">
                     <CornerBottomLeftIcon
                       className="h-4 w-4 text-pinto-gray-4"
                     />
-                    <span className="text-pinto-gray-4 text-sm font-menlo whitespace-nowrap overflow-hidden text-ellipsis">AND when Available Soil is at least {data.sowAmounts.minAmountToSowPerSeasonAsString}</span>
+                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">AND when Available Soil is at least {data.sowAmounts.minAmountToSowPerSeasonAsString}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
