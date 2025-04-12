@@ -10,21 +10,15 @@ import {
 } from "@/components/ui/Dropdown";
 import IconImage from "@/components/ui/IconImage";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import { SeasonColumn, nonHideableFields } from "@/pages/explorer/SeasonsExplorer";
+import { SeasonColumn, nonHideableFields, seasonColumns } from "@/pages/explorer/SeasonsExplorer";
 import { useState } from "react";
 interface HideColumnDropdownProps {
-  seasonColumns: SeasonColumn[];
   hiddenFields: string[];
   toggleColumn: (id: string) => void;
   resetAllHiddenColumns: () => void;
 }
 
-export const HideColumnDropdown = ({
-  seasonColumns,
-  hiddenFields,
-  toggleColumn,
-  resetAllHiddenColumns,
-}: HideColumnDropdownProps) => {
+export const HideColumnDropdown = ({ hiddenFields, toggleColumn, resetAllHiddenColumns }: HideColumnDropdownProps) => {
   const isMobile = useIsMobile();
   const columnDropdownLabel =
     hiddenFields.length > 0

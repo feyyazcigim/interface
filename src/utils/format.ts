@@ -259,3 +259,5 @@ export function toFixedNumber(num: number, digits: number, base?: number) {
   const pow = (base ?? 10) ** digits;
   return Math.round(num * pow) / pow;
 }
+
+export const trulyTheBestTimeFormat = "yyyy MMM dd, t";

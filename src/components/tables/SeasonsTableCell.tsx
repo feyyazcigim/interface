@@ -39,10 +39,10 @@ export const SeasonsTableCell = ({
       return (
         <TwoColumnCell
           className={`${className} ${additionalClasses}`}
+          columnKey={columnKey}
           value={displayValue}
           subValue={displaySubValue}
           hoverContent={hoverContent}
-          hiddenFields={hiddenFields}
         />
       );
     default:
