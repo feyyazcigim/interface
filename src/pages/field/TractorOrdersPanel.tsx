@@ -340,7 +340,11 @@ const TractorOrdersPanel = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <IconImage src={pintoIcon} size={4} />
-                  <span className="text-pinto-gray-4 text-sm font-antarctica whitespace-nowrap overflow-hidden text-ellipsis">PINTO Sown through this Order: {formatter.number(totalSown)}/{formatter.number(totalAmount)}</span>
+                  <span className="text-pinto-gray-4 text-sm font-antarctica whitespace-nowrap overflow-hidden text-ellipsis">
+                    PINTO Sown through this Order: 
+                    <span className="text-black"> {formatter.number(totalSown)}/{formatter.number(totalAmount)}</span>
+                    <span className="text-pinto-gray-4"> ({Math.round(percentCompleteNumber)}%)</span>
+                  </span>
                 </div>
               </div>
               
