@@ -3,12 +3,12 @@ import IconImage from "@/components/ui/IconImage";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
 import { SeasonsTableData } from "@/state/useSeasonsData";
+import { trulyTheBestTimeFormat } from "@/utils/format";
 import { calculateCropScales, caseIdToDescriptiveText, convertDeltaDemandToPercentage } from "@/utils/season";
 import { DateTime } from "luxon";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ListChildComponentProps, VariableSizeList, areEqual } from "react-window";
 import { SeasonsTableCell, SeasonsTableCellType } from "./SeasonsTableCell";
-import { trulyTheBestTimeFormat } from "@/utils/format";
 
 interface SeasonsTableProps {
   seasonsData: SeasonsTableData[];
