@@ -70,7 +70,12 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
     const deltaCropScalar = (data.deltaBeanToMaxLpGpPerBdvRatio / 1e18).toFixed(1);
     return (
       <TableRow key={data.season} style={style} noHoverMute>
-        <SeasonsTableCell className="text-left" columnKey="season" value={data.season} hiddenFields={hiddenFields} />
+        <SeasonsTableCell
+          className="text-left h-[50px]"
+          columnKey="season"
+          value={data.season}
+          hiddenFields={hiddenFields}
+        />
         <SeasonsTableCell
           columnKey="instantDeltaP"
           value={`${data.instDeltaB.toNumber() > 0 ? "+" : ""}${data.instDeltaB.toHuman("short")}`}
