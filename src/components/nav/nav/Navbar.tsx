@@ -190,7 +190,7 @@ const Navbar = () => {
           styles.navGrid,
         )}
       >
-        <div className="flex flex-row gap-4">
+        <div className="flex flex-row">
           <Panel
             isOpen={isLeftPanelOpen}
             side="left"
@@ -211,44 +211,46 @@ const Navbar = () => {
             {isSeasonsPanelOpen && <SeasonsPanel />}
             {isChartSelectPanelOpen && <ChartSelectPanel />}
           </Panel>
-          <div className={`transition-all duration-100 ${isPricePanelOpen && "z-[51]"}`}>
-            <Button
-              variant="outline-primary"
-              size="default"
-              rounded="full"
-              onClick={() => togglePanel("price")}
-              onMouseEnter={() => refetchPriceData()}
-              noShrink
-              className={cn(`flex flex-row gap-0.5 sm:gap-2 ${isPricePanelOpen && "border-pinto-green"}`)}
-            >
-              <IconImage src={pintoIcon} size={6} alt="pinto icon" />
-              {priceData.loading ? (
-                <Skeleton className="w-14 h-6" />
-              ) : (
-                <>${Number(priceData.price.toHuman()).toFixed(isMobile ? 3 : 4)}</>
-              )}
-              <IconImage src={chevronDown} size={4} mobileSize={2.5} alt="chevron down" />
-            </Button>
-          </div>
-          <div className={`transition-all duration-100 ${isSeasonsPanelOpen && "z-[51]"}`}>
-            <Button
-              variant="outline-secondary"
-              onClick={() => togglePanel("seasons")}
-              onMouseEnter={() => invalidateData("seasons")}
-              noShrink
-              rounded="full"
-              className={cn(`flex flex-row gap-0.5 sm:gap-2 ${isSeasonsPanelOpen && "border-pinto-green"}`)}
-            >
-              <IconImage src={sunIcon} size={6} />
-              {season === 0 ? (
-                <div className="hidden sm:block">
+          <div className="flex flex-row gap-4">
+            <div className={`transition-all duration-100 ${isPricePanelOpen && "z-[51]"}`}>
+              <Button
+                variant="outline-primary"
+                size="default"
+                rounded="full"
+                onClick={() => togglePanel("price")}
+                onMouseEnter={() => refetchPriceData()}
+                noShrink
+                className={cn(`flex flex-row gap-0.5 sm:gap-2 ${isPricePanelOpen && "border-pinto-green"}`)}
+              >
+                <IconImage src={pintoIcon} size={6} alt="pinto icon" />
+                {priceData.loading ? (
                   <Skeleton className="w-14 h-6" />
-                </div>
-              ) : (
-                <div className="hidden sm:block">Season {season}</div>
-              )}
-              <IconImage src={chevronDown} size={4} mobileSize={2.5} />
-            </Button>
+                ) : (
+                  <>${Number(priceData.price.toHuman()).toFixed(isMobile ? 3 : 4)}</>
+                )}
+                <IconImage src={chevronDown} size={4} mobileSize={2.5} alt="chevron down" />
+              </Button>
+            </div>
+            <div className={`transition-all duration-100 ${isSeasonsPanelOpen && "z-[51]"}`}>
+              <Button
+                variant="outline-secondary"
+                onClick={() => togglePanel("seasons")}
+                onMouseEnter={() => invalidateData("seasons")}
+                noShrink
+                rounded="full"
+                className={cn(`flex flex-row gap-0.5 sm:gap-2 ${isSeasonsPanelOpen && "border-pinto-green"}`)}
+              >
+                <IconImage src={sunIcon} size={6} />
+                {season === 0 ? (
+                  <div className="hidden sm:block">
+                    <Skeleton className="w-14 h-6" />
+                  </div>
+                ) : (
+                  <div className="hidden sm:block">Season {season}</div>
+                )}
+                <IconImage src={chevronDown} size={4} mobileSize={2.5} />
+              </Button>
+            </div>
           </div>
         </div>
         <div className="hidden lg:flex lg:justify-center pr-[208px]">
