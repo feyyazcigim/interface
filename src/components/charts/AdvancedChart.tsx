@@ -8,6 +8,7 @@ import { IRange, Time, UTCTimestamp } from "lightweight-charts";
 import { useEffect, useMemo, useState } from "react";
 import CalendarButton from "../CalendarButton";
 import { PlusIcon } from "../Icons";
+import LoadingSpinner from "../LoadingSpinner";
 import { Button } from "../ui/Button";
 import TVChart, { TVChartFormattedData } from "./TVChart";
 
@@ -106,6 +107,14 @@ export const AdvancedChart = () => {
       window.removeEventListener("resize", calculateHeight);
     };
   }, []);
+
+  if (seasonsData.isFetching) {
+    return (
+      <div className="flex flex-row justify-center">
+        <LoadingSpinner size={300} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col -mb-8 sm:-mb-20 gap-6">
