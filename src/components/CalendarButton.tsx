@@ -15,9 +15,11 @@ import {
 } from "date-fns";
 import { useState } from "react";
 import { DateRange, DayPicker } from "react-day-picker";
+import { div } from "three/webgpu";
 import { CalendarIcon, ClockIcon } from "./Icons";
 import { Input } from "./ui/Input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
+import { ResponsivePopover } from "./ui/ResponsivePopover";
 import { Separator } from "./ui/Separator";
 
 const calendarPresetRanges = [
@@ -356,21 +358,21 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }) =
           </>
         )}
       </div>
-      <Popover>
-        <PopoverTrigger>
+      <ResponsivePopover>
+        <ResponsivePopover.Trigger>
           <div className={`ml-6 ${selectedPreset === "CUSTOM" && !isDesktop ? "text-pinto-green" : "text-gray-700"}`}>
             <CalendarIcon />
           </div>
-        </PopoverTrigger>
-        <PopoverContent align="end">
+        </ResponsivePopover.Trigger>
+        <ResponsivePopover.Content align={"end"}>
           <CalendarContent
             isMobile={!isDesktop}
             range={range}
             selectedPreset={selectedPreset}
             handleChange={handleChange}
           />
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopover.Content>
+      </ResponsivePopover>
     </div>
   );
 };
