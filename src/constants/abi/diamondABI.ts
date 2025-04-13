@@ -6,11 +6,11 @@ export const diamondABI = [
         indexed: false,
         internalType: "uint256",
         name: "timestamp",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "Pause",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -19,31 +19,31 @@ export const diamondABI = [
         indexed: false,
         internalType: "uint256",
         name: "timestamp",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "timePassed",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "Unpause",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [],
     name: "pause",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
     name: "unpause",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     anonymous: false,
@@ -52,24 +52,24 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "previousOwner",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "newOwner",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "OwnershipTransferred",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [],
     name: "claimOwnership",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -78,11 +78,11 @@ export const diamondABI = [
       {
         internalType: "address",
         name: "owner_",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -91,43 +91,43 @@ export const diamondABI = [
       {
         internalType: "address",
         name: "ownerCandidate_",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "_newOwner",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "transferOwnership",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "bytes4",
         name: "_functionSelector",
-        type: "bytes4",
-      },
+        type: "bytes4"
+      }
     ],
     name: "facetAddress",
     outputs: [
       {
         internalType: "address",
         name: "facetAddress_",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -136,30 +136,30 @@ export const diamondABI = [
       {
         internalType: "address[]",
         name: "facetAddresses_",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "_facet",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "facetFunctionSelectors",
     outputs: [
       {
         internalType: "bytes4[]",
         name: "facetFunctionSelectors_",
-        type: "bytes4[]",
-      },
+        type: "bytes4[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -170,40 +170,40 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "facetAddress",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4[]",
             name: "functionSelectors",
-            type: "bytes4[]",
-          },
+            type: "bytes4[]"
+          }
         ],
         internalType: "struct IDiamondLoupe.Facet[]",
         name: "facets_",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "bytes4",
         name: "_interfaceId",
-        type: "bytes4",
-      },
+        type: "bytes4"
+      }
     ],
     name: "supportsInterface",
     outputs: [
       {
         internalType: "bool",
         name: "",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     anonymous: false,
@@ -213,39 +213,39 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "facetAddress",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "enum IDiamondCut.FacetCutAction",
             name: "action",
-            type: "uint8",
+            type: "uint8"
           },
           {
             internalType: "bytes4[]",
             name: "functionSelectors",
-            type: "bytes4[]",
-          },
+            type: "bytes4[]"
+          }
         ],
         indexed: false,
         internalType: "struct IDiamondCut.FacetCut[]",
         name: "_diamondCut",
-        type: "tuple[]",
+        type: "tuple[]"
       },
       {
         indexed: false,
         internalType: "address",
         name: "_init",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "bytes",
         name: "_calldata",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "DiamondCut",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
@@ -254,78 +254,152 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "facetAddress",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "enum IDiamondCut.FacetCutAction",
             name: "action",
-            type: "uint8",
+            type: "uint8"
           },
           {
             internalType: "bytes4[]",
             name: "functionSelectors",
-            type: "bytes4[]",
-          },
+            type: "bytes4[]"
+          }
         ],
         internalType: "struct IDiamondCut.FacetCut[]",
         name: "_diamondCut",
-        type: "tuple[]",
+        type: "tuple[]"
       },
       {
         internalType: "address",
         name: "_init",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "bytes",
         name: "_calldata",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "diamondCut",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "target",
+        type: "address"
+      }
+    ],
+    name: "AddressEmptyCode",
+    type: "error"
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address"
+      }
+    ],
+    name: "AddressInsufficientBalance",
+    type: "error"
   },
   {
     inputs: [],
     name: "ECDSAInvalidSignature",
-    type: "error",
+    type: "error"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "length",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "ECDSAInvalidSignatureLength",
-    type: "error",
+    type: "error"
   },
   {
     inputs: [
       {
         internalType: "bytes32",
         name: "s",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     name: "ECDSAInvalidSignatureS",
-    type: "error",
+    type: "error"
+  },
+  {
+    inputs: [],
+    name: "FailedInnerCall",
+    type: "error"
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "value",
+        type: "uint256"
+      }
+    ],
+    name: "SafeCastOverflowedUintToInt",
+    type: "error"
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address"
+      }
+    ],
+    name: "SafeERC20FailedOperation",
+    type: "error"
   },
   {
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "bytes32",
         name: "blueprintHash",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     name: "CancelBlueprint",
-    type: "event",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address"
+      },
+      {
+        indexed: true,
+        internalType: "contract IERC20",
+        name: "token",
+        type: "address"
+      },
+      {
+        indexed: false,
+        internalType: "int256",
+        name: "delta",
+        type: "int256"
+      }
+    ],
+    name: "InternalBalanceChanged",
+    type: "event"
   },
   {
     anonymous: false,
@@ -337,57 +411,100 @@ export const diamondABI = [
               {
                 internalType: "address",
                 name: "publisher",
-                type: "address",
+                type: "address"
               },
               {
                 internalType: "bytes",
                 name: "data",
-                type: "bytes",
+                type: "bytes"
               },
               {
                 internalType: "bytes32[]",
                 name: "operatorPasteInstrs",
-                type: "bytes32[]",
+                type: "bytes32[]"
               },
               {
                 internalType: "uint256",
                 name: "maxNonce",
-                type: "uint256",
+                type: "uint256"
               },
               {
                 internalType: "uint256",
                 name: "startTime",
-                type: "uint256",
+                type: "uint256"
               },
               {
                 internalType: "uint256",
                 name: "endTime",
-                type: "uint256",
-              },
+                type: "uint256"
+              }
             ],
             internalType: "struct LibTractor.Blueprint",
             name: "blueprint",
-            type: "tuple",
+            type: "tuple"
           },
           {
             internalType: "bytes32",
             name: "blueprintHash",
-            type: "bytes32",
+            type: "bytes32"
           },
           {
             internalType: "bytes",
             name: "signature",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         indexed: false,
         internalType: "struct LibTractor.Requisition",
         name: "requisition",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "PublishRequisition",
-    type: "event",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "token",
+        type: "address"
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address"
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "recipient",
+        type: "address"
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256"
+      },
+      {
+        indexed: false,
+        internalType: "enum LibTransfer.From",
+        name: "fromMode",
+        type: "uint8"
+      },
+      {
+        indexed: false,
+        internalType: "enum LibTransfer.To",
+        name: "toMode",
+        type: "uint8"
+      }
+    ],
+    name: "TokenTransferred",
+    type: "event"
   },
   {
     anonymous: false,
@@ -405,10 +522,16 @@ export const diamondABI = [
         type: "address"
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "bytes32",
         name: "blueprintHash",
         type: "bytes32"
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "gasleft",
+        type: "uint256"
       }
     ],
     name: "Tractor",
@@ -418,14 +541,45 @@ export const diamondABI = [
     anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: "address",
+        name: "operator",
+        type: "address"
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "publisher",
+        type: "address"
+      },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "blueprintHash",
+        type: "bytes32"
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "gasleft",
+        type: "uint256"
+      }
+    ],
+    name: "TractorExecutionBegan",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: false,
         internalType: "string",
         name: "version",
-        type: "string",
-      },
+        type: "string"
+      }
     ],
     name: "TractorVersionSet",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
@@ -436,58 +590,58 @@ export const diamondABI = [
               {
                 internalType: "address",
                 name: "publisher",
-                type: "address",
+                type: "address"
               },
               {
                 internalType: "bytes",
                 name: "data",
-                type: "bytes",
+                type: "bytes"
               },
               {
                 internalType: "bytes32[]",
                 name: "operatorPasteInstrs",
-                type: "bytes32[]",
+                type: "bytes32[]"
               },
               {
                 internalType: "uint256",
                 name: "maxNonce",
-                type: "uint256",
+                type: "uint256"
               },
               {
                 internalType: "uint256",
                 name: "startTime",
-                type: "uint256",
+                type: "uint256"
               },
               {
                 internalType: "uint256",
                 name: "endTime",
-                type: "uint256",
-              },
+                type: "uint256"
+              }
             ],
             internalType: "struct LibTractor.Blueprint",
             name: "blueprint",
-            type: "tuple",
+            type: "tuple"
           },
           {
             internalType: "bytes32",
             name: "blueprintHash",
-            type: "bytes32",
+            type: "bytes32"
           },
           {
             internalType: "bytes",
             name: "signature",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct LibTractor.Requisition",
         name: "requisition",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "cancelBlueprint",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -496,111 +650,124 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "publisher",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
+            type: "bytes"
           },
           {
             internalType: "bytes32[]",
             name: "operatorPasteInstrs",
-            type: "bytes32[]",
+            type: "bytes32[]"
           },
           {
             internalType: "uint256",
             name: "maxNonce",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "startTime",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "endTime",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct LibTractor.Blueprint",
         name: "blueprint",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "getBlueprintHash",
     outputs: [
       {
         internalType: "bytes32",
         name: "",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "bytes32",
         name: "blueprintHash",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     name: "getBlueprintNonce",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "bytes32",
         name: "counterId",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     name: "getCounter",
     outputs: [
       {
         internalType: "uint256",
         name: "count",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "getCurrentBlueprintHash",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "bytes32",
         name: "counterId",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     name: "getPublisherCounter",
     outputs: [
       {
         internalType: "uint256",
         name: "count",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -609,11 +776,24 @@ export const diamondABI = [
       {
         internalType: "string",
         name: "",
-        type: "string",
-      },
+        type: "string"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "operator",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   {
     inputs: [
@@ -624,58 +804,81 @@ export const diamondABI = [
               {
                 internalType: "address",
                 name: "publisher",
-                type: "address",
+                type: "address"
               },
               {
                 internalType: "bytes",
                 name: "data",
-                type: "bytes",
+                type: "bytes"
               },
               {
                 internalType: "bytes32[]",
                 name: "operatorPasteInstrs",
-                type: "bytes32[]",
+                type: "bytes32[]"
               },
               {
                 internalType: "uint256",
                 name: "maxNonce",
-                type: "uint256",
+                type: "uint256"
               },
               {
                 internalType: "uint256",
                 name: "startTime",
-                type: "uint256",
+                type: "uint256"
               },
               {
                 internalType: "uint256",
                 name: "endTime",
-                type: "uint256",
-              },
+                type: "uint256"
+              }
             ],
             internalType: "struct LibTractor.Blueprint",
             name: "blueprint",
-            type: "tuple",
+            type: "tuple"
           },
           {
             internalType: "bytes32",
             name: "blueprintHash",
-            type: "bytes32",
+            type: "bytes32"
           },
           {
             internalType: "bytes",
             name: "signature",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct LibTractor.Requisition",
         name: "requisition",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "publishRequisition",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "contract IERC20",
+        name: "token",
+        type: "address"
+      },
+      {
+        internalType: "address",
+        name: "recipient",
+        type: "address"
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256"
+      }
+    ],
+    name: "sendTokenToInternalBalance",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function"
   },
   {
     inputs: [
@@ -686,264 +889,203 @@ export const diamondABI = [
               {
                 internalType: "address",
                 name: "publisher",
-                type: "address",
+                type: "address"
               },
               {
                 internalType: "bytes",
                 name: "data",
-                type: "bytes",
+                type: "bytes"
               },
               {
                 internalType: "bytes32[]",
                 name: "operatorPasteInstrs",
-                type: "bytes32[]",
+                type: "bytes32[]"
               },
               {
                 internalType: "uint256",
                 name: "maxNonce",
-                type: "uint256",
+                type: "uint256"
               },
               {
                 internalType: "uint256",
                 name: "startTime",
-                type: "uint256",
+                type: "uint256"
               },
               {
                 internalType: "uint256",
                 name: "endTime",
-                type: "uint256",
-              },
+                type: "uint256"
+              }
             ],
             internalType: "struct LibTractor.Blueprint",
             name: "blueprint",
-            type: "tuple",
+            type: "tuple"
           },
           {
             internalType: "bytes32",
             name: "blueprintHash",
-            type: "bytes32",
+            type: "bytes32"
           },
           {
             internalType: "bytes",
             name: "signature",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct LibTractor.Requisition",
         name: "requisition",
-        type: "tuple",
+        type: "tuple"
       },
       {
         internalType: "bytes",
         name: "operatorData",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "tractor",
     outputs: [
       {
         internalType: "bytes[]",
         name: "results",
-        type: "bytes[]",
-      },
+        type: "bytes[]"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "tractorUser",
+    outputs: [
+      {
+        internalType: "address payable",
+        name: "",
+        type: "address"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "bytes32",
         name: "counterId",
-        type: "bytes32",
+        type: "bytes32"
       },
       {
         internalType: "enum LibTractor.CounterUpdateType",
         name: "updateType",
-        type: "uint8",
+        type: "uint8"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "updatePublisherCounter",
     outputs: [
       {
         internalType: "uint256",
         name: "count",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "string",
         name: "version",
-        type: "string",
-      },
+        type: "string"
+      }
     ],
     name: "updateTractorVersion",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "contract IERC1155",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "to",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256[]",
         name: "ids",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "uint256[]",
         name: "values",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     name: "batchTransferERC1155",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "contract IERC1155",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "to",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "id",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "value",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "transferERC1155",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "contract IERC721",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "to",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "id",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "transferERC721",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "target",
-        type: "address",
-      },
-    ],
-    name: "AddressEmptyCode",
-    type: "error",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "account",
-        type: "address",
-      },
-    ],
-    name: "AddressInsufficientBalance",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "FailedInnerCall",
-    type: "error",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-    ],
-    name: "SafeCastOverflowedUintToInt",
-    type: "error",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-    ],
-    name: "SafeERC20FailedOperation",
-    type: "error",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "account",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "contract IERC20",
-        name: "token",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "int256",
-        name: "delta",
-        type: "int256",
-      },
-    ],
-    name: "InternalBalanceChanged",
-    type: "event",
+    type: "function"
   },
   {
     anonymous: false,
@@ -952,137 +1094,94 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "owner",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "TokenApproval",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "sender",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "recipient",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "enum LibTransfer.From",
-        name: "fromMode",
-        type: "uint8",
-      },
-      {
-        indexed: false,
-        internalType: "enum LibTransfer.To",
-        name: "toMode",
-        type: "uint8",
-      },
-    ],
-    name: "TokenTransferred",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "approveToken",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "subtractedValue",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "decreaseTokenAllowance",
     outputs: [
       {
         internalType: "bool",
         name: "",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getAllBalance",
     outputs: [
@@ -1091,39 +1190,39 @@ export const diamondABI = [
           {
             internalType: "uint256",
             name: "internalBalance",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "externalBalance",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "totalBalance",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct TokenFacet.Balance",
         name: "b",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "getAllBalances",
     outputs: [
@@ -1132,408 +1231,408 @@ export const diamondABI = [
           {
             internalType: "uint256",
             name: "internalBalance",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "externalBalance",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "totalBalance",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct TokenFacet.Balance[]",
         name: "balances",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getBalance",
     outputs: [
       {
         internalType: "uint256",
         name: "balance",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "getBalances",
     outputs: [
       {
         internalType: "uint256[]",
         name: "balances",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getExternalBalance",
     outputs: [
       {
         internalType: "uint256",
         name: "balance",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "getExternalBalances",
     outputs: [
       {
         internalType: "uint256[]",
         name: "balances",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getInternalBalance",
     outputs: [
       {
         internalType: "uint256",
         name: "balance",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "getInternalBalances",
     outputs: [
       {
         internalType: "uint256[]",
         name: "balances",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "addedValue",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "increaseTokenAllowance",
     outputs: [
       {
         internalType: "bool",
         name: "",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256[]",
         name: "",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "uint256[]",
         name: "",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "bytes",
         name: "",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "onERC1155BatchReceived",
     outputs: [
       {
         internalType: "bytes4",
         name: "",
-        type: "bytes4",
-      },
+        type: "bytes4"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "bytes",
         name: "",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "onERC1155Received",
     outputs: [
       {
         internalType: "bytes4",
         name: "",
-        type: "bytes4",
-      },
+        type: "bytes4"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "tokenAllowance",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "sender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "recipient",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.To",
         name: "toMode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "transferInternalTokenFrom",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "contract IERC20",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "recipient",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.From",
         name: "fromMode",
-        type: "uint8",
+        type: "uint8"
       },
       {
         internalType: "enum LibTransfer.To",
         name: "toMode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "transferToken",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.From",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "unwrapEth",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.To",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "wrapEth",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -1542,48 +1641,48 @@ export const diamondABI = [
           {
             internalType: "bytes",
             name: "callData",
-            type: "bytes",
+            type: "bytes"
           },
           {
             internalType: "bytes",
             name: "clipboard",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct AdvancedFarmCall[]",
         name: "data",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     name: "advancedFarm",
     outputs: [
       {
         internalType: "bytes[]",
         name: "results",
-        type: "bytes[]",
-      },
+        type: "bytes[]"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "bytes[]",
         name: "data",
-        type: "bytes[]",
-      },
+        type: "bytes[]"
+      }
     ],
     name: "farm",
     outputs: [
       {
         internalType: "bytes[]",
         name: "results",
-        type: "bytes[]",
-      },
+        type: "bytes[]"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -1592,39 +1691,39 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes",
             name: "callData",
-            type: "bytes",
+            type: "bytes"
           },
           {
             internalType: "bytes",
             name: "clipboard",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct AdvancedPipeCall[]",
         name: "pipes",
-        type: "tuple[]",
+        type: "tuple[]"
       },
       {
         internalType: "uint256",
         name: "value",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "advancedPipe",
     outputs: [
       {
         internalType: "bytes[]",
         name: "results",
-        type: "bytes[]",
-      },
+        type: "bytes[]"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -1633,34 +1732,34 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct PipeCall",
         name: "p",
-        type: "tuple",
+        type: "tuple"
       },
       {
         internalType: "uint256",
         name: "value",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "etherPipe",
     outputs: [
       {
         internalType: "bytes",
         name: "result",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -1669,29 +1768,29 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct PipeCall[]",
         name: "pipes",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     name: "multiPipe",
     outputs: [
       {
         internalType: "bytes[]",
         name: "results",
-        type: "bytes[]",
-      },
+        type: "bytes[]"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -1700,29 +1799,29 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct PipeCall",
         name: "p",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "pipe",
     outputs: [
       {
         internalType: "bytes",
         name: "result",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -1731,61 +1830,61 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct PipeCall",
         name: "p",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "readPipe",
     outputs: [
       {
         internalType: "bytes",
         name: "result",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "prod1",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "denominator",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "PRBMath__MulDivOverflow",
-    type: "error",
+    type: "error"
   },
   {
     inputs: [
       {
         internalType: "uint8",
         name: "bits",
-        type: "uint8",
+        type: "uint8"
       },
       {
         internalType: "uint256",
         name: "value",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "SafeCastOverflowedUintDowncast",
-    type: "error",
+    type: "error"
   },
   {
     anonymous: false,
@@ -1794,11 +1893,11 @@ export const diamondABI = [
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "ActiveFieldSet",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -1807,11 +1906,11 @@ export const diamondABI = [
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "FieldAdded",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -1820,29 +1919,29 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256[]",
         name: "plots",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "beans",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "Harvest",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -1851,23 +1950,23 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "lister",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "index",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "PodListingCancelled",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -1876,35 +1975,35 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "index",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "beans",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "pods",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "Sow",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [],
@@ -1913,42 +2012,42 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
     name: "addField",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "balanceOfPods",
     outputs: [
       {
         internalType: "uint256",
         name: "pods",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -1957,11 +2056,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -1970,48 +2069,48 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getPlotIndexesFromAccount",
     outputs: [
       {
         internalType: "uint256[]",
         name: "plotIndexes",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getPlotsFromAccount",
     outputs: [
@@ -2020,63 +2119,69 @@ export const diamondABI = [
           {
             internalType: "uint256",
             name: "index",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "pods",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct FieldFacet.Plot[]",
         name: "plots",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256[]",
         name: "plots",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "enum LibTransfer.To",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "harvest",
-    outputs: [],
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "beansHarvested",
+        type: "uint256"
+      }
+    ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "harvestableIndex",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -2085,30 +2190,30 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "isHarvesting",
     outputs: [
       {
         internalType: "bool",
         name: "",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -2117,59 +2222,59 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "index",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "plot",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "podIndex",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -2178,92 +2283,92 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint32",
         name: "_temperature",
-        type: "uint32",
-      },
+        type: "uint32"
+      }
     ],
     name: "setActiveField",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "beans",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "minTemperature",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.From",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "sow",
     outputs: [
       {
         internalType: "uint256",
         name: "pods",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "beans",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "minTemperature",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "minSoil",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.From",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "sowWithMin",
     outputs: [
       {
         internalType: "uint256",
         name: "pods",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -2272,30 +2377,30 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "totalHarvestable",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -2304,49 +2409,49 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "totalHarvested",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "totalPods",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -2355,30 +2460,43 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "totalUnharvestable",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "totalUnharvestableForActiveField",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   {
     anonymous: false,
@@ -2387,35 +2505,35 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "from",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "to",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: true,
         internalType: "uint256",
         name: "index",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "PlotTransfer",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -2424,29 +2542,29 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "owner",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "PodApproval",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -2455,59 +2573,59 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "lister",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "index",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "start",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "podAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint24",
         name: "pricePerPod",
-        type: "uint24",
+        type: "uint24"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "maxHarvestableIndex",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "minFillAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "enum LibTransfer.To",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "PodListingCreated",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -2516,47 +2634,47 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "filler",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "lister",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "index",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "start",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "podAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "costInBeans",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "PodListingFilled",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -2565,17 +2683,17 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "orderer",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "bytes32",
         name: "id",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     name: "PodOrderCancelled",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -2584,47 +2702,47 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "orderer",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "bytes32",
         name: "id",
-        type: "bytes32",
+        type: "bytes32"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "beanAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint24",
         name: "pricePerPod",
-        type: "uint24",
+        type: "uint24"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "maxPlaceInLine",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "minFillAmount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "PodOrderCreated",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -2633,123 +2751,123 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "filler",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "orderer",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "bytes32",
         name: "id",
-        type: "bytes32",
+        type: "bytes32"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "index",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "start",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "podAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "costInBeans",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "PodOrderFilled",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "owner",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "allowancePods",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "approvePods",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "index",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "cancelPodListing",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -2758,43 +2876,43 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "orderer",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "uint256",
             name: "fieldId",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint24",
             name: "pricePerPod",
-            type: "uint24",
+            type: "uint24"
           },
           {
             internalType: "uint256",
             name: "maxPlaceInLine",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "minFillAmount",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct Order.PodOrder",
         name: "podOrder",
-        type: "tuple",
+        type: "tuple"
       },
       {
         internalType: "enum LibTransfer.To",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "cancelPodOrder",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -2803,58 +2921,58 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "lister",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "uint256",
             name: "fieldId",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "index",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "start",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podAmount",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint24",
             name: "pricePerPod",
-            type: "uint24",
+            type: "uint24"
           },
           {
             internalType: "uint256",
             name: "maxHarvestableIndex",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "minFillAmount",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "enum LibTransfer.To",
             name: "mode",
-            type: "uint8",
-          },
+            type: "uint8"
+          }
         ],
         internalType: "struct Listing.PodListing",
         name: "podListing",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "createPodListing",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -2863,54 +2981,54 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "orderer",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "uint256",
             name: "fieldId",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint24",
             name: "pricePerPod",
-            type: "uint24",
+            type: "uint24"
           },
           {
             internalType: "uint256",
             name: "maxPlaceInLine",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "minFillAmount",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct Order.PodOrder",
         name: "podOrder",
-        type: "tuple",
+        type: "tuple"
       },
       {
         internalType: "uint256",
         name: "beanAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.From",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "createPodOrder",
     outputs: [
       {
         internalType: "bytes32",
         name: "id",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -2919,68 +3037,68 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "lister",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "uint256",
             name: "fieldId",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "index",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "start",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podAmount",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint24",
             name: "pricePerPod",
-            type: "uint24",
+            type: "uint24"
           },
           {
             internalType: "uint256",
             name: "maxHarvestableIndex",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "minFillAmount",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "enum LibTransfer.To",
             name: "mode",
-            type: "uint8",
-          },
+            type: "uint8"
+          }
         ],
         internalType: "struct Listing.PodListing",
         name: "podListing",
-        type: "tuple",
+        type: "tuple"
       },
       {
         internalType: "uint256",
         name: "beanAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.From",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "fillPodListing",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -2989,58 +3107,58 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "orderer",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "uint256",
             name: "fieldId",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint24",
             name: "pricePerPod",
-            type: "uint24",
+            type: "uint24"
           },
           {
             internalType: "uint256",
             name: "maxPlaceInLine",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "minFillAmount",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct Order.PodOrder",
         name: "podOrder",
-        type: "tuple",
+        type: "tuple"
       },
       {
         internalType: "uint256",
         name: "index",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "start",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.To",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "fillPodOrder",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -3049,179 +3167,179 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "orderer",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "uint256",
             name: "fieldId",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint24",
             name: "pricePerPod",
-            type: "uint24",
+            type: "uint24"
           },
           {
             internalType: "uint256",
             name: "maxPlaceInLine",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "minFillAmount",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct Order.PodOrder",
         name: "podOrder",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "getOrderId",
     outputs: [
       {
         internalType: "bytes32",
         name: "id",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "index",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getPodListing",
     outputs: [
       {
         internalType: "bytes32",
         name: "id",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "bytes32",
         name: "id",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     name: "getPodOrder",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "sender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "recipient",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "index",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "start",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "end",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "transferPlot",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "sender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "recipient",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256[]",
         name: "ids",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "uint256[]",
         name: "starts",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "uint256[]",
         name: "ends",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     name: "transferPlots",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint8",
         name: "bits",
-        type: "uint8",
+        type: "uint8"
       },
       {
         internalType: "int256",
         name: "value",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     name: "SafeCastOverflowedIntDowncast",
-    type: "error",
+    type: "error"
   },
   {
     anonymous: false,
@@ -3230,41 +3348,41 @@ export const diamondABI = [
         indexed: false,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "index",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "bool",
         name: "isWhitelisted",
-        type: "bool",
+        type: "bool"
       },
       {
         indexed: false,
         internalType: "bool",
         name: "isWhitelistedLp",
-        type: "bool",
+        type: "bool"
       },
       {
         indexed: false,
         internalType: "bool",
         name: "isWhitelistedWell",
-        type: "bool",
+        type: "bool"
       },
       {
         indexed: false,
         internalType: "bool",
         name: "isSoppable",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     name: "AddWhitelistStatus",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -3273,11 +3391,11 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "DewhitelistToken",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -3286,41 +3404,41 @@ export const diamondABI = [
         indexed: false,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "index",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "bool",
         name: "isWhitelisted",
-        type: "bool",
+        type: "bool"
       },
       {
         indexed: false,
         internalType: "bool",
         name: "isWhitelistedLp",
-        type: "bool",
+        type: "bool"
       },
       {
         indexed: false,
         internalType: "bool",
         name: "isWhitelistedWell",
-        type: "bool",
+        type: "bool"
       },
       {
         indexed: false,
         internalType: "bool",
         name: "isSoppable",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     name: "UpdateWhitelistStatus",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -3330,97 +3448,97 @@ export const diamondABI = [
           {
             internalType: "uint256",
             name: "maxBeanMaxLpGpPerBdvRatio",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "minBeanMaxLpGpPerBdvRatio",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "targetSeasonsToCatchUp",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podRateLowerBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podRateOptimal",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podRateUpperBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "deltaPodDemandLowerBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "deltaPodDemandUpperBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "lpToSupplyRatioUpperBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "lpToSupplyRatioOptimal",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "lpToSupplyRatioLowerBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "excessivePriceThreshold",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "soilCoefficientHigh",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "soilCoefficientLow",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "baseReward",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint128",
             name: "minAvgGsPerBdv",
-            type: "uint128",
+            type: "uint128"
           },
           {
             internalType: "uint128",
             name: "rainingMinBeanMaxLpGpPerBdvRatio",
-            type: "uint128",
-          },
+            type: "uint128"
+          }
         ],
         indexed: false,
         internalType: "struct EvaluationParameters",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "UpdatedEvaluationParameters",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -3429,39 +3547,39 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         indexed: false,
         internalType: "struct Implementation",
         name: "gaugePointImplementation",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "UpdatedGaugePointImplementationForToken",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -3470,39 +3588,39 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         indexed: false,
         internalType: "struct Implementation",
         name: "liquidityWeightImplementation",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "UpdatedLiquidityWeightImplementationForToken",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -3511,17 +3629,17 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint64",
         name: "optimalPercentDepositedBdv",
-        type: "uint64",
-      },
+        type: "uint64"
+      }
     ],
     name: "UpdatedOptimalPercentDepositedBdvForToken",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -3530,39 +3648,39 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         indexed: false,
         internalType: "struct Implementation",
         name: "oracleImplementation",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "UpdatedOracleImplementationForToken",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -3571,23 +3689,23 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint40",
         name: "stalkEarnedPerSeason",
-        type: "uint40",
+        type: "uint40"
       },
       {
         indexed: false,
         internalType: "uint32",
         name: "season",
-        type: "uint32",
-      },
+        type: "uint32"
+      }
     ],
     name: "UpdatedStalkPerBdvPerSeason",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -3596,62 +3714,62 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "bytes4",
         name: "selector",
-        type: "bytes4",
+        type: "bytes4"
       },
       {
         indexed: false,
         internalType: "uint40",
         name: "stalkEarnedPerSeason",
-        type: "uint40",
+        type: "uint40"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "stalkIssuedPerBdv",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint128",
         name: "gaugePoints",
-        type: "uint128",
+        type: "uint128"
       },
       {
         indexed: false,
         internalType: "uint64",
         name: "optimalPercentDepositedBdv",
-        type: "uint64",
-      },
+        type: "uint64"
+      }
     ],
     name: "WhitelistToken",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "dewhitelistToken",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getGaugePointImplementationForToken",
     outputs: [
@@ -3660,39 +3778,39 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getLiquidityWeightImplementationForToken",
     outputs: [
@@ -3701,39 +3819,39 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getOracleImplementationForToken",
     outputs: [
@@ -3742,31 +3860,31 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -3775,19 +3893,19 @@ export const diamondABI = [
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getWhitelistStatus",
     outputs: [
@@ -3796,36 +3914,36 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "token",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bool",
             name: "isWhitelisted",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "bool",
             name: "isWhitelistedLp",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "bool",
             name: "isWhitelistedWell",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "bool",
             name: "isSoppable",
-            type: "bool",
-          },
+            type: "bool"
+          }
         ],
         internalType: "struct WhitelistStatus",
         name: "_whitelistStatuses",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -3836,36 +3954,36 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "token",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bool",
             name: "isWhitelisted",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "bool",
             name: "isWhitelistedLp",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "bool",
             name: "isWhitelistedWell",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "bool",
             name: "isSoppable",
-            type: "bool",
-          },
+            type: "bool"
+          }
         ],
         internalType: "struct WhitelistStatus[]",
         name: "_whitelistStatuses",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -3874,11 +3992,11 @@ export const diamondABI = [
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -3887,11 +4005,11 @@ export const diamondABI = [
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -3900,203 +4018,203 @@ export const diamondABI = [
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint64",
         name: "optimalPercentDepositedBdv",
-        type: "uint64",
+        type: "uint64"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "gpImplementation",
-        type: "tuple",
+        type: "tuple"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "lwImplementation",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "updateGaugeForToken",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "impl",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "updateGaugePointImplementationForToken",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "impl",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "updateLiquidityWeightImplementationForToken",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "impl",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "updateOracleImplementationForToken",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -4105,530 +4223,530 @@ export const diamondABI = [
           {
             internalType: "uint256",
             name: "maxBeanMaxLpGpPerBdvRatio",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "minBeanMaxLpGpPerBdvRatio",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "targetSeasonsToCatchUp",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podRateLowerBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podRateOptimal",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podRateUpperBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "deltaPodDemandLowerBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "deltaPodDemandUpperBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "lpToSupplyRatioUpperBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "lpToSupplyRatioOptimal",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "lpToSupplyRatioLowerBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "excessivePriceThreshold",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "soilCoefficientHigh",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "soilCoefficientLow",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "baseReward",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint128",
             name: "minAvgGsPerBdv",
-            type: "uint128",
+            type: "uint128"
           },
           {
             internalType: "uint128",
             name: "rainingMinBeanMaxLpGpPerBdvRatio",
-            type: "uint128",
-          },
+            type: "uint128"
+          }
         ],
         internalType: "struct EvaluationParameters",
         name: "updatedSeedGaugeSettings",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "updateSeedGaugeSettings",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint40",
         name: "stalkEarnedPerSeason",
-        type: "uint40",
-      },
+        type: "uint40"
+      }
     ],
     name: "updateStalkPerBdvPerSeasonForToken",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "bytes4",
         name: "selector",
-        type: "bytes4",
+        type: "bytes4"
       },
       {
         internalType: "uint48",
         name: "stalkIssuedPerBdv",
-        type: "uint48",
+        type: "uint48"
       },
       {
         internalType: "uint40",
         name: "stalkEarnedPerSeason",
-        type: "uint40",
+        type: "uint40"
       },
       {
         internalType: "bytes1",
         name: "encodeType",
-        type: "bytes1",
+        type: "bytes1"
       },
       {
         internalType: "uint128",
         name: "gaugePoints",
-        type: "uint128",
+        type: "uint128"
       },
       {
         internalType: "uint64",
         name: "optimalPercentDepositedBdv",
-        type: "uint64",
+        type: "uint64"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "oracleImplementation",
-        type: "tuple",
+        type: "tuple"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "gaugePointImplementation",
-        type: "tuple",
+        type: "tuple"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct Implementation",
         name: "liquidityWeightImplementation",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     name: "whitelistToken",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "depositId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "balanceOf",
     outputs: [
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address[]",
         name: "accounts",
-        type: "address[]",
+        type: "address[]"
       },
       {
         internalType: "uint256[]",
         name: "depositIds",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     name: "balanceOfBatch",
     outputs: [
       {
         internalType: "uint256[]",
         name: "",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfDepositedBdv",
     outputs: [
       {
         internalType: "uint256",
         name: "depositedBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfEarnedBeans",
     outputs: [
       {
         internalType: "uint256",
         name: "beans",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfEarnedStalk",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfFinishedGerminatingStalkAndRoots",
     outputs: [
       {
         internalType: "uint256",
         name: "gStalk",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "gRoots",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfGerminatingStalk",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfGrownStalk",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "balanceOfGrownStalkMultiple",
     outputs: [
       {
         internalType: "uint256[]",
         name: "grownStalks",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfPlantableSeeds",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "well",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfPlenty",
     outputs: [
       {
         internalType: "uint256",
         name: "plenty",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfRainRoots",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfRoots",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfSop",
     outputs: [
@@ -4637,294 +4755,307 @@ export const diamondABI = [
           {
             internalType: "uint32",
             name: "lastRain",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "uint32",
             name: "lastSop",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "uint256",
             name: "roots",
-            type: "uint256",
+            type: "uint256"
           },
           {
             components: [
               {
                 internalType: "address",
                 name: "well",
-                type: "address",
+                type: "address"
               },
               {
                 components: [
                   {
                     internalType: "uint256",
                     name: "plentyPerRoot",
-                    type: "uint256",
+                    type: "uint256"
                   },
                   {
                     internalType: "uint256",
                     name: "plenty",
-                    type: "uint256",
+                    type: "uint256"
                   },
                   {
                     internalType: "bytes32[4]",
                     name: "_buffer",
-                    type: "bytes32[4]",
-                  },
+                    type: "bytes32[4]"
+                  }
                 ],
                 internalType: "struct PerWellPlenty",
                 name: "wellsPlenty",
-                type: "tuple",
-              },
+                type: "tuple"
+              }
             ],
             internalType: "struct SiloGettersFacet.FarmerSops[]",
             name: "farmerSops",
-            type: "tuple[]",
-          },
+            type: "tuple[]"
+          }
         ],
         internalType: "struct SiloGettersFacet.AccountSeasonOfPlenty",
         name: "sop",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfStalk",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "balanceOfYoungAndMatureGerminatingStalk",
     outputs: [
       {
         internalType: "uint256",
         name: "matureGerminatingStalk",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "youngGerminatingStalk",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "bdv",
     outputs: [
       {
         internalType: "uint256",
         name: "_bdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
+        type: "address[]"
       },
       {
         internalType: "uint256[]",
         name: "amounts",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     name: "bdvs",
     outputs: [
       {
         internalType: "uint256[]",
         name: "_bdvs",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "grownStalk",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "bdvOfDeposit",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "calculateStemForTokenFromGrownStalk",
     outputs: [
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
+        type: "int96"
       },
       {
         internalType: "enum GerminationSide",
         name: "germ",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "depositId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getAddressAndStem",
     outputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "contract IERC20[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "getBeanIndex",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "getBeanToken",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     name: "getDeposit",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     name: "getDepositId",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getDepositsForAccount",
     outputs: [
@@ -4933,304 +5064,304 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "token",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "uint256[]",
             name: "depositIds",
-            type: "uint256[]",
+            type: "uint256[]"
           },
           {
             components: [
               {
                 internalType: "uint128",
                 name: "amount",
-                type: "uint128",
+                type: "uint128"
               },
               {
                 internalType: "uint128",
                 name: "bdv",
-                type: "uint128",
-              },
+                type: "uint128"
+              }
             ],
             internalType: "struct Deposit[]",
             name: "tokenDeposits",
-            type: "tuple[]",
-          },
+            type: "tuple[]"
+          }
         ],
         internalType: "struct SiloGettersFacet.TokenDepositId[]",
         name: "deposits",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getEvenGerminating",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint32",
         name: "season",
-        type: "uint32",
-      },
+        type: "uint32"
+      }
     ],
     name: "getGerminatingRootsForSeason",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint32",
         name: "season",
-        type: "uint32",
-      },
+        type: "uint32"
+      }
     ],
     name: "getGerminatingStalkAndRootsForSeason",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint32",
         name: "season",
-        type: "uint32",
-      },
+        type: "uint32"
+      }
     ],
     name: "getGerminatingStalkForSeason",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getGerminatingStem",
     outputs: [
       {
         internalType: "int96",
         name: "germinatingStem",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "getGerminatingStems",
     outputs: [
       {
         internalType: "int96[]",
         name: "germinatingStems",
-        type: "int96[]",
-      },
+        type: "int96[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getGerminatingTotalDeposited",
     outputs: [
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getGerminatingTotalDepositedBdv",
     outputs: [
       {
         internalType: "uint256",
         name: "_bdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getHighestNonGerminatingStem",
     outputs: [
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "getHighestNonGerminatingStems",
     outputs: [
       {
         internalType: "int96[]",
         name: "highestNonGerminatingStems",
-        type: "int96[]",
-      },
+        type: "int96[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "depositId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getIndexForDepositId",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getLastMowedStem",
     outputs: [
       {
         internalType: "int96",
         name: "lastStem",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "getMowStatus",
     outputs: [
@@ -5239,69 +5370,69 @@ export const diamondABI = [
           {
             internalType: "int96",
             name: "lastStem",
-            type: "int96",
+            type: "int96"
           },
           {
             internalType: "uint128",
             name: "bdv",
-            type: "uint128",
-          },
+            type: "uint128"
+          }
         ],
         internalType: "struct MowStatus[]",
         name: "mowStatuses",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "well",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getNonBeanTokenAndIndexFromWell",
     outputs: [
       {
         internalType: "address",
         name: "",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getOddGerminating",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -5310,48 +5441,48 @@ export const diamondABI = [
       {
         internalType: "int96[]",
         name: "_stemTips",
-        type: "int96[]",
-      },
+        type: "int96[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getTokenDepositIdsForAccount",
     outputs: [
       {
         internalType: "uint256[]",
         name: "depositIds",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getTokenDepositsForAccount",
     outputs: [
@@ -5360,114 +5491,114 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "token",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "uint256[]",
             name: "depositIds",
-            type: "uint256[]",
+            type: "uint256[]"
           },
           {
             components: [
               {
                 internalType: "uint128",
                 name: "amount",
-                type: "uint128",
+                type: "uint128"
               },
               {
                 internalType: "uint128",
                 name: "bdv",
-                type: "uint128",
-              },
+                type: "uint128"
+              }
             ],
             internalType: "struct Deposit[]",
             name: "tokenDeposits",
-            type: "tuple[]",
-          },
+            type: "tuple[]"
+          }
         ],
         internalType: "struct SiloGettersFacet.TokenDepositId",
         name: "deposits",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getTotalDeposited",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getTotalDepositedBdv",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getTotalGerminatingAmount",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getTotalGerminatingBdv",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -5476,11 +5607,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -5489,11 +5620,11 @@ export const diamondABI = [
       {
         internalType: "uint256[]",
         name: "depositedAmounts",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -5502,11 +5633,11 @@ export const diamondABI = [
       {
         internalType: "uint256[]",
         name: "depositedBdvs",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -5515,45 +5646,45 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "matureGerminatingStalk",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "youngGerminatingStalk",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     name: "grownStalkForDeposit",
     outputs: [
       {
         internalType: "uint256",
         name: "grownStalk",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -5562,76 +5693,76 @@ export const diamondABI = [
       {
         internalType: "uint32",
         name: "",
-        type: "uint32",
-      },
+        type: "uint32"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "lastUpdate",
     outputs: [
       {
         internalType: "uint32",
         name: "",
-        type: "uint32",
-      },
+        type: "uint32"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "stalkEarnedPerSeason",
     outputs: [
       {
         internalType: "uint256[]",
         name: "stalkEarnedPerSeasons",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "stemTipForToken",
     outputs: [
       {
         internalType: "int96",
         name: "_stemTip",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "tokenSettings",
     outputs: [
@@ -5640,110 +5771,110 @@ export const diamondABI = [
           {
             internalType: "bytes4",
             name: "selector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "uint40",
             name: "stalkEarnedPerSeason",
-            type: "uint40",
+            type: "uint40"
           },
           {
             internalType: "uint48",
             name: "stalkIssuedPerBdv",
-            type: "uint48",
+            type: "uint48"
           },
           {
             internalType: "uint32",
             name: "milestoneSeason",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "int96",
             name: "milestoneStem",
-            type: "int96",
+            type: "int96"
           },
           {
             internalType: "bytes1",
             name: "encodeType",
-            type: "bytes1",
+            type: "bytes1"
           },
           {
             internalType: "int40",
             name: "deltaStalkEarnedPerSeason",
-            type: "int40",
+            type: "int40"
           },
           {
             internalType: "uint128",
             name: "gaugePoints",
-            type: "uint128",
+            type: "uint128"
           },
           {
             internalType: "uint64",
             name: "optimalPercentDepositedBdv",
-            type: "uint64",
+            type: "uint64"
           },
           {
             components: [
               {
                 internalType: "address",
                 name: "target",
-                type: "address",
+                type: "address"
               },
               {
                 internalType: "bytes4",
                 name: "selector",
-                type: "bytes4",
+                type: "bytes4"
               },
               {
                 internalType: "bytes1",
                 name: "encodeType",
-                type: "bytes1",
+                type: "bytes1"
               },
               {
                 internalType: "bytes",
                 name: "data",
-                type: "bytes",
-              },
+                type: "bytes"
+              }
             ],
             internalType: "struct Implementation",
             name: "gaugePointImplementation",
-            type: "tuple",
+            type: "tuple"
           },
           {
             components: [
               {
                 internalType: "address",
                 name: "target",
-                type: "address",
+                type: "address"
               },
               {
                 internalType: "bytes4",
                 name: "selector",
-                type: "bytes4",
+                type: "bytes4"
               },
               {
                 internalType: "bytes1",
                 name: "encodeType",
-                type: "bytes1",
+                type: "bytes1"
               },
               {
                 internalType: "bytes",
                 name: "data",
-                type: "bytes",
-              },
+                type: "bytes"
+              }
             ],
             internalType: "struct Implementation",
             name: "liquidityWeightImplementation",
-            type: "tuple",
-          },
+            type: "tuple"
+          }
         ],
         internalType: "struct AssetSettings",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -5752,11 +5883,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -5765,11 +5896,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -5778,11 +5909,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -5791,11 +5922,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     anonymous: false,
@@ -5804,23 +5935,23 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "int256",
         name: "delta",
-        type: "int256",
+        type: "int256"
       },
       {
         indexed: false,
         internalType: "enum GerminationSide",
         name: "germ",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "FarmerGerminatingStalkBalanceChanged",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -5829,35 +5960,35 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "int96",
         name: "stem",
-        type: "int96",
+        type: "int96"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "bdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "RemoveDeposit",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -5866,41 +5997,41 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "int96[]",
         name: "stems",
-        type: "int96[]",
+        type: "int96[]"
       },
       {
         indexed: false,
         internalType: "uint256[]",
         name: "amounts",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256[]",
         name: "bdvs",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     name: "RemoveDeposits",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -5909,23 +6040,23 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "int256",
         name: "delta",
-        type: "int256",
+        type: "int256"
       },
       {
         indexed: false,
         internalType: "int256",
         name: "deltaRoots",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     name: "StalkBalanceChanged",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -5934,29 +6065,29 @@ export const diamondABI = [
         indexed: false,
         internalType: "uint256",
         name: "germinationSeason",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "int256",
         name: "deltaAmount",
-        type: "int256",
+        type: "int256"
       },
       {
         indexed: false,
         internalType: "int256",
         name: "deltaBdv",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     name: "TotalGerminatingBalanceChanged",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -5965,17 +6096,17 @@ export const diamondABI = [
         indexed: false,
         internalType: "uint256",
         name: "germinationSeason",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "int256",
         name: "deltaGerminatingStalk",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     name: "TotalGerminatingStalkChanged",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -5984,35 +6115,35 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "operator",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "from",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "to",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256[]",
         name: "ids",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         indexed: false,
         internalType: "uint256[]",
         name: "values",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     name: "TransferBatch",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -6021,274 +6152,302 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "operator",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "sender",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "recipient",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "depositId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "TransferSingle",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "_amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.From",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "deposit",
     outputs: [
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "_bdv",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "sender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "recipient",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256[]",
         name: "depositIds",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "uint256[]",
         name: "amounts",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "bytes",
         name: "",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "safeBatchTransferFrom",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "sender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "recipient",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "depositId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "bytes",
         name: "",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "safeTransferFrom",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "sender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "recipient",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
+        type: "int96"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "transferDeposit",
     outputs: [
       {
         internalType: "uint256",
         name: "_bdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "sender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "recipient",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "int96[]",
         name: "stem",
-        type: "int96[]",
+        type: "int96[]"
       },
       {
         internalType: "uint256[]",
         name: "amounts",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     name: "transferDeposits",
     outputs: [
       {
         internalType: "uint256[]",
         name: "bdvs",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address"
+      },
+      {
+        internalType: "address",
+        name: "token",
+        type: "address"
+      },
+      {
+        internalType: "uint256[]",
+        name: "sortedDepositIds",
+        type: "uint256[]"
+      }
+    ],
+    name: "updateSortedDepositIds",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
+        type: "int96"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "enum LibTransfer.To",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "withdrawDeposit",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "int96[]",
         name: "stems",
-        type: "int96[]",
+        type: "int96[]"
       },
       {
         internalType: "uint256[]",
         name: "amounts",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "enum LibTransfer.To",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "withdrawDeposits",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "T",
+    type: "error"
   },
   {
     anonymous: false,
@@ -6297,145 +6456,153 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "address",
         name: "fromToken",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "address",
         name: "toToken",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fromAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "toAmount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "Convert",
-    type: "event",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "stalkLost",
+        type: "uint256"
+      }
+    ],
+    name: "ConvertDownPenalty",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "inputToken",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "int96[]",
         name: "stems",
-        type: "int96[]",
+        type: "int96[]"
       },
       {
         internalType: "uint256[]",
         name: "amounts",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "address",
         name: "outputToken",
-        type: "address",
+        type: "address"
       },
       {
         components: [
           {
             internalType: "address",
             name: "target",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes",
             name: "callData",
-            type: "bytes",
+            type: "bytes"
           },
           {
             internalType: "bytes",
             name: "clipboard",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct AdvancedPipeCall[]",
         name: "advancedPipeCalls",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     name: "pipelineConvert",
     outputs: [
       {
         internalType: "int96",
         name: "toStem",
-        type: "int96",
+        type: "int96"
       },
       {
         internalType: "uint256",
         name: "fromAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "toAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "fromBdv",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "toBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "T",
-    type: "error",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "well",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256[]",
         name: "reserves",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "uint256",
         name: "lookback",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "calculateDeltaBFromReserves",
     outputs: [
       {
         internalType: "int256",
         name: "",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -6444,156 +6611,190 @@ export const diamondABI = [
           {
             internalType: "int256",
             name: "beforeInputTokenDeltaB",
-            type: "int256",
+            type: "int256"
           },
           {
             internalType: "int256",
             name: "afterInputTokenDeltaB",
-            type: "int256",
+            type: "int256"
           },
           {
             internalType: "int256",
             name: "beforeOutputTokenDeltaB",
-            type: "int256",
+            type: "int256"
           },
           {
             internalType: "int256",
             name: "afterOutputTokenDeltaB",
-            type: "int256",
+            type: "int256"
           },
           {
             internalType: "int256",
             name: "beforeOverallDeltaB",
-            type: "int256",
+            type: "int256"
           },
           {
             internalType: "int256",
             name: "afterOverallDeltaB",
-            type: "int256",
-          },
+            type: "int256"
+          }
         ],
         internalType: "struct LibConvert.DeltaBStorage",
         name: "dbs",
-        type: "tuple",
+        type: "tuple"
       },
       {
         internalType: "uint256",
         name: "bdvConverted",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "overallConvertCapacity",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "address",
         name: "inputToken",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "outputToken",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "calculateStalkPenalty",
     outputs: [
       {
         internalType: "uint256",
         name: "stalkPenaltyBdv",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "overallConvertCapacityUsed",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "inputTokenAmountUsed",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "outputTokenAmountUsed",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "well",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "cappedReservesDeltaB",
     outputs: [
       {
         internalType: "int256",
         name: "deltaB",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "well",
+        type: "address"
+      },
+      {
+        internalType: "uint256",
+        name: "bdvToConvert",
+        type: "uint256"
+      },
+      {
+        internalType: "uint256",
+        name: "grownStalkToConvert",
+        type: "uint256"
+      }
+    ],
+    name: "downPenalizedGrownStalk",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "newGrownStalk",
+        type: "uint256"
+      },
+      {
+        internalType: "uint256",
+        name: "grownStalkLost",
+        type: "uint256"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "tokenIn",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "tokenOut",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "amountIn",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getAmountOut",
     outputs: [
       {
         internalType: "uint256",
         name: "amountOut",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "tokenIn",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "tokenOut",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getMaxAmountIn",
     outputs: [
       {
         internalType: "uint256",
         name: "amountIn",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -6602,30 +6803,30 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "well",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getWellConvertCapacity",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -6634,11 +6835,11 @@ export const diamondABI = [
       {
         internalType: "int256",
         name: "deltaB",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -6647,89 +6848,89 @@ export const diamondABI = [
       {
         internalType: "int256",
         name: "deltaB",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "beforeLpTokenSupply",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "afterLpTokenSupply",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "int256",
         name: "deltaB",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     name: "scaledDeltaB",
     outputs: [
       {
         internalType: "int256",
         name: "",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "bytes",
         name: "convertData",
-        type: "bytes",
+        type: "bytes"
       },
       {
         internalType: "int96[]",
         name: "stems",
-        type: "int96[]",
+        type: "int96[]"
       },
       {
         internalType: "uint256[]",
         name: "amounts",
-        type: "uint256[]",
-      },
+        type: "uint256[]"
+      }
     ],
     name: "convert",
     outputs: [
       {
         internalType: "int96",
         name: "toStem",
-        type: "int96",
+        type: "int96"
       },
       {
         internalType: "uint256",
         name: "fromAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "toAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "fromBdv",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "toBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     anonymous: false,
@@ -6738,23 +6939,23 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "plenty",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "ClaimPlenty",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -6763,25 +6964,25 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "beans",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "Plant",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "enum LibTransfer.To",
         name: "toMode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "claimAllPlenty",
     outputs: [
@@ -6790,125 +6991,125 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "token",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "uint256",
             name: "plenty",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct ClaimFacet.ClaimPlentyData[]",
         name: "allPlenty",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "well",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "enum LibTransfer.To",
         name: "toMode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "claimPlenty",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "mow",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "mowAll",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address[]",
         name: "accounts",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "mowAllMultipleAccounts",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address[]",
         name: "tokens",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "mowMultiple",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address[]",
         name: "accounts",
-        type: "address[]",
+        type: "address[]"
       },
       {
         internalType: "address[][]",
         name: "tokens",
-        type: "address[][]",
-      },
+        type: "address[][]"
+      }
     ],
     name: "mowMultipleAccounts",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -6917,59 +7118,59 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "beans",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "beanToBDV",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "wellBdv",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     anonymous: false,
@@ -6978,23 +7179,23 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "operator",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "bool",
         name: "approved",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     name: "ApprovalForAll",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -7003,181 +7204,181 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "owner",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "DepositApproval",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "approveDeposit",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "subtractedValue",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "decreaseDepositAllowance",
     outputs: [
       {
         internalType: "bool",
         name: "",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "owner",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "depositAllowance",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "addedValue",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "increaseDepositAllowance",
     outputs: [
       {
         internalType: "bool",
         name: "",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "_owner",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "address",
         name: "_operator",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "isApprovedForAll",
     outputs: [
       {
         internalType: "bool",
         name: "",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "spender",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "bool",
         name: "approved",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     name: "setApprovalForAll",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     anonymous: false,
@@ -7186,36 +7387,36 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "beans",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "Incentivization",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "secondsLate",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "determineReward",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     anonymous: false,
@@ -7224,17 +7425,17 @@ export const diamondABI = [
         indexed: false,
         internalType: "int256",
         name: "deltaStalk",
-        type: "int256",
+        type: "int256"
       },
       {
         indexed: false,
         internalType: "int256",
         name: "deltaRoots",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     name: "TotalStalkChangedFromGermination",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -7243,67 +7444,48 @@ export const diamondABI = [
         indexed: true,
         internalType: "uint32",
         name: "season",
-        type: "uint32",
+        type: "uint32"
       },
       {
         indexed: false,
         internalType: "address",
         name: "well",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "int256",
         name: "deltaB",
-        type: "int256",
+        type: "int256"
       },
       {
         indexed: false,
         internalType: "bytes",
         name: "cumulativeReserves",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "WellOracle",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "well",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "check",
     outputs: [
       {
         internalType: "int256",
         name: "deltaB",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "index",
-        type: "uint256",
-      },
-    ],
-    name: "RemoveWhitelistStatus",
-    type: "event",
+    type: "function"
   },
   {
     anonymous: false,
@@ -7312,35 +7494,35 @@ export const diamondABI = [
         indexed: true,
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "int96",
         name: "stem",
-        type: "int96",
+        type: "int96"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "bdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "AddDeposit",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -7349,23 +7531,23 @@ export const diamondABI = [
         indexed: true,
         internalType: "uint256",
         name: "season",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: true,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "gaugePoints",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "GaugePointChange",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -7374,11 +7556,11 @@ export const diamondABI = [
         indexed: false,
         internalType: "uint256",
         name: "newStalkPerBdvPerSeason",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "UpdateAverageStalkPerBdvPerSeason",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -7387,23 +7569,23 @@ export const diamondABI = [
         indexed: true,
         internalType: "enum ShipmentRecipient",
         name: "recipient",
-        type: "uint8",
+        type: "uint8"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "receivedAmount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "bytes",
         name: "data",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "Receipt",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -7412,57 +7594,57 @@ export const diamondABI = [
         indexed: true,
         internalType: "uint32",
         name: "season",
-        type: "uint32",
+        type: "uint32"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "shipmentAmount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "Shipped",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "uint256[]",
         name: "shipmentAmounts",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         components: [
           {
             internalType: "uint256",
             name: "points",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "cap",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct ShipmentPlan[]",
         name: "shipmentPlans",
-        type: "tuple[]",
+        type: "tuple[]"
       },
       {
         internalType: "uint256",
         name: "totalPoints",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "beansToShip",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getBeansFromPoints",
     outputs: [],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -7471,28 +7653,28 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "planContract",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "planSelector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "enum ShipmentRecipient",
             name: "recipient",
-            type: "uint8",
+            type: "uint8"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct ShipmentRoute[]",
         name: "shipmentRoutes",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     name: "getShipmentPlans",
     outputs: [
@@ -7501,26 +7683,26 @@ export const diamondABI = [
           {
             internalType: "uint256",
             name: "points",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "cap",
-            type: "uint256",
-          },
+            type: "uint256"
+          }
         ],
         internalType: "struct ShipmentPlan[]",
         name: "shipmentPlans",
-        type: "tuple[]",
+        type: "tuple[]"
       },
       {
         internalType: "uint256",
         name: "totalPoints",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     anonymous: false,
@@ -7529,41 +7711,41 @@ export const diamondABI = [
         indexed: true,
         internalType: "uint256",
         name: "season",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "deltaPodDemand",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "lpToSupplyRatio",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "podRate",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "thisSowTime",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "lastSowTime",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "SeasonMetrics",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -7572,23 +7754,23 @@ export const diamondABI = [
         indexed: true,
         internalType: "uint256",
         name: "season",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "caseId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "int80",
         name: "absChange",
-        type: "int80",
-      },
+        type: "int80"
+      }
     ],
     name: "BeanToMaxLpGpPerBdvRatioChange",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -7597,17 +7779,17 @@ export const diamondABI = [
         indexed: true,
         internalType: "uint256",
         name: "season",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "bool",
         name: "raining",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     name: "RainStatus",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -7616,11 +7798,11 @@ export const diamondABI = [
         indexed: false,
         internalType: "uint256",
         name: "toField",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "SeasonOfPlentyField",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -7629,35 +7811,149 @@ export const diamondABI = [
         indexed: true,
         internalType: "uint256",
         name: "season",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "address",
         name: "well",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "beans",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "SeasonOfPlentyWell",
-    type: "event",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8"
+      },
+      {
+        components: [
+          {
+            internalType: "bytes",
+            name: "value",
+            type: "bytes"
+          },
+          {
+            internalType: "address",
+            name: "target",
+            type: "address"
+          },
+          {
+            internalType: "bytes4",
+            name: "selector",
+            type: "bytes4"
+          },
+          {
+            internalType: "bytes",
+            name: "data",
+            type: "bytes"
+          }
+        ],
+        indexed: false,
+        internalType: "struct Gauge",
+        name: "gauge",
+        type: "tuple"
+      }
+    ],
+    name: "AddedGauge",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8"
+      },
+      {
+        indexed: false,
+        internalType: "bytes",
+        name: "value",
+        type: "bytes"
+      }
+    ],
+    name: "Engaged",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8"
+      }
+    ],
+    name: "RemovedGauge",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8"
+      },
+      {
+        components: [
+          {
+            internalType: "bytes",
+            name: "value",
+            type: "bytes"
+          },
+          {
+            internalType: "address",
+            name: "target",
+            type: "address"
+          },
+          {
+            internalType: "bytes4",
+            name: "selector",
+            type: "bytes4"
+          },
+          {
+            internalType: "bytes",
+            name: "data",
+            type: "bytes"
+          }
+        ],
+        indexed: false,
+        internalType: "struct Gauge",
+        name: "gauge",
+        type: "tuple"
+      }
+    ],
+    name: "UpdatedGauge",
+    type: "event"
   },
   {
     inputs: [],
@@ -7666,87 +7962,87 @@ export const diamondABI = [
       {
         internalType: "bool",
         name: "",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address[]",
         name: "pools",
-        type: "address[]",
-      },
+        type: "address[]"
+      }
     ],
     name: "cumulativeCurrentDeltaB",
     outputs: [
       {
         internalType: "int256",
         name: "deltaB",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "caseId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getAbsBeanToMaxLpRatioChangeFromCaseId",
     outputs: [
       {
         internalType: "uint80",
         name: "ml",
-        type: "uint80",
-      },
+        type: "uint80"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "caseId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getAbsTemperatureChangeFromCaseId",
     outputs: [
       {
         internalType: "int32",
         name: "t",
-        type: "int32",
-      },
+        type: "int32"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "caseId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getCaseData",
     outputs: [
       {
         internalType: "bytes32",
         name: "casesData",
-        type: "bytes32",
-      },
+        type: "bytes32"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -7755,45 +8051,45 @@ export const diamondABI = [
       {
         internalType: "bytes32[144]",
         name: "cases",
-        type: "bytes32[144]",
-      },
+        type: "bytes32[144]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "caseId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getChangeFromCaseId",
     outputs: [
       {
         internalType: "uint32",
         name: "",
-        type: "uint32",
+        type: "uint32"
       },
       {
         internalType: "int32",
         name: "",
-        type: "int32",
+        type: "int32"
       },
       {
         internalType: "uint80",
         name: "",
-        type: "uint80",
+        type: "uint80"
       },
       {
         internalType: "int80",
         name: "",
-        type: "int80",
-      },
+        type: "int80"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -7802,11 +8098,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -7815,11 +8111,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -7830,96 +8126,96 @@ export const diamondABI = [
           {
             internalType: "uint256",
             name: "maxBeanMaxLpGpPerBdvRatio",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "minBeanMaxLpGpPerBdvRatio",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "targetSeasonsToCatchUp",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podRateLowerBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podRateOptimal",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "podRateUpperBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "deltaPodDemandLowerBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "deltaPodDemandUpperBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "lpToSupplyRatioUpperBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "lpToSupplyRatioOptimal",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "lpToSupplyRatioLowerBound",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "excessivePriceThreshold",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "soilCoefficientHigh",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "soilCoefficientLow",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "baseReward",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint128",
             name: "minAvgGsPerBdv",
-            type: "uint128",
+            type: "uint128"
           },
           {
             internalType: "uint128",
             name: "rainingMinBeanMaxLpGpPerBdvRatio",
-            type: "uint128",
-          },
+            type: "uint128"
+          }
         ],
         internalType: "struct EvaluationParameters",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -7928,11 +8224,66 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "getExtEvaluationParameters",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "belowPegSoilL2SRScalar",
+            type: "uint256"
+          },
+          {
+            internalType: "uint256",
+            name: "soilCoefficientRelativelyHigh",
+            type: "uint256"
+          },
+          {
+            internalType: "uint256",
+            name: "soilCoefficientRelativelyLow",
+            type: "uint256"
+          },
+          {
+            internalType: "uint256",
+            name: "abovePegDeltaBSoilScalar",
+            type: "uint256"
+          },
+          {
+            internalType: "uint256",
+            name: "soilDistributionPeriod",
+            type: "uint256"
+          },
+          {
+            internalType: "uint256",
+            name: "minSoilIssuance",
+            type: "uint256"
+          },
+          {
+            internalType: "uint256",
+            name: "minSoilSownDemand",
+            type: "uint256"
+          },
+          {
+            internalType: "bytes32[60]",
+            name: "buffer",
+            type: "bytes32[60]"
+          }
+        ],
+        internalType: "struct ExtEvaluationParameters",
+        name: "",
+        type: "tuple"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   {
     inputs: [],
@@ -7941,11 +8292,11 @@ export const diamondABI = [
       {
         internalType: "address",
         name: "",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -7954,11 +8305,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -7967,11 +8318,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -7980,11 +8331,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -7993,11 +8344,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8006,11 +8357,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8019,11 +8370,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8032,11 +8383,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8045,49 +8396,49 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "caseId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getRelBeanToMaxLpRatioChangeFromCaseId",
     outputs: [
       {
         internalType: "int80",
         name: "l",
-        type: "int80",
-      },
+        type: "int80"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "caseId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getRelTemperatureChangeFromCaseId",
     outputs: [
       {
         internalType: "uint32",
         name: "mt",
-        type: "uint32",
-      },
+        type: "uint32"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8098,71 +8449,71 @@ export const diamondABI = [
           {
             internalType: "uint32",
             name: "current",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "uint32",
             name: "lastSop",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "uint32",
             name: "lastSopSeason",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "uint32",
             name: "rainStart",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "bool",
             name: "raining",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "uint64",
             name: "sunriseBlock",
-            type: "uint64",
+            type: "uint64"
           },
           {
             internalType: "bool",
             name: "abovePeg",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "uint256",
             name: "start",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "period",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "timestamp",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "standardMintedBeans",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "bytes32[8]",
             name: "_buffer",
-            type: "bytes32[8]",
-          },
+            type: "bytes32[8]"
+          }
         ],
         internalType: "struct Season",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8171,11 +8522,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8184,11 +8535,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8197,11 +8548,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "totalLiquidity",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8210,49 +8561,49 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "totalWeightedLiquidity",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "well",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getTwaLiquidityForWell",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "well",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getWeightedTwaLiquidityForWell",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8263,36 +8614,36 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "well",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "int256",
             name: "deltaB",
-            type: "int256",
-          },
+            type: "int256"
+          }
         ],
         internalType: "struct LibFlood.WellDeltaB[]",
         name: "wellDeltaBs",
-        type: "tuple[]",
+        type: "tuple[]"
       },
       {
         internalType: "uint256",
         name: "totalPositiveDeltaB",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "totalNegativeDeltaB",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "positiveDeltaBCount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8301,92 +8652,92 @@ export const diamondABI = [
       {
         internalType: "bool",
         name: "",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint32",
         name: "_season",
-        type: "uint32",
+        type: "uint32"
       },
       {
         internalType: "address",
         name: "well",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "plentyPerRoot",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "pool",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "poolCurrentDeltaB",
     outputs: [
       {
         internalType: "int256",
         name: "deltaB",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "pool",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "poolDeltaB",
     outputs: [
       {
         internalType: "int256",
         name: "",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "pool",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "poolDeltaBNoCap",
     outputs: [
       {
         internalType: "int256",
         name: "",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8397,31 +8748,31 @@ export const diamondABI = [
           {
             internalType: "uint256",
             name: "pods",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "roots",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint128",
             name: "floodHarvestablePods",
-            type: "uint128",
+            type: "uint128"
           },
           {
             internalType: "bytes32[3]",
             name: "_buffer",
-            type: "bytes32[3]",
-          },
+            type: "bytes32[3]"
+          }
         ],
         internalType: "struct Rain",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8430,11 +8781,11 @@ export const diamondABI = [
       {
         internalType: "uint32",
         name: "",
-        type: "uint32",
-      },
+        type: "uint32"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8443,11 +8794,11 @@ export const diamondABI = [
       {
         internalType: "uint64",
         name: "",
-        type: "uint64",
-      },
+        type: "uint64"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8458,71 +8809,71 @@ export const diamondABI = [
           {
             internalType: "uint32",
             name: "current",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "uint32",
             name: "lastSop",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "uint32",
             name: "lastSopSeason",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "uint32",
             name: "rainStart",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "bool",
             name: "raining",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "uint64",
             name: "sunriseBlock",
-            type: "uint64",
+            type: "uint64"
           },
           {
             internalType: "bool",
             name: "abovePeg",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "uint256",
             name: "start",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "period",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "timestamp",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "uint256",
             name: "standardMintedBeans",
-            type: "uint256",
+            type: "uint256"
           },
           {
             internalType: "bytes32[8]",
             name: "_buffer",
-            type: "bytes32[8]",
-          },
+            type: "bytes32[8]"
+          }
         ],
         internalType: "struct Season",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8531,11 +8882,11 @@ export const diamondABI = [
       {
         internalType: "int256",
         name: "deltaB",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8544,11 +8895,24 @@ export const diamondABI = [
       {
         internalType: "int256",
         name: "deltaB",
-        type: "int256",
-      },
+        type: "int256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "totalInstantaneousDeltaB",
+    outputs: [
+      {
+        internalType: "int256",
+        name: "",
+        type: "int256"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   {
     inputs: [],
@@ -8559,55 +8923,60 @@ export const diamondABI = [
           {
             internalType: "uint128",
             name: "lastDeltaSoil",
-            type: "uint128",
+            type: "uint128"
           },
           {
             internalType: "uint32",
             name: "lastSowTime",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "uint32",
             name: "thisSowTime",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "uint32",
             name: "temp",
-            type: "uint32",
+            type: "uint32"
           },
           {
             internalType: "bytes32[4]",
             name: "_buffer",
-            type: "bytes32[4]",
-          },
+            type: "bytes32[4]"
+          }
         ],
         internalType: "struct Weather",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "well",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "wellOracleSnapshot",
     outputs: [
       {
         internalType: "bytes",
         name: "snapshot",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "MathOverflowedMulDiv",
+    type: "error"
   },
   {
     anonymous: false,
@@ -8617,32 +8986,32 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "planContract",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "planSelector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "enum ShipmentRecipient",
             name: "recipient",
-            type: "uint8",
+            type: "uint8"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         indexed: false,
         internalType: "struct ShipmentRoute[]",
         name: "newShipmentRoutes",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     name: "ShipmentRoutesSet",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -8651,17 +9020,17 @@ export const diamondABI = [
         indexed: true,
         internalType: "uint32",
         name: "season",
-        type: "uint32",
+        type: "uint32"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "soil",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "Soil",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -8670,11 +9039,11 @@ export const diamondABI = [
         indexed: true,
         internalType: "uint256",
         name: "season",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "Sunrise",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -8683,29 +9052,29 @@ export const diamondABI = [
         indexed: true,
         internalType: "uint256",
         name: "season",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "caseId",
-        type: "uint256",
+        type: "uint256"
       },
       {
         indexed: false,
         internalType: "int32",
         name: "absChange",
-        type: "int32",
+        type: "int32"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "TemperatureChange",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [],
@@ -8716,55 +9085,55 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "planContract",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "planSelector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "enum ShipmentRecipient",
             name: "recipient",
-            type: "uint8",
+            type: "uint8"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct ShipmentRoute[]",
         name: "",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "account",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "enum LibTransfer.To",
         name: "mode",
-        type: "uint8",
-      },
+        type: "uint8"
+      }
     ],
     name: "gm",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8773,11 +9142,11 @@ export const diamondABI = [
       {
         internalType: "uint32",
         name: "",
-        type: "uint32",
-      },
+        type: "uint32"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
@@ -8786,33 +9155,33 @@ export const diamondABI = [
           {
             internalType: "address",
             name: "planContract",
-            type: "address",
+            type: "address"
           },
           {
             internalType: "bytes4",
             name: "planSelector",
-            type: "bytes4",
+            type: "bytes4"
           },
           {
             internalType: "enum ShipmentRecipient",
             name: "recipient",
-            type: "uint8",
+            type: "uint8"
           },
           {
             internalType: "bytes",
             name: "data",
-            type: "bytes",
-          },
+            type: "bytes"
+          }
         ],
         internalType: "struct ShipmentRoute[]",
         name: "shipmentRoutes",
-        type: "tuple[]",
-      },
+        type: "tuple[]"
+      }
     ],
     name: "setShipmentRoutes",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -8821,265 +9190,265 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "payable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "lookback",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getMillionUsdPrice",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "contract IERC20[]",
         name: "tokens",
-        type: "address[]",
+        type: "address[]"
       },
       {
         internalType: "uint256",
         name: "lookback",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getRatiosAndBeanIndex",
     outputs: [
       {
         internalType: "uint256[]",
         name: "ratios",
-        type: "uint256[]",
+        type: "uint256[]"
       },
       {
         internalType: "uint256",
         name: "beanIndex",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "bool",
         name: "success",
-        type: "bool",
-      },
+        type: "bool"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getTokenUsdPrice",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "lookback",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getTokenUsdPriceFromExternal",
     outputs: [
       {
         internalType: "uint256",
         name: "tokenUsd",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "lookback",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getTokenUsdTwap",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getUsdTokenPrice",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "lookback",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getUsdTokenPriceFromExternal",
     outputs: [
       {
         internalType: "uint256",
         name: "usdToken",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "lookback",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getUsdTokenTwap",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "bytes",
         name: "",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "maxWeight",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "bytes",
         name: "",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "noWeight",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "uint256",
         name: "percentOfDepositedBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "calcGaugePointsWithParams",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9088,11 +9457,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9101,11 +9470,11 @@ export const diamondABI = [
       {
         internalType: "uint128",
         name: "",
-        type: "uint128",
-      },
+        type: "uint128"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9114,11 +9483,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9127,11 +9496,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9140,11 +9509,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9153,87 +9522,87 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getGaugePoints",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getGaugePointsPerBdvForToken",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "well",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getGaugePointsPerBdvForWell",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
-      },
+        type: "address"
+      }
     ],
     name: "getGaugePointsWithParams",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9242,11 +9611,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9255,11 +9624,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9268,11 +9637,11 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9281,30 +9650,30 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "fieldId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getPodRate",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9315,31 +9684,31 @@ export const diamondABI = [
           {
             internalType: "uint128",
             name: "averageGrownStalkPerBdvPerSeason",
-            type: "uint128",
+            type: "uint128"
           },
           {
             internalType: "uint128",
             name: "beanToMaxLpGpPerBdvRatio",
-            type: "uint128",
+            type: "uint128"
           },
           {
             internalType: "bool",
             name: "avgGsPerBdvFlag",
-            type: "bool",
+            type: "bool"
           },
           {
             internalType: "bytes32[4]",
             name: "_buffer",
-            type: "bytes32[4]",
-          },
+            type: "bytes32[4]"
+          }
         ],
         internalType: "struct SeedGauge",
         name: "",
-        type: "tuple",
-      },
+        type: "tuple"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9348,175 +9717,333 @@ export const diamondABI = [
       {
         internalType: "uint256",
         name: "totalBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "x",
+        type: "uint256"
+      }
+    ],
+    name: "PRBMathUD60x18__LogInputTooSmall",
+    type: "error"
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes",
+        name: "value",
+        type: "bytes"
+      },
+      {
+        internalType: "bytes",
+        name: "systemData",
+        type: "bytes"
+      },
+      {
+        internalType: "bytes",
+        name: "gaugeData",
+        type: "bytes"
+      }
+    ],
+    name: "convertDownPenaltyGauge",
+    outputs: [
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes"
+      },
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes",
+        name: "value",
+        type: "bytes"
+      },
+      {
+        internalType: "bytes",
+        name: "systemData",
+        type: "bytes"
+      },
+      {
+        internalType: "bytes",
+        name: "gaugeData",
+        type: "bytes"
+      }
+    ],
+    name: "cultivationFactor",
+    outputs: [
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes"
+      },
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "currentGaugePoints",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "optimalPercentDepositedBdv",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "percentOfDepositedBdv",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "bytes",
         name: "",
-        type: "bytes",
-      },
+        type: "bytes"
+      }
     ],
     name: "defaultGaugePoints",
     outputs: [
       {
         internalType: "uint256",
         name: "newGaugePoints",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "optimalPercentBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getExtremelyFarAbove",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "optimalPercentBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getExtremelyFarBelow",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8"
+      }
+    ],
+    name: "getGauge",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "bytes",
+            name: "value",
+            type: "bytes"
+          },
+          {
+            internalType: "address",
+            name: "target",
+            type: "address"
+          },
+          {
+            internalType: "bytes4",
+            name: "selector",
+            type: "bytes4"
+          },
+          {
+            internalType: "bytes",
+            name: "data",
+            type: "bytes"
+          }
+        ],
+        internalType: "struct Gauge",
+        name: "",
+        type: "tuple"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8"
+      }
+    ],
+    name: "getGaugeData",
+    outputs: [
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8"
+      }
+    ],
+    name: "getGaugeValue",
+    outputs: [
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "optimalPercentBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getRelativelyCloseAbove",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "optimalPercentBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getRelativelyCloseBelow",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "optimalPercentBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getRelativelyFarAbove",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "optimalPercentBdv",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "getRelativelyFarBelow",
     outputs: [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "value",
-        type: "uint256",
+        type: "uint256"
       },
       {
         internalType: "uint256",
         name: "length",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "StringsInsufficientHexLength",
-    type: "error",
+    type: "error"
   },
   {
     anonymous: false,
@@ -9525,41 +10052,41 @@ export const diamondABI = [
         indexed: false,
         internalType: "string",
         name: "_uri",
-        type: "string",
+        type: "string"
       },
       {
         indexed: true,
         internalType: "uint256",
         name: "_id",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "URI",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
       {
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         internalType: "int96",
         name: "stem",
-        type: "int96",
-      },
+        type: "int96"
+      }
     ],
     name: "imageURI",
     outputs: [
       {
         internalType: "string",
         name: "",
-        type: "string",
-      },
+        type: "string"
+      }
     ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9568,11 +10095,11 @@ export const diamondABI = [
       {
         internalType: "string",
         name: "",
-        type: "string",
-      },
+        type: "string"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
@@ -9581,29 +10108,29 @@ export const diamondABI = [
       {
         internalType: "string",
         name: "",
-        type: "string",
-      },
+        type: "string"
+      }
     ],
     stateMutability: "pure",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
       {
         internalType: "uint256",
         name: "depositId",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "uri",
     outputs: [
       {
         internalType: "string",
         name: "",
-        type: "string",
-      },
+        type: "string"
+      }
     ],
     stateMutability: "view",
-    type: "function",
-  },
+    type: "function"
+  }
 ] as const;
