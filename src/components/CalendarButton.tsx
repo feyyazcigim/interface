@@ -189,9 +189,9 @@ const CalendarContent = ({ isMobile, range, selectedPreset, handleChange }) => {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 pt-4 px-4 sm:p-0">
       <div className="flex justify-between">
-        <div className="font-bold">Custom Date Range</div>
+        <div className="pinto-body-light font-medium">Custom Date Range</div>
       </div>
       <div className="flex flex-col gap-2">
         {["from", "to"].map((inputType) => {
@@ -207,7 +207,7 @@ const CalendarContent = ({ isMobile, range, selectedPreset, handleChange }) => {
                 onChange={(e) => {
                   handleInputChange("date", inputType, e.target.value);
                 }}
-                className="h-8 px-2 text-[1rem]"
+                className="h-8 px-2 pinto-sm-light"
                 containerClassName="flex flex-grow basis-7/12"
               />
               <Input
@@ -219,16 +219,21 @@ const CalendarContent = ({ isMobile, range, selectedPreset, handleChange }) => {
                 onBlur={(e) => {
                   formatInputTimeOnBlur(inputType, e.target.value);
                 }}
-                className="h-8 px-2 text-[1rem]"
+                className="h-8 px-2 pinto-sm-light"
                 containerClassName="flex flex-grow basis-5/12"
-                endIcon={<ClockIcon className="mr-2" size={5} />}
+                endIcon={
+                  <div>
+                    <ClockIcon className="mr-2 hidden sm:block 3xl:hidden" size={4} />
+                    <ClockIcon className="mr-2 sm:hidden 3xl:block" size={5} />
+                  </div>
+                }
               />
             </div>
           );
         })}
       </div>
       <Separator />
-      <div className="flex flex-row">
+      <div className="flex flex-col justify-between">
         <DayPicker
           mode="range"
           showOutsideDays
@@ -238,7 +243,7 @@ const CalendarContent = ({ isMobile, range, selectedPreset, handleChange }) => {
           onMonthChange={setMonth}
           fixedWeeks
           classNames={{
-            root: clsx("p-0"),
+            root: clsx("p-0 pinto-sm-light"),
             caption: clsx("flex relative justify-center items-center mb-2.5"),
             nav: clsx("flex items-center place-self-end gap-2"),
             button_next: clsx(
@@ -247,7 +252,8 @@ const CalendarContent = ({ isMobile, range, selectedPreset, handleChange }) => {
             button_previous: clsx(
               "absolute left-3 rounded w-[1.875rem] h-[1.875rem] hover:bg-pinto-green-1 transition-colors duration-150 ease-in-out",
             ),
-            month: clsx("-mt-3 justify-items-center"),
+            month: clsx("-mt-3 justify-items-center "),
+            month_grid: clsx("mt-4"),
             nav_button_previous: clsx("absolute left-0 rounded-lg w-[1.875rem] h-[1.875rem]"),
             nav_button_next: clsx("absolute right-0 rounded-lg w-[1.875rem] h-[1.875rem]"),
             head_row: clsx("hidden"),
@@ -269,16 +275,16 @@ const CalendarContent = ({ isMobile, range, selectedPreset, handleChange }) => {
           }}
         />
         {isMobile && (
-          <div className="flex flex-col justify-between my-4 mr-4 flex-grow">
+          <div className="flex flex-row justify-between">
             {calendarPresetRanges.map((preset) => (
               <button
                 key={`timePeriodPreset${preset.key}`}
                 type="button"
-                className={`rounded px-1 py-1 text-sm min-w-fit ${
+                className={`rounded py-1 text-sm min-w-fit ${
                   selectedPreset === preset.key
                     ? "bg-pinto-green text-white"
                     : "border border-pinto-gray-2 text-pinto-gray-5"
-                }`}
+                } w-8 pinto-body-light`}
                 onClick={() => {
                   handleChange(
                     {
@@ -364,7 +370,7 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }) =
             <CalendarIcon />
           </div>
         </ResponsivePopover.Trigger>
-        <ResponsivePopover.Content align={"end"}>
+        <ResponsivePopover.Content align={"end"} className="w-[22rem] lg:w-[17.5rem]">
           <CalendarContent
             isMobile={!isDesktop}
             range={range}
