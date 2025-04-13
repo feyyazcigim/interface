@@ -1,5 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
-import { usePublicClient } from "wagmi";
+import { usePublicClient, useAccount } from "wagmi";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { toast } from "sonner";
 import { useEffect, useState, useCallback } from "react";
@@ -16,7 +16,7 @@ import { InfoCircledIcon } from "@radix-ui/react-icons";
 import TooltipSimple from "@/components/TooltipSimple";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
-import { createPublicClient, http } from "viem";
+import { createPublicClient, http, encodeFunctionData } from "viem";
 import { base } from "viem/chains";
 import { BASE_RPC_URL } from "@/utils/wagmi/chains";
 import { Token } from "@/utils/types";
@@ -127,6 +127,7 @@ export function Plow() {
   const [selectedRequisition, setSelectedRequisition] = useState<RequisitionEvent | null>(null);
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
+  const { address } = useAccount();
   const { data: latestBlock } = useLatestBlock();
   const queryClient = useQueryClient();
   const { tokenPrices } = usePriceData();
@@ -365,6 +366,39 @@ export function Plow() {
           setSuccessfulSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
         } catch (error) {
           console.error(`Simulation failed for ${req.requisition.blueprintHash}:`, error);
+          
+          // Log additional details for debugging
+          console.log("Simulation details:");
+          console.log("Blueprint Hash:", req.requisition.blueprintHash);
+          console.log("To Address:", protocolAddress);
+          console.log("From Address:", address || "Unknown");
+          
+          // Try to log call args
+          try {
+            // Just log the raw args
+            const encodedCallData = encodeFunctionData({
+              abi: diamondABI,
+              functionName: "tractor",
+              args: [
+                {
+                  blueprint: req.requisition.blueprint,
+                  blueprintHash: req.requisition.blueprintHash,
+                  signature: req.requisition.signature,
+                },
+                "0x",
+              ]
+            });
+            console.log("Encoded Call Data:", encodedCallData);
+            console.log("Simulator Ready Format:");
+            console.log(JSON.stringify({
+              to: protocolAddress,
+              from: address || "0x0000000000000000000000000000000000000000",
+              data: encodedCallData
+            }, null, 2));
+          } catch (dataError) {
+            console.error("Failed to encode call data:", dataError);
+          }
+          
           setFailedSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
           
           // Store the error message
@@ -386,7 +420,7 @@ export function Plow() {
     } finally {
       setSimulatingAll(false);
     }
-  }, [protocolAddress, publicClient, requisitions]);
+  }, [protocolAddress, publicClient, requisitions, address]);
 
   // Update handleSimulate function to include gas estimation
   const handleSimulate = useCallback(async (req: RequisitionEvent) => {
@@ -458,6 +492,38 @@ export function Plow() {
       setSuccessfulSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
     } catch (error) {
       console.error("Simulation failed:", error);
+      
+      // Log additional details for debugging
+      console.log("Simulation details:");
+      console.log("Blueprint Hash:", req.requisition.blueprintHash);
+      console.log("To Address:", protocolAddress);
+      console.log("From Address:", address || "Unknown");
+      
+      // Try to encode and log call data for simulator use
+      try {
+        const encodedCallData = encodeFunctionData({
+          abi: diamondABI,
+          functionName: "tractor",
+          args: [
+            {
+              blueprint: req.requisition.blueprint,
+              blueprintHash: req.requisition.blueprintHash,
+              signature: req.requisition.signature,
+            },
+            "0x",
+          ]
+        });
+        console.log("Encoded Call Data:", encodedCallData);
+        console.log("Simulator Ready Format:");
+        console.log(JSON.stringify({
+          to: protocolAddress,
+          from: address || "0x0000000000000000000000000000000000000000",
+          data: encodedCallData
+        }, null, 2));
+      } catch (dataError) {
+        console.error("Failed to encode call data:", dataError);
+      }
+      
       toast.error(`Simulation failed: ${extractErrorMessage(error)}`);
       setFailedSimulations(prev => new Set(prev).add(req.requisition.blueprintHash));
       
@@ -471,7 +537,7 @@ export function Plow() {
     } finally {
       setSimulatingReq(null);
     }
-  }, [protocolAddress, publicClient]);
+  }, [protocolAddress, publicClient, address]);
 
   // Add execute handler
   const handleExecute = useCallback(async (req: RequisitionEvent) => {

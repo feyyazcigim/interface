@@ -30,10 +30,6 @@ import { viewSeasonABI } from "@/constants/abi/viewSeasonABI";
 import { viewSiloABI } from "@/constants/abi/viewSiloABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 
-// Export these constants so they can be imported elsewhere
-export const TRACTOR_HELPERS_ADDRESS = "0xD69BC314bdaa329EB18F36E4897D96A3A48C3eeF" as const;
-export const SOW_BLUEPRINT_V0_ADDRESS = "0x6712008CCD96751d586FdBa0DEf5495E0E22D904" as const;
-
 const TESTNET_CHAIN_ID = 41337;
 
 const config = defineConfig(() => {
