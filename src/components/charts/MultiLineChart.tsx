@@ -68,7 +68,6 @@ const MultiLineChart = React.memo(
     yAxisMin,
     yAxisMax,
   }: MultiLineChartProps) => {
-    console.info("🚀 ~ data:", data);
     const chartRef = useRef<Chart | null>(null);
     const activeIndexRef = useRef<number | undefined>(activeIndex);
 

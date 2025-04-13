@@ -26,7 +26,6 @@ export interface SowEventTimings {
 const makeLineGradients = [metallicGreenStrokeGradientFn];
 
 export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSowEvents }: DeltaDemandChartProps) => {
-  console.info("🚀 ~ DeltaDemandChart ~ surroundingSeasons:", surroundingSeasons);
   if (!surroundingSeasons[0] || !surroundingSeasons[1]) {
     return null;
   }
@@ -103,18 +102,18 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
       <span>Demand for Soil is {descriptiveText}</span>
       <div className="flex text-sm mt-2 gap-1 items-center">
         <div className="rounded-full w-3 h-3 bg-pinto-green-4" />
-        <span>Season {surroundingSeasons[0].season}</span>
-        <span className="text-pinto-gray-4">({surroundingSeasons[0].temperature}% Temp)</span>
+        <span>Season {currentSeason.season}</span>
+        <span className="text-pinto-gray-4">({currentSeason.temperature}% Temp)</span>
         <span>-</span>
         <span className="text-pinto-gray-4">Amount Sown:</span>
         <span>
-          {surroundingSeasons[0].deltaSownBeans.toNumber().toFixed(2)}/
-          {surroundingSeasons[0].issuedSoil.toNumber().toFixed(2)}
+          {currentSeason.deltaSownBeans.toNumber().toFixed(2)}/
+          {currentSeason.issuedSoil.toNumber().toFixed(2)}
         </span>
         <span className="text-pinto-gray-4">
           (
           {(
-            (surroundingSeasons[0].deltaSownBeans.toNumber() / surroundingSeasons[0].issuedSoil.toNumber()) * 100 || 0
+            (currentSeason.deltaSownBeans.toNumber() / currentSeason.issuedSoil.toNumber()) * 100 || 0
           ).toFixed(2)}
           %)
         </span>
@@ -153,16 +152,16 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
       <div className="flex flex-col">
         <span className="text-base">Demand for Soil</span>
         <span className="text-xl">{descriptiveText}</span>
-        {surroundingSeasons[0].blocksToSoldOutSoil === "-" ? (
+        {currentSeason.blocksToSoldOutSoil === "-" ? (
           <span className="text-base mt-4 text-pinto-gray-4">
-            Amount of Soil Sown in {surroundingSeasons[0].season}:{" "}
-            {surroundingSeasons[0].deltaSownBeans.toNumber().toFixed(2)}
+            Amount of Soil Sown in {currentSeason.season}:{" "}
+            {currentSeason.deltaSownBeans.toNumber().toFixed(2)}
           </span>
         ) : (
           <span className="text-base mt-4 text-pinto-gray-4">
-            Soil - {surroundingSeasons[0].issuedSoil.toNumber().toFixed(2)} Sown in Season{" "}
-            {surroundingSeasons[0].season}: XX:
-            {surroundingSeasons[0].blocksToSoldOutSoil}
+            Soil - {currentSeason.issuedSoil.toNumber().toFixed(2)} Sown in Season{" "}
+            {currentSeason.season}: XX:
+            {currentSeason.blocksToSoldOutSoil}
           </span>
         )}
         {surroundingSeasons[1].blocksToSoldOutSoil === "-" ? (
