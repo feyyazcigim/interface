@@ -11,11 +11,14 @@ import {
   ISeriesApi,
   LineSeries,
   MouseEventParams,
+  PriceScaleMode,
   TickMarkType,
   Time,
   createChart,
 } from "lightweight-charts";
-import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
+import { GearIcon } from "../Icons";
+import { ResponsivePopover } from "../ui/ResponsivePopover";
 
 export type TVChartFormattedData = {
   time: Time;
@@ -135,22 +138,8 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
   const size = "full";
 
   // Price Scale Settings Menu
-  const [leftAnchorEl, setLeftAnchorEl] = useState<null | HTMLElement>(null);
-  const [rightAnchorEl, setRightAnchorEl] = useState<null | HTMLElement>(null);
-  const leftMenuVisible = Boolean(leftAnchorEl);
-  const rightMenuVisible = Boolean(rightAnchorEl);
-  const handleToggleMenu = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>, side: string) => {
-      if (side === "left") {
-        setLeftAnchorEl(leftAnchorEl ? null : event.currentTarget);
-      } else {
-        setRightAnchorEl(rightAnchorEl ? null : event.currentTarget);
-      }
-    },
-    [leftAnchorEl, rightAnchorEl],
-  );
-  const [leftPriceScaleMode, setLeftPriceScaleMode] = useState(0);
-  const [rightPriceScaleMode, setRightPriceScaleMode] = useState(0);
+  const [leftPriceScaleMode, setLeftPriceScaleMode] = useState<PriceScaleMode>(0);
+  const [rightPriceScaleMode, setRightPriceScaleMode] = useState<PriceScaleMode>(0);
   const priceScaleModes = ["Normal", "Logarithmic", "Percentage", "Indexed to 100"];
 
   // Set second price scale type
@@ -206,9 +195,9 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
       leftPriceScale: {
         borderVisible: true,
         mode: 0,
+        visible: false,
         borderColor: hexToRgba("#D9D9D9"),
         textColor: hexToRgba("#9C9C9C"),
-        visible: false,
       },
       width: chartContainerRef.current.clientWidth,
       height: height - headerOffset,
@@ -250,6 +239,9 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
       leftPriceScale: {
         mode: leftPriceScaleMode,
         visible: size === "full" && secondPriceScale,
+      },
+      rightPriceScale: {
+        mode: rightPriceScaleMode,
       },
     });
 
@@ -319,27 +311,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
     }
 
     setIsInitialized(true);
-  }, [selected, secondPriceScale, chartColors, leftPriceScaleMode]);
-
-  /*
-  // Update price scale modes
-  useEffect(() => {
-    if (!chart.current) return;
-
-    chart.current.applyOptions({
-      leftPriceScale: !secondPriceScale
-        ? undefined
-        : {
-            mode: leftPriceScaleMode,
-          },
-      rightPriceScale: {
-        mode: rightPriceScaleMode,
-      },
-    });
-  }, [rightPriceScaleMode, leftPriceScaleMode, secondPriceScale]);
-
-
-*/
+  }, [selected, secondPriceScale, chartColors, leftPriceScaleMode, rightPriceScaleMode]);
 
   // Handle time period changes
   useEffect(() => {
@@ -595,84 +567,58 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
           )}
         </div>
         <div ref={chartContainerRef} id="container" style={{ height: height - 200 }} />
-        {/* <>
-          <button
-            onClick={(e) => handleToggleMenu(e, "right")}
-            className={`p-0 absolute ${isMobile ? "bottom-16" : "bottom-20"} right-6`}
-            type="button"
-          >
-            <div
-              className={`text-xl text-primary transform transition-transform duration-150 ${rightAnchorEl ? "rotate-30" : "rotate-0"}`}
-            >
-              SETTINGS
-            </div>
-          </button>
-          {rightMenuVisible && (
-            <div
-              className="z-[79] absolute bottom-0 right-0 transform origin-top-right transition-transform duration-200"
-              style={{ display: rightAnchorEl ? "block" : "none" }}
-            >
-              <div className="border-2 border-divider bg-white rounded overflow-hidden">
+        {/*
+        <div className="absolute p-0 bottom-0 right-6">
+          <ResponsivePopover>
+            <ResponsivePopover.Trigger>
+              <GearIcon />
+            </ResponsivePopover.Trigger>
+            <ResponsivePopover.Content align={"end"}>
+              <div className="flex flex-col gap-0">
+                {priceScaleModes.map((mode, index) => (
+                  <button
+                    key={`priceScaleMode_right_${mode}`}
+                    className={`text-left font-normal text-primary py-2 px-4 h-auto justify-between rounded-none ${
+                      rightPriceScaleMode === index ? "bg-primary-light" : ""
+                    } hover:bg-gray-100 cursor-pointer`}
+                    onClick={() => setRightPriceScaleMode(index)}
+                    type="button"
+                  >
+                    {mode}
+                    {rightPriceScaleMode === index && <div className="text-inherit">CHECK ICON</div>}
+                  </button>
+                ))}
+              </div>
+            </ResponsivePopover.Content>
+          </ResponsivePopover>
+        </div>
+        {secondPriceScale && (
+          <div className="absolute p-0 bottom-0 left-6">
+            <ResponsivePopover>
+              <ResponsivePopover.Trigger>
+                <GearIcon />
+              </ResponsivePopover.Trigger>
+              <ResponsivePopover.Content align={"start"}>
                 <div className="flex flex-col gap-0">
                   {priceScaleModes.map((mode, index) => (
                     <button
-                      key={index}
+                      key={`priceScaleMode_left_${mode}`}
                       className={`text-left font-normal text-primary py-2 px-4 h-auto justify-between rounded-none w-[150px] ${
-                        rightPriceScaleMode === index ? "bg-primary-light" : ""
+                        leftPriceScaleMode === index ? "bg-primary-light" : ""
                       } hover:bg-gray-100 cursor-pointer`}
-                      onClick={() => setRightPriceScaleMode(index)}
+                      onClick={() => setLeftPriceScaleMode(index)}
                       type="button"
                     >
                       {mode}
-                      {rightPriceScaleMode === index && <div className="text-inherit">CHECK ICON</div>}
+                      {leftPriceScaleMode === index && <div className="text-inherit">CHECK ICON</div>}
                     </button>
                   ))}
                 </div>
-              </div>
-            </div>
-          )}
-
-        </>
-        {secondPriceScale && (
-          <>
-            <button
-              onClick={(e) => handleToggleMenu(e, "left")}
-              className={`p-0 absolute ${isMobile ? "bottom-16" : "bottom-20"} left-6`}
-              type="button"
-            >
-              <div
-                className={`text-xl text-primary transform transition-transform duration-150 ${leftAnchorEl ? "rotate-30" : "rotate-0"}`}
-              >
-                SETTINGS
-              </div>
-            </button>
-            {leftMenuVisible && (
-              <div
-                className="z-[79] absolute bottom-0 left-0 transform origin-top-right transition-transform duration-200"
-                style={{ display: leftAnchorEl ? "block" : "none" }}
-              >
-                <div className="border-2 border-divider bg-white rounded overflow-hidden">
-                  <div className="flex flex-col gap-0">
-                    {priceScaleModes.map((mode, index) => (
-                      <button
-                        key={index}
-                        className={`text-left font-normal text-primary py-2 px-4 h-auto justify-between rounded-none w-[150px] ${
-                          leftPriceScaleMode === index ? "bg-primary-light" : ""
-                        } hover:bg-gray-100 cursor-pointer`}
-                        onClick={() => setLeftPriceScaleMode(index)}
-                        type="button"
-                      >
-                        {mode}
-                        {leftPriceScaleMode === index && <div className="text-inherit">CHECK ICON</div>}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
+              </ResponsivePopover.Content>
+            </ResponsivePopover>
+          </div>
         )}
-                      */}
+        */}
       </div>
     </>
   );
