@@ -3,11 +3,13 @@ import IconImage from "@/components/ui/IconImage";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
 import { SeasonsTableData } from "@/state/useSeasonsData";
+import useSowEventData, { SowEvent } from "@/state/useSowEventData";
 import { trulyTheBestTimeFormat } from "@/utils/format";
 import { calculateCropScales, caseIdToDescriptiveText, convertDeltaDemandToPercentage } from "@/utils/season";
 import { DateTime } from "luxon";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ListChildComponentProps, VariableSizeList, areEqual } from "react-window";
+import { useBlockNumber } from "wagmi";
 import { DeltaDemandChart } from "../charts/DeltaDemandChart";
 import { SeasonsTableCell, SeasonsTableCellType } from "./SeasonsTableCell";
 
@@ -54,6 +56,23 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
     setHeight(newHeight);
   };
 
+  const blockQuery = useBlockNumber({
+    query: {
+      refetchInterval: 20_000,
+      refetchIntervalInBackground: false,
+      refetchOnMount: true,
+    },
+  });
+  const [blocknum, setBlocknum] = useState<number>(Number(blockQuery.data) || 0);
+
+  useEffect(() => {
+    if (blockQuery.data) {
+      setBlocknum(Number(blockQuery.data));
+    }
+  }, [blockQuery.data]);
+
+  const sowEvents = useSowEventData(seasonsData[seasonsData.length - 1]?.sunriseBlock, blocknum);
+
   useEffect(() => {
     window.addEventListener("resize", calculateHeight);
     return () => {
@@ -70,6 +89,27 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
     const { cropScalar, cropRatio } = calculateCropScales(data.beanToMaxLpGpPerBdvRatio, data.raining, data.season);
     const deltaCropScalar = (data.deltaBeanToMaxLpGpPerBdvRatio / 1e18).toFixed(1);
     const priceDescriptiveText = caseIdToDescriptiveText(data.caseId, "price");
+    const filteredSowEvents = sowEvents.data.reduce(
+      (acc, event) => {
+        if (!seasonsData[index - 1] || !seasonsData[index + 1]) {
+          return acc;
+        }
+        if (
+          event.blockNumber >= BigInt(data.sunriseBlock) &&
+          event.blockNumber <= BigInt(seasonsData[index - 1]?.sunriseBlock)
+        ) {
+          acc[data.season].push(event);
+        }
+        if (
+          event.blockNumber <= BigInt(data?.sunriseBlock) &&
+          event.blockNumber >= BigInt(seasonsData[index + 1]?.sunriseBlock)
+        ) {
+          acc[seasonsData[index + 1].season].push(event);
+        }
+        return acc;
+      },
+      { [data.season]: [], [seasonsData[index + 1]?.season]: [] } as Record<number, SowEvent[]>,
+    );
     return (
       <TableRow key={data.season} style={style} noHoverMute>
         <SeasonsTableCell
@@ -142,7 +182,11 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           hiddenFields={hiddenFields}
           hoverContent={
             data.season > 5 && (
-              <DeltaDemandChart currentSeason={data} prevSeasons={[seasonsData[index + 1], seasonsData[index + 2]]} />
+              <DeltaDemandChart
+                currentSeason={data}
+                surroundingSeasons={[seasonsData[index - 1], seasonsData[index + 1]]}
+                filteredSowEvents={filteredSowEvents}
+              />
             )
           }
         />
