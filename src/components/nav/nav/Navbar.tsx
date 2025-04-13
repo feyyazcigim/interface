@@ -205,7 +205,7 @@ const Navbar = () => {
               ),
             }}
             trigger={<></>}
-            toggle={() => null}
+            toggle={() => togglePanel(panelState.openPanel)}
           >
             {isPricePanelOpen && <PricePanel />}
             {isSeasonsPanelOpen && <SeasonsPanel />}
