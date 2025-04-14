@@ -240,8 +240,8 @@ export function SoilOrderbookContent() {
   return (
     <div className="overflow-x-auto">
       <Table>
-        <TableHeader>
-          <TableRow className="bg-gray-50">
+        <TableHeader className="[&_tr]:border-b-0">
+          <TableRow className="border-b-0">
             <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Temperature</TableHead>
             <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Max Podline Length</TableHead>
             <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Total Soil Order Size</TableHead>

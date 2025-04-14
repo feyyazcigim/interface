@@ -577,15 +577,15 @@ export function Plow() {
       <Table>
         <TableHeader>
           <TableRow className="border-b border-pinto-gray-3/20">
-            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Created At</TableHead>
-            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Publisher</TableHead>
-            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Blueprint Hash</TableHead>
-            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Temperature</TableHead>
-            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[220px]">Operator Tip</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">Created At</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">Publisher</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">Blueprint Hash</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">Temperature</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[220px]">Operator Tip</TableHead>
             {successfulSimulations.size > 0 && (
-              <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Estimated Profit</TableHead>
+              <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">Estimated Profit</TableHead>
             )}
-            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[200px]">
+            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[200px]">
               <div className="flex flex-col gap-2">
                 <span>Simulate</span>
                 <div className="text-xs text-pinto-gray-4">
@@ -596,7 +596,7 @@ export function Plow() {
                 </div>
               </div>
             </TableHead>
-            <TableHead className="px-2 py-2 text-left text-xs font-antarctica font-light text-pinto-gray-4">Details</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">Details</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
@@ -613,12 +613,12 @@ export function Plow() {
             return (
               <TableRow
                 key={index}
-                className="h-[4.5rem] bg-transparent items-center hover:bg-pinto-green-1/50"
+                className="h-[3.5rem] bg-transparent items-center hover:bg-pinto-green-1/50"
               >
-                <TableCell className="p-2">
+                <TableCell className="px-1.5">
                   {req.timestamp ? new Date(req.timestamp).toLocaleString(undefined, dateOptions) : "Unknown"}
                 </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
+                <TableCell className="px-1.5 font-mono text-sm">
                   <a
                     href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
                     target="_blank"
@@ -628,17 +628,17 @@ export function Plow() {
                     {`${req.requisition.blueprint.publisher.slice(0, 6)}...${req.requisition.blueprint.publisher.slice(-4)}`}
                   </a>
                 </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
+                <TableCell className="px-1.5 font-mono text-sm">
                   {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
+                <TableCell className="px-1.5 font-mono text-sm">
                   {req.decodedData ? `${(Number(req.decodedData.minTemp) / 1e6).toFixed(2)}%` : "Unknown"}
                 </TableCell>
-                <TableCell className="p-2 font-mono text-sm">
+                <TableCell className="px-1.5 font-mono text-sm">
                   {req.decodedData ? formatOperatorTip(req.decodedData.operatorParams.operatorTipAmount, mainToken, tokenPrices) : "Failed to decode"}
                 </TableCell>
                 {successfulSimulations.size > 0 && (
-                  <TableCell className="p-2 font-mono text-sm">
+                  <TableCell className="px-1.5 font-mono text-sm">
                     {(() => {
                       // Skip if this simulation hasn't been run yet
                       if (!successfulSimulations.has(req.requisition.blueprintHash) || !req.decodedData) {
@@ -657,7 +657,7 @@ export function Plow() {
                     })()}
                   </TableCell>
                 )}
-                <TableCell className="p-2">
+                <TableCell className="px-1.5">
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -683,6 +683,7 @@ export function Plow() {
                             : 'text-pinto-gray-4 hover:text-pinto-gray-5'
                         } 
                         ${failedSimulations.has(req.requisition.blueprintHash) ? 'opacity-50 cursor-not-allowed' : ''}
+                        px-2 py-0 text-xs
                       `}
                     >
                       {simulatingReq === req.requisition.blueprintHash 
@@ -751,12 +752,12 @@ export function Plow() {
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="p-2">
+                <TableCell className="px-1.5">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handlePlow(req)}
-                    className="text-pinto-gray-4 hover:text-pinto-gray-5"
+                    className="text-pinto-gray-4 hover:text-pinto-gray-5 px-2 py-0 text-xs"
                   >
                     Details
                   </Button>
@@ -766,7 +767,7 @@ export function Plow() {
           })}
           {requisitions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="p-4 text-center text-gray-500">
+              <TableCell colSpan={7} className="px-1.5 text-center text-gray-500">
                 No active requisitions found
               </TableCell>
             </TableRow>
