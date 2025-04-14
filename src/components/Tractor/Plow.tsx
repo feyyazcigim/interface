@@ -686,7 +686,7 @@ export function Plow() {
                             : 'text-pinto-gray-4 hover:text-pinto-gray-5'
                         } 
                         ${failedSimulations.has(req.requisition.blueprintHash) ? 'opacity-50 cursor-not-allowed' : ''}
-                        px-2 py-0 text-xs
+                        px-2 py-0 text-xs min-w-[80px]
                       `}
                     >
                       {simulatingReq === req.requisition.blueprintHash 
