@@ -454,7 +454,7 @@ const FieldActivity: React.FC = () => {
               <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Time</th>
               <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Address</th>
               <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Txn Hash</th>
-              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Temp</th>
+              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[75px]">Temp</th>
               <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Amount Sown</th>
               <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Pods minted</th>
               <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Place in Line</th>
@@ -533,7 +533,7 @@ const FieldActivity: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4 text-right">
-                          {formatter.number(order.estimatedPlaceInLine.toNumber())}
+                          {Math.round(order.estimatedPlaceInLine.toNumber()).toLocaleString()}
                         </td>
                       </tr>
                     );
@@ -612,7 +612,9 @@ const FieldActivity: React.FC = () => {
                     </span>
                   </div>
                 </td>
-                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark text-right">{activity.placeInLine}</td>
+                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark text-right">
+                  {activity.placeInLine.split('.')[0]}
+                </td>
               </tr>
             ))}
           </tbody>
