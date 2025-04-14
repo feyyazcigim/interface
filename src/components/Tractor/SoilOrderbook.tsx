@@ -264,7 +264,9 @@ export function SoilOrderbookContent() {
             const temperature = decodedData ? parseFloat(decodedData.minTempAsString) : 0;
             
             // Get max pod line length
-            const maxPodLineLength = decodedData ? decodedData.maxPodlineLengthAsString : "Unknown";
+            const maxPodLineLength = decodedData ? 
+              parseInt(decodedData.maxPodlineLengthAsString).toLocaleString() : 
+              "Unknown";
             
             // Total order size
             const totalSize = decodedData ? 
