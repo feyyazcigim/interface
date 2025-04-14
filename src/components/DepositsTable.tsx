@@ -292,7 +292,7 @@ export default function DepositsTable({
                 Stalk
               </TableHead>
               <TableHead className="text-black text-right font-[400] text-[1rem] w-[33.333%] md:w-[15%]">
-                Grown Stalk/PDV
+                Stalk/PDV
               </TableHead>
               <TableHead className="text-black text-right font-[400] text-[1rem] w-[33.333%] md:w-[20%] p-4">
                 Seeds

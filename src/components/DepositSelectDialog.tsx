@@ -200,7 +200,7 @@ export default function DepositSelectDialog({
                       variant="outline"
                       onClick={handleSmartGroup}
                       className="px-3 py-2 mb-2"
-                      title="Smart Group deposits by similar Grown Stalk/PDV"
+                      title="Smart Group deposits by similar Stalk/PDV"
                     >
                       Smart Group
                     </Button>
