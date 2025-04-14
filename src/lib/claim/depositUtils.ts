@@ -5,6 +5,15 @@ import { TokenDepositData, Token } from "@/utils/types";
 import { encodeClaimRewardCombineCalls } from "@/utils/utils";
 import { encodeFunctionData } from "viem";
 
+// Constants for deposit management
+const MIN_DEPOSITS_FOR_COMBINING = 25;   // Minimum deposits to trigger combining logic
+const MIN_DEPOSITS_FOR_ELIGIBILITY = 20; // Combine down to this many deposits
+const PROCESS_SINGLE_TOKEN_ONLY_THRESHOLD = 200; // If a single token has more than this many deposits, process it alone
+const LARGE_DEPOSITS_THRESHOLD = 100;    // If a single token has more than this many deposits, process it along with not more than the next variable's worth of tokens at time
+const MAX_TOKENS_WITH_LARGE_DEPOSITS = 3; // Maximum number of tokens to process when large deposits are present
+const MAX_TOP_DEPOSITS = 10;             // Maximum number of deposits to L2L update in regular Claim
+const MIN_BDV_THRESHOLD = TokenValue.ONE; // Minimum BDV difference threshold for regular updates, this filters out "dust" updates that are not worth L2L'ing
+
 /**
  * Determines if deposits need combining based on deposit counts
  * @param deposits Map of token to deposit data
@@ -12,7 +21,7 @@ import { encodeFunctionData } from "viem";
  */
 export function needsCombining(deposits: Map<Token, TokenDepositData>): boolean {
   return Array.from(deposits.entries()).some(([_, depositData]) => 
-    depositData.deposits.length >= 25
+    depositData.deposits.length >= MIN_DEPOSITS_FOR_COMBINING
   );
 }
 
@@ -31,10 +40,10 @@ export function generateUpdateCalls(
 
   const tokenEntries = Array.from(farmerDeposits.entries());
   
-  // First check if any tokens need combining (25+ deposits)
+  // First check if any tokens need combining
   if (!needsCombining(farmerDeposits)) {
-    // If no tokens need combining, use the top 10 deposits logic
-    console.log("No tokens need combining, processing top 10 deposits by BDV difference (regular L2L update)");
+    // If no tokens need combining, use the top deposits logic
+    console.log(`No tokens need combining, processing top ${MAX_TOP_DEPOSITS} deposits by BDV difference (regular L2L update)`);
     
     // Collect all eligible deposits into a flat array with their token info
     const allDeposits = tokenEntries
@@ -43,7 +52,7 @@ export function generateUpdateCalls(
           .filter((deposit) => {
             const bdvDiff = deposit.currentBdv.sub(deposit.depositBdv);
             const onePercent = deposit.depositBdv.mul(0.01);
-            const minThreshold = TokenValue.min(onePercent, TokenValue.ONE);
+            const minThreshold = TokenValue.min(onePercent, MIN_BDV_THRESHOLD);
             return bdvDiff.gt(minThreshold) && !deposit.isGerminating;
           })
           .map((deposit) => ({
@@ -53,13 +62,13 @@ export function generateUpdateCalls(
           })),
       );
 
-    // Sort by BDV difference and take top 10
-    const top10Deposits = allDeposits
-      .filter((deposit) => deposit.bdvDifference.gte(TokenValue.ONE))
+    // Sort by BDV difference and take top deposits
+    const topDeposits = allDeposits
+      .filter((deposit) => deposit.bdvDifference.gte(MIN_BDV_THRESHOLD))
       .sort((a, b) => (b.bdvDifference.gt(a.bdvDifference) ? 1 : -1))
-      .slice(0, 10);
+      .slice(0, MAX_TOP_DEPOSITS);
 
-    return top10Deposits.map(({ token, deposit }) => {
+    return topDeposits.map(({ token, deposit }) => {
       const convertData = calculateConvertData(token, token, deposit.amount, deposit.amount);
       if (!convertData) {
         throw new Error("Invalid convert data");
@@ -72,11 +81,11 @@ export function generateUpdateCalls(
     });
   }
   
-  console.log("Combining logic triggered (25+ deposits of a single token)");
+  console.log(`Combining logic triggered (${MIN_DEPOSITS_FOR_COMBINING}+ deposits of a single token)`);
   
-  // Check if any token has more than 200 deposits
+  // Check if any token has more than PROCESS_SINGLE_TOKEN_ONLY_THRESHOLD deposits
   const highVolumeToken = tokenEntries.find(([_, depositData]) => 
-    depositData.deposits.length >= 200
+    depositData.deposits.length >= PROCESS_SINGLE_TOKEN_ONLY_THRESHOLD
   );
   
   if (highVolumeToken) {
@@ -87,14 +96,14 @@ export function generateUpdateCalls(
     return encodeClaimRewardCombineCalls(highVolumeToken[1].deposits, highVolumeToken[0]);
   }
 
-  // Check if any token has more than 100 deposits
+  // Check if any token has more than LARGE_DEPOSITS_THRESHOLD deposits
   const hasLargeToken = tokenEntries.some(([_, depositData]) => 
-    depositData.deposits.length >= 100
+    depositData.deposits.length >= LARGE_DEPOSITS_THRESHOLD
   );
 
   const eligibleTokens = tokenEntries
     .filter(([_token, depositData]) => {
-      const hasEnoughDeposits = depositData.deposits.length >= 20;
+      const hasEnoughDeposits = depositData.deposits.length >= MIN_DEPOSITS_FOR_ELIGIBILITY;
       if (!hasEnoughDeposits) {
         console.log("Skipping token:", {
           name: _token.name,
@@ -106,9 +115,9 @@ export function generateUpdateCalls(
     });
 
   if (hasLargeToken) {
-    console.log("Limiting to 3 tokens due to large deposit count");
+    console.log(`Limiting to ${MAX_TOKENS_WITH_LARGE_DEPOSITS} tokens due to large deposit count`);
     return eligibleTokens
-      .slice(0, 3)
+      .slice(0, MAX_TOKENS_WITH_LARGE_DEPOSITS)
       .flatMap(([token, depositData]) => 
         encodeClaimRewardCombineCalls(depositData.deposits, token)
       );
