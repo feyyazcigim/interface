@@ -596,7 +596,6 @@ export function Plow() {
                 </div>
               </div>
             </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">Details</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
@@ -613,7 +612,9 @@ export function Plow() {
             return (
               <TableRow
                 key={index}
-                className="h-[3.5rem] bg-transparent items-center hover:bg-pinto-green-1/50"
+                className="h-[3.5rem] bg-transparent items-center hover:bg-pinto-green-1 cursor-pointer transition-colors"
+                noHoverMute
+                onClick={() => handlePlow(req)}
               >
                 <TableCell className="px-1.5">
                   {req.timestamp ? new Date(req.timestamp).toLocaleString(undefined, dateOptions) : "Unknown"}
@@ -752,22 +753,12 @@ export function Plow() {
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="px-1.5">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePlow(req)}
-                    className="text-pinto-gray-4 hover:text-pinto-gray-5 px-2 py-0 text-xs"
-                  >
-                    Details
-                  </Button>
-                </TableCell>
               </TableRow>
             );
           })}
           {requisitions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="px-1.5 text-center text-gray-500">
+              <TableCell colSpan={6} className="px-1.5 text-center text-gray-500">
                 No active requisitions found
               </TableCell>
             </TableRow>
