@@ -120,22 +120,25 @@ export const AdvancedChart = () => {
     <div className="flex flex-col -mb-8 sm:-mb-20 gap-6">
       <div className="flex flex-row gap-4 justify-between">
         <div className="flex flex-row gap-4">
-          {selectedCharts.map(
-            (selection, index) =>
-              chartSetupData[selection] && (
-                <Button
-                  variant="outline"
-                  size="default"
-                  rounded="full"
-                  key={`selectedChart${selection}`}
-                  className="flex flex-row gap-2 shadow-none bg-white text-pinto-gray-5 hover:text-pinto-gray-5"
-                  onClick={() => handleDeselectChart(index)}
-                >
-                  <span>{chartSetupData[selection].name}</span>
-                  <span className="w-4 h-4">×</span>
-                </Button>
-              ),
-          )}
+          <div className="hidden sm:block">
+            {selectedCharts.length < 5 &&
+              selectedCharts.map(
+                (selection, index) =>
+                  chartSetupData[selection] && (
+                    <Button
+                      variant="outline"
+                      size="default"
+                      rounded="full"
+                      key={`selectedChart${selection}`}
+                      className="flex flex-row gap-2 shadow-none bg-white text-pinto-gray-5 hover:text-pinto-gray-5"
+                      onClick={() => handleDeselectChart(index)}
+                    >
+                      <span>{chartSetupData[selection].name}</span>
+                      <span className="w-4 h-4">×</span>
+                    </Button>
+                  ),
+              )}
+          </div>
           <Button
             variant="outline"
             size="default"
@@ -143,11 +146,16 @@ export const AdvancedChart = () => {
             onClick={togglePanel}
             noShrink
             className={cn(
-              `flex flex-row gap-0.5 bg-pinto-green-1 text-pinto-green-3 border-pinto-green-3 hover:bg-pinto-green-2/30 shadow-none hover:text-pinto-green-3 sm:gap-2`,
+              `flex flex-row gap-2 bg-pinto-green-1 text-pinto-green-3 border-pinto-green-3 hover:bg-pinto-green-2/30 shadow-none hover:text-pinto-green-3`,
             )}
           >
-            Add Chart
-            <PlusIcon color={"currentColor"} />
+            <span className="hidden sm:inline-block">
+              {selectedCharts.length < 5 ? "Add Chart" : `${selectedCharts.length} Selected`}
+            </span>
+            <span className="sm:hidden">
+              {selectedCharts.length === 0 ? "Add Chart" : `${selectedCharts.length} Selected`}
+            </span>
+            <PlusIcon color={"currentColor"} width={14} height={14} />
           </Button>
         </div>
         <CalendarButton setTimePeriod={setTimePeriod} />
