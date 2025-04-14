@@ -61,15 +61,16 @@
 
 import podIcon from "@/assets/protocol/Pod.png";
 import { TokenValue } from "@/classes/TokenValue";
-import { AdvancedChartBeanDocument } from "@/generated/gql/graphql";
 import { formatNum, formatPct, formatUSD } from "@/utils/format";
-import { SGQueryParameters } from "@/utils/graph";
 import { Token } from "@/utils/types";
 import { hexToRgba } from "@/utils/utils";
 import { useMemo } from "react";
 import useTokenData from "./useTokenData";
 
-interface ChartSetupBase extends SGQueryParameters {
+interface ChartSetupBase {
+  id: string;
+  timeScaleKey: string;
+  priceScaleKey: string;
   name: string;
   tooltipTitle: string;
   tooltipHoverText: string | JSX.Element;
@@ -132,9 +133,6 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: mainToken.logoURI,
     timeScaleKey: "timestamp",
     priceScaleKey: "instPrice",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "PINTO_price",
     valueFormatter: (v: TokenValue) => v.toNumber(),
     tickFormatter: (v: number) => formatUSD(v, { decimals: 4 }),
@@ -149,9 +147,6 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: mainToken.logoURI,
     timeScaleKey: "timestamp",
     priceScaleKey: "supply",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "PINTO_amount",
     valueFormatter: (v: TokenValue) => v.toNumber(),
     tickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
@@ -166,9 +161,6 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: mainToken.logoURI,
     timeScaleKey: "timestamp",
     priceScaleKey: "marketCap",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "marketCap",
     valueFormatter: (v: number) => v,
     tickFormatter: (v: number) => formatUSD(v, { decimals: 2 }),
@@ -183,9 +175,6 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: mainToken.logoURI,
     timeScaleKey: "timestamp",
     priceScaleKey: "crosses",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "priceTargetCrosses",
     valueFormatter: (v: number) => v,
     tickFormatter: (v: number) => v.toFixed(0),
@@ -201,9 +190,6 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: mainToken.logoURI,
     timeScaleKey: "timestamp",
     priceScaleKey: "twaPrice",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "PINTO_price",
     valueFormatter: (v: TokenValue) => v.toNumber(),
     tickFormatter: (v: number) => formatUSD(v, { decimals: 4 }),
@@ -219,9 +205,6 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: mainToken.logoURI,
     timeScaleKey: "timestamp",
     priceScaleKey: "instDeltaB",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "deltaB",
     valueFormatter: (v: TokenValue) => v.toNumber(),
     tickFormatter: (v: number) => formatNum(v, { allowZero: true, maxDecimals: 0, showPositiveSign: true }),
@@ -237,9 +220,6 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: mainToken.logoURI,
     timeScaleKey: "timestamp",
     priceScaleKey: "twaDeltaB",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "deltaB",
     valueFormatter: (v: TokenValue) => v.toNumber(),
     tickFormatter: (v: number) =>
@@ -258,9 +238,6 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: mainToken.logoURI,
     timeScaleKey: "timestamp",
     priceScaleKey: "l2sr",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "L2SR",
     valueFormatter: (v: TokenValue) => v.toNumber(),
     tickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
@@ -279,9 +256,6 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: podIcon,
     timeScaleKey: "timestamp",
     priceScaleKey: "temperature",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "maxTemp",
     valueFormatter: (v: number) => v,
     tickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
@@ -297,9 +271,6 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: podIcon,
     timeScaleKey: "timestamp",
     priceScaleKey: "podRate",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "podRate",
     valueFormatter: (v: TokenValue) => v.toNumber(),
     tickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
@@ -314,9 +285,6 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: mainToken.logoURI,
     timeScaleKey: "timestamp",
     priceScaleKey: "sownBeans",
-    context: "pinto",
-    document: AdvancedChartBeanDocument,
-    documentEntity: "seasons",
     valueAxisType: "PINTO_amount",
     valueFormatter: (v: TokenValue) => v.toNumber(),
     tickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
