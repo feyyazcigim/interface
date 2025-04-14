@@ -390,9 +390,6 @@ export default function ReviewTractorOrderDialog({
                 ) : (
                   <>
                     {/* Enhanced Summary Section with Progress Bar and Tips Paid */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
-                      <h4 className="text-lg font-medium mb-4">Execution Summary</h4>
-                      
                       {/* Metrics Grid - Now with Total Tips Paid */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div className="flex flex-col">
@@ -473,7 +470,7 @@ export default function ReviewTractorOrderDialog({
                           })()}
                         </>
                       )}
-                    </div>
+
 
                     {/* Existing Table */}
                     <div className="overflow-x-auto">
