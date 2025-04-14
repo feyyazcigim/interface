@@ -625,6 +625,7 @@ export function Plow() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-pinto-green-4 hover:text-pinto-green-5 hover:underline"
+                    onClick={(event) => event.stopPropagation()}
                   >
                     {`${req.requisition.blueprint.publisher.slice(0, 6)}...${req.requisition.blueprint.publisher.slice(-4)}`}
                   </a>
@@ -663,7 +664,8 @@ export function Plow() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
+                      onClick={(event) => {
+                        event.stopPropagation(); // Prevent row onClick from firing
                         if (successfulSimulations.has(req.requisition.blueprintHash)) {
                           handleExecute(req);
                         } else {
@@ -701,7 +703,7 @@ export function Plow() {
                       }
                     </Button>
                     {successfulSimulations.has(req.requisition.blueprintHash) && (
-                      <div className="flex items-center text-pinto-gray-4 flex-1 min-w-0">
+                      <div className="flex items-center text-pinto-gray-4 flex-1 min-w-0" onClick={(event) => event.stopPropagation()}>
                         <div className="inline-flex items-center gap-1 text-xs">
                           Est. Gas: {(() => {
                             const gas = gasEstimates.get(req.requisition.blueprintHash);
@@ -739,7 +741,7 @@ export function Plow() {
                       </div>
                     )}
                     {failedSimulations.has(req.requisition.blueprintHash) && simulationErrors.get(req.requisition.blueprintHash) && (
-                      <div className="flex items-center text-pinto-red-4 flex-1 min-w-0">
+                      <div className="flex items-center text-pinto-red-4 flex-1 min-w-0" onClick={(event) => event.stopPropagation()}>
                         <TooltipSimple
                           content={simulationErrors.get(req.requisition.blueprintHash) || "Unknown error"}
                           variant="gray"
