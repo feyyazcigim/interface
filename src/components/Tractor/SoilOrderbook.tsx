@@ -242,13 +242,13 @@ export function SoilOrderbookContent() {
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50">
-            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Temperature</TableHead>
-            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Max Podline Length</TableHead>
-            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Total Soil Order Size</TableHead>
-            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Available Pinto</TableHead>
-            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Blueprint Hash</TableHead>
-            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Publisher</TableHead>
-            <TableHead className="py-3 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Created at</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Temperature</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Max Podline Length</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Total Soil Order Size</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Available Pinto</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Blueprint Hash</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Publisher</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Created at</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -281,36 +281,36 @@ export function SoilOrderbookContent() {
                 noHoverMute
                 onClick={() => handleRowClick(req)}
               >
-                <TableCell className="py-3">
+                <TableCell className="py-2">
                   ≥ {temperature.toFixed(0)}%
                 </TableCell>
-                <TableCell className="py-3">
+                <TableCell className="py-2">
                   ≤ {maxPodLineLength}
                 </TableCell>
-                <TableCell className="py-3">
+                <TableCell className="py-2">
                   <div className="flex items-center gap-1">
                     <IconImage 
                       src={PINTO.logoURI}
                       alt="PINTO" 
-                      size={5} 
+                      size={4} 
                     />
                     {totalSize}
                   </div>
                 </TableCell>
-                <TableCell className="py-3">
+                <TableCell className="py-2">
                   <div className="flex items-center gap-1">
                     <IconImage 
                       src={PINTO.logoURI}
                       alt="PINTO" 
-                      size={5} 
+                      size={4} 
                     />
                     {availablePinto}
                   </div>
                 </TableCell>
-                <TableCell className="py-3 text-pinto-dark">
+                <TableCell className="py-2 text-pinto-dark">
                   {`0x${req.requisition.blueprintHash.slice(2, 7)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
-                <TableCell className="py-3">
+                <TableCell className="py-2">
                   <a
                     href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
                     target="_blank"
@@ -321,7 +321,7 @@ export function SoilOrderbookContent() {
                     {`0x${req.requisition.blueprint.publisher.slice(2, 7)}...${req.requisition.blueprint.publisher.slice(-4)}`}
                   </a>
                 </TableCell>
-                <TableCell className="py-3">
+                <TableCell className="py-2">
                   {formatDate(req.timestamp)}
                 </TableCell>
               </TableRow>
@@ -329,7 +329,7 @@ export function SoilOrderbookContent() {
           })}
           {requisitions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="p-4 text-center text-gray-500">
+              <TableCell colSpan={7} className="p-2 text-center text-gray-500">
                 {isLoading ? "Loading tractor orders..." : "No active requisitions found"}
               </TableCell>
             </TableRow>
