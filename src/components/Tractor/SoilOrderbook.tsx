@@ -19,6 +19,8 @@ import IconImage from "@/components/ui/IconImage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Plow } from "./Plow";
+import ReviewTractorOrderDialog, { ExecutionData } from "../ReviewTractorOrderDialog";
+import { Blueprint } from "@/lib/Tractor/types";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
@@ -27,6 +29,8 @@ export function SoilOrderbookContent() {
   const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
   const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<OrderbookEntry | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
   const chainId = useChainId();
@@ -206,6 +210,33 @@ export function SoilOrderbookContent() {
     }).replace(' ', '');
   };
 
+  const handleRowClick = (requisition: OrderbookEntry) => {
+    setSelectedOrder(requisition);
+    setViewDialogOpen(true);
+  };
+
+  // Generate order data for the review dialog from the requisition
+  const getOrderDataForReview = () => {
+    if (!selectedOrder) return null;
+    
+    try {
+      const decodedData = decodeSowTractorData(selectedOrder.requisition.blueprint.data);
+      if (!decodedData) return null;
+
+      return {
+        totalAmount: TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6).toHuman(),
+        temperature: decodedData.minTempAsString,
+        podLineLength: decodedData.maxPodlineLengthAsString,
+        minSoil: decodedData.sowAmounts.minAmountToSowPerSeasonAsString,
+        operatorTip: TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6).toHuman(),
+        tokenStrategy: "LOWEST_SEEDS" as const, // Default, adjust based on your data
+      };
+    } catch (error) {
+      console.error("Failed to decode data for requisition:", error);
+      return null;
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -244,7 +275,12 @@ export function SoilOrderbookContent() {
             const availablePinto = formatter.number(req.currentlySowable);
 
             return (
-              <TableRow key={index} className="border-b border-gray-100 hover:bg-gray-50">
+              <TableRow 
+                key={index} 
+                className="border-b border-gray-100 hover:bg-pinto-green-1 cursor-pointer transition-colors"
+                noHoverMute
+                onClick={() => handleRowClick(req)}
+              >
                 <TableCell className="py-3">
                   ≥ {temperature.toFixed(0)}%
                 </TableCell>
@@ -280,6 +316,7 @@ export function SoilOrderbookContent() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-pinto-dark underline hover:opacity-80"
+                    onClick={(e) => e.stopPropagation()} // Prevent row click when clicking the link
                   >
                     {`0x${req.requisition.blueprint.publisher.slice(2, 7)}...${req.requisition.blueprint.publisher.slice(-4)}`}
                   </a>
@@ -299,6 +336,29 @@ export function SoilOrderbookContent() {
           )}
         </TableBody>
       </Table>
+
+      {/* Review Tractor Order Dialog */}
+      {selectedOrder && (
+        <ReviewTractorOrderDialog
+          open={viewDialogOpen}
+          onOpenChange={setViewDialogOpen}
+          orderData={getOrderDataForReview() || {
+            totalAmount: "0",
+            temperature: "0",
+            podLineLength: "0",
+            minSoil: "0",
+            operatorTip: "0"
+          }}
+          encodedData={selectedOrder.requisition.blueprint.data}
+          operatorPasteInstrs={Array.from(selectedOrder.requisition.blueprint.operatorPasteInstrs) as `0x${string}`[]}
+          blueprint={{
+            ...selectedOrder.requisition.blueprint,
+            operatorPasteInstrs: Array.from(selectedOrder.requisition.blueprint.operatorPasteInstrs) as `0x${string}`[]
+          } as Blueprint}
+          isViewOnly={true}
+          executionHistory={[]} // No execution history in the current data model
+        />
+      )}
     </div>
   );
 }
