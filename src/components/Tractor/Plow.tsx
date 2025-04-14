@@ -743,7 +743,7 @@ export function Plow() {
                     {failedSimulations.has(req.requisition.blueprintHash) && simulationErrors.get(req.requisition.blueprintHash) && (
                       <div className="flex items-center text-pinto-red-4 flex-1 min-w-0" onClick={(event) => event.stopPropagation()}>
                         <TooltipSimple
-                          content={simulationErrors.get(req.requisition.blueprintHash) || "Unknown error"}
+                          content={<span className="font-light text-pinto-gray-3">{simulationErrors.get(req.requisition.blueprintHash) || "Unknown error"}</span>}
                           variant="gray"
                         >
                           <div className="inline-flex items-center gap-1 text-xs text-pinto-red-4 max-w-full">
