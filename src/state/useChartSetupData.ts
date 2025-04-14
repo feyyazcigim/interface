@@ -172,7 +172,7 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     valueAxisType: "marketCap",
     valueFormatter: (v: number) => v,
     tickFormatter: (v: number) => formatUSD(v, { decimals: 2 }),
-    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 2 }),
+    shortTickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
   },
   {
     id: "priceTargetCrosses",

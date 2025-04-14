@@ -117,7 +117,7 @@ export const AdvancedChart = () => {
   }
 
   return (
-    <div className="flex flex-col -mb-8 sm:-mb-20 gap-6">
+    <div className="flex flex-col -mb-8 gap-4 sm:-mb-20 sm:gap-6">
       <div className="flex flex-row gap-4 justify-between">
         <div className="flex flex-row gap-4">
           <div className="hidden sm:block">

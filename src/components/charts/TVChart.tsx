@@ -465,7 +465,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
   return (
     <>
       <div className="relative h-full">
-        <div className={`${isMobile && selected.length > 2 ? "h-[6.5rem]" : isMobile ? "h-[5.5rem]" : ""}`}>
+        <div className="mb-4">
           <div
             ref={tooltip}
             className={`relative flex ${isMobile && selected.length > 2 ? "flex-col" : "flex-row"} p-0 z-10 ${isMobile && selected.length > 2 ? "gap-0.5" : "gap-8"}`}
@@ -532,12 +532,12 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                   <div
                     className={`flex flex-grow ${
                       selected.length > 1 ? "border-l-[2.5px]" : "border-l-0"
-                    } ${selected.length > 1 ? "pl-1" : "pl-0"} mr-8`}
+                    } ${selected.length > 1 ? "pl-1" : "pl-0"}`}
                     style={{ borderColor: chartColors[index].lineColor }}
                   >
                     <div className="flex flex-grow">
                       <div className="flex flex-grow">
-                        <p className="text-[15px]">{tooltipTitle}</p>
+                        <p className="pinto-sm-light text-pinto-gray-4">{tooltipTitle}</p>
                         {/*
                         {tooltipHoverText && (
                           <div
@@ -550,7 +550,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                         )}
                           */}
                       </div>
-                      <div className="text-base font-semibold justify-items-end">
+                      <div className="text-base pinto-sm-bold justify-items-end">
                         {value ? chartSetupData[chartId].tickFormatter(value) : "-"}
                       </div>
                     </div>
@@ -560,9 +560,9 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
             })}
           </div>
           {isMobile && selected.length > 2 && (
-            <div className="flex flex-grow px-8">
-              <p className="text-sm text-primary flex-grow">Season {dataPoint?.season ?? lastDataPoint?.season ?? 0}</p>
-              <p className="text-sm text-primary">{dataPoint?.time ?? lastDataPoint?.time ?? 0}</p>
+            <div className="flex flex-row justify-between pinto-sm-light text-pinto-gray-4">
+              <span>Season {dataPoint?.season ?? lastDataPoint?.season ?? 0}</span>
+              <span>{dataPoint?.time ?? lastDataPoint?.time ?? 0}</span>
             </div>
           )}
         </div>
