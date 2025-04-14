@@ -119,8 +119,8 @@ export const AdvancedChart = () => {
   return (
     <div className="flex flex-col -mb-8 gap-4 sm:-mb-20 sm:gap-6">
       <div className="flex flex-row gap-4 justify-between">
-        <div className="flex flex-row gap-4">
-          <div className="hidden sm:block">
+        <div className="flex flex-row">
+          <div className="hidden sm:flex flex-row">
             {selectedCharts.length < 5 &&
               selectedCharts.map(
                 (selection, index) =>
@@ -130,7 +130,7 @@ export const AdvancedChart = () => {
                       size="default"
                       rounded="full"
                       key={`selectedChart${selection}`}
-                      className="flex flex-row gap-2 shadow-none bg-white text-pinto-gray-5 hover:text-pinto-gray-5"
+                      className="flex flex-row gap-2 mr-4 shadow-none bg-white text-pinto-gray-5 hover:text-pinto-gray-5"
                       onClick={() => handleDeselectChart(index)}
                     >
                       <span>{chartSetupData[selection].name}</span>
