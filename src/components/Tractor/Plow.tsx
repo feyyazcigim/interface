@@ -223,6 +223,8 @@ export function Plow() {
 
   // Add state for tracking if we're simulating all
   const [simulatingAll, setSimulatingAll] = useState(false);
+  // Add state to track if all transactions have been simulated at least once
+  const [hasSimulatedAll, setHasSimulatedAll] = useState(false);
 
   // Add state for tracking completed executions
   const [completedExecutions, setCompletedExecutions] = useState<Set<string>>(new Set());
@@ -414,6 +416,8 @@ export function Plow() {
       toast.success("Completed simulating all requisitions");
       // Enable sorting after simulations are complete
       setSortingEnabled(true);
+      // Mark that we've simulated all transactions at least once
+      setHasSimulatedAll(true);
     } catch (error) {
       console.error("Failed during simulate all:", error);
       toast.error("Failed to simulate all requisitions");
@@ -785,8 +789,10 @@ export function Plow() {
             disabled={simulatingAll || requisitions.length === 0}
             size="xxl"
             rounded="full"
+            width="full"
+            className="text-[1rem] sm:text-[1.5rem]"
           >
-            {simulatingAll ? "Simulating All..." : "Simulate all transactions"}
+            {simulatingAll ? "Simulating All..." : hasSimulatedAll ? "Resimulate All" : "Simulate all transactions"}
           </Button>
           
           {/* You can add additional buttons like "Simulate 2 Transactions" or "Execute 2 Soil Orders" here later */}
