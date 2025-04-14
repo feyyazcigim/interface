@@ -586,7 +586,7 @@ export function Plow() {
               <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">Estimated Profit</TableHead>
             )}
             <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[200px]">
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
                 <span>Simulate</span>
                 <div className="text-xs text-pinto-gray-4">
                   {(() => {
@@ -612,14 +612,14 @@ export function Plow() {
             return (
               <TableRow
                 key={index}
-                className="h-[3.5rem] bg-transparent items-center hover:bg-pinto-green-1 cursor-pointer transition-colors"
+                className="h-[2.75rem] bg-transparent items-center hover:bg-pinto-green-1 cursor-pointer transition-colors"
                 noHoverMute
                 onClick={() => handlePlow(req)}
               >
-                <TableCell className="px-1.5">
+                <TableCell className="px-1.5" style={{paddingTop: '0.375rem', paddingBottom: '0.375rem'}}>
                   {req.timestamp ? new Date(req.timestamp).toLocaleString(undefined, dateOptions) : "Unknown"}
                 </TableCell>
-                <TableCell className="px-1.5 text-sm">
+                <TableCell className="px-1.5 text-sm" style={{paddingTop: '0.375rem', paddingBottom: '0.375rem'}}>
                   <a
                     href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
                     target="_blank"
@@ -629,17 +629,17 @@ export function Plow() {
                     {`${req.requisition.blueprint.publisher.slice(0, 6)}...${req.requisition.blueprint.publisher.slice(-4)}`}
                   </a>
                 </TableCell>
-                <TableCell className="px-1.5 text-sm">
+                <TableCell className="px-1.5 text-sm" style={{paddingTop: '0.375rem', paddingBottom: '0.375rem'}}>
                   {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
-                <TableCell className="px-1.5 text-sm">
+                <TableCell className="px-1.5 text-sm" style={{paddingTop: '0.375rem', paddingBottom: '0.375rem'}}>
                   {req.decodedData ? `${(Number(req.decodedData.minTemp) / 1e6).toFixed(2)}%` : "Unknown"}
                 </TableCell>
-                <TableCell className="px-1.5 text-sm">
+                <TableCell className="px-1.5 text-sm" style={{paddingTop: '0.375rem', paddingBottom: '0.375rem'}}>
                   {req.decodedData ? formatOperatorTip(req.decodedData.operatorParams.operatorTipAmount, mainToken, tokenPrices) : "Failed to decode"}
                 </TableCell>
                 {successfulSimulations.size > 0 && (
-                  <TableCell className="px-1.5 text-sm">
+                  <TableCell className="px-1.5 text-sm" style={{paddingTop: '0.375rem', paddingBottom: '0.375rem'}}>
                     {(() => {
                       // Skip if this simulation hasn't been run yet
                       if (!successfulSimulations.has(req.requisition.blueprintHash) || !req.decodedData) {
@@ -658,8 +658,8 @@ export function Plow() {
                     })()}
                   </TableCell>
                 )}
-                <TableCell className="px-1.5">
-                  <div className="flex items-center gap-2">
+                <TableCell className="px-1.5" style={{paddingTop: '0.375rem', paddingBottom: '0.375rem'}}>
+                  <div className="flex items-center gap-1">
                     <Button
                       variant="outline"
                       size="sm"
