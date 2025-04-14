@@ -619,7 +619,7 @@ export function Plow() {
                 <TableCell className="px-1.5">
                   {req.timestamp ? new Date(req.timestamp).toLocaleString(undefined, dateOptions) : "Unknown"}
                 </TableCell>
-                <TableCell className="px-1.5 font-mono text-sm">
+                <TableCell className="px-1.5 text-sm">
                   <a
                     href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
                     target="_blank"
@@ -629,17 +629,17 @@ export function Plow() {
                     {`${req.requisition.blueprint.publisher.slice(0, 6)}...${req.requisition.blueprint.publisher.slice(-4)}`}
                   </a>
                 </TableCell>
-                <TableCell className="px-1.5 font-mono text-sm">
+                <TableCell className="px-1.5 text-sm">
                   {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
-                <TableCell className="px-1.5 font-mono text-sm">
+                <TableCell className="px-1.5 text-sm">
                   {req.decodedData ? `${(Number(req.decodedData.minTemp) / 1e6).toFixed(2)}%` : "Unknown"}
                 </TableCell>
-                <TableCell className="px-1.5 font-mono text-sm">
+                <TableCell className="px-1.5 text-sm">
                   {req.decodedData ? formatOperatorTip(req.decodedData.operatorParams.operatorTipAmount, mainToken, tokenPrices) : "Failed to decode"}
                 </TableCell>
                 {successfulSimulations.size > 0 && (
-                  <TableCell className="px-1.5 font-mono text-sm">
+                  <TableCell className="px-1.5 text-sm">
                     {(() => {
                       // Skip if this simulation hasn't been run yet
                       if (!successfulSimulations.has(req.requisition.blueprintHash) || !req.decodedData) {
