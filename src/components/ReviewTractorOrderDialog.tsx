@@ -425,9 +425,9 @@ export default function ReviewTractorOrderDialog({
                       </div>
                       
                       {/* Progress Bar Section - remains the same */}
-                      {orderData.totalAmount && (
+                      {/* {orderData.totalAmount && (
                         <>
-                          {/* Calculate progress */}
+
                           {(() => {
                             const totalAmount = TokenValue.fromHuman(orderData.totalAmount, 6);
                             const percentComplete = totalAmount.gt(0) 
@@ -459,7 +459,7 @@ export default function ReviewTractorOrderDialog({
                                   ></div>
                                 </div>
                                 
-                                {/* Completion message */}
+
                                 {isComplete && (
                                   <div className="mt-3 py-2 bg-pinto-green-1 rounded-lg border border-pinto-green-4 text-pinto-green-4 text-center font-medium">
                                     Order Completed!
@@ -469,7 +469,7 @@ export default function ReviewTractorOrderDialog({
                             );
                           })()}
                         </>
-                      )}
+                      )} */}
 
 
                     {/* Existing Table */}
