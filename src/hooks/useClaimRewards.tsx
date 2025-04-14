@@ -4,7 +4,7 @@ import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
 import { useSiloData } from "@/state/useSiloData";
 import { useInvalidateSun, useSunData } from "@/state/useSunData";
 import useTokenData from "@/state/useTokenData";
-import { generateUpdateCalls } from "@/lib/claim/depositUtils";
+import { generateCombineAndL2LCallData } from "@/lib/claim/depositUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { estimateGas } from "@wagmi/core";
 import { useCallback, useState } from "react";
@@ -59,7 +59,7 @@ export function useClaimRewards() {
       });
 
       // Generate convert calls with smart limits using our utility function
-      const updateData = generateUpdateCalls(farmerDeposits, isRaining);
+      const updateData = generateCombineAndL2LCallData(farmerDeposits, isRaining);
 
       const _gas = await estimateGas(config, {
         to: beanstalkAddress[chainId as keyof typeof beanstalkAddress],

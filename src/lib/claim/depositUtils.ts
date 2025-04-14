@@ -26,16 +26,16 @@ export function needsCombining(deposits: Map<Token, TokenDepositData>): boolean 
 }
 
 /**
- * Generates smart conversion calls for updating deposits
+ * Generates smart conversion calls for updating deposits (L2L)
  * @param farmerDeposits Map of token to deposit data
  * @param isRaining Weather condition that affects conversion strategy
  * @returns Array of encoded function calls
  */
-export function generateUpdateCalls(
+export function generateCombineAndL2LCallData(
   farmerDeposits: Map<Token, TokenDepositData>,
   isRaining: boolean
 ): `0x${string}`[] {
-  // Prevents L2L converts when it's raining
+  // Prevents L2L converts when it's raining, don't want to lose rain roots
   if (isRaining) return [];
 
   const tokenEntries = Array.from(farmerDeposits.entries());
