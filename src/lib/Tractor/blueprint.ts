@@ -45,7 +45,7 @@ export function createBlueprint({
     data,
     operatorPasteInstrs,
     maxNonce,
-    startTime: startTime ?? now - 10n * 3600n, // Default 10 hours before now
+    startTime: startTime ?? now - 24n * 3600n, // Default 24 hours before now, this makes testing easier
     endTime: endTime ?? BigInt(2) ** BigInt(256) - BigInt(1), // Default uint256 max
   };
 }

@@ -14,7 +14,7 @@ import { useClaimRewards } from "@/hooks/useClaimRewards";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
 import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { Blueprint } from "@/lib/Tractor/types";
-import { TokenStrategy, createSowTractorData } from "@/lib/Tractor/utils";
+import { TokenStrategy, createSowTractorData, getAverageTipPaid } from "@/lib/Tractor/utils";
 import { needsCombining } from "@/lib/claim/depositUtils";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePodLine, useTemperature } from "@/state/useFieldData";
@@ -30,6 +30,7 @@ import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
 import { Input } from "./ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
+import { PublicClient } from "viem";
 
 interface SowOrderDialogProps {
   open: boolean;
@@ -69,6 +70,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     "average",
   );
   const temperatureInputRef = useRef<HTMLInputElement>(null);
+  const [averageTipValue, setAverageTipValue] = useState<number>(1);
 
   // Claim rewards necessary if deposits have not been combined
   const { submitClaimRewards, isSubmitting: isClaimSubmitting } = useClaimRewards();
@@ -171,6 +173,29 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
   // Add state for the review dialog
   const [showReview, setShowReview] = useState(false);
+
+  // Load average tip value on component mount
+  useEffect(() => {
+    const fetchAverageTip = async () => {
+      try {
+        const avgTip = await getAverageTipPaid(publicClient as PublicClient);
+        setAverageTipValue(avgTip);
+        // Set the initial operator tip to the average tip value
+        setOperatorTip(avgTip.toFixed(2));
+      } catch (error) {
+        console.error("Error fetching average tip value:", error);
+      }
+    };
+    
+    fetchAverageTip();
+  }, [publicClient]);
+
+  // Update operatorTip if averageTipValue changes and the active button is "average"
+  useEffect(() => {
+    if (activeTipButton === "average") {
+      setOperatorTip(averageTipValue.toFixed(2));
+    }
+  }, [averageTipValue, activeTipButton]);
 
   // Function to format number with commas
   const formatNumberWithCommas = (value: string) => {
@@ -476,14 +501,14 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
   // Helper function to calculate tip values for different percentages
   const getTipValue = (type: "down5" | "down1" | "average" | "up1" | "up5") => {
-    const baseValue = 1;
+    const baseValue = averageTipValue;
     switch (type) {
       case "down5":
         return (baseValue * 0.95).toFixed(2);
       case "down1":
         return (baseValue * 0.99).toFixed(2);
       case "average":
-        return "1.00";
+        return baseValue.toFixed(2);
       case "up1":
         return (baseValue * 1.01).toFixed(2);
       case "up5":
@@ -496,7 +521,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     const normalizedTip = parseFloat(tipValue).toFixed(2);
     if (normalizedTip === getTipValue("down5")) return "down5";
     if (normalizedTip === getTipValue("down1")) return "down1";
-    if (normalizedTip === "1.00") return "average";
+    if (normalizedTip === averageTipValue.toFixed(2)) return "average";
     if (normalizedTip === getTipValue("up1")) return "up1";
     if (normalizedTip === getTipValue("up5")) return "up5";
     return null;

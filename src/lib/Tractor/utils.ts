@@ -1071,3 +1071,77 @@ export async function loadOrderbookData(
     throw new Error("Failed to load orderbook data");
   }
 }
+
+/**
+ * Calculates the average tip paid from OperatorReward events in the last 14 days.
+ * Returns 1 if no events are found.
+ */
+export async function getAverageTipPaid(publicClient: PublicClient): Promise<number> {
+  try {
+    // Calculate blocks for 14 days (14 * 24 * 60 * 60 / 2 = 604800 blocks)
+    const BLOCKS_PER_14_DAYS = 604800n;
+    
+    // Get current block number
+    const currentBlock = await publicClient.getBlockNumber();
+    
+    // Calculate starting block (handle underflow)
+    const fromBlock = currentBlock > BLOCKS_PER_14_DAYS ? currentBlock - BLOCKS_PER_14_DAYS : 0n;
+    
+    // Query for OperatorReward events
+    const events = await publicClient.getContractEvents({
+      address: TRACTOR_HELPERS_ADDRESS,
+      abi: tractorHelpersABI,
+      eventName: "OperatorReward",
+      fromBlock,
+      toBlock: "latest",
+    });
+    
+    // If no events found, return default value of 1
+    if (events.length === 0) {
+      return 1;
+    }
+    
+    // Calculate average tip amount
+    let totalTipAmount = 0n;
+    let validEventCount = 0;
+    
+    for (const event of events) {
+      try {
+        // Get the event data
+        const decodedEvent = decodeEventLog({
+          abi: tractorHelpersABI,
+          data: event.data,
+          topics: event.topics,
+        });
+        
+        // Extract and use the amount parameter
+        if (decodedEvent.args && 'amount' in decodedEvent.args) {
+          const amount = decodedEvent.args.amount;
+          
+          // Make sure it's a bigint and positive
+          if (typeof amount === 'bigint' && amount > 0n) {
+            totalTipAmount += amount;
+            validEventCount++;
+          }
+        }
+      } catch (error) {
+        // Silently continue on error
+      }
+    }
+    
+    // If no valid events found, return default value
+    if (validEventCount === 0) {
+      return 1;
+    }
+    
+    // Calculate average in human-readable form 
+    const avgTipAmount = Number(totalTipAmount) / (validEventCount * 1e6);
+
+    // If we somehow got a non-positive number, return the default
+    return avgTipAmount > 0 ? avgTipAmount : 1;
+  } catch (error) {
+    console.error("Error getting average tip amount:", error);
+    // Return default value in case of error
+    return 1;
+  }
+}
