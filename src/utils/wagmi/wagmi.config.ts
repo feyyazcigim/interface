@@ -11,10 +11,11 @@ import { pipelineABI } from "@/constants/abi/PipelineABI";
 import { depotABI } from "@/constants/abi/depotABI";
 import { junctionABI } from "@/constants/abi/junctionABI";
 
-import { JUNCTION_ADDRESS } from "@/constants/address";
-import { diamondFarmerABI } from "@/constants/abi/diamondFarmerABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
+import { diamondFarmerABI } from "@/constants/abi/diamondFarmerABI";
+import { JUNCTION_ADDRESS } from "@/constants/address";
 
+import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 /**
  * Diamond cut fragmented facets
  *
@@ -28,7 +29,6 @@ import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
  */
 import { viewSeasonABI } from "@/constants/abi/viewSeasonABI";
 import { viewSiloABI } from "@/constants/abi/viewSiloABI";
-import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 import { TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
 import { SOW_BLUEPRINT_V0_ADDRESS } from "@/constants/address";
 
@@ -140,7 +140,7 @@ const config = defineConfig(() => {
           [localhost.id]: SOW_BLUEPRINT_V0_ADDRESS,
           [TESTNET_CHAIN_ID]: SOW_BLUEPRINT_V0_ADDRESS,
           [foundry.id]: SOW_BLUEPRINT_V0_ADDRESS,
-        }
+        },
       },
     ],
     plugins: [

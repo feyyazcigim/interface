@@ -9,10 +9,12 @@ import { PINTO } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import { useSwapMany } from "@/hooks/swap/useSwap";
+import { useClaimRewards } from "@/hooks/useClaimRewards";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
 import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { Blueprint } from "@/lib/Tractor/types";
 import { TokenStrategy, createSowTractorData } from "@/lib/Tractor/utils";
+import { needsCombining } from "@/lib/claim/depositUtils";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePodLine, useTemperature } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
@@ -23,6 +25,7 @@ import { isDev } from "@/utils/utils"; // Only used for pre-filling form data fo
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAccount, usePublicClient } from "wagmi";
+import SmartSubmitButton from "./SmartSubmitButton";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
 import { Input } from "./ui/Input";
@@ -58,20 +61,19 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [isLoading, setIsLoading] = useState(false);
   const publicClient = usePublicClient();
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
-  const [formStep, setFormStep] = useState(1); // Track which step of the form we're on
   const [activeTipButton, setActiveTipButton] = useState<"down5" | "down1" | "average" | "up1" | "up5" | null>(
     "average",
   );
   const temperatureInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Claim rewards necessary if deposits have not been combined
   const { submitClaimRewards, isSubmitting: isClaimSubmitting } = useClaimRewards();
-  
+
   // Check if farmer needs combining using depositUtils
   const needsDepositCombining = useMemo(() => {
     return needsCombining(farmerDeposits);
   }, [farmerDeposits]);
-  
+
   // Initialize form step based on whether combining is needed
   const [formStep, setFormStep] = useState(() => {
     // If deposits need combining, start at step 0, otherwise normal flow
@@ -267,7 +269,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     if (formStep === 0) {
       return;
     }
-    
+
     // First step just moves to the next form view
     if (formStep === 1) {
       setFormStep(2);
@@ -666,11 +668,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   <div className="flex items-center justify-center">
                     <WarningIcon color="#DC2626" width={40} height={40} />
                   </div>
-                  <h3 className="text-center pinto-h3 font-antarctica mt-4 mb-4">
-                    Fragmented Silo Deposits
-                  </h3>
+                  <h3 className="text-center pinto-h3 font-antarctica mt-4 mb-4">Fragmented Silo Deposits</h3>
                   <p className="text-center pinto-body text-gray-700">
-                    Pinto does not combine and sort deposits by default, due to gas costs. A one-time claim and combine will optimize your deposits and allow you to create Tractor orders.
+                    Pinto does not combine and sort deposits by default, due to gas costs. A one-time claim and combine
+                    will optimize your deposits and allow you to create Tractor orders.
                   </p>
                   {/* The Claim & Combine button has been moved to the footer (replacing the Next button) */}
                 </div>
@@ -1052,7 +1053,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 </div>
               )}
 
-              <div className={`flex gap-6 ${formStep === 0 ? 'mt-24' : 'mt-6'}`}>
+              <div className={`flex gap-6 ${formStep === 0 ? "mt-24" : "mt-6"}`}>
                 <Button
                   variant="outline"
                   className="flex-1 h-[60px] rounded-full text-2xl font-medium text-[#404040] bg-[#F8F8F8]"
@@ -1079,7 +1080,8 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     "Review"
                   )}
                 </Button>
-                /** {formStep === 0 ? (
+                /**{" "}
+                {formStep === 0 ? (
                   <SmartSubmitButton
                     variant="gradient"
                     submitFunction={handleClaim}
@@ -1101,9 +1103,14 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       <div className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
                       </div>
-                    ) : formStep === 1 ? "Next" : "Review"}
+                    ) : formStep === 1 ? (
+                      "Next"
+                    ) : (
+                      "Review"
+                    )}
                   </Button>
-                )} */
+                )}{" "}
+                */
               </div>
             </div>
           </div>

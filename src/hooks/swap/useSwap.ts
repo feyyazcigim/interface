@@ -46,7 +46,7 @@ const getSwapOptions = (
     disabledThruTokens: new Set([wsol]),
     lpRouteOverrides,
   };
-}
+};
 
 const useSwapOptions = (tokenIn: Token, tokenOut: Token | undefined): SwapOptions => {
   const wsol = useWSOL();
@@ -54,7 +54,7 @@ const useSwapOptions = (tokenIn: Token, tokenOut: Token | undefined): SwapOption
   const mainToken = useChainConstant(MAIN_TOKEN);
 
   return useMemo(() => {
-    return getSwapOptions(tokenIn, tokenOut, wsol, pintoWSOL, mainToken)
+    return getSwapOptions(tokenIn, tokenOut, wsol, pintoWSOL, mainToken);
   }, [tokenIn, tokenOut, wsol, pintoWSOL, mainToken]);
 };
 
@@ -122,7 +122,7 @@ export const useSwapMany = ({ args, disabled = false }: IUseSwapMany) => {
   const queryClient = useQueryClient();
 
   const swapOptions = useMemo(() => {
-    return args.map((arg) => getSwapOptions(arg.tokenIn, arg.tokenOut, wsol, pintoWSOL, mainToken))
+    return args.map((arg) => getSwapOptions(arg.tokenIn, arg.tokenOut, wsol, pintoWSOL, mainToken));
   }, [args, wsol, pintoWSOL, mainToken]);
 
   const hasSwapVars = useMemo(() => {
@@ -130,20 +130,25 @@ export const useSwapMany = ({ args, disabled = false }: IUseSwapMany) => {
   }, [args]);
 
   const swapNodesQuery = useQuery({
-    queryKey: [SWAP_QUERY_KEY_PREDICATE, args.map((arg) => [arg.tokenIn.address, arg.tokenOut?.address, arg.amountIn, arg.slippage])],
+    queryKey: [
+      SWAP_QUERY_KEY_PREDICATE,
+      args.map((arg) => [arg.tokenIn.address, arg.tokenOut?.address, arg.amountIn, arg.slippage]),
+    ],
     queryFn: async () => {
       if (!args.length || !hasSwapVars) return;
 
-      const swapResult = await Promise.all(args.map((arg, i) => {
-        if (!arg.tokenOut) {
-          // This should never happen
-          throw new Error("Token out is required");
-        }
-        return router.route(arg.tokenIn, arg.tokenOut, arg.amountIn, arg.slippage, swapOptions[i])
-      })).catch((e) => {
+      const swapResult = await Promise.all(
+        args.map((arg, i) => {
+          if (!arg.tokenOut) {
+            // This should never happen
+            throw new Error("Token out is required");
+          }
+          return router.route(arg.tokenIn, arg.tokenOut, arg.amountIn, arg.slippage, swapOptions[i]);
+        }),
+      ).catch((e) => {
         console.error("Error routing swap: ", e);
         throw e;
-      })
+      });
 
       console.debug("\n--------[Swap/useSwap] Query: ", swapResult, "\n");
       return swapResult;
@@ -165,4 +170,4 @@ export const useSwapMany = ({ args, disabled = false }: IUseSwapMany) => {
     ...swapNodesQuery,
     resetSwap,
   };
-}
+};

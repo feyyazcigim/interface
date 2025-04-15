@@ -9,13 +9,13 @@ import { usePriceData } from "@/state/usePriceData";
 import { useInvalidateSun } from "@/state/useSunData";
 import { calculateConvertData } from "@/utils/convert";
 import { DepositData, Token } from "@/utils/types";
+import { encodeGroupCombineCalls } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { toast } from "sonner";
 import DepositSelectDialog from "./DepositSelectDialog";
 import { LeftArrowIcon } from "./Icons";
 import { Button } from "./ui/Button";
-import { encodeGroupCombineCalls } from "@/utils/utils";
 
 export interface DepositGroup {
   id: number;
