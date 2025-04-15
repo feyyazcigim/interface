@@ -140,7 +140,6 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
               size="large"
               xKey="interval"
               makeLineGradients={makeLineGradients}
-              makeAreaGradients={makeAreaGradients}
               valueFormatter={formatter.pct}
             />
             <div className="absolute bg-morning-light opacity-50 left-[12px] w-[90px] h-[220px] top-[7px] " />

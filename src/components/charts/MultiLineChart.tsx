@@ -485,7 +485,7 @@ const MultiLineChart = React.memo(
               padding: 0,
               minRotation: 0,
               maxRotation: 0,
-              autoSkip: typeof activeIndex !== "number",
+              autoSkip: false,
               maxTicksLimit: typeof activeIndex !== "number" ? 6 : undefined,
               callback: (_value, index, values) => {
                 const xValue = data[0][index][xKey];
@@ -494,21 +494,13 @@ const MultiLineChart = React.memo(
                 }
 
                 const tickLabel = xValue instanceof Date ? `${xValue.getMonth() + 1}/${xValue.getDate()}` : xValue;
-                if (typeof activeIndex === "number") {
-                  if (index === 0 || index === values.length - 1) {
-                    return tickLabel;
-                  }
 
-                  const indicesToShowTicks = [4, 9, 14, 19];
+                const indicesToShowTicks = [0, 300, 600, 900, 1200, 1500, 1799];
 
-                  if (indicesToShowTicks.includes(index)) {
-                    return tickLabel;
-                  } else {
-                    return "";
-                  }
+                if (indicesToShowTicks.includes(index)) {
+                  return index === 1799 ? "XY:00" : tickLabel;
                 } else {
-                  // Let Chart.js handle auto-skipping and tick labels
-                  return tickLabel;
+                  return "";
                 }
               },
             },
