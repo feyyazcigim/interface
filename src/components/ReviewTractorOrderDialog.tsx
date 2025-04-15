@@ -558,7 +558,7 @@ export default function ReviewTractorOrderDialog({
             {!isViewOnly ? (
               <div className="flex justify-between items-center mt-4">
                 <p className="text-gray-600">
-                  Your Order will remain active until you've Sown {orderData.totalAmount} Pods under the specified
+                  Your Order will remain active until you've Sown {orderData.totalAmount} Pinto under the specified
                   conditions or until Order cancellation
                 </p>
                 <div className="flex gap-2">

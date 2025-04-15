@@ -124,22 +124,22 @@ function Field() {
           
           {(!isMobile || (!currentAction && isMobile)) && (
             <>
-              <div className="flex flex-row justify-between items-center">
+              <div className="flex flex-row justify-between items-center overflow-x-auto scrollbar-none">
                 <div className="flex space-x-1">
                   <button 
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === 'activity' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    className={`pinto-h3 py-2 pr-4 pl-0 text-left shrink-0 ${activeTab === 'activity' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
                     onClick={() => setActiveTab('activity')}
                   >
                     Field Activity
                   </button>
                   <button 
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === 'tractor' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    className={`pinto-h3 py-2 pr-4 pl-0 text-left shrink-0 ${activeTab === 'tractor' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
                     onClick={() => setActiveTab('tractor')}
                   >
                     My Tractor Orders
                   </button>
                   <button 
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === 'pods' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    className={`pinto-h3 py-2 pr-4 pl-0 text-left shrink-0 ${activeTab === 'pods' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
                     onClick={() => setActiveTab('pods')}
                   >
                     My Pods
