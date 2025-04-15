@@ -119,9 +119,8 @@ function setTimePeriod(chart: MutableRefObject<IChartApi | undefined>, timePerio
 const headerOffset = 200;
 
 const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartProps) => {
-  const chartContainerRef = useRef<any>(undefined);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi>();
-  const tooltip = useRef<any>();
 
   const isMobile = useIsMobile();
 
@@ -467,7 +466,6 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
       <div className="relative h-full">
         <div className="mb-4">
           <div
-            ref={tooltip}
             className={`relative flex ${isMobile && selected.length > 2 ? "flex-col" : "flex-row"} p-0 z-10 ${isMobile && selected.length > 2 ? "gap-0.5" : "gap-8"}`}
           >
             {selected.map((chartId, index) => {
