@@ -42,10 +42,7 @@ export function convertDeltaDemandToPercentage(deltaDemand: number) {
 }
 
 export function caseIdToDescriptiveText(rawCaseID: number, column: "price" | "soil_demand" | "pod_rate" | "l2sr") {
-  let caseId = rawCaseID;
-  if (rawCaseID > 1000) {
-    caseId = rawCaseID - 1000;
-  }
+  const caseId = rawCaseID > 1000 ? rawCaseID - 1000 : rawCaseID;
   switch (column) {
     case "price":
       if ((caseId % 36) % 9 >= 6) return "P > Q";
