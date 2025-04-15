@@ -132,15 +132,19 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
         </span>
       </div>
 
-      <div className="w-full h-[200px] rounded-md mt-2 flex justify-center items-center">
+      <div className="w-full h-[250px] rounded-md mt-2 flex justify-center items-center relative">
         {isChartReady && (
-          <MultiLineChart
-            data={mappedData}
-            size="large"
-            xKey="interval"
-            makeLineGradients={makeLineGradients}
-            valueFormatter={formatter.pct}
-          />
+          <>
+            <MultiLineChart
+              data={mappedData}
+              size="large"
+              xKey="interval"
+              makeLineGradients={makeLineGradients}
+              makeAreaGradients={makeAreaGradients}
+              valueFormatter={formatter.pct}
+            />
+            <div className="absolute bg-morning-light opacity-50 left-[12px] w-[90px] h-[220px] top-[7px] " />
+          </>
         )}
       </div>
       <Separator className="my-4" />
