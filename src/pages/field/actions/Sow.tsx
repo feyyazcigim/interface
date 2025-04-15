@@ -10,11 +10,7 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useTransaction from "@/hooks/useTransaction";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerField } from "@/state/useFarmerField";
-import {
-  useInvalidateField,
-  usePodLine,
-  useTotalSoil,
-} from "@/state/useFieldData";
+import { useInvalidateField, usePodLine, useTotalSoil } from "@/state/useFieldData";
 import { useTemperature } from "@/state/useFieldData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
@@ -29,7 +25,10 @@ import FrameAnimator from "@/components/LoadingSpinner";
 import MobileActionBar from "@/components/MobileActionBar";
 
 import { Col, Row } from "@/components/Container";
+import CornerBorders from "@/components/CornerBorders";
+import { LightningIcon } from "@/components/Icons";
 import RoutingAndSlippageInfo, { useRoutingAndSlippageWarning } from "@/components/RoutingAndSlippageInfo";
+import SowOrderDialog from "@/components/SowOrderDialog";
 import TextSkeleton from "@/components/TextSkeleton";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -48,12 +47,9 @@ import { sortAndPickCrates } from "@/utils/convert";
 import { HashString } from "@/utils/types.generic";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { getBalanceFromMode } from "@/utils/utils";
-import { Link } from "react-router-dom";
-import { LightningIcon } from "@/components/Icons";
-import SowOrderDialog from "@/components/SowOrderDialog";
-import CornerBorders from "@/components/CornerBorders";
-import { AnimatePresence, motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 type SowProps = {
   isMorning: boolean;
@@ -161,12 +157,11 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
     }
   }, [fromSilo, farmerField.refetch, farmerBalances.refetch, farmerSilo.refetch, invalidateField, resetSwap]);
 
-  const { writeWithEstimateGas, isConfirming, submitting, setSubmitting } =
-    useTransaction({
-      successCallback: onSuccess,
-      errorMessage: "Sow failed",
-      successMessage: "Sow successful",
-    });
+  const { writeWithEstimateGas, isConfirming, submitting, setSubmitting } = useTransaction({
+    successCallback: onSuccess,
+    errorMessage: "Sow failed",
+    successMessage: "Sow successful",
+  });
 
   const soilSown = useMemo(
     () => (isUsingMain ? amountInTV : swap.data?.buyAmount),
@@ -365,13 +360,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
     (!totalSoilLoading && totalSoil.lte(0)) ||
     (!maxBuyQuery.isLoading && Boolean(tokenBalance && maxBuy?.lt(tokenBalance)));
 
-  const ctaDisabled =
-    isLoading ||
-    isConfirming ||
-    submitting ||
-    !ready ||
-    inputError ||
-    !canProceed;
+  const ctaDisabled = isLoading || isConfirming || submitting || !ready || inputError || !canProceed;
 
   const buttonText = inputError ? "Amount too large" : "Sow";
 
@@ -499,22 +488,25 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
       </AnimatePresence>
       {slippageWarning}
       <div className="flex justify-center mt-4 relative">
-              <div className="relative w-full">
-                <button
-                  onClick={() => onShowOrder()}
-                  className="group box-border flex flex-col items-start p-4 gap-1 w-full bg-[#F8F8F8] border border-[#D9D9D9] rounded-[0.75rem] hover:bg-[#E5F5E5] hover:border-pinto-green-4 transition-colors duration-200"
-                  onMouseEnter={() => setHoveredTractor(true)}
-                  onMouseLeave={() => setHoveredTractor(false)}
-                >
-                  <div className="flex flex-row justify-center items-center gap-1">
-                    <LightningIcon className="w-4 h-4 text-[#404040] group-hover:text-pinto-green-4" />
-                    <span className="pinto-h4 text-[#404040] group-hover:text-pinto-green-4">Want to Sow with size?</span>
-                  </div>
-                  <span className="pinto-body-light text-[#9C9C9C] group-hover:text-pinto-green-3">Use 🚜 Tractor to set up an order for Pods over time</span>
-                </button>
-                <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="0.75rem" />
-              </div>
+        <div className="relative w-full">
+          <button
+            type="button"
+            onClick={() => onShowOrder()}
+            className="group box-border flex flex-col items-start p-4 gap-1 w-full bg-[#F8F8F8] border border-[#D9D9D9] rounded-[0.75rem] hover:bg-[#E5F5E5] hover:border-pinto-green-4 transition-colors duration-200"
+            onMouseEnter={() => setHoveredTractor(true)}
+            onMouseLeave={() => setHoveredTractor(false)}
+          >
+            <div className="flex flex-row justify-center items-center gap-1">
+              <LightningIcon className="w-4 h-4 text-[#404040] group-hover:text-pinto-green-4" />
+              <span className="pinto-h4 text-[#404040] group-hover:text-pinto-green-4">Want to Sow with size?</span>
             </div>
+            <span className="pinto-body-light text-[#9C9C9C] group-hover:text-pinto-green-3">
+              Use 🚜 Tractor to set up an order for Pods over time
+            </span>
+          </button>
+          <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="0.75rem" />
+        </div>
+      </div>
       <div className="hidden sm:flex flex-row gap-2">
         <SmartSubmitButton
           variant={isMorning ? "morning" : "gradient"}
@@ -558,8 +550,7 @@ const SettingsPoppover = ({
   setMinTemperature: React.Dispatch<React.SetStateAction<number>>;
 }) => {
   const [internalAmount, setInternalAmount] = useState(slippage);
-  const [internalMinTemperature, setInternalMinTemperature] =
-    useState(minTemperature);
+  const [internalMinTemperature, setInternalMinTemperature] = useState(minTemperature);
 
   // Effects
   useDebouncedEffect(() => setSlippage(internalAmount), [internalAmount], 100);
@@ -569,18 +560,10 @@ const SettingsPoppover = ({
     <Popover>
       <PopoverTrigger asChild>
         <Button variant={"ghost"} noPadding className="rounded-full w-10 h-10 ">
-          <img
-            src={settingsIcon}
-            className="w-4 h-4 transition-all"
-            alt="slippage"
-          />
+          <img src={settingsIcon} className="w-4 h-4 transition-all" alt="slippage" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        side="bottom"
-        align="end"
-        className="w-52 flex flex-col shadow-none"
-      >
+      <PopoverContent side="bottom" align="end" className="w-52 flex flex-col shadow-none">
         <div className="flex flex-col gap-4">
           <div className="pinto-md">Slippage Tolerance</div>
           <div className="flex flex-row gap-2">
@@ -600,9 +583,7 @@ const SettingsPoppover = ({
               inputMode="numeric"
               min={0}
               value={internalMinTemperature}
-              onChange={(e) =>
-                setInternalMinTemperature(Number(e.target.value))
-              }
+              onChange={(e) => setInternalMinTemperature(Number(e.target.value))}
             />
             <div className="text-xl self-center">%</div>
           </div>

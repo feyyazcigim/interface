@@ -1,12 +1,12 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { DepositGroup } from "@/components/CombineSelect";
+import convert from "@/encoders/silo/convert";
 import { FarmerBalance } from "@/state/useFarmerBalances";
+import { calculateConvertData } from "@/utils/convert";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { FarmFromMode, Token } from "./types";
 import { DepositData } from "./types";
-import { calculateConvertData } from "@/utils/convert";
-import { DepositGroup } from "@/components/CombineSelect";
-import convert from "@/encoders/silo/convert";
 import { MayArray } from "./types.generic";
 
 export function cn(...inputs: ClassValue[]) {
@@ -19,7 +19,7 @@ export const generateID = (prefix = "") => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
-export const noop = () => { };
+export const noop = () => {};
 
 export function unpackStem(data: string | number | bigint): bigint {
   // Convert input to BigInt if it isn't already
@@ -210,9 +210,7 @@ export function createSmartGroups(deposits: DepositData[], targetGroups: number 
     .sort((a, b) => b.ratio.sub(a.ratio).toNumber());
 
   // Only slice if we have more than MAX_DEPOSITS
-  const slicedDeposits = validDeposits.length > MAX_DEPOSITS
-    ? validDeposits.slice(-MAX_DEPOSITS)
-    : validDeposits;
+  const slicedDeposits = validDeposits.length > MAX_DEPOSITS ? validDeposits.slice(-MAX_DEPOSITS) : validDeposits;
 
   if (slicedDeposits.length === 0) return [];
 
@@ -221,16 +219,11 @@ export function createSmartGroups(deposits: DepositData[], targetGroups: number 
     diff: slicedDeposits[i].ratio.sub(deposit.ratio),
     index: i + 1,
     // Don't create breakpoint if current or next deposit is small
-    isValidBreakpoint: !(
-      slicedDeposits[i].bdv.lte(MIN_BDV) ||
-      slicedDeposits[i + 1].bdv.lte(MIN_BDV)
-    ),
+    isValidBreakpoint: !(slicedDeposits[i].bdv.lte(MIN_BDV) || slicedDeposits[i + 1].bdv.lte(MIN_BDV)),
   }));
 
   // Sort ratio differences to find natural breakpoints, excluding small deposits
-  const sortedDiffs = [...ratioDiffs]
-    .filter(d => d.isValidBreakpoint)
-    .sort((a, b) => b.diff.sub(a.diff).toNumber());
+  const sortedDiffs = [...ratioDiffs].filter((d) => d.isValidBreakpoint).sort((a, b) => b.diff.sub(a.diff).toNumber());
 
   // Select the top N-1 breakpoints (for N groups)
   const numBreakpoints = Math.min(targetGroups - 1, sortedDiffs.length);
@@ -242,7 +235,7 @@ export function createSmartGroups(deposits: DepositData[], targetGroups: number 
   // Create groups based on calculated breakpoints
   const newGroups: DepositGroup[] = [];
   let groupId = 1;
-  let currentGroup: typeof validDeposits[0][] = [];
+  let currentGroup: (typeof validDeposits)[0][] = [];
 
   slicedDeposits.forEach((deposit, index) => {
     currentGroup.push(deposit);
