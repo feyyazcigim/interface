@@ -1,4 +1,5 @@
 import useIsDesktop from "@/hooks/display/useIsDesktop";
+import { safeJSONParse } from "@/utils/utils";
 import { clsx } from "clsx";
 import {
   format,
@@ -14,7 +15,7 @@ import {
   subYears,
 } from "date-fns";
 import { useState } from "react";
-import { DateRange, DayPicker } from "react-day-picker";
+import { ClassNames, DateRange, DayPicker, DeprecatedUI } from "react-day-picker";
 import { CalendarIcon, ClockIcon } from "./Icons";
 import { Input } from "./ui/Input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
@@ -77,6 +78,38 @@ const initialRange = {
 type DateRangeState = {
   from: string | undefined;
   to: string | undefined;
+};
+
+const calendarStyling: Partial<ClassNames> & Partial<DeprecatedUI<string>> = {
+  root: clsx("p-0 pinto-sm-light"),
+  caption: clsx("flex relative justify-center items-center mb-2.5"),
+  nav: clsx("flex items-center place-self-end gap-2"),
+  button_next: clsx(
+    "absolute right-2 rounded w-[1.875rem] h-[1.875rem] hover:bg-pinto-green-1 transition-colors duration-150 ease-in-out",
+  ),
+  button_previous: clsx(
+    "absolute left-3 rounded w-[1.875rem] h-[1.875rem] hover:bg-pinto-green-1 transition-colors duration-150 ease-in-out",
+  ),
+  month: clsx("-mt-3 justify-items-center "),
+  month_grid: clsx("mt-4"),
+  nav_button_previous: clsx("absolute left-0 rounded-lg w-[1.875rem] h-[1.875rem]"),
+  nav_button_next: clsx("absolute right-0 rounded-lg w-[1.875rem] h-[1.875rem]"),
+  head_row: clsx("hidden"),
+  table: clsx("flex justify-center"),
+  tbody: clsx("ml-0.5"),
+  day: clsx("rounded h-[2.125rem] w-[2.125rem]"),
+  day_button: clsx("rounded h-[2.125rem] w-[2.125rem] transition-colors duration-150 ease-in-out"),
+  today: clsx("font-normal"),
+  selected: clsx("font-bold bg-pinto-green text-white"),
+  range_start: clsx(
+    "rounded-l rounded-r-none font-bold bg-pinto-green text-white hover:bg-pinto-green/80 transition-colors duration-150 ease-in-out",
+  ),
+  range_middle: clsx(
+    "rounded-none font-bold bg-pinto-green text-white hover:bg-pinto-green/80 transition-colors duration-150 ease-in-out",
+  ),
+  range_end: clsx(
+    "rounded-r rounded-l-none font-bold bg-pinto-green text-white hover:bg-pinto-green/80 transition-colors duration-150 ease-in-out",
+  ),
 };
 
 const CalendarContent = ({ isMobile, range, selectedPreset, handleChange }) => {
@@ -241,37 +274,7 @@ const CalendarContent = ({ isMobile, range, selectedPreset, handleChange }) => {
           month={month}
           onMonthChange={setMonth}
           fixedWeeks
-          classNames={{
-            root: clsx("p-0 pinto-sm-light"),
-            caption: clsx("flex relative justify-center items-center mb-2.5"),
-            nav: clsx("flex items-center place-self-end gap-2"),
-            button_next: clsx(
-              "absolute right-2 rounded w-[1.875rem] h-[1.875rem] hover:bg-pinto-green-1 transition-colors duration-150 ease-in-out",
-            ),
-            button_previous: clsx(
-              "absolute left-3 rounded w-[1.875rem] h-[1.875rem] hover:bg-pinto-green-1 transition-colors duration-150 ease-in-out",
-            ),
-            month: clsx("-mt-3 justify-items-center "),
-            month_grid: clsx("mt-4"),
-            nav_button_previous: clsx("absolute left-0 rounded-lg w-[1.875rem] h-[1.875rem]"),
-            nav_button_next: clsx("absolute right-0 rounded-lg w-[1.875rem] h-[1.875rem]"),
-            head_row: clsx("hidden"),
-            table: clsx("flex justify-center"),
-            tbody: clsx("ml-0.5"),
-            day: clsx("rounded h-[2.125rem] w-[2.125rem]"),
-            day_button: clsx("rounded h-[2.125rem] w-[2.125rem] transition-colors duration-150 ease-in-out"),
-            today: clsx("font-normal"),
-            selected: clsx("font-bold bg-pinto-green text-white"),
-            range_start: clsx(
-              "rounded-l rounded-r-none font-bold bg-pinto-green text-white hover:bg-pinto-green/80 transition-colors duration-150 ease-in-out",
-            ),
-            range_middle: clsx(
-              "rounded-none font-bold bg-pinto-green text-white hover:bg-pinto-green/80 transition-colors duration-150 ease-in-out",
-            ),
-            range_end: clsx(
-              "rounded-r rounded-l-none font-bold bg-pinto-green text-white hover:bg-pinto-green/80 transition-colors duration-150 ease-in-out",
-            ),
-          }}
+          classNames={calendarStyling}
         />
         {isMobile && (
           <div className="flex flex-row justify-between">
@@ -308,10 +311,10 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }) =
   const isDesktop = useIsDesktop();
 
   const storedSetting1 = localStorage.getItem(`${storageKeyPrefix}Range`);
-  const storedRange = storedSetting1 ? JSON.parse(storedSetting1) : undefined;
+  const storedRange = storedSetting1 ? safeJSONParse(storedSetting1, undefined) : undefined;
 
   const storedSetting2 = localStorage.getItem(`${storageKeyPrefix}Preset`);
-  const storedPreset = storedSetting2 ? JSON.parse(storedSetting2) : undefined;
+  const storedPreset = storedSetting2 ? safeJSONParse(storedSetting2, undefined) : undefined;
 
   const [selectedPreset, setPreset] = useState(storedPreset || "1W");
   const [range, setRange] = useState(storedRange || initialRange);
