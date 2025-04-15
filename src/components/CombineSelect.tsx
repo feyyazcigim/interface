@@ -4,18 +4,18 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useTransaction from "@/hooks/useTransaction";
 import { DepositTransferData } from "@/pages/transfer/actions/TransferDeposits";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
-import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import { useInvalidateSun } from "@/state/useSunData";
 import { calculateConvertData } from "@/utils/convert";
 import { DepositData, Token } from "@/utils/types";
+import { encodeGroupCombineCalls } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { toast } from "sonner";
 import DepositSelectDialog from "./DepositSelectDialog";
 import { LeftArrowIcon } from "./Icons";
 import { Button } from "./ui/Button";
-import { encodeGroupCombineCalls } from "@/utils/utils";
 
 export interface DepositGroup {
   id: number;
@@ -30,14 +30,16 @@ interface CombineSelectProps {
 
 export default function CombineSelect({ setTransferData, token, disabled }: CombineSelectProps) {
   const protocolAddress = useProtocolAddress();
-  const depositedBalances = useFarmerSiloNew();
-  const farmerDeposits = depositedBalances.deposits.get(token);
+  const depositedBalances = useFarmerSilo().deposits;
+  const farmerDeposits = depositedBalances.get(token);
+  const [selected, setSelected] = useState<string[]>([]);
   const [groups, setGroups] = useState<DepositGroup[]>([{ id: 1, deposits: [] }]);
+
   const [open, setOpen] = useState(false);
   const invalidateSun = useInvalidateSun();
   const qc = useQueryClient();
 
-  const farmerSilo = useFarmerSiloNew();
+  const farmerSilo = useFarmerSilo();
   const farmerBalances = useFarmerBalances();
   const { queryKeys: priceQueryKeys } = usePriceData();
 

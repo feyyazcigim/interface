@@ -1,24 +1,24 @@
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogOverlay, DialogPortal } from "./ui/Dialog";
-import { Button } from "./ui/Button";
-import { CornerBottomLeftIcon } from "@radix-ui/react-icons";
-import { useAccount } from "wagmi";
+import baseLogo from "@/assets/misc/base-logo-alt.png";
+import { TokenValue } from "@/classes/TokenValue";
+import SmartSubmitButton from "@/components/SmartSubmitButton";
+import IconImage from "@/components/ui/IconImage";
+import { diamondABI } from "@/constants/abi/diamondABI";
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import useTransaction from "@/hooks/useTransaction";
 import { createRequisition, useSignRequisition } from "@/lib/Tractor";
 import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
-import { toast } from "sonner";
-import { useState } from "react";
 import { Blueprint } from "@/lib/Tractor/types";
-import { HighlightedCallData } from "./Tractor/HighlightedCallData";
-import { Switch } from "./ui/Switch";
-import useTransaction from "@/hooks/useTransaction";
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { diamondABI } from "@/constants/abi/diamondABI";
-import { TokenValue } from "@/classes/TokenValue";
 import { formatter } from "@/utils/format";
+import { CornerBottomLeftIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
-import baseLogo from "@/assets/misc/base-logo-alt.png";
-import IconImage from "@/components/ui/IconImage";
-import SmartSubmitButton from "@/components/SmartSubmitButton";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useAccount } from "wagmi";
+import { HighlightedCallData } from "./Tractor/HighlightedCallData";
+import { Button } from "./ui/Button";
+import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "./ui/Dialog";
+import { Switch } from "./ui/Switch";
 
 // Define the execution data type
 export interface ExecutionData {
@@ -129,13 +129,13 @@ export default function ReviewTractorOrderDialog({
 
       // Success handling
       toast.success("Order published successfully");
-      
+
       // Close the dialog
       onOpenChange(false);
-      
+
       // Navigate to the Field page with tractor tab active
       navigate("/field?tab=tractor");
-      
+
       // Call the parent success callback to refresh data
       if (onSuccess) {
         onSuccess();
@@ -160,9 +160,7 @@ export default function ReviewTractorOrderDialog({
     return acc;
   }, TokenValue.ZERO);
 
-  const averagePodsPerBean = totalBeansSpent.gt(0) 
-    ? totalPodsReceived.div(totalBeansSpent) 
-    : TokenValue.ZERO;
+  const averagePodsPerBean = totalBeansSpent.gt(0) ? totalPodsReceived.div(totalBeansSpent) : TokenValue.ZERO;
 
   // Helper function to format dates with time
   const formatDate = (timestamp?: number) => {
@@ -177,36 +175,40 @@ export default function ReviewTractorOrderDialog({
         <DialogContent className="sm:max-w-[1200px]">
           <DialogTitle>{isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}</DialogTitle>
           <DialogDescription>
-            {isViewOnly 
-              ? (
-                <div className="flex items-center">
-                  <span>This is your active Tractor Order. It allows an Operator to execute a transaction for you on the </span>
+            {isViewOnly ? (
+              <div className="flex items-center">
+                <span>
+                  This is your active Tractor Order. It allows an Operator to execute a transaction for you on the{" "}
+                </span>
+                <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
+                <span>Base network when the conditions are met.</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <p className="flex items-center">
+                  A Tractor Order allows you to pay an Operator to execute a transaction for you on the
                   <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
-                  <span>Base network when the conditions are met.</span>
-                </div>
-              )
-              : (
-                <div className="flex flex-col gap-3">
-                  <p className="flex items-center">
-                    A Tractor Order allows you to pay an Operator to execute a transaction for you on the
-                    <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
-                    Base network.
-                  </p>
-                  <p>This allows you to interact with the Pinto protocol autonomously when the conditions of your Order are met.</p>
-                </div>
-              )
-            }
+                  Base network.
+                </p>
+                <p>
+                  This allows you to interact with the Pinto protocol autonomously when the conditions of your Order are
+                  met.
+                </p>
+              </div>
+            )}
           </DialogDescription>
           <div className="flex flex-col gap-6">
             {/* Tabs */}
             <div className="flex gap-4 border-b">
               <button
+                type="button"
                 className={`pb-2 ${activeTab === "order" ? "border-b-2 border-pinto-green-4 font-medium" : "text-gray-500"}`}
                 onClick={() => setActiveTab("order")}
               >
                 View Order
               </button>
               <button
+                type="button"
                 className={`pb-2 ${
                   activeTab === "blueprint" ? "border-b-2 border-pinto-green-4 font-medium" : "text-gray-500"
                 }`}
@@ -216,6 +218,7 @@ export default function ReviewTractorOrderDialog({
               </button>
               {isViewOnly && executionHistory.length > 0 && (
                 <button
+                  type="button"
                   className={`pb-2 ${
                     activeTab === "executions" ? "border-b-2 border-pinto-green-4 font-medium" : "text-gray-500"
                   }`}
@@ -241,27 +244,30 @@ export default function ReviewTractorOrderDialog({
                     <div className="bg-white rounded-xl px-2 py-2 shadow-sm flex flex-col gap-2 border border-gray-200">
                       <div className="flex items-center gap-0">
                         <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Withdraw</div>
-                        <div className="border-t-2 border-gray-300 w-6 flex-shrink-0"></div>
+                        <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
 
                         <span className="text-box rounded-full">
                           <span>Deposited Tokens</span>
                         </span>
-                        <div className="border-t-2 border-gray-300 w-6 flex-shrink-0"></div>
+                        <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
                         <span className="text-box rounded-full flex items-center">
                           <span>as</span>
                           <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-5 h-5 mx-1" />
                           <span className="font-medium">PINTO</span>
                         </span>
                       </div>
-                      
+
                       <div className="text-gray-500 text-sm">
                         <div className="flex items-center gap-1">
                           <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                          <span className="font-antarctica font-light text-[#9C9C9C]">Withdraw Deposited Tokens from the Silo with the {
-                            orderData.tokenStrategy === "LOWEST_SEEDS" ? "Lowest Seeds" : 
-                            orderData.tokenStrategy === "LOWEST_PRICE" ? "Best Price" : 
-                            orderData.tokenSymbol || "Selected Token"
-                          }</span>
+                          <span className="font-antarctica font-light text-[#9C9C9C]">
+                            Withdraw Deposited Tokens from the Silo with the{" "}
+                            {orderData.tokenStrategy === "LOWEST_SEEDS"
+                              ? "Lowest Seeds"
+                              : orderData.tokenStrategy === "LOWEST_PRICE"
+                                ? "Best Price"
+                                : orderData.tokenSymbol || "Selected Token"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -273,7 +279,7 @@ export default function ReviewTractorOrderDialog({
                       <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-0">
                           <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Sow</div>
-                          <div className="border-t-2 border-gray-300 w-6 flex-shrink-0"></div>
+                          <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
                           <span className="text-box rounded-full">
                             up to <span className="text-pinto-green-4">{orderData.totalAmount}</span>{" "}
                             <span className="text-pinto-green-4">PINTO</span>
@@ -293,8 +299,10 @@ export default function ReviewTractorOrderDialog({
                             <span className="font-antarctica font-light text-[#9C9C9C]">
                               AND when Pod Line Length is at most{" "}
                               <span className="text-pinto-green-4">
-                                {typeof orderData.podLineLength === 'string' && orderData.podLineLength.includes('.') 
-                                  ? formatter.number(parseFloat(orderData.podLineLength.replace(/,/g, '')), { maxDecimals: 0 })
+                                {typeof orderData.podLineLength === "string" && orderData.podLineLength.includes(".")
+                                  ? formatter.number(parseFloat(orderData.podLineLength.replace(/,/g, "")), {
+                                      maxDecimals: 0,
+                                    })
                                   : formatter.number(orderData.podLineLength, { maxDecimals: 0 })}
                               </span>
                             </span>
@@ -315,15 +323,14 @@ export default function ReviewTractorOrderDialog({
                   <div className="flex items-center justify-center mt-8">
                     <div className="bg-white rounded-xl px-2 py-2 shadow-sm flex items-center gap-0 border border-gray-200">
                       <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Tip</div>
-                      <div className="border-t-2 border-gray-300 w-6 flex-shrink-0"></div>
+                      <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
                       <span className="text-box rounded-full">
                         <span className="text-pinto-green-4">{orderData.operatorTip} PINTO</span>
                       </span>
-                      <div className="border-t-2 border-gray-300 w-6 flex-shrink-0"></div>
+                      <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
                       <span className="text-box rounded-full">to Operator</span>
                     </div>
                   </div>
-
                 </div>
               </div>
             ) : activeTab === "blueprint" ? (
@@ -390,42 +397,40 @@ export default function ReviewTractorOrderDialog({
                 ) : (
                   <>
                     {/* Enhanced Summary Section with Progress Bar and Tips Paid */}
-                      {/* Metrics Grid - Now with Total Tips Paid */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500">Total PINTO Sown</span>
-                          <span className="text-xl font-medium mt-3">
-                            {formatter.number(totalBeansSpent)}
-                          </span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500">Total Pods Received</span>
-                          <span className="text-xl font-medium mt-3">
-                            {formatter.number(totalPodsReceived)}
-                          </span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500">Average Temperature</span>
-                          <span className="text-xl font-medium mt-3">
-                            {formatter.number(averagePodsPerBean.mul(100))}%
-                          </span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500">Total Tips Paid</span>
-                          <span className="text-xl font-medium mt-3">
-                            {(() => {
-                              // Get tip amount from order data
-                              const tipAmount = orderData.operatorTip ? TokenValue.fromHuman(orderData.operatorTip, 6) : TokenValue.ZERO;
-                              // Calculate total tips paid
-                              const totalTipsPaid = tipAmount.mul(executionHistory.length);
-                              return formatter.number(totalTipsPaid);
-                            })()} PINTO
-                          </span>
-                        </div>
+                    {/* Metrics Grid - Now with Total Tips Paid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">Total PINTO Sown</span>
+                        <span className="text-xl font-medium mt-3">{formatter.number(totalBeansSpent)}</span>
                       </div>
-                      
-                      {/* Progress Bar Section - remains the same */}
-                      {/* {orderData.totalAmount && (
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">Total Pods Received</span>
+                        <span className="text-xl font-medium mt-3">{formatter.number(totalPodsReceived)}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">Average Temperature</span>
+                        <span className="text-xl font-medium mt-3">
+                          {formatter.number(averagePodsPerBean.mul(100))}%
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">Total Tips Paid</span>
+                        <span className="text-xl font-medium mt-3">
+                          {(() => {
+                            // Get tip amount from order data
+                            const tipAmount = orderData.operatorTip
+                              ? TokenValue.fromHuman(orderData.operatorTip, 6)
+                              : TokenValue.ZERO;
+                            // Calculate total tips paid
+                            const totalTipsPaid = tipAmount.mul(executionHistory.length);
+                            return formatter.number(totalTipsPaid);
+                          })()} PINTO
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar Section - remains the same */}
+                    {/* {orderData.totalAmount && (
                         <>
 
                           {(() => {
@@ -471,7 +476,6 @@ export default function ReviewTractorOrderDialog({
                         </>
                       )} */}
 
-
                     {/* Existing Table */}
                     <div className="overflow-x-auto">
                       <table className="w-full border-collapse">
@@ -499,24 +503,23 @@ export default function ReviewTractorOrderDialog({
                             })
                             .map((execution, index) => {
                               // Calculate temperature for this execution
-                              const temperature = execution.sowEvent && execution.sowEvent.beans > 0n
-                                ? TokenValue.fromBlockchain(execution.sowEvent.pods, 6)
-                                    .div(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
-                                    .mul(100) // Convert to percentage
-                                : TokenValue.ZERO;
-                                
+                              const temperature =
+                                execution.sowEvent && execution.sowEvent.beans > 0n
+                                  ? TokenValue.fromBlockchain(execution.sowEvent.pods, 6)
+                                      .div(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
+                                      .mul(100) // Convert to percentage
+                                  : TokenValue.ZERO;
+
                               return (
                                 <tr key={index} className="hover:bg-gray-50 border-b">
-                                  <td className="px-4 py-3 font-medium">
-                                    #{executionHistory.length - index}
-                                  </td>
+                                  <td className="px-4 py-3 font-medium">#{executionHistory.length - index}</td>
                                   <td className="px-4 py-3 text-right">
-                                    {execution.sowEvent 
+                                    {execution.sowEvent
                                       ? formatter.number(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
                                       : "-"}
                                   </td>
                                   <td className="px-4 py-3 text-right">
-                                    {execution.sowEvent 
+                                    {execution.sowEvent
                                       ? formatter.number(TokenValue.fromBlockchain(execution.sowEvent.pods, 6))
                                       : "-"}
                                   </td>
@@ -525,18 +528,16 @@ export default function ReviewTractorOrderDialog({
                                       ? `${formatter.number(temperature)}%`
                                       : "-"}
                                   </td>
-                                  <td className="px-4 py-3 text-gray-500">
-                                    {shortenAddress(execution.operator)}
-                                  </td>
+                                  <td className="px-4 py-3 text-gray-500">{shortenAddress(execution.operator)}</td>
                                   <td className="px-4 py-3 text-right text-gray-500">
-                                    {execution.timestamp 
+                                    {execution.timestamp
                                       ? formatDate(execution.timestamp)
                                       : `Block ${execution.blockNumber}`}
                                   </td>
                                   <td className="px-4 py-3 text-right">
-                                    <a 
-                                      href={`https://basescan.org/tx/${execution.transactionHash}`} 
-                                      target="_blank" 
+                                    <a
+                                      href={`https://basescan.org/tx/${execution.transactionHash}`}
+                                      target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-pinto-green-4 hover:underline text-sm"
                                     >
