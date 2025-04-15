@@ -9,7 +9,6 @@ import PlotsTable from "@/components/PlotsTable";
 import { Button } from "@/components/ui/Button";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
-import Text from "@/components/ui/Text";
 import MorningTemperatureChart from "@/pages/field/MorningTemperature";
 import {
   useUpdateMorningSoilOnInterval,
@@ -18,7 +17,6 @@ import {
 
 import MobileActionBar from "@/components/MobileActionBar";
 import TooltipSimple from "@/components/TooltipSimple";
-import IconImage from "@/components/ui/IconImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useFarmerField } from "@/state/useFarmerField";
