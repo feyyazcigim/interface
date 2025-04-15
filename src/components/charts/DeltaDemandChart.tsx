@@ -161,12 +161,12 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
           </span>
         )}
         {surroundingSeasons[1].blocksToSoldOutSoil === "-" ? (
-          <span className="text-base mt-4 text-pinto-gray-4">
+          <span className="text-base text-pinto-gray-4">
             Amount of Soil Sown in {surroundingSeasons[1].season}:{" "}
             {surroundingSeasons[1].deltaSownBeans.toNumber().toFixed(2)}
           </span>
         ) : (
-          <span className="text-base mt-4 text-pinto-gray-4">
+          <span className="text-base text-pinto-gray-4">
             Soil - {surroundingSeasons[1].issuedSoil.toNumber().toFixed(2)} Sown in Season{" "}
             {surroundingSeasons[1].season}: XX:
             {surroundingSeasons[1].blocksToSoldOutSoil}
