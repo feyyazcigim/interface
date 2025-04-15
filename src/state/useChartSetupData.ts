@@ -69,6 +69,7 @@ import useTokenData from "./useTokenData";
 
 interface ChartSetupBase {
   id: string;
+  type: "Pinto" | "Field" | "Silo";
   timeScaleKey: string;
   priceScaleKey: string;
   name: string;
@@ -84,41 +85,32 @@ interface ChartSetupBase {
 }
 
 export type ChartSetup = ChartSetupBase & {
-  type: string;
   index: number;
 };
 
+type ChartColors = Array<{
+  lineColor: string;
+}>;
+
 // The length of chartColors determines how many charts you can plot at the same time
-export const chartColors = [
+export const chartColors: ChartColors = [
   {
     lineColor: "#246645", // Pinto Green (pinto-green-3)
-    topColor: hexToRgba("#246645", 0.8),
-    bottomColor: hexToRgba("#246645", 0.2),
   },
   {
     lineColor: "#1E6091", // Deep Blue
-    topColor: hexToRgba("#1E6091", 0.8),
-    bottomColor: hexToRgba("#1E6091", 0.2),
   },
   {
     lineColor: "#D62828", // Vibrant Red
-    topColor: hexToRgba("#D62828", 0.8),
-    bottomColor: hexToRgba("#D62828", 0.2),
   },
   {
     lineColor: "#8338EC", // Bright Purple
-    topColor: hexToRgba("#8338EC", 0.8),
-    bottomColor: hexToRgba("#8338EC", 0.2),
   },
   {
     lineColor: "#FF9F1C", // Golden Orange
-    topColor: hexToRgba("#FF9F1C", 0.8),
-    bottomColor: hexToRgba("#FF9F1C", 0.2),
   },
   {
     lineColor: "#00BCD4", // Light Blue / Cyan
-    topColor: hexToRgba("#00BCD4", 0.8),
-    bottomColor: hexToRgba("#00BCD4", 0.2),
   },
 ];
 
@@ -126,6 +118,7 @@ export const chartColors = [
 const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
   {
     id: "priceInstantPINTO",
+    type: "Pinto",
     name: "Pinto Price",
     tooltipTitle: "Current Pinto Price",
     tooltipHoverText: "The Current Price of Pinto in USD",
@@ -140,6 +133,7 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
   },
   {
     id: "supplyPINTO",
+    type: "Pinto",
     name: "Supply",
     tooltipTitle: "Pinto Supply",
     tooltipHoverText: "The total Pinto supply at the beginning of every Season.",
@@ -154,6 +148,7 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
   },
   {
     id: "marketCap",
+    type: "Pinto",
     name: "Market Cap",
     tooltipTitle: "Market Cap",
     tooltipHoverText: "The USD value of the Pinto supply at the beginning of every Season.",
@@ -168,6 +163,7 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
   },
   {
     id: "priceTargetCrosses",
+    type: "Pinto",
     name: "Price Target Crosses",
     tooltipTitle: "Price Target Crosses",
     tooltipHoverText: "The total number of times Pinto has crossed its price target at the beginning of every Season.",
@@ -182,6 +178,7 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
   },
   {
     id: "priceTwaPINTO",
+    type: "Pinto",
     name: "TWA Pinto Price",
     tooltipTitle: "TWA Pinto Price",
     tooltipHoverText:
@@ -197,6 +194,7 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
   },
   {
     id: "instDeltaB",
+    type: "Pinto",
     name: "Instantaneous ΔP",
     tooltipTitle: "Cumulative Instantaneous ΔP",
     tooltipHoverText:
@@ -212,6 +210,7 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
   },
   {
     id: "twaDeltaB",
+    type: "Pinto",
     name: "TWA ΔP",
     tooltipTitle: "Cumulative TWA ΔP",
     tooltipHoverText:
@@ -229,6 +228,7 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
   },
   {
     id: "l2sr",
+    type: "Pinto",
     name: "Liquidity to Supply Ratio",
     tooltipTitle: "Liquidity to Supply Ratio",
     tooltipHoverText:
@@ -249,6 +249,7 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
 const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
   {
     id: "pintoMaxTemperature",
+    type: "Field",
     name: "Max Temperature",
     tooltipTitle: "Max Temperature",
     tooltipHoverText: "The maximum interest rate for Sowing Pinto every Season.",
@@ -263,6 +264,7 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
   },
   {
     id: "podRate",
+    type: "Field",
     name: "Pod Rate",
     tooltipTitle: "Pod Rate",
     tooltipHoverText:
@@ -278,6 +280,7 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
   },
   {
     id: "pintoSown",
+    type: "Field",
     name: "Pinto Sown",
     tooltipTitle: "Pinto Sown",
     tooltipHoverText: "The total number of Pinto Sown at the beginning of every Season.",
@@ -297,41 +300,26 @@ export function useChartSetupData() {
 
   // Memoize data separately with proper dependencies
   const data = useMemo(() => {
-    // Start with an empty output array only when dependencies change
-    const output: ChartSetup[] = [];
-    let dataIndex = 0;
-
-    // Add Pinto charts
+    // Get Pinto charts
     const pintoCharts = createPintoCharts(mainToken);
-    pintoCharts.forEach((chartData) => {
-      output.push({
-        ...chartData,
-        type: "Pinto",
-        index: dataIndex++,
-      });
-    });
 
-    // LP charts processing (if needed)
-    if (lpTokens.length > 0) {
-      // Add LP charts processing here when uncommented
-    }
-
-    // Deposit & APY charts processing (if needed)
-    if (whitelistedTokens.length > 0) {
-      // Add deposit & APY charts processing here when uncommented
-    }
-
-    // Add Field charts
+    // Get Field charts
     const fieldCharts = createFieldCharts(mainToken);
-    fieldCharts.forEach((chartData) => {
-      const chartDataToAdd = {
-        ...chartData,
-        type: "Field",
-        index: dataIndex,
-      };
-      output.push(chartDataToAdd);
-      dataIndex += 1;
-    });
+
+    // LP charts
+    if (lpTokens.length > 0) {
+      // Add LP charts here
+    }
+
+    // Deposit & APY charts
+    if (whitelistedTokens.length > 0) {
+      // Add deposit & APY charts here
+    }
+
+    const output: ChartSetup[] = [...pintoCharts, ...fieldCharts].map((setupData, index) => ({
+      ...setupData,
+      index: index,
+    }));
 
     return output;
   }, [mainToken, lpTokens, whitelistedTokens]); // Include all dependencies
