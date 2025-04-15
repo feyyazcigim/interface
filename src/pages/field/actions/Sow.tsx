@@ -400,7 +400,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
               />
             )}
             {slippageWarning}
-            <div className="flex justify-center mt-4 relative">
+            <div className="hidden sm:flex justify-center mt-4 relative">
               <div className="relative w-full">
                 <button
                   onClick={() => onShowOrder()}
