@@ -114,10 +114,52 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     return results;
   }, [lpTokens, swapQuotes]);
 
+  // Calculate the token with the highest dollar value
+  const tokenWithHighestValue = useMemo(() => {
+    let highestValue = TokenValue.ZERO;
+    let tokenWithHighestValue: string | null = null;
+    let tokenType: "SPECIFIC_TOKEN" | "LOWEST_SEEDS" = "LOWEST_SEEDS";
+
+    // Check PINTO token first
+    const pintoToken = whitelistedTokens.find(t => t.symbol === "PINTO");
+    if (pintoToken) {
+      const pintoDeposit = farmerDeposits.get(pintoToken);
+      if (pintoDeposit?.amount) {
+        const pintoDollarValue = pintoDeposit.amount.mul(priceData.price);
+        if (pintoDollarValue.gt(highestValue)) {
+          highestValue = pintoDollarValue;
+          tokenWithHighestValue = pintoToken.address;
+          tokenType = "SPECIFIC_TOKEN";
+        }
+      }
+    }
+
+    // Check all LP tokens
+    whitelistedTokens.forEach(token => {
+      if (token.isLP) {
+        const lpDollarValue = swapResults.get(token.address);
+        if (lpDollarValue && lpDollarValue.gt(highestValue)) {
+          highestValue = lpDollarValue;
+          tokenWithHighestValue = token.address;
+          tokenType = "SPECIFIC_TOKEN";
+        }
+      }
+    });
+
+    // If no token has value, default to LOWEST_SEEDS
+    if (!tokenWithHighestValue) {
+      return { type: "LOWEST_SEEDS" } as TokenStrategy;
+    }
+
+    // Return the token with highest value
+    return {
+      type: tokenType,
+      address: tokenWithHighestValue as `0x${string}`
+    } as TokenStrategy;
+  }, [farmerDeposits, whitelistedTokens, priceData.price, swapResults]);
+
   // Update the default token strategy
-  const [selectedTokenStrategy, setSelectedTokenStrategy] = useState<TokenStrategy>({
-    type: "LOWEST_SEEDS", // Default to pure PINTO
-  });
+  const [selectedTokenStrategy, setSelectedTokenStrategy] = useState<TokenStrategy>(tokenWithHighestValue);
 
   // Add state for the review dialog
   const [showReview, setShowReview] = useState(false);
