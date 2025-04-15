@@ -107,9 +107,8 @@ const MultiLineChart = React.memo(
         return [yAxisMin, yAxisMax];
       }
 
-      // Otherwise calculate based on data
-      const maxData = 100; //data.reduce((acc, next) => Math.max(acc, ...next.values), Number.MIN_SAFE_INTEGER);
-      const minData = 0; //data.reduce((acc, next) => Math.min(acc, ...next.values), Number.MAX_SAFE_INTEGER);
+      const maxData = 100;
+      const minData = 0;
 
       let minTick = Math.max(0, minData - (maxData - minData) * 0.1);
       if (minTick === maxData) {
@@ -160,10 +159,10 @@ const MultiLineChart = React.memo(
         });
         return {
           labels: labels,
-          datasets: Object.values(data).map((datum, idx: number) => {
+          datasets: Object.values(data).reverse().map((datum, idx: number) => {
             return {
               data: datum.map((d) => d.values[0]),
-              borderColor: idx === 0 ? "#FDE394" : "#387F5C",
+              borderColor: idx === 0 ? "#387F5C" : "#FDE394",
               borderWidth: 1.5,
               // Hide default points, custom are implemented in afterDraw plugin
               pointRadius: 0,
@@ -496,9 +495,18 @@ const MultiLineChart = React.memo(
                 const tickLabel = xValue instanceof Date ? `${xValue.getMonth() + 1}/${xValue.getDate()}` : xValue;
 
                 const indicesToShowTicks = [0, 300, 600, 900, 1200, 1500, 1799];
+                const tickMap = {
+                  0: "XX:00",
+                  300: "XX:10",
+                  600: "XX:20",
+                  900: "XX:30",
+                  1200: "XX:40",
+                  1500: "XX:50",
+                  1799: "XY:00",
+                };
 
                 if (indicesToShowTicks.includes(index)) {
-                  return index === 1799 ? "XY:00" : tickLabel;
+                  return tickMap[index];
                 } else {
                   return "";
                 }
@@ -525,10 +533,9 @@ const MultiLineChart = React.memo(
             }),
             ticks: {
               padding: 0,
-              maxTicksLimit: 3,
+              maxTicksLimit: 2,
               callback: (value) => {
-                const num = typeof value === "string" ? Number(value) : value;
-                return valueFormatter ? valueFormatter(num) : value;
+                return `${value}%`
               },
             },
           },
