@@ -64,7 +64,6 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
   const farmerSilo = useFarmerSilo();
   const farmerField = useFarmerField();
   const account = useAccount();
-  const queryClient = useQueryClient();
 
   const temperature = useTemperature();
   const podLine = usePodLine();
@@ -367,8 +366,8 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
   const animationHeight = getAnimateHeight({ fromSilo, hasSoil, tokenIn });
 
   return (
-    <Col className="gap-4">
-      <div>
+    <Col className="gap-4 w-full">
+      <Col className="w-full">
         <Row className="justify-between items-center">
           <div className="pinto-body-light text-pinto-light">Amount and token to Sow</div>
           <SettingsPoppover
@@ -399,7 +398,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
           filterTokens={filterTokens}
           disableClamping={true}
         />
-      </div>
+      </Col>
       <Row className="justify-between my-2">
         <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">Use Silo Deposits</div>
         <TextSkeleton loading={false} className="w-11 h-6">

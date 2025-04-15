@@ -39,6 +39,9 @@ function Field() {
   const harvestableIndex = useHarvestableIndex();
   const harvestableIndexLoading = useHarvestableIndexLoading();
   const [searchParams] = useSearchParams();
+  const isMobile = useIsMobile();
+
+  const currentAction = searchParams.get("action");
 
   // Set the active tab (default to 'activity' or 'pods' on mobile)
   const [activeTab, setActiveTab] = useState(() => {

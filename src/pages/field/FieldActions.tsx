@@ -18,7 +18,7 @@ export default function FieldActions() {
   const [showSowOrder, setShowSowOrder] = useState(false);
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full w-full">
       <div className={showSowOrder ? "invisible" : "visible"}>
         <Tabs defaultValue="sow" className="w-full h-full" value={!tab ? "sow" : tab} onValueChange={handleChangeTab}>
           <TabsList className="grid w-full grid-cols-2">
