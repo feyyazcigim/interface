@@ -9,6 +9,7 @@ import { useFieldQueryKeys, useInvalidateField } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import { useInvalidateSun, useSeasonQueryKeys } from "@/state/useSunData";
 import useTokenData from "@/state/useTokenData";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { isDev } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
@@ -733,6 +734,9 @@ export default function DevPage() {
             )}
           </div>
         </Card>
+        
+        {/* Farmer Silo Deposits section - render component directly */}
+        <FarmerSiloDeposits />
       </div>
     </div>
   );
@@ -931,3 +935,131 @@ const MorningAuctionDev = ({
     </MorningCard>
   );
 };
+
+// Farmer Silo Deposits Component
+function FarmerSiloDeposits() {
+  const { address } = useAccount();
+  const farmerSilo = useFarmerSilo();
+  const { deposits } = farmerSilo;
+  const tokenData = useTokenData();
+  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      // Invalidate all queries
+      await queryClient.invalidateQueries();
+      toast.success("Refreshed farmer deposits data");
+    } catch (error) {
+      console.error("Error refreshing deposits:", error);
+      toast.error("Failed to refresh deposits");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper to format value
+  const formatValue = (value) => {
+    if (!value) return "0";
+    return value.toHuman ? value.toHuman() : "0";
+  };
+
+  return (
+    <Card className="p-6">
+      <h2 className="text-2xl mb-4">Farmer Silo Deposits</h2>
+      
+      <div className="flex justify-between items-center mb-6">
+        <div className="text-sm text-gray-500">
+          {address ? `Current account: ${address}` : "No account connected"}
+        </div>
+        <Button 
+          onClick={handleRefresh} 
+          disabled={loading || !address}
+          className="px-4 py-2"
+        >
+          {loading ? "Refreshing..." : "Refresh Deposits"}
+        </Button>
+      </div>
+
+      {!address ? (
+        <div className="text-center py-8 text-gray-500">
+          Connect your wallet to view deposits
+        </div>
+      ) : !deposits || deposits.size === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          No deposits found for this account
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="grid grid-cols-5 gap-4 font-medium text-sm text-pinto-gray-4 p-2 border-b">
+            <div>Token</div>
+            <div>Amount</div>
+            <div>BDV</div>
+            <div>Stalk</div>
+            <div>Seeds</div>
+          </div>
+          
+          {Array.from(deposits.entries() || []).map(([token, depositData]) => (
+            <div key={token.address} className="border-b pb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <img src={token.logoURI} alt={token.symbol} className="w-6 h-6 rounded-full" />
+                <span className="font-medium">{token.symbol}</span>
+              </div>
+              
+              <div className="grid grid-cols-5 gap-4 text-sm">
+                <div className="font-medium">Total:</div>
+                <div className="font-mono">{formatValue(depositData.amount)}</div>
+                <div>
+                  <span className="font-semibold">
+                    BDV:{" "}
+                  </span>
+                  <span className="font-mono">{depositData.currentBDV.toHuman()}</span>
+                </div>
+                <div className="font-mono">{formatValue(depositData.stalk?.total)}</div>
+                <div className="font-mono">{formatValue(depositData.seeds)}</div>
+              </div>
+              
+              {depositData.deposits && depositData.deposits.length > 0 ? (
+                <div className="mt-4">
+                  <div className="text-xs font-medium text-pinto-gray-4 mb-2">Individual Deposits:</div>
+                  <div className="space-y-2 pl-4">
+                    {depositData.deposits.map((deposit, i) => (
+                      <div key={i} className="grid grid-cols-5 gap-4 text-xs text-pinto-gray-5">
+                        <div className="font-mono">Stem: {deposit.stem.toString()}</div>
+                        <div className="font-mono">{formatValue(deposit.amount)}</div>
+                        <div>
+                          <span className="font-semibold">
+                            BDV:{" "}
+                          </span>
+                          <span className="font-mono">{deposit.currentBdv.toHuman()}</span>
+                        </div>
+                        <div className="font-mono">{formatValue(deposit.stalk?.base)}</div>
+                        <div className="font-mono">{formatValue(deposit.seeds)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ))}
+          
+          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+            <div className="flex justify-between font-medium mb-2">
+              <span>Total Stalk:</span>
+              <span className="font-mono">{formatValue(farmerSilo.activeStalkBalance)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>Earned Beans:</span>
+              <span className="font-mono">{formatValue(farmerSilo.earnedBeansBalance)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>Total Seeds:</span>
+              <span className="font-mono">{formatValue(farmerSilo.activeSeedsBalance)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
