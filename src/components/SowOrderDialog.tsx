@@ -16,7 +16,7 @@ import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { Blueprint } from "@/lib/Tractor/types";
 import { TokenStrategy, createSowTractorData } from "@/lib/Tractor/utils";
 import { needsCombining } from "@/lib/claim/depositUtils";
-import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePodLine, useTemperature } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
@@ -42,7 +42,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [podLineLength, setPodLineLength] = useState("");
   const [rawPodLineLength, setRawPodLineLength] = useState(""); // Track raw input
   const podLineLengthTimeoutRef = useRef<NodeJS.Timeout | null>(null); // For debounce
-  const farmerSilo = useFarmerSiloNew();
+  const farmerSilo = useFarmerSilo();
   const farmerDeposits = farmerSilo.deposits;
   const { whitelistedTokens, mainToken } = useTokenData();
   const priceData = usePriceData();
