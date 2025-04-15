@@ -91,24 +91,24 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
     const priceDescriptiveText = caseIdToDescriptiveText(data.caseId, "price");
     const filteredSowEvents = sowEvents.data.reduce(
       (acc, event) => {
-        if (!seasonsData[index - 1] || !seasonsData[index + 1]) {
+        if (!displaySeasonsData[index - 1] || !displaySeasonsData[index + 1]) {
           return acc;
         }
         if (
           event.blockNumber >= BigInt(data.sunriseBlock) &&
-          event.blockNumber <= BigInt(seasonsData[index - 1]?.sunriseBlock)
+          event.blockNumber <= BigInt(displaySeasonsData[index - 1]?.sunriseBlock)
         ) {
           acc[data.season].push(event);
         }
         if (
           event.blockNumber <= BigInt(data?.sunriseBlock) &&
-          event.blockNumber >= BigInt(seasonsData[index + 1]?.sunriseBlock)
+          event.blockNumber >= BigInt(displaySeasonsData[index + 1]?.sunriseBlock)
         ) {
-          acc[seasonsData[index + 1].season].push(event);
+          acc[displaySeasonsData[index + 1].season].push(event);
         }
         return acc;
       },
-      { [data.season]: [], [seasonsData[index + 1]?.season]: [] } as Record<number, SowEvent[]>,
+      { [data.season]: [], [displaySeasonsData[index + 1]?.season]: [] } as Record<number, SowEvent[]>,
     );
     return (
       <TableRow key={data.season} style={style} noHoverMute>
@@ -184,7 +184,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
             data.season > 5 && (
               <DeltaDemandChart
                 currentSeason={data}
-                surroundingSeasons={[seasonsData[index - 1], seasonsData[index + 1]]}
+                surroundingSeasons={[displaySeasonsData[index - 1], displaySeasonsData[index + 1]]}
                 filteredSowEvents={filteredSowEvents}
               />
             )

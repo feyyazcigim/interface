@@ -58,7 +58,6 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
   const isChartReady = Object.values(sowEventTimings).every((timings) => !!timings);
 
   const mappedData = useMemo(() => {
-    const calculatedSowEventTimings = sowEventTimings;
     const labels: string[] = [];
     const data: Record<number, LineChartData[]> = {};
     const indexesWithSowEvents: number[] = [];
@@ -68,7 +67,7 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
       surroundingSeasons[1].sunriseBlock - surroundingSeasons[0].sunriseBlock,
     );
 
-    Object.entries(calculatedSowEventTimings).forEach(([key, timings], idx) => {
+    Object.entries(sowEventTimings).forEach(([key, timings], idx) => {
       if (!data[idx]) {
         data[idx] = [];
       }
