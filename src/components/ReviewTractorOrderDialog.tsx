@@ -49,6 +49,7 @@ interface ReviewTractorOrderProps {
     operatorTip: string;
     tokenStrategy?: "LOWEST_SEEDS" | "LOWEST_PRICE" | "SPECIFIC_TOKEN";
     tokenSymbol?: string;
+    morningAuction?: boolean;
   };
   encodedData: `0x${string}`;
   operatorPasteInstrs: `0x${string}`[];
@@ -314,6 +315,12 @@ export default function ReviewTractorOrderDialog({
                               <span className="text-pinto-green-4">{orderData.minSoil}</span>
                             </span>
                           </li>
+                          <li className="flex items-center gap-2">
+                            <CornerBottomLeftIcon className="text-gray-300 ml-4" />
+                            <span className="font-antarctica font-light text-[#9C9C9C]">
+                              AND {orderData.morningAuction ? "during" : "after"} the morning auction
+                            </span>
+                          </li>
                         </ul>
                       </div>
                     </div>
@@ -559,7 +566,7 @@ export default function ReviewTractorOrderDialog({
             {!isViewOnly ? (
               <div className="flex justify-between items-center mt-4">
                 <p className="text-gray-600">
-                  Your Order will remain active until you've Sown {orderData.totalAmount} Pods under the specified
+                  Your Order will remain active until you've Sown {orderData.totalAmount} Pinto under the specified
                   conditions or until Order cancellation
                 </p>
                 <div className="flex gap-2">

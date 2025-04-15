@@ -9,7 +9,6 @@ import PlotsTable from "@/components/PlotsTable";
 import { Button } from "@/components/ui/Button";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
-import Text from "@/components/ui/Text";
 import MorningTemperatureChart from "@/pages/field/MorningTemperature";
 import {
   useUpdateMorningSoilOnInterval,
@@ -18,14 +17,13 @@ import {
 
 import MobileActionBar from "@/components/MobileActionBar";
 import TooltipSimple from "@/components/TooltipSimple";
-import IconImage from "@/components/ui/IconImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useFarmerField } from "@/state/useFarmerField";
 import { useHarvestableIndex, useHarvestableIndexLoading } from "@/state/useFieldData";
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import FieldActions from "./field/FieldActions";
 import FieldActivity from "./field/FieldActivity";
@@ -40,16 +38,25 @@ function Field() {
   const farmerField = useFarmerField();
   const harvestableIndex = useHarvestableIndex();
   const harvestableIndexLoading = useHarvestableIndexLoading();
-  const [activeTab, setActiveTab] = useState<"activity" | "pods" | "tractor">("activity");
   const [searchParams] = useSearchParams();
 
-  // Set the active tab based on URL query parameter if present
-  useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    if (tabParam === "activity" || tabParam === "pods" || tabParam === "tractor") {
-      setActiveTab(tabParam);
+  // Set the active tab (default to 'activity' or 'pods' on mobile)
+  const [activeTab, setActiveTab] = useState(() => {
+    // Get tab from query params if available
+    const tabParam = searchParams.get('tab');
+    
+    // On mobile devices, default to 'pods'
+    if (isMobile) {
+      return tabParam === 'activity' || tabParam === 'pods' || tabParam === 'tractor' 
+        ? tabParam 
+        : 'pods';
     }
-  }, [searchParams]);
+    
+    // On desktop, use the param or default to 'activity'
+    return tabParam === 'activity' || tabParam === 'pods' || tabParam === 'tractor' 
+      ? tabParam 
+      : 'activity';
+  });
 
   const hasPods = farmerField.plots.length > 0;
   const totalPods = useMemo(
@@ -65,9 +72,6 @@ function Field() {
   );
 
   const navigate = useNavigate();
-
-  const isMobile = useIsMobile();
-  const currentAction = searchParams.get("action");
 
   const morning = useMorning();
 
@@ -124,7 +128,7 @@ function Field() {
 
           {(!isMobile || (!currentAction && isMobile)) && (
             <>
-              <div className="flex flex-row justify-between items-center">
+              <div className="flex flex-row justify-between items-center overflow-x-auto scrollbar-none">
                 <div className="flex space-x-1">
                   <button
                     type="button"
