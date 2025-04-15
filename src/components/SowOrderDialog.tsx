@@ -1248,7 +1248,8 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
             tokenStrategy: selectedTokenStrategy.type,
             tokenSymbol: selectedTokenStrategy.type === "SPECIFIC_TOKEN" 
               ? whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.symbol 
-              : undefined
+              : undefined,
+            morningAuction
           }}
           encodedData={encodedData}
           operatorPasteInstrs={operatorPasteInstructions}
