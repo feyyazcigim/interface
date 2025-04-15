@@ -2,7 +2,7 @@ import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { useChartSetupData } from "@/state/useChartSetupData";
 import useSeasonsDataChart from "@/state/useSeasonsDataChart";
 import { useSeason } from "@/state/useSunData";
-import { cn } from "@/utils/utils";
+import { cn, safeJSONParse, safeJSONStringify } from "@/utils/utils";
 import { atom, useAtom } from "jotai";
 import { IRange, Time, UTCTimestamp } from "lightweight-charts";
 import { useEffect, useMemo, useState } from "react";
@@ -19,9 +19,13 @@ export const AdvancedChart = () => {
   const currentSeason = useSeason();
 
   const storedSetting1 = localStorage.getItem("advancedChartTimePeriod");
-  const storedTimePeriod = storedSetting1 ? JSON.parse(storedSetting1) : undefined;
+  const storedTimePeriod = storedSetting1
+    ? safeJSONParse<IRange<Time>, undefined>(storedSetting1, undefined)
+    : undefined;
   const storedSetting2 = localStorage.getItem("advancedChartSelectedCharts");
-  const storedSelectedCharts = storedSetting2 ? JSON.parse(storedSetting2) : undefined;
+  const storedSelectedCharts = storedSetting2
+    ? safeJSONParse<number[], undefined>(storedSetting2, undefined)
+    : undefined;
 
   const [timePeriod, setTimePeriod] = useState<IRange<Time> | undefined>(storedTimePeriod);
   const [selectedCharts, setSelectedCharts] = useAtom(selectedChartsAtom);
@@ -31,7 +35,7 @@ export const AdvancedChart = () => {
     const newSelection = [...selectedCharts];
     newSelection.splice(selectionIndex, 1);
     setSelectedCharts(newSelection);
-    localStorage.setItem("advancedChartSelectedCharts", JSON.stringify(newSelection));
+    localStorage.setItem("advancedChartSelectedCharts", safeJSONStringify(newSelection));
   }
 
   const togglePanel = () => {

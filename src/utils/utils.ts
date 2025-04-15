@@ -213,3 +213,21 @@ export const hexToRgba = (hex: string, alpha?: number) => {
 
   return `rgba(${r}, ${g}, ${b}, ${alpha ?? 1})`;
 };
+
+export function safeJSONParse<T, F = false>(jsonString: string, fallbackValue: F): T | F {
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch (error) {
+    console.error("Failed to parse JSON:", error);
+    return fallbackValue;
+  }
+}
+
+export function safeJSONStringify<T>(value: T, fallbackValue: string = "{}"): string {
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    console.error("Failed to stringify object:", error);
+    return fallbackValue;
+  }
+}
