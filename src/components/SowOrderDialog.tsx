@@ -1,32 +1,32 @@
-import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
-import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
-import { usePodLine, useTemperature } from "@/state/useFieldData";
+import arrowDown from "@/assets/misc/ChevronDown.svg";
+import seedIcon from "@/assets/protocol/Seed.png";
+import stalkIcon from "@/assets/protocol/Stalk.png";
 import { TokenValue } from "@/classes/TokenValue";
-import { useState, useMemo, useEffect, useRef } from "react";
-import { formatter } from "@/utils/format";
-import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
-import useTokenData from "@/state/useTokenData";
-import useSwap from "@/hooks/swap/useSwap";
-import { PINTO } from "@/constants/tokens";
-import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
-import { FarmFromMode, FarmToMode } from "@/utils/types";
-import IconImage from "@/components/ui/IconImage";
-import { TokenStrategy, createSowTractorData } from "@/lib/Tractor/utils";
+import { InfoOutlinedIcon, WarningIcon } from "@/components/Icons";
 import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
+import IconImage from "@/components/ui/IconImage";
+import { PINTO } from "@/constants/tokens";
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
+import useSwap from "@/hooks/swap/useSwap";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
 import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
+import { Blueprint } from "@/lib/Tractor/types";
+import { TokenStrategy, createSowTractorData } from "@/lib/Tractor/utils";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
+import { usePodLine, useTemperature } from "@/state/useFieldData";
+import { usePriceData } from "@/state/usePriceData";
+import useTokenData from "@/state/useTokenData";
+import { formatter } from "@/utils/format";
+import { FarmFromMode, FarmToMode } from "@/utils/types";
+import { isDev } from "@/utils/utils"; // Only used for pre-filling form data for faster developing, remove before prod
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAccount, usePublicClient } from "wagmi";
-import { isDev } from "@/utils/utils"; // Only used for pre-filling form data for faster developing, remove before prod
-import { Blueprint } from "@/lib/Tractor/types";
-import { InfoOutlinedIcon, WarningIcon } from "@/components/Icons";
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import stalkIcon from "@/assets/protocol/Stalk.png";
-import seedIcon from "@/assets/protocol/Seed.png";
-import { usePriceData } from "@/state/usePriceData";
-import arrowDown from "@/assets/misc/ChevronDown.svg";
+import { Button } from "./ui/Button";
+import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
+import { Input } from "./ui/Input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 
 interface SowOrderDialogProps {
   open: boolean;
@@ -39,7 +39,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [podLineLength, setPodLineLength] = useState("");
   const [rawPodLineLength, setRawPodLineLength] = useState(""); // Track raw input
   const podLineLengthTimeoutRef = useRef<NodeJS.Timeout | null>(null); // For debounce
-  const farmerSilo = useFarmerSiloNew();
+  const farmerSilo = useFarmerSilo();
   const farmerDeposits = farmerSilo.deposits;
   const { whitelistedTokens } = useTokenData();
   const priceData = usePriceData();
@@ -59,7 +59,9 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const publicClient = usePublicClient();
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
   const [formStep, setFormStep] = useState(1); // Track which step of the form we're on
-  const [activeTipButton, setActiveTipButton] = useState<"down5" | "down1" | "average" | "up1" | "up5" | null>("average");
+  const [activeTipButton, setActiveTipButton] = useState<"down5" | "down1" | "average" | "up1" | "up5" | null>(
+    "average",
+  );
   const temperatureInputRef = useRef<HTMLInputElement>(null);
 
   // Get LP tokens
@@ -102,9 +104,9 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     // Remove any existing commas
     const cleanValue = value.replace(/,/g, "");
     // Format with commas but preserve decimal portion
-    const parts = cleanValue.split('.');
+    const parts = cleanValue.split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return parts.join('.');
+    return parts.join(".");
   };
 
   // Handle debounced formatting for pod line length
@@ -114,13 +116,13 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       if (podLineLengthTimeoutRef.current) {
         clearTimeout(podLineLengthTimeoutRef.current);
       }
-      
+
       // Set new timeout
       podLineLengthTimeoutRef.current = setTimeout(() => {
         setPodLineLength(formatNumberWithCommas(rawPodLineLength));
       }, 500); // 500ms debounce
     }
-    
+
     // Cleanup timeout on unmount
     return () => {
       if (podLineLengthTimeoutRef.current) {
@@ -312,7 +314,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     } else if (selectedTokenStrategy.type === "LOWEST_PRICE") {
       return "Token with Best Price";
     } else if (selectedTokenStrategy.type === "SPECIFIC_TOKEN") {
-      const token = whitelistedTokens.find(t => t.address === selectedTokenStrategy.address);
+      const token = whitelistedTokens.find((t) => t.address === selectedTokenStrategy.address);
       return token?.symbol || "Select Token";
     }
     return "Select Deposited Silo Token";
@@ -321,33 +323,33 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   // Add a function to get the dollar value for the selected strategy
   const getSelectedTokenDollarValue = () => {
     if (selectedTokenStrategy.type === "SPECIFIC_TOKEN" && selectedTokenStrategy.address) {
-      const token = whitelistedTokens.find(t => t.address === selectedTokenStrategy.address);
-      
+      const token = whitelistedTokens.find((t) => t.address === selectedTokenStrategy.address);
+
       // If it's PINTO token, use its direct value multiplied by price
       if (token?.symbol === "PINTO") {
         const pintoDeposit = farmerDeposits.get(token);
         return pintoDeposit?.amount ? pintoDeposit.amount.mul(priceData.price) : TokenValue.ZERO;
       }
-      
+
       return swapResults.get(selectedTokenStrategy.address) || TokenValue.ZERO;
     } else if (selectedTokenStrategy.type === "LOWEST_PRICE" || selectedTokenStrategy.type === "LOWEST_SEEDS") {
       // Sum all token dollar values
       let totalValue = TokenValue.ZERO;
-      
+
       // Include PINTO tokens in the calculation
-      const pintoToken = whitelistedTokens.find(t => t.symbol === "PINTO");
+      const pintoToken = whitelistedTokens.find((t) => t.symbol === "PINTO");
       if (pintoToken) {
         const pintoDeposit = farmerDeposits.get(pintoToken);
         if (pintoDeposit?.amount) {
           totalValue = totalValue.add(pintoDeposit.amount.mul(priceData.price));
         }
       }
-      
+
       // Add all LP token values
       swapResults.forEach((value) => {
         totalValue = totalValue.add(value);
       });
-      
+
       return totalValue;
     }
     return TokenValue.ZERO;
@@ -357,11 +359,16 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const getTipValue = (type: "down5" | "down1" | "average" | "up1" | "up5") => {
     const baseValue = 1;
     switch (type) {
-      case "down5": return (baseValue * 0.95).toFixed(2);
-      case "down1": return (baseValue * 0.99).toFixed(2);
-      case "average": return "1.00";
-      case "up1": return (baseValue * 1.01).toFixed(2);
-      case "up5": return (baseValue * 1.05).toFixed(2);
+      case "down5":
+        return (baseValue * 0.95).toFixed(2);
+      case "down1":
+        return (baseValue * 0.99).toFixed(2);
+      case "average":
+        return "1.00";
+      case "up1":
+        return (baseValue * 1.01).toFixed(2);
+      case "up5":
+        return (baseValue * 1.05).toFixed(2);
     }
   };
 
@@ -450,7 +457,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       const total = TokenValue.fromHuman(totalClean, PINTO.decimals);
       const min = TokenValue.fromHuman(minClean, PINTO.decimals);
       const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
-      
+
       // Parse the operator tip
       const tipValue = parseFloat(operatorTip);
 
@@ -491,10 +498,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     // Get the cursor position before making changes
     const cursorPosition = e.target.selectionStart || 0;
     const value = e.target.value;
-    const hadPercentSign = value.includes('%');
-    
+    const hadPercentSign = value.includes("%");
+
     // Check if user is deleting the % sign
-    if (value.endsWith('%') && cursorPosition === value.length) {
+    if (value.endsWith("%") && cursorPosition === value.length) {
       // If cursor is at the end (after %), move it back one position
       setTimeout(() => {
         if (temperatureInputRef.current) {
@@ -507,14 +514,14 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     // Remove % and any non-numeric characters except decimal
     const cleanValue = value.replace(/[^0-9.,]/g, "");
     setTemperature(cleanValue); // Store clean value without %
-    
+
     // Add % for display
     const newDisplayValue = `${cleanValue}%`;
     setDisplayTemperature(newDisplayValue);
-    
+
     // Calculate where the cursor should be
     let newPosition = cursorPosition;
-    
+
     // If we're deleting a character (current value is shorter than previous + adjustment for % sign)
     if (cleanValue.length < temperature.length) {
       newPosition = cursorPosition;
@@ -522,10 +529,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       // If we didn't have a % sign before but now we do, adjust accordingly
       newPosition = cursorPosition;
     }
-    
+
     // Ensure cursor position is clamped to a valid range and before %
     newPosition = Math.min(newPosition, cleanValue.length);
-    
+
     // Set cursor position with a timeout to ensure it happens after React's rendering
     setTimeout(() => {
       if (temperatureInputRef.current) {
@@ -544,7 +551,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   // Function to handle temperature input focus
   const handleTemperatureFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     // If cursor is at the end, move it before the % sign
-    if (e.target.value.endsWith('%')) {
+    if (e.target.value.endsWith("%")) {
       setTimeout(() => {
         if (temperatureInputRef.current) {
           const pos = e.target.value.length - 1;
@@ -558,24 +565,24 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const handleTemperatureKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const cursorPosition = e.currentTarget.selectionStart || 0;
     const value = e.currentTarget.value;
-    
+
     // If backspace is pressed and cursor is after the last number (right before or at %)
-    if (e.key === 'Backspace' && cursorPosition >= value.length - 1) {
+    if (e.key === "Backspace" && cursorPosition >= value.length - 1) {
       const newValue = temperature.slice(0, -1);
       setTemperature(newValue);
-      setDisplayTemperature(newValue ? `${newValue}%` : '');
-      
+      setDisplayTemperature(newValue ? `${newValue}%` : "");
+
       // Position cursor at the end of the number portion
       setTimeout(() => {
         if (temperatureInputRef.current) {
           temperatureInputRef.current.setSelectionRange(newValue.length, newValue.length);
         }
       }, 0);
-      
+
       e.preventDefault();
-    } 
+    }
     // If delete key is pressed and cursor is right before %
-    else if (e.key === 'Delete' && cursorPosition === value.length - 1) {
+    else if (e.key === "Delete" && cursorPosition === value.length - 1) {
       e.preventDefault();
     }
   };
@@ -637,7 +644,6 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       </div>
                     </div>
                   </div>
-
 
                   {/* Min and Max per Season - combined in a single row */}
                   <div className="flex flex-col gap-2">
@@ -703,18 +709,21 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   <div className="flex flex-col gap-2">
                     <div className="flex justify-between items-center">
                       <div className="text-[#9C9C9C] text-base font-light">Fund order using</div>
-                      <Button 
-                        variant="outline-gray-shadow" 
-                        size="xl" 
+                      <Button
+                        variant="outline-gray-shadow"
+                        size="xl"
                         rounded="full"
                         onClick={() => setShowTokenSelectionDialog(true)}
                       >
                         <div className="flex items-center gap-2">
                           {selectedTokenStrategy.type === "SPECIFIC_TOKEN" && (
-                            <IconImage 
-                              src={whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.logoURI || ""} 
-                              alt="token" 
-                              size={6} 
+                            <IconImage
+                              src={
+                                whitelistedTokens.find((t) => t.address === selectedTokenStrategy.address)?.logoURI ||
+                                ""
+                              }
+                              alt="token"
+                              size={6}
                               className="rounded-full"
                             />
                           )}
@@ -724,7 +733,6 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       </Button>
                     </div>
                   </div>
-
 
                   {/* Execute when Temperature is at least */}
                   <div className="flex flex-row items-center justify-between gap-4">
@@ -762,10 +770,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         const value = e.target.value.replace(/[^\d,\.]/g, "");
                         // Ensure at most one decimal point
                         const decimalCount = (value.match(/\./g) || []).length;
-                        const sanitizedValue = decimalCount > 1 
-                          ? value.replace(/\./g, (match, index) => index === value.indexOf('.') ? match : '')
-                          : value;
-                        
+                        const sanitizedValue =
+                          decimalCount > 1
+                            ? value.replace(/\./g, (match, index) => (index === value.indexOf(".") ? match : ""))
+                            : value;
+
                         // Store raw input and update displayed value
                         setRawPodLineLength(sanitizedValue.replace(/,/g, ""));
                         setPodLineLength(sanitizedValue);
@@ -881,10 +890,8 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 // Step 2 - Operator Tip
                 <div className="flex flex-col gap-6 mt-6">
                   <div className="flex flex-col">
-                    <div className="text-[#9C9C9C] text-base font-light mb-4">
-                      I'm willing to pay someone
-                    </div>
-                    
+                    <div className="text-[#9C9C9C] text-base font-light mb-4">I'm willing to pay someone</div>
+
                     <div className="flex rounded-[12px] border border-[#D9D9D9] mb-4">
                       <input
                         className="h-12 px-3 py-1.5 flex-1 rounded-l-[12px] focus:outline-none text-base font-light"
@@ -904,7 +911,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         <span className="text-base font-normal">PINTO</span>
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-between gap-2 mb-4">
                       <Button
                         variant="outline"
@@ -967,27 +974,21 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         5% ↑
                       </Button>
                     </div>
-                    
+
                     <div className="text-[#9C9C9C] text-base font-light mb-6">
                       each time they Sow part of my Tractor Order.
                     </div>
-                    
+
                     <div className="flex flex-col gap-2 mb-6">
                       <div className="flex justify-between">
-                        <div className="text-[#9C9C9C] text-base font-light">
-                          Estimated total number of executions
-                        </div>
-                        <div className="text-black text-base font-light">
-                          {calculateEstimatedExecutions()}
-                        </div>
+                        <div className="text-[#9C9C9C] text-base font-light">Estimated total number of executions</div>
+                        <div className="text-black text-base font-light">{calculateEstimatedExecutions()}</div>
                       </div>
                       <div className="flex justify-between items-center">
-                        <div className="text-[#9C9C9C] text-base font-light">
-                          Estimated total tip
-                        </div>
+                        <div className="text-[#9C9C9C] text-base font-light">Estimated total tip</div>
                         <div className="flex items-center text-black text-base font-light">
-                          {calculateEstimatedTotalTip()} 
-                          <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-5 h-5 mx-1" /> 
+                          {calculateEstimatedTotalTip()}
+                          <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-5 h-5 mx-1" />
                           PINTO
                         </div>
                       </div>
@@ -1017,7 +1018,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     <div className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
                     </div>
-                  ) : formStep === 1 ? "Next" : "Review"}
+                  ) : formStep === 1 ? (
+                    "Next"
+                  ) : (
+                    "Review"
+                  )}
                 </Button>
               </div>
             </div>
@@ -1029,7 +1034,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       <Dialog open={showTokenSelectionDialog} onOpenChange={setShowTokenSelectionDialog}>
         <DialogPortal>
           <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
-          <DialogContent 
+          <DialogContent
             className="sm:max-w-[700px] mx-auto p-0 bg-white rounded-2xl border border-[#D9D9D9]"
             style={{ padding: 0, gap: 0 }}
           >
@@ -1041,15 +1046,15 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
               </div>
               <p className="text-gray-500 mb-2">Tractor allows you to fund Orders for Soil using Deposits</p>
               <div className="w-full h-[1px] bg-[#D9D9D9] mb-6" />
-              
+
               {/* Dynamic funding source options */}
               <div className="flex flex-col gap-4 mb-6">
                 <div className="text-gray-500">Dynamic funding source</div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div 
+                  <div
                     className={`flex items-center px-6 py-4 gap-2 rounded-[36px] cursor-pointer ${
-                      selectedTokenStrategy.type === "LOWEST_PRICE" 
-                        ? "bg-[#F8F8F8] border border-[#D9D9D9]" 
+                      selectedTokenStrategy.type === "LOWEST_PRICE"
+                        ? "bg-[#F8F8F8] border border-[#D9D9D9]"
                         : "bg-[#F8F8F8] border border-[#D9D9D9]"
                     }`}
                     onClick={() => {
@@ -1057,22 +1062,27 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       setShowTokenSelectionDialog(false);
                     }}
                   >
-                    <div className={`w-10 h-10 rounded-full ${
-                      selectedTokenStrategy.type === "LOWEST_PRICE" 
-                        ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]" 
-                        : "border border-[#D9D9D9]"
-                    }`}>
-                    </div>
+                    <div
+                      className={`w-10 h-10 rounded-full ${
+                        selectedTokenStrategy.type === "LOWEST_PRICE"
+                          ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]"
+                          : "border border-[#D9D9D9]"
+                      }`}
+                    ></div>
                     <div className="flex flex-col gap-1">
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">Token with Best Price</span>
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">at time of execution</span>
+                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">
+                        Token with Best Price
+                      </span>
+                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">
+                        at time of execution
+                      </span>
                     </div>
                   </div>
-                  
-                  <div 
+
+                  <div
                     className={`flex items-center px-6 py-4 gap-2 rounded-[36px] cursor-pointer ${
-                      selectedTokenStrategy.type === "LOWEST_SEEDS" 
-                        ? "bg-[#F8F8F8] border border-[#D9D9D9]" 
+                      selectedTokenStrategy.type === "LOWEST_SEEDS"
+                        ? "bg-[#F8F8F8] border border-[#D9D9D9]"
                         : "bg-[#F8F8F8] border border-[#D9D9D9]"
                     }`}
                     onClick={() => {
@@ -1080,20 +1090,25 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       setShowTokenSelectionDialog(false);
                     }}
                   >
-                    <div className={`w-10 h-10 rounded-full ${
-                      selectedTokenStrategy.type === "LOWEST_SEEDS" 
-                        ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]" 
-                        : "border border-[#D9D9D9]"
-                    }`}>
-                    </div>
+                    <div
+                      className={`w-10 h-10 rounded-full ${
+                        selectedTokenStrategy.type === "LOWEST_SEEDS"
+                          ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]"
+                          : "border border-[#D9D9D9]"
+                      }`}
+                    ></div>
                     <div className="flex flex-col gap-1">
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">Token with Least Seeds</span>
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">at time of execution</span>
+                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">
+                        Token with Least Seeds
+                      </span>
+                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">
+                        at time of execution
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               {/* Deposited Tokens */}
               <div className="flex flex-col gap-2">
                 <div className="text-gray-500">Deposited Tokens</div>
@@ -1101,17 +1116,19 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   {whitelistedTokens.map((token) => {
                     const deposit = farmerDeposits.get(token);
                     const amount = deposit?.amount || TokenValue.ZERO;
-                    
+
                     // Calculate dollar value - use price for PINTO, swap results for LP tokens
-                    const pintoAmount = token.symbol === "PINTO" 
-                      ? amount.mul(priceData.price) 
-                      : swapResults.get(token.address) || TokenValue.ZERO;
-                      
-                    const isSelected = selectedTokenStrategy.type === "SPECIFIC_TOKEN" && 
-                                      selectedTokenStrategy.address === token.address;
+                    const pintoAmount =
+                      token.symbol === "PINTO"
+                        ? amount.mul(priceData.price)
+                        : swapResults.get(token.address) || TokenValue.ZERO;
+
+                    const isSelected =
+                      selectedTokenStrategy.type === "SPECIFIC_TOKEN" &&
+                      selectedTokenStrategy.address === token.address;
 
                     return (
-                      <div 
+                      <div
                         key={token.address}
                         className={`flex items-center justify-between py-4 cursor-pointer rounded-lg ${
                           isSelected ? "bg-green-50" : "bg-white"
@@ -1129,15 +1146,17 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                           <div className="flex flex-col">
                             <div className="font-medium text-lg mb-1">{token.symbol}</div>
                             <div className="flex items-center text-xs text-gray-500 gap-1">
-                              <IconImage src={stalkIcon} size={3} alt="Stalk" /> {formatter.number(deposit?.stalk?.total || 0)} Stalk 
-                              <IconImage src={seedIcon} size={3} alt="Seeds" className="ml-1" /> {formatter.number(deposit?.seeds || 0)} Seeds
+                              <IconImage src={stalkIcon} size={3} alt="Stalk" />{" "}
+                              {formatter.number(deposit?.stalk?.total || 0)} Stalk
+                              <IconImage src={seedIcon} size={3} alt="Seeds" className="ml-1" />{" "}
+                              {formatter.number(deposit?.seeds || 0)} Seeds
                             </div>
                           </div>
                         </div>
                         <div className="flex flex-col items-end">
                           <div className="text-right text-xl font-medium">
-                            {amount.toNumber() > 0 && amount.toNumber() < 0.01 
-                              ? formatter.number(amount, { minDecimals: 4, maxDecimals: 8 }) 
+                            {amount.toNumber() > 0 && amount.toNumber() < 0.01
+                              ? formatter.number(amount, { minDecimals: 4, maxDecimals: 8 })
                               : formatter.number(amount)}
                           </div>
                           <div className="text-right text-gray-500 text-sm">
@@ -1170,9 +1189,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
             minSoil,
             operatorTip,
             tokenStrategy: selectedTokenStrategy.type,
-            tokenSymbol: selectedTokenStrategy.type === "SPECIFIC_TOKEN" 
-              ? whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.symbol 
-              : undefined
+            tokenSymbol:
+              selectedTokenStrategy.type === "SPECIFIC_TOKEN"
+                ? whitelistedTokens.find((t) => t.address === selectedTokenStrategy.address)?.symbol
+                : undefined,
           }}
           encodedData={encodedData}
           operatorPasteInstrs={operatorPasteInstructions}
