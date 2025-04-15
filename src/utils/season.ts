@@ -2,7 +2,7 @@ import { TokenValue } from "@/classes/TokenValue";
 import { toFixedNumber } from "./format";
 
 export const seasonCutOffFor150 = 2710;
-export const seasonCutOffFor200 = 5000; // placeholder value, will likely be in the 3400-3600 range
+export const seasonCutOffFor200 = 5000; // placeholder value, will likely be in the 3400-3600 range TODO: FLOYD / burr please change!
 
 const getMaxCropRatioBySeason = (season: number) => {
   if (season >= seasonCutOffFor150 && season < seasonCutOffFor200) {
@@ -41,7 +41,11 @@ export function convertDeltaDemandToPercentage(deltaDemand: number) {
   return `${TokenValue.fromHuman(scaledValue, 0).toHuman("short")}%`;
 }
 
-export function caseIdToDescriptiveText(caseId: number, column: "price" | "soil_demand" | "pod_rate" | "l2sr") {
+export function caseIdToDescriptiveText(rawCaseID: number, column: "price" | "soil_demand" | "pod_rate" | "l2sr") {
+  let caseId = rawCaseID;
+  if (rawCaseID > 1000) {
+    caseId = rawCaseID - 1000;
+  }
   switch (column) {
     case "price":
       if ((caseId % 36) % 9 >= 6) return "P > Q";
