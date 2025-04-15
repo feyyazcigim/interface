@@ -1,6 +1,7 @@
 import useIsDesktop from "@/hooks/display/useIsDesktop";
 import { safeJSONStringify } from "@/utils/utils";
 import { format, isValid, parse, set, startOfYear, subHours, subMonths, subWeeks, subYears } from "date-fns";
+import { IRange, Time } from "lightweight-charts";
 import { useEffect, useState } from "react";
 import { ClassNames, DayPicker, DeprecatedUI, SelectRangeEventHandler } from "react-day-picker";
 import { CalendarIcon, ClockIcon } from "./Icons";
@@ -280,7 +281,7 @@ const CalendarContent = ({ isMobile, range, selectedPreset, onRangeChange, onPre
 // Main CalendarButton component
 interface CalendarButtonProps {
   storageKeyPrefix?: string;
-  setTimePeriod: (timePeriod: TimePeriod) => void;
+  setTimePeriod: (timePeriod: IRange<Time>) => void;
 }
 
 const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: CalendarButtonProps) => {
@@ -357,7 +358,7 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
         to: rangeToSave.to ? Math.floor(rangeToSave.to.valueOf() / 1000) : Math.floor(Date.now() / 1000),
       };
 
-      setTimePeriod(timePeriod);
+      setTimePeriod(timePeriod as IRange<Time>);
       localStorage.setItem(`${storageKeyPrefix}TimePeriod`, safeJSONStringify(timePeriod));
     } catch (error) {
       console.error("Error saving date range to localStorage", error);
