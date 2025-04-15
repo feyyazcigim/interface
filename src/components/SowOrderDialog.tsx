@@ -63,6 +63,31 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     "average",
   );
   const temperatureInputRef = useRef<HTMLInputElement>(null);
+  
+  // Claim rewards necessary if deposits have not been combined
+  const { submitClaimRewards, isSubmitting: isClaimSubmitting } = useClaimRewards();
+  
+  // Check if farmer needs combining using depositUtils
+  const needsDepositCombining = useMemo(() => {
+    return needsCombining(farmerDeposits);
+  }, [farmerDeposits]);
+  
+  // Initialize form step based on whether combining is needed
+  const [formStep, setFormStep] = useState(() => {
+    // If deposits need combining, start at step 0, otherwise normal flow
+    return needsDepositCombining ? 0 : 1;
+  });
+
+  // Recheck the need for combining whenever deposits change
+  useEffect(() => {
+    // Only auto-update if we're on step 0
+    if (formStep === 0) {
+      // If no longer needs combining, advance to step 1
+      if (!needsDepositCombining) {
+        setFormStep(1);
+      }
+    }
+  }, [needsDepositCombining, formStep]);
 
   // Get LP tokens
   const lpTokens = useMemo(() => whitelistedTokens.filter((t) => t.isLP), [whitelistedTokens]);
@@ -236,8 +261,13 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     }
   };
 
-  // Update handleNext to create two different steps
+  // Update handleNext to create three different steps (0, 1, 2)
   const handleNext = async () => {
+    // Step 0 does nothing on Next since we handle the claim button separately
+    if (formStep === 0) {
+      return;
+    }
+    
     // First step just moves to the next form view
     if (formStep === 1) {
       setFormStep(2);
@@ -305,10 +335,26 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     }
   };
 
+  // Handle claim button click in step 0
+  const handleClaim = async () => {
+    try {
+      await submitClaimRewards();
+      // We don't need to manually advance to the next step
+      // The useEffect will detect the change in needsDepositCombining
+      // and automatically advance when appropriate
+    } catch (e) {
+      console.error("Failed to claim rewards:", e);
+      toast.error("Failed to claim rewards");
+    }
+  };
+
   // Add handle back function
   const handleBack = () => {
     if (formStep === 2) {
       setFormStep(1);
+    } else if (formStep === 1) {
+      // Can't go back from step 1 to step 0 as step 0 is conditional
+      onOpenChange(false);
     } else {
       onOpenChange(false);
     }
@@ -612,21 +658,23 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       <div className="h-auto w-full flex flex-col">
         <div className="py-4 pb-0">
           <div className="flex flex-col gap-6">
-            {/* Title */}
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-row items-center gap-6">
-                  <h2 className="font-antarctica font-medium text-[20px] leading-[115%] text-black">
-                    Create an Order to Sow automatically
-                  </h2>
-                </div>
-                <div className="w-full h-[1px] bg-[#D9D9D9]" />
-              </div>
-            </div>
-
             {/* Form Fields */}
             <div className="flex flex-col gap-6">
-              {formStep === 1 ? (
+              {formStep === 0 ? (
+                // Step 0 - Deposits need combining
+                <div className="flex flex-col gap-4 py-2 h-[280px]">
+                  <div className="flex items-center justify-center">
+                    <WarningIcon color="#DC2626" width={40} height={40} />
+                  </div>
+                  <h3 className="text-center pinto-h3 font-antarctica mt-4 mb-4">
+                    Fragmented Silo Deposits
+                  </h3>
+                  <p className="text-center pinto-body text-gray-700">
+                    Pinto does not combine and sort deposits by default, due to gas costs. A one-time claim and combine will optimize your deposits and allow you to create Tractor orders.
+                  </p>
+                  {/* The Claim & Combine button has been moved to the footer (replacing the Next button) */}
+                </div>
+              ) : formStep === 1 ? (
                 // Step 1 - Main Form
                 <>
                   {/* I want to Sow up to */}
@@ -1004,7 +1052,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 </div>
               )}
 
-              <div className="flex gap-6 mt-6">
+              <div className={`flex gap-6 ${formStep === 0 ? 'mt-24' : 'mt-6'}`}>
                 <Button
                   variant="outline"
                   className="flex-1 h-[60px] rounded-full text-2xl font-medium text-[#404040] bg-[#F8F8F8]"
@@ -1031,6 +1079,31 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     "Review"
                   )}
                 </Button>
+                /** {formStep === 0 ? (
+                  <SmartSubmitButton
+                    variant="gradient"
+                    submitFunction={handleClaim}
+                    disabled={isClaimSubmitting}
+                    submitButtonText={isClaimSubmitting ? "Combining..." : "Combine"}
+                    className="flex-1 h-[60px] rounded-full text-2xl font-medium"
+                  />
+                ) : (
+                  <Button
+                    className={`flex-1 h-[60px] rounded-full text-2xl font-medium ${
+                      (formStep === 1 && (error || !isPodLineLengthValid())) || isLoading
+                        ? "bg-[#D9D9D9] text-[#9C9C9C]"
+                        : "bg-[#2F8957] text-white"
+                    }`}
+                    disabled={(formStep === 1 && (!!error || !isPodLineLengthValid())) || isLoading}
+                    onClick={handleNext}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+                      </div>
+                    ) : formStep === 1 ? "Next" : "Review"}
+                  </Button>
+                )} */
               </div>
             </div>
           </div>

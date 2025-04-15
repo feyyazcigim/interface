@@ -145,7 +145,7 @@ export function PlowDetails({ requisition, isOpen, onClose, onSuccess }: PlowDet
               </div>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-4">
+            {/* <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
@@ -155,7 +155,7 @@ export function PlowDetails({ requisition, isOpen, onClose, onSuccess }: PlowDet
               <Button onClick={handlePlow} disabled={submitting}>
                 {submitting ? "Plowing..." : "Plow"}
               </Button>
-            </div>
+            </div> */}
           </div>
         )}
       </DialogContent>

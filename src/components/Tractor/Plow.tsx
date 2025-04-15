@@ -223,6 +223,8 @@ export function Plow() {
 
   // Add state for tracking if we're simulating all
   const [simulatingAll, setSimulatingAll] = useState(false);
+  // Add state to track if all transactions have been simulated at least once
+  const [hasSimulatedAll, setHasSimulatedAll] = useState(false);
 
   // Add state for tracking completed executions
   const [completedExecutions, setCompletedExecutions] = useState<Set<string>>(new Set());
@@ -414,6 +416,8 @@ export function Plow() {
       toast.success("Completed simulating all requisitions");
       // Enable sorting after simulations are complete
       setSortingEnabled(true);
+      // Mark that we've simulated all transactions at least once
+      setHasSimulatedAll(true);
     } catch (error) {
       console.error("Failed during simulate all:", error);
       toast.error("Failed to simulate all requisitions");
@@ -625,6 +629,7 @@ export function Plow() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-pinto-green-4 hover:text-pinto-green-5 hover:underline"
+                    onClick={(event) => event.stopPropagation()}
                   >
                     {`${req.requisition.blueprint.publisher.slice(0, 6)}...${req.requisition.blueprint.publisher.slice(-4)}`}
                   </a>
@@ -663,7 +668,8 @@ export function Plow() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
+                      onClick={(event) => {
+                        event.stopPropagation(); // Prevent row onClick from firing
                         if (successfulSimulations.has(req.requisition.blueprintHash)) {
                           handleExecute(req);
                         } else {
@@ -684,7 +690,7 @@ export function Plow() {
                             : 'text-pinto-gray-4 hover:text-pinto-gray-5'
                         } 
                         ${failedSimulations.has(req.requisition.blueprintHash) ? 'opacity-50 cursor-not-allowed' : ''}
-                        px-2 py-0 text-xs
+                        px-2 py-0 text-xs min-w-[80px]
                       `}
                     >
                       {simulatingReq === req.requisition.blueprintHash 
@@ -701,7 +707,7 @@ export function Plow() {
                       }
                     </Button>
                     {successfulSimulations.has(req.requisition.blueprintHash) && (
-                      <div className="flex items-center text-pinto-gray-4 flex-1 min-w-0">
+                      <div className="flex items-center text-pinto-gray-4 flex-1 min-w-0" onClick={(event) => event.stopPropagation()}>
                         <div className="inline-flex items-center gap-1 text-xs">
                           Est. Gas: {(() => {
                             const gas = gasEstimates.get(req.requisition.blueprintHash);
@@ -739,9 +745,9 @@ export function Plow() {
                       </div>
                     )}
                     {failedSimulations.has(req.requisition.blueprintHash) && simulationErrors.get(req.requisition.blueprintHash) && (
-                      <div className="flex items-center text-pinto-red-4 flex-1 min-w-0">
+                      <div className="flex items-center text-pinto-red-4 flex-1 min-w-0" onClick={(event) => event.stopPropagation()}>
                         <TooltipSimple
-                          content={simulationErrors.get(req.requisition.blueprintHash) || "Unknown error"}
+                          content={<span className="font-light text-pinto-gray-3">{simulationErrors.get(req.requisition.blueprintHash) || "Unknown error"}</span>}
                           variant="gray"
                         >
                           <div className="inline-flex items-center gap-1 text-xs text-pinto-red-4 max-w-full">
@@ -783,8 +789,10 @@ export function Plow() {
             disabled={simulatingAll || requisitions.length === 0}
             size="xxl"
             rounded="full"
+            width="full"
+            className="text-[1rem] sm:text-[1.5rem]"
           >
-            {simulatingAll ? "Simulating All..." : "Simulate all transactions"}
+            {simulatingAll ? "Simulating All..." : hasSimulatedAll ? "Resimulate All" : "Simulate all transactions"}
           </Button>
           
           {/* You can add additional buttons like "Simulate 2 Transactions" or "Execute 2 Soil Orders" here later */}
