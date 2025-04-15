@@ -9,7 +9,6 @@ query BeanstalkSeasonalSilo($from: Int, $to: Int, $silo: String) {
     season
     stalk
     avgGrownStalkPerBdvPerSeason
-    depositedBDV
     createdAt
   }
 }

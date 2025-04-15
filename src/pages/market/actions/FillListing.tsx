@@ -142,11 +142,11 @@ export default function FillListing() {
   const mainTokensIn = isUsingMain ? TokenValue.fromHuman(amountIn, mainToken.decimals) : swapData?.buyAmount;
 
   const tokenInBalance = farmerBalances.balances.get(tokenIn);
-  const { data: maxFillAmount } = useMaxBuy(tokenIn, slippage, mainTokensToFill);
+  const maxFillAmount = useMaxBuy(tokenIn, slippage, mainTokensToFill);
   const balanceFromMode = getBalanceFromMode(tokenInBalance, balanceFrom);
   const balanceExceedsMax = balanceFromMode.gt(0) && maxFillAmount && balanceFromMode.gte(maxFillAmount);
 
-  const onSubmit = useCallback(async () => {
+  const onSubmit = useCallback(() => {
     if (!listing) {
       throw new Error("Listing not found");
     }
@@ -177,10 +177,8 @@ export default function FillListing() {
             Number(balanceFrom), // fromMode
           ],
         });
-      } else if (swapBuild?.advancedFarm.length) {
-        const { clipboard } = await swapBuild.deriveClipboardWithOutputToken(mainToken, 9, account.address, {
-          value: value ?? TV.ZERO,
-        });
+      } else if (swapBuild) {
+        const fillClipboard = swapBuild.getPipeCallClipboardSlot(9, mainToken);
 
         const advFarm = [...swapBuild.advancedFarm];
         advFarm.push(
@@ -195,7 +193,7 @@ export default function FillListing() {
             Number(listing.mode), // mode
             TV.ZERO, // amountIn (from clipboard)
             FarmFromMode.INTERNAL, // fromMode
-            clipboard,
+            fillClipboard,
           ),
         );
 
@@ -206,8 +204,6 @@ export default function FillListing() {
           args: [advFarm],
           value: (value ?? TV.ZERO).toBigInt(),
         });
-      } else {
-        throw new Error("No quote");
       }
     } catch (e) {
       console.error(e);

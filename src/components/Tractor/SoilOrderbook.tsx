@@ -1,26 +1,26 @@
-import { TokenValue } from "@/classes/TokenValue";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
-import IconImage from "@/components/ui/IconImage";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
-import { PINTO } from "@/constants/tokens";
+import { usePublicClient } from "wagmi";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { Blueprint } from "@/lib/Tractor/types";
-import {
-  OrderbookEntry,
+import { toast } from "sonner";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { 
+  OrderbookEntry, 
+  loadOrderbookData, 
+  decodeSowTractorData, 
   SowBlueprintData,
-  decodeSowTractorData,
-  getSowBlueprintDisplayData,
-  loadOrderbookData,
+  getSowBlueprintDisplayData
 } from "@/lib/Tractor/utils";
 import { formatter } from "@/utils/format";
 import { getChainToken } from "@/utils/token";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { usePublicClient } from "wagmi";
 import { useChainId } from "wagmi";
-import ReviewTractorOrderDialog, { ExecutionData } from "../ReviewTractorOrderDialog";
+import { TokenValue } from "@/classes/TokenValue";
+import { PINTO } from "@/constants/tokens";
+import IconImage from "@/components/ui/IconImage";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Plow } from "./Plow";
+import ReviewTractorOrderDialog, { ExecutionData } from "../ReviewTractorOrderDialog";
+import { Blueprint } from "@/lib/Tractor/types";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
@@ -43,7 +43,7 @@ export function SoilOrderbookContent() {
     latestBlockInfo,
     isLoading,
     requisitionsCount: requisitions.length,
-    loadAttempted: loadAttempted.current,
+    loadAttempted: loadAttempted.current
   });
 
   // Cleanup function to prevent state updates after unmount
@@ -67,9 +67,9 @@ export function SoilOrderbookContent() {
         const latestBlock = await publicClient.getBlock();
         console.log("Got latest block:", {
           number: latestBlock.number,
-          timestamp: latestBlock.timestamp,
+          timestamp: latestBlock.timestamp
         });
-
+        
         const blockInfo = {
           number: Number(latestBlock.number),
           timestamp: Number(latestBlock.timestamp) * 1000,
@@ -87,9 +87,9 @@ export function SoilOrderbookContent() {
     (events: OrderbookEntry[]) => {
       console.log("Calculating timestamps for events:", {
         eventCount: events.length,
-        latestBlockInfo,
+        latestBlockInfo
       });
-
+      
       if (!latestBlockInfo || events.length === 0) return events;
 
       return events.map((event) => {
@@ -110,37 +110,35 @@ export function SoilOrderbookContent() {
       hasPublicClient: !!publicClient,
       hasProtocolAddress: !!protocolAddress,
       isMounted: isMounted.current,
-      loadAttempted: loadAttempted.current,
+      loadAttempted: loadAttempted.current
     });
 
     if (isLoading || !publicClient || !protocolAddress) {
       console.log("Skipping load - conditions not met:", {
         isLoading,
         hasPublicClient: !!publicClient,
-        hasProtocolAddress: !!protocolAddress,
+        hasProtocolAddress: !!protocolAddress
       });
       return;
     }
-
+    
     setIsLoading(true);
     try {
       console.log("Starting to load orderbook data...");
       // Use the new loadOrderbookData function
       const orderbookData = await loadOrderbookData(
-        undefined,
-        protocolAddress,
+        undefined, 
+        protocolAddress, 
         publicClient,
-        latestBlockInfo
-          ? {
-              number: BigInt(latestBlockInfo.number),
-              timestamp: BigInt(latestBlockInfo.timestamp / 1000),
-            }
-          : undefined,
+        latestBlockInfo ? { 
+          number: BigInt(latestBlockInfo.number), 
+          timestamp: BigInt(latestBlockInfo.timestamp / 1000) 
+        } : undefined
       );
 
       console.log("Got orderbook data:", {
         dataCount: orderbookData.length,
-        isMounted: isMounted.current,
+        isMounted: isMounted.current
       });
 
       // Get approximate timestamps
@@ -179,7 +177,7 @@ export function SoilOrderbookContent() {
       latestBlockInfo,
       isLoading,
       isMounted: isMounted.current,
-      loadAttempted: loadAttempted.current,
+      loadAttempted: loadAttempted.current
     });
 
     if (protocolAddress && publicClient && latestBlockInfo && !isLoading && !loadAttempted.current) {
@@ -191,7 +189,7 @@ export function SoilOrderbookContent() {
         hasPublicClient: !!publicClient,
         hasLatestBlockInfo: !!latestBlockInfo,
         isLoading,
-        loadAttempted: loadAttempted.current,
+        loadAttempted: loadAttempted.current
       });
     }
   }, [protocolAddress, publicClient, latestBlockInfo, loadAllRequisitions, isLoading]);
@@ -199,23 +197,17 @@ export function SoilOrderbookContent() {
   const formatDate = (timestamp: number | undefined) => {
     if (!timestamp) return "Unknown";
     const date = new Date(timestamp);
-
+    
     // Format: MM/DD/YY hh:mmAM/PM
-    return (
-      date.toLocaleDateString("en-US", {
-        month: "2-digit",
-        day: "2-digit",
-        year: "2-digit",
-      }) +
-      " " +
-      date
-        .toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-        .replace(" ", "")
-    );
+    return date.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: '2-digit'
+    }) + ' ' + date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).replace(' ', '');
   };
 
   const handleRowClick = (requisition: OrderbookEntry) => {
@@ -226,7 +218,7 @@ export function SoilOrderbookContent() {
   // Generate order data for the review dialog from the requisition
   const getOrderDataForReview = () => {
     if (!selectedOrder) return null;
-
+    
     try {
       const decodedData = decodeSowTractorData(selectedOrder.requisition.blueprint.data);
       if (!decodedData) return null;
@@ -250,27 +242,13 @@ export function SoilOrderbookContent() {
       <Table>
         <TableHeader className="[&_tr]:border-b-0">
           <TableRow className="border-b-0">
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Temperature
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Max Podline Length
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Total Soil Order Size
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Available Pinto
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Blueprint Hash
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Publisher
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Created at
-            </TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Temperature</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Max Podline Length</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Total Soil Order Size</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Available Pinto</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Blueprint Hash</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Publisher</TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">Created at</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -284,38 +262,50 @@ export function SoilOrderbookContent() {
 
             // Get temperature
             const temperature = decodedData ? parseFloat(decodedData.minTempAsString) : 0;
-
+            
             // Get max pod line length
-            const maxPodLineLength = decodedData
-              ? parseInt(decodedData.maxPodlineLengthAsString).toLocaleString()
-              : "Unknown";
-
+            const maxPodLineLength = decodedData ? 
+              parseInt(decodedData.maxPodlineLengthAsString).toLocaleString() : 
+              "Unknown";
+            
             // Total order size
-            const totalSize = decodedData
-              ? formatter.number(TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6))
-              : "Unknown";
+            const totalSize = decodedData ? 
+              formatter.number(TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6)) : 
+              "Unknown";
 
             // Available Pinto
             const availablePinto = formatter.number(req.currentlySowable);
 
             return (
-              <TableRow
-                key={index}
+              <TableRow 
+                key={index} 
                 className="border-b border-gray-100 hover:bg-pinto-green-1 cursor-pointer transition-colors"
                 noHoverMute
                 onClick={() => handleRowClick(req)}
               >
-                <TableCell className="py-2">≥ {temperature.toFixed(0)}%</TableCell>
-                <TableCell className="py-2">≤ {maxPodLineLength}</TableCell>
+                <TableCell className="py-2">
+                  ≥ {temperature.toFixed(0)}%
+                </TableCell>
+                <TableCell className="py-2">
+                  ≤ {maxPodLineLength}
+                </TableCell>
                 <TableCell className="py-2">
                   <div className="flex items-center gap-1">
-                    <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                    <IconImage 
+                      src={PINTO.logoURI}
+                      alt="PINTO" 
+                      size={4} 
+                    />
                     {totalSize}
                   </div>
                 </TableCell>
                 <TableCell className="py-2">
                   <div className="flex items-center gap-1">
-                    <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                    <IconImage 
+                      src={PINTO.logoURI}
+                      alt="PINTO" 
+                      size={4} 
+                    />
                     {availablePinto}
                   </div>
                 </TableCell>
@@ -333,7 +323,9 @@ export function SoilOrderbookContent() {
                     {`0x${req.requisition.blueprint.publisher.slice(2, 7)}...${req.requisition.blueprint.publisher.slice(-4)}`}
                   </a>
                 </TableCell>
-                <TableCell className="py-2">{formatDate(req.timestamp)}</TableCell>
+                <TableCell className="py-2">
+                  {formatDate(req.timestamp)}
+                </TableCell>
               </TableRow>
             );
           })}
@@ -352,25 +344,19 @@ export function SoilOrderbookContent() {
         <ReviewTractorOrderDialog
           open={viewDialogOpen}
           onOpenChange={setViewDialogOpen}
-          orderData={
-            getOrderDataForReview() || {
-              totalAmount: "0",
-              temperature: "0",
-              podLineLength: "0",
-              minSoil: "0",
-              operatorTip: "0",
-            }
-          }
+          orderData={getOrderDataForReview() || {
+            totalAmount: "0",
+            temperature: "0",
+            podLineLength: "0",
+            minSoil: "0",
+            operatorTip: "0"
+          }}
           encodedData={selectedOrder.requisition.blueprint.data}
           operatorPasteInstrs={Array.from(selectedOrder.requisition.blueprint.operatorPasteInstrs) as `0x${string}`[]}
-          blueprint={
-            {
-              ...selectedOrder.requisition.blueprint,
-              operatorPasteInstrs: Array.from(
-                selectedOrder.requisition.blueprint.operatorPasteInstrs,
-              ) as `0x${string}`[],
-            } as Blueprint
-          }
+          blueprint={{
+            ...selectedOrder.requisition.blueprint,
+            operatorPasteInstrs: Array.from(selectedOrder.requisition.blueprint.operatorPasteInstrs) as `0x${string}`[]
+          } as Blueprint}
           isViewOnly={true}
           executionHistory={[]} // No execution history in the current data model
         />
@@ -399,26 +385,30 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
         <DialogHeader className="pb-4">
           <DialogTitle className="text-xl font-antarctica font-bold">Tractor</DialogTitle>
         </DialogHeader>
-
+        
         <div className="w-full">
           <div className="flex gap-4 border-b">
             <button
-              type="button"
               className={`pb-2 font-antarctica ${activeTab === "view" ? "border-b-2 border-green-600 font-medium" : "text-gray-500"}`}
               onClick={() => setActiveTab("view")}
             >
               View Soil Orders
             </button>
             <button
-              type="button"
               className={`pb-2 font-antarctica ${activeTab === "execute" ? "border-b-2 border-green-600 font-medium" : "text-gray-500"}`}
               onClick={() => setActiveTab("execute")}
             >
               Execute Soil Orders
             </button>
           </div>
-
-          <div className="pt-6">{activeTab === "view" ? <SoilOrderbookContent /> : <Plow />}</div>
+          
+          <div className="pt-6">
+            {activeTab === "view" ? (
+              <SoilOrderbookContent />
+            ) : (
+              <Plow />
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

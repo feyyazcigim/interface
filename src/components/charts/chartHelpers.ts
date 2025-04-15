@@ -1,4 +1,9 @@
-import { Chart, ChartOptions, Plugin, ScriptableScaleContext } from "chart.js";
+import {
+  Chart,
+  ChartOptions,
+  Plugin,
+  ScriptableScaleContext,
+} from "chart.js";
 import { MutableRefObject } from "react";
 
 export type MakeGradientFunction = (
@@ -22,7 +27,11 @@ export const positionalGradient = (ctx: CanvasRenderingContext2D, colors: string
   return gradient;
 };
 
-export const positionalGradientVertical = (ctx: CanvasRenderingContext2D, colors: string[], positions: number[]) => {
+export const positionalGradientVertical = (
+  ctx: CanvasRenderingContext2D,
+  colors: string[],
+  positions: number[]
+) => {
   // Change from (0, 0, ctx.canvas.width, 0) to (0, 0, 0, ctx.canvas.height)
   const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
   for (let i = 0; i < positions.length; ++i) {
@@ -35,7 +44,7 @@ export const positionalGradientVertical = (ctx: CanvasRenderingContext2D, colors
     }
   }
   return gradient;
-};
+}
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Stroke gradients
@@ -74,9 +83,9 @@ const gradientFunctionMap = {
 } as const;
 
 export function getStrokeGradientFunctions(
-  options: (keyof typeof gradientFunctionMap | string)[],
+  options: (keyof typeof gradientFunctionMap | string)[]
 ): (MakeGradientFunction | string)[] {
-  return options.map((option) => gradientFunctionMap[option] || option);
+  return options.map((option) => gradientFunctionMap[option] || option)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -102,7 +111,7 @@ const fadeAreaGreenColors = [
   "rgba(36, 102, 69, 0.15)",
   "rgba(36, 102, 69, 0.0277607)",
   "rgba(36, 102, 69, 0.1)",
-  "rgba(36, 102, 69, 0.2)",
+  "rgba(36, 102, 69, 0.2)"
 ];
 const fadeAreaGreenPositions = [0.2805, 0.4326, 0.751, 0.9767];
 
@@ -120,9 +129,9 @@ const areaGradientFunctionMap = {
   fadeGreen: fadeGreenAreaGradientFn,
 } as const;
 export function getAreaGradientFunctions(
-  options: (keyof typeof areaGradientFunctionMap | string)[],
+  options: (keyof typeof areaGradientFunctionMap | string)[]
 ): (MakeGradientFunction | string)[] {
-  return options.map((option) => areaGradientFunctionMap[option] || option);
+  return options.map((option) => areaGradientFunctionMap[option] || option)
 }
 // ---------------------------------------------------------------------------------------------------------------------
 // Line Chart Options
@@ -211,7 +220,7 @@ const getVerticalLinePlugin = (
 
 const getSelectionPointPlugin = (
   activeIndexRef: MutableRefObject<number | undefined>,
-  fillArea: boolean = false,
+  fillArea: boolean = false
 ): Plugin => ({
   id: "customSelectPoint",
   afterDraw: (chart: Chart) => {
@@ -233,13 +242,33 @@ const getSelectionPointPlugin = (
       ctx.beginPath();
       ctx.moveTo(x - rectWidth / 2 + cornerRadius, y - rectHeight / 2);
       ctx.lineTo(x + rectWidth / 2 - cornerRadius, y - rectHeight / 2);
-      ctx.quadraticCurveTo(x + rectWidth / 2, y - rectHeight / 2, x + rectWidth / 2, y - rectHeight / 2 + cornerRadius);
+      ctx.quadraticCurveTo(
+        x + rectWidth / 2,
+        y - rectHeight / 2,
+        x + rectWidth / 2,
+        y - rectHeight / 2 + cornerRadius,
+      );
       ctx.lineTo(x + rectWidth / 2, y + rectHeight / 2 - cornerRadius);
-      ctx.quadraticCurveTo(x + rectWidth / 2, y + rectHeight / 2, x + rectWidth / 2 - cornerRadius, y + rectHeight / 2);
+      ctx.quadraticCurveTo(
+        x + rectWidth / 2,
+        y + rectHeight / 2,
+        x + rectWidth / 2 - cornerRadius,
+        y + rectHeight / 2,
+      );
       ctx.lineTo(x - rectWidth / 2 + cornerRadius, y + rectHeight / 2);
-      ctx.quadraticCurveTo(x - rectWidth / 2, y + rectHeight / 2, x - rectWidth / 2, y + rectHeight / 2 - cornerRadius);
+      ctx.quadraticCurveTo(
+        x - rectWidth / 2,
+        y + rectHeight / 2,
+        x - rectWidth / 2,
+        y + rectHeight / 2 - cornerRadius,
+      );
       ctx.lineTo(x - rectWidth / 2, y - rectHeight / 2 + cornerRadius);
-      ctx.quadraticCurveTo(x - rectWidth / 2, y - rectHeight / 2, x - rectWidth / 2 + cornerRadius, y - rectHeight / 2);
+      ctx.quadraticCurveTo(
+        x - rectWidth / 2,
+        y - rectHeight / 2,
+        x - rectWidth / 2 + cornerRadius,
+        y - rectHeight / 2,
+      );
       ctx.closePath();
 
       ctx.fill();
@@ -270,9 +299,11 @@ const getSelectionPointPlugin = (
       }
     }
   },
-});
+})
 
-const getSelectionCallbackPlugin = (onMouseOver?: (index: number | undefined) => void): Plugin => ({
+const getSelectionCallbackPlugin = (
+  onMouseOver?: (index: number | undefined) => void
+): Plugin => ({
   id: "selectionCallback",
   afterDraw: (chart: Chart) => {
     onMouseOver?.(chart.getActiveElements()?.[0]?.index);
@@ -320,20 +351,22 @@ const getGradientShiftPlugin = (
       }
     }
   },
-});
+})
 
 export const plugins = {
   verticalLine: getVerticalLinePlugin,
   selectionCallback: getSelectionCallbackPlugin,
   selectionPoint: getSelectionPointPlugin,
   gradientShift: getGradientShiftPlugin,
-};
+}
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Scales
 // ---------------------------------------------------------------------------------------------------------------------
 
-const getXScaleGridColor = (activeIndex: number | undefined) => (context: ScriptableScaleContext) => {
+const getXScaleGridColor = (activeIndex: number | undefined) => (
+  context: ScriptableScaleContext
+) => {
   const tickLabel = context.tick && context.tick.label;
   if (typeof activeIndex === "number") {
     if (tickLabel && tickLabel !== "") {
@@ -344,7 +377,7 @@ const getXScaleGridColor = (activeIndex: number | undefined) => (context: Script
   } else {
     return "rgba(0, 0, 0, 0.1)";
   }
-};
+}
 
 const getXScaleTick = (
   _value: unknown,
@@ -369,11 +402,11 @@ const getXScaleTick = (
 
   // Let Chart.js handle auto-skipping and tick labels
   return tickLabel;
-};
+}
 
 export const scalesX = {
   grid: {
     color: getXScaleGridColor,
   },
   ticksWithXValue: getXScaleTick,
-};
+}

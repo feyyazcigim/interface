@@ -1,6 +1,6 @@
-import { Clipboard } from "@/classes/Clipboard";
-import { TokenValue } from "@/classes/TokenValue";
 import { Address, encodeFunctionData, erc20Abi } from "viem";
+import { TokenValue } from "@/classes/TokenValue";
+import { Clipboard } from "@/classes/Clipboard";
 
 export default function erc20Approve(
   spender?: Address,

@@ -141,7 +141,7 @@ export function usePriceData() {
   const tokenData = useTokenData();
   const nativeToken = tokenData.nativeToken;
   const wrappedNativeToken = tokenData.wrappedNativeToken;
-  const siloWrappedToken3p = tokenData.siloWrappedToken3p;
+  const thirdPartyWrappedNative = tokenData.thirdPartyWrappedNativeToken;
 
   const priceQuery = usePriceQuery();
   const price = priceQuery.data;
@@ -225,7 +225,7 @@ export function usePriceData() {
       twa: TokenValue.ZERO,
     });
 
-    map.set(siloWrappedToken3p, {
+    map.set(thirdPartyWrappedNative, {
       instant: mainTokenPrice
         .mul(xChangeRate.data ?? TV.ZERO)
         .mul(creamExchangeRate.data ?? TV.ZERO)
@@ -246,7 +246,7 @@ export function usePriceData() {
     price,
     wrappedNativeToken,
     nativeToken,
-    siloWrappedToken3p,
+    thirdPartyWrappedNative,
     tokenData.mainToken,
     tokenData.siloWrappedToken,
     priceResults.pools,

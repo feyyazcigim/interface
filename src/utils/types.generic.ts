@@ -7,7 +7,6 @@ export type MayNull<T> = T | null | undefined;
 
 export type MayPromise<T> = T | Promise<T>;
 
-// biome-ignore lint/suspicious/noExplicitAny: any function
 export type AnyFn = (...args: any[]) => any;
 
 // Objects

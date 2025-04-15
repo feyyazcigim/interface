@@ -10,7 +10,10 @@ class BaseAnimationMaterial extends THREE.ShaderMaterial {
     });
 
     this.setValues(parameters);
-    this.uniforms = THREE.UniformsUtils.merge([uniforms, parameters.uniforms || {}]);
+    this.uniforms = THREE.UniformsUtils.merge([
+      uniforms,
+      parameters.uniforms || {},
+    ]);
     this.setUniformValues(parameters);
   }
 

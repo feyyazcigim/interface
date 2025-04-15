@@ -21,7 +21,6 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import useSiloConvert, {
   useClearSiloConvertQueries,
-  useSiloConvertDownPenaltyQuery,
   useSiloConvertQuote,
   useSiloMaxConvertQuery,
 } from "@/hooks/silo/useSiloConvert";
@@ -32,7 +31,7 @@ import { useWellUnderlying } from "@/hooks/wells/wells";
 import { SiloConvert, SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
 import { SiloConvertMaxConvertQuoter } from "@/lib/siloConvert/SiloConvert.maxConvertQuoter";
 import ConvertProvider, { SiloTokenConvertPath, useConvertState } from "@/state/context/convert.provider";
-import { useFarmerSilo } from "@/state/useFarmerSilo";
+import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
 import { PoolData, usePriceData } from "@/state/usePriceData";
 import { useSiloData } from "@/state/useSiloData";
 import { useInvalidateSun } from "@/state/useSunData";
@@ -56,7 +55,7 @@ interface BaseConvertProps {
 interface ConvertProps extends BaseConvertProps {
   siloConvert: SiloConvert;
   queryClient: ReturnType<typeof useQueryClient>;
-  farmerDeposits: ReturnType<typeof useFarmerSilo>["deposits"];
+  farmerDeposits: ReturnType<typeof useFarmerSiloNew>["deposits"];
   farmerActiveStalk: TV;
   deltaP: TV;
   convertExceptions: ReturnType<typeof useConvertExceptions>;
@@ -88,11 +87,14 @@ function ConvertForm({
   const invalidateSun = useInvalidateSun();
 
   const minAmountIn = convertExceptions.minAmountIn;
+
   const isDefaultConvert = siloToken.isMain || targetToken?.isMain;
+
   const defaultConvertDeltaPEnabled = siloToken.isMain ? deltaP.gt(0) : siloToken.isLP ? deltaP.lt(0) : false;
+
   const deltaPEnabled = Boolean(isDefaultConvert && defaultConvertDeltaPEnabled);
+
   const targetDeposits = targetToken ? farmerDeposits.get(targetToken) : undefined;
-  const isDownConvert = Boolean(siloToken.isMain && targetToken?.isLP);
 
   const deposits = farmerDeposits.get(siloToken);
   const convertibleDeposits = deposits?.convertibleDeposits;
@@ -127,7 +129,6 @@ function ConvertForm({
   } = useSiloConvertQuote(siloConvert, siloToken, targetToken, amountIn, convertibleDeposits, slippage, quoteEnabled);
 
   const convertResults = useSiloConvertResult(siloToken, targetToken, quote?.quotes, quote?.results);
-  const grownStalkPenaltyQuery = useSiloConvertDownPenaltyQuery(siloToken, targetToken, convertResults, isDownConvert);
 
   const priceImpact = useDeterminePriceImpact(quote?.postPriceData);
   const priceImpactSummary1 = !siloToken.isMain ? priceImpact.get(siloToken) : undefined;
@@ -145,7 +146,7 @@ function ConvertForm({
     // PipelineConvert will mow the source & target deposits.
     const mowAmount = depositsMowAmount?.add(targetDepositsMowAmount ?? 0n) ?? TV.ZERO;
     // Add mow amounts & subtract any germinating stalk as a result of the convert.
-    const currTotalStalk = farmerActiveStalk.add(mowAmount).sub(convertResults.germinatingStalk);
+    const currTotalStalk = farmerActiveStalk.add(mowAmount).sub(convertResults.toGerminatingStalk);
 
     // Add the expected delta stalk
     return currTotalStalk.add(convertResults.deltaStalk);
@@ -237,7 +238,7 @@ function ConvertForm({
 
   // if url mode === 'max', set amount in to max convert
   useEffect(() => {
-    if (mode !== "max" || !targetToken || didInitAmountMax || maxConvert.lte(0)) return;
+    if (mode !== 'max' || !targetToken || didInitAmountMax || maxConvert.lte(0)) return;
     setDidInitAmountMax(true);
     setAmountIn(maxConvert.toHuman());
   }, [mode, targetToken, didInitAmountMax, maxConvert]);
@@ -308,13 +309,11 @@ function ConvertForm({
     return <Warning variant="info">{msg}</Warning>;
   };
 
-  const renderGerminatingStalkWarning = !(!convertResults || convertResults.germinatingStalk.lte(0));
-
   const GerminatingStalkWarning = () => {
-    if (!renderGerminatingStalkWarning) return null;
+    if (!convertResults || convertResults.toGerminatingStalk.lte(0)) return null;
 
-    const germinating = convertResults.germinatingStalk;
-    const germinatingSeasons = convertResults.germinatingSeasons;
+    const germinating = convertResults.toGerminatingStalk;
+    const germinatingSeasons = convertResults.toGerminatingSeasons;
 
     return (
       <Warning variant="info" className="text-pinto-off-green bg-pinto-off-green-bg border border-pinto-off-green">
@@ -324,15 +323,8 @@ function ConvertForm({
     );
   };
 
-  const renderDownPenaltyWarning = !(
-    !siloToken.isLP ||
-    !targetToken?.isLP ||
-    maxConvertQueryData.lte(0) ||
-    maxConvertQueryData.eq(SiloConvertMaxConvertQuoter.NO_MAX_CONVERT_AMOUNT)
-  );
-
   const LP2LPMinConvertWarning = () => {
-    if (!renderDownPenaltyWarning) return null;
+    if (!siloToken.isLP || !targetToken?.isLP || maxConvertQueryData.lte(0) || maxConvertQueryData.eq(SiloConvertMaxConvertQuoter.NO_MAX_CONVERT_AMOUNT)) return null;
 
     return (
       <Warning variant="info">
@@ -342,34 +334,16 @@ function ConvertForm({
     );
   };
 
-  const renderMinAmountWarning = minAmountIn?.gt(0) && !isValidAmountIn;
-
   const MinAmountWarning = () => {
-    if (!renderMinAmountWarning) return null;
-
-    return (
-      <Warning variant="info">
-        A minimum amount of {formatter.token(minAmountIn, siloToken)} {siloToken.symbol} is required to convert.
-      </Warning>
-    );
+    if (minAmountIn?.gt(0) && !isValidAmountIn) {
+      return (
+        <Warning variant="info">
+          A minimum amount of {formatter.token(minAmountIn, siloToken)} {siloToken.symbol} is required to convert.
+        </Warning>
+      );
+    }
+    return null;
   };
-
-  const renderGrownStalkPenaltyWarning = grownStalkPenaltyQuery.data?.isPenalty;
-
-  const GrownStalkPenaltyWarning = () => {
-    if (!renderGrownStalkPenaltyWarning) return null;
-    const penaltyPct = (grownStalkPenaltyQuery.data?.penaltyRatio ?? 0) * 100;
-
-    return (
-      <Warning variant="warning">This conversion incurs a {formatter.pct(penaltyPct)} Grown Stalk penalty.</Warning>
-    );
-  };
-
-  const warningRendered =
-    renderGerminatingStalkWarning ||
-    renderDownPenaltyWarning ||
-    renderMinAmountWarning ||
-    renderGrownStalkPenaltyWarning;
 
   const disabled =
     !targetToken ||
@@ -416,15 +390,12 @@ function ConvertForm({
           disableButton
         />
       </div>
-      {warningRendered ? (
-        <div className="flex flex-col gap-2">
-          <MinAmountWarning />
-          <ConvertWarning />
-          <LP2LPMinConvertWarning />
-          <GrownStalkPenaltyWarning />
-        </div>
-      ) : null}
-      <ConvertTokenOutput quote={quote} amount={convertResults?.totalAmountOut || TV.ZERO} siloToken={siloToken} />
+      <div className="flex flex-col gap-2">
+        <MinAmountWarning />
+        <ConvertWarning />
+        <LP2LPMinConvertWarning />
+      </div>
+      <ConvertTokenOutput quote={quote} amount={convertResults?.amountOut || TV.ZERO} siloToken={siloToken} />
       <div className="flex flex-col">
         {loading && !quoteQuery.isError ? (
           <div className="flex flex-col w-full h-[181px] items-center justify-center">
@@ -434,7 +405,7 @@ function ConvertForm({
           <>
             <GerminatingStalkWarning />
             <SiloOutputDisplay
-              amount={convertResults.totalAmountOut}
+              amount={convertResults.amountOut}
               token={targetToken}
               stalk={convertResults.deltaStalk}
               seeds={convertResults.deltaSeed}
@@ -510,7 +481,7 @@ const SiloConvertProvider = ({ children }: { children: React.ReactNode }) => {
     const token = tokenMap[getTokenIndex(tokenValue)];
 
     if (token) {
-      setTargetToken(token);
+      setTargetToken(token)
       if (modeValue) {
         setMode(modeValue);
       }
@@ -577,7 +548,7 @@ const ConvertSwitch = ({ siloToken }: BaseConvertProps) => {
   const queryClient = useQueryClient();
   const siloConvert = useSiloConvert();
 
-  const farmerSilo = useFarmerSilo();
+  const farmerSilo = useFarmerSiloNew();
   const { pools, queryKeys: priceQueryKeys, deltaB } = usePriceData();
   const { queryKeys: siloQueryKeys } = useSiloData();
 

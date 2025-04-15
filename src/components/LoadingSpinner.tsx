@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 const svgs = Object.values(import.meta.glob<{ default: string }>("@/assets/misc/Spinner-*.svg", { eager: true })).map(
   (module) => module.default,

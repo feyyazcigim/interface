@@ -1,35 +1,35 @@
-import { ZeroXQuoteV2Parameters, ZeroXQuoteV2Response } from "@/lib/matcha/types";
-import { resolveChainId } from "@/utils/chain";
-import { stringEq, stringToNumber } from "@/utils/string";
+import { Limiter } from "@/classes/Limiter";
+import { ZeroExQuoteResponse } from "@/lib/matcha/types";
 import { exists } from "@/utils/utils";
+import { stringEq, stringToNumber } from "./../../utils/string";
 
-import { TV } from "@/classes/TokenValue";
-import { ZERO_ADDRESS_HEX } from "@/constants/address";
-import { API_SERVICES } from "@/constants/endpoints";
-import { getChainTokenMap, getTokenIndex } from "@/utils/token";
+import { ZERO_ADDRESS, ZERO_ADDRESS_HEX } from "@/constants/address";
+import { PINTO, tokens } from "@/constants/tokens";
+import { ZeroExAPI } from "./types";
+
+const apiKey = import.meta.env.VITE_ZEROEX_API_KEY;
 
 type RequestParams = Omit<RequestInit, "headers" | "method">;
 
-const endpoint = API_SERVICES.router;
-
-const endpointSlug = "swap/allowance-holder/quote";
-
-const routerEndpoint = endpoint ? `${endpoint}/${endpointSlug}` : undefined;
+const endpoint = "https://base.api.0x.org/swap/v1/quote";
 
 export class ZeroX {
   /**
    * Fetches quotes from the 0x API
    *
+   * @note Utilizes Bottleneck limiter to prevent rate limiting.
+   * - In the case of a rate limit, it will retry until up to 3 times every 200ms.
+   *
    * @param args - a single request or an array of requests
    * @param requestInit - optional request init params
    * @returns
    */
-  static async quote<T extends ZeroXQuoteV2Parameters = ZeroXQuoteV2Parameters>(
+  static async quote<T extends ZeroExAPI = ZeroExAPI>(
     args: T | T[],
     requestInit?: RequestParams,
-  ): Promise<ZeroXQuoteV2Response[]> {
-    if (!routerEndpoint) {
-      throw new Error("ERROR: Router endpoint is not set");
+  ): Promise<ZeroExQuoteResponse[]> {
+    if (!apiKey) {
+      throw new Error("API key is not set");
     }
 
     const fetchArgs = Array.isArray(args) ? args : [args];
@@ -39,16 +39,19 @@ export class ZeroX {
         throw new Error("buyToken and sellToken and required");
       }
 
-      if (!params.sellAmount) {
-        throw new Error("sellAmount is required");
+      if (!params.sellAmount && !params.buyAmount) {
+        throw new Error("sellAmount or buyAmount is required");
       }
 
       const urlParams = new URLSearchParams(ZeroX.generateQuoteParams(params) as unknown as Record<string, string>);
 
-      return () => ZeroX.send0xRequest(urlParams, requestInit);
+      return {
+        id: ZeroX.generateRequestId(params),
+        request: () => ZeroX.send0xRequest(urlParams, requestInit),
+      };
     });
 
-    return Promise.all(requests.map((r) => r()));
+    return Limiter.fetchWithBottleneckLimiter<ZeroExQuoteResponse>(requests, { allowFailure: false });
   }
 
   private static async send0xRequest(
@@ -61,12 +64,24 @@ export class ZeroX {
       headers: new Headers({
         "Content-Type": "application/json",
         Accept: "application/json",
+        "0x-api-key": apiKey,
       }),
     };
 
-    const url = `${routerEndpoint}/?${urlParams.toString()}`;
+    const url = `${endpoint}?${urlParams.toString()}`;
 
-    return fetch(url, options).then((r) => r.json()) as Promise<ZeroXQuoteV2Response>;
+    return fetch(url, options).then((r) => r.json()) as Promise<ZeroExQuoteResponse>;
+  }
+
+  private static generateRequestId<T extends ZeroExAPI = ZeroExAPI>(args: T) {
+    const sellToken = args.sellToken || "";
+    const buyToken = args.buyToken || "";
+    const sellAmount = args.sellAmount || "0";
+    const buyAmount = args.buyAmount || "0";
+    const slippagePercentage = args.slippagePercentage || "0.01";
+    const timestamp = new Date().getTime();
+
+    return `0x-${sellToken}-${buyToken}-${sellAmount}-${buyAmount}-${slippagePercentage}-${timestamp}`;
   }
 
   /**
@@ -75,31 +90,27 @@ export class ZeroX {
    *
    * @returns the params for the 0x API
    */
-  static generateQuoteParams<T extends ZeroXQuoteV2Parameters = ZeroXQuoteV2Parameters>(
-    params: T,
-  ): ZeroXQuoteV2Parameters {
-    if (!ZeroX.isValidQuoteParams(params)) {
-      throw new Error("ERROR: Invalid quote params");
-    }
-
-    const quoteParams: ZeroXQuoteV2Parameters = {
-      chainId: resolveChainId(params.chainId),
-      buyToken: params.buyToken,
+  static generateQuoteParams<T extends ZeroExAPI = ZeroExAPI>(params: T): ZeroExAPI {
+    const quoteParams: ZeroExAPI = {
       sellToken: params.sellToken,
+      buyToken: params.buyToken,
       sellAmount: params.sellAmount,
-      taker: params.taker,
-      txOrigin: params.txOrigin ?? undefined,
-      swapFeeRecipient: params.swapFeeRecipient ?? undefined,
-      swapFeeBps: params.swapFeeBps ?? undefined,
-      tradeSurplusRecipient: params.tradeSurplusRecipient ?? undefined,
+      buyAmount: params.buyAmount,
+      slippagePercentage: params.slippagePercentage ?? "0.01",
       gasPrice: params.gasPrice,
-      slippageBps: params.slippageBps ?? 10, // default 0.1% slippage
+      takerAddress: params.takerAddress,
       excludedSources: params.excludedSources,
-      sellEntireBalance: params.sellEntireBalance ?? false,
+      includedSources: params.includedSources,
+      skipValidation: params.skipValidation ?? "true", // defaults to true b/c most of our swaps go through advFarm / pipeline calls
+      feeRecipient: params.feeRecipient,
+      buyTokenPercentageFee: params.buyTokenPercentageFee,
+      priceImpactProtectionPercentage: params.priceImpactProtectionPercentage,
+      feeRecipientTradeSurplus: params.feeRecipientTradeSurplus,
+      shouldSellEntireBalance: params.shouldSellEntireBalance ?? "false",
     };
 
     Object.keys(quoteParams).forEach((_key) => {
-      const key = _key as keyof ZeroXQuoteV2Parameters;
+      const key = _key as keyof typeof quoteParams;
       if (!exists(quoteParams[key]) || quoteParams[key] === "") {
         delete quoteParams[key];
       }
@@ -108,21 +119,16 @@ export class ZeroX {
     return quoteParams;
   }
 
-  static isValidQuoteParams(params: ZeroXQuoteV2Parameters) {
-    const tokenMap = getChainTokenMap(params.chainId);
-    const sellTokenToken = tokenMap[getTokenIndex(params.sellToken)];
-
-    if (!sellTokenToken) {
-      return false;
-    }
-
-    const sellAmount = TV.fromHuman(params.sellAmount, sellTokenToken?.decimals);
+  static isValidQuoteParams(params: ZeroExAPI) {
+    const sellAmount = stringToNumber(params.sellAmount ?? "");
+    const buyAmount = stringToNumber(params.buyAmount ?? "");
 
     if (
-      !params.chainId ||
       !params.buyToken ||
       !params.sellToken ||
-      !sellAmount.gt(0) ||
+      (!sellAmount && !buyAmount) ||
+      stringEq(params.buyToken, PINTO.address) ||
+      stringEq(params.sellToken, PINTO.address) ||
       stringEq(params.buyToken, ZERO_ADDRESS_HEX) ||
       stringEq(params.sellToken, ZERO_ADDRESS_HEX)
     ) {
@@ -130,9 +136,5 @@ export class ZeroX {
     }
 
     return true;
-  }
-
-  static slippageToSlippageBps(slippage: number | string) {
-    return stringToNumber(slippage.toString()) * 100;
   }
 }
