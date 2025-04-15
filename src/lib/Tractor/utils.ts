@@ -20,6 +20,9 @@ import { PublicClient } from "viem";
 import { type BaseError, useContractWrite } from "wagmi";
 import { Requisition } from "./types";
 
+// Block number at which Tractor was deployed - use this as starting point for event queries
+export const TRACTOR_DEPLOYMENT_BLOCK = 28930876n;
+
 /**
  * Encodes three uint80 values into a bytes32 value in the format:
  * [ Padding (2 bytes) | copyByteIndex (10 bytes) | pasteCallIndex (10 bytes) | pasteByteIndex (10 bytes) ]
@@ -431,7 +434,7 @@ export async function fetchTractorEvents(publicClient: PublicClient, protocolAdd
     address: protocolAddress,
     abi: diamondABI,
     eventName: "PublishRequisition",
-    fromBlock: BigInt(0),
+    fromBlock: TRACTOR_DEPLOYMENT_BLOCK,
     toBlock: "latest",
   });
 
@@ -440,7 +443,7 @@ export async function fetchTractorEvents(publicClient: PublicClient, protocolAdd
     address: protocolAddress,
     abi: diamondABI,
     eventName: "CancelBlueprint",
-    fromBlock: BigInt(0),
+    fromBlock: TRACTOR_DEPLOYMENT_BLOCK,
     toBlock: "latest",
   });
 
@@ -699,7 +702,7 @@ export async function fetchTractorExecutions(
     args: {
       publisher: publisher,
     },
-    fromBlock: BigInt(0),
+    fromBlock: TRACTOR_DEPLOYMENT_BLOCK,
     toBlock: "latest",
   });
 
@@ -1084,8 +1087,9 @@ export async function getAverageTipPaid(publicClient: PublicClient): Promise<num
     // Get current block number
     const currentBlock = await publicClient.getBlockNumber();
     
-    // Calculate starting block (handle underflow)
-    const fromBlock = currentBlock > BLOCKS_PER_14_DAYS ? currentBlock - BLOCKS_PER_14_DAYS : 0n;
+    // Calculate starting block (use max of deployment block or 14 days ago)
+    const fourteenDaysAgoBlock = currentBlock > BLOCKS_PER_14_DAYS ? currentBlock - BLOCKS_PER_14_DAYS : 0n;
+    const fromBlock = fourteenDaysAgoBlock > TRACTOR_DEPLOYMENT_BLOCK ? fourteenDaysAgoBlock : TRACTOR_DEPLOYMENT_BLOCK;
     
     // Query for OperatorReward events
     const events = await publicClient.getContractEvents({
