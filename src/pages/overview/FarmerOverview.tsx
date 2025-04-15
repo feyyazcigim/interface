@@ -18,7 +18,7 @@ import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useFarmerActions from "@/hooks/useFarmerActions";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerField } from "@/state/useFarmerField";
-import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { useHarvestableIndex, useTotalSoil } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import { useSiloData } from "@/state/useSiloData";
@@ -35,7 +35,7 @@ import TractorOrdersPanel from "../field/TractorOrdersPanel";
 
 const Overview = () => {
   // Hooks
-  const farmerSilo = useFarmerSiloNew();
+  const farmerSilo = useFarmerSilo();
   const farmerField = useFarmerField();
   const farmerActions = useFarmerActions();
   const tokenData = useTokenData();
@@ -322,10 +322,13 @@ const Overview = () => {
         ) : null}
       </AnimatePresence>
       <div className="flex flex-col items-center">
-        <Tabs defaultValue="deposits" className="w-full" value={currentTab} onValueChange={(value) => setCurrentTab(value as "deposits" | "pods" | "tractor")}>
-          <TabsList
-            className="h-0 bg-transparent p-0 border-0 -ml-3 flex flex-row justify-start"
-          >
+        <Tabs
+          defaultValue="deposits"
+          className="w-full"
+          value={currentTab}
+          onValueChange={(value) => setCurrentTab(value as "deposits" | "pods" | "tractor")}
+        >
+          <TabsList className="h-0 bg-transparent p-0 border-0 -ml-3 flex flex-row justify-start">
             {/* Conditionally render My Deposits and My Pods based on hasOnlyPods */}
             {hasOnlyPods ? (
               <>
@@ -358,7 +361,7 @@ const Overview = () => {
                 </TabsTrigger>
               </>
             )}
-            
+
             {/* Always render My Tractor Orders last */}
             <TabsTrigger
               className="hidden sm:flex font-[400] text-[1.5rem] sm:text-[2rem] text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
@@ -438,7 +441,7 @@ const Overview = () => {
                     }
                   />
                 )*/}
-                <div className="absolute right-0 top-20 h-4" data-action-target="helper-target" />
+                {/* <div className="absolute right-0 top-20 h-4" data-action-target="helper-target" />
                 {currentTab === "deposits" && canWrap && (
                   <HelperLink
                     text={"Wrap Deposited Pinto"}
@@ -457,7 +460,7 @@ const Overview = () => {
                     }
                     onClick={() => navigate(`/wrap`)}
                   />
-                )}
+                )} */}
               </div>
             ) : (
               <EmptyTable type="deposits" />

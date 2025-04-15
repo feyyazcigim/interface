@@ -1,3 +1,7 @@
+import { mockAddressAtom } from "@/Web3Provider";
+import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
+import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
+import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
 import { morningFieldDevModeAtom } from "@/state/protocol/field/field.atoms";
 import { getMorningResult, getNowRounded } from "@/state/protocol/sun";
 import { morningAtom, seasonAtom, sunQueryKeysAtom } from "@/state/protocol/sun/sun.atoms";
@@ -12,18 +16,13 @@ import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { http, PublicClient, createPublicClient, isAddress, TransactionReceipt, decodeEventLog, erc20Abi } from "viem";
+import { http, PublicClient, createPublicClient, decodeEventLog, erc20Abi, isAddress } from "viem";
 import { hardhat } from "viem/chains";
 import { useAccount, useBlockNumber, useChainId } from "wagmi";
 import MorningCard from "./MorningCard";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
-import Text from "./ui/Text";
-import { mockAddressAtom } from "@/Web3Provider";
-import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
-import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
-import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
@@ -38,7 +37,7 @@ const publicClient = createPublicClient({
 });
 
 // Merge the ABIs
-const combinedABI = [...beanstalkAbi, ...sowBlueprintv0ABI, ...tractorHelpersABI, ...erc20Abi];
+const combinedABI = [...beanstalkAbi, ...sowBlueprintv0ABI, ...tractorHelpersABI, ...erc20Abi] as const;
 
 export default function DevPage() {
   const { address } = useAccount();
@@ -84,13 +83,16 @@ export default function DevPage() {
 
   const [mockAddress, setMockAddress] = useAtom(mockAddressAtom);
 
-  const [txHash, setTxHash] = useState<`0x${string}` | ''>('');
-  const [txEvents, setTxEvents] = useState<{
-    eventName: string;
-    args: Record<string, any>;
-    address: string;
-    logIndex: number;
-  }[] | null>(null);
+  const [txHash, setTxHash] = useState<`0x${string}` | "">("");
+  const [txEvents, setTxEvents] = useState<
+    | {
+        eventName: string;
+        args: Record<string, any>;
+        address: string;
+        logIndex: number;
+      }[]
+    | null
+  >(null);
 
   const [recentTxs, setRecentTxs] = useState<`0x${string}`[]>([]);
 
@@ -123,38 +125,36 @@ export default function DevPage() {
 
   const fetchRecentTransactions = async () => {
     if (!address || !publicClient) return;
-    
+
     try {
       const latestBlock = await publicClient.getBlockNumber();
       const recentTxs = new Set<`0x${string}`>();
-      
+
       // Look back through blocks until we find 5 transactions or hit 100 blocks
       for (let i = 0; i < 100 && recentTxs.size < 5; i++) {
         try {
           const block = await publicClient.getBlock({
             blockNumber: latestBlock - BigInt(i),
-            includeTransactions: true
+            includeTransactions: true,
           });
-          
+
           // Find all transactions from our address in this block
-          const blockTxs = block.transactions.filter(tx => 
-            typeof tx === 'object' && 
-            tx.from.toLowerCase() === address.toLowerCase()
+          const blockTxs = block.transactions.filter(
+            (tx) => typeof tx === "object" && tx.from.toLowerCase() === address.toLowerCase(),
           );
-          
+
           // Add new transactions to our set
           for (const tx of blockTxs) {
-            if (typeof tx === 'object') {
+            if (typeof tx === "object") {
               recentTxs.add(tx.hash);
               if (recentTxs.size >= 5) break;
             }
           }
         } catch (err) {
           console.warn(`Failed to fetch block ${latestBlock - BigInt(i)}:`, err);
-          continue;
         }
       }
-      
+
       // Convert Set back to array and update state
       setRecentTxs(Array.from(recentTxs));
     } catch (error) {
@@ -293,8 +293,8 @@ export default function DevPage() {
   const analyzeTxEvents = async (hashToAnalyze?: `0x${string}`) => {
     // Add type assertion to ensure hashToUse is of type `0x${string}`
     const hashToUse = (hashToAnalyze || txHash) as `0x${string}`;
-    
-    if (!hashToUse || !hashToUse.startsWith('0x') || !publicClient) {
+
+    if (!hashToUse || !hashToUse.startsWith("0x") || !publicClient) {
       toast.error("Please enter a valid transaction hash");
       return;
     }
@@ -431,6 +431,8 @@ export default function DevPage() {
                   setMockAddress(newAddress); // Always update the input
                   if (isAddress(newAddress)) {
                     localStorage.setItem("mockAddress", newAddress);
+                  } else if (!newAddress) {
+                    localStorage.removeItem("mockAddress");
                   }
                 }}
                 className={`flex-1 ${mockAddress && !isAddress(mockAddress) ? "border-pinto-red-2" : ""}`}
@@ -665,14 +667,11 @@ export default function DevPage() {
                 onChange={(e) => setTxHash(e.target.value as `0x${string}`)}
                 className="flex-1"
               />
-              <Button
-                onClick={() => analyzeTxEvents()}
-                disabled={!txHash || loading === "analyzeTx"}
-              >
+              <Button onClick={() => analyzeTxEvents()} disabled={!txHash || loading === "analyzeTx"}>
                 Analyze
               </Button>
             </div>
-            
+
             {/* Add Recent Transactions Section */}
             {recentTxs.length > 0 && (
               <div className="mt-2">
@@ -681,6 +680,7 @@ export default function DevPage() {
                   {recentTxs.map((hash, index) => (
                     <div key={index} className="flex items-center gap-4">
                       <button
+                        type="button"
                         onClick={async () => {
                           await analyzeTxEvents(hash);
                           setTxHash(hash as `0x${string}`);
@@ -691,6 +691,7 @@ export default function DevPage() {
                         {hash}
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
                           const command = `cast run ${hash} --rpc-url http://localhost:8545`;
                           navigator.clipboard.writeText(command);
@@ -706,7 +707,7 @@ export default function DevPage() {
                 </div>
               </div>
             )}
-            
+
             {/* Existing Events Display */}
             {txEvents && (
               <div className="mt-4 space-y-4">
@@ -715,16 +716,10 @@ export default function DevPage() {
                   {txEvents.map((event, index) => (
                     <div key={index} className="p-4 border rounded-lg">
                       <div className="flex justify-between items-start">
-                        <span className="font-medium text-pinto-green-4">
-                          {event.eventName}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          Log Index: {event.logIndex}
-                        </span>
+                        <span className="font-medium text-pinto-green-4">{event.eventName}</span>
+                        <span className="text-sm text-gray-500">Log Index: {event.logIndex}</span>
                       </div>
-                      <div className="text-sm font-mono mt-2">
-                        Contract: {event.address}
-                      </div>
+                      <div className="text-sm font-mono mt-2">Contract: {event.address}</div>
                       <div className="mt-2">
                         <div className="text-sm font-medium">Arguments:</div>
                         <pre className="mt-1 p-2 bg-gray-50 rounded text-sm overflow-x-auto">
@@ -936,4 +931,3 @@ const MorningAuctionDev = ({
     </MorningCard>
   );
 };
-
