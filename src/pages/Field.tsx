@@ -40,16 +40,27 @@ function Field() {
   const farmerField = useFarmerField();
   const harvestableIndex = useHarvestableIndex();
   const harvestableIndexLoading = useHarvestableIndexLoading();
-  const [activeTab, setActiveTab] = useState<'activity' | 'pods' | 'tractor'>('activity');
   const [searchParams] = useSearchParams();
-
-  // Set the active tab based on URL query parameter if present
-  useEffect(() => {
+  const currentAction = searchParams.get("action");
+  const isMobile = useIsMobile();
+  
+  // Set the active tab (default to 'activity' or 'pods' on mobile)
+  const [activeTab, setActiveTab] = useState(() => {
+    // Get tab from query params if available
     const tabParam = searchParams.get('tab');
-    if (tabParam === 'activity' || tabParam === 'pods' || tabParam === 'tractor') {
-      setActiveTab(tabParam);
+    
+    // On mobile devices, default to 'pods'
+    if (isMobile) {
+      return tabParam === 'activity' || tabParam === 'pods' || tabParam === 'tractor' 
+        ? tabParam 
+        : 'pods';
     }
-  }, [searchParams]);
+    
+    // On desktop, use the param or default to 'activity'
+    return tabParam === 'activity' || tabParam === 'pods' || tabParam === 'tractor' 
+      ? tabParam 
+      : 'activity';
+  });
 
   const hasPods = farmerField.plots.length > 0;
   const totalPods = useMemo(
@@ -65,9 +76,6 @@ function Field() {
   );
 
   const navigate = useNavigate();
-
-  const isMobile = useIsMobile();
-  const currentAction = searchParams.get("action");
 
   const morning = useMorning();
 
@@ -127,13 +135,13 @@ function Field() {
               <div className="flex flex-row justify-between items-center overflow-x-auto scrollbar-none">
                 <div className="flex space-x-1">
                   <button 
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left shrink-0 ${activeTab === 'activity' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    className={`hidden sm:inline-block pinto-h3 py-2 pr-4 pl-0 text-left shrink-0 ${activeTab === 'activity' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
                     onClick={() => setActiveTab('activity')}
                   >
                     Field Activity
                   </button>
                   <button 
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left shrink-0 ${activeTab === 'tractor' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    className={`hidden sm:inline-block pinto-h3 py-2 pr-4 pl-0 text-left shrink-0 ${activeTab === 'tractor' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
                     onClick={() => setActiveTab('tractor')}
                   >
                     My Tractor Orders

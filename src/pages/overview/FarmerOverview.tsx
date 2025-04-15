@@ -13,6 +13,7 @@ import IconImage from "@/components/ui/IconImage";
 import PageContainer from "@/components/ui/PageContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import useIsSmallDesktop from "@/hooks/display/useIsSmallDesktop";
+import useIsMobile from "@/hooks/display/useIsMobile";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useFarmerActions from "@/hooks/useFarmerActions";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
@@ -81,8 +82,18 @@ const Overview = () => {
   const canWrap = farmerActions.canWrapPinto;
   const enablePintoToLPHelper = farmerSilo.deposits.get(mainToken)?.convertibleAmount.gt(0) && priceData.deltaB.gt(100);
 
+  // Get mobile status from hook
+  const isMobile = useIsMobile();
+
   // State
-  const [currentTab, setCurrentTab] = useState<"deposits" | "pods" | "tractor">(hasOnlyPods ? "pods" : "deposits");
+  const [currentTab, setCurrentTab] = useState<"deposits" | "pods" | "tractor">(() => {
+    // Default to "pods" on mobile, or if hasOnlyPods is true on desktop
+    if (isMobile) {
+      return "pods";
+    } else {
+      return hasOnlyPods ? "pods" : "deposits";
+    }
+  });
   const [hoveredButton, setHoveredButton] = useState("");
 
   const [hoveredId, setHoveredId] = useAtom(hoveredIdAtom);
@@ -350,7 +361,7 @@ const Overview = () => {
             
             {/* Always render My Tractor Orders last */}
             <TabsTrigger
-              className="font-[400] text-[1.5rem] sm:text-[2rem] text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
+              className="hidden sm:flex font-[400] text-[1.5rem] sm:text-[2rem] text-pinto-gray-4 hover:text-pinto-gray-5/80 data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-pinto-gray-5"
               value="tractor"
             >
               My Tractor Orders
