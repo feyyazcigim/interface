@@ -8,7 +8,7 @@ import IconImage from "@/components/ui/IconImage";
 import { PINTO } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
-import useSwap from "@/hooks/swap/useSwap";
+import { useSwapMany } from "@/hooks/swap/useSwap";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
 import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { Blueprint } from "@/lib/Tractor/types";
@@ -67,16 +67,23 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   // Get LP tokens
   const lpTokens = useMemo(() => whitelistedTokens.filter((t) => t.isLP), [whitelistedTokens]);
 
-  // Create swap hooks for each LP token
-  const swapQuotes = lpTokens.map((token) => {
-    const amount = farmerDeposits.get(token)?.amount || TokenValue.ZERO;
-    return useSwap({
-      tokenIn: token,
-      tokenOut: PINTO,
-      amountIn: amount,
-      slippage: 0.5,
-      disabled: amount.eq(0), // Only enable if there's an amount to swap
+  const swapArgs = useMemo(() => {
+    return lpTokens.map((token) => {
+      const amount = farmerDeposits.get(token)?.amount || TokenValue.ZERO;
+      return {
+        tokenIn: token,
+        tokenOut: PINTO,
+        amountIn: amount,
+        slippage: 0.5,
+        disabled: amount.eq(0),
+      };
     });
+  }, [lpTokens, farmerDeposits]);
+
+  // Create swap hooks for each LP token
+  const swapQuotes = useSwapMany({
+    args: swapArgs,
+    disabled: !swapArgs.length,
   });
 
   // Combine the results into a map
@@ -462,7 +469,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       const tipValue = parseFloat(operatorTip);
 
       // Check for zero values
-      if (total.eq(0) || max.eq(0) || isNaN(tipValue)) {
+      if (total.eq(0) || max.eq(0) || Number.isNaN(tipValue)) {
         return "~0";
       }
 
@@ -1068,7 +1075,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                           ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]"
                           : "border border-[#D9D9D9]"
                       }`}
-                    ></div>
+                    />
                     <div className="flex flex-col gap-1">
                       <span className="font-antarctica text-base font-normal leading-[110%] text-black">
                         Token with Best Price
@@ -1096,7 +1103,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                           ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]"
                           : "border border-[#D9D9D9]"
                       }`}
-                    ></div>
+                    />
                     <div className="flex flex-col gap-1">
                       <span className="font-antarctica text-base font-normal leading-[110%] text-black">
                         Token with Least Seeds
@@ -1177,7 +1184,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
         </DialogPortal>
       </Dialog>
 
-      {showReview && encodedData && operatorPasteInstructions && (
+      {showReview && encodedData && operatorPasteInstructions && blueprint && (
         <ReviewTractorOrderDialog
           open={showReview}
           onOpenChange={setShowReview}
@@ -1196,7 +1203,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
           }}
           encodedData={encodedData}
           operatorPasteInstrs={operatorPasteInstructions}
-          blueprint={blueprint!}
+          blueprint={blueprint}
         />
       )}
     </>
