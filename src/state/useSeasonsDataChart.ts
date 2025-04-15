@@ -174,7 +174,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
         timestamp: Number(season.beanHourlySnapshot.season.timestamp || 0),
       });
       return acc;
-    }, [] as any);
+    }, [] as SeasonsTableData[]);
     return transformedData;
   }, [useBeanQuery.data, useStalkQuery.data]);
 
