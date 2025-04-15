@@ -1,6 +1,5 @@
 import advancedPipe from "./advancedPipe";
 import erc20Approve from "./erc20Approve";
-import erc20BalanceOf from "./erc20BalanceOf";
 import erc20Transfer from "./erc20Transfer";
 import balanceOfRainRoots from "./farmerSilo/balanceOfRainRoots";
 import balanceOfStalk from "./farmerSilo/balanceOfStalk";
@@ -14,8 +13,6 @@ import shift from "./shift";
 import convert, { getMaxAmountIn, getAmountOut } from "./silo/convert";
 import { pipelineConvert } from "./silo/pipelineConvert";
 import siloWithdraw from "./silo/withdraw";
-import siloedTokenDeposit from "./siloedPinto/siloedTokenDeposit";
-import siloedTokenRedeem from "./siloedPinto/siloedTokenRedeem";
 import sync from "./sync";
 import transferToken from "./transferToken";
 import unwrapEth from "./unwrapEth";
@@ -47,15 +44,9 @@ const encoders = {
     getAmountOut,
   },
 
-  siloedPinto: {
-    depositERC20: siloedTokenDeposit,
-    redeemERC20: siloedTokenRedeem,
-  },
-
   token: {
     transferToken,
     erc20Transfer,
-    erc20BalanceOf,
     erc20Approve,
     unwrapEth,
     wrapEth,

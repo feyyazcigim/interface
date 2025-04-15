@@ -11,11 +11,11 @@ interface TableRowCornersProps {
 /**
  * Component designed to add animated corners to table rows or standalone elements
  */
-const CornerBorders: FC<TableRowCornersProps> = ({
-  rowNumber = 0,
-  active = true,
+const CornerBorders: FC<TableRowCornersProps> = ({ 
+  rowNumber = 0, 
+  active = true, 
   standalone = false,
-  cornerRadius = "0", // Default radius set to 0 for square corners
+  cornerRadius = "0" // Default radius set to 0 for square corners
 }) => {
   // Animation variants
   const cornerVariants: Variants = {

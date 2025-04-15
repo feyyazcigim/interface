@@ -174,9 +174,11 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
           {/* <MobileNavLink href={navLinks.podmarket} onClick={unmountAndClose}>
             Pod Market
           </MobileNavLink> */}
-          <MobileNavLink href={navLinks.wrap} onClick={unmountAndClose}>
-            Wrap
-          </MobileNavLink>
+          {isDev() && (
+            <MobileNavLink href={navLinks.wrap} onClick={unmountAndClose}>
+              Wrap
+            </MobileNavLink>
+          )}
         </div>
         <hr className=" border-pinto-gray-2" />
         <div className="flex flex-col gap-6 pl-4">

@@ -1,7 +1,5 @@
 import { TokenValue } from "@/classes/TokenValue";
-import { diamondABI } from "@/constants/abi/diamondABI";
 import { ZERO_ADDRESS } from "@/constants/address";
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useTransaction from "@/hooks/useTransaction";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { FarmFromMode, Token } from "@/utils/types";
@@ -12,6 +10,8 @@ import { toast } from "sonner";
 import { Address, erc20Abi } from "viem";
 import { useAccount, useReadContract } from "wagmi";
 import { Button, ButtonProps } from "./ui/Button";
+import { diamondABI } from "@/constants/abi/diamondABI";
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 
 interface SmartSubmitButton extends Omit<ButtonProps, "onClick" | "disabled" | "className"> {
   token?: Token;
@@ -41,6 +41,7 @@ export default function SmartSubmitButton({
   const queryClient = useQueryClient();
   const farmerBalances = useFarmerBalances().balances;
   const diamond = useProtocolAddress();
+
   const baseAllowanceQueryEnabled = !!account.address && !!token && !token.isNative;
 
   const {
@@ -69,7 +70,7 @@ export default function SmartSubmitButton({
     args: [account.address ?? ZERO_ADDRESS, spender ?? ZERO_ADDRESS, token?.address ?? ZERO_ADDRESS],
     query: {
       enabled: baseAllowanceQueryEnabled && requiresDiamondAllowance && !!spender,
-    },
+    }
   });
 
   const allowance = requiresDiamondAllowance ? diamondAllowance : tokenAllowance;
@@ -79,6 +80,7 @@ export default function SmartSubmitButton({
   const onSuccess = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: allowanceQueryKey });
   }, [queryClient, allowanceQueryKey]);
+
 
   const {
     submitting: submittingApproval,
@@ -92,7 +94,7 @@ export default function SmartSubmitButton({
   });
 
   const needsApproval = useMemo(() => {
-    if (!token || !exists(balanceFrom) || token.isNative) {
+    if (!token || !balanceFrom || token.isNative) {
       return false;
     }
 
@@ -151,7 +153,10 @@ export default function SmartSubmitButton({
           abi: erc20Abi,
           address: token?.address ?? ZERO_ADDRESS,
           functionName: "approve",
-          args: [spender ?? diamond, inputAmount.toBigInt()],
+          args: [
+            spender ?? diamond,
+            inputAmount.toBigInt(),
+          ],
         });
       } catch (e) {
         console.error(e);

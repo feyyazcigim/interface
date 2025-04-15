@@ -45,9 +45,6 @@ export abstract class SwapNode implements ISwapNode {
   /** Max amount of of buyToken received */
   buyAmount: TV = TV.ZERO;
 
-  /** Min amount of buyToken received */
-  minBuyAmount: TV = TV.ZERO;
-
   /** USD amount of sellAmount */
   usdIn: TV = TV.ZERO;
 

@@ -1,7 +1,6 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 import { PlotSource } from "@/generated/gql/graphql";
-import { ProtocolIntegration } from "@/state/integrations/types";
 import { QueryKey, UseQueryOptions } from "@tanstack/react-query";
 import { DateTime } from "luxon";
 import { ReactNode } from "react";
@@ -39,10 +38,6 @@ export interface Token {
   description?: string;
 }
 
-export interface Token3PIntegration extends Token {
-  integration: ProtocolIntegration;
-}
-
 export interface InternalToken {
   name: string;
   symbol: string;
@@ -56,44 +51,12 @@ export interface DepositCrateData {
   amount: TokenValue;
   bdv: TokenValue;
   stalk: {
-    initial: TokenValue;
     base: TokenValue;
     grown: TokenValue;
     total: TokenValue;
-    grownSinceDeposit: TokenValue;
   };
   seeds: TokenValue;
   isGerminating: boolean;
-}
-
-export interface DepositStalkBreakdown {
-  /**
-   * The amount of Stalk issued at the time of deposit.
-   * Should be equivalent to the recorded BDV of the deposit (only w/ 16 decimals)
-   */
-  initial: TokenValue;
-  /**
-   * The current amount of 'active' stalk.
-   * Calculated as: initial + grownSinceDeposit + grown
-   */
-  base: TokenValue;
-  /**
-   * Amount of Stalk grown since last time deposit was Mowed (AKA Claimable)
-   */
-  grown: TokenValue;
-  /**
-   * Amount of Stalk that is currently germinating
-   */
-  germinating: TokenValue;
-  /**
-   * The total amount of stalk associated w/ this deposit
-   * Calculated as: base + grown +
-   */
-  total: TokenValue;
-  /**
-   * The total amount of stalk that has grown in this deposit since depositing in the Silo
-   */
-  grownSinceDeposit: TokenValue;
 }
 
 export interface DepositData {
@@ -107,7 +70,13 @@ export interface DepositData {
   amount: TokenValue;
   depositBdv: TokenValue;
   currentBdv: TokenValue;
-  stalk: DepositStalkBreakdown;
+  stalk: {
+    base: TokenValue;
+    grown: TokenValue;
+    germinating: TokenValue;
+    total: TokenValue;
+    grownSinceDeposit: TokenValue;
+  };
   isPlantDeposit?: boolean;
   seeds: TokenValue;
   isGerminating: boolean;
@@ -307,12 +276,6 @@ export type UseSeasonalResult = {
   isError: boolean;
 };
 
-export type UseMultiSeasonalResult = {
-  data: { [key: string]: SeasonalChartData[] } | undefined;
-  isLoading: boolean;
-  isError: boolean;
-};
-
 export type BlockInfo = {
   blockNumber: number;
   timestamp: DateTime;
@@ -330,13 +293,6 @@ export type ConstrainedUseQueryArgs<TData, TSelect = TData> = Omit<
 export type ConstrainedUseQueryArgsWithSelect<TData, TSelect = TData> = ConstrainedUseQueryArgs<TData, TSelect> & {
   select?: (data: TData) => TSelect;
 };
-
-export interface MinimumViableUseQueryResult<T> {
-  data: T | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  refetch: () => void;
-}
 
 export type FailableUseContractsResult<T> = (
   | {

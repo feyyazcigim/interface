@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useDenomination } from "@/hooks/useAppSettings";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useFarmerActions from "@/hooks/useFarmerActions";
-import { useFarmerSilo } from "@/state/useFarmerSilo";
+import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
 import { usePriceData } from "@/state/usePriceData";
 import { useSiloData } from "@/state/useSiloData";
 import useTokenData from "@/state/useTokenData";
@@ -38,7 +38,7 @@ export default function FarmerDepositsTable({
   setHoveredButton,
 }: FarmerDepositsTableProps) {
   const navigate = useNavigate();
-  const farmerSilo = useFarmerSilo();
+  const farmerSilo = useFarmerSiloNew();
   const priceData = usePriceData();
   const tokenData = useTokenData();
   const siloData = useSiloData();
@@ -90,7 +90,7 @@ export default function FarmerDepositsTable({
 
     return (
       <TableRow
-        className={`bg-pinto-green-1 hover:bg-pinto-green-1/50 hover:opacity-50 hover:cursor-pointer text-pinto-green-4/70 ${showRow ? "pointer-events-auto" : "pointer-events-none"}`}
+        className="bg-pinto-green-1 hover:bg-pinto-green-1/50 hover:opacity-50 hover:cursor-pointer text-pinto-green-4/70"
         data-action-target="claimable-rewards"
         ref={rewardsRef}
         initial={initialState}

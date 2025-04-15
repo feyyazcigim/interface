@@ -2,17 +2,24 @@ import depositIcon from "@/assets/protocol/Deposit.svg";
 import seedIcon from "@/assets/protocol/Seed.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
 import { TokenValue } from "@/classes/TokenValue";
-import DepositDialog from "@/components/DepositDialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/Table";
+import { HTMLMotionProps } from "framer-motion";
 import { ToggleGroupItem } from "@/components/ui/ToggleGroup";
+import DepositDialog from "@/components/DepositDialog";
 import { useDenomination } from "@/hooks/useAppSettings";
-import { useFarmerSilo } from "@/state/useFarmerSilo";
+import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
 import { usePriceData } from "@/state/usePriceData";
 import { formatter, truncateHex } from "@/utils/format";
 import { stringEq } from "@/utils/string";
 import { DepositData, Token, TokenDepositData } from "@/utils/types";
 import { cn } from "@/utils/utils";
-import { HTMLMotionProps } from "framer-motion";
 import React, { useState } from "react";
 import CheckmarkCircle from "./CheckmarkCircle";
 import IconImage from "./ui/IconImage";
@@ -40,9 +47,13 @@ interface DepositRowProps {
   onRowClick: (deposit: DepositData) => void;
 }
 
-type TableRowProps = HTMLMotionProps<"tr"> & React.HTMLAttributes<HTMLTableRowElement> & { noHoverMute?: boolean };
+type TableRowProps = HTMLMotionProps<"tr"> &
+  React.HTMLAttributes<HTMLTableRowElement> & { noHoverMute?: boolean };
 
-const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & TableRowProps>(
+const DepositRow = React.forwardRef<
+  HTMLTableRowElement,
+  DepositRowProps & TableRowProps
+>(
   (
     {
       deposit,
@@ -58,7 +69,7 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
       onRowClick,
       ...props
     },
-    ref,
+    ref
   ) => {
     const denomination = useDenomination();
 
@@ -67,11 +78,19 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
       if (!group) return null;
 
       const groupDeposits = group.deposits
-        .map((stem) => farmerDeposits?.deposits.find((d) => d.stem.toHuman() === stem))
+        .map((stem) =>
+          farmerDeposits?.deposits.find((d) => d.stem.toHuman() === stem)
+        )
         .filter((d): d is DepositData => d !== undefined);
 
-      const totalStalk = groupDeposits.reduce((sum, d) => sum.add(d.stalk.total), TokenValue.ZERO);
-      const totalBdv = groupDeposits.reduce((sum, d) => sum.add(d.depositBdv), TokenValue.ZERO);
+      const totalStalk = groupDeposits.reduce(
+        (sum, d) => sum.add(d.stalk.total),
+        TokenValue.ZERO
+      );
+      const totalBdv = groupDeposits.reduce(
+        (sum, d) => sum.add(d.depositBdv),
+        TokenValue.ZERO
+      );
 
       return totalBdv.gt(0) ? totalStalk.div(totalBdv) : TokenValue.ZERO;
     };
@@ -82,10 +101,17 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
         ref={ref}
         className={cn(
           "h-[4.5rem] transition-all",
-          deposit.isGerminating ? "bg-pinto-off-green/15" : deposit.isPlantDeposit ? "bg-pinto-green-4/15" : "bg-white",
+          deposit.isGerminating
+            ? "bg-pinto-off-green/15"
+            : deposit.isPlantDeposit
+              ? "bg-pinto-green-4/15"
+              : "bg-white",
           "text-[1rem]",
-          !useToggle ? "pointer-events-none" : "hover:cursor-pointer hover:bg-pinto-green-1/50",
-          disabled && "bg-pinto-gray-2/30 hover:bg-pinto-gray-2/30 opacity-60 cursor-not-allowed",
+          !useToggle
+            ? "pointer-events-none"
+            : "hover:cursor-pointer hover:bg-pinto-green-1/50",
+          disabled &&
+            "bg-pinto-gray-2/30 hover:bg-pinto-gray-2/30 opacity-60 cursor-not-allowed"
         )}
         onClick={!disabled ? () => onRowClick(deposit) : undefined}
       >
@@ -93,21 +119,11 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
           <div className="gap-2 pl-2 flex items-center">
             {useToggle && <CheckmarkCircle isSelected={isSelected} />}
             <img src={depositIcon} alt="deposit icon" />
-            <span
-              className={`${useToggle ? "hover:underline hover:cursor-pointer" : ""}`}
-              onClick={
-                useToggle
-                  ? (e) => {
-                      e.stopPropagation(); // Stop the event from bubbling up to TableRow
-                      onRowClick(deposit);
-                    }
-                  : undefined
-              }
-            >
-              {truncateHex(deposit.idHex)}
-            </span>
+            <span>{truncateHex(deposit.idHex)}</span>
             {groupId && (
-              <span className="ml-2 text-xs px-2 py-0.5 text-pinto-green-4 whitespace-nowrap">Group {groupId}</span>
+              <span className="ml-2 text-xs px-2 py-0.5 text-pinto-green-4 whitespace-nowrap">
+                Group {groupId}
+              </span>
             )}
           </div>
         </TableCell>
@@ -126,7 +142,9 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
               <>
                 {deposit.stalk.base.gt(0) && (
                   <>
-                    <div className="hidden md:block opacity-60">{formatter.twoDec(deposit.stalk.base)}</div>
+                    <div className="hidden md:block opacity-60">
+                      {formatter.twoDec(deposit.stalk.base)}
+                    </div>
                     <div className="md:hidden opacity-60">
                       {deposit.stalk.base.gt(9999)
                         ? deposit.stalk.base.toHuman("ultraShort")
@@ -153,7 +171,9 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
               </>
             ) : (
               <>
-                <div className="hidden md:block opacity-70">{formatter.twoDec(deposit.stalk.base)}</div>
+                <div className="hidden md:block opacity-70">
+                  {formatter.twoDec(deposit.stalk.base)}
+                </div>
                 <div className="md:hidden opacity-70">
                   {deposit.stalk.base.gt(9999)
                     ? deposit.stalk.base.toHuman("ultraShort")
@@ -163,7 +183,9 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
             )}
           </div>
           {deposit.isGerminating && deposit.stalk.grown.gt(0) && (
-            <div className="text-pinto-gray-4 mt-1 opacity-70 font-[340] hidden md:block">Claimable Grown Stalk: -</div>
+            <div className="text-pinto-gray-4 mt-1 opacity-70 font-[340] hidden md:block">
+              Claimable Grown Stalk: -
+            </div>
           )}
           {!deposit.isGerminating && deposit.stalk.grown.gt(0) && (
             <div className="text-pinto-gray-4 mt-1 opacity-70 font-[340] hidden md:block">
@@ -182,7 +204,10 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
             <div className="opacity-70">
               {deposit.depositBdv.gt(0) ? (
                 <>
-                  {formatter.xDec(deposit.stalk.total.div(deposit.depositBdv), 3)}
+                  {formatter.xDec(
+                    deposit.stalk.total.div(deposit.depositBdv),
+                    3
+                  )}
                   {groupId && (
                     <>
                       {" → "}
@@ -199,15 +224,19 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
         <TableCell className="pinto-sm text-right p-4">
           <div className="flex flex-row gap-1 items-center justify-end">
             <IconImage src={seedIcon} size={4} />
-            <div className="hidden md:block opacity-70">{formatter.twoDec(deposit.seeds)}</div>
+            <div className="hidden md:block opacity-70">
+              {formatter.twoDec(deposit.seeds)}
+            </div>
             <div className="md:hidden opacity-70">
-              {deposit.seeds.gt(9999) ? deposit.seeds.toHuman("ultraShort") : formatter.twoDec(deposit.seeds)}
+              {deposit.seeds.gt(9999)
+                ? deposit.seeds.toHuman("ultraShort")
+                : formatter.twoDec(deposit.seeds)}
             </div>
           </div>
         </TableCell>
       </TableRow>
     );
-  },
+  }
 );
 
 export default function DepositsTable({
@@ -218,14 +247,18 @@ export default function DepositsTable({
   disabledDeposits,
   groups,
 }: DepositsTableProps) {
-  const farmerDeposits = useFarmerSilo().deposits;
+  const farmerDeposits = useFarmerSiloNew().deposits;
   const isLoading = useFarmerSiloNew().isLoading;
   const tokenData = farmerDeposits.get(token);
   const priceData = usePriceData();
-  const [selectedDeposit, setSelectedDeposit] = useState<DepositData | null>(null);
+  const [selectedDeposit, setSelectedDeposit] = useState<DepositData | null>(
+    null
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const pool = priceData.pools.find((poolData) => stringEq(poolData.pool.address, token.address));
+  const pool = priceData.pools.find((poolData) =>
+    stringEq(poolData.pool.address, token.address)
+  );
   const poolPrice = pool?.price ?? TokenValue.ZERO;
 
   const isDepositInOtherGroup = (stem: string) => {
@@ -283,7 +316,8 @@ export default function DepositsTable({
                 .map((deposit) => {
                   const stem = deposit.stem.toHuman();
                   const isDepositDisabled = isDepositInOtherGroup(stem);
-                  const isGerminating = mode === "combine" && deposit.isGerminating;
+                  const isGerminating =
+                    mode === "combine" && deposit.isGerminating;
 
                   if (useToggle) {
                     return (

@@ -14,11 +14,3 @@ export const InlineCenterSpan = forwardRef<HTMLSpanElement, InlineCenterSpanProp
     );
   },
 );
-
-export const Row = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => {
-  return <div {...props} ref={ref} className={cn("flex flex-row items-center", className)} />;
-});
-
-export const Col = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => {
-  return <div {...props} ref={ref} className={cn("flex flex-col", className)} />;
-});

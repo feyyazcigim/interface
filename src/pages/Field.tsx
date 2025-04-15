@@ -9,6 +9,7 @@ import PlotsTable from "@/components/PlotsTable";
 import { Button } from "@/components/ui/Button";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import Text from "@/components/ui/Text";
 import MorningTemperatureChart from "@/pages/field/MorningTemperature";
 import {
   useUpdateMorningSoilOnInterval,
@@ -17,6 +18,7 @@ import {
 
 import MobileActionBar from "@/components/MobileActionBar";
 import TooltipSimple from "@/components/TooltipSimple";
+import IconImage from "@/components/ui/IconImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useFarmerField } from "@/state/useFarmerField";
@@ -26,11 +28,11 @@ import { formatter } from "@/utils/format";
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import FieldActions from "./field/FieldActions";
-import FieldActivity from "./field/FieldActivity";
 import FieldStats from "./field/FieldStats";
 import MorningPanel from "./field/MorningPanel";
 import TemperatureChart from "./field/Temperature";
 import TractorOrdersPanel from "./field/TractorOrdersPanel";
+import FieldActivity from "./field/FieldActivity";
 
 function Field() {
   useUpdateMorningTemperatureOnInterval();
@@ -38,13 +40,13 @@ function Field() {
   const farmerField = useFarmerField();
   const harvestableIndex = useHarvestableIndex();
   const harvestableIndexLoading = useHarvestableIndexLoading();
-  const [activeTab, setActiveTab] = useState<"activity" | "pods" | "tractor">("activity");
+  const [activeTab, setActiveTab] = useState<'activity' | 'pods' | 'tractor'>('activity');
   const [searchParams] = useSearchParams();
 
   // Set the active tab based on URL query parameter if present
   useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    if (tabParam === "activity" || tabParam === "pods" || tabParam === "tractor") {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'activity' || tabParam === 'pods' || tabParam === 'tractor') {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -119,34 +121,31 @@ function Field() {
               </Button>
             </div>
           )}
-
+          
           {(!isMobile || (!currentAction && isMobile)) && (
             <>
               <div className="flex flex-row justify-between items-center">
                 <div className="flex space-x-1">
-                  <button
-                    type="button"
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "activity" ? "text-pinto-dark" : "text-pinto-gray-4"}`}
-                    onClick={() => setActiveTab("activity")}
+                  <button 
+                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === 'activity' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    onClick={() => setActiveTab('activity')}
                   >
                     Field Activity
                   </button>
-                  <button
-                    type="button"
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "tractor" ? "text-pinto-dark" : "text-pinto-gray-4"}`}
-                    onClick={() => setActiveTab("tractor")}
+                  <button 
+                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === 'tractor' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    onClick={() => setActiveTab('tractor')}
                   >
                     My Tractor Orders
                   </button>
-                  <button
-                    type="button"
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "pods" ? "text-pinto-dark" : "text-pinto-gray-4"}`}
-                    onClick={() => setActiveTab("pods")}
+                  <button 
+                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === 'pods' ? 'text-pinto-dark' : 'text-pinto-gray-4'}`}
+                    onClick={() => setActiveTab('pods')}
                   >
                     My Pods
                   </button>
                 </div>
-
+                
                 <div className="flex flex-row gap-2 items-center">
                   <img src={podIcon} className="w-8 h-8" alt={"total pods"} />
                   {harvestableIndexLoading ? (
@@ -156,14 +155,16 @@ function Field() {
                   )}
                 </div>
               </div>
-
-              {activeTab === "activity" && <FieldActivity />}
-
-              {activeTab === "pods" && (
+              
+              {activeTab === 'activity' && (
+                <FieldActivity />
+              )}
+              
+              {activeTab === 'pods' && (
                 <div>{hasPods ? <PlotsTable showClaimable disableHover /> : <EmptyTable type="plots-field" />}</div>
               )}
-
-              {activeTab === "tractor" && (
+              
+              {activeTab === 'tractor' && (
                 <div className="w-full">
                   <TractorOrdersPanel />
                 </div>

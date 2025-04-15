@@ -61,7 +61,6 @@ export class Limiter {
 
     // Process results
     const finalResults: T[] = [];
-    // biome-ignore lint/suspicious/noExplicitAny:
     const errors: { id: string | number; error: any }[] = [];
 
     for (const res of results) {

@@ -72,7 +72,7 @@ export default function GerminationNotice(props: GerminationNoticeProps) {
     const deposits = new Map<Token, Date>();
     const plantedDeposits: DepositData[] = [];
     let hasNormalDeposits = false;
-    const hasPlantedDeposits = false;
+    let hasPlantedDeposits = false;
     const tokenDepositTypes = new Map<
       Token,
       {

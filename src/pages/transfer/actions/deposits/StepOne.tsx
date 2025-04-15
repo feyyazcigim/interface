@@ -1,6 +1,6 @@
 import DepositBalanceSelect from "@/components/DepositBalanceSelect";
 import { Button } from "@/components/ui/Button";
-import { useFarmerSilo } from "@/state/useFarmerSilo";
+import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
 import { Dispatch, SetStateAction, useCallback, useEffect } from "react";
 import { DepositTransferData } from "../TransferDeposits";
 
@@ -12,7 +12,7 @@ interface StepOneProps {
 }
 
 export default function StepOne({ transferData, setTransferData, usingMax, setUsingMax }: StepOneProps) {
-  const farmerDeposits = useFarmerSilo().deposits;
+  const farmerDeposits = useFarmerSiloNew().deposits;
 
   const handleDepositedTokenSelect = useCallback(
     (tokens: string[]) => {

@@ -1,17 +1,17 @@
 import { TokenValue } from "@/classes/TokenValue";
 import DepositsTable from "@/components/DepositsTable";
 import { DepositTransferData } from "@/pages/transfer/actions/TransferDeposits";
-import { tokensEqual } from "@/utils/token";
 import { DepositData, Token, TokenDepositData } from "@/utils/types";
-import { createSmartGroups } from "@/utils/utils";
 import { Dispatch, SetStateAction, useState } from "react";
 import { useAccount } from "wagmi";
-import { DepositGroup } from "./CombineSelect";
-import { CloseIcon, PlusIcon } from "./Icons";
 import { Button } from "./ui/Button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/Dialog";
 import { Separator } from "./ui/Separator";
 import { ToggleGroup } from "./ui/ToggleGroup";
+import { CloseIcon, PlusIcon } from "./Icons";
+import { createSmartGroups } from "@/utils/utils";
+import { DepositGroup } from "./CombineSelect";
+import { tokensEqual } from "@/utils/token";
 
 interface DepositSelectDialogProps {
   open: boolean;
@@ -111,7 +111,9 @@ export default function DepositSelectDialog({
           }
         });
       } else {
-        setTransferData((prev) => prev.filter((item) => !tokensEqual(item.token, token)));
+        setTransferData((prev) =>
+          prev.filter((item) => !tokensEqual(item.token, token))
+        );
       }
     }
   };

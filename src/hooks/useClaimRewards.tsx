@@ -1,10 +1,10 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { beanstalkAbi, beanstalkAddress } from "@/generated/contractHooks";
-import { generateCombineAndL2LCallData } from "@/lib/claim/depositUtils";
-import { useFarmerSilo } from "@/state/useFarmerSilo";
+import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
 import { useSiloData } from "@/state/useSiloData";
 import { useInvalidateSun, useSunData } from "@/state/useSunData";
 import useTokenData from "@/state/useTokenData";
+import { generateCombineAndL2LCallData } from "@/lib/claim/depositUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { estimateGas } from "@wagmi/core";
 import { useCallback, useState } from "react";
@@ -18,7 +18,7 @@ export function useClaimRewards() {
   const chainId = useChainId();
   const queryClient = useQueryClient();
   const account = useAccount().address;
-  const data = useFarmerSilo();
+  const data = useFarmerSiloNew();
   const siloData = useSiloData();
   const isRaining = useSunData().raining;
   const whitelistedTokens = useTokenData().whitelistedTokens;
