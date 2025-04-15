@@ -92,19 +92,17 @@ export const AdvancedChart = () => {
   // Handle height
   const [height, setHeight] = useState(500);
 
-  const calculateHeight = () => {
-    const elem = document.getElementById("pinto-navbar");
-    if (!elem) {
-      return;
-    }
-    const windowHeight = window.innerHeight;
-    const headerOffset = elem?.getBoundingClientRect().height;
-    const newHeight = windowHeight - headerOffset;
-    setHeight(newHeight);
-  };
-
   useEffect(() => {
-    calculateHeight();
+    const calculateHeight = () => {
+      const elem = document.getElementById("pinto-navbar");
+      if (!elem) {
+        return;
+      }
+      const windowHeight = window.innerHeight;
+      const headerOffset = elem?.getBoundingClientRect().height;
+      const newHeight = windowHeight - headerOffset;
+      setHeight(newHeight);
+    };
 
     window.addEventListener("resize", calculateHeight);
     return () => {
