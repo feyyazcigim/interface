@@ -153,7 +153,6 @@ export default function DevPage() {
           }
         } catch (err) {
           console.warn(`Failed to fetch block ${latestBlock - BigInt(i)}:`, err);
-          continue;
         }
       }
 
