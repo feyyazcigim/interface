@@ -22,6 +22,7 @@ const ChartSelectPanel = memo(() => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [internalSelected, setInternalSelected] = useState(selectedCharts);
 
+  const currentlySelected = selectedCharts.length;
   const maxChartsSelected = chartColors.length;
 
   function typeToggle(type: string) {
@@ -71,7 +72,12 @@ const ChartSelectPanel = memo(() => {
     <>
       <div className="flex flex-col">
         <div className="flex flex-col gap-6 p-6">
-          <div className="pinto-h4">Compare Data</div>
+          <div className="flex flex-row justify-between items-center">
+            <span className="pinto-h4">Compare Data</span>
+            <span className="pinto-sm-light text-pinto-gray-4">
+              {currentlySelected}/{maxChartsSelected} Selected
+            </span>
+          </div>
           <Input
             type="text"
             className="bg-pinto-gray-1 placeholder:text-pinto-gray-4 border-pinto-gray-2"
