@@ -2,13 +2,12 @@ import { TokenValue } from "@/classes/TokenValue";
 import { FarmerBalance } from "@/state/useFarmerBalances";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { FarmFromMode, Token, TokenDepositData } from "./types";
+import { FarmFromMode, Token } from "./types";
 import { DepositData } from "./types";
-import { diamondABI } from "@/constants/abi/diamondABI";
 import { calculateConvertData } from "@/utils/convert";
-import { encodeFunctionData } from "viem";
 import { DepositGroup } from "@/components/CombineSelect";
 import convert from "@/encoders/silo/convert";
+import { MayArray } from "./types.generic";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -73,9 +72,11 @@ export const isObject = (value: unknown): value is Record<string, unknown> => {
   return !!value && typeof value === "object" && !Array.isArray(value);
 };
 
-export function calculatePipeCallClipboardSlot(pipeCallLength: number, slot: number) {
-  if (!pipeCallLength || !slot) return 0;
-  return 2 + pipeCallLength + (1 + slot * 2);
+export function arrayify<T>(value: MayArray<T>): T[];
+export function arrayify<T, U>(value: MayArray<T>, map: (v: T, i: number, arr: T[]) => U): U[];
+export function arrayify<T, U = T>(value: MayArray<T>, map?: (v: T, i: number, arr: T[]) => U): (T | U)[] {
+  const array = Array.isArray(value) ? value : [value];
+  return map ? array.map(map) : array;
 }
 
 export function getBalanceFromMode(balance: FarmerBalance | undefined, mode: FarmFromMode) {
@@ -209,7 +210,7 @@ export function createSmartGroups(deposits: DepositData[], targetGroups: number 
     .sort((a, b) => b.ratio.sub(a.ratio).toNumber());
 
   // Only slice if we have more than MAX_DEPOSITS
-  const slicedDeposits = validDeposits.length > MAX_DEPOSITS 
+  const slicedDeposits = validDeposits.length > MAX_DEPOSITS
     ? validDeposits.slice(-MAX_DEPOSITS)
     : validDeposits;
 
@@ -221,7 +222,7 @@ export function createSmartGroups(deposits: DepositData[], targetGroups: number 
     index: i + 1,
     // Don't create breakpoint if current or next deposit is small
     isValidBreakpoint: !(
-      slicedDeposits[i].bdv.lte(MIN_BDV) || 
+      slicedDeposits[i].bdv.lte(MIN_BDV) ||
       slicedDeposits[i + 1].bdv.lte(MIN_BDV)
     ),
   }));
@@ -250,7 +251,7 @@ export function createSmartGroups(deposits: DepositData[], targetGroups: number 
     const isBreakpoint = breakpoints.includes(index + 1);
     const nextDeposit = slicedDeposits[index + 1];
     const isLastDeposit = index === slicedDeposits.length - 1;
-    
+
     const shouldBreak = isBreakpoint || isLastDeposit;
     const wouldLeaveSmallDeposit = nextDeposit && nextDeposit.bdv.lte(MIN_BDV);
 

@@ -1,3 +1,4 @@
+import { mockAddressAtom } from "@/Web3Provider";
 import { morningFieldDevModeAtom } from "@/state/protocol/field/field.atoms";
 import { getMorningResult, getNowRounded } from "@/state/protocol/sun";
 import { morningAtom, seasonAtom, sunQueryKeysAtom } from "@/state/protocol/sun/sun.atoms";
@@ -12,15 +13,13 @@ import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { http, PublicClient, createPublicClient, isAddress, TransactionReceipt, decodeEventLog, erc20Abi } from "viem";
+import { http, PublicClient, createPublicClient, isAddress, decodeEventLog, erc20Abi } from "viem";
 import { hardhat } from "viem/chains";
 import { useAccount, useBlockNumber, useChainId } from "wagmi";
 import MorningCard from "./MorningCard";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
-import Text from "./ui/Text";
-import { mockAddressAtom } from "@/Web3Provider";
 import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
@@ -38,7 +37,7 @@ const publicClient = createPublicClient({
 });
 
 // Merge the ABIs
-const combinedABI = [...beanstalkAbi, ...sowBlueprintv0ABI, ...tractorHelpersABI, ...erc20Abi];
+const combinedABI = [...beanstalkAbi, ...sowBlueprintv0ABI, ...tractorHelpersABI, ...erc20Abi] as const;
 
 export default function DevPage() {
   const { address } = useAccount();
@@ -431,6 +430,8 @@ export default function DevPage() {
                   setMockAddress(newAddress); // Always update the input
                   if (isAddress(newAddress)) {
                     localStorage.setItem("mockAddress", newAddress);
+                  } else if (!newAddress) {
+                    localStorage.removeItem("mockAddress");
                   }
                 }}
                 className={`flex-1 ${mockAddress && !isAddress(mockAddress) ? "border-pinto-red-2" : ""}`}

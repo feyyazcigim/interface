@@ -17,7 +17,7 @@ import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useFarmerActions from "@/hooks/useFarmerActions";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerField } from "@/state/useFarmerField";
-import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { useHarvestableIndex, useTotalSoil } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import { useSiloData } from "@/state/useSiloData";
@@ -34,7 +34,7 @@ import TractorOrdersPanel from "../field/TractorOrdersPanel";
 
 const Overview = () => {
   // Hooks
-  const farmerSilo = useFarmerSiloNew();
+  const farmerSilo = useFarmerSilo();
   const farmerField = useFarmerField();
   const farmerActions = useFarmerActions();
   const tokenData = useTokenData();
@@ -427,7 +427,7 @@ const Overview = () => {
                     }
                   />
                 )*/}
-                <div className="absolute right-0 top-20 h-4" data-action-target="helper-target" />
+                {/* <div className="absolute right-0 top-20 h-4" data-action-target="helper-target" />
                 {currentTab === "deposits" && canWrap && (
                   <HelperLink
                     text={"Wrap Deposited Pinto"}
@@ -446,7 +446,7 @@ const Overview = () => {
                     }
                     onClick={() => navigate(`/wrap`)}
                   />
-                )}
+                )} */}
               </div>
             ) : (
               <EmptyTable type="deposits" />

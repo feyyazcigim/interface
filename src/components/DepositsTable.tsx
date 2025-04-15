@@ -11,10 +11,10 @@ import {
   TableRow,
 } from "@/components/ui/Table";
 import { HTMLMotionProps } from "framer-motion";
-import { ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import DepositDialog from "@/components/DepositDialog";
+import { ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { useDenomination } from "@/hooks/useAppSettings";
-import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import { formatter, truncateHex } from "@/utils/format";
 import { stringEq } from "@/utils/string";
@@ -23,6 +23,9 @@ import { cn } from "@/utils/utils";
 import React, { useState } from "react";
 import CheckmarkCircle from "./CheckmarkCircle";
 import IconImage from "./ui/IconImage";
+import deposit from "@/encoders/deposit";
+import price from "@/encoders/ecosystem/price";
+import { div } from "three/webgpu";
 
 interface DepositsTableProps {
   token: Token;
@@ -119,7 +122,19 @@ const DepositRow = React.forwardRef<
           <div className="gap-2 pl-2 flex items-center">
             {useToggle && <CheckmarkCircle isSelected={isSelected} />}
             <img src={depositIcon} alt="deposit icon" />
-            <span>{truncateHex(deposit.idHex)}</span>
+            <span
+              className={`${useToggle ? "hover:underline hover:cursor-pointer" : ""}`}
+              onClick={
+                useToggle
+                  ? (e) => {
+                      e.stopPropagation(); // Stop the event from bubbling up to TableRow
+                      onRowClick(deposit);
+                    }
+                  : undefined
+              }
+            >
+              {truncateHex(deposit.idHex)}
+            </span>
             {groupId && (
               <span className="ml-2 text-xs px-2 py-0.5 text-pinto-green-4 whitespace-nowrap">
                 Group {groupId}
@@ -236,19 +251,22 @@ const DepositRow = React.forwardRef<
         </TableCell>
       </TableRow>
     );
-  }
+  },
 );
 
-export default function DepositsTable({
-  token,
-  selected = [],
-  useToggle,
-  mode,
-  disabledDeposits,
-  groups,
+const empty: NonNullable<DepositsTableProps['selected']> = [];
+
+export default function DepositsTable({ 
+  token, 
+  selected = empty, 
+  useToggle, 
+  mode, 
+  disabledDeposits, 
+  groups
 }: DepositsTableProps) {
-  const farmerDeposits = useFarmerSiloNew().deposits;
-  const isLoading = useFarmerSiloNew().isLoading;
+  const farmerSilo = useFarmerSilo();
+  const farmerDeposits = farmerSilo.deposits;
+  const isLoading = farmerSilo.isLoading;
   const tokenData = farmerDeposits.get(token);
   const priceData = usePriceData();
   const [selectedDeposit, setSelectedDeposit] = useState<DepositData | null>(

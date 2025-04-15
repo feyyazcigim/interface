@@ -6,7 +6,7 @@ import useFarmerActions from "@/hooks/useFarmerActions";
 import useFarmerStatus from "@/hooks/useFarmerStatus";
 import { NavbarPanelType, navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
-import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
 import useFieldSnapshots from "@/state/useFieldSnapshots";
 import {
   usePriceData,
@@ -46,7 +46,7 @@ const Navbar = () => {
   const farmerActions = useFarmerActions();
   const farmerBalances = useFarmerBalances();
   const priceData = usePriceData();
-  const farmerSilo = useFarmerSiloNew();
+  const farmerSilo = useFarmerSilo();
   const invalidateSun = useInvalidateSun();
 
   const fieldSnapshots = useFieldSnapshots();
