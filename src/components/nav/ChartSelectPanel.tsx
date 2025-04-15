@@ -1,7 +1,7 @@
 import IconImage from "@/components/ui/IconImage";
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { useChartSetupData } from "@/state/useChartSetupData";
-import { cn } from "@/utils/utils";
+import { cn, safeJSONStringify } from "@/utils/utils";
 import { useAtom } from "jotai";
 import { memo, useEffect, useMemo, useState } from "react";
 import { SearchIcon } from "../Icons";
@@ -50,7 +50,7 @@ const ChartSelectPanel = memo(() => {
   useEffect(() => {
     // if (!isOpen) {
     setSelected(internalSelected);
-    localStorage.setItem("advancedChartSelectedCharts", JSON.stringify(internalSelected));
+    localStorage.setItem("advancedChartSelectedCharts", safeJSONStringify(internalSelected));
     // }
   }, [isOpen, internalSelected, setSelected]);
 

@@ -1,5 +1,5 @@
 import useIsDesktop from "@/hooks/display/useIsDesktop";
-import { safeJSONParse } from "@/utils/utils";
+import { safeJSONParse, safeJSONStringify } from "@/utils/utils";
 import { clsx } from "clsx";
 import {
   format,
@@ -328,12 +328,12 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }) =
       setRange(newRange);
       setTimePeriod(newTimePeriod);
 
-      localStorage.setItem(`${storageKeyPrefix}Range`, JSON.stringify(newRange));
-      localStorage.setItem(`${storageKeyPrefix}TimePeriod`, JSON.stringify(newTimePeriod));
+      localStorage.setItem(`${storageKeyPrefix}Range`, safeJSONStringify(newRange));
+      localStorage.setItem(`${storageKeyPrefix}TimePeriod`, safeJSONStringify(newTimePeriod));
     }
     if (_preset) {
       setPreset(_preset);
-      localStorage.setItem(`${storageKeyPrefix}Preset`, JSON.stringify(_preset));
+      localStorage.setItem(`${storageKeyPrefix}Preset`, safeJSONStringify(_preset));
     }
   };
 
