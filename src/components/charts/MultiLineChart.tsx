@@ -486,7 +486,7 @@ const MultiLineChart = React.memo(
               minRotation: 0,
               maxRotation: 0,
               autoSkip: false,
-              maxTicksLimit: typeof activeIndex !== "number" ? 6 : undefined,
+              maxTicksLimit: typeof activeIndex !== "number" ? 12 : undefined,
               callback: (_value, index, values) => {
                 const xValue = data[0][index][xKey];
                 if (!xValue) {
