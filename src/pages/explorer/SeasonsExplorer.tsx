@@ -74,7 +74,9 @@ const SeasonsExplorer = () => {
     // padded to include 2 extra seasons for calculation of delta demand chart
     // SeasonsTable has displaySeasonData will slice the data to exclude the last 2 seasons
     // for rendering
-    setSeasons(seasonsData?.data?.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE + 2));
+    const start = Math.max(0, (page - 1) * PAGE_SIZE - 1);
+    const end = Math.min(seasonsData?.data?.length, page * PAGE_SIZE + 1);
+    setSeasons(seasonsData?.data?.slice(start, end));
   }, [seasonsData?.data?.length, page, seasonsData?.isFetching]);
 
   useEffect(() => {

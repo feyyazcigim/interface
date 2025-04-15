@@ -1,4 +1,5 @@
 import { SeasonsTableData } from "@/state/useSeasonsData";
+import { SowEvent } from "@/state/useSowEventData";
 import { formatter } from "@/utils/format";
 import { caseIdToDescriptiveText } from "@/utils/season";
 import { Separator } from "@radix-ui/react-separator";
@@ -6,7 +7,6 @@ import { useMemo } from "react";
 import { LineChartData } from "./LineChart";
 import MultiLineChart from "./MultiLineChart";
 import { metallicGreenStrokeGradientFn } from "./chartHelpers";
-import { SowEvent } from "@/state/useSowEventData";
 
 interface DeltaDemandChartProps {
   currentSeason: SeasonsTableData;
@@ -60,7 +60,7 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
   const mappedData = useMemo(() => {
     const calculatedSowEventTimings = sowEventTimings;
     const labels: string[] = [];
-    const datas: Record<number, LineChartData[]> = {};
+    const data: Record<number, LineChartData[]> = {};
     const indexesWithSowEvents: number[] = [];
     // number of blocks is not necessarily 1,800, depends when gm was called
     const numBlocks = Math.max(
@@ -69,8 +69,8 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
     );
 
     Object.entries(calculatedSowEventTimings).forEach(([key, timings], idx) => {
-      if (!datas[idx]) {
-        datas[idx] = [];
+      if (!data[idx]) {
+        data[idx] = [];
       }
       let cumulativeSownBeans = 0;
       for (let i = 0; i < numBlocks; i++) {
@@ -80,21 +80,21 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
         if (sowEvent) {
           labels.push("XX");
           cumulativeSownBeans += sowEvent.sownBeans;
-          datas[idx].push({
+          data[idx].push({
             values: [(cumulativeSownBeans / timings.availableSoil) * 100 || 0],
             interval: textInterval,
           });
           indexesWithSowEvents.push(i);
         } else {
           labels.push(textInterval);
-          datas[idx].push({
+          data[idx].push({
             values: [(cumulativeSownBeans / timings.availableSoil) * 100 || 0],
             interval: textInterval,
           });
         }
       }
     });
-    return datas;
+    return data;
   }, [sowEventTimings]);
 
   return (
@@ -107,14 +107,10 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
         <span>-</span>
         <span className="text-pinto-gray-4">Amount Sown:</span>
         <span>
-          {currentSeason.deltaSownBeans.toNumber().toFixed(2)}/
-          {currentSeason.issuedSoil.toNumber().toFixed(2)}
+          {currentSeason.deltaSownBeans.toNumber().toFixed(2)}/{currentSeason.issuedSoil.toNumber().toFixed(2)}
         </span>
         <span className="text-pinto-gray-4">
-          (
-          {(
-            (currentSeason.deltaSownBeans.toNumber() / currentSeason.issuedSoil.toNumber()) * 100 || 0
-          ).toFixed(2)}
+          ({((currentSeason.deltaSownBeans.toNumber() / currentSeason.issuedSoil.toNumber()) * 100 || 0).toFixed(2)}
           %)
         </span>
       </div>
@@ -154,13 +150,11 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
         <span className="text-xl">{descriptiveText}</span>
         {currentSeason.blocksToSoldOutSoil === "-" ? (
           <span className="text-base mt-4 text-pinto-gray-4">
-            Amount of Soil Sown in {currentSeason.season}:{" "}
-            {currentSeason.deltaSownBeans.toNumber().toFixed(2)}
+            Amount of Soil Sown in {currentSeason.season}: {currentSeason.deltaSownBeans.toNumber().toFixed(2)}
           </span>
         ) : (
           <span className="text-base mt-4 text-pinto-gray-4">
-            Soil - {currentSeason.issuedSoil.toNumber().toFixed(2)} Sown in Season{" "}
-            {currentSeason.season}: XX:
+            Soil - {currentSeason.issuedSoil.toNumber().toFixed(2)} Sown in Season {currentSeason.season}: XX:
             {currentSeason.blocksToSoldOutSoil}
           </span>
         )}
