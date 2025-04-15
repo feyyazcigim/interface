@@ -29,7 +29,7 @@ const useGetSwapOptions = () => {
   const mainToken = useChainConstant(MAIN_TOKEN);
 
   const getSwapOptions = useCallback(
-    (tokenIn: Token, tokenOut: Token): SwapOptions => {
+    (tokenIn: Token, tokenOut: Token | undefined): SwapOptions => {
       const wsolIn = tokensEqual(tokenIn, wsol);
       const wsolOut = !!(tokenOut && tokensEqual(tokenOut, wsol));
 
@@ -39,7 +39,7 @@ const useGetSwapOptions = () => {
       lpRouteOverrides.set(pintoWSOL, mainToken);
 
       // In the case where user is going from WSOL => NON_PINTOWSOL LP, add single sided PINTO liquidity.
-      if (wsolIn && tokenOut.isLP) {
+      if (wsolIn && tokenOut?.isLP) {
         lpRouteOverrides.set(tokenOut, mainToken);
       }
 
@@ -58,7 +58,7 @@ const useGetSwapOptions = () => {
 
 type UseSwapOptionsArgs = {
   tokenIn: Token;
-  tokenOut: Token;
+  tokenOut: Token | undefined;
 };
 
 const useSwapOptions = (args: MayArray<UseSwapOptionsArgs>): SwapOptions[] => {
@@ -69,7 +69,7 @@ const useSwapOptions = (args: MayArray<UseSwapOptionsArgs>): SwapOptions[] => {
 
 export type UseSwapParams = {
   tokenIn: Token;
-  tokenOut: Token;
+  tokenOut: Token | undefined;
   amountIn: TV;
   slippage: number;
   disabled?: boolean;
@@ -78,7 +78,7 @@ export type UseSwapParams = {
 export const SWAP_QUERY_KEY_PREDICATE = ["pinto-swap-router"] as const;
 
 const createSwapQueryKey = (args: UseSwapParams): QueryKey => {
-  return [SWAP_QUERY_KEY_PREDICATE, args.tokenIn.address, args.tokenOut.address, args.amountIn, args.slippage];
+  return [SWAP_QUERY_KEY_PREDICATE, args.tokenIn.address, args.tokenOut?.address ?? "", args.amountIn, args.slippage];
 };
 
 export default function useSwap({ tokenIn, tokenOut, amountIn, slippage, disabled = false }: UseSwapParams) {
@@ -96,7 +96,8 @@ export default function useSwap({ tokenIn, tokenOut, amountIn, slippage, disable
   const swapNodesQuery = useQuery({
     queryKey,
     queryFn: async () => {
-      if (swapOptions.length !== 1) return;
+      if (swapOptions.length !== 1 || !tokenOut) return;
+
       const swapResult = await router.route(tokenIn, tokenOut, amountIn, slippage, swapOptions[0]).catch((e) => {
         console.error("Error routing swap: ", e);
         throw e;
