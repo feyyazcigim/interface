@@ -95,9 +95,7 @@ export const AdvancedChart = () => {
   useEffect(() => {
     const calculateHeight = () => {
       const elem = document.getElementById("pinto-navbar");
-      if (!elem) {
-        return;
-      }
+      if (!elem) return;
       const windowHeight = window.innerHeight;
       const headerOffset = elem?.getBoundingClientRect().height;
       const newHeight = windowHeight - headerOffset;
@@ -105,8 +103,11 @@ export const AdvancedChart = () => {
     };
 
     window.addEventListener("resize", calculateHeight);
+    window.addEventListener("navbarMounted", calculateHeight);
+
     return () => {
       window.removeEventListener("resize", calculateHeight);
+      window.removeEventListener("navbarMounted", calculateHeight);
     };
   }, []);
 

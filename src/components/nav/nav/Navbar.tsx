@@ -16,7 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useModal } from "connectkit";
 import { useAtom } from "jotai";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useMatch } from "react-router-dom";
 import { useAccount } from "wagmi";
 
@@ -180,6 +180,13 @@ const Navbar = () => {
   const refetchPriceData = useCallback(async () => {
     return Promise.all([priceData.refetch(), refetchTwaDeltaBLP(), refetchTwaDeltaB()]);
   }, [priceData.refetch, refetchTwaDeltaBLP, refetchTwaDeltaB]);
+
+  useEffect(() => {
+    // Dispatch navbarMounted event after render
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("navbarMounted"));
+    }, 0);
+  }, []);
 
   return (
     <div className="flex flex-col sticky top-0 z-[2]" id="pinto-navbar" style={{ transformOrigin: "top left" }}>
