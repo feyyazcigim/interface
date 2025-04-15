@@ -170,9 +170,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     }
   };
 
-  // Update the validateSoilAmounts function to only check for conflicts
-  const validateSoilAmounts = (minSoilAmount: string, maxSeasonAmount: string) => {
-    if (!minSoilAmount || !maxSeasonAmount) {
+  // Update the validateSoilAmounts function to check against total amount too
+  const validateSoilAmounts = (minSoilAmount: string, maxSeasonAmount: string, totalSowAmount: string) => {
+    // Skip validation if any values are missing
+    if (!minSoilAmount || !maxSeasonAmount || !totalSowAmount) {
       setError(null);
       return;
     }
@@ -181,12 +182,16 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       // Remove commas and convert to numbers first
       const minClean = minSoilAmount.replace(/,/g, "");
       const maxClean = maxSeasonAmount.replace(/,/g, "");
+      const totalClean = totalSowAmount.replace(/,/g, "");
 
       const min = TokenValue.fromHuman(minClean, PINTO.decimals);
       const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
+      const total = TokenValue.fromHuman(totalClean, PINTO.decimals);
 
       if (min.gt(max)) {
         setError("Min per Season must be less than or equal to Max per Season");
+      } else if (min.gt(total)) {
+        setError("Min per Season cannot exceed the total amount to Sow");
       } else {
         setError(null);
       }
@@ -196,10 +201,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     }
   };
 
-  // Validate whenever either value changes
+  // Validate whenever any of the values changes
   useEffect(() => {
-    validateSoilAmounts(minSoil, maxPerSeason);
-  }, [minSoil, maxPerSeason]);
+    validateSoilAmounts(minSoil, maxPerSeason, totalAmount);
+  }, [minSoil, maxPerSeason, totalAmount]);
 
   // Set initial pod line length to current + 100% when component mounts
   useEffect(() => {
