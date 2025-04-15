@@ -55,6 +55,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [morningAuction, setMorningAuction] = useState(false);
   const [operatorTip, setOperatorTip] = useState("1");
   const { address } = useAccount();
+  const [formStep, setFormStep] = useState(() => {
+    // If deposits need combining, start at step 0, otherwise normal flow
+    return needsCombining(farmerDeposits) ? 0 : 1;
+  });
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [encodedData, setEncodedData] = useState<`0x${string}` | null>(null);
   const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
@@ -72,12 +76,6 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     return needsCombining(farmerDeposits);
   }, [farmerDeposits]);
   
-  // Initialize form step based on whether combining is needed
-  const [formStep, setFormStep] = useState(() => {
-    // If deposits need combining, start at step 0, otherwise normal flow
-    return needsDepositCombining ? 0 : 1;
-  });
-
   // Recheck the need for combining whenever deposits change
   useEffect(() => {
     // Only auto-update if we're on step 0
@@ -172,9 +170,12 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     }
   };
 
-  // Validation function
+  // Update the validateSoilAmounts function to only check for conflicts
   const validateSoilAmounts = (minSoilAmount: string, maxSeasonAmount: string) => {
-    if (!minSoilAmount || !maxSeasonAmount) return;
+    if (!minSoilAmount || !maxSeasonAmount) {
+      setError(null);
+      return;
+    }
 
     try {
       // Remove commas and convert to numbers first
@@ -185,7 +186,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
 
       if (min.gt(max)) {
-        setError("Min per Season must be greater than or equal to Max per Season");
+        setError("Min per Season must be less than or equal to Max per Season");
       } else {
         setError(null);
       }
@@ -248,22 +249,40 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       const inputLength = parseFloat(podLineLength.replace(/,/g, ""));
       const currentLength = parseFloat(formatter.number(podLine).replace(/,/g, ""));
 
-      return !Number.isNaN(inputLength) && inputLength > currentLength;
+      return !Number.isNaN(inputLength);
     } catch (e) {
       return false;
     }
   };
 
-  // Update handleNext to create three different steps (0, 1, 2)
+  // Add this function to check if all required fields are filled
+  const areRequiredFieldsFilled = () => {
+    return (
+      // Check if temperature is filled
+      !!temperature &&
+      // Check if min soil is filled
+      !!minSoil &&
+      // Check if max per season is filled
+      !!maxPerSeason &&
+      // Check if total amount is filled
+      !!totalAmount &&
+      // Check if pod line length is valid
+      isPodLineLengthValid()
+    );
+  };
+
+  // Update handleNext to remove formSubmitAttempted
   const handleNext = async () => {
     // Step 0 does nothing on Next since we handle the claim button separately
     if (formStep === 0) {
       return;
     }
     
-    // First step just moves to the next form view
+    // First step just moves to the next form view if validation passes
     if (formStep === 1) {
-      setFormStep(2);
+      if (areRequiredFieldsFilled() && !error) {
+        setFormStep(2);
+      }
       return;
     }
 
@@ -688,7 +707,6 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     </div>
                   </div>
 
-
                   {/* Min and Max per Season - combined in a single row */}
                   <div className="flex flex-col gap-2">
                     <div className="flex gap-4">
@@ -701,7 +719,9 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                           <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                             <Input
                               id={inputIds.minPerSeason}
-                              className={`h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
+                              className={`h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                                error ? "bg-red-50" : ""
+                              }`}
                               placeholder="0.00"
                               value={minSoil}
                               onChange={(e) => {
@@ -727,7 +747,9 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                           <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                             <Input
                               id={inputIds.maxPerSeason}
-                              className={`h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "border-red-500" : ""}`}
+                              className={`h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                                error ? "bg-red-50" : ""
+                              }`}
                               placeholder="0.00"
                               value={maxPerSeason}
                               onChange={(e) => {
@@ -775,7 +797,6 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     </div>
                   </div>
 
-
                   {/* Execute when Temperature is at least */}
                   <div className="flex flex-row items-center justify-between gap-4">
                     <label htmlFor={inputIds.temperature} className="text-[#9C9C9C] text-base font-light">
@@ -802,9 +823,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     </label>
                     <Input
                       id={inputIds.podLineLength}
-                      className={`h-12 px-3 py-1.5 border ${
-                        !isPodLineLengthValid() ? "border-red-500" : "border-[#D9D9D9]"
-                      } rounded-[12px]`}
+                      className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-[12px]"
                       placeholder="9,000,000"
                       value={podLineLength}
                       onChange={(e) => {
@@ -821,15 +840,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         setPodLineLength(sanitizedValue);
                       }}
                     />
-                    {!isPodLineLengthValid() && (
-                      <div className="bg-red-100 border border-red-300 text-red-600 px-4 py-3 rounded-lg flex items-start gap-2">
-                        <WarningIcon color="#DC2626" width={25} height={25} />
-                        <span>
-                          Pod Line is length is {formatter.number(podLine)}, this order cannot execute under current
-                          conditions.
-                        </span>
-                      </div>
-                    )}
+                    
                     <div className="flex justify-between gap-2 mt-1 w-full">
                       <Button
                         variant="outline"
@@ -1065,11 +1076,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 ) : (
                   <Button
                     className={`flex-1 h-[60px] rounded-full text-2xl font-medium ${
-                      (formStep === 1 && (error || !isPodLineLengthValid())) || isLoading
+                      (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
                         ? "bg-[#D9D9D9] text-[#9C9C9C]"
                         : "bg-[#2F8957] text-white"
                     }`}
-                    disabled={(formStep === 1 && (!!error || !isPodLineLengthValid())) || isLoading}
+                    disabled={(formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading}
                     onClick={handleNext}
                   >
                     {isLoading ? (
