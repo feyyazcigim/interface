@@ -650,11 +650,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
             <div className="flex flex-col gap-6">
               {formStep === 0 ? (
                 // Step 0 - Deposits need combining
-                <div className="flex flex-col gap-6 py-4">
+                <div className="flex flex-col gap-4 py-2 h-[280px]">
                   <div className="flex items-center justify-center">
                     <WarningIcon color="#DC2626" width={40} height={40} />
                   </div>
-                  <h3 className="text-center pinto-h3 font-antarctica">
+                  <h3 className="text-center pinto-h3 font-antarctica mt-4 mb-4">
                     Fragmented Silo Deposits
                   </h3>
                   <p className="text-center pinto-body text-gray-700">
@@ -1046,7 +1046,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 </div>
               )}
 
-              <div className="flex gap-6 mt-6">
+              <div className={`flex gap-6 ${formStep === 0 ? 'mt-24' : 'mt-6'}`}>
                 <Button
                   variant="outline"
                   className="flex-1 h-[60px] rounded-full text-2xl font-medium text-[#404040] bg-[#F8F8F8]"

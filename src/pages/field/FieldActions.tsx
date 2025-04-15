@@ -60,7 +60,7 @@ export default function FieldActions() {
       </div>
 
       {showSowOrder && (
-        <div className="absolute inset-x-0 -top-[56px] min-h-[calc(100%+60px)] bg-[#FCFCFC] rounded-[20px] border border-[#D9D9D9] z-10 flex items-start overflow-auto">
+        <div className="absolute inset-x-0 -top-[56px] min-h-[calc(100%)] bg-[#FCFCFC] rounded-[20px] border border-[#D9D9D9] z-10 flex items-start overflow-auto">
           <div className="w-full max-w-[90%] my-2 mx-auto pb-4">
             <SowOrderDialog open={showSowOrder} onOpenChange={setShowSowOrder} />
           </div>

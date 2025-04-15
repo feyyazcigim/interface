@@ -410,9 +410,9 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
                 >
                   <div className="flex flex-row justify-center items-center gap-1">
                     <LightningIcon className="w-4 h-4 text-[#404040] group-hover:text-pinto-green-4" />
-                    <span className="font-antarctica font-[340] text-[20px] leading-[110%] text-[#404040] group-hover:text-pinto-green-4">Want to Sow with size?</span>
+                    <span className="pinto-h4 text-[#404040] group-hover:text-pinto-green-4">Want to Sow with size?</span>
                   </div>
-                  <span className="font-antarctica font-[340] text-base leading-[110%] text-[#9C9C9C] group-hover:text-pinto-green-3">Use 🚜 Tractor to set up an order for Pods over time</span>
+                  <span className="pinto-body-light text-[#9C9C9C] group-hover:text-pinto-green-3">Use 🚜 Tractor to set up an order for Pods over time</span>
                 </button>
                 <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="0.75rem" />
               </div>
