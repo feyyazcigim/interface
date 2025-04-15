@@ -2,11 +2,11 @@ import depositIcon from "@/assets/protocol/Deposit.svg";
 import seedIcon from "@/assets/protocol/Seed.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
 import { TokenValue } from "@/classes/TokenValue";
+import DepositDialog from "@/components/DepositDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { ToggleGroupItem } from "@/components/ui/ToggleGroup";
-import DepositDialog from "@/components/DepositDialog";
 import { useDenomination } from "@/hooks/useAppSettings";
-import { useFarmerSiloNew } from "@/state/useFarmerSiloNew";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import { formatter, truncateHex } from "@/utils/format";
 import { stringEq } from "@/utils/string";
@@ -42,20 +42,27 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & React
       <TableRow
         {...props}
         ref={ref}
-        className={`h-[4.5rem] transition-all ${
+        className={`h-[4.5rem] transition-all hover:cursor-pointer ${
           deposit.isGerminating ? "bg-pinto-off-green/15" : deposit.isPlantDeposit ? "bg-pinto-green-4/15" : "bg-white"
-        } text-[1rem] ${
-          useToggle 
-            ? "hover:bg-pinto-green-1/50" 
-            : "hover:cursor-pointer hover:bg-pinto-green-1/50"
-        }`}
-        onClick={() => onRowClick(deposit)}
+        } text-[1rem] hover:bg-pinto-green-1/50`}
       >
         <TableCell className="hidden md:table-cell pinto-sm">
           <div className="gap-2 pl-2 flex items-center">
             {useToggle && <CheckmarkCircle isSelected={isSelected} />}
             <img src={depositIcon} alt="deposit icon" />
-            <span>{truncateHex(deposit.idHex)}</span>
+            <span
+              className={`${useToggle ? "hover:underline hover:cursor-pointer" : ""}`}
+              onClick={
+                useToggle
+                  ? (e) => {
+                      e.stopPropagation(); // Stop the event from bubbling up to TableRow
+                      onRowClick(deposit);
+                    }
+                  : undefined
+              }
+            >
+              {truncateHex(deposit.idHex)}
+            </span>
           </div>
         </TableCell>
         <TableCell className="pinto-sm text-left px-4 md:px-0 md:text-right">
@@ -134,12 +141,13 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & React
         </TableCell>
       </TableRow>
     );
-  }
+  },
 );
 
 export default function DepositsTable({ token, selected, useToggle, mode }: DepositsTableProps) {
-  const farmerDeposits = useFarmerSiloNew().deposits;
-  const isLoading = useFarmerSiloNew().isLoading;
+  const farmerSilo = useFarmerSilo();
+  const farmerDeposits = farmerSilo.deposits;
+  const isLoading = farmerSilo.isLoading;
   const tokenData = farmerDeposits.get(token);
   const priceData = usePriceData();
   const [selectedDeposit, setSelectedDeposit] = useState<DepositData | null>(null);
@@ -231,7 +239,7 @@ export default function DepositsTable({ token, selected, useToggle, mode }: Depo
         </Table>
       </div>
       {selectedDeposit && (
-        <DepositDialog 
+        <DepositDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           deposit={selectedDeposit}
