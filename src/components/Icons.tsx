@@ -1,6 +1,4 @@
 import { cn } from "@/utils/utils";
-import { Icon } from "@radix-ui/react-select";
-import { size } from "viem";
 
 interface SVGProps {
   color?: string;
