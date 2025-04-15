@@ -97,17 +97,16 @@ export const AdvancedChart = () => {
       const elem = document.getElementById("pinto-navbar");
       if (!elem) return;
       const windowHeight = window.innerHeight;
-      const headerOffset = elem?.getBoundingClientRect().height;
+      const headerOffset = elem.getBoundingClientRect().height;
       const newHeight = windowHeight - headerOffset;
       setHeight(newHeight);
     };
 
-    window.addEventListener("resize", calculateHeight);
-    window.addEventListener("navbarMounted", calculateHeight);
+    calculateHeight();
 
+    window.addEventListener("resize", calculateHeight);
     return () => {
       window.removeEventListener("resize", calculateHeight);
-      window.removeEventListener("navbarMounted", calculateHeight);
     };
   }, []);
 
