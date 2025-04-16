@@ -436,62 +436,55 @@ export const CalendarIcon = ({ size = 6, color = "#9C9C9C", ...props }: IconProp
       className={cn(props.className)}
     >
       <g id="Group">
-        <path id="Path" d="M7.5 3V6" stroke={color} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-        <path
-          id="Path_2"
-          d="M16.5 3V6"
-          stroke={color}
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
+        <path id="Path" d="M7.5 3V6" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path id="Path_2" d="M16.5 3V6" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         <path
           id="Path_3"
           d="M8.5 11.5H7.5"
           stroke={color}
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           id="Path_4"
           d="M8.5 15H7.5"
           stroke={color}
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           id="Path_5"
           d="M12.5 11.5H11.5"
           stroke={color}
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           id="Path_6"
           d="M12.5 15H11.5"
           stroke={color}
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           id="Path_7"
           d="M16.5 11.5H15.5"
           stroke={color}
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           id="Path_8"
           d="M16.5 15H15.5"
           stroke={color}
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <rect
           id="Rectangle"
@@ -501,9 +494,9 @@ export const CalendarIcon = ({ size = 6, color = "#9C9C9C", ...props }: IconProp
           height="16.5"
           rx="3"
           stroke={color}
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
       </g>
     </svg>
@@ -544,9 +537,9 @@ export const SearchIcon = ({ size = 6, color = "#9C9C9C", ...props }: IconProps)
         id="Icon"
         d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
         stroke={color}
-        stroke-width="2.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
