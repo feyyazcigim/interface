@@ -18,8 +18,6 @@ export default function FieldActions() {
   const [tab, handleChangeTab] = useParamsTabs(slugs, "action", true);
   const [showSowOrder, setShowSowOrder] = useState(false);
 
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
   return (
     <div className="relative h-full w-full">
       <div className={showSowOrder ? "invisible" : "visible"}>
@@ -35,7 +33,7 @@ export default function FieldActions() {
           <Separator className="my-4" />
           {tab === "sow" && (
             <TabsContent value="sow">
-              <Sow isMorning={isMorning} onShowOrder={() => setShowSowOrder(true)} setDimensions={setDimensions} />
+              <Sow isMorning={isMorning} onShowOrder={() => setShowSowOrder(true)} />
             </TabsContent>
           )}
           {tab === "harvest" && (

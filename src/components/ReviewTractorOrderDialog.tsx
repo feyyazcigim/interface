@@ -19,6 +19,7 @@ import { HighlightedCallData } from "./Tractor/HighlightedCallData";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "./ui/Dialog";
 import { Switch } from "./ui/Switch";
+import { Col, Row } from "./Container";
 
 // Define the execution data type
 export interface ExecutionData {
@@ -176,33 +177,35 @@ export default function ReviewTractorOrderDialog({
         <DialogContent className="sm:max-w-[1200px]" style={{ 
           padding: 0 // no  other way to set padding as 0 
         }}>
-          <DialogTitle className="px-4 pt-4">{isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}</DialogTitle>
-          <DialogDescription className="px-4">
-            {isViewOnly ? (
-              <div className="flex items-center">
-                <span>
-                  This is your active Tractor Order. It allows an Operator to execute a transaction for you on the{" "}
-                </span>
-                <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
-                <span>Base network when the conditions are met.</span>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <p className="flex items-center">
-                  A Tractor Order allows you to pay an Operator to execute a transaction for you on the
+          <Col className="gap-3 pb-3">
+            <div className="px-6 pt-6 pinto-body">{isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}</div>
+            <DialogDescription className="px-6 pinto-sm-light text-pinto-light">
+              {isViewOnly ? (
+                <div className="flex items-center">
+                  <span>
+                    This is your active Tractor Order. It allows an Operator to execute a transaction for you on the{" "}
+                  </span>
                   <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
-                  Base network.
-                </p>
-                <p>
-                  This allows you to interact with the Pinto protocol autonomously when the conditions of your Order are
-                  met.
-                </p>
-              </div>
-            )}
-          </DialogDescription>
+                  <span>Base network when the conditions are met.</span>
+                </div>
+              ) : (
+                <Col className="gap-3">
+                  <p className="flex items-center">
+                    A Tractor Order allows you to pay an Operator to execute a transaction for you on the
+                    <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
+                    Base network.
+                  </p>
+                  <p>
+                    This allows you to interact with the Pinto protocol autonomously when the conditions of your Order are
+                    met.
+                  </p>
+                </Col>
+              )}
+            </DialogDescription>
+          </Col>
           <div className="flex flex-col">
             {/* Tabs */}
-            <div className="flex gap-4 border-b px-4 pinto-sm">
+            <div className="flex gap-4 border-b px-6 pinto-sm">
               <button
                 type="button"
                 className={`pb-2 ${activeTab === "order" ? "border-b-2 border-pinto-green-4 font-medium" : "text-gray-500"}`}
@@ -566,18 +569,18 @@ export default function ReviewTractorOrderDialog({
 
             {/* Footer */}
             {!isViewOnly ? (
-              <div className="flex justify-between items-center border-t p-4">
+              <Row className="justify-between items-center border-t p-6">
                 <p className="pinto-sm-light text-pinto-light">
                   Your Order will remain active until you've Sown {orderData.totalAmount} Pinto under the specified
                   conditions or until Order cancellation
                 </p>
-                <div className="flex gap-2">
+                <Row className="flex flex-row gap-2 shrink-0">
                   <SmartSubmitButton
                     variant="gradient"
                     disabled={signing || !!signedRequisitionData}
                     submitFunction={handleSignBlueprint}
                     submitButtonText={signing ? "Signing..." : signedRequisitionData ? "Signed" : "Sign Order"}
-                    className="w-40"
+                    className="w-min"
                   />
 
                   <SmartSubmitButton
@@ -585,10 +588,10 @@ export default function ReviewTractorOrderDialog({
                     disabled={submitting || !signedRequisitionData}
                     submitFunction={handlePublishRequisition}
                     submitButtonText={submitting ? "Publishing..." : "Publish Order"}
-                    className="w-50"
+                    className="w-min"
                   />
-                </div>
-              </div>
+                </Row>
+              </Row>
             ) : null}
           </div>
         </DialogContent>

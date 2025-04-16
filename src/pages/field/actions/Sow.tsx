@@ -47,15 +47,13 @@ import { HashString } from "@/utils/types.generic";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { getBalanceFromMode } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import useSetElementDimensionsState, { ElementDimensions } from "@/hooks/display/useSetElementDimensionsState";
 
 type SowProps = {
   isMorning: boolean;
   onShowOrder: () => void;
-  setDimensions: React.Dispatch<React.SetStateAction<ElementDimensions>>;
 };
 
-function Sow({ isMorning, onShowOrder, setDimensions }: SowProps) {
+function Sow({ isMorning, onShowOrder }: SowProps) {
   // Hooks
   const diamond = useProtocolAddress();
   const { mainToken } = useTokenData();
@@ -63,9 +61,6 @@ function Sow({ isMorning, onShowOrder, setDimensions }: SowProps) {
   const farmerSilo = useFarmerSilo();
   const farmerField = useFarmerField();
   const account = useAccount();
-  const formRef = useRef<HTMLDivElement | null>(null);
-
-  useSetElementDimensionsState(formRef, setDimensions);
 
   const temperature = useTemperature();
   const podLine = usePodLine();
@@ -368,7 +363,7 @@ function Sow({ isMorning, onShowOrder, setDimensions }: SowProps) {
   const animationHeight = getAnimateHeight({ fromSilo, hasSoil, tokenIn });
 
   return (
-    <Col className="gap-4 w-full" ref={formRef}>
+    <Col className="gap-4 w-full">
       <Col className="w-full">
         <Row className="justify-between items-center">
           <div className="pinto-body-light text-pinto-light">Amount and token to Sow</div>
