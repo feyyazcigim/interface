@@ -401,7 +401,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
         </DialogHeader>
 
         <div className="w-full">
-          <div className="flex gap-4 border-b">
+          <div className="flex gap-4 border-b pinto-sm">
             <button
               type="button"
               className={`pb-2 font-antarctica ${activeTab === "view" ? "border-b-2 border-green-600 font-medium" : "text-gray-500"}`}

@@ -48,6 +48,7 @@ const buttonVariants = cva(
       },
       size: {
         default: `h-10 w-max px-2 py-2 sm:px-4 sm:py-2 ${deriveTextStyles("body-light", true)}`,
+        xlargest: `h-[3.75rem] text-2xl font-medium`,
         xxl: `px-3 py-2 sm:px-6 sm:py-4 ${deriveTextStyles("h4", true)} font-[500]`,
         xl: `h-12 px-3 py-3 sm:px-4 sm:py-3 ${deriveTextStyles("body-light", true)}`,
         lg: "h-10 rounded-md px-8",

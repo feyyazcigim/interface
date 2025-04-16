@@ -1,4 +1,5 @@
 import SowOrderDialog from "@/components/SowOrderDialog";
+import { Card } from "@/components/ui/Card";
 import { Separator } from "@/components/ui/Separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { useParamsTabs } from "@/hooks/useRouterTabs";
@@ -42,13 +43,12 @@ export default function FieldActions() {
           )}
         </Tabs>
       </div>
-
       {showSowOrder && (
-        <div className="absolute inset-x-0 -top-[56px] min-h-[calc(100%)] bg-[#FCFCFC] rounded-[20px] border border-[#D9D9D9] z-10 flex items-start overflow-auto">
-          <div className="w-full max-w-[90%] my-2 mx-auto pb-4">
+        <Card className="absolute inset-x-0 -top-[calc(2.5rem)] rounded-xl z-10" id="sow-order-dialog">
+          <div className="flex flex-col w-full items-center p-4">
             <SowOrderDialog open={showSowOrder} onOpenChange={setShowSowOrder} />
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

@@ -25,12 +25,13 @@ import { FarmFromMode, FarmToMode } from "@/utils/types";
 import { isDev } from "@/utils/utils"; // Only used for pre-filling form data for faster developing, remove before prod
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { PublicClient } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
+import { Col, Row } from "./Container";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
 import { Input } from "./ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
-import { PublicClient } from "viem";
 
 interface SowOrderDialogProps {
   open: boolean;
@@ -131,7 +132,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     let tokenType: "SPECIFIC_TOKEN" | "LOWEST_SEEDS" = "LOWEST_SEEDS";
 
     // Check PINTO token first
-    const pintoToken = whitelistedTokens.find(t => t.symbol === "PINTO");
+    const pintoToken = whitelistedTokens.find((t) => t.symbol === "PINTO");
     if (pintoToken) {
       const pintoDeposit = farmerDeposits.get(pintoToken);
       if (pintoDeposit?.amount) {
@@ -145,7 +146,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     }
 
     // Check all LP tokens
-    whitelistedTokens.forEach(token => {
+    whitelistedTokens.forEach((token) => {
       if (token.isLP) {
         const lpDollarValue = swapResults.get(token.address);
         if (lpDollarValue && lpDollarValue.gt(highestValue)) {
@@ -164,7 +165,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     // Return the token with highest value
     return {
       type: tokenType,
-      address: tokenWithHighestValue as `0x${string}`
+      address: tokenWithHighestValue as `0x${string}`,
     } as TokenStrategy;
   }, [farmerDeposits, whitelistedTokens, priceData.price, swapResults]);
 
@@ -186,7 +187,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
         console.error("Error fetching average tip value:", error);
       }
     };
-    
+
     fetchAverageTip();
   }, [publicClient]);
 
@@ -733,21 +734,14 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
   if (!open) return null;
 
-  const inputIds = {
-    totalAmount: "total-amount-input",
-    minPerSeason: "min-per-season-input",
-    maxPerSeason: "max-per-season-input",
-    fundOrder: "fund-order-select",
-    temperature: "temperature-input",
-    podLineLength: "pod-line-length-input",
-    morningAuction: "morning-auction-input",
-    operatorTip: "operator-tip-input",
-  };
+  console.log({
+    formStep,
+  });
 
   return (
     <>
-      <div className="h-auto w-full flex flex-col">
-        <div className="py-4 pb-0">
+      <Col className="h-auto w-full">
+        <div>
           <div className="flex flex-col gap-6">
             {/* Form Fields */}
             <div className="flex flex-col gap-6">
@@ -766,12 +760,10 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 </div>
               ) : formStep === 1 ? (
                 // Step 1 - Main Form
-                <>
+                <Col className="gap-6 pinto-sm-light text-pinto-light">
                   {/* I want to Sow up to */}
                   <div className="flex flex-col gap-2">
-                    <label htmlFor={inputIds.totalAmount} className="text-[#9C9C9C] text-base font-light">
-                      I want to Sow up to
-                    </label>
+                    <label htmlFor={inputIds.totalAmount}>I want to Sow up to</label>
                     <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
                       <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                         <Input
@@ -795,9 +787,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     <div className="flex gap-4">
                       {/* Min per Season */}
                       <div className="flex flex-col gap-2 flex-1">
-                        <label htmlFor={inputIds.minPerSeason} className="text-[#9C9C9C] text-base font-light">
-                          Min per Season
-                        </label>
+                        <label htmlFor={inputIds.minPerSeason}>Min per Season</label>
                         <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
                           <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                             <Input
@@ -823,9 +813,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
                       {/* Max per Season */}
                       <div className="flex flex-col gap-2 flex-1">
-                        <label htmlFor={inputIds.maxPerSeason} className="text-[#9C9C9C] text-base font-light">
-                          Max per Season
-                        </label>
+                        <label htmlFor={inputIds.maxPerSeason}>Max per Season</label>
                         <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
                           <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                             <Input
@@ -857,7 +845,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                   {/* Fund order using */}
                   <div className="flex flex-col gap-2">
                     <div className="flex justify-between items-center">
-                      <div className="text-[#9C9C9C] text-base font-light">Fund order using</div>
+                      <div>Fund order using</div>
                       <Button
                         variant="outline-gray-shadow"
                         size="xl"
@@ -885,9 +873,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
                   {/* Execute when Temperature is at least */}
                   <div className="flex flex-row items-center justify-between gap-4">
-                    <label htmlFor={inputIds.temperature} className="text-[#9C9C9C] text-base font-light">
-                      Execute when Temperature is at least
-                    </label>
+                    <label htmlFor={inputIds.temperature}>Execute when Temperature is at least</label>
                     <Input
                       id={inputIds.temperature}
                       className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-[12px] w-[140px]"
@@ -904,9 +890,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
                   {/* Execute when the length of the Pod Line is at most */}
                   <div className="flex flex-col gap-2">
-                    <label htmlFor={inputIds.podLineLength} className="text-[#9C9C9C] text-base font-light">
-                      Execute when the length of the Pod Line is at most
-                    </label>
+                    <label htmlFor={inputIds.podLineLength}>Execute when the length of the Pod Line is at most</label>
                     <Input
                       id={inputIds.podLineLength}
                       className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-[12px]"
@@ -927,7 +911,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         setPodLineLength(sanitizedValue);
                       }}
                     />
-                    
+
                     <div className="flex justify-between gap-2 mt-1 w-full">
                       <Button
                         variant="outline"
@@ -994,9 +978,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
                   {/* Execute during the Morning Auction */}
                   <div className="flex flex-col gap-2">
-                    <label htmlFor={inputIds.morningAuction} className="text-[#9C9C9C] text-base font-light">
-                      Execute during the Morning Auction
-                    </label>
+                    <label htmlFor={inputIds.morningAuction}>Execute during the Morning Auction</label>
                     <div className="flex justify-between gap-2 w-full">
                       <Button
                         variant="outline"
@@ -1024,13 +1006,12 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       </Button>
                     </div>
                   </div>
-                </>
+                </Col>
               ) : (
                 // Step 2 - Operator Tip
-                <div className="flex flex-col gap-6 mt-6">
-                  <div className="flex flex-col">
-                    <div className="text-[#9C9C9C] text-base font-light mb-4">I'm willing to pay someone</div>
-
+                <Col className="gap-6">
+                  <Col>
+                    <div className="pinto-sm-light text-pinto-light mb-2">I'm willing to pay someone</div>
                     <div className="flex rounded-[12px] border border-[#D9D9D9] mb-4">
                       <input
                         className="h-12 px-3 py-1.5 flex-1 rounded-l-[12px] focus:outline-none text-base font-light"
@@ -1045,7 +1026,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         }}
                         type="text"
                       />
-                      <div className="flex items-center gap-2 px-4 rounded-r-[12px] bg-white">
+                      <div className="flex items-center gap-2 px-4 rounded-r-[12px] font-semibold bg-white">
                         <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
                         <span className="text-base font-normal">PINTO</span>
                       </div>
@@ -1132,29 +1113,34 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </Col>
+                </Col>
               )}
-
-              <div className={`flex gap-6 ${formStep === 0 ? "mt-24" : "mt-6"}`}>
+              <Row className="gap-6">
                 <Button
                   variant="outline"
-                  className="flex-1 h-[60px] rounded-full text-2xl font-medium text-[#404040] bg-[#F8F8F8]"
+                  size="xlargest"
+                  rounded="full"
+                  className="flex-1 text-[#404040] bg-[#F8F8F8]"
                   onClick={handleBack}
                 >
                   ← Back
                 </Button>
                 {formStep === 0 ? (
                   <SmartSubmitButton
+                    size="xlargest"
+                    rounded="full"
                     variant="gradient"
                     submitFunction={handleClaim}
                     disabled={isClaimSubmitting}
                     submitButtonText={isClaimSubmitting ? "Combining..." : "Combine"}
-                    className="flex-1 h-[60px] rounded-full text-2xl font-medium"
+                    className="flex-1"
                   />
                 ) : (
                   <Button
-                    className={`flex-1 h-[60px] rounded-full text-2xl font-medium ${
+                    size="xlargest"
+                    rounded="full"
+                    className={`flex-1 ${
                       (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
                         ? "bg-[#D9D9D9] text-[#9C9C9C]"
                         : "bg-[#2F8957] text-white"
@@ -1173,11 +1159,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     )}
                   </Button>
                 )}
-              </div>
+              </Row>
             </div>
           </div>
         </div>
-      </div>
+      </Col>
 
       {/* Token Selection Dialog */}
       <Dialog open={showTokenSelectionDialog} onOpenChange={setShowTokenSelectionDialog}>
@@ -1189,7 +1175,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
           >
             <div className="p-3">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="font-antarctica font-medium text-[20px] leading-[115%] text-black">
+                <h2 className="font-antarctica font-medium text-[20px] leading-[115%] text-pinto-primary">
                   Select Token from Silo Deposits
                 </h2>
               </div>
@@ -1338,10 +1324,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
             minSoil,
             operatorTip,
             tokenStrategy: selectedTokenStrategy.type,
-            tokenSymbol: selectedTokenStrategy.type === "SPECIFIC_TOKEN" 
-              ? whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.symbol 
-              : undefined,
-            morningAuction
+            tokenSymbol:
+              selectedTokenStrategy.type === "SPECIFIC_TOKEN"
+                ? whitelistedTokens.find((t) => t.address === selectedTokenStrategy.address)?.symbol
+                : undefined,
+            morningAuction,
           }}
           encodedData={encodedData}
           operatorPasteInstrs={operatorPasteInstructions}
@@ -1351,3 +1338,15 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     </>
   );
 }
+
+//
+const inputIds = {
+  totalAmount: "total-amount-input",
+  minPerSeason: "min-per-season-input",
+  maxPerSeason: "max-per-season-input",
+  fundOrder: "fund-order-select",
+  temperature: "temperature-input",
+  podLineLength: "pod-line-length-input",
+  morningAuction: "morning-auction-input",
+  operatorTip: "operator-tip-input",
+} as const;
