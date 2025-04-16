@@ -22,7 +22,7 @@ const ChartSelectPanel = memo(() => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [internalSelected, setInternalSelected] = useState(selectedCharts);
 
-  const currentlySelected = selectedCharts.length;
+  const currentlySelected = internalSelected.length;
   const maxChartsSelected = chartColors.length;
 
   function typeToggle(type: string) {
@@ -47,11 +47,19 @@ const ChartSelectPanel = memo(() => {
     setInternalSelected(selectedItems);
   }
 
+  // Update internal selection when panel opens
   useEffect(() => {
-    // if (!isOpen) {
-    setSelected(internalSelected);
-    localStorage.setItem("advancedChartSelectedCharts", safeJSONStringify(internalSelected));
-    // }
+    if (isOpen) {
+      setInternalSelected([...selectedCharts]);
+    }
+  }, [isOpen, selectedCharts]);
+
+  // Save selections when panel closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelected(internalSelected);
+      localStorage.setItem("advancedChartSelectedCharts", safeJSONStringify(internalSelected));
+    }
   }, [isOpen, internalSelected, setSelected]);
 
   const filteredData = useMemo(() => {
