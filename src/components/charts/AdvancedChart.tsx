@@ -125,23 +125,31 @@ export const AdvancedChart = () => {
       <div className="flex flex-row gap-4 justify-between">
         <div className="flex flex-row">
           <div className="hidden sm:flex flex-row">
-            {selectedCharts.length < 5 &&
-              selectedCharts.map(
-                (selection, index) =>
-                  chartSetupData[selection] && (
-                    <Button
-                      variant="outline"
-                      size="default"
-                      rounded="full"
-                      key={`selectedChart${selection}`}
-                      className="flex flex-row gap-2 mr-4 shadow-none bg-white text-pinto-gray-5 hover:text-pinto-gray-5"
-                      onClick={() => handleDeselectChart(index)}
-                    >
-                      <span>{chartSetupData[selection].name}</span>
-                      <span className="w-4 h-4">×</span>
-                    </Button>
-                  ),
-              )}
+            {
+              /*
+               * When the user has more than 4 charts selected, we hide the
+               * individual deselect buttons for a single button that says
+               * "4/5/6 Selected" in order to prevent the buttons from
+               * overflowing the page
+               */
+              selectedCharts.length < 5 &&
+                selectedCharts.map(
+                  (selection, index) =>
+                    chartSetupData[selection] && (
+                      <Button
+                        variant="outline"
+                        size="default"
+                        rounded="full"
+                        key={`selectedChart${selection}`}
+                        className="flex flex-row gap-2 mr-4 shadow-none bg-white text-pinto-gray-5 hover:text-pinto-gray-5"
+                        onClick={() => handleDeselectChart(index)}
+                      >
+                        <span>{chartSetupData[selection].name}</span>
+                        <span className="w-4 h-4">×</span>
+                      </Button>
+                    ),
+                )
+            }
           </div>
           <Button
             variant="outline"
@@ -153,6 +161,12 @@ export const AdvancedChart = () => {
               `flex flex-row gap-2 bg-pinto-green-1 text-pinto-green-3 border-pinto-green-3 hover:bg-pinto-green-2/30 shadow-none hover:text-pinto-green-3`,
             )}
           >
+            {/*
+             * When the user has more than 4 charts selected, we hide the
+             * individual deselect buttons for a single button that says
+             * "4/5/6 Selected" in order to prevent the buttons from
+             * overflowing the page
+             */}
             <span className="hidden sm:inline-block">
               {selectedCharts.length < 5 ? "Add Chart" : `${selectedCharts.length} Selected`}
             </span>
