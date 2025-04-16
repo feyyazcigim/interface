@@ -4946,10 +4946,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/query-core@npm:5.74.3":
+  version: 5.74.3
+  resolution: "@tanstack/query-core@npm:5.74.3"
+  checksum: 10c0/ad28c2a4b9c39b23fb4a621474f134320f4cf5a2ea62a12918ca27d95b4b4a8b15316d5eceba04debbe2ecc7453f4dbaeb8deede7eeef07a83ad6ee42659b326
+  languageName: node
+  linkType: hard
+
 "@tanstack/query-devtools@npm:5.51.1":
   version: 5.51.1
   resolution: "@tanstack/query-devtools@npm:5.51.1"
   checksum: 10c0/244367572faf5af1dbaf4a64654547fe92e913a888ca889e01ce7715c9834ac1d10107767c45478fe8d890c7b8b43c55c58f97a8db1755f08804623d51d3ec20
+  languageName: node
+  linkType: hard
+
+"@tanstack/query-persist-client-core@npm:5.74.3":
+  version: 5.74.3
+  resolution: "@tanstack/query-persist-client-core@npm:5.74.3"
+  dependencies:
+    "@tanstack/query-core": "npm:5.74.3"
+  checksum: 10c0/236c20cb4e11a182ef9886fbab39d66d454785db0a7495e8828df30f635359ea4210481e3cb3724569e3ab1e003abbe97edf674ca487b9de9b643c64c1117322
+  languageName: node
+  linkType: hard
+
+"@tanstack/query-sync-storage-persister@npm:^5.74.3":
+  version: 5.74.3
+  resolution: "@tanstack/query-sync-storage-persister@npm:5.74.3"
+  dependencies:
+    "@tanstack/query-core": "npm:5.74.3"
+    "@tanstack/query-persist-client-core": "npm:5.74.3"
+  checksum: 10c0/1785d2f3ee735895eada02e0206c52bd5615aa917618320c06a556a887d1fdd841ee7a2453d45371144e8b806eef408242d68395874b11587281b261faf4db19
   languageName: node
   linkType: hard
 
@@ -4962,6 +4988,18 @@ __metadata:
     "@tanstack/react-query": ^5.51.1
     react: ^18 || ^19
   checksum: 10c0/39922b3d31c3ef5fcc1b7ecc16b18feeb17955ddc623f3ba688b6a903d284a349d12a8d645024ddb5373f7da80c0090af1aadf8ab0e3164f5c99e94a8bba07de
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-query-persist-client@npm:^5.74.3":
+  version: 5.74.3
+  resolution: "@tanstack/react-query-persist-client@npm:5.74.3"
+  dependencies:
+    "@tanstack/query-persist-client-core": "npm:5.74.3"
+  peerDependencies:
+    "@tanstack/react-query": ^5.74.3
+    react: ^18 || ^19
+  checksum: 10c0/a8d938ddcfe02f25844c6a823d895673081bc292c98ad5a5534cbf45fa4fac9617d4951ebe766c1b303e42f3bf110f1f30740dadd366f7c4d5f743aa125fa912
   languageName: node
   linkType: hard
 
@@ -9136,8 +9174,10 @@ __metadata:
     "@react-three/fiber": "npm:^8.17.10"
     "@rollup/plugin-strip": "npm:^3.0.4"
     "@tailwindcss/typography": "npm:^0.5.15"
+    "@tanstack/query-sync-storage-persister": "npm:^5.74.3"
     "@tanstack/react-query": "npm:^5.59.13"
     "@tanstack/react-query-devtools": "npm:5.51.1"
+    "@tanstack/react-query-persist-client": "npm:^5.74.3"
     "@tsparticles/engine": "npm:^3.5.0"
     "@tsparticles/react": "npm:^3.0.0"
     "@types/lodash": "npm:^4"
