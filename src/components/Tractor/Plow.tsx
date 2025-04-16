@@ -844,8 +844,8 @@ export function Plow() {
         onClose={() => setSelectedRequisition(null)}
       />
 
-      <div className="mt-6 py-4 flex justify-between items-center">
-        <div className="text-sm font-antarctica font-light text-pinto-gray-4">
+      <div className="mt-6 flex justify-between items-center">
+        <div className="font-antarctica pinto-sm-light text-pinto-light">
           <div>Select Soil Orders to Simulate and Execute for a tip.</div>
           <div className="mt-1">
             Note that executing an order will likely affect the ability to execute another order.

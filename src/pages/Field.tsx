@@ -46,19 +46,15 @@ function Field() {
   // Set the active tab (default to 'activity' or 'pods' on mobile)
   const [activeTab, setActiveTab] = useState(() => {
     // Get tab from query params if available
-    const tabParam = searchParams.get('tab');
-    
+    const tabParam = searchParams.get("tab");
+
     // On mobile devices, default to 'pods'
     if (isMobile) {
-      return tabParam === 'activity' || tabParam === 'pods' || tabParam === 'tractor' 
-        ? tabParam 
-        : 'pods';
+      return tabParam === "activity" || tabParam === "pods" || tabParam === "tractor" ? tabParam : "pods";
     }
-    
+
     // On desktop, use the param or default to 'activity'
-    return tabParam === 'activity' || tabParam === 'pods' || tabParam === 'tractor' 
-      ? tabParam 
-      : 'activity';
+    return tabParam === "activity" || tabParam === "pods" || tabParam === "tractor" ? tabParam : "activity";
   });
 
   const hasPods = farmerField.plots.length > 0;

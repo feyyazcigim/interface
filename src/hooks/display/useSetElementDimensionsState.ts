@@ -29,10 +29,7 @@ export default function useSetElementDimensionsState(
         const { width, height } = entry.contentRect;
 
         // Only update if the dimensions have changed to prevent unnecessary re-renders
-        if (
-          prev.current.width !== width ||
-          prev.current.height !== height
-        ) {
+        if (prev.current.width !== width || prev.current.height !== height) {
           prev.current = { width, height };
           onChange({ width, height });
         }

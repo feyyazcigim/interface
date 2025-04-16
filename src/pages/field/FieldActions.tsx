@@ -1,4 +1,5 @@
 import SowOrderDialog from "@/components/SowOrderDialog";
+import { Card } from "@/components/ui/Card";
 import { Separator } from "@/components/ui/Separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { useParamsTabs } from "@/hooks/useRouterTabs";
@@ -7,7 +8,6 @@ import clsx from "clsx";
 import { useState } from "react";
 import Harvest from "./actions/Harvest";
 import Sow from "./actions/Sow";
-import { Card } from "@/components/ui/Card";
 
 const slugs = ["sow", "harvest"] as const;
 

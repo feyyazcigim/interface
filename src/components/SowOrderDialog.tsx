@@ -25,13 +25,13 @@ import { FarmFromMode, FarmToMode } from "@/utils/types";
 import { isDev } from "@/utils/utils"; // Only used for pre-filling form data for faster developing, remove before prod
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { PublicClient } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
+import { Col, Row } from "./Container";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
 import { Input } from "./ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
-import { PublicClient } from "viem";
-import { Col, Row } from "./Container";
 
 interface SowOrderDialogProps {
   open: boolean;
@@ -132,7 +132,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     let tokenType: "SPECIFIC_TOKEN" | "LOWEST_SEEDS" = "LOWEST_SEEDS";
 
     // Check PINTO token first
-    const pintoToken = whitelistedTokens.find(t => t.symbol === "PINTO");
+    const pintoToken = whitelistedTokens.find((t) => t.symbol === "PINTO");
     if (pintoToken) {
       const pintoDeposit = farmerDeposits.get(pintoToken);
       if (pintoDeposit?.amount) {
@@ -146,7 +146,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     }
 
     // Check all LP tokens
-    whitelistedTokens.forEach(token => {
+    whitelistedTokens.forEach((token) => {
       if (token.isLP) {
         const lpDollarValue = swapResults.get(token.address);
         if (lpDollarValue && lpDollarValue.gt(highestValue)) {
@@ -165,7 +165,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
     // Return the token with highest value
     return {
       type: tokenType,
-      address: tokenWithHighestValue as `0x${string}`
+      address: tokenWithHighestValue as `0x${string}`,
     } as TokenStrategy;
   }, [farmerDeposits, whitelistedTokens, priceData.price, swapResults]);
 
@@ -187,7 +187,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
         console.error("Error fetching average tip value:", error);
       }
     };
-    
+
     fetchAverageTip();
   }, [publicClient]);
 
@@ -735,9 +735,8 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   if (!open) return null;
 
   console.log({
-    formStep
-  })
-
+    formStep,
+  });
 
   return (
     <>
@@ -764,9 +763,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 <Col className="gap-6 pinto-sm-light text-pinto-light">
                   {/* I want to Sow up to */}
                   <div className="flex flex-col gap-2">
-                    <label htmlFor={inputIds.totalAmount}>
-                      I want to Sow up to
-                    </label>
+                    <label htmlFor={inputIds.totalAmount}>I want to Sow up to</label>
                     <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
                       <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                         <Input
@@ -790,9 +787,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     <div className="flex gap-4">
                       {/* Min per Season */}
                       <div className="flex flex-col gap-2 flex-1">
-                        <label htmlFor={inputIds.minPerSeason} >
-                          Min per Season
-                        </label>
+                        <label htmlFor={inputIds.minPerSeason}>Min per Season</label>
                         <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
                           <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                             <Input
@@ -818,9 +813,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
                       {/* Max per Season */}
                       <div className="flex flex-col gap-2 flex-1">
-                        <label htmlFor={inputIds.maxPerSeason}>
-                          Max per Season
-                        </label>
+                        <label htmlFor={inputIds.maxPerSeason}>Max per Season</label>
                         <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
                           <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
                             <Input
@@ -880,9 +873,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
                   {/* Execute when Temperature is at least */}
                   <div className="flex flex-row items-center justify-between gap-4">
-                    <label htmlFor={inputIds.temperature}>
-                      Execute when Temperature is at least
-                    </label>
+                    <label htmlFor={inputIds.temperature}>Execute when Temperature is at least</label>
                     <Input
                       id={inputIds.temperature}
                       className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-[12px] w-[140px]"
@@ -899,9 +890,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
                   {/* Execute when the length of the Pod Line is at most */}
                   <div className="flex flex-col gap-2">
-                    <label htmlFor={inputIds.podLineLength}>
-                      Execute when the length of the Pod Line is at most
-                    </label>
+                    <label htmlFor={inputIds.podLineLength}>Execute when the length of the Pod Line is at most</label>
                     <Input
                       id={inputIds.podLineLength}
                       className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-[12px]"
@@ -922,7 +911,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         setPodLineLength(sanitizedValue);
                       }}
                     />
-                    
+
                     <div className="flex justify-between gap-2 mt-1 w-full">
                       <Button
                         variant="outline"
@@ -989,9 +978,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
 
                   {/* Execute during the Morning Auction */}
                   <div className="flex flex-col gap-2">
-                    <label htmlFor={inputIds.morningAuction}>
-                      Execute during the Morning Auction
-                    </label>
+                    <label htmlFor={inputIds.morningAuction}>Execute during the Morning Auction</label>
                     <div className="flex justify-between gap-2 w-full">
                       <Button
                         variant="outline"
@@ -1337,10 +1324,11 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
             minSoil,
             operatorTip,
             tokenStrategy: selectedTokenStrategy.type,
-            tokenSymbol: selectedTokenStrategy.type === "SPECIFIC_TOKEN" 
-              ? whitelistedTokens.find(t => t.address === selectedTokenStrategy.address)?.symbol 
-              : undefined,
-            morningAuction
+            tokenSymbol:
+              selectedTokenStrategy.type === "SPECIFIC_TOKEN"
+                ? whitelistedTokens.find((t) => t.address === selectedTokenStrategy.address)?.symbol
+                : undefined,
+            morningAuction,
           }}
           encodedData={encodedData}
           operatorPasteInstrs={operatorPasteInstructions}
@@ -1351,8 +1339,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   );
 }
 
-
-// 
+//
 const inputIds = {
   totalAmount: "total-amount-input",
   minPerSeason: "min-per-season-input",

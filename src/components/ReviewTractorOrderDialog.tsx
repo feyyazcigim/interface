@@ -15,11 +15,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
+import { Col, Row } from "./Container";
 import { HighlightedCallData } from "./Tractor/HighlightedCallData";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "./ui/Dialog";
 import { Switch } from "./ui/Switch";
-import { Col, Row } from "./Container";
 
 // Define the execution data type
 export interface ExecutionData {
@@ -174,11 +174,16 @@ export default function ReviewTractorOrderDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
-        <DialogContent className="sm:max-w-[1200px]" style={{ 
-          padding: 0 // no  other way to set padding as 0 
-        }}>
+        <DialogContent
+          className="sm:max-w-[1200px]"
+          style={{
+            padding: 0, // no  other way to set padding as 0
+          }}
+        >
           <Col className="gap-3 pb-3">
-            <div className="px-6 pt-6 pinto-body">{isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}</div>
+            <div className="px-6 pt-6 pinto-body">
+              {isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}
+            </div>
             <DialogDescription className="px-6 pinto-sm-light text-pinto-light">
               {isViewOnly ? (
                 <div className="flex items-center">
@@ -196,8 +201,8 @@ export default function ReviewTractorOrderDialog({
                     Base network.
                   </p>
                   <p>
-                    This allows you to interact with the Pinto protocol autonomously when the conditions of your Order are
-                    met.
+                    This allows you to interact with the Pinto protocol autonomously when the conditions of your Order
+                    are met.
                   </p>
                 </Col>
               )}
