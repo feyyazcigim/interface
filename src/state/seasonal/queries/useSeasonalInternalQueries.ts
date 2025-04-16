@@ -49,15 +49,15 @@ export default function useSeasonalQueries<T>(
   const currentVars =
     orderBy === "asc"
       ? {
-          from: queryConfig.toSeason,
-          to: queryConfig.toSeason,
-          ...queryConfig.queryVars,
-        }
+        from: queryConfig.toSeason,
+        to: queryConfig.toSeason,
+        ...queryConfig.queryVars,
+      }
       : {
-          from: Math.max(1, queryConfig.fromSeason),
-          to: Math.max(1, queryConfig.fromSeason),
-          ...queryConfig.queryVars,
-        };
+        from: Math.max(1, queryConfig.fromSeason),
+        to: Math.max(1, queryConfig.fromSeason),
+        ...queryConfig.queryVars,
+      };
 
   const historicalQueryKey = [
     `historical_${keyName}`,
@@ -89,6 +89,9 @@ export default function useSeasonalQueries<T>(
     staleTime: Infinity,
     retry: 1,
     retryDelay: 2000,
+    meta: {
+      persist: true,
+    }
   });
 
   let historicalData: SeasonalChartData[] | undefined = historical.data;
@@ -141,6 +144,9 @@ export default function useSeasonalQueries<T>(
     gcTime: 60 * 1000,
     retry: 1,
     retryDelay: 2000,
+    meta: {
+      persist: true,
+    }
   });
 
   return {
@@ -170,15 +176,15 @@ export function useMultiSeasonalQueries<T>(
   const currentVars =
     orderBy === "asc"
       ? {
-          from: queryConfig.toSeason,
-          to: queryConfig.toSeason,
-          ...queryConfig.queryVars,
-        }
+        from: queryConfig.toSeason,
+        to: queryConfig.toSeason,
+        ...queryConfig.queryVars,
+      }
       : {
-          from: Math.max(1, queryConfig.fromSeason),
-          to: Math.max(1, queryConfig.fromSeason),
-          ...queryConfig.queryVars,
-        };
+        from: Math.max(1, queryConfig.fromSeason),
+        to: Math.max(1, queryConfig.fromSeason),
+        ...queryConfig.queryVars,
+      };
 
   const historicalQueryKey = [
     `historical_${keyName}`,
@@ -216,6 +222,9 @@ export function useMultiSeasonalQueries<T>(
     staleTime: Infinity,
     retry: 1,
     retryDelay: 2000,
+    meta: {
+      persist: true,
+    }
   });
 
   const historicalData: { [key: string]: SeasonalChartData[] } | undefined = historical.data;
@@ -271,12 +280,12 @@ export function useMultiSeasonalQueries<T>(
   const combinedData =
     historicalData && current.data
       ? Object.entries(historicalData).reduce(
-          (acc, [key, queryResult]: [string, any]) => {
-            acc[key] = [...queryResult, ...current.data[key]];
-            return acc;
-          },
-          {} as { [key: string]: SeasonalChartData[] },
-        )
+        (acc, [key, queryResult]: [string, any]) => {
+          acc[key] = [...queryResult, ...current.data[key]];
+          return acc;
+        },
+        {} as { [key: string]: SeasonalChartData[] },
+      )
       : undefined;
   return {
     data: combinedData,

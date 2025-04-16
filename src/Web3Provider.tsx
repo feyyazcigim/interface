@@ -29,12 +29,30 @@ const queryClient = new QueryClient({
     queries: {
       gcTime: 1000 * 60 * 60 * 24, // 24 hours
     },
+    dehydrate: {
+      shouldDehydrateQuery: (query) => {
+        return query.meta?.persist === true;
+      }
+    }
   },
 });
 
 const localStoragePersister = createSyncStoragePersister({
   storage: window.localStorage,
 });
+
+
+// persistQueryClient({
+//   // queryClient: queryClient,
+//   persister: localStoragePersister,
+//   maxAge: 1000 * 60 * 60, // 1 hour
+//   dehydrateOptions: {
+//     shouldDehydrateQuery: (query) => {
+//       return query.meta?.persist === true;
+//     }
+//   }
+// });
+
 // const sessionStoragePersister = createSyncStoragePersister({ storage: window.sessionStorage })
 
 export const Web3Provider = ({ children }: { children: ReactNode }) => {

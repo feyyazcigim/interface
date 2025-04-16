@@ -82,7 +82,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
   const tokenData = useTokenData();
 
   const stalkQueryFnFactory = (vars: SeasonalQueryVars) => async () => {
-    return await paginateMultiQuerySubgraph(
+    return paginateMultiQuerySubgraph(
       stalkPaginateSettings,
       subgraphs[chainId].beanstalk,
       SeasonsTableBeanStalkDocument,
@@ -91,7 +91,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
   };
 
   const beanQueryFnFactory = (vars: SeasonalQueryVars) => async () => {
-    return await paginateSubgraph(beanPaginateSettings, subgraphs[chainId].bean, AdvancedChartBeanDocument, vars);
+    return paginateSubgraph(beanPaginateSettings, subgraphs[chainId].bean, AdvancedChartBeanDocument, vars);
   };
 
   const useStalkQuery = useMultiSeasonalQueries("seasonsTableStalk", {
