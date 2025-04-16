@@ -173,9 +173,11 @@ export default function ReviewTractorOrderDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
-        <DialogContent className="sm:max-w-[1200px]">
-          <DialogTitle>{isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}</DialogTitle>
-          <DialogDescription>
+        <DialogContent className="sm:max-w-[1200px]" style={{ 
+          padding: 0 // no  other way to set padding as 0 
+        }}>
+          <DialogTitle className="px-4 pt-4">{isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}</DialogTitle>
+          <DialogDescription className="px-4">
             {isViewOnly ? (
               <div className="flex items-center">
                 <span>
@@ -198,9 +200,9 @@ export default function ReviewTractorOrderDialog({
               </div>
             )}
           </DialogDescription>
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col">
             {/* Tabs */}
-            <div className="flex gap-4 border-b">
+            <div className="flex gap-4 border-b px-4 pinto-sm">
               <button
                 type="button"
                 className={`pb-2 ${activeTab === "order" ? "border-b-2 border-pinto-green-4 font-medium" : "text-gray-500"}`}
@@ -564,8 +566,8 @@ export default function ReviewTractorOrderDialog({
 
             {/* Footer */}
             {!isViewOnly ? (
-              <div className="flex justify-between items-center mt-4">
-                <p className="text-gray-600">
+              <div className="flex justify-between items-center border-t p-4">
+                <p className="pinto-sm-light text-pinto-light">
                   Your Order will remain active until you've Sown {orderData.totalAmount} Pinto under the specified
                   conditions or until Order cancellation
                 </p>
