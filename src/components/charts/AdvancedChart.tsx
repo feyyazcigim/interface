@@ -1,5 +1,5 @@
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
-import { useChartSetupData } from "@/state/useChartSetupData";
+import { ChartSetup, useChartSetupData } from "@/state/useChartSetupData";
 import useSeasonsDataChart from "@/state/useSeasonsDataChart";
 import { useSeason } from "@/state/useSunData";
 import { cn, safeJSONParse, safeJSONStringify } from "@/utils/utils";
@@ -14,6 +14,29 @@ import TVChart, { TVChartFormattedData } from "./TVChart";
 
 export const selectedChartsAtom = atom<number[]>([0]);
 
+function saveChartsToStorage(selection: number[], chartSetupData: ChartSetup[]) {
+  const selectedIds = selection.map((selectedChartIndex) => chartSetupData[selectedChartIndex].id);
+  localStorage.setItem("advancedChartSelectedCharts", safeJSONStringify(selectedIds));
+  // console.log("Saved charts to storage: ", selectedIds, selection);
+}
+
+function loadChartsFromStorage(chartSetupData: ChartSetup[]) {
+  const storedIds = localStorage.getItem("advancedChartSelectedCharts");
+  const selectedIds = storedIds ? safeJSONParse<string[], undefined>(storedIds, undefined) : undefined;
+  if (!selectedIds) {
+    // console.log("Loaded charts from storage: undefined");
+    return undefined;
+  }
+  const result = chartSetupData.reduce<number[]>((output, setupData, index) => {
+    if (selectedIds.includes(setupData.id)) {
+      output.push(index);
+    }
+    return output;
+  }, []);
+  //console.log("Loaded charts from storage: ", selectedIds, result);
+  return result;
+}
+
 export const AdvancedChart = () => {
   const { data: chartSetupData } = useChartSetupData();
   const currentSeason = useSeason();
@@ -22,20 +45,25 @@ export const AdvancedChart = () => {
   const storedTimePeriod = storedSetting1
     ? safeJSONParse<IRange<Time>, undefined>(storedSetting1, undefined)
     : undefined;
-  const storedSetting2 = localStorage.getItem("advancedChartSelectedCharts");
-  const storedSelectedCharts = storedSetting2
-    ? safeJSONParse<number[], undefined>(storedSetting2, undefined)
-    : undefined;
+
+  const storedSelectedCharts = useMemo(() => {
+    return loadChartsFromStorage(chartSetupData);
+  }, [chartSetupData]);
 
   const [timePeriod, setTimePeriod] = useState<IRange<Time> | undefined>(storedTimePeriod);
   const [selectedCharts, setSelectedCharts] = useAtom(selectedChartsAtom);
   const [panelState, setPanelState] = useAtom(navbarPanelAtom);
 
+  useEffect(() => {
+    if (storedSelectedCharts && storedSelectedCharts.length > 0) {
+      setSelectedCharts(storedSelectedCharts);
+    }
+  }, [storedSelectedCharts, setSelectedCharts]);
+
   function handleDeselectChart(selectionIndex: number) {
     const newSelection = [...selectedCharts];
     newSelection.splice(selectionIndex, 1);
     setSelectedCharts(newSelection);
-    localStorage.setItem("advancedChartSelectedCharts", safeJSONStringify(newSelection));
   }
 
   const togglePanel = () => {
@@ -64,6 +92,10 @@ export const AdvancedChart = () => {
       });
     }
   };
+
+  useEffect(() => {
+    saveChartsToStorage(selectedCharts, chartSetupData);
+  }, [selectedCharts, chartSetupData]);
 
   // By adjusting fromSeason here, we can avoid fetching data
   // that might break the chart
