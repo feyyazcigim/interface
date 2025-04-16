@@ -2,6 +2,7 @@ import { mockAddressAtom } from "@/Web3Provider";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
+import { TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
 import { morningFieldDevModeAtom } from "@/state/protocol/field/field.atoms";
 import { getMorningResult, getNowRounded } from "@/state/protocol/sun";
 import { morningAtom, seasonAtom, sunQueryKeysAtom } from "@/state/protocol/sun/sun.atoms";
@@ -10,20 +11,30 @@ import { usePriceData } from "@/state/usePriceData";
 import { useInvalidateSun, useSeasonQueryKeys } from "@/state/useSunData";
 import useTokenData from "@/state/useTokenData";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { isDev } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
-import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { http, PublicClient, createPublicClient, decodeEventLog, erc20Abi, isAddress } from "viem";
-import { hardhat } from "viem/chains";
-import { useAccount, useBlockNumber, useChainId } from "wagmi";
+import { 
+  http, 
+  PublicClient, 
+  createPublicClient, 
+  decodeEventLog, 
+  decodeFunctionResult,
+  encodeFunctionData, 
+  erc20Abi, 
+  isAddress 
+} from "viem";
+import { base, hardhat } from "viem/chains";
+import { useAccount, useBlockNumber, useChainId, usePublicClient, useWalletClient } from "wagmi";
 import MorningCard from "./MorningCard";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
+import { Token } from "@/utils/types";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
@@ -943,7 +954,11 @@ function FarmerSiloDeposits() {
   const { deposits } = farmerSilo;
   const tokenData = useTokenData();
   const queryClient = useQueryClient();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
+  const protocolAddress = useProtocolAddress();
   const [loading, setLoading] = useState(false);
+  const [sortingToken, setSortingToken] = useState<string | null>(null);
 
   const handleRefresh = async () => {
     setLoading(true);
@@ -956,6 +971,80 @@ function FarmerSiloDeposits() {
       toast.error("Failed to refresh deposits");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSortDeposits = async (token: Token) => {
+    if (!address || !walletClient || !publicClient || !protocolAddress) return;
+    
+    setSortingToken(token.address);
+    try {
+      // 1. Call getSortedDeposits to get stems and amounts
+      const tractorHelpersAddress = TRACTOR_HELPERS_ADDRESS;
+      // Use the Beanstalk address from the protocol address hook
+      const beanstalkAddress = protocolAddress;
+
+      const result = await publicClient.readContract({
+        address: tractorHelpersAddress,
+        abi: tractorHelpersABI,
+        functionName: "getSortedDeposits",
+        args: [address, token.address]
+      });
+
+      // The result is a tuple [stems[], amounts[]]
+      const stems = result[0] as readonly bigint[];
+      const amounts = result[1] as readonly bigint[];
+      
+      console.log(`Sorted deposits for ${token.symbol}:`, {
+        stems: stems.map(stem => stem.toString()),
+        amounts: amounts.map(amount => amount.toString())
+      });
+
+      // Correctly implement the Solidity packAddressAndStem function:
+      // function packAddressAndStem(address _address, int96 stem) internal pure returns (uint256) {
+      //     return (uint256(uint160(_address)) << 96) | uint96(stem);
+      // }
+      const packAddressAndStem = (tokenAddress: string, stem: bigint): bigint => {
+        // In Solidity: uint256(uint160(_address)) << 96
+        // We need to extract just the lower 160 bits of the address (20 bytes)
+        const addressValue = BigInt(tokenAddress) & ((1n << 160n) - 1n);
+        
+        // Shift the address left by 96 bits
+        const shiftedAddress = addressValue << 96n;
+        
+        // Convert stem to uint96 (mask with 2^96-1)
+        const stemUint96 = stem & ((1n << 96n) - 1n);
+        
+        // Combine with bitwise OR
+        return shiftedAddress | stemUint96;
+      };
+
+      // 2. Convert stems to depositIds using the correct packing function
+      const depositIds = stems.map(stem => packAddressAndStem(token.address, stem));
+
+      // Reverse the order of deposit IDs (invert sorting order)
+      const reversedDepositIds = [...depositIds].reverse();
+
+      console.log(`Deposit IDs (original):`, depositIds.map(id => id.toString()));
+      console.log(`Deposit IDs (reversed):`, reversedDepositIds.map(id => id.toString()));
+
+      toast.info(`Preparing to submit sort deposits transaction for ${token.symbol}`);
+
+      // Execute transaction using the diamondABI and passing all three required arguments
+      const hash = await walletClient.writeContract({
+        address: beanstalkAddress,
+        abi: beanstalkAbi,
+        functionName: 'updateSortedDepositIds',
+        args: [address, token.address, reversedDepositIds]
+      });
+
+      toast.success(`Sort deposits transaction submitted for ${token.symbol}`);
+      console.log("Transaction hash:", hash);
+    } catch (error) {
+      console.error(`Error sorting deposits for ${token.symbol}:`, error);
+      toast.error(`Failed to sort deposits for ${token.symbol}: ${(error as Error).message}`);
+    } finally {
+      setSortingToken(null);
     }
   };
 
@@ -1002,9 +1091,20 @@ function FarmerSiloDeposits() {
           
           {Array.from(deposits.entries() || []).map(([token, depositData]) => (
             <div key={token.address} className="border-b pb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <img src={token.logoURI} alt={token.symbol} className="w-6 h-6 rounded-full" />
-                <span className="font-medium">{token.symbol}</span>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <img src={token.logoURI} alt={token.symbol} className="w-6 h-6 rounded-full" />
+                  <span className="font-medium">{token.symbol}</span>
+                </div>
+                <Button 
+                  onClick={() => handleSortDeposits(token)}
+                  disabled={sortingToken === token.address}
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                >
+                  {sortingToken === token.address ? "Sorting..." : "Sort Deposits"}
+                </Button>
               </div>
               
               <div className="grid grid-cols-5 gap-4 text-sm">

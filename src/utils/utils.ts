@@ -315,11 +315,55 @@ export function encodeClaimRewardCombineCalls(
     })),
   });
 
-  // Use our existing encode function
-  const result = encodeGroupCombineCalls(groups, token, deposits);
+  // Sort groups by average Stalk/BDV ratio
+  const groupsWithRatio = groups.map(group => {
+    const groupDeposits = group.deposits
+      .map(stem => deposits.find(d => d.stem.toHuman() === stem))
+      .filter(Boolean) as DepositData[];
+    
+    const totalStalk = groupDeposits.reduce(
+      (sum, deposit) => sum.add(deposit.stalk.total), 
+      TokenValue.ZERO
+    );
+    
+    const totalBdv = groupDeposits.reduce(
+      (sum, deposit) => sum.add(deposit.depositBdv),
+      TokenValue.ZERO
+    );
+    
+    // Calculate the stalk-to-BDV ratio for the entire group
+    const stalkPerBdv = totalBdv.gt(0) 
+      ? totalStalk.div(totalBdv) 
+      : TokenValue.ZERO;
+    
+    return {
+      ...group,
+      stalkPerBdv
+    };
+  });
+
+  // Sort by Stalk/BDV ratio (highest to lowest)
+  const sortedGroups = groupsWithRatio
+    .sort((a, b) => b.stalkPerBdv.sub(a.stalkPerBdv).toNumber())
+    .map(({ id, deposits, stalkPerBdv }) => ({ id, deposits, stalkPerBdv }));
+
+  console.log("Sorted groups by Stalk/BDV ratio for", token.symbol, ":", {
+    sortedGroups: sortedGroups.map(g => ({
+      id: g.id,
+      depositCount: g.deposits.length,
+      stalkPerBdv: g.stalkPerBdv.toHuman(),
+    }))
+  });
+
+  // Use our existing encode function with sorted groups - strip stalkPerBdv before passing
+  const result = encodeGroupCombineCalls(
+    sortedGroups.map(({ id, deposits }) => ({ id, deposits })), 
+    token, 
+    deposits
+  );
 
   console.log("Final encoded calls for", token.symbol, ":", {
-    groupCount: groups.length,
+    groupCount: sortedGroups.length,
     encodedCallCount: result.length,
   });
 
