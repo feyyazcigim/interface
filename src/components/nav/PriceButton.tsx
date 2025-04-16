@@ -29,7 +29,7 @@ import { Separator } from "../ui/Separator";
 import { Skeleton } from "../ui/Skeleton";
 import { Switch } from "../ui/Switch";
 
-export default function PricePanel() {
+function PriceButtonPanel() {
   const priceData = usePriceData();
   const tokenData = useTokenData();
   const twaDeltaB = useTwaDeltaBQuery();
@@ -481,5 +481,47 @@ export default function PricePanel() {
         </Button>
       )}
     </>
+  );
+}
+
+export interface IPriceButton extends HTMLAttributes<HTMLButtonElement> {
+  isOpen: boolean;
+  togglePanel: () => void;
+}
+
+export default function PriceButton({ isOpen = false, togglePanel, ...props }: IPriceButton) {
+  const priceData = usePriceData();
+  const isMobile = useIsMobile();
+
+  return (
+    <Panel
+      isOpen={isOpen}
+      toggle={togglePanel}
+      side="left"
+      panelProps={{
+        className: "max-w-panel-price w-panel-price mt-4",
+      }}
+      trigger={
+        <Button
+          variant="outline-primary"
+          size="default"
+          rounded="full"
+          onClick={togglePanel}
+          noShrink
+          {...props}
+          className={cn(`flex flex-row gap-0.5 sm:gap-2 ${isOpen && "border-pinto-green"}`, props.className)}
+        >
+          <IconImage src={pintoIcon} size={6} alt="pinto icon" />
+          {priceData.loading ? (
+            <Skeleton className="w-14 h-6" />
+          ) : (
+            <>${Number(priceData.price.toHuman()).toFixed(isMobile ? 3 : 4)}</>
+          )}
+          <IconImage src={chevronDown} size={4} mobileSize={2.5} alt="chevron down" />
+        </Button>
+      }
+    >
+      <PriceButtonPanel />
+    </Panel>
   );
 }

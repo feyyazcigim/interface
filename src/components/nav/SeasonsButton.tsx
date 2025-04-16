@@ -22,22 +22,28 @@ import { Separator } from "../ui/Separator";
 import { Skeleton } from "../ui/Skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/Table";
 
+interface SeasonsButtonPanel {
+  season: number;
+  fieldSnapshots: ReturnType<typeof useFieldSnapshots>;
+  siloSnapshots: ReturnType<typeof useSiloSnapshots>;
+  supplySnapshots: ReturnType<typeof useSupplySnapshots>;
+  evaluationParams: ReturnType<typeof useDiamondEvalulationParameters>;
+  hasFloodOrRain: boolean;
+}
+
 const deriveTextStyles = textConfig.methods.variant;
 const deriveTextColor = textConfig.methods.color;
 
 const smTextStyles = clsx(...deriveTextStyles("sm"), deriveTextColor("secondary"));
 
-export default function SeasonsPanel() {
-  const season = useSeason();
-  const fieldSnapshots = useFieldSnapshots();
-  const siloSnapshots = useSiloSnapshots();
-  const supplySnapshots = useSupplySnapshots();
-  const evaluationParams = useDiamondEvalulationParameters();
-
-  const hasFloodOrRain = !!supplySnapshots.data.find(
-    (seasonData) => seasonData.floodFieldBeans.gt(0) || seasonData.floodSiloBeans.gt(0),
-  );
-
+const PanelContent = ({
+  season,
+  fieldSnapshots,
+  siloSnapshots,
+  supplySnapshots,
+  evaluationParams,
+  hasFloodOrRain,
+}: SeasonsButtonPanel) => {
   const { getEvaluationParametersWithSeason } = evaluationParams;
 
   const cropRatios = useMemo(() => {
@@ -343,5 +349,62 @@ export default function SeasonsPanel() {
         </ScrollArea>
       </CardContent>
     </>
+  );
+};
+
+export interface ISeasonsButton extends HTMLAttributes<HTMLButtonElement> {
+  isOpen: boolean;
+  togglePanel: () => void;
+}
+
+export default function SeasonsButton({ isOpen = false, togglePanel, ...props }: ISeasonsButton) {
+  const season = useSeason();
+  const fieldSnapshots = useFieldSnapshots();
+  const siloSnapshots = useSiloSnapshots();
+  const newPintoSupplySnapshots = useSupplySnapshots();
+  const evaluationParams = useDiamondEvalulationParameters();
+
+  const hasFloodOrRain = !!newPintoSupplySnapshots.data.find(
+    (seasonData) => seasonData.floodFieldBeans.gt(0) || seasonData.floodSiloBeans.gt(0),
+  );
+
+  return (
+    <Panel
+      isOpen={isOpen}
+      side="left"
+      panelProps={{
+        className: `${hasFloodOrRain ? "max-w-panel-seasons w-panel-seasons" : "max-w-panel-seasons-sm w-panel-seasons-sm"} mt-4`,
+      }}
+      trigger={
+        <Button
+          variant="outline-secondary"
+          onClick={() => togglePanel()}
+          noShrink
+          rounded="full"
+          {...props}
+          className={cn(`flex flex-row gap-0.5 sm:gap-2 ${isOpen && "border-pinto-green"}`, props.className)}
+        >
+          <IconImage src={sunIcon} size={6} />
+          {season === 0 ? (
+            <div className="hidden sm:block">
+              <Skeleton className="w-14 h-6" />
+            </div>
+          ) : (
+            <div className="hidden sm:block">Season {season}</div>
+          )}
+          <IconImage src={chevronDown} size={4} mobileSize={2.5} />
+        </Button>
+      }
+      toggle={() => togglePanel()}
+    >
+      <PanelContent
+        season={season}
+        fieldSnapshots={fieldSnapshots}
+        siloSnapshots={siloSnapshots}
+        supplySnapshots={newPintoSupplySnapshots}
+        hasFloodOrRain={hasFloodOrRain}
+        evaluationParams={evaluationParams}
+      />
+    </Panel>
   );
 }
