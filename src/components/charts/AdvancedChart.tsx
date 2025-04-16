@@ -65,6 +65,8 @@ export const AdvancedChart = () => {
     }
   };
 
+  // By adjusting fromSeason here, we can avoid fetching data
+  // that might break the chart
   const seasonsData = useSeasonsDataChart(7, currentSeason);
 
   const filtered = useMemo(() => {
