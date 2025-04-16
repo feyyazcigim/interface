@@ -63,24 +63,69 @@ import podIcon from "@/assets/protocol/Pod.png";
 import { TokenValue } from "@/classes/TokenValue";
 import { formatNum, formatPct, formatUSD } from "@/utils/format";
 import { Token } from "@/utils/types";
-import { hexToRgba } from "@/utils/utils";
 import { useMemo } from "react";
 import useTokenData from "./useTokenData";
 
 interface ChartSetupBase {
+  /**
+   * Chart ID
+   */
   id: string;
+  /**
+   * Chart type, used to categorize charts in the Select panel
+   */
   type: "Pinto" | "Field" | "Silo";
+  /**
+   * Name of variable to be used to fill the time scale. Usually "timestamp"
+   */
   timeScaleKey: string;
+  /**
+   * Name of variable to be used to fill the price scale.
+   */
   priceScaleKey: string;
+  /**
+   * Short name for this chart
+   */
   name: string;
-  tooltipTitle: string;
-  tooltipHoverText: string | JSX.Element;
+  /**
+   * Short description for this chart, used in the Select panel
+   */
   shortDescription: string;
+  /**
+   * Longer name for this chart, used on tooltips (not implemented yet)
+   */
+  tooltipTitle: string;
+  /**
+   * Longer description for this chart, used on tooltips (not implemented yet)
+   */
+  tooltipHoverText: string | JSX.Element;
+  /**
+   * Icon for this chart, shown in the Select panel
+   */
   icon: string;
+  /**
+   * In Lightweight Charts, each price scale can have its own id tag, allowing
+   * for multiple data sets to use the same price scale.
+   *
+   * For example, it makes sense for Instant DeltaB and TWA DeltaB to share the same price scale,
+   * therefore they have the same valueAxisType.
+   */
   valueAxisType: string;
+  /**
+   * Formats the value into a number for Lightweight Charts, this is the number
+   * it uses internally to plot the line chart
+   */
   valueFormatter: (value: any) => number;
-  dataFormatter?: (value: any) => any;
+  /**
+   * Formats the number into a string. This is what is shown above the chart,
+   * so this is where we want to do things like adding dollar signs and the like
+   */
   tickFormatter: (value: number) => string;
+  /**
+   * Formats the number into a string. This is what is shown on the price scale,
+   * so it's a good idea to make this a short string (ie: 30M instead of 30,000,000)
+   * for aestethic purposes
+   */
   shortTickFormatter: (value: number) => string;
 }
 
