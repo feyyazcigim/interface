@@ -32,15 +32,14 @@ const queryClient = new QueryClient({
     dehydrate: {
       shouldDehydrateQuery: (query) => {
         return query.meta?.persist === true;
-      }
-    }
+      },
+    },
   },
 });
 
 const localStoragePersister = createSyncStoragePersister({
   storage: window.localStorage,
 });
-
 
 // persistQueryClient({
 //   // queryClient: queryClient,
