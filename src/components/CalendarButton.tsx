@@ -1,7 +1,7 @@
 import useIsDesktop from "@/hooks/display/useIsDesktop";
 import { safeJSONStringify } from "@/utils/utils";
 import { format, isValid, parse, set, startOfYear, subHours, subMonths, subWeeks, subYears } from "date-fns";
-import { IRange, Time } from "lightweight-charts";
+import { IRange, Time, UTCTimestamp } from "lightweight-charts";
 import { useEffect, useState } from "react";
 import { ClassNames, DayPicker, DeprecatedUI, SelectRangeEventHandler } from "react-day-picker";
 import { CalendarIcon, ClockIcon } from "./Icons";
@@ -15,11 +15,6 @@ export type CalendarPresetRange = "1D" | "1W" | "1M" | "3M" | "6M" | "YTD" | "1Y
 export interface DateRange {
   from: Date | undefined;
   to: Date | undefined;
-}
-
-export interface TimePeriod {
-  from: number;
-  to: number;
 }
 
 interface DatePresetConfig {
@@ -356,12 +351,12 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
       localStorage.setItem(`${storageKeyPrefix}Preset`, safeJSONStringify(presetToSave));
 
       // Set time period
-      const timePeriod: TimePeriod = {
-        from: rangeToSave.from ? Math.floor(rangeToSave.from.valueOf() / 1000) : 0,
-        to: rangeToSave.to ? Math.floor(rangeToSave.to.valueOf() / 1000) : Math.floor(Date.now() / 1000),
+      const timePeriod: IRange<Time> = {
+        from: (rangeToSave.from ? rangeToSave.from.valueOf() : 0) as UTCTimestamp,
+        to: (rangeToSave.to ? rangeToSave.to.valueOf() : Date.now()) as UTCTimestamp,
       };
 
-      setTimePeriod(timePeriod as IRange<Time>);
+      setTimePeriod(timePeriod);
       localStorage.setItem(`${storageKeyPrefix}TimePeriod`, safeJSONStringify(timePeriod));
     } catch (error) {
       console.error("Error saving date range to localStorage", error);

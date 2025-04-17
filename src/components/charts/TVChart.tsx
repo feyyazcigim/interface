@@ -1,7 +1,6 @@
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useChartSetupData } from "@/state/useChartSetupData";
 import { hexToRgba } from "@/utils/utils";
-import { setHours } from "date-fns";
 import {
   ChartOptions,
   CreatePriceLineOptions,
@@ -93,25 +92,24 @@ function getTimezoneCorrectedTime(utcTime: Date, tickMarkType: TickMarkType) {
 
 function setTimePeriod(chart: MutableRefObject<IChartApi | undefined>, timePeriod: IRange<Time> | undefined) {
   if (!chart.current) return;
-
   const from = timePeriod?.from;
   const to = timePeriod?.to;
 
   if (!from) {
     chart.current.timeScale().fitContent();
   } else if (from && to) {
-    const newFrom = setHours(new Date((from.valueOf() as number) * 1000), 0);
-    const newTo = setHours(new Date((to.valueOf() as number) * 1000), 23);
+    const newFrom = new Date(from.valueOf() as number);
+    const newTo = new Date(to.valueOf() as number);
     chart.current.timeScale().setVisibleRange({
-      from: (newFrom.valueOf() / 1000) as Time,
-      to: (newTo.valueOf() / 1000) as Time,
+      from: Math.floor(newFrom.valueOf() / 1000) as Time,
+      to: Math.floor(newTo.valueOf() / 1000) as Time,
     });
   } else if (from) {
-    const newFrom = setHours(new Date((from.valueOf() as number) * 1000), 0);
-    const newTo = setHours(new Date((from.valueOf() as number) * 1000), 23);
+    const newFrom = new Date(from.valueOf() as number);
+    const newTo = new Date(from.valueOf() as number);
     chart.current.timeScale().setVisibleRange({
-      from: (newFrom.valueOf() / 1000) as Time,
-      to: (newTo.valueOf() / 1000) as Time,
+      from: Math.floor(newFrom.valueOf() / 1000) as Time,
+      to: Math.floor(newTo.valueOf() / 1000) as Time,
     });
   }
 }
