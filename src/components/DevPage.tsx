@@ -112,6 +112,10 @@ export default function DevPage() {
   const [simulationResults, setSimulationResults] = useState<{
     simulationData: any;
     tokenAddress: string;
+    decodedData?: {
+      stems: string[];
+      amounts: string[];
+    };
   } | null>(null);
 
   const [sortingToken, setSortingToken] = useState<string | null>(null);
@@ -972,6 +976,10 @@ function FarmerSiloDeposits() {
   const [simulationResults, setSimulationResults] = useState<{
     simulationData: any;
     tokenAddress: string;
+    decodedData?: {
+      stems: string[];
+      amounts: string[];
+    };
   } | null>(null);
 
   const handleRefresh = async () => {
@@ -1085,7 +1093,11 @@ function FarmerSiloDeposits() {
       // Store the simulation results
       setSimulationResults({
         simulationData: result.simulationResult,
-        tokenAddress: token.address
+        tokenAddress: token.address,
+        decodedData: result.decodedResult ? {
+          stems: result.decodedResult.stems.map(stem => stem.toString()),
+          amounts: result.decodedResult.amounts.map(amount => amount.toString())
+        } : undefined
       });
       
       toast.success(`Successfully simulated farm call with pipe for ${token.symbol}`);
@@ -1180,6 +1192,63 @@ function FarmerSiloDeposits() {
                 <div className="font-mono">{formatValue(depositData.seeds)}</div>
               </div>
               
+              {/* Display simulation results when available for this token */}
+              {simulationResults && simulationResults.tokenAddress === token.address && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                  <div className="text-xs font-medium text-pinto-green-4 mb-2">Farm Call Simulation Results:</div>
+                  <div className="space-y-2">
+                    <div className="text-xs text-pinto-gray-4">
+                      Successfully simulated a farm call containing a pipe call to getSortedDeposits
+                    </div>
+                    
+                    {/* Display decoded data if available */}
+                    {simulationResults.decodedData && (
+                      <div className="mt-2 p-2 bg-gray-100 rounded border border-pinto-green-3">
+                        <div className="text-xs font-medium text-pinto-green-4 mb-2">Decoded Sorted Deposits:</div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <div className="text-xs font-medium text-pinto-gray-4 mb-1">Stems (newest first):</div>
+                            <div className="font-mono text-xs overflow-auto max-h-[120px] p-2 bg-white rounded">
+                              {simulationResults.decodedData.stems.slice().reverse().map((stem, i) => (
+                                <div key={i} className="mb-1">
+                                  {stem}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs font-medium text-pinto-gray-4 mb-1">Amounts:</div>
+                            <div className="font-mono text-xs overflow-auto max-h-[120px] p-2 bg-white rounded">
+                              {simulationResults.decodedData.amounts.slice().reverse().map((amount, i) => (
+                                <div key={i} className="mb-1">
+                                  {amount}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="font-mono text-xs overflow-auto max-h-[300px] p-2 bg-gray-100 rounded">
+                      <pre>
+                        {JSON.stringify(simulationResults.simulationData, null, 2)}
+                      </pre>
+                    </div>
+                    <div className="mt-2">
+                      <Button
+                        onClick={() => setSimulationResults(null)}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs"
+                      >
+                        Clear Results
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {depositData.deposits && depositData.deposits.length > 0 ? (
                 <div className="mt-4">
                   <div className="text-xs font-medium text-pinto-gray-4 mb-2">Individual Deposits:</div>
@@ -1201,33 +1270,6 @@ function FarmerSiloDeposits() {
                   </div>
                 </div>
               ) : null}
-              
-              {/* Display simulation results when available for this token */}
-              {simulationResults && simulationResults.tokenAddress === token.address && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                  <div className="text-xs font-medium text-pinto-green-4 mb-2">Farm Call Simulation Results:</div>
-                  <div className="space-y-2">
-                    <div className="text-xs text-pinto-gray-4">
-                      Successfully simulated a farm call containing a pipe call to getSortedDeposits
-                    </div>
-                    <div className="font-mono text-xs overflow-auto max-h-[300px] p-2 bg-gray-100 rounded">
-                      <pre>
-                        {JSON.stringify(simulationResults.simulationData, null, 2)}
-                      </pre>
-                    </div>
-                    <div className="mt-2">
-                      <Button
-                        onClick={() => setSimulationResults(null)}
-                        size="sm"
-                        variant="outline"
-                        className="text-xs"
-                      >
-                        Clear Results
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
           
