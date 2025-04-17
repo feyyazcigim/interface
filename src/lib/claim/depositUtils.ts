@@ -138,7 +138,7 @@ export function generateCombineAndL2LCallData(
  * @param isRaining Optional weather condition
  * @returns Object with simulation result and decoded result
  */
-export async function generateSortDepositsFarmCalls(
+export async function simulateCombineAndSortDeposits(
   account: `0x${string}`,
   token: Token,
   publicClient: PublicClient,
@@ -153,7 +153,7 @@ export async function generateSortDepositsFarmCalls(
     amounts: bigint[];
   };
 }> {
-  console.log(`Generating and simulating farm calls for ${token.symbol}`);
+  console.log(`Simulating combine and sort operations for ${token.symbol}`);
 
   // Create a call to getSortedDeposits from the TractorHelpers contract
   const getSortedDepositsCall = encodeFunctionData({
@@ -366,7 +366,7 @@ export async function generateBatchSortDepositsCallData(
 
     try {
       // Get sorted deposits through simulation
-      const result = await generateSortDepositsFarmCalls(
+      const result = await simulateCombineAndSortDeposits(
         account,
         token,
         publicClient,

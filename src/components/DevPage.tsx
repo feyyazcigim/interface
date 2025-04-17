@@ -23,10 +23,11 @@ import {
   PublicClient, 
   createPublicClient, 
   decodeEventLog, 
+  decodeFunctionData,
   decodeFunctionResult,
   encodeFunctionData, 
   erc20Abi, 
-  isAddress 
+  isAddress
 } from "viem";
 import { base, hardhat } from "viem/chains";
 import { useAccount, useBlockNumber, useChainId, usePublicClient, useWalletClient } from "wagmi";
@@ -35,7 +36,7 @@ import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
 import { Token } from "@/utils/types";
-import { generateSortDepositsFarmCalls, generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
+import { simulateCombineAndSortDeposits, generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
 import { useSunData } from "@/state/useSunData";
 
 type ServerStatus = "running" | "not-running" | "checking";
@@ -52,6 +53,39 @@ const publicClient = createPublicClient({
 
 // Merge the ABIs
 const combinedABI = [...beanstalkAbi, ...sowBlueprintv0ABI, ...tractorHelpersABI, ...erc20Abi] as const;
+
+/**
+ * Packs a token address and stem into a deposit ID
+ * Matches the Solidity implementation:
+ * function packAddressAndStem(address _address, int96 stem) internal pure returns (uint256) {
+ *     return (uint256(uint160(_address)) << 96) | uint96(stem);
+ * }
+ */
+const packAddressAndStem = (tokenAddress: string, stem: bigint): bigint => {
+  // In Solidity: uint256(uint160(_address)) << 96
+  // We need to extract just the lower 160 bits of the address (20 bytes)
+  const addressValue = BigInt(tokenAddress) & ((1n << 160n) - 1n);
+  
+  // Shift the address left by 96 bits
+  const shiftedAddress = addressValue << 96n;
+  
+  // Convert stem to uint96 (mask with 2^96-1)
+  const stemUint96 = stem & ((1n << 96n) - 1n);
+  
+  // Combine with bitwise OR
+  return shiftedAddress | stemUint96;
+};
+
+/**
+ * Creates sorted deposit IDs from stems for a token and reverses them for storage optimization
+ */
+const createReversedDepositIds = (tokenAddress: string, stems: readonly bigint[] | bigint[]): bigint[] => {
+  // Convert stems to depositIds using the packing function
+  const depositIds = stems.map(stem => packAddressAndStem(tokenAddress, stem));
+  
+  // Reverse the order of deposit IDs (invert sorting order)
+  return [...depositIds].reverse();
+};
 
 export default function DevPage() {
   const { address } = useAccount();
@@ -1026,32 +1060,9 @@ function FarmerSiloDeposits() {
         amounts: amounts.map(amount => amount.toString())
       });
 
-      // Correctly implement the Solidity packAddressAndStem function:
-      // function packAddressAndStem(address _address, int96 stem) internal pure returns (uint256) {
-      //     return (uint256(uint160(_address)) << 96) | uint96(stem);
-      // }
-      const packAddressAndStem = (tokenAddress: string, stem: bigint): bigint => {
-        // In Solidity: uint256(uint160(_address)) << 96
-        // We need to extract just the lower 160 bits of the address (20 bytes)
-        const addressValue = BigInt(tokenAddress) & ((1n << 160n) - 1n);
-        
-        // Shift the address left by 96 bits
-        const shiftedAddress = addressValue << 96n;
-        
-        // Convert stem to uint96 (mask with 2^96-1)
-        const stemUint96 = stem & ((1n << 96n) - 1n);
-        
-        // Combine with bitwise OR
-        return shiftedAddress | stemUint96;
-      };
+      // Use the extracted utility function to create reversed deposit IDs
+      const reversedDepositIds = createReversedDepositIds(token.address, stems);
 
-      // 2. Convert stems to depositIds using the correct packing function
-      const depositIds = stems.map(stem => packAddressAndStem(token.address, stem));
-
-      // Reverse the order of deposit IDs (invert sorting order)
-      const reversedDepositIds = [...depositIds].reverse();
-
-      console.log(`Deposit IDs (original):`, depositIds.map(id => id.toString()));
       console.log(`Deposit IDs (reversed):`, reversedDepositIds.map(id => id.toString()));
 
       toast.info(`Preparing to submit sort deposits transaction for ${token.symbol}`);
@@ -1087,7 +1098,7 @@ function FarmerSiloDeposits() {
       const isRaining = sunData.raining || false;
       
       // Generate and simulate the farm call with the pipe call to getSortedDeposits
-      const result = await generateSortDepositsFarmCalls(
+      const result = await simulateCombineAndSortDeposits(
         address as `0x${string}`, 
         token,
         publicClient,
@@ -1123,41 +1134,188 @@ function FarmerSiloDeposits() {
     
     setSortingAllTokens(true);
     try {
-      toast.info("Generating sort deposit calls for all tokens...");
+      toast.info("Generating sort and combine deposit calls for all tokens...");
       
       const isRaining = sunData.raining || false;
+      const allFarmCalls: `0x${string}`[] = [];
       
-      // Generate sort deposit calls for all tokens
-      const callData = await generateBatchSortDepositsCallData(
-        address as `0x${string}`,
-        farmerSilo.deposits,
-        publicClient,
-        protocolAddress,
-        isRaining
-      );
+      // Process each token in the farmer's deposits
+      for (const [token, depositData] of farmerSilo.deposits.entries()) {
+        if (!depositData.deposits || depositData.deposits.length === 0) {
+          console.log(`Skipping ${token.symbol} - no deposits`);
+          continue;
+        }
+        
+        console.log(`Processing ${token.symbol} with ${depositData.deposits.length} deposits`);
+        
+        try {
+          // Create a single-token deposit map for this token only
+          // This prevents duplicate combine calls for tokens we've already processed
+          const singleTokenDeposits = new Map();
+          singleTokenDeposits.set(token, depositData);
+          
+          // Generate farm calls for this token, including combine operations
+          const result = await simulateCombineAndSortDeposits(
+            address as `0x${string}`, 
+            token,
+            publicClient,
+            protocolAddress,
+            address as `0x${string}`,
+            singleTokenDeposits, // Pass only this token's deposits
+            isRaining
+          );
+          
+          // Extract the farm calls used in the simulation
+          if (result.simulationResult?.request?.args?.[0]) {
+            const tokenFarmCalls = result.simulationResult.request.args[0] as `0x${string}`[];
+            console.log(`Adding ${tokenFarmCalls.length} farm calls for ${token.symbol}`);
+            
+            // Log details about individual farm calls for debugging
+            tokenFarmCalls.forEach((call, i) => {
+              try {
+                const decoded = decodeFunctionData({
+                  abi: beanstalkAbi,
+                  data: call,
+                });
+                console.log(`${token.symbol} call ${i+1}:`, {
+                  functionName: decoded.functionName,
+                  args: decoded.args,
+                });
+              } catch (err) {
+                console.log(`${token.symbol} call ${i+1} (raw):`, call);
+              }
+            });
+            
+            allFarmCalls.push(...tokenFarmCalls);
+          }
+        } catch (error) {
+          console.error(`Error processing ${token.symbol}:`, error);
+        }
+      }
       
-      if (callData.length === 0) {
-        toast.warning("No tokens to sort deposits for");
+      if (allFarmCalls.length === 0) {
+        toast.warning("No farm calls generated for any tokens");
         return;
       }
       
-      toast.info(`Sorting deposits for ${callData.length} tokens...`);
+      // Output raw calldata for simulator debugging
+      const rawCalldata = encodeFunctionData({
+        abi: beanstalkAbi,
+        functionName: 'farm',
+        args: [allFarmCalls]
+      });
       
-      // Execute the transactions using farm()
+      console.log("=== Raw Farm Calldata for Simulator ===");
+      console.log(rawCalldata);
+      console.log("======================================");
+      
+      console.log(`Total farm calls to execute: ${allFarmCalls.length}`);
+      toast.info(`Executing ${allFarmCalls.length} farm calls for combine and sort operations...`);
+      
+      // Execute all farm calls in a single transaction
       const hash = await walletClient.writeContract({
         address: protocolAddress,
         abi: beanstalkAbi,
         functionName: 'farm',
-        args: [callData]
+        args: [allFarmCalls]
       });
       
-      toast.success(`Batch sort deposits transaction submitted for ${callData.length} tokens`);
+      toast.success(`Transaction submitted for processing ${farmerSilo.deposits.size} tokens`);
       console.log("Transaction hash:", hash);
     } catch (error) {
-      console.error("Error batch sorting deposits:", error);
-      toast.error(`Failed to batch sort deposits: ${(error as Error).message}`);
+      console.error("Error processing deposits:", error);
+      toast.error(`Failed to process deposits: ${(error as Error).message}`);
     } finally {
       setSortingAllTokens(false);
+    }
+  };
+
+  const handleCombineAndSortSingleToken = async (token: Token) => {
+    if (!address || !publicClient || !protocolAddress || !farmerSilo.deposits) return;
+    
+    setSortingToken(token.address); // Reuse the sorting token state
+    try {
+      toast.info(`Generating combine and sort calls for ${token.symbol}...`);
+      
+      const isRaining = sunData?.raining || false;
+      
+      // Create a single-token deposit map for this token only
+      const singleTokenDeposits = new Map();
+      const depositData = farmerSilo.deposits.get(token);
+      
+      if (!depositData || !depositData.deposits || depositData.deposits.length === 0) {
+        toast.warning(`No deposits found for ${token.symbol}`);
+        return;
+      }
+      
+      singleTokenDeposits.set(token, depositData);
+      
+      console.log(`Processing single token ${token.symbol} with ${depositData.deposits.length} deposits`);
+      
+      // Generate farm calls for this token, including combine operations
+      const result = await simulateCombineAndSortDeposits(
+        address as `0x${string}`, 
+        token,
+        publicClient,
+        protocolAddress,
+        address as `0x${string}`,
+        singleTokenDeposits, // Pass only this token's deposits
+        isRaining
+      );
+      
+      // Extract the farm calls used in the simulation
+      if (!result.simulationResult?.request?.args?.[0]) {
+        toast.error(`Failed to generate farm calls for ${token.symbol}`);
+        return;
+      }
+      
+      const farmCalls = result.simulationResult.request.args[0] as `0x${string}`[];
+      console.log(`Generated ${farmCalls.length} farm calls for ${token.symbol}`);
+      
+      // Log details about individual farm calls for debugging
+      farmCalls.forEach((call, i) => {
+        try {
+          const decoded = decodeFunctionData({
+            abi: beanstalkAbi,
+            data: call,
+          });
+          console.log(`${token.symbol} call ${i+1}:`, {
+            functionName: decoded.functionName,
+            args: decoded.args,
+          });
+        } catch (err) {
+          console.log(`${token.symbol} call ${i+1} (raw):`, call);
+        }
+      });
+      
+      // Output raw calldata for simulator debugging
+      const rawCalldata = encodeFunctionData({
+        abi: beanstalkAbi,
+        functionName: 'farm',
+        args: [farmCalls]
+      });
+      
+      console.log(`=== Raw Farm Calldata for ${token.symbol} Simulator ===`);
+      console.log(rawCalldata);
+      console.log("======================================");
+      
+      toast.info(`Executing ${farmCalls.length} farm calls for ${token.symbol}...`);
+      
+      // Execute the farm calls in a single transaction
+      const hash = await walletClient?.writeContract({
+        address: protocolAddress,
+        abi: beanstalkAbi,
+        functionName: 'farm',
+        args: [farmCalls]
+      });
+      
+      toast.success(`Transaction submitted for ${token.symbol}`);
+      console.log("Transaction hash:", hash);
+    } catch (error) {
+      console.error(`Error processing ${token.symbol}:`, error);
+      toast.error(`Failed to process ${token.symbol}: ${(error as Error).message}`);
+    } finally {
+      setSortingToken(null);
     }
   };
 
@@ -1181,7 +1339,7 @@ function FarmerSiloDeposits() {
             disabled={sortingAllTokens || loading || !address}
             className="px-4 py-2"
           >
-            {sortingAllTokens ? "Sorting All..." : "Sort All Deposits"}
+            {sortingAllTokens ? "Processing..." : "Combine & Sort All Deposits"}
           </Button>
           <Button 
             onClick={handleRefresh} 
@@ -1219,6 +1377,15 @@ function FarmerSiloDeposits() {
                   <span className="font-medium">{token.symbol}</span>
                 </div>
                 <div className="flex gap-2">
+                  <Button 
+                    onClick={() => handleCombineAndSortSingleToken(token)}
+                    disabled={farmingSortToken === token.address || sortingToken === token.address}
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                  >
+                    {sortingToken === token.address ? "Processing..." : "Combine & Sort"}
+                  </Button>
                   <Button 
                     onClick={() => handleFarmSortDeposits(token)}
                     disabled={farmingSortToken === token.address || sortingToken === token.address}
