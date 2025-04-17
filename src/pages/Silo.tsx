@@ -15,14 +15,18 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { getClaimText } from "@/utils/string";
-import { StatPanelData } from "@/utils/types";
+import { SiloTokenData, StatPanelData } from "@/utils/types";
 import { getSiloConvertUrl } from "@/utils/url";
 import { AnimatePresence } from "framer-motion";
 import { motion } from "framer-motion";
 import { useAtom } from "jotai";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SiloTable from "./silo/SiloTable";
+import useBoolean from "@/hooks/useBoolean";
+import { cn } from "@/utils/utils";
+import { Row } from "@/components/Container";
+import { useSiloData } from "@/state/useSiloData";
 
 function Silo() {
   const farmerSilo = useFarmerSilo();
@@ -31,6 +35,8 @@ function Silo() {
   const priceData = usePriceData();
   const mainToken = tokenData.mainToken;
   const { submitClaimRewards } = useClaimRewards();
+
+  const [readMoreOpened, toggleReadMore] = useBoolean();
 
   const navigate = useNavigate();
   const isSmallDesktop = useIsSmallDesktop();
@@ -106,8 +112,27 @@ function Silo() {
           <div className="flex flex-col gap-2">
             <div className="pinto-h2 sm:pinto-h1">Silo</div>
             <div className="pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-              Deposit value in the Silo to earn yield.
+              Deposit value in the Silo to earn yield.{" "}
+              <span className="text-pinto-green cursor-pointer" onClick={toggleReadMore}>
+                Read more.
+              </span>
             </div>
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{
+                height: readMoreOpened ? "auto" : 0,
+                opacity: readMoreOpened ? 1 : 0,
+              }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className={cn("overflow-hidden", readMoreOpened && "flex flex-col")}
+            >
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+              dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
+              ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+              fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident
+            </motion.div>
+            <Row className="gap-4">a</Row>
           </div>
           <Separator />
           {enableStatPanels && (
@@ -283,3 +308,29 @@ function Silo() {
 }
 
 export default Silo;
+
+const SiloStats = () => {
+  const siloStats = useSiloStats();
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="pinto-h3">Silo Stats</div>
+    </div>
+  )
+}
+
+export const useSiloStats = () => {
+  const silo = useSiloData();
+
+  const totals = useMemo(() => {
+    return [...silo.tokenData.values()].reduce<{ depositedBDV: TokenValue }>((acc, tokenData) => {
+      acc.depositedBDV = acc.depositedBDV.add(tokenData.depositedBDV);
+      return acc;
+    }, {
+      depositedBDV: TokenValue.ZERO,
+    });
+  }, [silo.tokenData]);
+
+  return totals;
+}
+
