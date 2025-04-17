@@ -128,13 +128,15 @@ export function generateCombineAndL2LCallData(
 
 
 /**
- * Generates farm calls to get sorted deposits and simulates the call
- * @param account The user's account address
- * @param token The token for which to sort deposits
- * @param publicClient The viem public client for blockchain interaction
- * @param protocolAddress The Beanstalk protocol address
- * @param fromAddress The address to simulate the call from
- * @returns A Promise containing simulation result and sorted deposit data
+ * Generates sort deposits farm calls and simulates them
+ * @param account Address of the user account
+ * @param token Token to sort deposits for
+ * @param publicClient Public client instance
+ * @param protocolAddress Protocol contract address
+ * @param fromAddress Address to simulate from
+ * @param farmerDeposits Optional map of token to deposit data
+ * @param isRaining Optional weather condition
+ * @returns Object with simulation result and decoded result
  */
 export async function generateSortDepositsFarmCalls(
   account: `0x${string}`,
@@ -142,6 +144,8 @@ export async function generateSortDepositsFarmCalls(
   publicClient: PublicClient,
   protocolAddress: `0x${string}`,
   fromAddress: `0x${string}`,
+  farmerDeposits?: Map<Token, TokenDepositData>,
+  isRaining?: boolean
 ): Promise<{
   simulationResult: any;
   decodedResult?: {
@@ -170,25 +174,73 @@ export async function generateSortDepositsFarmCalls(
     ]
   });
 
-  // Simulate the farm call 
-  const simulationResult = await publicClient.simulateContract({
-    address: protocolAddress,
-    abi: beanstalkAbi,
-    functionName: "farm",
-    args: [[pipeCall]],  // Farm takes an array of encoded function calls
-    account: fromAddress
-  });
+  // Prepare the farm calls array
+  const farmCalls: `0x${string}`[] = [];
 
-  console.log("Simulation result:", simulationResult);
+  // If farmer deposits are provided, add combine and L2L calls first
+  if (farmerDeposits && farmerDeposits.size > 0) {
+    // Generate convert calls with smart limits using our utility function
+    const combineCalls = generateCombineAndL2LCallData(farmerDeposits, isRaining || false);
+    if (combineCalls.length > 0) {
+      console.log(`Adding ${combineCalls.length} combine/L2L calls to execute before sort deposits`);
+      farmCalls.push(...combineCalls);
+    } else {
+      console.log('No combine/L2L calls needed');
+    }
+  } else {
+    console.log('No farmer deposits provided, skipping combine/L2L calls');
+  }
 
-  // Decode the result data using our helper function
-  const decodedResult = decodeSortedDepositsResult(simulationResult.result?.[0] as `0x${string}` | undefined);
+  // Add the pipe call last so we can capture its result
+  farmCalls.push(pipeCall);
+  console.log(`Total farm calls to execute: ${farmCalls.length}`);
 
-  // Return a complete result object
-  return {
-    simulationResult,
-    decodedResult
-  };
+  try {
+    // Simulate the farm call 
+    const simulationResult = await publicClient.simulateContract({
+      address: protocolAddress,
+      abi: beanstalkAbi,
+      functionName: "farm",
+      args: [farmCalls],  // Farm takes an array of encoded function calls
+      account: fromAddress
+    });
+
+    console.log("Simulation completed successfully");
+    console.log("Number of results:", simulationResult.result?.length || 0);
+
+    // The getSortedDeposits result will be the last item in the results array
+    const sortDepositsResult = simulationResult.result?.[simulationResult.result.length - 1];
+
+    if (sortDepositsResult) {
+      console.log(`Sort deposits result length: ${(sortDepositsResult as `0x${string}`).length}`);
+      console.log(`Raw sort deposits result: ${sortDepositsResult}`);
+    } else {
+      console.error("Sort deposits result is undefined");
+    }
+
+    // Decode the result data using our helper function
+    const decodedResult = decodeSortedDepositsResult(sortDepositsResult as `0x${string}` | undefined);
+
+    if (decodedResult) {
+      console.log(`Successfully decoded ${decodedResult.stems.length} stems and amounts`);
+      console.log(`Decoded stems: ${decodedResult.stems}`);
+      console.log(`Decoded amounts: ${decodedResult.amounts}`);
+    } else {
+      console.error("Failed to decode sorted deposits result");
+    }
+
+    // Return a complete result object
+    return {
+      simulationResult,
+      decodedResult
+    };
+  } catch (error) {
+    console.error("Error simulating farm calls:", error);
+    return {
+      simulationResult: { error },
+      decodedResult: undefined
+    };
+  }
 }
 
 

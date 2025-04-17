@@ -36,6 +36,7 @@ import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
 import { Token } from "@/utils/types";
 import { generateSortDepositsFarmCalls } from "@/lib/claim/depositUtils";
+import { useSunData } from "@/state/useSunData";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
@@ -963,13 +964,7 @@ const MorningAuctionDev = ({
 // Farmer Silo Deposits Component
 function FarmerSiloDeposits() {
   const { address } = useAccount();
-  const farmerSilo = useFarmerSilo();
-  const { deposits } = farmerSilo;
-  const tokenData = useTokenData();
-  const queryClient = useQueryClient();
-  const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
-  const protocolAddress = useProtocolAddress();
+  const { deposits, refetch: refetchSilo } = useFarmerSilo();
   const [loading, setLoading] = useState(false);
   const [sortingToken, setSortingToken] = useState<string | null>(null);
   const [farmingSortToken, setFarmingSortToken] = useState<string | null>(null);
@@ -981,6 +976,13 @@ function FarmerSiloDeposits() {
       amounts: string[];
     };
   } | null>(null);
+  const publicClient = usePublicClient();
+  const protocolAddress = useProtocolAddress();
+  const farmerSilo = useFarmerSilo();
+  const sunData = useSunData();
+  const tokenData = useTokenData();
+  const queryClient = useQueryClient();
+  const { data: walletClient } = useWalletClient();
 
   const handleRefresh = async () => {
     setLoading(true);
@@ -1079,13 +1081,18 @@ function FarmerSiloDeposits() {
     try {
       toast.info(`Simulating farm call with pipe for ${token.symbol}...`);
       
+      // Get raining status from sunData at component level
+      const isRaining = sunData.raining || false;
+      
       // Generate and simulate the farm call with the pipe call to getSortedDeposits
       const result = await generateSortDepositsFarmCalls(
         address as `0x${string}`, 
         token,
         publicClient,
         protocolAddress,
-        address as `0x${string}`
+        address as `0x${string}`,
+        farmerSilo.deposits,  // Pass the user's deposits
+        isRaining            // Pass whether it's raining
       );
       
       console.log(`Farm call simulation result:`, result);
@@ -1202,7 +1209,7 @@ function FarmerSiloDeposits() {
                     </div>
                     
                     {/* Display decoded data if available */}
-                    {simulationResults.decodedData && (
+                    {simulationResults?.decodedData && simulationResults.decodedData.stems && (
                       <div className="mt-2 p-2 bg-gray-100 rounded border border-pinto-green-3">
                         <div className="text-xs font-medium text-pinto-green-4 mb-2">Decoded Sorted Deposits:</div>
                         <div className="overflow-auto max-h-[200px]">
@@ -1220,7 +1227,7 @@ function FarmerSiloDeposits() {
                                   <td className="py-1 px-2">{i}</td>
                                   <td className="py-1 px-2">{stem}</td>
                                   <td className="py-1 px-2">
-                                    {simulationResults.decodedData.amounts?.[i]}
+                                    {simulationResults.decodedData?.amounts?.[i]}
                                   </td>
                                 </tr>
                               ))}
