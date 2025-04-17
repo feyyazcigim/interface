@@ -94,11 +94,11 @@ interface ChartSetupBase {
   /**
    * Longer name for this chart, used on tooltips (not implemented yet)
    */
-  tooltipTitle: string;
+  tooltipTitle?: string;
   /**
    * Longer description for this chart, used on tooltips (not implemented yet)
    */
-  tooltipHoverText: string | JSX.Element;
+  tooltipHoverText?: string | JSX.Element;
   /**
    * Icon for this chart, shown in the Select panel
    */

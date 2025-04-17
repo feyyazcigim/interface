@@ -144,9 +144,6 @@ export default function useSeasonalQueries<T>(
     gcTime: 60 * 1000,
     retry: 1,
     retryDelay: 2000,
-    meta: {
-      persist: true,
-    },
   });
 
   return {
