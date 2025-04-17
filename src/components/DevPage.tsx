@@ -1205,27 +1205,27 @@ function FarmerSiloDeposits() {
                     {simulationResults.decodedData && (
                       <div className="mt-2 p-2 bg-gray-100 rounded border border-pinto-green-3">
                         <div className="text-xs font-medium text-pinto-green-4 mb-2">Decoded Sorted Deposits:</div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <div className="text-xs font-medium text-pinto-gray-4 mb-1">Stems (newest first):</div>
-                            <div className="font-mono text-xs overflow-auto max-h-[120px] p-2 bg-white rounded">
-                              {simulationResults.decodedData.stems.slice().reverse().map((stem, i) => (
-                                <div key={i} className="mb-1">
-                                  {stem}
-                                </div>
+                        <div className="overflow-auto max-h-[200px]">
+                          <table className="w-full text-xs font-mono">
+                            <thead>
+                              <tr className="text-pinto-gray-4 border-b">
+                                <th className="text-left py-1 px-2">Index</th>
+                                <th className="text-left py-1 px-2">Stem</th>
+                                <th className="text-left py-1 px-2">Amount</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                              {simulationResults.decodedData.stems.map((stem, i) => (
+                                <tr key={i} className="hover:bg-gray-50">
+                                  <td className="py-1 px-2">{i}</td>
+                                  <td className="py-1 px-2">{stem}</td>
+                                  <td className="py-1 px-2">
+                                    {simulationResults.decodedData.amounts?.[i]}
+                                  </td>
+                                </tr>
                               ))}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs font-medium text-pinto-gray-4 mb-1">Amounts:</div>
-                            <div className="font-mono text-xs overflow-auto max-h-[120px] p-2 bg-white rounded">
-                              {simulationResults.decodedData.amounts.slice().reverse().map((amount, i) => (
-                                <div key={i} className="mb-1">
-                                  {amount}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+                            </tbody>
+                          </table>
                         </div>
                       </div>
                     )}
