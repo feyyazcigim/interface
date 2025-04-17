@@ -87,6 +87,28 @@ const createReversedDepositIds = (tokenAddress: string, stems: readonly bigint[]
   return [...depositIds].reverse();
 };
 
+// Update the transaction details type definition to align with Viem's types
+type TransactionDetails = {
+  hash: string;
+  from: string;
+  to: string | null;
+  value: bigint;
+  data: string; 
+  nonce: number;
+  gasLimit: bigint;
+  gasPrice?: bigint;
+  maxFeePerGas?: bigint;
+  maxPriorityFeePerGas?: bigint;
+  status: string;
+  blockNumber: bigint;
+  blockHash: string;
+  gasUsed: bigint;
+  effectiveGasPrice: bigint;
+  cumulativeGasUsed: bigint;
+  type: number;
+  chainId?: number;
+};
+
 export default function DevPage() {
   const { address } = useAccount();
   const [loading, setLoading] = useState<string | null>(null);
@@ -156,6 +178,15 @@ export default function DevPage() {
   const [sortingToken, setSortingToken] = useState<string | null>(null);
   const [farmingSortToken, setFarmingSortToken] = useState<string | null>(null);
   const [sortingAllTokens, setSortingAllTokens] = useState(false);
+
+  // Use the new type in the state declaration
+  const [transactionDetails, setTransactionDetails] = useState<TransactionDetails | null>(null);
+
+  // Add state for decoded function data
+  const [decodedFunctionData, setDecodedFunctionData] = useState<{
+    functionName: string;
+    args: any;
+  } | null>(null);
 
   useEffect(() => {
     const checkServer = async () => {
@@ -362,10 +393,49 @@ export default function DevPage() {
 
     try {
       setLoading("analyzeTx");
-      const receipt = await publicClient.getTransactionReceipt({
+      
+      // Fetch both transaction and receipt data
+      const [transaction, receipt] = await Promise.all([
+        publicClient.getTransaction({ hash: hashToUse }),
+        publicClient.getTransactionReceipt({ hash: hashToUse })
+      ]);
+      
+      // Cast the txDetails object to the correct type
+      const txDetails = {
         hash: hashToUse,
-      });
-
+        from: transaction.from,
+        to: transaction.to,
+        value: transaction.value,
+        data: transaction.input,
+        nonce: transaction.nonce,
+        gasLimit: transaction.gas,
+        gasPrice: transaction.gasPrice,
+        maxFeePerGas: transaction.maxFeePerGas,
+        maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
+        status: receipt.status,
+        blockNumber: receipt.blockNumber,
+        blockHash: receipt.blockHash,
+        gasUsed: receipt.gasUsed,
+        effectiveGasPrice: receipt.effectiveGasPrice,
+        cumulativeGasUsed: receipt.cumulativeGasUsed,
+        type: transaction.type !== undefined ? Number(transaction.type) : 0,
+        chainId: transaction.chainId
+      } as TransactionDetails;
+      
+      // Try to decode the calldata
+      let decodedFunction;
+      try {
+        if (transaction.input && transaction.input.length > 10) {
+          decodedFunction = decodeFunctionData({
+            abi: combinedABI,
+            data: transaction.input as `0x${string}`
+          });
+        }
+      } catch (error) {
+        console.log("Could not decode function data:", error);
+      }
+      
+      // Process logs to decode events
       const decodedEvents = receipt.logs.map((log, index) => {
         try {
           const decoded = decodeEventLog({
@@ -394,13 +464,22 @@ export default function DevPage() {
         }
       });
 
+      // Set both transaction details and decoded events in state
       setTxEvents(decodedEvents);
+      setTransactionDetails(txDetails);
+      setDecodedFunctionData(decodedFunction);
+      
+      console.log("Transaction Details:", txDetails);
+      console.log("Decoded Function:", decodedFunction);
       console.log("Transaction Events:", decodedEvents);
+      
       toast.success("Transaction analyzed successfully");
     } catch (error) {
       console.error("Failed to analyze transaction:", error);
       toast.error("Failed to analyze transaction");
       setTxEvents(null);
+      setTransactionDetails(null);
+      setDecodedFunctionData(null);
     } finally {
       setLoading(null);
     }
@@ -789,6 +868,92 @@ export default function DevPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Add new transaction details section */}
+            {txEvents && transactionDetails && (
+              <div className="mt-4 space-y-4">
+                <h3 className="text-lg font-medium">Transaction Details:</h3>
+                <div className="p-4 border rounded-lg space-y-3">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    <div className="col-span-2">
+                      <span className="font-medium">Hash: </span>
+                      <span className="font-mono break-all">{transactionDetails.hash}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">From: </span>
+                      <span className="font-mono break-all">{transactionDetails.from}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">To: </span>
+                      <span className="font-mono break-all">{transactionDetails.to || "Contract Creation"}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Value: </span>
+                      <span className="font-mono">{transactionDetails.value.toString()} wei</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Status: </span>
+                      <span className={`font-medium ${transactionDetails.status === "success" ? "text-green-500" : "text-red-500"}`}>
+                        {transactionDetails.status}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Block: </span>
+                      <span className="font-mono">{transactionDetails.blockNumber.toString()}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Nonce: </span>
+                      <span className="font-mono">{transactionDetails.nonce}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Gas Used: </span>
+                      <span className="font-mono">{transactionDetails.gasUsed.toString()} ({((Number(transactionDetails.gasUsed) / Number(transactionDetails.gasLimit)) * 100).toFixed(2)}%)</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Gas Limit: </span>
+                      <span className="font-mono">{transactionDetails.gasLimit.toString()}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Gas Price: </span>
+                      <span className="font-mono">
+                        {transactionDetails.effectiveGasPrice ? 
+                          (Number(transactionDetails.effectiveGasPrice) / 1e9).toFixed(2) + " gwei" : 
+                          "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Type: </span>
+                      <span className="font-mono">{transactionDetails.type !== undefined ? transactionDetails.type : "N/A"}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Chain ID: </span>
+                      <span className="font-mono">{transactionDetails.chainId !== undefined ? transactionDetails.chainId : "N/A"}</span>
+                    </div>
+                  </div>
+                  
+                  {decodedFunctionData && (
+                    <div className="mt-4">
+                      <div className="font-medium mb-2">Function Call:</div>
+                      <div className="bg-gray-50 p-3 rounded">
+                        <div className="font-medium text-pinto-green-4">{decodedFunctionData.functionName}</div>
+                        <pre className="mt-2 text-sm font-mono overflow-x-auto">
+                          {JSON.stringify(decodedFunctionData.args, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mt-4">
+                    <div className="font-medium mb-2">Raw Calldata:</div>
+                    <div className="bg-gray-50 p-3 rounded">
+                      <div className="text-sm font-mono break-all overflow-x-auto max-h-[100px] overflow-y-auto">
+                        {transactionDetails.data}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1231,11 +1396,11 @@ function FarmerSiloDeposits() {
   };
 
   const handleCombineAndSortSingleToken = async (token: Token) => {
-    if (!address || !publicClient || !protocolAddress || !farmerSilo.deposits) return;
+    if (!address || !publicClient || !protocolAddress || !farmerSilo.deposits || !walletClient) return;
     
     setSortingToken(token.address); // Reuse the sorting token state
     try {
-      toast.info(`Generating combine and sort calls for ${token.symbol}...`);
+      toast.info(`Preparing combine and sort operations for ${token.symbol}...`);
       
       const isRaining = sunData?.raining || false;
       
@@ -1252,7 +1417,7 @@ function FarmerSiloDeposits() {
       
       console.log(`Processing single token ${token.symbol} with ${depositData.deposits.length} deposits`);
       
-      // Generate farm calls for this token, including combine operations
+      // Simulate the combine operations and get sorted deposits
       const result = await simulateCombineAndSortDeposits(
         address as `0x${string}`, 
         token,
@@ -1263,50 +1428,65 @@ function FarmerSiloDeposits() {
         isRaining
       );
       
-      // Extract the farm calls used in the simulation
-      if (!result.simulationResult?.request?.args?.[0]) {
-        toast.error(`Failed to generate farm calls for ${token.symbol}`);
+      // Check if we have decoded result data with sorted stems
+      if (!result.decodedResult?.stems || result.decodedResult.stems.length === 0) {
+        toast.error(`Failed to get sorted deposits for ${token.symbol}`);
         return;
       }
       
-      const farmCalls = result.simulationResult.request.args[0] as `0x${string}`[];
-      console.log(`Generated ${farmCalls.length} farm calls for ${token.symbol}`);
+      // Extract the combine/L2L calls from the simulation result
+      const combineCalls: `0x${string}`[] = [];
       
-      // Log details about individual farm calls for debugging
-      farmCalls.forEach((call, i) => {
-        try {
-          const decoded = decodeFunctionData({
-            abi: beanstalkAbi,
-            data: call,
-          });
-          console.log(`${token.symbol} call ${i+1}:`, {
-            functionName: decoded.functionName,
-            args: decoded.args,
-          });
-        } catch (err) {
-          console.log(`${token.symbol} call ${i+1} (raw):`, call);
+      if (result.simulationResult?.request?.args?.[0]) {
+        const simulatedCalls = result.simulationResult.request.args[0] as `0x${string}`[];
+        
+        // The last call in the simulation is the pipe call that we don't want to keep
+        // We only want the combine/L2L calls that come before it
+        if (simulatedCalls.length > 1) {
+          combineCalls.push(...simulatedCalls.slice(0, -1));
+          console.log(`Extracted ${combineCalls.length} combine/L2L calls`);
         }
+      }
+      
+      // Convert the sorted stems to deposit IDs and reverse them for storage optimization
+      const { stems } = result.decodedResult;
+      const reversedDepositIds = createReversedDepositIds(token.address, stems);
+      
+      console.log(`Generated ${reversedDepositIds.length} deposit IDs from sorted stems`);
+      
+      // Create the updateSortedDepositIds call
+      const updateSortedIdsCall = encodeFunctionData({
+        abi: beanstalkAbi,
+        functionName: 'updateSortedDepositIds',
+        args: [address, token.address as `0x${string}`, reversedDepositIds]
       });
+      
+      // Prepare the final farm calls: combine/L2L calls followed by updateSortedDepositIds
+      const finalFarmCalls = [...combineCalls];
+      // const finalFarmCalls = [...combineCalls, updateSortedIdsCall];
+      
+      // Log details about the operations
+      console.log(`Final farm calls: ${finalFarmCalls.length} total (${combineCalls.length} combine + 1 update)`);
       
       // Output raw calldata for simulator debugging
       const rawCalldata = encodeFunctionData({
         abi: beanstalkAbi,
         functionName: 'farm',
-        args: [farmCalls]
+        args: [finalFarmCalls]
       });
       
       console.log(`=== Raw Farm Calldata for ${token.symbol} Simulator ===`);
       console.log(rawCalldata);
       console.log("======================================");
       
-      toast.info(`Executing ${farmCalls.length} farm calls for ${token.symbol}...`);
+      toast.info(`Executing ${finalFarmCalls.length} operations for ${token.symbol}...`);
       
       // Execute the farm calls in a single transaction
-      const hash = await walletClient?.writeContract({
+      const hash = await walletClient.writeContract({
         address: protocolAddress,
         abi: beanstalkAbi,
         functionName: 'farm',
-        args: [farmCalls]
+        args: [finalFarmCalls]
       });
       
       toast.success(`Transaction submitted for ${token.symbol}`);
