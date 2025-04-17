@@ -126,6 +126,7 @@ export function generateCombineAndL2LCallData(
   return eligibleTokens.flatMap(([token, depositData]) => encodeClaimRewardCombineCalls(depositData.deposits, token));
 }
 
+
 /**
  * Generates farm calls to get sorted deposits and simulates the call
  * @param account The user's account address
@@ -180,68 +181,77 @@ export async function generateSortDepositsFarmCalls(
 
   console.log("Simulation result:", simulationResult);
 
-  // Attempt to decode the result data
-  let decodedResult;
-  try {
-    // The result is in the first item of the result array
-    const resultData = simulationResult.result?.[0] as `0x${string}` | undefined;
-    console.log("Raw result data:", resultData);
-
-    if (resultData) {
-      // Parse out the hex data without the 0x prefix
-      const hexData = resultData.slice(2);
-
-      // For the pipe function's response format:
-      // The stem count is at position 256 (hex index) based on the debugging
-      const stemCountPosition = 256;
-      const stemCount = parseInt(hexData.slice(stemCountPosition, stemCountPosition + 64), 16);
-
-      if (stemCount > 0 && stemCount < 1000) { // Sanity check on the count
-        console.log(`Decoding ${stemCount} sorted deposits`);
-
-        // Start position for stem array elements (after the length field)
-        const stemStartPos = stemCountPosition + 64;
-        const stems: bigint[] = [];
-        const amounts: bigint[] = [];
-
-        // Extract stems
-        for (let i = 0; i < stemCount; i++) {
-          const stemHex = hexData.slice(stemStartPos + i * 64, stemStartPos + (i + 1) * 64);
-          const stemValue = BigInt('0x' + stemHex);
-          stems.push(stemValue);
-        }
-
-        // The amount array starts after all stems
-        // Add 64 bytes for the array length field
-        const amountCountPosition = stemStartPos + (stemCount * 64);
-        const amountCount = parseInt(hexData.slice(amountCountPosition, amountCountPosition + 64), 16);
-
-        // Verify the amount count matches the stem count
-        if (amountCount === stemCount) {
-          // Extract amounts
-          const amountStartPos = amountCountPosition + 64;
-          for (let i = 0; i < amountCount; i++) {
-            const amountHex = hexData.slice(amountStartPos + i * 64, amountStartPos + (i + 1) * 64);
-            const amountValue = BigInt('0x' + amountHex);
-            amounts.push(amountValue);
-          }
-
-          decodedResult = { stems, amounts };
-          console.log(`Successfully decoded ${stems.length} stems and ${amounts.length} amounts`);
-        } else {
-          console.error(`Amount count (${amountCount}) doesn't match stem count (${stemCount})`);
-        }
-      } else {
-        console.error(`Invalid stem count: ${stemCount}`);
-      }
-    }
-  } catch (error) {
-    console.error("Error decoding simulation result:", error);
-  }
+  // Decode the result data using our helper function
+  const decodedResult = decodeSortedDepositsResult(simulationResult.result?.[0] as `0x${string}` | undefined);
 
   // Return a complete result object
   return {
     simulationResult,
     decodedResult
   };
+}
+
+
+/**
+ * Decodes the raw result data from a getSortedDeposits simulation
+ * @param resultData The raw hex data from the simulation result
+ * @returns Object containing the decoded stems and amounts, or undefined if decoding fails
+ */
+function decodeSortedDepositsResult(
+  resultData: `0x${string}` | undefined
+): { stems: bigint[]; amounts: bigint[]; } | undefined {
+  if (!resultData) return undefined;
+
+  try {
+    // Parse out the hex data without the 0x prefix
+    const hexData = resultData.slice(2);
+
+    // For the pipe function's response format:
+    // The stem count is at position 256 (hex index) based on the debugging
+    const stemCountPosition = 256;
+    const stemCount = parseInt(hexData.slice(stemCountPosition, stemCountPosition + 64), 16);
+
+    if (stemCount > 0 && stemCount < 1000) { // Sanity check on the count
+      console.log(`Decoding ${stemCount} sorted deposits`);
+
+      // Start position for stem array elements (after the length field)
+      const stemStartPos = stemCountPosition + 64;
+      const stems: bigint[] = [];
+      const amounts: bigint[] = [];
+
+      // Extract stems
+      for (let i = 0; i < stemCount; i++) {
+        const stemHex = hexData.slice(stemStartPos + i * 64, stemStartPos + (i + 1) * 64);
+        const stemValue = BigInt('0x' + stemHex);
+        stems.push(stemValue);
+      }
+
+      // The amount array starts after all stems
+      // Add 64 bytes for the array length field
+      const amountCountPosition = stemStartPos + (stemCount * 64);
+      const amountCount = parseInt(hexData.slice(amountCountPosition, amountCountPosition + 64), 16);
+
+      // Verify the amount count matches the stem count
+      if (amountCount === stemCount) {
+        // Extract amounts
+        const amountStartPos = amountCountPosition + 64;
+        for (let i = 0; i < amountCount; i++) {
+          const amountHex = hexData.slice(amountStartPos + i * 64, amountStartPos + (i + 1) * 64);
+          const amountValue = BigInt('0x' + amountHex);
+          amounts.push(amountValue);
+        }
+
+        console.log(`Successfully decoded ${stems.length} stems and ${amounts.length} amounts`);
+        return { stems, amounts };
+      } else {
+        console.error(`Amount count (${amountCount}) doesn't match stem count (${stemCount})`);
+      }
+    } else {
+      console.error(`Invalid stem count: ${stemCount}`);
+    }
+  } catch (error) {
+    console.error("Error decoding simulation result:", error);
+  }
+
+  return undefined;
 }
