@@ -133,14 +133,13 @@ const PresetButton = ({ preset, isSelected, onClick }: PresetButtonProps) => (
 
 // CalendarContent component - handles the popover content
 interface CalendarContentProps {
-  isMobile: boolean;
   range: DateRange;
   selectedPreset: CalendarPresetRange;
   onRangeChange: (range: DateRange) => void;
   onPresetChange: (preset: CalendarPresetRange) => void;
 }
 
-const CalendarContent = ({ isMobile, range, selectedPreset, onRangeChange, onPresetChange }: CalendarContentProps) => {
+const CalendarContent = ({ range, selectedPreset, onRangeChange, onPresetChange }: CalendarContentProps) => {
   const [month, setMonth] = useState<Date>(new Date());
   const [dateInputs, setDateInputs] = useState<DateTimeInputs>({ from: "", to: "" });
   const [timeInputs, setTimeInputs] = useState<DateTimeInputs>({ from: "", to: "" });
@@ -234,9 +233,8 @@ const CalendarContent = ({ isMobile, range, selectedPreset, onRangeChange, onPre
   );
 
   return (
-    <div className="flex flex-col gap-4 pt-4 px-4 sm:p-0">
+    <div className="flex flex-col gap-4 p-0">
       <div className="pinto-body-light font-medium">Custom Date Range</div>
-
       <div className="flex flex-col gap-2">
         <DateRangeInput
           label="From"
@@ -253,9 +251,7 @@ const CalendarContent = ({ isMobile, range, selectedPreset, onRangeChange, onPre
           onTimeChange={(val) => handleTimeChange("to", val)}
         />
       </div>
-
       <Separator />
-
       <div className="flex flex-col">
         <DayPicker
           mode="range"
@@ -267,8 +263,7 @@ const CalendarContent = ({ isMobile, range, selectedPreset, onRangeChange, onPre
           fixedWeeks
           classNames={CALENDAR_STYLES}
         />
-
-        {isMobile && renderMobilePresets()}
+        <div className="lg:hidden">{renderMobilePresets()}</div>
       </div>
     </div>
   );
@@ -281,7 +276,6 @@ interface CalendarButtonProps {
 }
 
 const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: CalendarButtonProps) => {
-  const isDesktop = useIsDesktop();
   const [selectedPreset, setSelectedPreset] = useState<CalendarPresetRange>("1W");
   const [range, setRange] = useState<DateRange>({ from: undefined, to: undefined });
 
@@ -365,31 +359,29 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
 
   return (
     <div className="relative flex flex-row items-center">
-      {isDesktop && (
-        <>
-          <div className="flex flex-row items-center gap-6">
-            {Object.keys(DATE_PRESETS).map((preset) => (
-              <PresetButton
-                key={`preset-${preset}`}
-                preset={preset}
-                isSelected={selectedPreset === preset}
-                onClick={() => applyPreset(preset as Exclude<CalendarPresetRange, "CUSTOM">)}
-              />
-            ))}
-          </div>
-          <Separator orientation="vertical" className="h-6 mx-4" />
-        </>
-      )}
-
+      <div className="hidden lg:flex">
+        <div className="flex flex-row items-center gap-6">
+          {Object.keys(DATE_PRESETS).map((preset) => (
+            <PresetButton
+              key={`preset-${preset}`}
+              preset={preset}
+              isSelected={selectedPreset === preset}
+              onClick={() => applyPreset(preset as Exclude<CalendarPresetRange, "CUSTOM">)}
+            />
+          ))}
+        </div>
+        <Separator orientation="vertical" className="h-6 mx-4" />
+      </div>
       <Popover>
         <PopoverTrigger>
-          <div className={`${selectedPreset === "CUSTOM" && !isDesktop ? "text-pinto-green" : "text-gray-700"}`}>
-            <CalendarIcon />
+          <div
+            className={`text-pinto-gray-4 ${selectedPreset === "CUSTOM" ? "lg:text-pinto-green" : "text-pinto-gray-4"}`}
+          >
+            <CalendarIcon color={"currentColor"} />
           </div>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-[22rem] lg:w-[17.5rem]">
           <CalendarContent
-            isMobile={!isDesktop}
             range={range}
             selectedPreset={selectedPreset}
             onRangeChange={handleRangeChange}
