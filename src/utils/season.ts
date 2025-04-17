@@ -2,7 +2,7 @@ import { TokenValue } from "@/classes/TokenValue";
 import { toFixedNumber } from "./format";
 
 export const seasonCutOffFor150 = 2710;
-export const seasonCutOffFor200 = 5000; // placeholder value, will likely be in the 3400-3600 range
+export const seasonCutOffFor200 = 3571; // placeholder value, will likely be in the 3400-3600 range
 
 const getMaxCropRatioBySeason = (season: number) => {
   if (season >= seasonCutOffFor150 && season < seasonCutOffFor200) {
