@@ -2,7 +2,9 @@ import { TokenValue } from "@/classes/TokenValue";
 import { toFixedNumber } from "./format";
 
 export const seasonCutOffFor150 = 2710;
-export const seasonCutOffFor200 = 5000; // placeholder value, will likely be in the 3400-3600 range TODO: FLOYD / burr please change!
+// it's actually 3572 but theres an oddity with subgraph that gave us the value mid-season so we need to
+// calculate season 3571 as if the max crop ratio is 200
+export const seasonCutOffFor200 = 3571;
 
 const getMaxCropRatioBySeason = (season: number) => {
   if (season >= seasonCutOffFor150 && season < seasonCutOffFor200) {
@@ -52,9 +54,12 @@ export function caseIdToDescriptiveText(rawCaseID: number, column: "price" | "so
       else if (caseId % 3 === 1) return "Steady";
       else return "Increasing";
     case "pod_rate":
-      if ((caseId % 36) / 9 === 0) return "Excessively Low";
-      else if ((caseId % 36) / 9 === 1) return "Reasonably Low";
-      else if ((caseId % 36) / 9 === 2) return "Reasonably High";
+      // pod rate > 100 case
+      if (rawCaseID > 1000) return "Extremely High";
+      // otherwise use original logic
+      if (Math.trunc((caseId % 36) / 9) === 0) return "Excessively Low";
+      else if (Math.trunc((caseId % 36) / 9) === 1) return "Reasonably Low";
+      else if (Math.trunc((caseId % 36) / 9) === 2) return "Reasonably High";
       else return "Excessively High";
     case "l2sr":
       if (Math.trunc(caseId / 36) === 0) {
