@@ -135,9 +135,9 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
           value={convertDeltaDemandToPercentage(data.deltaPodDemand.toNumber())}
           subValue={caseIdToDescriptiveText(data.caseId, "soil_demand")}
           hiddenFields={hiddenFields}
-        // hoverContent={
-        //   <DeltaDemandChart />
-        // }
+          // hoverContent={
+          //   <DeltaDemandChart />
+          // }
         />
         <SeasonsTableCell
           columnKey="cropScalar"
