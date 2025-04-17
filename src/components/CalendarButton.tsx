@@ -206,6 +206,7 @@ const CalendarContent = ({ isMobile, range, selectedPreset, onRangeChange, onPre
         });
         const newRange: DateRange = { ...range, [type]: newDate };
         onRangeChange(newRange);
+        onPresetChange("CUSTOM");
       } catch (e) {
         // Invalid time format
       }
@@ -340,7 +341,9 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
   // Handle preset changes
   const handlePresetChange = (preset: CalendarPresetRange): void => {
     setSelectedPreset(preset);
-    saveRangeAndSetPeriod(range, preset);
+    if (preset !== "CUSTOM") {
+      saveRangeAndSetPeriod(range, preset);
+    }
   };
 
   // Save to localStorage and set period
