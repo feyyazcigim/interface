@@ -3,7 +3,9 @@ import { beanstalkAbi } from "@/generated/contractHooks";
 import { calculateConvertData } from "@/utils/convert";
 import { Token, TokenDepositData } from "@/utils/types";
 import { encodeClaimRewardCombineCalls } from "@/utils/utils";
-import { encodeFunctionData } from "viem";
+import { encodeFunctionData, PublicClient } from "viem";
+import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
+import { TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
 
 // Constants for deposit management
 const MIN_DEPOSITS_FOR_COMBINING = 25; // Minimum deposits to trigger combining logic
@@ -122,4 +124,59 @@ export function generateCombineAndL2LCallData(
   }
 
   return eligibleTokens.flatMap(([token, depositData]) => encodeClaimRewardCombineCalls(depositData.deposits, token));
+}
+
+/**
+ * Generates farm calls to get sorted deposits and simulates the call
+ * @param account The user's account address
+ * @param token The token for which to sort deposits
+ * @param publicClient The viem public client for blockchain interaction
+ * @param protocolAddress The Beanstalk protocol address
+ * @param fromAddress The address to simulate the call from
+ * @returns A Promise containing simulation result and sorted deposit data
+ */
+export async function generateSortDepositsFarmCalls(
+  account: `0x${string}`,
+  token: Token,
+  publicClient: PublicClient,
+  protocolAddress: `0x${string}`,
+  fromAddress: `0x${string}`,
+): Promise<{
+  simulationResult: any;
+}> {
+  console.log(`Generating and simulating farm calls for ${token.symbol}`);
+
+  // Create a call to getSortedDeposits from the TractorHelpers contract
+  const getSortedDepositsCall = encodeFunctionData({
+    abi: tractorHelpersABI,
+    functionName: "getSortedDeposits",
+    args: [account, token.address as `0x${string}`]
+  });
+
+  // Create a pipe call that calls getSortedDeposits
+  const pipeCall = encodeFunctionData({
+    abi: beanstalkAbi,
+    functionName: "pipe",
+    args: [
+      {
+        target: TRACTOR_HELPERS_ADDRESS as `0x${string}`,  // Target contract for the call
+        data: getSortedDepositsCall  // The call data for getSortedDeposits
+      }
+    ]
+  });
+
+  // Simulate the farm call 
+  const simulationResult = await publicClient.simulateContract({
+    address: protocolAddress,
+    abi: beanstalkAbi,
+    functionName: "farm",
+    args: [[pipeCall]],  // Farm takes an array of encoded function calls
+    account: fromAddress
+  });
+
+  console.log("Simulation result:", simulationResult);
+
+  return {
+    simulationResult: simulationResult
+  };
 }

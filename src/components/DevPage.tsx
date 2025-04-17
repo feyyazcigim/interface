@@ -35,6 +35,7 @@ import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
 import { Token } from "@/utils/types";
+import { generateSortDepositsFarmCalls } from "@/lib/claim/depositUtils";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
@@ -107,6 +108,14 @@ export default function DevPage() {
   >(null);
 
   const [recentTxs, setRecentTxs] = useState<`0x${string}`[]>([]);
+
+  const [simulationResults, setSimulationResults] = useState<{
+    simulationData: any;
+    tokenAddress: string;
+  } | null>(null);
+
+  const [sortingToken, setSortingToken] = useState<string | null>(null);
+  const [farmingSortToken, setFarmingSortToken] = useState<string | null>(null);
 
   useEffect(() => {
     const checkServer = async () => {
@@ -959,6 +968,11 @@ function FarmerSiloDeposits() {
   const protocolAddress = useProtocolAddress();
   const [loading, setLoading] = useState(false);
   const [sortingToken, setSortingToken] = useState<string | null>(null);
+  const [farmingSortToken, setFarmingSortToken] = useState<string | null>(null);
+  const [simulationResults, setSimulationResults] = useState<{
+    simulationData: any;
+    tokenAddress: string;
+  } | null>(null);
 
   const handleRefresh = async () => {
     setLoading(true);
@@ -1048,6 +1062,41 @@ function FarmerSiloDeposits() {
     }
   };
 
+  const handleFarmSortDeposits = async (token: Token) => {
+    if (!address || !publicClient || !protocolAddress) return;
+    
+    setFarmingSortToken(token.address);
+    setSimulationResults(null);
+    
+    try {
+      toast.info(`Simulating farm call with pipe for ${token.symbol}...`);
+      
+      // Generate and simulate the farm call with the pipe call to getSortedDeposits
+      const result = await generateSortDepositsFarmCalls(
+        address as `0x${string}`, 
+        token,
+        publicClient,
+        protocolAddress,
+        address as `0x${string}`
+      );
+      
+      console.log(`Farm call simulation result:`, result);
+      
+      // Store the simulation results
+      setSimulationResults({
+        simulationData: result.simulationResult,
+        tokenAddress: token.address
+      });
+      
+      toast.success(`Successfully simulated farm call with pipe for ${token.symbol}`);
+    } catch (error) {
+      console.error(`Error simulating farm call for ${token.symbol}:`, error);
+      toast.error(`Failed to simulate farm call for ${token.symbol}: ${(error as Error).message}`);
+    } finally {
+      setFarmingSortToken(null);
+    }
+  };
+
   // Helper to format value
   const formatValue = (value) => {
     if (!value) return "0";
@@ -1096,15 +1145,26 @@ function FarmerSiloDeposits() {
                   <img src={token.logoURI} alt={token.symbol} className="w-6 h-6 rounded-full" />
                   <span className="font-medium">{token.symbol}</span>
                 </div>
-                <Button 
-                  onClick={() => handleSortDeposits(token)}
-                  disabled={sortingToken === token.address}
-                  size="sm"
-                  variant="outline"
-                  className="text-xs"
-                >
-                  {sortingToken === token.address ? "Sorting..." : "Sort Deposits"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => handleFarmSortDeposits(token)}
+                    disabled={farmingSortToken === token.address || sortingToken === token.address}
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                  >
+                    {farmingSortToken === token.address ? "Simulating..." : "Simulate Farm Call"}
+                  </Button>
+                  <Button 
+                    onClick={() => handleSortDeposits(token)}
+                    disabled={sortingToken === token.address || farmingSortToken === token.address}
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                  >
+                    {sortingToken === token.address ? "Sorting..." : "Sort Deposits"}
+                  </Button>
+                </div>
               </div>
               
               <div className="grid grid-cols-5 gap-4 text-sm">
@@ -1141,6 +1201,33 @@ function FarmerSiloDeposits() {
                   </div>
                 </div>
               ) : null}
+              
+              {/* Display simulation results when available for this token */}
+              {simulationResults && simulationResults.tokenAddress === token.address && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                  <div className="text-xs font-medium text-pinto-green-4 mb-2">Farm Call Simulation Results:</div>
+                  <div className="space-y-2">
+                    <div className="text-xs text-pinto-gray-4">
+                      Successfully simulated a farm call containing a pipe call to getSortedDeposits
+                    </div>
+                    <div className="font-mono text-xs overflow-auto max-h-[300px] p-2 bg-gray-100 rounded">
+                      <pre>
+                        {JSON.stringify(simulationResults.simulationData, null, 2)}
+                      </pre>
+                    </div>
+                    <div className="mt-2">
+                      <Button
+                        onClick={() => setSimulationResults(null)}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs"
+                      >
+                        Clear Results
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
           
