@@ -35,7 +35,7 @@ import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
 import { Token } from "@/utils/types";
-import { generateSortDepositsFarmCalls } from "@/lib/claim/depositUtils";
+import { generateSortDepositsFarmCalls, generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
 import { useSunData } from "@/state/useSunData";
 
 type ServerStatus = "running" | "not-running" | "checking";
@@ -121,6 +121,7 @@ export default function DevPage() {
 
   const [sortingToken, setSortingToken] = useState<string | null>(null);
   const [farmingSortToken, setFarmingSortToken] = useState<string | null>(null);
+  const [sortingAllTokens, setSortingAllTokens] = useState(false);
 
   useEffect(() => {
     const checkServer = async () => {
@@ -968,6 +969,7 @@ function FarmerSiloDeposits() {
   const [loading, setLoading] = useState(false);
   const [sortingToken, setSortingToken] = useState<string | null>(null);
   const [farmingSortToken, setFarmingSortToken] = useState<string | null>(null);
+  const [sortingAllTokens, setSortingAllTokens] = useState(false);
   const [simulationResults, setSimulationResults] = useState<{
     simulationData: any;
     tokenAddress: string;
@@ -1116,6 +1118,49 @@ function FarmerSiloDeposits() {
     }
   };
 
+  const handleSortAllDeposits = async () => {
+    if (!address || !walletClient || !publicClient || !protocolAddress || !farmerSilo.deposits) return;
+    
+    setSortingAllTokens(true);
+    try {
+      toast.info("Generating sort deposit calls for all tokens...");
+      
+      const isRaining = sunData.raining || false;
+      
+      // Generate sort deposit calls for all tokens
+      const callData = await generateBatchSortDepositsCallData(
+        address as `0x${string}`,
+        farmerSilo.deposits,
+        publicClient,
+        protocolAddress,
+        isRaining
+      );
+      
+      if (callData.length === 0) {
+        toast.warning("No tokens to sort deposits for");
+        return;
+      }
+      
+      toast.info(`Sorting deposits for ${callData.length} tokens...`);
+      
+      // Execute the transactions using farm()
+      const hash = await walletClient.writeContract({
+        address: protocolAddress,
+        abi: beanstalkAbi,
+        functionName: 'farm',
+        args: [callData]
+      });
+      
+      toast.success(`Batch sort deposits transaction submitted for ${callData.length} tokens`);
+      console.log("Transaction hash:", hash);
+    } catch (error) {
+      console.error("Error batch sorting deposits:", error);
+      toast.error(`Failed to batch sort deposits: ${(error as Error).message}`);
+    } finally {
+      setSortingAllTokens(false);
+    }
+  };
+
   // Helper to format value
   const formatValue = (value) => {
     if (!value) return "0";
@@ -1130,13 +1175,22 @@ function FarmerSiloDeposits() {
         <div className="text-sm text-gray-500">
           {address ? `Current account: ${address}` : "No account connected"}
         </div>
-        <Button 
-          onClick={handleRefresh} 
-          disabled={loading || !address}
-          className="px-4 py-2"
-        >
-          {loading ? "Refreshing..." : "Refresh Deposits"}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleSortAllDeposits}
+            disabled={sortingAllTokens || loading || !address}
+            className="px-4 py-2"
+          >
+            {sortingAllTokens ? "Sorting All..." : "Sort All Deposits"}
+          </Button>
+          <Button 
+            onClick={handleRefresh} 
+            disabled={loading || !address || sortingAllTokens}
+            className="px-4 py-2"
+          >
+            {loading ? "Refreshing..." : "Refresh Deposits"}
+          </Button>
+        </div>
       </div>
 
       {!address ? (

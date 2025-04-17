@@ -307,3 +307,105 @@ function decodeSortedDepositsResult(
 
   return undefined;
 }
+
+/**
+ * Utility function to pack a token address and stem into a deposit ID
+ * Matches the Solidity implementation:
+ * function packAddressAndStem(address _address, int96 stem) internal pure returns (uint256) {
+ *     return (uint256(uint160(_address)) << 96) | uint96(stem);
+ * }
+ * 
+ * @param tokenAddress The token address
+ * @param stem The stem value
+ * @returns A packed deposit ID as a bigint
+ */
+export function packAddressAndStem(tokenAddress: string, stem: bigint): bigint {
+  // In Solidity: uint256(uint160(_address)) << 96
+  // We need to extract just the lower 160 bits of the address (20 bytes)
+  const addressValue = BigInt(tokenAddress) & ((1n << 160n) - 1n);
+
+  // Shift the address left by 96 bits
+  const shiftedAddress = addressValue << 96n;
+
+  // Convert stem to uint96 (mask with 2^96-1)
+  const stemUint96 = stem & ((1n << 96n) - 1n);
+
+  // Combine with bitwise OR
+  return shiftedAddress | stemUint96;
+}
+
+/**
+ * Generates calldata for updating sorted deposits for multiple tokens
+ * 
+ * @param account The user's account address
+ * @param farmerDeposits Map of token to deposit data
+ * @param publicClient The viem public client for blockchain interaction
+ * @param protocolAddress The Beanstalk protocol address
+ * @param isRaining Whether it's currently raining in the protocol
+ * @returns Array of encoded function calls for updating sorted deposits
+ */
+export async function generateBatchSortDepositsCallData(
+  account: `0x${string}`,
+  farmerDeposits: Map<Token, TokenDepositData>,
+  publicClient: PublicClient,
+  protocolAddress: `0x${string}`,
+  isRaining: boolean
+): Promise<`0x${string}`[]> {
+  console.log(`Generating batch sort deposits call data for ${farmerDeposits.size} tokens`);
+
+  const callData: `0x${string}`[] = [];
+
+  // Process each token in the farmer's deposits
+  for (const [token, depositData] of farmerDeposits.entries()) {
+    if (!depositData.deposits.length) {
+      console.log(`Skipping ${token.symbol} - no deposits`);
+      continue;
+    }
+
+    console.log(`Processing ${token.symbol} with ${depositData.deposits.length} deposits`);
+
+    try {
+      // Get sorted deposits through simulation
+      const result = await generateSortDepositsFarmCalls(
+        account,
+        token,
+        publicClient,
+        protocolAddress,
+        account,
+        farmerDeposits,
+        isRaining
+      );
+
+      // Check if we have decoded result data
+      if (!result.decodedResult) {
+        console.error(`Failed to get sorted deposits for ${token.symbol}`);
+        continue;
+      }
+
+      const { stems } = result.decodedResult;
+
+      // Convert stems to deposit IDs using the packing function
+      const depositIds = stems.map(stem => packAddressAndStem(token.address, stem));
+
+      // Reverse the order of deposit IDs for optimal storage in the contract
+      const reversedDepositIds = [...depositIds].reverse();
+
+      console.log(`Generated ${reversedDepositIds.length} deposit IDs for ${token.symbol}`);
+
+      // Create the calldata for updateSortedDepositIds
+      const updateCall = encodeFunctionData({
+        abi: beanstalkAbi,
+        functionName: 'updateSortedDepositIds',
+        args: [account, token.address as `0x${string}`, reversedDepositIds]
+      });
+
+      callData.push(updateCall);
+
+    } catch (error) {
+      console.error(`Error processing ${token.symbol}:`, error);
+    }
+  }
+
+  console.log(`Generated ${callData.length} sort deposit calls`);
+  return callData;
+}
