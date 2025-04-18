@@ -46,7 +46,7 @@ import { encodeClaimRewardCombineCalls } from "@/utils/utils";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
-// this extended type declaration is to fix the fact that hardhat_mine is not one of the offical types
+// this extended type declaration is to fix the fact that hardhat_mine is not one of the official types
 type ExtendedPublicClient = PublicClient & {
   request(args: { method: "hardhat_mine"; params: string[] }): Promise<void>;
 };
@@ -1265,49 +1265,7 @@ function FarmerSiloDeposits() {
     }
   };
 
-  const handleFarmSortDeposits = async (token: Token) => {
-    if (!address || !publicClient || !protocolAddress) return;
-    
-    setFarmingSortToken(token.address);
-    setSimulationResults(null);
-    
-    try {
-      toast.info(`Simulating farm call with pipe for ${token.symbol}...`);
-      
-      // Get raining status from sunData at component level
-      const isRaining = sunData.raining || false;
-      
-      // Generate and simulate the farm call with the pipe call to getSortedDeposits
-      const result = await simulateCombineAndSortDeposits(
-        address as `0x${string}`, 
-        token,
-        publicClient,
-        protocolAddress,
-        address as `0x${string}`,
-        farmerSilo.deposits,  // Pass the user's deposits
-        isRaining            // Pass whether it's raining
-      );
-      
-      console.log(`Farm call simulation result:`, result);
-      
-      // Store the simulation results
-      setSimulationResults({
-        simulationData: result.simulationResult,
-        tokenAddress: token.address,
-        decodedData: result.decodedResult ? {
-          stems: result.decodedResult.stems.map(stem => stem.toString()),
-          amounts: result.decodedResult.amounts.map(amount => amount.toString())
-        } : undefined
-      });
-      
-      toast.success(`Successfully simulated farm call with pipe for ${token.symbol}`);
-    } catch (error) {
-      console.error(`Error simulating farm call for ${token.symbol}:`, error);
-      toast.error(`Failed to simulate farm call for ${token.symbol}: ${(error as Error).message}`);
-    } finally {
-      setFarmingSortToken(null);
-    }
-  };
+
 
   const handleSortAllDeposits = async () => {
 
@@ -1515,15 +1473,7 @@ function FarmerSiloDeposits() {
                   >
                     {sortingToken === token.address ? "Processing..." : "Combine & Sort"}
                   </Button>
-                  <Button 
-                    onClick={() => handleFarmSortDeposits(token)}
-                    disabled={farmingSortToken === token.address || sortingToken === token.address}
-                    size="sm"
-                    variant="outline"
-                    className="text-xs"
-                  >
-                    {farmingSortToken === token.address ? "Simulating..." : "Simulate Farm Call"}
-                  </Button>
+
                   <Button 
                     onClick={() => handleSortDeposits(token)}
                     disabled={sortingToken === token.address || farmingSortToken === token.address}
