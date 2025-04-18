@@ -1,9 +1,9 @@
 import { TokenValue } from "@/classes/TokenValue";
 import ActionsMenu from "@/components/ActionsMenu";
-import ClaimRewards from "@/components/ClaimRewards";
-import OverviewNoticeGermination from "@/components/GerminationNotice";
+import { Col, Row } from "@/components/Container";
 import GerminationNotice from "@/components/GerminationNotice";
-import HelperLink, { hoveredIdAtom } from "@/components/HelperLink";
+import HelperLink from "@/components/HelperLink";
+import ReadMoreAccordion from "@/components/ReadMoreAccordion";
 import StatPanel from "@/components/StatPanel";
 import TableRowConnector from "@/components/TableRowConnector";
 import PageContainer from "@/components/ui/PageContainer";
@@ -13,20 +13,17 @@ import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useFarmerActions from "@/hooks/useFarmerActions";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
+import { useSiloData } from "@/state/useSiloData";
 import useTokenData from "@/state/useTokenData";
+import { formatter } from "@/utils/format";
 import { getClaimText } from "@/utils/string";
-import { SiloTokenData, StatPanelData } from "@/utils/types";
+import { StatPanelData } from "@/utils/types";
 import { getSiloConvertUrl } from "@/utils/url";
-import { AnimatePresence } from "framer-motion";
-import { motion } from "framer-motion";
-import { useAtom } from "jotai";
-import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SiloTable from "./silo/SiloTable";
-import useBoolean from "@/hooks/useBoolean";
-import { cn } from "@/utils/utils";
-import { Row } from "@/components/Container";
-import { useSiloData } from "@/state/useSiloData";
+import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 
 function Silo() {
   const farmerSilo = useFarmerSilo();
@@ -35,16 +32,8 @@ function Silo() {
   const priceData = usePriceData();
   const mainToken = tokenData.mainToken;
   const { submitClaimRewards } = useClaimRewards();
-
-  const [readMoreOpened, toggleReadMore] = useBoolean();
-
   const navigate = useNavigate();
   const isSmallDesktop = useIsSmallDesktop();
-
-  const [hoveredId, setHoveredId] = useAtom(hoveredIdAtom);
-  useEffect(() => {
-    setHoveredId("");
-  }, []);
 
   const [hoveredButton, setHoveredButton] = useState("");
   const enableStatPanels =
@@ -112,27 +101,9 @@ function Silo() {
           <div className="flex flex-col gap-2">
             <div className="pinto-h2 sm:pinto-h1">Silo</div>
             <div className="pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-              Deposit value in the Silo to earn yield.{" "}
-              <span className="text-pinto-green cursor-pointer" onClick={toggleReadMore}>
-                Read more.
-              </span>
+              Deposit value in the Silo to earn yield.
             </div>
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{
-                height: readMoreOpened ? "auto" : 0,
-                opacity: readMoreOpened ? 1 : 0,
-              }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className={cn("overflow-hidden", readMoreOpened && "flex flex-col")}
-            >
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-              dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
-              ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-              fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident
-            </motion.div>
-            <Row className="gap-4">a</Row>
+            <LearnSilo />
           </div>
           <Separator />
           {enableStatPanels && (
@@ -300,8 +271,15 @@ function Silo() {
               )}
             </div>
           </div>
+          <div className="flex flex-col w-full">
+            <div className="flex flex-col gap-6">
+          <SiloStats />
+          <AccordionGroup items={FAQ_ITEMS} groupTitle="Frequently Asked Questions" />
+            </div>
+        </div>
         </div>
       </div>
+      
       <ActionsMenu showOnTablet />
     </PageContainer>
   );
@@ -309,28 +287,192 @@ function Silo() {
 
 export default Silo;
 
+// ---------- Sub Components ----------
+
+const LearnSilo = () => (
+  <>
+    <ReadMoreAccordion defaultOpen>
+      <div>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+        magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+        consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+        pariatur. Excepteur sint occaecat cupidatat non proident
+      </div>
+    </ReadMoreAccordion>
+  </>
+);
+
 const SiloStats = () => {
   const siloStats = useSiloStats();
 
+  const stats = [
+    {
+      label: "Total Deposited PDV",
+      value: formatter.twoDec(siloStats.totalDepositedBDV),
+    },
+    {
+      label: "Total Stalk",
+      value: formatter.twoDec(siloStats.totalStalk),
+    },
+    {
+      label: "Unique Depositors",
+      value: siloStats.uniqueDepositors,
+    },
+  ] as const;
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="pinto-h3">Silo Stats</div>
+      <div className="hidden sm:grid grid-cols-3 gap-4">
+        {stats.map(({ label, value }) => {
+          return (
+            <div key={`silo-stat-desktop-${label}`} className="flex flex-col gap-2 items-center">
+              <div className="pinto-xs text-pinto-light">{label}</div>
+              <div className="pinto-h3 w-full text-center text-pinto-gray-5">{value}</div>
+            </div>
+          );
+        })}
+      </div>
+      <Col className="flex sm:hidden gap-2">
+        {stats.map(({ label, value }) => {
+          return (
+            <Row key={`silo-stat-mobile-${label}`} className="gap-2 items-center justify-between">
+              <div className="pinto-xs text-pinto-light">{label}</div>
+              <div className="pinto-sm text-end text-pinto-gray-5">{value}</div>
+            </Row>
+          );
+        })}
+      </Col>
     </div>
-  )
-}
+  );
+};
 
-export const useSiloStats = () => {
+const fakeData: { uniqueDepositors: number; isLoading: boolean } = {
+  uniqueDepositors: 413,
+  isLoading: false,
+};
+
+const useUniqueDepositors = () => {
+  return fakeData;
+};
+
+const useSiloStats = () => {
   const silo = useSiloData();
+  const uniqueDepositors = useUniqueDepositors();
 
   const totals = useMemo(() => {
-    return [...silo.tokenData.values()].reduce<{ depositedBDV: TokenValue }>((acc, tokenData) => {
-      acc.depositedBDV = acc.depositedBDV.add(tokenData.depositedBDV);
-      return acc;
-    }, {
-      depositedBDV: TokenValue.ZERO,
-    });
+    return [...silo.tokenData.values()].reduce<{ totalDepositedBDV: TokenValue }>(
+      (acc, tokenData) => {
+        acc.totalDepositedBDV = acc.totalDepositedBDV.add(tokenData.depositedBDV);
+        return acc;
+      },
+      {
+        totalDepositedBDV: TokenValue.ZERO,
+      },
+    );
   }, [silo.tokenData]);
 
-  return totals;
-}
+  return {
+    ...totals,
+    ...uniqueDepositors,
+    totalStalk: silo.totalStalk,
+    isLoading: totals.totalDepositedBDV.lte(0) || uniqueDepositors.isLoading,
+  };
+};
 
+
+const FAQ_ITEMS: IBaseAccordionContent[] = [
+  {
+    key: "what-is-stalk",
+    title: "What is Stalk?",
+    content:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+  },
+  {
+    key: "what-is-grown-stalk",
+    title: "What is Grown Stalk?",
+    content:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+  },
+  {
+    key: "what-is-seed",
+    title: "What are Seeds?",
+    content:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.",
+  },
+  {
+    key: "How-do-you-earn-yield",
+    title: "How do you earn yield?",
+    content:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.",
+  },
+  {
+    key: "why-should-i-care-about-grown-stalk",
+    title: "Why should I care about Grown Stalk?",
+    content:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.",
+  },
+  {
+    key: "why-should-i-care-about-grown-stalks",
+    title: "Why does PINTO need liquidity?",
+    content:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.",
+  },
+] as const;
+
+
+/*
+
+Silo Token Page
+
+Want to learn more? 
+-> link to the /explorer/silo
+
+Charts
+- Total Deposited Value
+- Avg Seeds Per BDV
+
+How much stalk they've grown & What does this mean? 
+- It would take x months for a new depositor to catch up to me
+- I have x multiplier on my mints
+- Some fun fact. 
+  - You are top x % of grown stalk holders. etc. 
+  - Nuggets of information
+  
+FAQ
+- Why does PINTO need liquidity
+- What benefit do I get for holding LP?
+- Why should I care about Grown Stalk?
+
+Field Page
+- implied market cap in which my pods will be paid off
+
+- My plots chart
+-> my place in line if I sow now
+-> If someone sows before me, how much farther behind will I be? 
+-> Somehow convey that you want to get in line asap
+-> If I knew how much my sow would affect temperature? 
+  if no soil was sold out last season and you were to sow, you decrease the temperature by 0.5%
+  -> arrow down by temperature stat?
+
+  Convey how our single actions affect the model
+  -> convey the secondary effects of the action
+
+  -> If there no soil, expose link to marketplace. "Come back next season".
+
+Market Page
+- FAQ
+  - What is the Pod Market?
+  - Why should I buy pods in the marketplace?
+
+- Data
+  - Charts
+    - Executed orders over time
+    - Total pods listed over time
+
+  - Stats
+    - Total Pods Listed
+    - Total Pods Ordered
+    - Total Pods Orders Executed
+
+
+ */
