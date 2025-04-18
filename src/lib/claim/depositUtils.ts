@@ -433,7 +433,7 @@ export async function generateBatchSortDepositsCallData(
 
 
 export function createSmartGroups(deposits: DepositData[], targetGroups: number = 20): DepositGroup[] {
-  const MAX_DEPOSITS = 200;
+  const MAX_DEPOSITS = 2000; // Increased for Tractor launch to combine everyone's deposits
   const MIN_BDV = TokenValue.fromHuman(25, 6);
 
   // Filter and map deposits, including BDV for small deposit handling
