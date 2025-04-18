@@ -9,6 +9,7 @@ import ReadMoreAccordion from "@/components/ReadMoreAccordion";
 import StatPanel from "@/components/StatPanel";
 import TableRowConnector from "@/components/TableRowConnector";
 import { TimeTab, tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
+import { navLinks } from "@/components/nav/nav/Navbar";
 import { Card } from "@/components/ui/Card";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
@@ -548,6 +549,33 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
     title: "How can I maximize Stalk growth?",
     content:
       "A user can maximize their stalk growth by maximizing their seeds, which may change on a season-by-season basis. The system incentivizes conversions to occur by adjusting the seed values of each Silo Token as needed every season.",
+  },
+  {
+    key: "how-c",
+    title: "How can I learn more on the Silo?",
+    content: (
+      <>
+        Head to the{" "}
+        <Link
+          className="text-pinto-green-4 hover:underline transition-all"
+          to={`${navLinks.docs}/farm/silo`}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Pinto docs
+        </Link>{" "}
+        for more info, or ask any questions in the{" "}
+        <Link
+          className="text-pinto-green-4 hover:underline transition-all"
+          to={navLinks.discord}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          discord
+        </Link>{" "}
+        community!
+      </>
+    ),
   },
 ] as const;
 
