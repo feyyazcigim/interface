@@ -16,10 +16,9 @@ import {
 } from "@/state/protocol/field/field.updater";
 
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
-import { Col } from "@/components/Container";
 import MobileActionBar from "@/components/MobileActionBar";
+import ReadMoreAccordion from "@/components/ReadMoreAccordion";
 import TooltipSimple from "@/components/TooltipSimple";
-import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useFarmerField } from "@/state/useFarmerField";
@@ -75,6 +74,7 @@ function Field() {
               <div className="hidden sm:block pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
                 Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.
               </div>
+              <ReadMoreField />
             </div>
           )}
           {currentAction && isMobile && (
@@ -209,6 +209,17 @@ export const DynamicTemperatureChart = () => {
     return <TemperatureChart />;
   }
 };
+
+const ReadMoreField = () => (
+  <ReadMoreAccordion defaultOpen>
+    <div>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+      magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+      consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      Excepteur sint occaecat cupidatat non proident
+    </div>
+  </ReadMoreAccordion>
+);
 
 const FieldFAQ: IBaseAccordionContent[] = [
   {

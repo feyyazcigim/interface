@@ -12,7 +12,7 @@ export default function ReadMoreAccordion({ children, defaultOpen = false }: IRe
 
   return (
     <Col>
-      <Col className="relative overflow-hidden pinto-body-light text-pinto-light">
+      <Col className={cn("relative overflow-hidden")}>
         <motion.div
           initial={{ height: defaultOpen ? "auto" : 0, opacity: defaultOpen ? 1 : 0 }}
           animate={{
@@ -21,7 +21,10 @@ export default function ReadMoreAccordion({ children, defaultOpen = false }: IRe
           }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: "easeInOut" }}
-          className={open ? "flex flex-col" : ""}
+          className={cn(
+            "text-pinto-light sm:text-pinto-light pinto-sm-light sm:pinto-body-light",
+            open ? "flex flex-col" : "",
+          )}
         >
           {children}
         </motion.div>

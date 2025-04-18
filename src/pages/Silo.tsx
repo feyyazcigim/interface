@@ -469,8 +469,6 @@ const useSiloStats = () => {
 
   const totals = useMemo(() => reduceTotalDepositedBDV(silo.tokenData), [silo.tokenData]);
 
-  const totalDepositedBDVStr = totals.toHuman();
-
   const byToken = useMemo(() => {
     return whitelist.reduce<Record<string, BDVInfo>>((prev, token) => {
       const obj = { token, depositedBDV: TokenValue.ZERO, ratio: TokenValue.ZERO };
@@ -485,19 +483,21 @@ const useSiloStats = () => {
       prev[token.symbol] = obj;
       return prev;
     }, {});
-  }, [totalDepositedBDVStr, whitelist]);
+  }, [totals, whitelist, silo.tokenData.size]);
 
   const isLoading = uniqueDepositors.isLoading || totals.lte(0);
 
-  return {
-    data: {
-      totalDepositedBDV: totals,
-      uniqueDepositors: uniqueDepositors.data,
-      totalStalk: silo.totalStalk,
-      depositedByToken: byToken,
-    },
-    isLoading,
-  };
+  return useMemo(() => {
+    return {
+      data: {
+        totalDepositedBDV: totals,
+        uniqueDepositors: uniqueDepositors.data,
+        totalStalk: silo.totalStalk,
+        depositedByToken: byToken,
+      },
+      isLoading,
+    };
+  }, [totals, uniqueDepositors.data, silo.totalStalk, byToken]);
 };
 
 const FAQ_ITEMS: IBaseAccordionContent[] = [
