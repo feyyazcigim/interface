@@ -15,8 +15,11 @@ import {
   useUpdateMorningTemperatureOnInterval,
 } from "@/state/protocol/field/field.updater";
 
+import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
+import { Col } from "@/components/Container";
 import MobileActionBar from "@/components/MobileActionBar";
 import TooltipSimple from "@/components/TooltipSimple";
+import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useFarmerField } from "@/state/useFarmerField";
@@ -157,7 +160,6 @@ function Field() {
                   Send Pods
                 </NavLink>
               </Button>
-
               <Button asChild variant="silo-action" className="w-full">
                 <NavLink to="/market/pods" className="flex flex-row gap-2 items-center">
                   <div className="rounded-full bg-pinto-green h-6 w-6 flex justify-evenly">
@@ -170,6 +172,7 @@ function Field() {
               </Button>
             </div>
           )}
+          <AccordionGroup groupTitle="Frequently Asked Questions" items={FieldFAQ} allExpanded={false} />
           {!currentAction && (
             <MobileActionBar>
               <Button
@@ -206,3 +209,57 @@ export const DynamicTemperatureChart = () => {
     return <TemperatureChart />;
   }
 };
+
+const FieldFAQ: IBaseAccordionContent[] = [
+  {
+    key: "what-is-a-pod",
+    title: "What are pods?",
+    content: "Pods are Pinto's unique Debt asset that are issued when the protocol borrows Pinto from the open market.",
+  },
+  {
+    key: "what-makes-pods-unique",
+    title: "What makes pods unique?",
+    content: (
+      <div className="flex flex-col gap-2 pinto-sm font-thin text-pinto-light">
+        <>
+          {
+            "Pods are similar to bonds, in that 1 pod is redeemable for 1 Pinto once the pods mature, but have these unique properties:"
+          }
+        </>
+        <ul className="flex flex-col gap-1 pl-2">
+          <li>
+            {
+              "- Pods are placed in a FIFO queue, where newly issued pods are placed at the end of the line, and newly issued pinto are used to pay off pods at the front of the line."
+            }
+          </li>
+          <li>{"- Maturity is determined by your place in line, rather than at some date."}</li>
+          <li>{"- Pods never expire."}</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    key: "what-is-soil",
+    title: "What is Soil?",
+    content:
+      "Soil is the amount of Pinto the protocol is willing to borrow, issued every season. While the protocol is always willing to issue debt every season, the amount is dependent of the state of the system.",
+  },
+  {
+    key: "what-is-temperature",
+    title: "What is Temperature?",
+    content:
+      "The Temperature is the interest rate that you gain when you sow (purchase) pods. This changes autonomously based on the previous season.",
+  },
+  {
+    key: "does-temperature-have-a-cap",
+    title: "Does Temperature have a cap?",
+    content:
+      "Temperature does not have a cap. In practice, the system does not change the temperature directly, but instead increases or decreases the temperature by some amount based on the previous state. Introducing a cap introduces systemic risks that are highlighted here: (article)",
+  },
+  {
+    key: "what-is-the-morning-auction",
+    title: "What is the Morning Auction?",
+    content:
+      "The morning Auction is an event that occurs in the first 10 minutes of the season, where the temperature slowly rises to the maximum temperature over the course of the morning auction. This allows farmers to potentially purchase soil at a lower temperature in instances where there is signficant demand at the current Temperature.",
+  },
+] as const;
