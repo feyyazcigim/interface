@@ -59,7 +59,7 @@ export function useClaimRewards() {
       });
 
       // Generate convert calls with smart limits using our utility function
-      const updateData = generateCombineAndL2LCallData(farmerDeposits, isRaining);
+      const updateData = generateCombineAndL2LCallData(farmerDeposits);
 
       const _gas = await estimateGas(config, {
         to: beanstalkAddress[chainId as keyof typeof beanstalkAddress],
