@@ -1,7 +1,7 @@
 import { mockAddressAtom } from "@/Web3Provider";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
-import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
+import { diamondABI as beanstalkAbi, diamondABI } from "@/constants/abi/diamondABI";
 import { TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
 import { morningFieldDevModeAtom } from "@/state/protocol/field/field.atoms";
 import { getMorningResult, getNowRounded } from "@/state/protocol/sun";
@@ -12,7 +12,7 @@ import { useInvalidateSun, useSeasonQueryKeys } from "@/state/useSunData";
 import useTokenData from "@/state/useTokenData";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { isDev } from "@/utils/utils";
+import { isDev, isLocalhost } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
@@ -38,6 +38,8 @@ import { Input } from "./ui/Input";
 import { Token } from "@/utils/types";
 import { simulateCombineAndSortDeposits, generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
 import { useSunData } from "@/state/useSunData";
+import useTransaction from "@/hooks/useTransaction";
+import { isValidAddress } from "@/utils/string";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
@@ -1184,6 +1186,16 @@ function FarmerSiloDeposits() {
   const tokenData = useTokenData();
   const queryClient = useQueryClient();
   const { data: walletClient } = useWalletClient();
+  const [mockAddress] = useAtom(mockAddressAtom);
+  const isLocal = isLocalhost();
+  
+  const { writeWithEstimateGas, isConfirming, submitting, setSubmitting } = useTransaction({
+    successMessage: "Combine & Sort successful",
+    errorMessage: "Combine & Sort failed",
+    successCallback: () => {
+      queryClient.invalidateQueries();
+    }
+  });
 
   const handleRefresh = async () => {
     setLoading(true);
@@ -1378,7 +1390,7 @@ function FarmerSiloDeposits() {
       toast.info(`Executing ${allFarmCalls.length} farm calls for combine and sort operations...`);
       
       // Execute all farm calls in a single transaction
-      const hash = await walletClient.writeContract({
+      writeWithEstimateGas({
         address: protocolAddress,
         abi: beanstalkAbi,
         functionName: 'farm',
@@ -1396,9 +1408,14 @@ function FarmerSiloDeposits() {
   };
 
   const handleCombineAndSortSingleToken = async (token: Token) => {
-    if (!address || !publicClient || !protocolAddress || !farmerSilo.deposits || !walletClient) return;
+    if (!address || !publicClient || !protocolAddress || !farmerSilo.deposits) return;
+    
+    const effectiveAddress = isLocal && isValidAddress(mockAddress) ? mockAddress : address;
+    console.log("Combine & Sort - Using address:", effectiveAddress);
     
     setSortingToken(token.address); // Reuse the sorting token state
+    setSubmitting(true);
+    
     try {
       toast.info(`Preparing combine and sort operations for ${token.symbol}...`);
       
@@ -1419,11 +1436,11 @@ function FarmerSiloDeposits() {
       
       // Simulate the combine operations and get sorted deposits
       const result = await simulateCombineAndSortDeposits(
-        address as `0x${string}`, 
+        effectiveAddress as `0x${string}`, 
         token,
         publicClient,
         protocolAddress,
-        address as `0x${string}`,
+        effectiveAddress as `0x${string}`,
         singleTokenDeposits, // Pass only this token's deposits
         isRaining
       );
@@ -1458,12 +1475,12 @@ function FarmerSiloDeposits() {
       const updateSortedIdsCall = encodeFunctionData({
         abi: beanstalkAbi,
         functionName: 'updateSortedDepositIds',
-        args: [address, token.address as `0x${string}`, reversedDepositIds]
+        args: [effectiveAddress, token.address as `0x${string}`, reversedDepositIds]
       });
       
       // Prepare the final farm calls: combine/L2L calls followed by updateSortedDepositIds
-      const finalFarmCalls = [...combineCalls];
-      // const finalFarmCalls = [...combineCalls, updateSortedIdsCall];
+      // const finalFarmCalls = [...combineCalls];
+      const finalFarmCalls = [...combineCalls, updateSortedIdsCall];
       
       // Log details about the operations
       console.log(`Final farm calls: ${finalFarmCalls.length} total (${combineCalls.length} combine + 1 update)`);
@@ -1481,21 +1498,76 @@ function FarmerSiloDeposits() {
       
       toast.info(`Executing ${finalFarmCalls.length} operations for ${token.symbol}...`);
       
-      // Execute the farm calls in a single transaction
-      const hash = await walletClient.writeContract({
+      // Execute the farm calls using writeWithEstimateGas instead of walletClient
+      writeWithEstimateGas({
         address: protocolAddress,
         abi: beanstalkAbi,
         functionName: 'farm',
         args: [finalFarmCalls]
       });
       
-      toast.success(`Transaction submitted for ${token.symbol}`);
-      console.log("Transaction hash:", hash);
     } catch (error) {
       console.error(`Error processing ${token.symbol}:`, error);
-      toast.error(`Failed to process ${token.symbol}: ${(error as Error).message}`);
+      
+      // Extract and log detailed error information for debugging
+      const errorObj = error as any;
+      console.log('Error details:');
+      
+      // Log potential contract revert details
+      if (errorObj.cause) {
+        console.log('Error cause:', errorObj.cause);
+      }
+      
+      if (errorObj.details) {
+        console.log('Error details:', errorObj.details);
+      }
+      
+      if (errorObj.data) {
+        console.log('Error data:', errorObj.data);
+      }
+      
+      if (errorObj.reason) {
+        console.log('Error reason:', errorObj.reason);
+      }
+      
+      // Check for viem-specific error properties
+      if (errorObj.shortMessage) {
+        console.log('Short message:', errorObj.shortMessage);
+      }
+      
+      if (errorObj.metaMessages) {
+        console.log('Meta messages:', errorObj.metaMessages);
+      }
+      
+      if (errorObj.contract) {
+        console.log('Contract error:', {
+          address: errorObj.contract.address,
+          args: errorObj.contract.args,
+          functionName: errorObj.contract.functionName
+        });
+      }
+      
+      // Try to parse error selector if available (common with revert errors)
+      if (typeof errorObj.data === 'string' && errorObj.data.startsWith('0x')) {
+        try {
+          const errorSelector = errorObj.data.slice(0, 10);
+          console.log('Error selector:', errorSelector);
+        } catch (e) {
+          console.log('Failed to parse error selector');
+        }
+      }
+      
+      // Display toast with more specific info if available
+      const errorMessage = 
+        errorObj.shortMessage || 
+        errorObj.reason || 
+        (errorObj.cause?.message) || 
+        (error as Error).message;
+        
+      toast.error(`Failed to process ${token.symbol}: ${errorMessage}`);
     } finally {
       setSortingToken(null);
+      setSubmitting(false);
     }
   };
 
