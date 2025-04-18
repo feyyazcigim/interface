@@ -471,7 +471,7 @@ export default function DevPage() {
       // Set both transaction details and decoded events in state
       setTxEvents(decodedEvents);
       setTransactionDetails(txDetails);
-      setDecodedFunctionData(decodedFunction);
+      setDecodedFunctionData(decodedFunction || null);
 
       console.log("Transaction Details:", txDetails);
       console.log("Decoded Function:", decodedFunction);
