@@ -43,7 +43,6 @@ import useTransaction from "@/hooks/useTransaction";
 import { isValidAddress } from "@/utils/string";
 import { TokenValue } from "@/classes/TokenValue";
 import { calculateConvertData } from "@/utils/convert";
-import { encodeClaimRewardCombineCalls } from "@/utils/utils";
 
 type ServerStatus = "running" | "not-running" | "checking";
 

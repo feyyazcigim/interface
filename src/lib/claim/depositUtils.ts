@@ -2,10 +2,12 @@ import { TokenValue } from "@/classes/TokenValue";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { calculateConvertData } from "@/utils/convert";
 import { Token, TokenDepositData } from "@/utils/types";
-import { encodeClaimRewardCombineCalls } from "@/utils/utils";
 import { encodeFunctionData, PublicClient, decodeAbiParameters } from "viem";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 import { TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
+import { DepositData } from "@/utils/types";
+import { DepositGroup } from "@/components/CombineSelect";
+import convert from "@/encoders/silo/convert";
 
 // Constants for deposit management
 const MIN_DEPOSITS_FOR_COMBINING = 25; // Minimum deposits to trigger combining logic
@@ -37,65 +39,68 @@ export function generateCombineAndL2LCallData(
 ): `0x${string}`[] {
   const tokenEntries = Array.from(farmerDeposits.entries());
 
-  // First check if any tokens need combining
-  if (!needsCombining(farmerDeposits)) {
-    // If no tokens need combining, use the top deposits logic
-    console.log(
-      `No tokens need combining, processing top ${MAX_TOP_DEPOSITS} deposits by BDV difference (regular L2L update)`,
-    );
+  // The "only update top 10 deposits" stuff is getting commented out for now, since
+  // We're reducing the total number of deposits to something managable that should be L2L-able every time,
+  // But more importantly, we're trying to get Tractor out, we can come back to this and optimize when/if we print again.
+  // if (!needsCombining(farmerDeposits)) {
+  //   // If no tokens need combining, use the top deposits logic
+  //   console.log(
+  //     `No tokens need combining, processing top ${MAX_TOP_DEPOSITS} deposits by BDV difference (regular L2L update)`,
+  //   );
 
-    // Collect all eligible deposits into a flat array with their token info
-    const allDeposits = tokenEntries.flatMap(([token, depositData]) =>
-      depositData.deposits
-        .filter((deposit) => {
-          const bdvDiff = deposit.currentBdv.sub(deposit.depositBdv);
-          const onePercent = deposit.depositBdv.mul(0.01);
-          const minThreshold = TokenValue.min(onePercent, MIN_BDV_THRESHOLD);
-          return bdvDiff.gt(minThreshold) && !deposit.isGerminating;
-        })
-        .map((deposit) => ({
-          token,
-          deposit,
-          bdvDifference: deposit.currentBdv.sub(deposit.depositBdv),
-        })),
-    );
+  //   // Collect all eligible deposits into a flat array with their token info
+  //   const allDeposits = tokenEntries.flatMap(([token, depositData]) =>
+  //     depositData.deposits
+  //       .filter((deposit) => {
+  //         const bdvDiff = deposit.currentBdv.sub(deposit.depositBdv);
+  //         const onePercent = deposit.depositBdv.mul(0.01);
+  //         const minThreshold = TokenValue.min(onePercent, MIN_BDV_THRESHOLD);
+  //         return bdvDiff.gt(minThreshold) && !deposit.isGerminating;
+  //       })
+  //       .map((deposit) => ({
+  //         token,
+  //         deposit,
+  //         bdvDifference: deposit.currentBdv.sub(deposit.depositBdv),
+  //       })),
+  //   );
 
-    // Sort by BDV difference and take top deposits
-    const topDeposits = allDeposits
-      .filter((deposit) => deposit.bdvDifference.gte(MIN_BDV_THRESHOLD))
-      .sort((a, b) => (b.bdvDifference.gt(a.bdvDifference) ? 1 : -1))
-      .slice(0, MAX_TOP_DEPOSITS);
+  //   // Sort by BDV difference and take top deposits
+  //   const topDeposits = allDeposits
+  //     .filter((deposit) => deposit.bdvDifference.gte(MIN_BDV_THRESHOLD))
+  //     .sort((a, b) => (b.bdvDifference.gt(a.bdvDifference) ? 1 : -1))
+  //     .slice(0, MAX_TOP_DEPOSITS);
 
-    return topDeposits.map(({ token, deposit }) => {
-      const convertData = calculateConvertData(token, token, deposit.amount, deposit.amount);
-      if (!convertData) {
-        throw new Error("Invalid convert data");
-      }
-      return encodeFunctionData({
-        abi: beanstalkAbi,
-        functionName: "convert",
-        args: [convertData, [deposit.stem.toBigInt()], [deposit.amount.toBigInt()]],
-      });
-    });
-  }
+  //   return topDeposits.map(({ token, deposit }) => {
+  //     const convertData = calculateConvertData(token, token, deposit.amount, deposit.amount);
+  //     if (!convertData) {
+  //       throw new Error("Invalid convert data");
+  //     }
+  //     return encodeFunctionData({
+  //       abi: beanstalkAbi,
+  //       functionName: "convert",
+  //       args: [convertData, [deposit.stem.toBigInt()], [deposit.amount.toBigInt()]],
+  //     });
+  //   });
+  // }
 
   console.log(`Combining logic triggered (${MIN_DEPOSITS_FOR_COMBINING}+ deposits of a single token)`);
 
   // Check if any token has more than PROCESS_SINGLE_TOKEN_ONLY_THRESHOLD deposits
-  const highVolumeToken = tokenEntries.find(
-    ([_, depositData]) => depositData.deposits.length >= PROCESS_SINGLE_TOKEN_ONLY_THRESHOLD,
-  );
-
-  if (highVolumeToken) {
-    console.log("Processing single high-volume token:", {
-      name: highVolumeToken[0].name,
-      depositCount: highVolumeToken[1].deposits.length,
-    });
-    return encodeClaimRewardCombineCalls(highVolumeToken[1].deposits, highVolumeToken[0]);
-  }
+  /*  const highVolumeToken = tokenEntries.find(
+      ([_, depositData]) => depositData.deposits.length >= PROCESS_SINGLE_TOKEN_ONLY_THRESHOLD,
+    );
+  
+    if (highVolumeToken) {
+      console.log("Processing single high-volume token:", {
+        name: highVolumeToken[0].name,
+        depositCount: highVolumeToken[1].deposits.length,
+      });
+      return encodeClaimRewardCombineCalls(highVolumeToken[1].deposits, highVolumeToken[0]);
+    }
+  */
 
   // Check if any token has more than LARGE_DEPOSITS_THRESHOLD deposits
-  const hasLargeToken = tokenEntries.some(
+  /*const hasLargeToken = tokenEntries.some(
     ([_, depositData]) => depositData.deposits.length >= LARGE_DEPOSITS_THRESHOLD,
   );
 
@@ -116,9 +121,16 @@ export function generateCombineAndL2LCallData(
     return eligibleTokens
       .slice(0, MAX_TOKENS_WITH_LARGE_DEPOSITS)
       .flatMap(([token, depositData]) => encodeClaimRewardCombineCalls(depositData.deposits, token));
-  }
+  }*/
 
-  return eligibleTokens.flatMap(([token, depositData]) => encodeClaimRewardCombineCalls(depositData.deposits, token));
+  // The above logic had 3 cases:
+  // 1. Process single high-volume token only
+  // 2. Process large tokens only
+  // 3. Process all tokens with large deposits
+
+  // We're now just going to combine/sort all tokens, so that Tractor orders will work as expected.
+
+  return tokenEntries.flatMap(([token, depositData]) => encodeClaimRewardCombineCalls(depositData.deposits, token));
 }
 
 /**
@@ -417,4 +429,180 @@ export async function generateBatchSortDepositsCallData(
 
   console.log(`Generated ${callData.length} total calls (combines + sort deposits)`);
   return callData;
+}
+
+
+export function createSmartGroups(deposits: DepositData[], targetGroups: number = 20): DepositGroup[] {
+  const MAX_DEPOSITS = 200;
+  const MIN_BDV = TokenValue.fromHuman(25, 6);
+
+  // Filter and map deposits, including BDV for small deposit handling
+  const validDeposits = deposits
+    .filter((d) => !d.isGerminating)
+    .map((d) => ({
+      stem: d.stem.toHuman(),
+      ratio: d.stalk.total.div(d.depositBdv),
+      bdv: d.depositBdv,
+    }))
+    .sort((a, b) => b.ratio.sub(a.ratio).toNumber());
+
+  // Only slice if we have more than MAX_DEPOSITS
+  const slicedDeposits = validDeposits.length > MAX_DEPOSITS ? validDeposits.slice(-MAX_DEPOSITS) : validDeposits;
+
+  if (slicedDeposits.length === 0) return [];
+
+  // Calculate ratio differences between adjacent deposits
+  const ratioDiffs = slicedDeposits.slice(1).map((deposit, i) => ({
+    diff: slicedDeposits[i].ratio.sub(deposit.ratio),
+    index: i + 1,
+    // Don't create breakpoint if current or next deposit is small
+    isValidBreakpoint: !(slicedDeposits[i].bdv.lte(MIN_BDV) || slicedDeposits[i + 1].bdv.lte(MIN_BDV)),
+  }));
+
+  // Sort ratio differences to find natural breakpoints, excluding small deposits
+  const sortedDiffs = [...ratioDiffs].filter((d) => d.isValidBreakpoint).sort((a, b) => b.diff.sub(a.diff).toNumber());
+
+  // Select the top N-1 breakpoints (for N groups)
+  const numBreakpoints = Math.min(targetGroups - 1, sortedDiffs.length);
+  const breakpoints = sortedDiffs
+    .slice(0, numBreakpoints)
+    .sort((a, b) => a.index - b.index)
+    .map((b) => b.index);
+
+  // Create groups based on calculated breakpoints
+  const newGroups: DepositGroup[] = [];
+  let groupId = 1;
+  let currentGroup: (typeof validDeposits)[0][] = [];
+
+  slicedDeposits.forEach((deposit, index) => {
+    currentGroup.push(deposit);
+
+    // Only create new group at breakpoint if it wouldn't leave a small deposit alone
+    const isBreakpoint = breakpoints.includes(index + 1);
+    const nextDeposit = slicedDeposits[index + 1];
+    const isLastDeposit = index === slicedDeposits.length - 1;
+
+    const shouldBreak = isBreakpoint || isLastDeposit;
+    const wouldLeaveSmallDeposit = nextDeposit && nextDeposit.bdv.lte(MIN_BDV);
+
+    if (shouldBreak && !wouldLeaveSmallDeposit) {
+      if (currentGroup.length > 0) {
+        newGroups.push({
+          id: groupId++,
+          deposits: currentGroup.map((d) => d.stem),
+        });
+      }
+      currentGroup = [];
+    }
+  });
+
+  return newGroups;
+}
+
+export function encodeGroupCombineCalls(
+  validGroups: DepositGroup[],
+  token: Token,
+  deposits: DepositData[],
+): `0x${string}`[] {
+  // Exclude groups with only one deposit, since they are already alone
+  const groupsToEncode = validGroups.filter((group) => group.deposits.length > 1);
+
+  return groupsToEncode.map((group) => {
+    // Get selected deposits for this group
+    const selectedDepositData = group.deposits
+      .map((stem) => deposits.find((d) => d.stem.toHuman() === stem))
+      .filter(Boolean);
+
+    const totalAmount = selectedDepositData.reduce((sum, deposit) => {
+      if (!deposit) return sum;
+      return deposit.amount.add(sum);
+    }, TokenValue.ZERO);
+
+    const convertData = calculateConvertData(token, token, totalAmount, totalAmount);
+    if (!convertData) throw new Error("Failed to prepare combine data");
+
+    const stems = selectedDepositData.filter((d): d is DepositData => d !== undefined).map((d) => d.stem.toBigInt());
+    const amounts = selectedDepositData
+      .filter((d): d is DepositData => d !== undefined)
+      .map((d) => d.amount.toBigInt());
+
+    // Use the imported convert function instead
+    return convert(convertData, stems, amounts).callData;
+  });
+}
+
+// Add a new function to handle claim reward grouping and encoding
+export function encodeClaimRewardCombineCalls(
+  deposits: DepositData[],
+  token: Token,
+  targetGroups: number = 20,
+): `0x${string}`[] {
+  console.log("Processing deposits for", token.symbol, ":", {
+    depositCount: deposits.length,
+  });
+
+  // Use our existing smart grouping logic
+  const groups = createSmartGroups(deposits, targetGroups);
+
+  console.log("Created groups for", token.symbol, ":", {
+    groupCount: groups.length,
+    groups: groups.map((g) => ({
+      id: g.id,
+      depositCount: g.deposits.length,
+    })),
+  });
+
+  // Sort groups by average Stalk/BDV ratio
+  const groupsWithRatio = groups.map(group => {
+    const groupDeposits = group.deposits
+      .map(stem => deposits.find(d => d.stem.toHuman() === stem))
+      .filter(Boolean) as DepositData[];
+
+    const totalStalk = groupDeposits.reduce(
+      (sum, deposit) => sum.add(deposit.stalk.total),
+      TokenValue.ZERO
+    );
+
+    const totalBdv = groupDeposits.reduce(
+      (sum, deposit) => sum.add(deposit.depositBdv),
+      TokenValue.ZERO
+    );
+
+    // Calculate the stalk-to-BDV ratio for the entire group
+    const stalkPerBdv = totalBdv.gt(0)
+      ? totalStalk.div(totalBdv)
+      : TokenValue.ZERO;
+
+    return {
+      ...group,
+      stalkPerBdv
+    };
+  });
+
+  // Sort by Stalk/BDV ratio (highest to lowest)
+  const sortedGroups = groupsWithRatio
+    .sort((a, b) => b.stalkPerBdv.sub(a.stalkPerBdv).toNumber())
+    .map(({ id, deposits, stalkPerBdv }) => ({ id, deposits, stalkPerBdv }));
+
+  console.log("Sorted groups by Stalk/BDV ratio for", token.symbol, ":", {
+    sortedGroups: sortedGroups.map(g => ({
+      id: g.id,
+      depositCount: g.deposits.length,
+      stalkPerBdv: g.stalkPerBdv.toHuman(),
+    }))
+  });
+
+  // Use our existing encode function with sorted groups - strip stalkPerBdv before passing
+  const result = encodeGroupCombineCalls(
+    sortedGroups.map(({ id, deposits }) => ({ id, deposits })),
+    token,
+    deposits
+  );
+
+  console.log("Final encoded calls for", token.symbol, ":", {
+    groupCount: sortedGroups.length,
+    encodedCallCount: result.length,
+  });
+
+  return result;
 }

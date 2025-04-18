@@ -8,7 +8,7 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import { useInvalidateSun } from "@/state/useSunData";
 import { Token } from "@/utils/types";
-import { encodeGroupCombineCalls } from "@/utils/utils";
+import { encodeGroupCombineCalls } from "@/lib/claim/depositUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { toast } from "sonner";
