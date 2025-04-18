@@ -19,7 +19,7 @@ import { usePublicClient } from "wagmi";
 interface FieldActivityItem {
   id: string;
   timestamp: number; // Unix timestamp
-  season: number;
+  season: number | null;
   type: "sow" | "harvest" | "transfer" | "other";
   amount: TokenValue;
   pods: TokenValue;
@@ -28,6 +28,33 @@ interface FieldActivityItem {
   address: string;
   txHash: string;
 }
+
+/**
+ * Estimates the season number for a transaction based on its block number
+ * Using the knowledge that a new season starts each hour and blocks are ~2 seconds each
+ */
+const estimateSeasonFromBlock = (
+  eventBlockNumber: number,
+  latestBlockNumber: number,
+  currentSeason: number | undefined
+): number | null => {
+  // Return null if we don't have valid inputs yet
+  if (!latestBlockNumber || !currentSeason) return null;
+  
+  // On Base, blocks are approximately 2 seconds each
+  // 1 hour = 3600 seconds = ~1800 blocks per season
+  const BLOCKS_PER_SEASON = 1800;
+  
+  // Calculate block difference from the latest block
+  const blockDifference = latestBlockNumber - eventBlockNumber;
+  
+  // Calculate how many seasons ago this was
+  const seasonsAgo = Math.floor(blockDifference / BLOCKS_PER_SEASON);
+  
+  // Calculate the estimated season (ensure it's at least 1)
+  const estimatedSeason = currentSeason - seasonsAgo;
+  return estimatedSeason > 0 ? estimatedSeason : null;
+};
 
 const FieldActivity: React.FC = () => {
   const publicClient = usePublicClient();
@@ -42,6 +69,15 @@ const FieldActivity: React.FC = () => {
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const tractorLinksRef = useRef<HTMLDivElement>(null);
+  
+  // Add a ref to store initial block data that won't trigger re-renders
+  const initialBlockDataRef = useRef<{
+    latestBlockNumber: number | null;
+    latestBlockTimestamp: number | null;
+  }>({
+    latestBlockNumber: null,
+    latestBlockTimestamp: null,
+  });
 
   // Helper function to estimate temperature from an order
   const getOrderTemperature = (order: OrderbookEntry): number => {
@@ -150,6 +186,19 @@ const FieldActivity: React.FC = () => {
         const latestBlock = await publicClient.getBlock();
         const latestBlockNumber = Number(latestBlock.number);
         const latestBlockTimestamp = Number(latestBlock.timestamp);
+        
+        // Store the initial block data in the ref if not already set
+        if (initialBlockDataRef.current.latestBlockNumber === null) {
+          initialBlockDataRef.current = {
+            latestBlockNumber,
+            latestBlockTimestamp,
+          };
+          console.log(`Initial block data captured: Block ${latestBlockNumber}, Timestamp ${latestBlockTimestamp}`);
+        }
+        
+        // Use the stored initial values for all calculations
+        const storedBlockNumber = initialBlockDataRef.current.latestBlockNumber || latestBlockNumber;
+        const storedBlockTimestamp = initialBlockDataRef.current.latestBlockTimestamp || latestBlockTimestamp;
 
         // Calculate a fromBlock value for 30 days worth of blocks on Base
         // Base has a 2-second block time
@@ -194,12 +243,15 @@ const FieldActivity: React.FC = () => {
 
           // Calculate timestamp using block number difference and 2-second block time
           // Base has 2 second blocks
-          const blockDiff = latestBlockNumber - Number(blockNumber);
-          const timestamp = latestBlockTimestamp - blockDiff * 2;
+          const blockDiff = storedBlockNumber - Number(blockNumber);
+          const timestamp = storedBlockTimestamp - blockDiff * 2;
 
-          // We'll use newer events with more recent seasons
-          // In a real implementation, you would get the actual season from the block timestamp
-          const mockSeason = Math.max(Number(currentSeason) - 5 + index, 1);
+          // Estimate the actual season based on block number
+          const estimatedSeason = estimateSeasonFromBlock(
+            Number(blockNumber),
+            storedBlockNumber,
+            Number(currentSeason)
+          );
 
           // Convert the podIndex to a TokenValue
           const podIndexTV = TokenValue.fromBlockchain(podIndex, 6);
@@ -226,7 +278,7 @@ const FieldActivity: React.FC = () => {
           activityItems.push({
             id: `${transactionHash}-${index}`,
             timestamp,
-            season: mockSeason,
+            season: estimatedSeason,
             type: "sow",
             amount: beanAmount,
             pods: podAmount,
@@ -370,6 +422,11 @@ const FieldActivity: React.FC = () => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
+  // Update the formatType function or add a new formatting function for seasons
+  const formatSeason = (season: number | null): string => {
+    return season !== null ? season.toString() : "-";
+  };
+
   // Render a loading skeleton for the entire table
   if (loading && loadingTractorOrders) {
     return (
@@ -509,7 +566,7 @@ const FieldActivity: React.FC = () => {
                         className={`tractor-order-row hover:bg-pinto-green-1 transition-colors ${hoveredAddress === order.requisition.blueprint.publisher ? "bg-pinto-green-1" : ""}`}
                       >
                         <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
-                          {Number(currentSeason) + 1}
+                          {formatSeason(Number(currentSeason) + 1)}
                         </td>
                         <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
                           {new Date().toLocaleDateString()}
@@ -584,7 +641,7 @@ const FieldActivity: React.FC = () => {
                 key={activity.id}
                 className={`hover:bg-pinto-green-1 transition-colors ${hoveredAddress === activity.address ? "bg-pinto-green-1" : ""}`}
               >
-                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{activity.season}</td>
+                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatSeason(activity.season)}</td>
                 <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
                   {formatDate(activity.timestamp)}
                 </td>
