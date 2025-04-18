@@ -194,11 +194,12 @@ function decodeSortedDepositsResult(
  * Simulates and prepares farm calls for token deposits in one comprehensive function
  * 
  * @param token Token to process
- * @param address User's address 
+ * @param address User's address for simulation
  * @param publicClient Public client for blockchain interaction
  * @param protocolAddress Protocol contract address
  * @param farmerDeposits Map of token to deposit data
  * @param isRaining Weather condition
+ * @param sender Optional override for the sender address in the updateSortedDepositIds call
  * @returns Array of farm calls or null if simulation failed
  */
 export async function simulateAndPrepareFarmCalls(
@@ -207,7 +208,8 @@ export async function simulateAndPrepareFarmCalls(
   publicClient: PublicClient,
   protocolAddress: `0x${string}`,
   farmerDeposits: Map<Token, TokenDepositData>,
-  isRaining: boolean
+  isRaining: boolean,
+  sender?: `0x${string}`
 ): Promise<`0x${string}`[] | null> {
   console.log(`Simulating and preparing farm calls for ${token.symbol}`);
 
@@ -294,16 +296,20 @@ export async function simulateAndPrepareFarmCalls(
       console.log(`Extracted ${combineCalls.length} combine/L2L calls`);
     }
 
-    // Convert the sorted stems to deposit IDs and reverse them for storage optimization
+    // Convert the sorted stems to deposit IDs and reverse them for proper sorting order
     const reversedDepositIds = createReversedDepositIds(token.address, decodedResult.stems);
 
     console.log(`Generated ${reversedDepositIds.length} deposit IDs from sorted stems`);
 
-    // Create the updateSortedDepositIds call
+    // For the actual transaction, we need to use the real sender address in the call
+    // Use address for simulation, but zero address for transaction to avoid "tx from field is set" error
+    const effectiveAddress = sender || address;
+
+    // Create the updateSortedDepositIds call with the effective address
     const updateSortedIdsCall = encodeFunctionData({
       abi: beanstalkAbi,
       functionName: 'updateSortedDepositIds',
-      args: [address, token.address as `0x${string}`, reversedDepositIds]
+      args: [effectiveAddress, token.address as `0x${string}`, reversedDepositIds]
     });
 
     // Prepare the final farm calls: combine/L2L calls followed by updateSortedDepositIds
@@ -367,6 +373,7 @@ export function packAddressAndStem(tokenAddress: string, stem: bigint): bigint {
  * @param publicClient The viem public client for blockchain interaction
  * @param protocolAddress The Beanstalk protocol address
  * @param isRaining Whether it's currently raining in the protocol
+ * @param sender Optional override for the sender address in the updateSortedDepositIds calls
  * @returns Array of encoded function calls for updating sorted deposits
  */
 export async function generateBatchSortDepositsCallData(
@@ -374,7 +381,8 @@ export async function generateBatchSortDepositsCallData(
   farmerDeposits: Map<Token, TokenDepositData>,
   publicClient: PublicClient,
   protocolAddress: `0x${string}`,
-  isRaining: boolean
+  isRaining: boolean,
+  sender?: `0x${string}`
 ): Promise<`0x${string}`[]> {
   console.log(`Generating batch sort deposits call data for ${farmerDeposits.size} tokens`);
 
@@ -390,28 +398,33 @@ export async function generateBatchSortDepositsCallData(
     console.log(`Processing ${token.symbol} with ${depositData.deposits.length} deposits`);
 
     try {
+      // Create a map with only this token's deposits
+      const singleTokenMap = new Map<Token, TokenDepositData>();
+      singleTokenMap.set(token, depositData);
+
       // Get sorted deposits through simulation and prepare farm calls
+      // Only pass the current token's deposits instead of all deposits
       const farmCalls = await simulateAndPrepareFarmCalls(
         token,
         account,
         publicClient,
         protocolAddress,
-        farmerDeposits,
-        isRaining
+        singleTokenMap, // Pass only this token's deposits
+        isRaining,
+        sender // Pass the sender parameter
       );
 
       // If we got farm calls, add them to our callData array
       if (farmCalls && farmCalls.length > 0) {
-        // We only want the updateSortedDepositIds call (the last one)
-        // as we'll handle combines separately
-        callData.push(farmCalls[farmCalls.length - 1]);
-        console.log(`Added sort deposit call for ${token.symbol}`);
+        // Include all calls from simulateAndPrepareFarmCalls including combines
+        callData.push(...farmCalls);
+        console.log(`Added ${farmCalls.length} calls for ${token.symbol} (includes combine operations)`);
       }
     } catch (error) {
       console.error(`Error processing ${token.symbol}:`, error);
     }
   }
 
-  console.log(`Generated ${callData.length} sort deposit calls`);
+  console.log(`Generated ${callData.length} total calls (combines + sort deposits)`);
   return callData;
 }

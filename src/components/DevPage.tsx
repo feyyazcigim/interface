@@ -27,7 +27,8 @@ import {
   decodeFunctionResult,
   encodeFunctionData, 
   erc20Abi, 
-  isAddress
+  isAddress,
+  zeroAddress
 } from "viem";
 import { base, hardhat } from "viem/chains";
 import { useAccount, useBlockNumber, useChainId, usePublicClient, useWalletClient } from "wagmi";
@@ -1265,10 +1266,106 @@ function FarmerSiloDeposits() {
     }
   };
 
-
-
   const handleSortAllDeposits = async () => {
+    if (!address || !publicClient || !protocolAddress || !farmerSilo.deposits) return;
+    
+    const effectiveAddress = isLocal && isValidAddress(mockAddress) ? mockAddress : address;
+    console.log("Combine & Sort All - Using address:", effectiveAddress);
+    
+    setSortingAllTokens(true);
+    setSubmitting(true);
+    
+    try {
+      toast.info("Preparing to combine and sort all deposits...");
+      
+      const isRaining = sunData?.raining || false;
+      
+      console.log(`Processing ${farmerSilo.deposits.size} tokens for sorting`);
+      
+      // Use the utility function to generate batch sort deposits call data
+      const callData = await generateBatchSortDepositsCallData(
+        effectiveAddress as `0x${string}`,
+        farmerSilo.deposits,
+        publicClient,
+        protocolAddress,
+        isRaining
+      );
+      
+      if (!callData || callData.length === 0) {
+        toast.warning("No sort deposit calls were generated");
+        return;
+      }
+      
+      // Output raw calldata for simulator debugging
+      const rawCalldata = encodeFunctionData({
+        abi: beanstalkAbi,
+        functionName: 'farm',
+        args: [callData]
+      });
+      
+      console.log(`=== Raw Farm Calldata for All Tokens ===`);
+      console.log(rawCalldata);
+      console.log(`Number of calls: ${callData.length}`);
+      console.log("======================================");
+      
+      toast.info(`Executing ${callData.length} operations for all tokens (combines + sort updates)...`);
+      
+      // Determine gas limit based on the number of calls (higher for more operations)
+      // Use a base of 3M gas plus 500k per call to ensure we have enough
+      const gasLimit = BigInt(3_000_000 + (callData.length * 500_000));
+      console.log(`Setting custom gas limit: ${gasLimit}`);
+      
+      // Execute the farm transaction using writeWithEstimateGas with higher gas limit
+      const simulateFirst = await publicClient.simulateContract({
+        address: protocolAddress,
+        abi: beanstalkAbi,
+        functionName: "farm",
+        args: [callData],
+        account: effectiveAddress
+      }).catch(e => {
+        console.error("Simulation failed:", e);
+        return { error: e };
+      });
+      
+      if ('error' in simulateFirst) {
+        console.error("Transaction would fail in simulation, not submitting");
+        toast.error("Transaction would fail: " + (simulateFirst.error as any)?.shortMessage || "unknown error");
+        return;
+      }
+      
+      // Execute with higher gas limit to prevent running out of gas
+      writeWithEstimateGas({
+        address: protocolAddress,
+        abi: beanstalkAbi,
+        functionName: 'farm',
+        args: [callData],
+        gas: gasLimit // Override with our custom gas limit
+      });
 
+    } catch (error) {
+      console.error("Error processing all tokens:", error);
+      
+      // Extract error details for debugging
+      const errorObj = error as any;
+      
+      if (errorObj.cause) console.log('Error cause:', errorObj.cause);
+      if (errorObj.details) console.log('Error details:', errorObj.details);
+      if (errorObj.data) console.log('Error data:', errorObj.data);
+      if (errorObj.reason) console.log('Error reason:', errorObj.reason);
+      if (errorObj.shortMessage) console.log('Short message:', errorObj.shortMessage);
+      
+      // Display toast with specific error information
+      const errorMessage = 
+        errorObj.shortMessage || 
+        errorObj.reason || 
+        (errorObj.cause?.message) || 
+        (error as Error).message;
+        
+      toast.error(`Failed to process all tokens: ${errorMessage}`);
+    } finally {
+      setSortingAllTokens(false);
+      setSubmitting(false);
+    }
   };
 
   const handleCombineAndSortSingleToken = async (token: Token) => {
@@ -1324,14 +1421,38 @@ function FarmerSiloDeposits() {
       console.log(rawCalldata);
       console.log("======================================");
       
-      toast.info(`Executing ${tokenCalls.length} operations for ${token.symbol}...`);
+      toast.info(`Executing ${tokenCalls.length} operations for ${token.symbol} (combines + sort updates)...`);
       
-      // Execute the farm calls using writeWithEstimateGas instead of walletClient
+      // Determine gas limit based on the number of calls (higher for more operations)
+      // Use a base of 3M gas plus 500k per call to ensure we have enough
+      const gasLimit = BigInt(3_000_000 + (tokenCalls.length * 500_000));
+      console.log(`Setting custom gas limit: ${gasLimit}`);
+      
+      // Simulate first to check if the transaction would succeed
+      const simulateFirst = await publicClient.simulateContract({
+        address: protocolAddress,
+        abi: beanstalkAbi,
+        functionName: "farm",
+        args: [tokenCalls],
+        account: effectiveAddress
+      }).catch(e => {
+        console.error("Simulation failed:", e);
+        return { error: e };
+      });
+      
+      if ('error' in simulateFirst) {
+        console.error("Transaction would fail in simulation, not submitting");
+        toast.error("Transaction would fail: " + (simulateFirst.error as any)?.shortMessage || "unknown error");
+        return;
+      }
+      
+      // Execute the farm calls using writeWithEstimateGas with higher gas limit
       writeWithEstimateGas({
         address: protocolAddress,
         abi: beanstalkAbi,
         functionName: 'farm',
-        args: [tokenCalls]
+        args: [tokenCalls],
+        gas: gasLimit // Override with our custom gas limit
       });
 
     } catch (error) {
