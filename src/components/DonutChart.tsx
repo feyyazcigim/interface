@@ -1,6 +1,6 @@
+import { cn } from "@/utils/utils";
 import { ArcElement, Chart, ChartData, ChartOptions, PieController, Tooltip } from "chart.js";
 import { ReactChart } from "./ReactChart";
-import { cn } from "@/utils/utils";
 
 Chart.register(PieController, ArcElement, Tooltip);
 
