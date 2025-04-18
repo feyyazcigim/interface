@@ -158,6 +158,9 @@ export function Plow() {
   const [sortedRequisitions, setSortedRequisitions] = useState<RequisitionEvent[]>([]);
   const [sortingEnabled, setSortingEnabled] = useState(false);
 
+  // Add state to track if any order has been executed, requiring resimulation
+  const [hasExecutedOrder, setHasExecutedOrder] = useState(false);
+
   // Fetch gas price periodically
   useEffect(() => {
     const fetchGasPrice = async () => {
@@ -322,6 +325,8 @@ export function Plow() {
   const handleSimulateAll = useCallback(async () => {
     if (!protocolAddress || !publicClient || simulatingAll) return;
     setSimulatingAll(true);
+    // Reset the executed order flag when simulating all
+    setHasExecutedOrder(false);
 
     try {
       for (const req of requisitions) {
@@ -598,6 +603,8 @@ export function Plow() {
             "0x",
           ] as const,
         });
+        // Set the flag indicating an order has been executed
+        setHasExecutedOrder(true);
       } catch (error) {
         console.error("Failed to execute plow:", error);
       } finally {
@@ -735,14 +742,18 @@ export function Plow() {
                         simulatingReq === req.requisition.blueprintHash ||
                         failedSimulations.has(req.requisition.blueprintHash) ||
                         executingReq === req.requisition.blueprintHash ||
-                        completedExecutions.has(req.requisition.blueprintHash)
+                        completedExecutions.has(req.requisition.blueprintHash) ||
+                        // Disable execution button if any order has been executed and this is not a simulation
+                        (hasExecutedOrder && successfulSimulations.has(req.requisition.blueprintHash))
                       }
                       className={`
                         ${
                           successfulSimulations.has(req.requisition.blueprintHash) &&
-                          !completedExecutions.has(req.requisition.blueprintHash)
+                          !completedExecutions.has(req.requisition.blueprintHash) &&
+                          !hasExecutedOrder
                             ? "bg-pinto-green-4 text-white hover:bg-pinto-green-5"
-                            : completedExecutions.has(req.requisition.blueprintHash)
+                            : completedExecutions.has(req.requisition.blueprintHash) || 
+                              (hasExecutedOrder && successfulSimulations.has(req.requisition.blueprintHash))
                               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                               : "text-pinto-gray-4 hover:text-pinto-gray-5"
                         } 
@@ -758,9 +769,11 @@ export function Plow() {
                             ? "Reverted"
                             : completedExecutions.has(req.requisition.blueprintHash)
                               ? "Plowed"
-                              : successfulSimulations.has(req.requisition.blueprintHash)
-                                ? "Execute"
-                                : "Simulate"}
+                              : hasExecutedOrder && successfulSimulations.has(req.requisition.blueprintHash)
+                                ? "Resimulate"
+                                : successfulSimulations.has(req.requisition.blueprintHash)
+                                  ? "Execute"
+                                  : "Simulate"}
                     </Button>
                     {successfulSimulations.has(req.requisition.blueprintHash) && (
                       <div
