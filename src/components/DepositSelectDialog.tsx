@@ -1,9 +1,9 @@
 import { TokenValue } from "@/classes/TokenValue";
 import DepositsTable from "@/components/DepositsTable";
+import { createSmartGroups } from "@/lib/claim/depositUtils";
 import { DepositTransferData } from "@/pages/transfer/actions/TransferDeposits";
 import { tokensEqual } from "@/utils/token";
 import { DepositData, Token, TokenDepositData } from "@/utils/types";
-import { createSmartGroups } from "@/lib/claim/depositUtils";
 import { Dispatch, SetStateAction, useState } from "react";
 import { useAccount } from "wagmi";
 import { DepositGroup } from "./CombineSelect";

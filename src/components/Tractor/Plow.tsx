@@ -752,8 +752,8 @@ export function Plow() {
                           !completedExecutions.has(req.requisition.blueprintHash) &&
                           !hasExecutedOrder
                             ? "bg-pinto-green-4 text-white hover:bg-pinto-green-5"
-                            : completedExecutions.has(req.requisition.blueprintHash) || 
-                              (hasExecutedOrder && successfulSimulations.has(req.requisition.blueprintHash))
+                            : completedExecutions.has(req.requisition.blueprintHash) ||
+                                (hasExecutedOrder && successfulSimulations.has(req.requisition.blueprintHash))
                               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                               : "text-pinto-gray-4 hover:text-pinto-gray-5"
                         } 

@@ -1,13 +1,13 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { DepositGroup } from "@/components/CombineSelect";
+import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
+import { TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
+import convert from "@/encoders/silo/convert";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { calculateConvertData } from "@/utils/convert";
 import { Token, TokenDepositData } from "@/utils/types";
-import { encodeFunctionData, PublicClient, decodeAbiParameters } from "viem";
-import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
-import { TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
 import { DepositData } from "@/utils/types";
-import { DepositGroup } from "@/components/CombineSelect";
-import convert from "@/encoders/silo/convert";
+import { PublicClient, decodeAbiParameters, encodeFunctionData } from "viem";
 
 // Constants for deposit management
 const MIN_DEPOSITS_FOR_COMBINING = 25; // Minimum deposits to trigger combining logic
@@ -34,9 +34,7 @@ export function needsCombining(deposits: Map<Token, TokenDepositData>): boolean 
  * @param farmerDeposits Map of token to deposit data
  * @returns Array of encoded function calls
  */
-export function generateCombineAndL2LCallData(
-  farmerDeposits: Map<Token, TokenDepositData>
-): `0x${string}`[] {
+export function generateCombineAndL2LCallData(farmerDeposits: Map<Token, TokenDepositData>): `0x${string}`[] {
   const tokenEntries = Array.from(farmerDeposits.entries());
 
   // The "only update top 10 deposits" stuff is getting commented out for now, since
@@ -139,8 +137,8 @@ export function generateCombineAndL2LCallData(
  * @returns Object containing the decoded stems and amounts, or undefined if decoding fails
  */
 function decodeSortedDepositsResult(
-  resultData: `0x${string}` | undefined
-): { stems: bigint[]; amounts: bigint[]; } | undefined {
+  resultData: `0x${string}` | undefined,
+): { stems: bigint[]; amounts: bigint[] } | undefined {
   if (!resultData) return undefined;
 
   try {
@@ -152,7 +150,8 @@ function decodeSortedDepositsResult(
     const stemCountPosition = 256;
     const stemCount = parseInt(hexData.slice(stemCountPosition, stemCountPosition + 64), 16);
 
-    if (stemCount > 0 && stemCount < 1000) { // Sanity check on the count
+    if (stemCount > 0 && stemCount < 1000) {
+      // Sanity check on the count
       console.log(`Decoding ${stemCount} sorted deposits`);
 
       // Start position for stem array elements (after the length field)
@@ -163,13 +162,13 @@ function decodeSortedDepositsResult(
       // Extract stems
       for (let i = 0; i < stemCount; i++) {
         const stemHex = hexData.slice(stemStartPos + i * 64, stemStartPos + (i + 1) * 64);
-        const stemValue = BigInt('0x' + stemHex);
+        const stemValue = BigInt("0x" + stemHex);
         stems.push(stemValue);
       }
 
       // The amount array starts after all stems
       // Add 64 bytes for the array length field
-      const amountCountPosition = stemStartPos + (stemCount * 64);
+      const amountCountPosition = stemStartPos + stemCount * 64;
       const amountCount = parseInt(hexData.slice(amountCountPosition, amountCountPosition + 64), 16);
 
       // Verify the amount count matches the stem count
@@ -178,7 +177,7 @@ function decodeSortedDepositsResult(
         const amountStartPos = amountCountPosition + 64;
         for (let i = 0; i < amountCount; i++) {
           const amountHex = hexData.slice(amountStartPos + i * 64, amountStartPos + (i + 1) * 64);
-          const amountValue = BigInt('0x' + amountHex);
+          const amountValue = BigInt("0x" + amountHex);
           amounts.push(amountValue);
         }
 
@@ -199,7 +198,7 @@ function decodeSortedDepositsResult(
 
 /**
  * Simulates and prepares farm calls for token deposits in one comprehensive function
- * 
+ *
  * @param token Token to process
  * @param address User's address for simulation
  * @param publicClient Public client for blockchain interaction
@@ -214,7 +213,7 @@ export async function simulateAndPrepareFarmCalls(
   publicClient: PublicClient,
   protocolAddress: `0x${string}`,
   farmerDeposits: Map<Token, TokenDepositData>,
-  sender?: `0x${string}`
+  sender?: `0x${string}`,
 ): Promise<`0x${string}`[] | null> {
   console.log(`Simulating and preparing farm calls for ${token.symbol}`);
 
@@ -223,7 +222,7 @@ export async function simulateAndPrepareFarmCalls(
     const getSortedDepositsCall = encodeFunctionData({
       abi: tractorHelpersABI,
       functionName: "getSortedDeposits",
-      args: [address, token.address as `0x${string}`]
+      args: [address, token.address as `0x${string}`],
     });
 
     // Create a pipe call that calls getSortedDeposits
@@ -232,10 +231,10 @@ export async function simulateAndPrepareFarmCalls(
       functionName: "pipe",
       args: [
         {
-          target: TRACTOR_HELPERS_ADDRESS as `0x${string}`,  // Target contract for the call
-          data: getSortedDepositsCall  // The call data for getSortedDeposits
-        }
-      ]
+          target: TRACTOR_HELPERS_ADDRESS as `0x${string}`, // Target contract for the call
+          data: getSortedDepositsCall, // The call data for getSortedDeposits
+        },
+      ],
     });
 
     // Prepare the farm calls array
@@ -249,10 +248,10 @@ export async function simulateAndPrepareFarmCalls(
         console.log(`Adding ${combineCalls.length} combine/L2L calls to execute before sort deposits`);
         farmCalls.push(...combineCalls);
       } else {
-        console.log('No combine/L2L calls needed');
+        console.log("No combine/L2L calls needed");
       }
     } else {
-      console.log('No farmer deposits provided, skipping combine/L2L calls');
+      console.log("No farmer deposits provided, skipping combine/L2L calls");
     }
 
     // Add the pipe call last so we can capture its result
@@ -264,8 +263,8 @@ export async function simulateAndPrepareFarmCalls(
       address: protocolAddress,
       abi: beanstalkAbi,
       functionName: "farm",
-      args: [farmCalls],  // Farm takes an array of encoded function calls
-      account: address
+      args: [farmCalls], // Farm takes an array of encoded function calls
+      account: address,
     });
 
     console.log("Simulation completed successfully");
@@ -313,8 +312,8 @@ export async function simulateAndPrepareFarmCalls(
     // Create the updateSortedDepositIds call with the effective address
     const updateSortedIdsCall = encodeFunctionData({
       abi: beanstalkAbi,
-      functionName: 'updateSortedDepositIds',
-      args: [effectiveAddress, token.address as `0x${string}`, reversedDepositIds]
+      functionName: "updateSortedDepositIds",
+      args: [effectiveAddress, token.address as `0x${string}`, reversedDepositIds],
     });
 
     // Prepare the final farm calls: combine/L2L calls followed by updateSortedDepositIds
@@ -338,7 +337,7 @@ export async function simulateAndPrepareFarmCalls(
  */
 export function createReversedDepositIds(tokenAddress: string, stems: readonly bigint[] | bigint[]): bigint[] {
   // Convert stems to depositIds using the packing function
-  const depositIds = stems.map(stem => packAddressAndStem(tokenAddress, stem));
+  const depositIds = stems.map((stem) => packAddressAndStem(tokenAddress, stem));
 
   // Reverse the order of deposit IDs (invert sorting order)
   return [...depositIds].reverse();
@@ -350,7 +349,7 @@ export function createReversedDepositIds(tokenAddress: string, stems: readonly b
  * function packAddressAndStem(address _address, int96 stem) internal pure returns (uint256) {
  *     return (uint256(uint160(_address)) << 96) | uint96(stem);
  * }
- * 
+ *
  * @param tokenAddress The token address
  * @param stem The stem value
  * @returns A packed deposit ID as a bigint
@@ -372,7 +371,7 @@ export function packAddressAndStem(tokenAddress: string, stem: bigint): bigint {
 
 /**
  * Generates calldata for updating sorted deposits for multiple tokens
- * 
+ *
  * @param account The user's account address
  * @param farmerDeposits Map of token to deposit data
  * @param publicClient The viem public client for blockchain interaction
@@ -385,7 +384,7 @@ export async function generateBatchSortDepositsCallData(
   farmerDeposits: Map<Token, TokenDepositData>,
   publicClient: PublicClient,
   protocolAddress: `0x${string}`,
-  sender?: `0x${string}`
+  sender?: `0x${string}`,
 ): Promise<`0x${string}`[]> {
   console.log(`Generating batch sort deposits call data for ${farmerDeposits.size} tokens`);
 
@@ -413,7 +412,7 @@ export async function generateBatchSortDepositsCallData(
         publicClient,
         protocolAddress,
         singleTokenMap, // Pass only this token's deposits
-        sender // Pass the sender parameter
+        sender, // Pass the sender parameter
       );
 
       // If we got farm calls, add them to our callData array
@@ -430,7 +429,6 @@ export async function generateBatchSortDepositsCallData(
   console.log(`Generated ${callData.length} total calls (combines + sort deposits)`);
   return callData;
 }
-
 
 export function createSmartGroups(deposits: DepositData[], targetGroups: number = 20): DepositGroup[] {
   const MAX_DEPOSITS = 2000; // Increased for Tractor launch to combine everyone's deposits
@@ -553,29 +551,21 @@ export function encodeClaimRewardCombineCalls(
   });
 
   // Sort groups by average Stalk/BDV ratio
-  const groupsWithRatio = groups.map(group => {
+  const groupsWithRatio = groups.map((group) => {
     const groupDeposits = group.deposits
-      .map(stem => deposits.find(d => d.stem.toHuman() === stem))
+      .map((stem) => deposits.find((d) => d.stem.toHuman() === stem))
       .filter(Boolean) as DepositData[];
 
-    const totalStalk = groupDeposits.reduce(
-      (sum, deposit) => sum.add(deposit.stalk.total),
-      TokenValue.ZERO
-    );
+    const totalStalk = groupDeposits.reduce((sum, deposit) => sum.add(deposit.stalk.total), TokenValue.ZERO);
 
-    const totalBdv = groupDeposits.reduce(
-      (sum, deposit) => sum.add(deposit.depositBdv),
-      TokenValue.ZERO
-    );
+    const totalBdv = groupDeposits.reduce((sum, deposit) => sum.add(deposit.depositBdv), TokenValue.ZERO);
 
     // Calculate the stalk-to-BDV ratio for the entire group
-    const stalkPerBdv = totalBdv.gt(0)
-      ? totalStalk.div(totalBdv)
-      : TokenValue.ZERO;
+    const stalkPerBdv = totalBdv.gt(0) ? totalStalk.div(totalBdv) : TokenValue.ZERO;
 
     return {
       ...group,
-      stalkPerBdv
+      stalkPerBdv,
     };
   });
 
@@ -585,18 +575,18 @@ export function encodeClaimRewardCombineCalls(
     .map(({ id, deposits, stalkPerBdv }) => ({ id, deposits, stalkPerBdv }));
 
   console.log("Sorted groups by Stalk/BDV ratio for", token.symbol, ":", {
-    sortedGroups: sortedGroups.map(g => ({
+    sortedGroups: sortedGroups.map((g) => ({
       id: g.id,
       depositCount: g.deposits.length,
       stalkPerBdv: g.stalkPerBdv.toHuman(),
-    }))
+    })),
   });
 
   // Use our existing encode function with sorted groups - strip stalkPerBdv before passing
   const result = encodeGroupCombineCalls(
     sortedGroups.map(({ id, deposits }) => ({ id, deposits })),
     token,
-    deposits
+    deposits,
   );
 
   console.log("Final encoded calls for", token.symbol, ":", {

@@ -4,6 +4,8 @@ import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 import { diamondABI as beanstalkAbi, diamondABI } from "@/constants/abi/diamondABI";
 import { TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import useTransaction from "@/hooks/useTransaction";
+import { generateBatchSortDepositsCallData, simulateAndPrepareFarmCalls } from "@/lib/claim/depositUtils";
 import { morningFieldDevModeAtom } from "@/state/protocol/field/field.atoms";
 import { getMorningResult, getNowRounded } from "@/state/protocol/sun";
 import { morningAtom, seasonAtom, sunQueryKeysAtom } from "@/state/protocol/sun/sun.atoms";
@@ -11,25 +13,28 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { useFieldQueryKeys, useInvalidateField } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import { useInvalidateSun, useSeasonQueryKeys } from "@/state/useSunData";
+import { useSunData } from "@/state/useSunData";
 import useTokenData from "@/state/useTokenData";
-import { isDev, isLocalhost } from "@/utils/utils";
+import { isValidAddress } from "@/utils/string";
 import { Token } from "@/utils/types";
+import { DepositData } from "@/utils/types";
+import { isDev, isLocalhost } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { 
-  http, 
-  PublicClient, 
-  createPublicClient, 
-  decodeEventLog, 
+import {
+  http,
+  PublicClient,
+  createPublicClient,
+  decodeEventLog,
   decodeFunctionData,
   decodeFunctionResult,
-  encodeFunctionData, 
-  erc20Abi, 
+  encodeFunctionData,
+  erc20Abi,
   isAddress,
-  zeroAddress
+  zeroAddress,
 } from "viem";
 import { base, hardhat } from "viem/chains";
 import { useAccount, useBlockNumber, useChainId, usePublicClient, useWalletClient } from "wagmi";
@@ -37,11 +42,6 @@ import MorningCard from "./MorningCard";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
-import { DepositData } from "@/utils/types";
-import { generateBatchSortDepositsCallData, simulateAndPrepareFarmCalls } from "@/lib/claim/depositUtils";
-import { useSunData } from "@/state/useSunData";
-import useTransaction from "@/hooks/useTransaction";
-import { isValidAddress } from "@/utils/string";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
@@ -69,13 +69,13 @@ const packAddressAndStem = (tokenAddress: string, stem: bigint): bigint => {
   // In Solidity: uint256(uint160(_address)) << 96
   // We need to extract just the lower 160 bits of the address (20 bytes)
   const addressValue = BigInt(tokenAddress) & ((1n << 160n) - 1n);
-  
+
   // Shift the address left by 96 bits
   const shiftedAddress = addressValue << 96n;
-  
+
   // Convert stem to uint96 (mask with 2^96-1)
   const stemUint96 = stem & ((1n << 96n) - 1n);
-  
+
   // Combine with bitwise OR
   return shiftedAddress | stemUint96;
 };
@@ -85,8 +85,8 @@ const packAddressAndStem = (tokenAddress: string, stem: bigint): bigint => {
  */
 const createReversedDepositIds = (tokenAddress: string, stems: readonly bigint[] | bigint[]): bigint[] => {
   // Convert stems to depositIds using the packing function
-  const depositIds = stems.map(stem => packAddressAndStem(tokenAddress, stem));
-  
+  const depositIds = stems.map((stem) => packAddressAndStem(tokenAddress, stem));
+
   // Reverse the order of deposit IDs (invert sorting order)
   return [...depositIds].reverse();
 };
@@ -97,7 +97,7 @@ type TransactionDetails = {
   from: string;
   to: string | null;
   value: bigint;
-  data: string; 
+  data: string;
   nonce: number;
   gasLimit: bigint;
   gasPrice?: bigint;
@@ -397,13 +397,13 @@ export default function DevPage() {
 
     try {
       setLoading("analyzeTx");
-      
+
       // Fetch both transaction and receipt data
       const [transaction, receipt] = await Promise.all([
         publicClient.getTransaction({ hash: hashToUse }),
-        publicClient.getTransactionReceipt({ hash: hashToUse })
+        publicClient.getTransactionReceipt({ hash: hashToUse }),
       ]);
-      
+
       // Cast the txDetails object to the correct type
       const txDetails = {
         hash: hashToUse,
@@ -423,22 +423,22 @@ export default function DevPage() {
         effectiveGasPrice: receipt.effectiveGasPrice,
         cumulativeGasUsed: receipt.cumulativeGasUsed,
         type: transaction.type !== undefined ? Number(transaction.type) : 0,
-        chainId: transaction.chainId
+        chainId: transaction.chainId,
       } as TransactionDetails;
-      
+
       // Try to decode the calldata
-      let decodedFunction;
+      let decodedFunction: { functionName: string; args: any } | undefined;
       try {
         if (transaction.input && transaction.input.length > 10) {
           decodedFunction = decodeFunctionData({
             abi: combinedABI,
-            data: transaction.input as `0x${string}`
+            data: transaction.input as `0x${string}`,
           });
         }
       } catch (error) {
         console.log("Could not decode function data:", error);
       }
-      
+
       // Process logs to decode events
       const decodedEvents = receipt.logs.map((log, index) => {
         try {
@@ -472,11 +472,11 @@ export default function DevPage() {
       setTxEvents(decodedEvents);
       setTransactionDetails(txDetails);
       setDecodedFunctionData(decodedFunction);
-      
+
       console.log("Transaction Details:", txDetails);
       console.log("Decoded Function:", decodedFunction);
       console.log("Transaction Events:", decodedEvents);
-      
+
       toast.success("Transaction analyzed successfully");
     } catch (error) {
       console.error("Failed to analyze transaction:", error);
@@ -900,7 +900,9 @@ export default function DevPage() {
                     </div>
                     <div>
                       <span className="font-medium">Status: </span>
-                      <span className={`font-medium ${transactionDetails.status === "success" ? "text-green-500" : "text-red-500"}`}>
+                      <span
+                        className={`font-medium ${transactionDetails.status === "success" ? "text-green-500" : "text-red-500"}`}
+                      >
                         {transactionDetails.status}
                       </span>
                     </div>
@@ -914,7 +916,11 @@ export default function DevPage() {
                     </div>
                     <div>
                       <span className="font-medium">Gas Used: </span>
-                      <span className="font-mono">{transactionDetails.gasUsed.toString()} ({((Number(transactionDetails.gasUsed) / Number(transactionDetails.gasLimit)) * 100).toFixed(2)}%)</span>
+                      <span className="font-mono">
+                        {transactionDetails.gasUsed.toString()} (
+                        {((Number(transactionDetails.gasUsed) / Number(transactionDetails.gasLimit)) * 100).toFixed(2)}
+                        %)
+                      </span>
                     </div>
                     <div>
                       <span className="font-medium">Gas Limit: </span>
@@ -923,21 +929,25 @@ export default function DevPage() {
                     <div>
                       <span className="font-medium">Gas Price: </span>
                       <span className="font-mono">
-                        {transactionDetails.effectiveGasPrice ? 
-                          (Number(transactionDetails.effectiveGasPrice) / 1e9).toFixed(2) + " gwei" : 
-                          "N/A"}
+                        {transactionDetails.effectiveGasPrice
+                          ? (Number(transactionDetails.effectiveGasPrice) / 1e9).toFixed(2) + " gwei"
+                          : "N/A"}
                       </span>
                     </div>
                     <div>
                       <span className="font-medium">Type: </span>
-                      <span className="font-mono">{transactionDetails.type !== undefined ? transactionDetails.type : "N/A"}</span>
+                      <span className="font-mono">
+                        {transactionDetails.type !== undefined ? transactionDetails.type : "N/A"}
+                      </span>
                     </div>
                     <div>
                       <span className="font-medium">Chain ID: </span>
-                      <span className="font-mono">{transactionDetails.chainId !== undefined ? transactionDetails.chainId : "N/A"}</span>
+                      <span className="font-mono">
+                        {transactionDetails.chainId !== undefined ? transactionDetails.chainId : "N/A"}
+                      </span>
                     </div>
                   </div>
-                  
+
                   {decodedFunctionData && (
                     <div className="mt-4">
                       <div className="font-medium mb-2">Function Call:</div>
@@ -949,7 +959,7 @@ export default function DevPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="mt-4">
                     <div className="font-medium mb-2">Raw Calldata:</div>
                     <div className="bg-gray-50 p-3 rounded">
@@ -1190,38 +1200,36 @@ function FarmerSiloDeposits() {
   const { data: walletClient } = useWalletClient();
   const [mockAddress] = useAtom(mockAddressAtom);
   const isLocal = isLocalhost();
-  
+
   const { writeWithEstimateGas, isConfirming, submitting, setSubmitting } = useTransaction({
     successMessage: "Combine & Sort successful",
     errorMessage: "Combine & Sort failed",
     successCallback: () => {
       queryClient.invalidateQueries();
-    }
+    },
   });
 
   // Function to check if deposits are sorted from low stem to high stem
   const areDepositsSorted = (deposits: DepositData[]): boolean => {
     if (!deposits || deposits.length <= 1) return true;
-    
+
     for (let i = 1; i < deposits.length; i++) {
       const currentStem = deposits[i].stem.toBigInt();
-      const previousStem = deposits[i-1].stem.toBigInt();
-      
+      const previousStem = deposits[i - 1].stem.toBigInt();
+
       if (currentStem <= previousStem) {
         return false;
       }
     }
-    
+
     return true;
   };
-  
+
   // Check if all tokens have sorted deposits
   const allTokensSorted = useMemo(() => {
     if (!deposits || deposits.size === 0) return true;
-    
-    return Array.from(deposits.entries()).every(([_, depositData]) => 
-      areDepositsSorted(depositData.deposits || [])
-    );
+
+    return Array.from(deposits.entries()).every(([_, depositData]) => areDepositsSorted(depositData.deposits || []));
   }, [deposits]);
 
   const handleRefresh = async () => {
@@ -1267,7 +1275,10 @@ function FarmerSiloDeposits() {
       // Use the extracted utility function to create reversed deposit IDs
       const reversedDepositIds = createReversedDepositIds(token.address, stems);
 
-      console.log(`Deposit IDs (reversed):`, reversedDepositIds.map(id => id.toString()));
+      console.log(
+        `Deposit IDs (reversed):`,
+        reversedDepositIds.map((id) => id.toString()),
+      );
 
       toast.info(`Preparing to submit sort deposits transaction for ${token.symbol}`);
 
@@ -1291,96 +1302,94 @@ function FarmerSiloDeposits() {
 
   const handleSortAllDeposits = async () => {
     if (!address || !publicClient || !protocolAddress || !farmerSilo.deposits) return;
-    
+
     const effectiveAddress = isLocal && isValidAddress(mockAddress) ? mockAddress : address;
     console.log("Combine & Sort All - Using address:", effectiveAddress);
-    
+
     setSortingAllTokens(true);
     setSubmitting(true);
-    
+
     try {
       toast.info("Preparing to combine and sort all deposits...");
-      
+
       console.log(`Processing ${farmerSilo.deposits.size} tokens for sorting`);
-      
+
       // Use the utility function to generate batch sort deposits call data
       const callData = await generateBatchSortDepositsCallData(
         effectiveAddress as `0x${string}`,
         farmerSilo.deposits,
         publicClient,
-        protocolAddress
+        protocolAddress,
       );
-      
+
       if (!callData || callData.length === 0) {
         toast.warning("No sort deposit calls were generated");
         return;
       }
-      
+
       // Output raw calldata for simulator debugging
       const rawCalldata = encodeFunctionData({
         abi: beanstalkAbi,
-        functionName: 'farm',
-        args: [callData]
+        functionName: "farm",
+        args: [callData],
       });
-      
+
       console.log(`=== Raw Farm Calldata for All Tokens ===`);
       console.log(rawCalldata);
       console.log(`Number of calls: ${callData.length}`);
       console.log("======================================");
-      
+
       toast.info(`Executing ${callData.length} operations for all tokens (combines + sort updates)...`);
-      
+
       // Determine gas limit based on the number of calls (higher for more operations)
       // Use a base of 3M gas plus 500k per call to ensure we have enough
-      const gasLimit = BigInt(3_000_000 + (callData.length * 500_000));
+      const gasLimit = BigInt(3_000_000 + callData.length * 500_000);
       console.log(`Setting custom gas limit: ${gasLimit}`);
-      
+
       // Execute the farm transaction using writeWithEstimateGas with higher gas limit
-      const simulateFirst = await publicClient.simulateContract({
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "farm",
-        args: [callData],
-        account: effectiveAddress
-      }).catch(e => {
-        console.error("Simulation failed:", e);
-        return { error: e };
-      });
-      
-      if ('error' in simulateFirst) {
+      const simulateFirst = await publicClient
+        .simulateContract({
+          address: protocolAddress,
+          abi: beanstalkAbi,
+          functionName: "farm",
+          args: [callData],
+          account: effectiveAddress,
+        })
+        .catch((e) => {
+          console.error("Simulation failed:", e);
+          return { error: e };
+        });
+
+      if ("error" in simulateFirst) {
         console.error("Transaction would fail in simulation, not submitting");
         toast.error("Transaction would fail: " + (simulateFirst.error as any)?.shortMessage || "unknown error");
         return;
       }
-      
+
       // Execute with higher gas limit to prevent running out of gas
       writeWithEstimateGas({
         address: protocolAddress,
         abi: beanstalkAbi,
-        functionName: 'farm',
+        functionName: "farm",
         args: [callData],
-        gas: gasLimit // Override with our custom gas limit
+        gas: gasLimit, // Override with our custom gas limit
       });
-
     } catch (error) {
       console.error("Error processing all tokens:", error);
-      
+
       // Extract error details for debugging
       const errorObj = error as any;
-      
-      if (errorObj.cause) console.log('Error cause:', errorObj.cause);
-      if (errorObj.details) console.log('Error details:', errorObj.details);
-      if (errorObj.data) console.log('Error data:', errorObj.data);
-      if (errorObj.reason) console.log('Error reason:', errorObj.reason);
-      if (errorObj.shortMessage) console.log('Short message:', errorObj.shortMessage);
-      
+
+      if (errorObj.cause) console.log("Error cause:", errorObj.cause);
+      if (errorObj.details) console.log("Error details:", errorObj.details);
+      if (errorObj.data) console.log("Error data:", errorObj.data);
+      if (errorObj.reason) console.log("Error reason:", errorObj.reason);
+      if (errorObj.shortMessage) console.log("Short message:", errorObj.shortMessage);
+
       // Display toast with specific error information
-      const errorMessage = 
-        errorObj.shortMessage || 
-        errorObj.reason || 
-        (errorObj.cause?.message) || 
-        (error as Error).message;
-        
+      const errorMessage =
+        errorObj.shortMessage || errorObj.reason || errorObj.cause?.message || (error as Error).message;
+
       toast.error(`Failed to process all tokens: ${errorMessage}`);
     } finally {
       setSortingAllTokens(false);
@@ -1390,146 +1399,144 @@ function FarmerSiloDeposits() {
 
   const handleCombineAndSortSingleToken = async (token: Token) => {
     if (!address || !publicClient || !protocolAddress || !farmerSilo.deposits) return;
-    
+
     const effectiveAddress = isLocal && isValidAddress(mockAddress) ? mockAddress : address;
     console.log("Combine & Sort - Using address:", effectiveAddress);
-    
+
     setSortingToken(token.address); // Reuse the sorting token state
     setSubmitting(true);
-    
+
     try {
       toast.info(`Preparing combine and sort operations for ${token.symbol}...`);
-      
+
       // Create a single-token deposit map for this token only
       const singleTokenDeposits = new Map();
       const depositData = farmerSilo.deposits.get(token);
-      
+
       if (!depositData || !depositData.deposits || depositData.deposits.length === 0) {
         toast.warning(`No deposits found for ${token.symbol}`);
         return;
       }
-      
+
       singleTokenDeposits.set(token, depositData);
-      
+
       console.log(`Processing single token ${token.symbol} with ${depositData.deposits.length} deposits`);
-      
+
       // Simulate and prepare the farm calls in one step
       const tokenCalls = await simulateAndPrepareFarmCalls(
         token,
-        effectiveAddress as `0x${string}`, 
+        effectiveAddress as `0x${string}`,
         publicClient,
         protocolAddress,
-        singleTokenDeposits // Pass only this token's deposits
+        singleTokenDeposits, // Pass only this token's deposits
       );
-      
+
       if (!tokenCalls) {
         toast.error(`Failed to prepare farm calls for ${token.symbol}`);
         return;
       }
-      
+
       // Output raw calldata for simulator debugging
       const rawCalldata = encodeFunctionData({
         abi: beanstalkAbi,
-        functionName: 'farm',
-        args: [tokenCalls]
+        functionName: "farm",
+        args: [tokenCalls],
       });
-      
+
       console.log(`=== Raw Farm Calldata for ${token.symbol} Simulator ===`);
       console.log(rawCalldata);
       console.log("======================================");
-      
+
       toast.info(`Executing ${tokenCalls.length} operations for ${token.symbol} (combines + sort updates)...`);
-      
+
       // Determine gas limit based on the number of calls (higher for more operations)
       // Use a base of 3M gas plus 500k per call to ensure we have enough
-      const gasLimit = BigInt(3_000_000 + (tokenCalls.length * 500_000));
+      const gasLimit = BigInt(3_000_000 + tokenCalls.length * 500_000);
       console.log(`Setting custom gas limit: ${gasLimit}`);
-      
+
       // Simulate first to check if the transaction would succeed
-      const simulateFirst = await publicClient.simulateContract({
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "farm",
-        args: [tokenCalls],
-        account: effectiveAddress
-      }).catch(e => {
-        console.error("Simulation failed:", e);
-        return { error: e };
-      });
-      
-      if ('error' in simulateFirst) {
+      const simulateFirst = await publicClient
+        .simulateContract({
+          address: protocolAddress,
+          abi: beanstalkAbi,
+          functionName: "farm",
+          args: [tokenCalls],
+          account: effectiveAddress,
+        })
+        .catch((e) => {
+          console.error("Simulation failed:", e);
+          return { error: e };
+        });
+
+      if ("error" in simulateFirst) {
         console.error("Transaction would fail in simulation, not submitting");
         toast.error("Transaction would fail: " + (simulateFirst.error as any)?.shortMessage || "unknown error");
         return;
       }
-      
+
       // Execute the farm calls using writeWithEstimateGas with higher gas limit
       writeWithEstimateGas({
         address: protocolAddress,
         abi: beanstalkAbi,
-        functionName: 'farm',
+        functionName: "farm",
         args: [tokenCalls],
-        gas: gasLimit // Override with our custom gas limit
+        gas: gasLimit, // Override with our custom gas limit
       });
-
     } catch (error) {
       console.error(`Error processing ${token.symbol}:`, error);
-      
+
       // Extract and log detailed error information for debugging
       const errorObj = error as any;
-      console.log('Error details:');
-      
+      console.log("Error details:");
+
       // Log potential contract revert details
       if (errorObj.cause) {
-        console.log('Error cause:', errorObj.cause);
+        console.log("Error cause:", errorObj.cause);
       }
-      
+
       if (errorObj.details) {
-        console.log('Error details:', errorObj.details);
+        console.log("Error details:", errorObj.details);
       }
-      
+
       if (errorObj.data) {
-        console.log('Error data:', errorObj.data);
+        console.log("Error data:", errorObj.data);
       }
-      
+
       if (errorObj.reason) {
-        console.log('Error reason:', errorObj.reason);
+        console.log("Error reason:", errorObj.reason);
       }
-      
+
       // Check for viem-specific error properties
       if (errorObj.shortMessage) {
-        console.log('Short message:', errorObj.shortMessage);
+        console.log("Short message:", errorObj.shortMessage);
       }
-      
+
       if (errorObj.metaMessages) {
-        console.log('Meta messages:', errorObj.metaMessages);
+        console.log("Meta messages:", errorObj.metaMessages);
       }
-      
+
       if (errorObj.contract) {
-        console.log('Contract error:', {
+        console.log("Contract error:", {
           address: errorObj.contract.address,
           args: errorObj.contract.args,
-          functionName: errorObj.contract.functionName
+          functionName: errorObj.contract.functionName,
         });
       }
-      
+
       // Try to parse error selector if available (common with revert errors)
-      if (typeof errorObj.data === 'string' && errorObj.data.startsWith('0x')) {
+      if (typeof errorObj.data === "string" && errorObj.data.startsWith("0x")) {
         try {
           const errorSelector = errorObj.data.slice(0, 10);
-          console.log('Error selector:', errorSelector);
+          console.log("Error selector:", errorSelector);
         } catch (e) {
-          console.log('Failed to parse error selector');
+          console.log("Failed to parse error selector");
         }
       }
-      
+
       // Display toast with more specific info if available
-      const errorMessage = 
-        errorObj.shortMessage || 
-        errorObj.reason || 
-        (errorObj.cause?.message) || 
-        (error as Error).message;
-        
+      const errorMessage =
+        errorObj.shortMessage || errorObj.reason || errorObj.cause?.message || (error as Error).message;
+
       toast.error(`Failed to process ${token.symbol}: ${errorMessage}`);
     } finally {
       setSortingToken(null);
@@ -1556,43 +1563,33 @@ function FarmerSiloDeposits() {
             <div className="flex items-center mt-1">
               <span className="text-sm mr-2">Overall Status:</span>
               {allTokensSorted ? (
-                <span className="text-sm px-2 py-0.5 bg-green-100 text-green-800 rounded-full">
-                  All Sorted
-                </span>
+                <span className="text-sm px-2 py-0.5 bg-green-100 text-green-800 rounded-full">All Sorted</span>
               ) : (
-                <span className="text-sm px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">
-                  Not Sorted
-                </span>
+                <span className="text-sm px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">Not Sorted</span>
               )}
             </div>
           )}
         </div>
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={handleSortAllDeposits}
             disabled={sortingAllTokens || loading || !address}
             className="px-4 py-2"
           >
             {sortingAllTokens ? "Processing..." : "Combine & Sort All Deposits"}
           </Button>
-          <Button 
-            onClick={handleRefresh} 
-            disabled={loading || !address || sortingAllTokens}
-            className="px-4 py-2"
-          >
+          <Button onClick={handleRefresh} disabled={loading || !address || sortingAllTokens} className="px-4 py-2">
             {loading ? "Refreshing..." : "Refresh Deposits"}
           </Button>
         </div>
       </div>
 
       {!address ? (
-        <div className="text-center py-8 text-gray-500">
-          Connect your wallet to view deposits
-        </div>
+        <div className="text-center py-8 text-gray-500">Connect your wallet to view deposits</div>
       ) : loading ? (
         <div className="text-center py-8 text-gray-500">
           <div className="flex items-center justify-center gap-2">
-            <div className="animate-spin h-5 w-5 border-2 border-pinto-green-3 border-t-transparent rounded-full"></div>
+            <div className="animate-spin h-5 w-5 border-2 border-pinto-green-3 border-t-transparent rounded-full" />
             <span>Loading deposits...</span>
           </div>
         </div>
@@ -1615,20 +1612,22 @@ function FarmerSiloDeposits() {
                   <img src={token.logoURI} alt={token.symbol} className="w-6 h-6 rounded-full" />
                   <span className="font-medium">{token.symbol}</span>
                   {depositData.deposits && depositData.deposits.length > 1 && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      areDepositsSorted(depositData.deposits) 
-                        ? "bg-green-100 text-green-800" 
-                        : "bg-amber-100 text-amber-800"
-                    }`}>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full ${
+                        areDepositsSorted(depositData.deposits)
+                          ? "bg-green-100 text-green-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
                       {areDepositsSorted(depositData.deposits) ? "Sorted" : "Not Sorted"}
                     </span>
                   )}
                 </div>
                 <div className="flex gap-2 items-center">
                   <span className="text-xs text-pinto-gray-4">
-                    {depositData.deposits.length} deposit{depositData.deposits.length !== 1 ? 's' : ''}
+                    {depositData.deposits.length} deposit{depositData.deposits.length !== 1 ? "s" : ""}
                   </span>
-                  <Button 
+                  <Button
                     onClick={() => handleCombineAndSortSingleToken(token)}
                     disabled={farmingSortToken === token.address || sortingToken === token.address}
                     size="sm"
@@ -1638,7 +1637,7 @@ function FarmerSiloDeposits() {
                     {sortingToken === token.address ? "Processing..." : "Combine & Sort"}
                   </Button>
 
-                  <Button 
+                  <Button
                     onClick={() => handleSortDeposits(token)}
                     disabled={sortingToken === token.address || farmingSortToken === token.address}
                     size="sm"
@@ -1660,7 +1659,7 @@ function FarmerSiloDeposits() {
                 <div className="font-mono">{formatValue(depositData.stalk?.total)}</div>
                 <div className="font-mono">{formatValue(depositData.seeds)}</div>
               </div>
-              
+
               {/* Display simulation results when available for this token */}
               {simulationResults && simulationResults.tokenAddress === token.address && (
                 <div className="mt-4 p-3 bg-gray-50 rounded-md">
@@ -1669,7 +1668,7 @@ function FarmerSiloDeposits() {
                     <div className="text-xs text-pinto-gray-4">
                       Successfully simulated a farm call containing a pipe call to getSortedDeposits
                     </div>
-                    
+
                     {/* Display decoded data if available */}
                     {simulationResults?.decodedData && simulationResults.decodedData.stems && (
                       <div className="mt-2 p-2 bg-gray-100 rounded border border-pinto-green-3">
@@ -1688,9 +1687,7 @@ function FarmerSiloDeposits() {
                                 <tr key={i} className="hover:bg-gray-50">
                                   <td className="py-1 px-2">{i}</td>
                                   <td className="py-1 px-2">{stem}</td>
-                                  <td className="py-1 px-2">
-                                    {simulationResults.decodedData?.amounts?.[i]}
-                                  </td>
+                                  <td className="py-1 px-2">{simulationResults.decodedData?.amounts?.[i]}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -1698,11 +1695,9 @@ function FarmerSiloDeposits() {
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="font-mono text-xs overflow-auto max-h-[300px] p-2 bg-gray-100 rounded">
-                      <pre>
-                        {JSON.stringify(simulationResults.simulationData, null, 2)}
-                      </pre>
+                      <pre>{JSON.stringify(simulationResults.simulationData, null, 2)}</pre>
                     </div>
                     <div className="mt-2">
                       <Button
@@ -1717,7 +1712,7 @@ function FarmerSiloDeposits() {
                   </div>
                 </div>
               )}
-              
+
               {depositData.deposits && depositData.deposits.length > 0 ? (
                 <div className="mt-4">
                   <div className="text-xs font-medium text-pinto-gray-4 mb-2">Individual Deposits:</div>

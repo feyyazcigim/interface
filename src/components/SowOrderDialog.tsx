@@ -1,3 +1,4 @@
+import { mockAddressAtom } from "@/Web3Provider";
 import arrowDown from "@/assets/misc/ChevronDown.svg";
 import seedIcon from "@/assets/protocol/Seed.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
@@ -6,36 +7,35 @@ import { InfoOutlinedIcon, WarningIcon } from "@/components/Icons";
 import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
 import SmartSubmitButton from "@/components/SmartSubmitButton";
 import IconImage from "@/components/ui/IconImage";
+import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
 import { PINTO } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import useSwap, { useSwapMany } from "@/hooks/swap/useSwap";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
+import useTransaction from "@/hooks/useTransaction";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
 import { Blueprint } from "@/lib/Tractor/types";
 import { TokenStrategy, createSowTractorData, getAverageTipPaid } from "@/lib/Tractor/utils";
-import { needsCombining, generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
+import { generateBatchSortDepositsCallData, needsCombining } from "@/lib/claim/depositUtils";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePodLine, useTemperature } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { FarmFromMode, FarmToMode, DepositData } from "@/utils/types";
 import { isValidAddress } from "@/utils/string";
+import { DepositData, FarmFromMode, FarmToMode } from "@/utils/types";
+import { isLocalhost } from "@/utils/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAtom } from "jotai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { PublicClient, encodeFunctionData } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { Col, Row } from "./Container";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
 import { Input } from "./ui/Input";
-import { PublicClient, encodeFunctionData } from "viem";
-import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
-import { useQueryClient } from "@tanstack/react-query";
-import useTransaction from "@/hooks/useTransaction";
-import { mockAddressAtom } from "@/Web3Provider";
-import { useAtom } from "jotai";
-import { isLocalhost } from "@/utils/utils";
-import { Col, Row } from "./Container";
 
 interface SowOrderDialogProps {
   open: boolean;
@@ -62,55 +62,53 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [operatorTip, setOperatorTip] = useState("1");
   const { address } = useAccount();
   const [loading, setLoading] = useState<string | null>(null);
-  
+
   // Function to check if deposits are sorted from low stem to high stem
   const areDepositsSorted = (deposits: DepositData[]): boolean => {
     if (!deposits || deposits.length <= 1) return true;
-    
+
     for (let i = 1; i < deposits.length; i++) {
       const currentStem = deposits[i].stem.toBigInt();
-      const previousStem = deposits[i-1].stem.toBigInt();
-      
+      const previousStem = deposits[i - 1].stem.toBigInt();
+
       if (currentStem <= previousStem) {
         return false;
       }
     }
-    
+
     return true;
   };
-  
+
   // Check if all tokens have sorted deposits
   const allTokensSorted = useMemo(() => {
     if (!farmerDeposits || farmerDeposits.size === 0) return true;
-    
-    return Array.from(farmerDeposits.entries()).every(([_, depositData]) => 
-      areDepositsSorted(depositData.deposits || [])
+
+    return Array.from(farmerDeposits.entries()).every(([_, depositData]) =>
+      areDepositsSorted(depositData.deposits || []),
     );
   }, [farmerDeposits]);
-  
+
   // Get a list of unsorted tokens and their deposit counts
   const unsortedTokensInfo = useMemo(() => {
     if (!farmerDeposits || farmerDeposits.size === 0) return [];
-    
+
     return Array.from(farmerDeposits.entries())
-      .filter(([_, depositData]) => 
-        !areDepositsSorted(depositData.deposits || []) && depositData.deposits.length > 1
-      )
+      .filter(([_, depositData]) => !areDepositsSorted(depositData.deposits || []) && depositData.deposits.length > 1)
       .map(([token, depositData]) => ({
         token,
-        depositCount: depositData.deposits.length
+        depositCount: depositData.deposits.length,
       }));
   }, [farmerDeposits]);
-  
+
   // Get a list of tokens that need combining
   const tokensThatNeedCombining = useMemo(() => {
     if (!farmerDeposits || farmerDeposits.size === 0) return [];
-    
+
     return Array.from(farmerDeposits.entries())
       .filter(([_, depositData]) => depositData.deposits.length >= 25) // MIN_DEPOSITS_FOR_COMBINING
       .map(([token, depositData]) => ({
         token,
-        depositCount: depositData.deposits.length
+        depositCount: depositData.deposits.length,
       }));
   }, [farmerDeposits]);
 
@@ -118,12 +116,12 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const needsOptimization = useMemo(() => {
     return needsCombining(farmerDeposits) || !allTokensSorted;
   }, [farmerDeposits, allTokensSorted]);
-  
+
   const [formStep, setFormStep] = useState(() => {
     // If deposits need combining OR are not sorted, start at step 0, otherwise normal flow
     return needsOptimization ? 0 : 1;
   });
-  
+
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [encodedData, setEncodedData] = useState<`0x${string}` | null>(null);
   const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
@@ -150,7 +148,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       queryClient.invalidateQueries();
       // If combining is successful, advance to the next step
       setFormStep(1);
-    }
+    },
   });
 
   // Claim rewards necessary if deposits have not been combined
@@ -430,95 +428,92 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   // New function to handle combine and sort all deposits
   const handleCombineAndSortAll = async () => {
     if (!address || !publicClient || !protocolAddress || !farmerDeposits) return;
-    
+
     const effectiveAddress = isLocal && isValidAddress(mockAddress) ? mockAddress : address;
     console.log("Combine & Sort All - Using address:", effectiveAddress);
-    
+
     setSortingAllTokens(true);
     setSubmitting(true);
-    
+
     try {
       toast.info("Preparing to combine and sort all deposits...");
-      
+
       console.log(`Processing ${farmerDeposits.size} tokens for sorting`);
-      
+
       // Use the utility function to generate batch sort deposits call data
       const callData = await generateBatchSortDepositsCallData(
         effectiveAddress as `0x${string}`,
         farmerDeposits,
         publicClient,
-        protocolAddress
+        protocolAddress,
       );
-      
+
       if (!callData || callData.length === 0) {
         toast.warning("No sort deposit calls were generated");
         return;
       }
-      
+
       // Output raw calldata for simulator debugging
       const rawCalldata = encodeFunctionData({
         abi: beanstalkAbi,
-        functionName: 'farm',
-        args: [callData]
+        functionName: "farm",
+        args: [callData],
       });
-      
+
       console.log(`=== Raw Farm Calldata for All Tokens ===`);
       console.log(rawCalldata);
       console.log(`Number of calls: ${callData.length}`);
       console.log("======================================");
-      
+
       toast.info(`Executing ${callData.length} operations for all tokens (combines + sort updates)...`);
-      
-      
+
       // Execute the farm transaction using writeWithEstimateGas with higher gas limit
-      const simulateFirst = await publicClient.simulateContract({
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "farm",
-        args: [callData],
-        account: effectiveAddress
-      }).catch(e => {
-        console.error("Simulation failed:", e);
-        return { error: e };
-      });
-      
-      if ('error' in simulateFirst) {
+      const simulateFirst = await publicClient
+        .simulateContract({
+          address: protocolAddress,
+          abi: beanstalkAbi,
+          functionName: "farm",
+          args: [callData],
+          account: effectiveAddress,
+        })
+        .catch((e) => {
+          console.error("Simulation failed:", e);
+          return { error: e };
+        });
+
+      if ("error" in simulateFirst) {
         console.error("Transaction would fail in simulation, not submitting");
         toast.error("Transaction would fail: " + (simulateFirst.error as any)?.shortMessage || "unknown error");
         setSubmitting(false);
         setSortingAllTokens(false);
         return;
       }
-      
+
       // Execute with higher gas limit to prevent running out of gas
       await writeWithEstimateGas({
         address: protocolAddress,
         abi: beanstalkAbi,
-        functionName: 'farm',
-        args: [callData]
+        functionName: "farm",
+        args: [callData],
       });
-
     } catch (error) {
       console.error("Error processing all tokens:", error);
-      
+
       // Extract error details for debugging
       const errorObj = error as any;
-      
-      if (errorObj.cause) console.log('Error cause:', errorObj.cause);
-      if (errorObj.details) console.log('Error details:', errorObj.details);
-      if (errorObj.data) console.log('Error data:', errorObj.data);
-      if (errorObj.reason) console.log('Error reason:', errorObj.reason);
-      if (errorObj.shortMessage) console.log('Short message:', errorObj.shortMessage);
-      
+
+      if (errorObj.cause) console.log("Error cause:", errorObj.cause);
+      if (errorObj.details) console.log("Error details:", errorObj.details);
+      if (errorObj.data) console.log("Error data:", errorObj.data);
+      if (errorObj.reason) console.log("Error reason:", errorObj.reason);
+      if (errorObj.shortMessage) console.log("Short message:", errorObj.shortMessage);
+
       // Display toast with specific error information
-      const errorMessage = 
-        errorObj.shortMessage || 
-        errorObj.reason || 
-        (errorObj.cause?.message) || 
-        (error as Error).message;
-        
+      const errorMessage =
+        errorObj.shortMessage || errorObj.reason || errorObj.cause?.message || (error as Error).message;
+
       toast.error(`Failed to process all tokens: ${errorMessage}`);
-      
+
       setSubmitting(false);
       setSortingAllTokens(false);
     }
@@ -928,7 +923,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                     Pinto does not combine and sort deposits by default, due to gas costs. A one-time claim and combine
                     will optimize your deposits and allow you to create Tractor orders.
                   </p>
-                  
+
                   {/* Display tokens needing optimization */}
                   <div className="mt-2 p-3 bg-gray-50 rounded-md max-h-[180px] overflow-y-auto">
                     {unsortedTokensInfo.length > 0 && (
@@ -943,7 +938,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         </ul>
                       </div>
                     )}
-                    
+
                     {tokensThatNeedCombining.length > 0 && (
                       <div>
                         <p className="text-sm font-medium text-[#ED7A00] mb-2">Tokens with too many deposits:</p>
@@ -957,7 +952,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                       </div>
                     )}
                   </div>
-                  
+
                   {/* The Claim & Combine button has been moved to the footer (replacing the Next button) */}
                 </div>
               ) : formStep === 1 ? (
