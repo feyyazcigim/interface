@@ -36,10 +36,13 @@ import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
 import { Token } from "@/utils/types";
-import { simulateCombineAndSortDeposits, generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
+import { generateBatchSortDepositsCallData, simulateAndPrepareFarmCalls } from "@/lib/claim/depositUtils";
 import { useSunData } from "@/state/useSunData";
 import useTransaction from "@/hooks/useTransaction";
 import { isValidAddress } from "@/utils/string";
+import { TokenValue } from "@/classes/TokenValue";
+import { calculateConvertData } from "@/utils/convert";
+import { encodeClaimRewardCombineCalls } from "@/utils/utils";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
@@ -1307,103 +1310,7 @@ function FarmerSiloDeposits() {
   };
 
   const handleSortAllDeposits = async () => {
-    if (!address || !walletClient || !publicClient || !protocolAddress || !farmerSilo.deposits) return;
-    
-    setSortingAllTokens(true);
-    try {
-      toast.info("Generating sort and combine deposit calls for all tokens...");
-      
-      const isRaining = sunData.raining || false;
-      const allFarmCalls: `0x${string}`[] = [];
-      
-      // Process each token in the farmer's deposits
-      for (const [token, depositData] of farmerSilo.deposits.entries()) {
-        if (!depositData.deposits || depositData.deposits.length === 0) {
-          console.log(`Skipping ${token.symbol} - no deposits`);
-          continue;
-        }
-        
-        console.log(`Processing ${token.symbol} with ${depositData.deposits.length} deposits`);
-        
-        try {
-          // Create a single-token deposit map for this token only
-          // This prevents duplicate combine calls for tokens we've already processed
-          const singleTokenDeposits = new Map();
-          singleTokenDeposits.set(token, depositData);
-          
-          // Generate farm calls for this token, including combine operations
-          const result = await simulateCombineAndSortDeposits(
-            address as `0x${string}`, 
-            token,
-            publicClient,
-            protocolAddress,
-            address as `0x${string}`,
-            singleTokenDeposits, // Pass only this token's deposits
-            isRaining
-          );
-          
-          // Extract the farm calls used in the simulation
-          if (result.simulationResult?.request?.args?.[0]) {
-            const tokenFarmCalls = result.simulationResult.request.args[0] as `0x${string}`[];
-            console.log(`Adding ${tokenFarmCalls.length} farm calls for ${token.symbol}`);
-            
-            // Log details about individual farm calls for debugging
-            tokenFarmCalls.forEach((call, i) => {
-              try {
-                const decoded = decodeFunctionData({
-                  abi: beanstalkAbi,
-                  data: call,
-                });
-                console.log(`${token.symbol} call ${i+1}:`, {
-                  functionName: decoded.functionName,
-                  args: decoded.args,
-                });
-              } catch (err) {
-                console.log(`${token.symbol} call ${i+1} (raw):`, call);
-              }
-            });
-            
-            allFarmCalls.push(...tokenFarmCalls);
-          }
-        } catch (error) {
-          console.error(`Error processing ${token.symbol}:`, error);
-        }
-      }
-      
-      if (allFarmCalls.length === 0) {
-        toast.warning("No farm calls generated for any tokens");
-        return;
-      }
-      
-      // Output raw calldata for simulator debugging
-      const rawCalldata = encodeFunctionData({
-        abi: beanstalkAbi,
-        functionName: 'farm',
-        args: [allFarmCalls]
-      });
-      
-      console.log("=== Raw Farm Calldata for Simulator ===");
-      console.log(rawCalldata);
-      console.log("======================================");
-      
-      console.log(`Total farm calls to execute: ${allFarmCalls.length}`);
-      toast.info(`Executing ${allFarmCalls.length} farm calls for combine and sort operations...`);
-      
-      // Execute all farm calls in a single transaction
-      writeWithEstimateGas({
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: 'farm',
-        args: [allFarmCalls]
-      });
-      
-      toast.success(`Transaction submitted for processing ${farmerSilo.deposits.size} tokens`);
-    } catch (error) {
-      console.error("Error processing deposits:", error);
-      toast.error(`Failed to process deposits: ${(error as Error).message}`);
-    } finally {
-      setSortingAllTokens(false);
-    }
+
   };
 
   const handleCombineAndSortSingleToken = async (token: Token) => {
@@ -1433,78 +1340,42 @@ function FarmerSiloDeposits() {
       
       console.log(`Processing single token ${token.symbol} with ${depositData.deposits.length} deposits`);
       
-      // Simulate the combine operations and get sorted deposits
-      const result = await simulateCombineAndSortDeposits(
-        effectiveAddress as `0x${string}`, 
+      // Simulate and prepare the farm calls in one step
+      const tokenCalls = await simulateAndPrepareFarmCalls(
         token,
+        effectiveAddress as `0x${string}`, 
         publicClient,
         protocolAddress,
-        effectiveAddress as `0x${string}`,
         singleTokenDeposits, // Pass only this token's deposits
         isRaining
       );
       
-      // Check if we have decoded result data with sorted stems
-      if (!result.decodedResult?.stems || result.decodedResult.stems.length === 0) {
-        toast.error(`Failed to get sorted deposits for ${token.symbol}`);
+      if (!tokenCalls) {
+        toast.error(`Failed to prepare farm calls for ${token.symbol}`);
         return;
       }
-      
-      // Extract the combine/L2L calls from the simulation result
-      const combineCalls: `0x${string}`[] = [];
-      
-      if (result.simulationResult?.request?.args?.[0]) {
-        const simulatedCalls = result.simulationResult.request.args[0] as `0x${string}`[];
-        
-        // The last call in the simulation is the pipe call that we don't want to keep
-        // We only want the combine/L2L calls that come before it
-        if (simulatedCalls.length > 1) {
-          combineCalls.push(...simulatedCalls.slice(0, -1));
-          console.log(`Extracted ${combineCalls.length} combine/L2L calls`);
-        }
-      }
-      
-      // Convert the sorted stems to deposit IDs and reverse them for storage optimization
-      const { stems } = result.decodedResult;
-      const reversedDepositIds = createReversedDepositIds(token.address, stems);
-      
-      console.log(`Generated ${reversedDepositIds.length} deposit IDs from sorted stems`);
-      
-      // Create the updateSortedDepositIds call
-      const updateSortedIdsCall = encodeFunctionData({
-        abi: beanstalkAbi,
-        functionName: 'updateSortedDepositIds',
-        args: [effectiveAddress, token.address as `0x${string}`, reversedDepositIds]
-      });
-      
-      // Prepare the final farm calls: combine/L2L calls followed by updateSortedDepositIds
-      // const finalFarmCalls = [...combineCalls];
-      const finalFarmCalls = [...combineCalls, updateSortedIdsCall];
-      
-      // Log details about the operations
-      console.log(`Final farm calls: ${finalFarmCalls.length} total (${combineCalls.length} combine + 1 update)`);
       
       // Output raw calldata for simulator debugging
       const rawCalldata = encodeFunctionData({
         abi: beanstalkAbi,
         functionName: 'farm',
-        args: [finalFarmCalls]
+        args: [tokenCalls]
       });
       
       console.log(`=== Raw Farm Calldata for ${token.symbol} Simulator ===`);
       console.log(rawCalldata);
       console.log("======================================");
       
-      toast.info(`Executing ${finalFarmCalls.length} operations for ${token.symbol}...`);
+      toast.info(`Executing ${tokenCalls.length} operations for ${token.symbol}...`);
       
       // Execute the farm calls using writeWithEstimateGas instead of walletClient
       writeWithEstimateGas({
         address: protocolAddress,
         abi: beanstalkAbi,
         functionName: 'farm',
-        args: [finalFarmCalls]
+        args: [tokenCalls]
       });
-      
+
     } catch (error) {
       console.error(`Error processing ${token.symbol}:`, error);
       

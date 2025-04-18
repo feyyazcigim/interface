@@ -126,124 +126,6 @@ export function generateCombineAndL2LCallData(
   return eligibleTokens.flatMap(([token, depositData]) => encodeClaimRewardCombineCalls(depositData.deposits, token));
 }
 
-
-/**
- * Generates sort deposits farm calls and simulates them
- * @param account Address of the user account
- * @param token Token to sort deposits for
- * @param publicClient Public client instance
- * @param protocolAddress Protocol contract address
- * @param fromAddress Address to simulate from
- * @param farmerDeposits Optional map of token to deposit data
- * @param isRaining Optional weather condition
- * @returns Object with simulation result and decoded result
- */
-export async function simulateCombineAndSortDeposits(
-  account: `0x${string}`,
-  token: Token,
-  publicClient: PublicClient,
-  protocolAddress: `0x${string}`,
-  fromAddress: `0x${string}`,
-  farmerDeposits?: Map<Token, TokenDepositData>,
-  isRaining?: boolean
-): Promise<{
-  simulationResult: any;
-  decodedResult?: {
-    stems: bigint[];
-    amounts: bigint[];
-  };
-}> {
-  console.log(`Simulating combine and sort operations for ${token.symbol}`);
-
-  // Create a call to getSortedDeposits from the TractorHelpers contract
-  const getSortedDepositsCall = encodeFunctionData({
-    abi: tractorHelpersABI,
-    functionName: "getSortedDeposits",
-    args: [account, token.address as `0x${string}`]
-  });
-
-  // Create a pipe call that calls getSortedDeposits
-  const pipeCall = encodeFunctionData({
-    abi: beanstalkAbi,
-    functionName: "pipe",
-    args: [
-      {
-        target: TRACTOR_HELPERS_ADDRESS as `0x${string}`,  // Target contract for the call
-        data: getSortedDepositsCall  // The call data for getSortedDeposits
-      }
-    ]
-  });
-
-  // Prepare the farm calls array
-  const farmCalls: `0x${string}`[] = [];
-
-  // If farmer deposits are provided, add combine and L2L calls first
-  if (farmerDeposits && farmerDeposits.size > 0) {
-    // Generate convert calls with smart limits using our utility function
-    const combineCalls = generateCombineAndL2LCallData(farmerDeposits, isRaining || false);
-    if (combineCalls.length > 0) {
-      console.log(`Adding ${combineCalls.length} combine/L2L calls to execute before sort deposits`);
-      farmCalls.push(...combineCalls);
-    } else {
-      console.log('No combine/L2L calls needed');
-    }
-  } else {
-    console.log('No farmer deposits provided, skipping combine/L2L calls');
-  }
-
-  // Add the pipe call last so we can capture its result
-  farmCalls.push(pipeCall);
-  console.log(`Total farm calls to execute: ${farmCalls.length}`);
-
-  try {
-    // Simulate the farm call 
-    const simulationResult = await publicClient.simulateContract({
-      address: protocolAddress,
-      abi: beanstalkAbi,
-      functionName: "farm",
-      args: [farmCalls],  // Farm takes an array of encoded function calls
-      account: fromAddress
-    });
-
-    console.log("Simulation completed successfully");
-    console.log("Number of results:", simulationResult.result?.length || 0);
-
-    // The getSortedDeposits result will be the last item in the results array
-    const sortDepositsResult = simulationResult.result?.[simulationResult.result.length - 1];
-
-    if (sortDepositsResult) {
-      console.log(`Sort deposits result length: ${(sortDepositsResult as `0x${string}`).length}`);
-      console.log(`Raw sort deposits result: ${sortDepositsResult}`);
-    } else {
-      console.error("Sort deposits result is undefined");
-    }
-
-    // Decode the result data using our helper function
-    const decodedResult = decodeSortedDepositsResult(sortDepositsResult as `0x${string}` | undefined);
-
-    if (decodedResult) {
-      console.log(`Successfully decoded ${decodedResult.stems.length} stems and amounts`);
-      console.log(`Decoded stems: ${decodedResult.stems}`);
-      console.log(`Decoded amounts: ${decodedResult.amounts}`);
-    } else {
-      console.error("Failed to decode sorted deposits result");
-    }
-
-    // Return a complete result object
-    return {
-      simulationResult,
-      decodedResult
-    };
-  } catch (error) {
-    console.error("Error simulating farm calls:", error);
-    return {
-      simulationResult: { error },
-      decodedResult: undefined
-    };
-  }
-}
-
-
 /**
  * Decodes the raw result data from a getSortedDeposits simulation
  * @param resultData The raw hex data from the simulation result
@@ -309,6 +191,149 @@ function decodeSortedDepositsResult(
 }
 
 /**
+ * Simulates and prepares farm calls for token deposits in one comprehensive function
+ * 
+ * @param token Token to process
+ * @param address User's address 
+ * @param publicClient Public client for blockchain interaction
+ * @param protocolAddress Protocol contract address
+ * @param farmerDeposits Map of token to deposit data
+ * @param isRaining Weather condition
+ * @returns Array of farm calls or null if simulation failed
+ */
+export async function simulateAndPrepareFarmCalls(
+  token: Token,
+  address: `0x${string}`,
+  publicClient: PublicClient,
+  protocolAddress: `0x${string}`,
+  farmerDeposits: Map<Token, TokenDepositData>,
+  isRaining: boolean
+): Promise<`0x${string}`[] | null> {
+  console.log(`Simulating and preparing farm calls for ${token.symbol}`);
+
+  try {
+    // Create a call to getSortedDeposits from the TractorHelpers contract
+    const getSortedDepositsCall = encodeFunctionData({
+      abi: tractorHelpersABI,
+      functionName: "getSortedDeposits",
+      args: [address, token.address as `0x${string}`]
+    });
+
+    // Create a pipe call that calls getSortedDeposits
+    const pipeCall = encodeFunctionData({
+      abi: beanstalkAbi,
+      functionName: "pipe",
+      args: [
+        {
+          target: TRACTOR_HELPERS_ADDRESS as `0x${string}`,  // Target contract for the call
+          data: getSortedDepositsCall  // The call data for getSortedDeposits
+        }
+      ]
+    });
+
+    // Prepare the farm calls array
+    const farmCalls: `0x${string}`[] = [];
+
+    // If farmer deposits are provided, add combine and L2L calls first
+    if (farmerDeposits && farmerDeposits.size > 0) {
+      // Generate convert calls with smart limits using our utility function
+      const combineCalls = generateCombineAndL2LCallData(farmerDeposits, isRaining || false);
+      if (combineCalls.length > 0) {
+        console.log(`Adding ${combineCalls.length} combine/L2L calls to execute before sort deposits`);
+        farmCalls.push(...combineCalls);
+      } else {
+        console.log('No combine/L2L calls needed');
+      }
+    } else {
+      console.log('No farmer deposits provided, skipping combine/L2L calls');
+    }
+
+    // Add the pipe call last so we can capture its result
+    farmCalls.push(pipeCall);
+    console.log(`Total farm calls to execute in simulation: ${farmCalls.length}`);
+
+    // Simulate the farm call
+    const simulationResult = await publicClient.simulateContract({
+      address: protocolAddress,
+      abi: beanstalkAbi,
+      functionName: "farm",
+      args: [farmCalls],  // Farm takes an array of encoded function calls
+      account: address
+    });
+
+    console.log("Simulation completed successfully");
+    console.log("Number of results:", simulationResult.result?.length || 0);
+
+    // The getSortedDeposits result will be the last item in the results array
+    const sortDepositsResult = simulationResult.result?.[simulationResult.result.length - 1];
+
+    if (!sortDepositsResult) {
+      console.error("Sort deposits result is undefined");
+      return null;
+    }
+
+    console.log(`Sort deposits result length: ${(sortDepositsResult as `0x${string}`).length}`);
+
+    // Decode the result data
+    const decodedResult = decodeSortedDepositsResult(sortDepositsResult as `0x${string}`);
+
+    if (!decodedResult || !decodedResult.stems || decodedResult.stems.length === 0) {
+      console.error("Failed to decode sorted deposits result");
+      return null;
+    }
+
+    console.log(`Successfully decoded ${decodedResult.stems.length} stems and amounts`);
+
+    // Extract the combine/L2L calls from the simulation result
+    // Note: We want all calls except the last one (the pipe call)
+    const combineCalls: `0x${string}`[] = [];
+
+    // Only add combine calls if we have them in the simulation
+    if (farmCalls.length > 1) {
+      combineCalls.push(...farmCalls.slice(0, -1));
+      console.log(`Extracted ${combineCalls.length} combine/L2L calls`);
+    }
+
+    // Convert the sorted stems to deposit IDs and reverse them for storage optimization
+    const reversedDepositIds = createReversedDepositIds(token.address, decodedResult.stems);
+
+    console.log(`Generated ${reversedDepositIds.length} deposit IDs from sorted stems`);
+
+    // Create the updateSortedDepositIds call
+    const updateSortedIdsCall = encodeFunctionData({
+      abi: beanstalkAbi,
+      functionName: 'updateSortedDepositIds',
+      args: [address, token.address as `0x${string}`, reversedDepositIds]
+    });
+
+    // Prepare the final farm calls: combine/L2L calls followed by updateSortedDepositIds
+    const finalFarmCalls = [...combineCalls, updateSortedIdsCall];
+
+    // Log details about the operations
+    console.log(`Final farm calls: ${finalFarmCalls.length} total (${combineCalls.length} combine + 1 update)`);
+
+    return finalFarmCalls;
+  } catch (error) {
+    console.error(`Error simulating and preparing farm calls for ${token.symbol}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Creates reversed deposit IDs from stems for a token's storage optimization
+ * @param tokenAddress The token address
+ * @param stems Array of stem values
+ * @returns Array of deposit IDs reversed for optimal storage
+ */
+export function createReversedDepositIds(tokenAddress: string, stems: readonly bigint[] | bigint[]): bigint[] {
+  // Convert stems to depositIds using the packing function
+  const depositIds = stems.map(stem => packAddressAndStem(tokenAddress, stem));
+
+  // Reverse the order of deposit IDs (invert sorting order)
+  return [...depositIds].reverse();
+}
+
+/**
  * Utility function to pack a token address and stem into a deposit ID
  * Matches the Solidity implementation:
  * function packAddressAndStem(address _address, int96 stem) internal pure returns (uint256) {
@@ -365,42 +390,23 @@ export async function generateBatchSortDepositsCallData(
     console.log(`Processing ${token.symbol} with ${depositData.deposits.length} deposits`);
 
     try {
-      // Get sorted deposits through simulation
-      const result = await simulateCombineAndSortDeposits(
-        account,
+      // Get sorted deposits through simulation and prepare farm calls
+      const farmCalls = await simulateAndPrepareFarmCalls(
         token,
+        account,
         publicClient,
         protocolAddress,
-        account,
         farmerDeposits,
         isRaining
       );
 
-      // Check if we have decoded result data
-      if (!result.decodedResult) {
-        console.error(`Failed to get sorted deposits for ${token.symbol}`);
-        continue;
+      // If we got farm calls, add them to our callData array
+      if (farmCalls && farmCalls.length > 0) {
+        // We only want the updateSortedDepositIds call (the last one)
+        // as we'll handle combines separately
+        callData.push(farmCalls[farmCalls.length - 1]);
+        console.log(`Added sort deposit call for ${token.symbol}`);
       }
-
-      const { stems } = result.decodedResult;
-
-      // Convert stems to deposit IDs using the packing function
-      const depositIds = stems.map(stem => packAddressAndStem(token.address, stem));
-
-      // Reverse the order of deposit IDs for optimal storage in the contract
-      const reversedDepositIds = [...depositIds].reverse();
-
-      console.log(`Generated ${reversedDepositIds.length} deposit IDs for ${token.symbol}`);
-
-      // Create the calldata for updateSortedDepositIds
-      const updateCall = encodeFunctionData({
-        abi: beanstalkAbi,
-        functionName: 'updateSortedDepositIds',
-        args: [account, token.address as `0x${string}`, reversedDepositIds]
-      });
-
-      callData.push(updateCall);
-
     } catch (error) {
       console.error(`Error processing ${token.symbol}:`, error);
     }
