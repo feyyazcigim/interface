@@ -12,25 +12,28 @@ import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import useSwap, { useSwapMany } from "@/hooks/swap/useSwap";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
-import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { Blueprint } from "@/lib/Tractor/types";
 import { TokenStrategy, createSowTractorData, getAverageTipPaid } from "@/lib/Tractor/utils";
-import { needsCombining } from "@/lib/claim/depositUtils";
+import { needsCombining, generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePodLine, useTemperature } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { FarmFromMode, FarmToMode } from "@/utils/types";
-import { isDev } from "@/utils/utils"; // Only used for pre-filling form data for faster developing, remove before prod
+import { isValidAddress } from "@/utils/string";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useAccount, usePublicClient } from "wagmi";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
 import { Input } from "./ui/Input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
-import { PublicClient } from "viem";
+import { PublicClient, encodeFunctionData } from "viem";
+import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
+import { useQueryClient } from "@tanstack/react-query";
+import useTransaction from "@/hooks/useTransaction";
+import { mockAddressAtom } from "@/Web3Provider";
+import { useAtom } from "jotai";
+import { isLocalhost } from "@/utils/utils";
 
 interface SowOrderDialogProps {
   open: boolean;
@@ -56,6 +59,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [morningAuction, setMorningAuction] = useState(false);
   const [operatorTip, setOperatorTip] = useState("1");
   const { address } = useAccount();
+  const [loading, setLoading] = useState<string | null>(null);
   const [formStep, setFormStep] = useState(() => {
     // If deposits need combining, start at step 0, otherwise normal flow
     return needsCombining(farmerDeposits) ? 0 : 1;
@@ -64,13 +68,30 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [encodedData, setEncodedData] = useState<`0x${string}` | null>(null);
   const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const publicClient = usePublicClient();
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
   const [activeTipButton, setActiveTipButton] = useState<"down5" | "down1" | "average" | "up1" | "up5" | null>(
     "average",
   );
   const temperatureInputRef = useRef<HTMLInputElement>(null);
   const [averageTipValue, setAverageTipValue] = useState<number>(1);
+
+  // Add these new declarations for combine and sort functionality
+  const [sortingAllTokens, setSortingAllTokens] = useState(false);
+  const publicClient = usePublicClient();
+  const protocolAddress = useProtocolAddress();
+  const queryClient = useQueryClient();
+  const { data: walletClient } = useWalletClient();
+  const [mockAddress] = useAtom(mockAddressAtom);
+  const isLocal = isLocalhost();
+  const { writeWithEstimateGas, isConfirming, submitting, setSubmitting } = useTransaction({
+    successMessage: "Combine & Sort successful",
+    errorMessage: "Combine & Sort failed",
+    successCallback: () => {
+      queryClient.invalidateQueries();
+      // If combining is successful, advance to the next step
+      setFormStep(1);
+    }
+  });
 
   // Claim rewards necessary if deposits have not been combined
   const { submitClaimRewards, isSubmitting: isClaimSubmitting } = useClaimRewards();
@@ -349,6 +370,103 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
       // Check if pod line length is valid
       isPodLineLengthValid()
     );
+  };
+
+  // New function to handle combine and sort all deposits
+  const handleCombineAndSortAll = async () => {
+    if (!address || !publicClient || !protocolAddress || !farmerDeposits) return;
+    
+    const effectiveAddress = isLocal && isValidAddress(mockAddress) ? mockAddress : address;
+    console.log("Combine & Sort All - Using address:", effectiveAddress);
+    
+    setSortingAllTokens(true);
+    setSubmitting(true);
+    
+    try {
+      toast.info("Preparing to combine and sort all deposits...");
+      
+      console.log(`Processing ${farmerDeposits.size} tokens for sorting`);
+      
+      // Use the utility function to generate batch sort deposits call data
+      const callData = await generateBatchSortDepositsCallData(
+        effectiveAddress as `0x${string}`,
+        farmerDeposits,
+        publicClient,
+        protocolAddress
+      );
+      
+      if (!callData || callData.length === 0) {
+        toast.warning("No sort deposit calls were generated");
+        return;
+      }
+      
+      // Output raw calldata for simulator debugging
+      const rawCalldata = encodeFunctionData({
+        abi: beanstalkAbi,
+        functionName: 'farm',
+        args: [callData]
+      });
+      
+      console.log(`=== Raw Farm Calldata for All Tokens ===`);
+      console.log(rawCalldata);
+      console.log(`Number of calls: ${callData.length}`);
+      console.log("======================================");
+      
+      toast.info(`Executing ${callData.length} operations for all tokens (combines + sort updates)...`);
+      
+      
+      // Execute the farm transaction using writeWithEstimateGas with higher gas limit
+      const simulateFirst = await publicClient.simulateContract({
+        address: protocolAddress,
+        abi: beanstalkAbi,
+        functionName: "farm",
+        args: [callData],
+        account: effectiveAddress
+      }).catch(e => {
+        console.error("Simulation failed:", e);
+        return { error: e };
+      });
+      
+      if ('error' in simulateFirst) {
+        console.error("Transaction would fail in simulation, not submitting");
+        toast.error("Transaction would fail: " + (simulateFirst.error as any)?.shortMessage || "unknown error");
+        setSubmitting(false);
+        setSortingAllTokens(false);
+        return;
+      }
+      
+      // Execute with higher gas limit to prevent running out of gas
+      await writeWithEstimateGas({
+        address: protocolAddress,
+        abi: beanstalkAbi,
+        functionName: 'farm',
+        args: [callData]
+      });
+
+    } catch (error) {
+      console.error("Error processing all tokens:", error);
+      
+      // Extract error details for debugging
+      const errorObj = error as any;
+      
+      if (errorObj.cause) console.log('Error cause:', errorObj.cause);
+      if (errorObj.details) console.log('Error details:', errorObj.details);
+      if (errorObj.data) console.log('Error data:', errorObj.data);
+      if (errorObj.reason) console.log('Error reason:', errorObj.reason);
+      if (errorObj.shortMessage) console.log('Short message:', errorObj.shortMessage);
+      
+      // Display toast with specific error information
+      const errorMessage = 
+        errorObj.shortMessage || 
+        errorObj.reason || 
+        (errorObj.cause?.message) || 
+        (error as Error).message;
+        
+      toast.error(`Failed to process all tokens: ${errorMessage}`);
+      
+      setSubmitting(false);
+      setSortingAllTokens(false);
+    }
   };
 
   // Update handleNext to remove formSubmitAttempted
@@ -1147,9 +1265,9 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                 {formStep === 0 ? (
                   <SmartSubmitButton
                     variant="gradient"
-                    submitFunction={handleClaim}
-                    disabled={isClaimSubmitting}
-                    submitButtonText={isClaimSubmitting ? "Combining..." : "Combine"}
+                    submitFunction={handleCombineAndSortAll}
+                    disabled={sortingAllTokens || submitting}
+                    submitButtonText={sortingAllTokens || submitting ? "Optimizing..." : "Combine & Sort"}
                     className="flex-1 h-[60px] rounded-full text-2xl font-medium"
                   />
                 ) : (
