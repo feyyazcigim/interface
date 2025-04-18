@@ -2,7 +2,6 @@ import useBoolean from "@/hooks/useBoolean";
 import { cn } from "@/utils/utils";
 import { motion } from "framer-motion";
 import { Col } from "./Container";
-import { Button } from "./ui/Button";
 
 interface IReadMoreAccordion {
   children: React.ReactNode;
@@ -13,7 +12,7 @@ export default function ReadMoreAccordion({ children, defaultOpen = false }: IRe
 
   return (
     <Col>
-      <Col className="relative overflow-hidden pinto-sm-light text-pinto-light">
+      <Col className="relative overflow-hidden pinto-body-light text-pinto-light">
         <motion.div
           initial={{ height: defaultOpen ? "auto" : 0, opacity: defaultOpen ? 1 : 0 }}
           animate={{
@@ -22,7 +21,7 @@ export default function ReadMoreAccordion({ children, defaultOpen = false }: IRe
           }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: "easeInOut" }}
-          className={cn(open && "flex flex-col")}
+          className={open ? "flex flex-col": ""}
         >
           {children}
         </motion.div>
