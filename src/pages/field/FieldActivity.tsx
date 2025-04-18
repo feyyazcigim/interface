@@ -36,21 +36,21 @@ interface FieldActivityItem {
 const estimateSeasonFromBlock = (
   eventBlockNumber: number,
   latestBlockNumber: number,
-  currentSeason: number | undefined
+  currentSeason: number | undefined,
 ): number | null => {
   // Return null if we don't have valid inputs yet
   if (!latestBlockNumber || !currentSeason) return null;
-  
+
   // On Base, blocks are approximately 2 seconds each
   // 1 hour = 3600 seconds = ~1800 blocks per season
   const BLOCKS_PER_SEASON = 1800;
-  
+
   // Calculate block difference from the latest block
   const blockDifference = latestBlockNumber - eventBlockNumber;
-  
+
   // Calculate how many seasons ago this was
   const seasonsAgo = Math.floor(blockDifference / BLOCKS_PER_SEASON);
-  
+
   // Calculate the estimated season (ensure it's at least 1)
   const estimatedSeason = currentSeason - seasonsAgo;
   return estimatedSeason > 0 ? estimatedSeason : null;
@@ -69,7 +69,7 @@ const FieldActivity: React.FC = () => {
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const tractorLinksRef = useRef<HTMLDivElement>(null);
-  
+
   // Add a ref to store initial block data that won't trigger re-renders
   const initialBlockDataRef = useRef<{
     latestBlockNumber: number | null;
@@ -186,7 +186,7 @@ const FieldActivity: React.FC = () => {
         const latestBlock = await publicClient.getBlock();
         const latestBlockNumber = Number(latestBlock.number);
         const latestBlockTimestamp = Number(latestBlock.timestamp);
-        
+
         // Store the initial block data in the ref if not already set
         if (initialBlockDataRef.current.latestBlockNumber === null) {
           initialBlockDataRef.current = {
@@ -195,7 +195,7 @@ const FieldActivity: React.FC = () => {
           };
           console.log(`Initial block data captured: Block ${latestBlockNumber}, Timestamp ${latestBlockTimestamp}`);
         }
-        
+
         // Use the stored initial values for all calculations
         const storedBlockNumber = initialBlockDataRef.current.latestBlockNumber || latestBlockNumber;
         const storedBlockTimestamp = initialBlockDataRef.current.latestBlockTimestamp || latestBlockTimestamp;
@@ -250,7 +250,7 @@ const FieldActivity: React.FC = () => {
           const estimatedSeason = estimateSeasonFromBlock(
             Number(blockNumber),
             storedBlockNumber,
-            Number(currentSeason)
+            Number(currentSeason),
           );
 
           // Convert the podIndex to a TokenValue
@@ -641,7 +641,9 @@ const FieldActivity: React.FC = () => {
                 key={activity.id}
                 className={`hover:bg-pinto-green-1 transition-colors ${hoveredAddress === activity.address ? "bg-pinto-green-1" : ""}`}
               >
-                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatSeason(activity.season)}</td>
+                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
+                  {formatSeason(activity.season)}
+                </td>
                 <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
                   {formatDate(activity.timestamp)}
                 </td>
