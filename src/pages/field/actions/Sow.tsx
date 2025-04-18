@@ -16,7 +16,7 @@ import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { stringToNumber, stringToStringNum } from "@/utils/string";
 import { AdvancedFarmCall, FarmFromMode, FarmToMode, Token } from "@/utils/types";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
 
@@ -28,7 +28,6 @@ import { Col, Row } from "@/components/Container";
 import CornerBorders from "@/components/CornerBorders";
 import { LightningIcon } from "@/components/Icons";
 import RoutingAndSlippageInfo, { useRoutingAndSlippageWarning } from "@/components/RoutingAndSlippageInfo";
-import SowOrderDialog from "@/components/SowOrderDialog";
 import TextSkeleton from "@/components/TextSkeleton";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -47,9 +46,7 @@ import { sortAndPickCrates } from "@/utils/convert";
 import { HashString } from "@/utils/types.generic";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { getBalanceFromMode } from "@/utils/utils";
-import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Link } from "react-router-dom";
 
 type SowProps = {
   isMorning: boolean;
@@ -486,8 +483,8 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
         )}
       </AnimatePresence>
       {slippageWarning}
-      <div className="flex justify-center mt-4 relative">
-        <div className="relative w-full">
+      <div className="hidden sm:flex justify-center relative">
+        <div className="relative w-full mt-4 ">
           <button
             type="button"
             onClick={() => onShowOrder()}
@@ -674,7 +671,7 @@ const heightMapping = {
   },
   fromBalance: {
     isMain: { 0: "13.75rem", 1: "19rem" },
-    notMain: { 0: "19.25rem", 1: "24.5rem" },
+    notMain: { 0: "18.5rem", 1: "24.5rem" },
   },
 } as const;
 

@@ -1083,14 +1083,14 @@ export async function getAverageTipPaid(publicClient: PublicClient): Promise<num
   try {
     // Calculate blocks for 14 days (14 * 24 * 60 * 60 / 2 = 604800 blocks)
     const BLOCKS_PER_14_DAYS = 604800n;
-    
+
     // Get current block number
     const currentBlock = await publicClient.getBlockNumber();
-    
+
     // Calculate starting block (use max of deployment block or 14 days ago)
     const fourteenDaysAgoBlock = currentBlock > BLOCKS_PER_14_DAYS ? currentBlock - BLOCKS_PER_14_DAYS : 0n;
     const fromBlock = fourteenDaysAgoBlock > TRACTOR_DEPLOYMENT_BLOCK ? fourteenDaysAgoBlock : TRACTOR_DEPLOYMENT_BLOCK;
-    
+
     // Query for OperatorReward events
     const events = await publicClient.getContractEvents({
       address: TRACTOR_HELPERS_ADDRESS,
@@ -1099,16 +1099,16 @@ export async function getAverageTipPaid(publicClient: PublicClient): Promise<num
       fromBlock,
       toBlock: "latest",
     });
-    
+
     // If no events found, return default value of 1
     if (events.length === 0) {
       return 1;
     }
-    
+
     // Calculate average tip amount
     let totalTipAmount = 0n;
     let validEventCount = 0;
-    
+
     for (const event of events) {
       try {
         // Get the event data
@@ -1117,13 +1117,13 @@ export async function getAverageTipPaid(publicClient: PublicClient): Promise<num
           data: event.data,
           topics: event.topics,
         });
-        
+
         // Extract and use the amount parameter
-        if (decodedEvent.args && 'amount' in decodedEvent.args) {
+        if (decodedEvent.args && "amount" in decodedEvent.args) {
           const amount = decodedEvent.args.amount;
-          
+
           // Make sure it's a bigint and positive
-          if (typeof amount === 'bigint' && amount > 0n) {
+          if (typeof amount === "bigint" && amount > 0n) {
             totalTipAmount += amount;
             validEventCount++;
           }
@@ -1132,13 +1132,13 @@ export async function getAverageTipPaid(publicClient: PublicClient): Promise<num
         // Silently continue on error
       }
     }
-    
+
     // If no valid events found, return default value
     if (validEventCount === 0) {
       return 1;
     }
-    
-    // Calculate average in human-readable form 
+
+    // Calculate average in human-readable form
     const avgTipAmount = Number(totalTipAmount) / (validEventCount * 1e6);
 
     // If we somehow got a non-positive number, return the default

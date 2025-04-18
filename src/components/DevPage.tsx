@@ -3,16 +3,17 @@ import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 import { diamondABI as beanstalkAbi, diamondABI } from "@/constants/abi/diamondABI";
 import { TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { morningFieldDevModeAtom } from "@/state/protocol/field/field.atoms";
 import { getMorningResult, getNowRounded } from "@/state/protocol/sun";
 import { morningAtom, seasonAtom, sunQueryKeysAtom } from "@/state/protocol/sun/sun.atoms";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { useFieldQueryKeys, useInvalidateField } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import { useInvalidateSun, useSeasonQueryKeys } from "@/state/useSunData";
 import useTokenData from "@/state/useTokenData";
-import { useFarmerSilo } from "@/state/useFarmerSilo";
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { isDev, isLocalhost } from "@/utils/utils";
+import { Token } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useEffect, useState, useMemo } from "react";
@@ -36,7 +37,7 @@ import MorningCard from "./MorningCard";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
-import { Token, DepositData } from "@/utils/types";
+import { DepositData } from "@/utils/types";
 import { generateBatchSortDepositsCallData, simulateAndPrepareFarmCalls } from "@/lib/claim/depositUtils";
 import { useSunData } from "@/state/useSunData";
 import useTransaction from "@/hooks/useTransaction";
@@ -962,7 +963,7 @@ export default function DevPage() {
             )}
           </div>
         </Card>
-        
+
         {/* Farmer Silo Deposits section - render component directly */}
         <FarmerSiloDeposits />
       </div>
@@ -1239,7 +1240,7 @@ function FarmerSiloDeposits() {
 
   const handleSortDeposits = async (token: Token) => {
     if (!address || !walletClient || !publicClient || !protocolAddress) return;
-    
+
     setSortingToken(token.address);
     try {
       // 1. Call getSortedDeposits to get stems and amounts
@@ -1251,16 +1252,16 @@ function FarmerSiloDeposits() {
         address: tractorHelpersAddress,
         abi: tractorHelpersABI,
         functionName: "getSortedDeposits",
-        args: [address, token.address]
+        args: [address, token.address],
       });
 
       // The result is a tuple [stems[], amounts[]]
       const stems = result[0] as readonly bigint[];
       const amounts = result[1] as readonly bigint[];
-      
+
       console.log(`Sorted deposits for ${token.symbol}:`, {
-        stems: stems.map(stem => stem.toString()),
-        amounts: amounts.map(amount => amount.toString())
+        stems: stems.map((stem) => stem.toString()),
+        amounts: amounts.map((amount) => amount.toString()),
       });
 
       // Use the extracted utility function to create reversed deposit IDs
@@ -1274,8 +1275,8 @@ function FarmerSiloDeposits() {
       const hash = await walletClient.writeContract({
         address: beanstalkAddress,
         abi: beanstalkAbi,
-        functionName: 'updateSortedDepositIds',
-        args: [address, token.address, reversedDepositIds]
+        functionName: "updateSortedDepositIds",
+        args: [address, token.address, reversedDepositIds],
       });
 
       toast.success(`Sort deposits transaction submitted for ${token.symbol}`);
@@ -1545,7 +1546,7 @@ function FarmerSiloDeposits() {
   return (
     <Card className="p-6">
       <h2 className="text-2xl mb-4">Farmer Silo Deposits</h2>
-      
+
       <div className="flex justify-between items-center mb-6">
         <div className="flex flex-col">
           <div className="text-sm text-gray-500">
@@ -1596,9 +1597,7 @@ function FarmerSiloDeposits() {
           </div>
         </div>
       ) : !deposits || deposits.size === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          No deposits found for this account
-        </div>
+        <div className="text-center py-8 text-gray-500">No deposits found for this account</div>
       ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-5 gap-4 font-medium text-sm text-pinto-gray-4 p-2 border-b">
@@ -1608,7 +1607,7 @@ function FarmerSiloDeposits() {
             <div>Stalk</div>
             <div>Seeds</div>
           </div>
-          
+
           {Array.from(deposits.entries() || []).map(([token, depositData]) => (
             <div key={token.address} className="border-b pb-4">
               <div className="flex items-center justify-between mb-2">
@@ -1650,14 +1649,12 @@ function FarmerSiloDeposits() {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-5 gap-4 text-sm">
                 <div className="font-medium">Total:</div>
                 <div className="font-mono">{formatValue(depositData.amount)}</div>
                 <div>
-                  <span className="font-semibold">
-                    BDV:{" "}
-                  </span>
+                  <span className="font-semibold">BDV: </span>
                   <span className="font-mono">{depositData.currentBDV.toHuman()}</span>
                 </div>
                 <div className="font-mono">{formatValue(depositData.stalk?.total)}</div>
@@ -1730,9 +1727,7 @@ function FarmerSiloDeposits() {
                         <div className="font-mono">Stem: {deposit.stem.toString()}</div>
                         <div className="font-mono">{formatValue(deposit.amount)}</div>
                         <div>
-                          <span className="font-semibold">
-                            BDV:{" "}
-                          </span>
+                          <span className="font-semibold">BDV: </span>
                           <span className="font-mono">{deposit.currentBdv.toHuman()}</span>
                         </div>
                         <div className="font-mono">{formatValue(deposit.stalk?.base)}</div>
@@ -1744,7 +1739,7 @@ function FarmerSiloDeposits() {
               ) : null}
             </div>
           ))}
-          
+
           <div className="mt-8 p-4 bg-gray-50 rounded-lg">
             <div className="flex justify-between font-medium mb-2">
               <span>Total Stalk:</span>
