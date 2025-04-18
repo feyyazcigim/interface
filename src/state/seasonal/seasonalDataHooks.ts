@@ -234,19 +234,11 @@ export function useSeasonalAvgSeeds(fromSeason: number, toSeason: number): UseSe
 }
 
 export function useSeasonalSiloActiveFarmers(fromSeason: number, toSeason: number): UseSeasonalResult {
-  const q = useSeasonalBeanstalkSiloActiveFarmersSG(fromSeason, toSeason, (siloHourly, timestamp) => ({
+  return useSeasonalBeanstalkSiloActiveFarmersSG(fromSeason, toSeason, (siloHourly, timestamp) => ({
     season: Number(siloHourly.season),
     value: siloHourly.activeFarmers,
     timestamp,
   }));
-
-  console.log({
-    fromSeason,
-    toSeason,
-    data: q.data,
-  });
-
-  return q;
 }
 
 /** ==================== Beanstalk FieldHourlySnapshot ==================== **/
