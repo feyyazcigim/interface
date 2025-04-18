@@ -1578,7 +1578,10 @@ function FarmerSiloDeposits() {
                   <img src={token.logoURI} alt={token.symbol} className="w-6 h-6 rounded-full" />
                   <span className="font-medium">{token.symbol}</span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                  <span className="text-xs text-pinto-gray-4">
+                    {depositData.deposits.length} deposit{depositData.deposits.length !== 1 ? 's' : ''}
+                  </span>
                   <Button 
                     onClick={() => handleCombineAndSortSingleToken(token)}
                     disabled={farmingSortToken === token.address || sortingToken === token.address}
