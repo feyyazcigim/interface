@@ -20,6 +20,7 @@ import { usePodLine, useTemperature } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
+import { FarmFromMode, FarmToMode, DepositData } from "@/utils/types";
 import { isValidAddress } from "@/utils/string";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -60,10 +61,68 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   const [operatorTip, setOperatorTip] = useState("1");
   const { address } = useAccount();
   const [loading, setLoading] = useState<string | null>(null);
+  
+  // Function to check if deposits are sorted from low stem to high stem
+  const areDepositsSorted = (deposits: DepositData[]): boolean => {
+    if (!deposits || deposits.length <= 1) return true;
+    
+    for (let i = 1; i < deposits.length; i++) {
+      const currentStem = deposits[i].stem.toBigInt();
+      const previousStem = deposits[i-1].stem.toBigInt();
+      
+      if (currentStem <= previousStem) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+  
+  // Check if all tokens have sorted deposits
+  const allTokensSorted = useMemo(() => {
+    if (!farmerDeposits || farmerDeposits.size === 0) return true;
+    
+    return Array.from(farmerDeposits.entries()).every(([_, depositData]) => 
+      areDepositsSorted(depositData.deposits || [])
+    );
+  }, [farmerDeposits]);
+  
+  // Get a list of unsorted tokens and their deposit counts
+  const unsortedTokensInfo = useMemo(() => {
+    if (!farmerDeposits || farmerDeposits.size === 0) return [];
+    
+    return Array.from(farmerDeposits.entries())
+      .filter(([_, depositData]) => 
+        !areDepositsSorted(depositData.deposits || []) && depositData.deposits.length > 1
+      )
+      .map(([token, depositData]) => ({
+        token,
+        depositCount: depositData.deposits.length
+      }));
+  }, [farmerDeposits]);
+  
+  // Get a list of tokens that need combining
+  const tokensThatNeedCombining = useMemo(() => {
+    if (!farmerDeposits || farmerDeposits.size === 0) return [];
+    
+    return Array.from(farmerDeposits.entries())
+      .filter(([_, depositData]) => depositData.deposits.length >= 25) // MIN_DEPOSITS_FOR_COMBINING
+      .map(([token, depositData]) => ({
+        token,
+        depositCount: depositData.deposits.length
+      }));
+  }, [farmerDeposits]);
+
+  // Determine if deposits need to be optimized (either combined or sorted)
+  const needsOptimization = useMemo(() => {
+    return needsCombining(farmerDeposits) || !allTokensSorted;
+  }, [farmerDeposits, allTokensSorted]);
+  
   const [formStep, setFormStep] = useState(() => {
-    // If deposits need combining, start at step 0, otherwise normal flow
-    return needsCombining(farmerDeposits) ? 0 : 1;
+    // If deposits need combining OR are not sorted, start at step 0, otherwise normal flow
+    return needsOptimization ? 0 : 1;
   });
+  
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [encodedData, setEncodedData] = useState<`0x${string}` | null>(null);
   const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
@@ -96,21 +155,16 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
   // Claim rewards necessary if deposits have not been combined
   const { submitClaimRewards, isSubmitting: isClaimSubmitting } = useClaimRewards();
 
-  // Check if farmer needs combining using depositUtils
-  const needsDepositCombining = useMemo(() => {
-    return needsCombining(farmerDeposits);
-  }, [farmerDeposits]);
-
-  // Recheck the need for combining whenever deposits change
+  // Recheck the need for optimization whenever deposits change
   useEffect(() => {
     // Only auto-update if we're on step 0
     if (formStep === 0) {
-      // If no longer needs combining, advance to step 1
-      if (!needsDepositCombining) {
+      // If no longer needs optimization, advance to step 1
+      if (!needsOptimization) {
         setFormStep(1);
       }
     }
-  }, [needsDepositCombining, formStep]);
+  }, [needsOptimization, formStep]);
 
   // Get LP tokens
   const lpTokens = useMemo(() => whitelistedTokens.filter((t) => t.isLP), [whitelistedTokens]);
@@ -870,16 +924,46 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
             {/* Form Fields */}
             <div className="flex flex-col gap-6">
               {formStep === 0 ? (
-                // Step 0 - Deposits need combining
-                <div className="flex flex-col gap-4 py-2 h-[280px]">
+                // Step 0 - Deposits need combining or sorting
+                <div className="flex flex-col gap-4 py-2 min-h-[320px]">
                   <div className="flex items-center justify-center">
                     <WarningIcon color="#DC2626" width={40} height={40} />
                   </div>
-                  <h3 className="text-center pinto-h3 font-antarctica mt-4 mb-4">Fragmented Silo Deposits</h3>
-                  <p className="text-center pinto-body text-gray-700">
+                  <h3 className="text-center pinto-h3 font-antarctica mt-4 mb-2">Fragmented Silo Deposits</h3>
+                  <p className="text-center pinto-body text-gray-700 mb-2">
                     Pinto does not combine and sort deposits by default, due to gas costs. A one-time claim and combine
                     will optimize your deposits and allow you to create Tractor orders.
                   </p>
+                  
+                  {/* Display tokens needing optimization */}
+                  <div className="mt-2 p-3 bg-gray-50 rounded-md max-h-[180px] overflow-y-auto">
+                    {unsortedTokensInfo.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-[#ED7A00] mb-2">Tokens with unsorted deposits:</p>
+                        <ul className="text-xs text-gray-600 ml-4 list-disc">
+                          {unsortedTokensInfo.map(({ token, depositCount }) => (
+                            <li key={token.address} className="mb-1">
+                              <span className="font-medium">{token.symbol}</span>: {depositCount} deposits
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {tokensThatNeedCombining.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-[#ED7A00] mb-2">Tokens with too many deposits:</p>
+                        <ul className="text-xs text-gray-600 ml-4 list-disc">
+                          {tokensThatNeedCombining.map(({ token, depositCount }) => (
+                            <li key={token.address} className="mb-1">
+                              <span className="font-medium">{token.symbol}</span>: {depositCount} deposits
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                  
                   {/* The Claim & Combine button has been moved to the footer (replacing the Next button) */}
                 </div>
               ) : formStep === 1 ? (
