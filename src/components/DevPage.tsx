@@ -1278,8 +1278,6 @@ function FarmerSiloDeposits() {
     try {
       toast.info("Preparing to combine and sort all deposits...");
       
-      const isRaining = sunData?.raining || false;
-      
       console.log(`Processing ${farmerSilo.deposits.size} tokens for sorting`);
       
       // Use the utility function to generate batch sort deposits call data
@@ -1287,8 +1285,7 @@ function FarmerSiloDeposits() {
         effectiveAddress as `0x${string}`,
         farmerSilo.deposits,
         publicClient,
-        protocolAddress,
-        isRaining
+        protocolAddress
       );
       
       if (!callData || callData.length === 0) {
@@ -1380,8 +1377,6 @@ function FarmerSiloDeposits() {
     try {
       toast.info(`Preparing combine and sort operations for ${token.symbol}...`);
       
-      const isRaining = sunData?.raining || false;
-      
       // Create a single-token deposit map for this token only
       const singleTokenDeposits = new Map();
       const depositData = farmerSilo.deposits.get(token);
@@ -1401,8 +1396,7 @@ function FarmerSiloDeposits() {
         effectiveAddress as `0x${string}`, 
         publicClient,
         protocolAddress,
-        singleTokenDeposits, // Pass only this token's deposits
-        isRaining
+        singleTokenDeposits // Pass only this token's deposits
       );
       
       if (!tokenCalls) {

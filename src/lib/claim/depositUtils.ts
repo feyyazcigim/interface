@@ -30,16 +30,11 @@ export function needsCombining(deposits: Map<Token, TokenDepositData>): boolean 
 /**
  * Generates smart conversion calls for updating deposits (L2L)
  * @param farmerDeposits Map of token to deposit data
- * @param isRaining Weather condition that affects conversion strategy
  * @returns Array of encoded function calls
  */
 export function generateCombineAndL2LCallData(
-  farmerDeposits: Map<Token, TokenDepositData>,
-  isRaining: boolean,
+  farmerDeposits: Map<Token, TokenDepositData>
 ): `0x${string}`[] {
-  // Prevents L2L converts when it's raining, don't want to lose rain roots
-  if (isRaining) return [];
-
   const tokenEntries = Array.from(farmerDeposits.entries());
 
   // First check if any tokens need combining
@@ -198,7 +193,6 @@ function decodeSortedDepositsResult(
  * @param publicClient Public client for blockchain interaction
  * @param protocolAddress Protocol contract address
  * @param farmerDeposits Map of token to deposit data
- * @param isRaining Weather condition
  * @param sender Optional override for the sender address in the updateSortedDepositIds call
  * @returns Array of farm calls or null if simulation failed
  */
@@ -208,7 +202,6 @@ export async function simulateAndPrepareFarmCalls(
   publicClient: PublicClient,
   protocolAddress: `0x${string}`,
   farmerDeposits: Map<Token, TokenDepositData>,
-  isRaining: boolean,
   sender?: `0x${string}`
 ): Promise<`0x${string}`[] | null> {
   console.log(`Simulating and preparing farm calls for ${token.symbol}`);
@@ -239,7 +232,7 @@ export async function simulateAndPrepareFarmCalls(
     // If farmer deposits are provided, add combine and L2L calls first
     if (farmerDeposits && farmerDeposits.size > 0) {
       // Generate convert calls with smart limits using our utility function
-      const combineCalls = generateCombineAndL2LCallData(farmerDeposits, isRaining || false);
+      const combineCalls = generateCombineAndL2LCallData(farmerDeposits);
       if (combineCalls.length > 0) {
         console.log(`Adding ${combineCalls.length} combine/L2L calls to execute before sort deposits`);
         farmCalls.push(...combineCalls);
@@ -372,7 +365,6 @@ export function packAddressAndStem(tokenAddress: string, stem: bigint): bigint {
  * @param farmerDeposits Map of token to deposit data
  * @param publicClient The viem public client for blockchain interaction
  * @param protocolAddress The Beanstalk protocol address
- * @param isRaining Whether it's currently raining in the protocol
  * @param sender Optional override for the sender address in the updateSortedDepositIds calls
  * @returns Array of encoded function calls for updating sorted deposits
  */
@@ -381,7 +373,6 @@ export async function generateBatchSortDepositsCallData(
   farmerDeposits: Map<Token, TokenDepositData>,
   publicClient: PublicClient,
   protocolAddress: `0x${string}`,
-  isRaining: boolean,
   sender?: `0x${string}`
 ): Promise<`0x${string}`[]> {
   console.log(`Generating batch sort deposits call data for ${farmerDeposits.size} tokens`);
@@ -410,7 +401,6 @@ export async function generateBatchSortDepositsCallData(
         publicClient,
         protocolAddress,
         singleTokenMap, // Pass only this token's deposits
-        isRaining,
         sender // Pass the sender parameter
       );
 
