@@ -15,7 +15,7 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { isDev, isLocalhost } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
 import { 
@@ -36,13 +36,11 @@ import MorningCard from "./MorningCard";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
-import { Token } from "@/utils/types";
+import { Token, DepositData } from "@/utils/types";
 import { generateBatchSortDepositsCallData, simulateAndPrepareFarmCalls } from "@/lib/claim/depositUtils";
 import { useSunData } from "@/state/useSunData";
 import useTransaction from "@/hooks/useTransaction";
 import { isValidAddress } from "@/utils/string";
-import { TokenValue } from "@/classes/TokenValue";
-import { calculateConvertData } from "@/utils/convert";
 
 type ServerStatus = "running" | "not-running" | "checking";
 
@@ -1200,6 +1198,31 @@ function FarmerSiloDeposits() {
     }
   });
 
+  // Function to check if deposits are sorted from low stem to high stem
+  const areDepositsSorted = (deposits: DepositData[]): boolean => {
+    if (!deposits || deposits.length <= 1) return true;
+    
+    for (let i = 1; i < deposits.length; i++) {
+      const currentStem = deposits[i].stem.toBigInt();
+      const previousStem = deposits[i-1].stem.toBigInt();
+      
+      if (currentStem <= previousStem) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+  
+  // Check if all tokens have sorted deposits
+  const allTokensSorted = useMemo(() => {
+    if (!deposits || deposits.size === 0) return true;
+    
+    return Array.from(deposits.entries()).every(([_, depositData]) => 
+      areDepositsSorted(depositData.deposits || [])
+    );
+  }, [deposits]);
+
   const handleRefresh = async () => {
     setLoading(true);
     try {
@@ -1524,8 +1547,24 @@ function FarmerSiloDeposits() {
       <h2 className="text-2xl mb-4">Farmer Silo Deposits</h2>
       
       <div className="flex justify-between items-center mb-6">
-        <div className="text-sm text-gray-500">
-          {address ? `Current account: ${address}` : "No account connected"}
+        <div className="flex flex-col">
+          <div className="text-sm text-gray-500">
+            {address ? `Current account: ${address}` : "No account connected"}
+          </div>
+          {deposits && deposits.size > 0 && (
+            <div className="flex items-center mt-1">
+              <span className="text-sm mr-2">Overall Status:</span>
+              {allTokensSorted ? (
+                <span className="text-sm px-2 py-0.5 bg-green-100 text-green-800 rounded-full">
+                  All Sorted
+                </span>
+              ) : (
+                <span className="text-sm px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">
+                  Not Sorted
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <Button 
@@ -1576,6 +1615,15 @@ function FarmerSiloDeposits() {
                 <div className="flex items-center gap-2">
                   <img src={token.logoURI} alt={token.symbol} className="w-6 h-6 rounded-full" />
                   <span className="font-medium">{token.symbol}</span>
+                  {depositData.deposits && depositData.deposits.length > 1 && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      areDepositsSorted(depositData.deposits) 
+                        ? "bg-green-100 text-green-800" 
+                        : "bg-amber-100 text-amber-800"
+                    }`}>
+                      {areDepositsSorted(depositData.deposits) ? "Sorted" : "Not Sorted"}
+                    </span>
+                  )}
                 </div>
                 <div className="flex gap-2 items-center">
                   <span className="text-xs text-pinto-gray-4">
