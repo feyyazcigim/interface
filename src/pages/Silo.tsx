@@ -14,16 +14,27 @@ import useFarmerActions from "@/hooks/useFarmerActions";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import { useSiloData } from "@/state/useSiloData";
-import useTokenData from "@/state/useTokenData";
+import useTokenData, { useWhitelistedTokens } from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { getClaimText } from "@/utils/string";
-import { StatPanelData } from "@/utils/types";
+import { StatPanelData, Token } from "@/utils/types";
 import { getSiloConvertUrl } from "@/utils/url";
 import { AnimatePresence, motion } from "framer-motion";
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import SiloTable from "./silo/SiloTable";
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
+import { useQuery } from "@tanstack/react-query";
+import { useSeason } from "@/state/useSunData";
+import { useChainId } from "wagmi";
+import { useSeasonalSiloActiveFarmers } from "@/state/seasonal/seasonalDataHooks";
+import { tabToSeasonalLookback, TimeTab } from "@/components/charts/SeasonalChart";
+import { title } from "process";
+import { Card } from "@/components/ui/Card";
+import { div } from "three/webgpu";
+import DonutChart from "@/components/DonutChart";
+import useIsMobile from "@/hooks/display/useIsMobile";
+import { cn } from "@/utils/utils";
 
 function Silo() {
   const farmerSilo = useFarmerSilo();
@@ -271,15 +282,19 @@ function Silo() {
               )}
             </div>
           </div>
-          <div className="flex flex-col w-full">
-            <div className="flex flex-col gap-6">
-          <SiloStats />
-          <AccordionGroup items={FAQ_ITEMS} groupTitle="Frequently Asked Questions" />
+          <div className="flex flex-col w-full gap-8">
+            {/* <div className="grid grid-cols-[1fr_2fr]"> */}
+            <div className="w-full">
+              <SiloStats />
             </div>
-        </div>
+            <div className="w-full">
+              <AccordionGroup items={FAQ_ITEMS} allExpanded={false} groupTitle="Frequently Asked Questions" />
+            </div>
+            {/* </div> */}
+          </div>
         </div>
       </div>
-      
+
       <ActionsMenu showOnTablet />
     </PageContainer>
   );
@@ -303,122 +318,242 @@ const LearnSilo = () => (
 );
 
 const SiloStats = () => {
-  const siloStats = useSiloStats();
+  const { data: siloStats, isLoading } = useSiloStats();
 
-  const stats = [
-    {
-      label: "Total Deposited PDV",
-      value: formatter.twoDec(siloStats.totalDepositedBDV),
-    },
-    {
-      label: "Total Stalk",
-      value: formatter.twoDec(siloStats.totalStalk),
-    },
-    {
-      label: "Unique Depositors",
-      value: siloStats.uniqueDepositors,
-    },
-  ] as const;
+  const stats = useMemo(
+    () =>
+      [
+        {
+          label: "Total Deposited PDV",
+          subLabel: "Total Pinto Denominated Value deposited into the Silo",
+          value: formatter.twoDec(siloStats.totalDepositedBDV),
+        },
+        {
+          label: "Total Stalk",
+          subLabel: "Total Stalk issued to Silo Depositors",
+          value: formatter.twoDec(siloStats.totalStalk),
+        },
+        {
+          label: "Active Farmers",
+          subLabel: "Total number of unique depositors in the Silo",
+          value: siloStats.uniqueDepositors,
+        },
+      ] as const,
+    [siloStats.totalDepositedBDV, siloStats.totalStalk, siloStats.uniqueDepositors],
+  );
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="hidden sm:grid grid-cols-3 gap-4">
-        {stats.map(({ label, value }) => {
-          return (
-            <div key={`silo-stat-desktop-${label}`} className="flex flex-col gap-2 items-center">
-              <div className="pinto-xs text-pinto-light">{label}</div>
-              <div className="pinto-h3 w-full text-center text-pinto-gray-5">{value}</div>
-            </div>
-          );
-        })}
-      </div>
-      <Col className="flex sm:hidden gap-2">
-        {stats.map(({ label, value }) => {
-          return (
-            <Row key={`silo-stat-mobile-${label}`} className="gap-2 items-center justify-between">
-              <div className="pinto-xs text-pinto-light">{label}</div>
-              <div className="pinto-sm text-end text-pinto-gray-5">{value}</div>
-            </Row>
-          );
-        })}
-      </Col>
-    </div>
+    <Row className="flex flex-col sm:flex-row gap-4 sm:gap-12 justify-between h-full">
+      {/*
+       * Stats section
+       */}
+      <Card className="flex flex-col p-4 h-auto" style={{ alignSelf: "stretch" }}>
+        <div className="hidden sm:flex flex-row gap-x-12 gap-y-4 flex-wrap w-full">
+          {stats.map(({ label, subLabel, value }) => {
+            return (
+              <div key={`silo-stat-desktop-${label}`} className="flex flex-col flex-grow gap-1 sm:gap-2">
+                <div className="pinto-sm-light sm:pinto-body-light font-thin">{label}</div>
+                <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">{subLabel}</div>
+                <div className="pinto-body sm:pinto-h3">{isLoading ? "--" : value}</div>
+              </div>
+            );
+          })}
+        </div>
+        <Col className="flex sm:hidden gap-2 w-full">
+          {stats.map(({ label, value }) => {
+            return (
+              <Row key={`silo-stat-mobile-${label}`} className="gap-2 items-center justify-between">
+                <div className="pinto-xs">{label}</div>
+                <div className="pinto-sm text-end">{value}</div>
+              </Row>
+            );
+          })}
+        </Col>
+        <Link
+          to="/explorer/silo"
+          className="pinto-xs sm:pinto-sm font-light text-pinto-green-4 sm:text-pinto-green-4 hover:underline transition-all mt-2"
+        >
+          See more data →
+        </Link>
+      </Card>
+      <Card className="flex flex-col p-4 w-full h-auto" style={{ alignSelf: "stretch" }}>
+        <DepositedByTokenDoughnutChart />
+      </Card>
+    </Row>
   );
 };
 
-const fakeData: { uniqueDepositors: number; isLoading: boolean } = {
-  uniqueDepositors: 413,
-  isLoading: false,
-};
+const donutOptions = {
+  plugins: {
+    tooltip: {
+      enabled: true,
+      callbacks: {
+        label: (context) => {
+          return `% TVD: ${context.formattedValue}%`;
+        },
+      },
+    },
+  },
+} as const;
+
+// The length of chartColors determines how many charts you can plot at the same time
+const chartColors = [
+  "#246645", // Pinto Green (pinto-green-3)
+  "#1E6091", // Deep Blue
+  "#D62828", // Vibrant Red
+  "#8338EC", // Bright Purple
+  "#FF9F1C", // Golden Orange
+  "#00BCD4", // Light Blue / Cyan
+];
+
+const DepositedByTokenDoughnutChart = React.memo(() => {
+  const { data: siloStats, isLoading } = useSiloStats();
+
+  const isMobile = useIsMobile();
+
+  const donutChartProps = useMemo(() => {
+    return {
+      labels: isLoading ? [] : Object.keys(siloStats.depositedByToken),
+      datasets: [
+        {
+          label: "",
+          data: isLoading
+            ? []
+            : Object.values(siloStats.depositedByToken).map(({ ratio }) => ratio.mul(100).toNumber()),
+          backgroundColor: chartColors,
+          borderWidth: 0,
+        },
+      ],
+    };
+  }, [siloStats.depositedByToken]);
+
+  return (
+    <Col className="relative gap-4 items-center">
+      <div className="pinto-sm-light sm:pinto-body-light font-thin">Silo Deposits By Token</div>
+      <div className="flex flex-col self-stretch items-center">
+        <DonutChart
+          className={cn("w-72 h-72", isMobile && "w-40 h-40")}
+          size={isMobile ? 150 : 300}
+          data={donutChartProps}
+          options={donutOptions}
+        />
+      </div>
+    </Col>
+  );
+});
 
 const useUniqueDepositors = () => {
-  return fakeData;
-};
-
-const useSiloStats = () => {
-  const silo = useSiloData();
-  const uniqueDepositors = useUniqueDepositors();
-
-  const totals = useMemo(() => {
-    return [...silo.tokenData.values()].reduce<{ totalDepositedBDV: TokenValue }>(
-      (acc, tokenData) => {
-        acc.totalDepositedBDV = acc.totalDepositedBDV.add(tokenData.depositedBDV);
-        return acc;
-      },
-      {
-        totalDepositedBDV: TokenValue.ZERO,
-      },
-    );
-  }, [silo.tokenData]);
+  const season = useSeason();
+  const query = useSeasonalSiloActiveFarmers(Math.max(0, season - tabToSeasonalLookback(TimeTab.Week)), season);
 
   return {
-    ...totals,
-    ...uniqueDepositors,
-    totalStalk: silo.totalStalk,
-    isLoading: totals.totalDepositedBDV.lte(0) || uniqueDepositors.isLoading,
+    ...query,
+    data: query.data?.length ? query.data[0].value : undefined,
   };
 };
 
+type BDVInfo = {
+  token: Token;
+  depositedBDV: TokenValue;
+  ratio: TokenValue;
+};
+
+const reduceTotalDepositedBDV = (tokenData: ReturnType<typeof useSiloData>["tokenData"]) => {
+  const entries = [...tokenData.entries()];
+
+  return entries.reduce<TokenValue>((acc, [_, tokenData]) => acc.add(tokenData.depositedBDV), TokenValue.ZERO);
+};
+
+const useSiloStats = () => {
+  const whitelist = useWhitelistedTokens();
+
+  const uniqueDepositors = useUniqueDepositors();
+  const silo = useSiloData();
+
+  const totals = useMemo(() => reduceTotalDepositedBDV(silo.tokenData), [silo.tokenData]);
+
+  const totalDepositedBDVStr = totals.toHuman();
+
+  const byToken = useMemo(() => {
+    return whitelist.reduce<Record<string, BDVInfo>>((prev, token) => {
+      const obj = { token, depositedBDV: TokenValue.ZERO, ratio: TokenValue.ZERO };
+
+      const wlTokenData = silo.tokenData.get(token);
+
+      if (wlTokenData) {
+        obj.depositedBDV = wlTokenData.depositedBDV;
+        obj.ratio = wlTokenData.depositedBDV.div(totals);
+      }
+
+      prev[token.symbol] = obj;
+      return prev;
+    }, {});
+  }, [totalDepositedBDVStr, whitelist]);
+
+  const isLoading = uniqueDepositors.isLoading || totals.lte(0);
+
+  return {
+    data: {
+      totalDepositedBDV: totals,
+      uniqueDepositors: uniqueDepositors.data,
+      totalStalk: silo.totalStalk,
+      depositedByToken: byToken,
+    },
+    isLoading,
+  };
+};
 
 const FAQ_ITEMS: IBaseAccordionContent[] = [
   {
     key: "what-is-stalk",
     title: "What is Stalk?",
     content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+      "Stalk is a Pinto native asset that represents your ownership of the Silo. When Pinto is above it's value target, more Pintos are issued and distributed amongst the Silo and Field. The higher your ownership, the larger your share of the pinto mints.",
   },
   {
-    key: "what-is-grown-stalk",
-    title: "What is Grown Stalk?",
-    content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+    key: "how-do-i-get-more-stalk",
+    title: "How do I get more Stalk?",
+    content: (
+      <div className="flex flex-col gap-2 pinto-sm font-thin text-pinto-light">
+        <>{"There are two ways to get more Stalk."}</>
+        <ul className="flex flex-col gap-1 pl-2">
+          <li>
+            {
+              "- You can deposit more into the Silo to get more stalk. 1 Pinto (or Pinto Denominated Value) gives you 1 Stalk."
+            }
+          </li>
+          <li>
+            {
+              "- Every season you stay in the silo, you earn Stalk based on the amount of seeds you have. Each seed earns 1/10000 stalk. The amount of seeds you have is based on the amount and token type you deposited in the Silo."
+            }
+          </li>
+        </ul>
+      </div>
+    ),
   },
   {
-    key: "what-is-seed",
-    title: "What are Seeds?",
-    content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.",
+    key: "can-i-lose-stalk",
+    title: "Can I lose Stalk?",
+    content: (
+      <>
+        <span className="font-medium">Yes.</span> Upon withdrawing from the Silo, you forfeit all stalk grown from the
+        withdrawn amount, and cannot be regained.
+      </>
+    ),
   },
   {
-    key: "How-do-you-earn-yield",
-    title: "How do you earn yield?",
+    key: "can-i-switch-my-deposit-type",
+    title: "Can I switch my Deposit type?",
     content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.",
+      "Yes! Pinto allows you to Convert your Pinto Deposits to LP Deposits, when Pinto is above its value target, and LP Deposits to Pinto Deposits below its value target, without losing Stalk. Pinto also allows you to Convert between LP types.",
   },
   {
-    key: "why-should-i-care-about-grown-stalk",
-    title: "Why should I care about Grown Stalk?",
+    key: "how-can-i-maximize-stalk-growth",
+    title: "How can I maximize Stalk growth?",
     content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.",
-  },
-  {
-    key: "why-should-i-care-about-grown-stalks",
-    title: "Why does PINTO need liquidity?",
-    content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.",
+      "A user can maximize their stalk growth by maximizing their seeds, which may change on a season-by-season basis. The system incentivizes conversions to occur by adjusting the seed values of each Silo Token as needed every season.",
   },
 ] as const;
-
 
 /*
 

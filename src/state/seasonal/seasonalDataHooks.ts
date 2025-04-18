@@ -11,7 +11,9 @@ import { useAccount } from "wagmi";
 import useSeasonalBeanBeanSG from "./queries/useSeasonalBeanBeanSG";
 import useSeasonalBeanSeasonSG from "./queries/useSeasonalBeanSeasonSG";
 import useSeasonalBeanstalkFieldSG from "./queries/useSeasonalBeanstalkFieldSG";
-import useSeasonalBeanstalkSiloSG from "./queries/useSeasonalBeanstalkSiloSG";
+import useSeasonalBeanstalkSiloSG, {
+  useSeasonalBeanstalkSiloActiveFarmersSG,
+} from "./queries/useSeasonalBeanstalkSiloSG";
 import useSeasonalBeanstalkWrappedDepositsSG from "./queries/useSeasonalBeanstalkWrappedDepositsSG";
 import useSeasonalFarmerSG from "./queries/useSeasonalFarmerSG";
 import useSeasonalFarmerSiloAssetTokenSG from "./queries/useSeasonalFarmerSiloAssetTokenSG";
@@ -79,8 +81,8 @@ export function useSeasonalTotalLiquidity(fromSeason: number, toSeason: number):
 function calcSeasonalGrownStalk(siloHourly: SiloHourlySnapshot) {
   return TV.fromBlockchain(
     BigInt(siloHourly.stalk) +
-    BigInt(siloHourly.germinatingStalk) -
-    BigInt(siloHourly.depositedBDV) * BigInt(10) ** BigInt(10),
+      BigInt(siloHourly.germinatingStalk) -
+      BigInt(siloHourly.depositedBDV) * BigInt(10) ** BigInt(10),
     STALK.decimals,
   );
 }
@@ -232,11 +234,19 @@ export function useSeasonalAvgSeeds(fromSeason: number, toSeason: number): UseSe
 }
 
 export function useSeasonalSiloActiveFarmers(fromSeason: number, toSeason: number): UseSeasonalResult {
-  return useSeasonalBeanstalkSiloSG(fromSeason, toSeason, (siloHourly, timestamp) => ({
+  const q = useSeasonalBeanstalkSiloActiveFarmersSG(fromSeason, toSeason, (siloHourly, timestamp) => ({
     season: Number(siloHourly.season),
     value: siloHourly.activeFarmers,
     timestamp,
   }));
+
+  console.log({
+    fromSeason,
+    toSeason,
+    data: q.data,
+  });
+
+  return q;
 }
 
 /** ==================== Beanstalk FieldHourlySnapshot ==================== **/

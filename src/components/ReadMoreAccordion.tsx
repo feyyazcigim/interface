@@ -21,7 +21,7 @@ export default function ReadMoreAccordion({ children, defaultOpen = false }: IRe
           }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: "easeInOut" }}
-          className={open ? "flex flex-col": ""}
+          className={open ? "flex flex-col" : ""}
         >
           {children}
         </motion.div>
