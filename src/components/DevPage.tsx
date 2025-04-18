@@ -1398,7 +1398,6 @@ function FarmerSiloDeposits() {
       });
       
       toast.success(`Transaction submitted for processing ${farmerSilo.deposits.size} tokens`);
-      console.log("Transaction hash:", hash);
     } catch (error) {
       console.error("Error processing deposits:", error);
       toast.error(`Failed to process deposits: ${(error as Error).message}`);
@@ -1606,6 +1605,13 @@ function FarmerSiloDeposits() {
       {!address ? (
         <div className="text-center py-8 text-gray-500">
           Connect your wallet to view deposits
+        </div>
+      ) : loading ? (
+        <div className="text-center py-8 text-gray-500">
+          <div className="flex items-center justify-center gap-2">
+            <div className="animate-spin h-5 w-5 border-2 border-pinto-green-3 border-t-transparent rounded-full"></div>
+            <span>Loading deposits...</span>
+          </div>
         </div>
       ) : !deposits || deposits.size === 0 ? (
         <div className="text-center py-8 text-gray-500">
