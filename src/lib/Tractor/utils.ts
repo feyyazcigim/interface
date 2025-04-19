@@ -1013,12 +1013,12 @@ export async function loadOrderbookData(
         console.log(`Total available PINTO: ${totalAvailablePinto.toHuman()}`);
         console.log(`Currently sowable: ${currentlySowable.toHuman()}`);
 
-        // Calculate amountSowableNextSeason as the lesser of currentlySowable and minAmountToSowPerSeason
+        // Calculate amountSowableNextSeason as the greater of currentlySowable and minAmountToSowPerSeason
         let amountSowableNextSeason = currentlySowable;
-        if (decodedData && decodedData.sowAmounts.minAmountToSowPerSeason) {
-          const minAmountPerSeason = TokenValue.fromBlockchain(decodedData.sowAmounts.minAmountToSowPerSeason, 6);
-          amountSowableNextSeason = TokenValue.min(currentlySowable, minAmountPerSeason);
-          console.log(`Min amount to sow per season: ${minAmountPerSeason.toHuman()}`);
+        if (decodedData && decodedData.sowAmounts.maxAmountToSowPerSeason) {
+          const maxAmountToSowPerSeason = TokenValue.fromBlockchain(decodedData.sowAmounts.maxAmountToSowPerSeason, 6);
+          amountSowableNextSeason = TokenValue.min(currentlySowable, maxAmountToSowPerSeason);
+          console.log(`Min amount to sow per season: ${maxAmountToSowPerSeason.toHuman()}`);
           console.log(`Amount sowable next season: ${amountSowableNextSeason.toHuman()}`);
         }
 
