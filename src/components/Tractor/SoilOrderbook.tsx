@@ -21,6 +21,7 @@ import { usePublicClient } from "wagmi";
 import { useChainId } from "wagmi";
 import ReviewTractorOrderDialog, { ExecutionData } from "../ReviewTractorOrderDialog";
 import { Plow } from "./Plow";
+import LoadingSpinner from "../LoadingSpinner";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
@@ -351,7 +352,12 @@ export function SoilOrderbookContent() {
           {requisitions.length === 0 && (
             <TableRow>
               <TableCell colSpan={8} className="p-2 text-center text-gray-500">
-                {isLoading ? "Loading tractor orders..." : "No active requisitions found"}
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <LoadingSpinner size={20} />
+                    <span>Loading tractor orders...</span>
+                  </div>
+                ) : "No active requisitions found"}
               </TableCell>
             </TableRow>
           )}

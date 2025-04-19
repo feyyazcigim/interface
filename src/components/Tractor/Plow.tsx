@@ -21,6 +21,7 @@ import { http, createPublicClient, encodeFunctionData } from "viem";
 import { base } from "viem/chains";
 import { useAccount, usePublicClient } from "wagmi";
 import { PlowDetails } from "./PlowDetails";
+import LoadingSpinner from "../LoadingSpinner";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 const UINT256_MAX = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
@@ -616,7 +617,12 @@ export function Plow() {
   );
 
   if (isLoading) {
-    return <div>Loading requisitions...</div>;
+    return (
+      <div className="flex items-center justify-center gap-2 py-4">
+        <LoadingSpinner size={20} />
+        <span>Loading requisitions...</span>
+      </div>
+    );
   }
 
   // Return the sorted requisitions in the table
