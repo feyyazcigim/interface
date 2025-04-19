@@ -866,15 +866,25 @@ export function Plow() {
         </div>
         <div className="flex gap-4">
           <Button
-            variant="gradient"
-            onClick={handleSimulateAll}
-            disabled={simulatingAll || requisitions.length === 0}
-            size="xxl"
             rounded="full"
-            width="full"
-            className="text-[1rem] sm:text-[1.5rem]"
+            className={`flex-1 ${
+              simulatingAll || requisitions.length === 0
+                ? "bg-[#D9D9D9] text-[#9C9C9C]"
+                : "bg-[#2F8957] text-white"
+            }`}
+            disabled={simulatingAll || requisitions.length === 0}
+            onClick={handleSimulateAll}
           >
-            {simulatingAll ? "Simulating All..." : hasSimulatedAll ? "Resimulate All" : "Simulate all transactions"}
+            {simulatingAll ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+                <span>Simulating All...</span>
+              </div>
+            ) : hasSimulatedAll ? (
+              "Resimulate All"
+            ) : (
+              "Simulate all transactions"
+            )}
           </Button>
 
           {/* You can add additional buttons like "Simulate 2 Transactions" or "Execute 2 Soil Orders" here later */}
