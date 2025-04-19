@@ -263,6 +263,9 @@ export function SoilOrderbookContent() {
               Available Pinto
             </TableHead>
             <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
+              Max per Season
+            </TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
               Blueprint Hash
             </TableHead>
             <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
@@ -319,6 +322,14 @@ export function SoilOrderbookContent() {
                     {availablePinto}
                   </div>
                 </TableCell>
+                <TableCell className="py-2">
+                  <div className="flex items-center gap-1">
+                    <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                    {decodedData && decodedData.sowAmounts.maxAmountToSowPerSeasonAsString
+                      ? formatter.number(TokenValue.fromHuman(decodedData.sowAmounts.maxAmountToSowPerSeasonAsString, 6))
+                      : "Unknown"}
+                  </div>
+                </TableCell>
                 <TableCell className="py-2 text-pinto-dark">
                   {`0x${req.requisition.blueprintHash.slice(2, 7)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
@@ -339,7 +350,7 @@ export function SoilOrderbookContent() {
           })}
           {requisitions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="p-2 text-center text-gray-500">
+              <TableCell colSpan={8} className="p-2 text-center text-gray-500">
                 {isLoading ? "Loading tractor orders..." : "No active requisitions found"}
               </TableCell>
             </TableRow>
