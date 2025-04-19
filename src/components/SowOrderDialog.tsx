@@ -552,7 +552,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
         maxAmountToSowPerSeason: maxPerSeason || "0",
         maxPodlineLength: podLineLength || "0",
         maxGrownStalkPerBdv: "10000000000000000", // default of 100 grown stalk per bdv, which would take about 21 years at 4 seeds. TODO: add input for this in the future
-        runBlocksAfterSunrise: "0",
+        runBlocksAfterSunrise: morningAuction ? "0" : "300",
         operatorTip: operatorTip || "0",
         whitelistedOperators: [],
         tokenStrategy: selectedTokenStrategy,

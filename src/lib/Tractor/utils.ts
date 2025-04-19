@@ -110,7 +110,7 @@ export async function createSowTractorData({
   const maxPodlineBigInt = BigInt(whole + paddedDecimal);
 
   const maxGrownStalk = BigInt(Math.floor(parseFloat(maxGrownStalkPerBdv) * 1e6));
-  const runBlocks = BigInt(runBlocksAfterSunrise === "true" ? 0 : 300); // 0 for morning auction, 300 otherwise
+  const runBlocks = BigInt(runBlocksAfterSunrise); // Direct block number value
   const temp = BigInt(Math.floor(parseFloat(temperature) * 1e6));
   const tip = BigInt(Math.floor(parseFloat(operatorTip) * 1e6));
 
