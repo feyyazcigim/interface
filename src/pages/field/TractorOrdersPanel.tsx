@@ -191,8 +191,7 @@ const TractorOrdersPanel = () => {
   if (error) {
     return (
       <div className="flex flex-col gap-6 justify-center items-center w-full h-[22.5rem] border rounded-[0.75rem] bg-pinto-off-white border-pinto-gray-2">
-        <div className="pinto-body-light text-pinto-red-2">Error loading tractor orders</div>
-        <div className="p-4 rounded-[1rem] border border-pinto-red-2 bg-white text-pinto-red-2">{error}</div>
+        <div className="pinto-h4 text-pinto-red-2">Error loading tractor orders</div>
       </div>
     );
   }
