@@ -2,6 +2,7 @@ import { mockAddressAtom } from "@/Web3Provider";
 import arrowDown from "@/assets/misc/ChevronDown.svg";
 import seedIcon from "@/assets/protocol/Seed.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
+import pintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import { InfoOutlinedIcon, WarningIcon } from "@/components/Icons";
 import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
@@ -973,7 +974,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         />
                       </div>
                       <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-[12px] bg-white group-focus-within:border-[#2F8957]">
-                        <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
+                        <img src={pintoIcon} alt="PINTO" className="w-6 h-6" />
                         <span className="text-black">PINTO</span>
                       </div>
                     </div>
@@ -1002,7 +1003,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                             />
                           </div>
                           <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-[12px] bg-white group-focus-within:border-[#2F8957]">
-                            <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
+                            <img src={pintoIcon} alt="PINTO" className="w-6 h-6" />
                             <span className="text-black">PINTO</span>
                           </div>
                         </div>
@@ -1028,7 +1029,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                             />
                           </div>
                           <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-[12px] bg-white group-focus-within:border-[#2F8957]">
-                            <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
+                            <img src={pintoIcon} alt="PINTO" className="w-6 h-6" />
                             <span className="text-black">PINTO</span>
                           </div>
                         </div>
@@ -1224,7 +1225,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         type="text"
                       />
                       <div className="flex items-center gap-2 px-4 rounded-r-[12px] font-semibold bg-white">
-                        <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-6 h-6" />
+                        <img src={pintoIcon} alt="PINTO" className="w-6 h-6" />
                         <span className="text-base font-normal">PINTO</span>
                       </div>
                     </div>
@@ -1305,7 +1306,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
                         <div className="text-[#9C9C9C] text-base font-light">Estimated total tip</div>
                         <div className="flex items-center text-black text-base font-light">
                           {calculateEstimatedTotalTip()}
-                          <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-5 h-5 mx-1" />
+                          <img src={pintoIcon} alt="PINTO" className="w-5 h-5 mx-1" />
                           PINTO
                         </div>
                       </div>
