@@ -530,6 +530,12 @@ export const diamondABI = [
       {
         indexed: false,
         internalType: "uint256",
+        name: "nonce",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
         name: "gasleft",
         type: "uint256",
       },
@@ -557,6 +563,12 @@ export const diamondABI = [
         internalType: "bytes32",
         name: "blueprintHash",
         type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "nonce",
+        type: "uint256",
       },
       {
         indexed: false,
@@ -6450,11 +6462,6 @@ export const diamondABI = [
     type: "error",
   },
   {
-    inputs: [],
-    name: "T",
-    type: "error",
-  },
-  {
     anonymous: false,
     inputs: [
       {
@@ -6496,21 +6503,20 @@ export const diamondABI = [
     inputs: [
       {
         indexed: false,
-        internalType: "uint256",
-        name: "stalkLost",
-        type: "uint256",
+        internalType: "address",
+        name: "account",
+        type: "address",
       },
-    ],
-    name: "ConvertDownPenalty",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
       {
         indexed: false,
         internalType: "uint256",
-        name: "stalkLost",
+        name: "grownStalkLost",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "grownStalkKept",
         type: "uint256",
       },
     ],
@@ -6722,40 +6728,6 @@ export const diamondABI = [
         internalType: "int256",
         name: "deltaB",
         type: "int256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "well",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "bdvToConvert",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "grownStalkToConvert",
-        type: "uint256",
-      },
-    ],
-    name: "downPenalizedGrownStalk",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "newGrownStalk",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "grownStalkLost",
-        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -8339,56 +8311,6 @@ export const diamondABI = [
   },
   {
     inputs: [],
-    name: "getExtEvaluationParameters",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "uint256",
-            name: "belowPegSoilL2SRScalar",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "soilCoefficientRelativelyHigh",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "soilCoefficientRelativelyLow",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "abovePegDeltaBSoilScalar",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "soilDistributionPeriod",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "minSoilIssuance",
-            type: "uint256",
-          },
-          {
-            internalType: "bytes32[61]",
-            name: "buffer",
-            type: "bytes32[61]",
-          },
-        ],
-        internalType: "struct ExtEvaluationParameters",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "getLargestLiqWell",
     outputs: [
       {
@@ -9018,19 +8940,6 @@ export const diamondABI = [
   },
   {
     inputs: [],
-    name: "totalInstantaneousDeltaB",
-    outputs: [
-      {
-        internalType: "int256",
-        name: "",
-        type: "int256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "weather",
     outputs: [
       {
@@ -9092,30 +9001,6 @@ export const diamondABI = [
     inputs: [],
     name: "MathOverflowedMulDiv",
     type: "error",
-  },
-  {
-    inputs: [],
-    name: "MathOverflowedMulDiv",
-    type: "error",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "enum GaugeId",
-        name: "gaugeId",
-        type: "uint8",
-      },
-      {
-        indexed: false,
-        internalType: "bytes",
-        name: "value",
-        type: "bytes",
-      },
-    ],
-    name: "Engaged",
-    type: "event",
   },
   {
     anonymous: false,
@@ -9945,85 +9830,6 @@ export const diamondABI = [
     inputs: [
       {
         internalType: "uint256",
-        name: "x",
-        type: "uint256",
-      },
-    ],
-    name: "PRBMathUD60x18__LogInputTooSmall",
-    type: "error",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes",
-        name: "value",
-        type: "bytes",
-      },
-      {
-        internalType: "bytes",
-        name: "systemData",
-        type: "bytes",
-      },
-      {
-        internalType: "bytes",
-        name: "gaugeData",
-        type: "bytes",
-      },
-    ],
-    name: "convertDownPenaltyRatioGauge",
-    outputs: [
-      {
-        internalType: "bytes",
-        name: "",
-        type: "bytes",
-      },
-      {
-        internalType: "bytes",
-        name: "",
-        type: "bytes",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes",
-        name: "value",
-        type: "bytes",
-      },
-      {
-        internalType: "bytes",
-        name: "systemData",
-        type: "bytes",
-      },
-      {
-        internalType: "bytes",
-        name: "gaugeData",
-        type: "bytes",
-      },
-    ],
-    name: "cultivationFactor",
-    outputs: [
-      {
-        internalType: "bytes",
-        name: "",
-        type: "bytes",
-      },
-      {
-        internalType: "bytes",
-        name: "",
-        type: "bytes",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
         name: "currentGaugePoints",
         type: "uint256",
       },
@@ -10147,66 +9953,6 @@ export const diamondABI = [
         internalType: "bytes",
         name: "",
         type: "bytes",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "enum GaugeId",
-        name: "gaugeId",
-        type: "uint8",
-      },
-    ],
-    name: "getGaugeValue",
-    outputs: [
-      {
-        internalType: "bytes",
-        name: "",
-        type: "bytes",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "enum GaugeId",
-        name: "gaugeId",
-        type: "uint8",
-      },
-    ],
-    name: "getGauge",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "bytes",
-            name: "value",
-            type: "bytes",
-          },
-          {
-            internalType: "address",
-            name: "target",
-            type: "address",
-          },
-          {
-            internalType: "bytes4",
-            name: "selector",
-            type: "bytes4",
-          },
-          {
-            internalType: "bytes",
-            name: "data",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct Gauge",
-        name: "",
-        type: "tuple",
       },
     ],
     stateMutability: "view",
