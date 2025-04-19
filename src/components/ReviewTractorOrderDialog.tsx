@@ -1,4 +1,5 @@
 import baseLogo from "@/assets/misc/base-logo-alt.png";
+import pintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import SmartSubmitButton from "@/components/SmartSubmitButton";
 import IconImage from "@/components/ui/IconImage";
@@ -263,7 +264,7 @@ export default function ReviewTractorOrderDialog({
                         <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
                         <span className="text-box rounded-full flex items-center">
                           <span>as</span>
-                          <img src="/src/assets/tokens/PINTO.png" alt="PINTO" className="w-5 h-5 mx-1" />
+                          <img src={pintoIcon} alt="PINTO" className="w-5 h-5 mx-1" />
                           <span className="font-medium">PINTO</span>
                         </span>
                       </div>
