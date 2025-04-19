@@ -505,24 +505,22 @@ const FieldActivity: React.FC = () => {
   return (
     <div className="w-full relative">
       {/* Add Tractor Orders label and link */}
-      {!loadingTractorOrders && (
-        <div
-          ref={tractorLinksRef}
-          style={{ position: "absolute", right: "-18rem" }}
-          className="flex flex-col items-start transition-all duration-300"
+      <div
+        ref={tractorLinksRef}
+        style={{ position: "absolute", right: "-18rem" }}
+        className="flex flex-col items-start transition-all duration-300"
+      >
+        <span className="text-sm font-antarctica font-light text-pinto-dark mb-2">
+          Tractor Soil Orders for next Season
+        </span>
+        <button
+          type="button"
+          onClick={() => setShowTractorOrdersDialog(true)}
+          className="text-sm font-antarctica font-light text-pinto-green-4 hover:text-pinto-green-5 hover:underline text-left"
         >
-          <span className="text-sm font-antarctica font-light text-pinto-dark mb-2">
-            Tractor Soil Orders for next Season
-          </span>
-          <button
-            type="button"
-            onClick={() => setShowTractorOrdersDialog(true)}
-            className="text-sm font-antarctica font-light text-pinto-green-4 hover:text-pinto-green-5 hover:underline text-left"
-          >
-            See all Tractor Orders
-          </button>
-        </div>
-      )}
+          See all Tractor Orders
+        </button>
+      </div>
 
       {/* Tractor Orders Dialog */}
       <SoilOrderbookDialog open={showTractorOrdersDialog} onOpenChange={setShowTractorOrdersDialog} />
