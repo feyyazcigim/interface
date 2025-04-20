@@ -11,6 +11,7 @@ import TableRowConnector from "@/components/TableRowConnector";
 import { TimeTab, tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Card } from "@/components/ui/Card";
+import IconImage from "@/components/ui/IconImage";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
 import useIsMobile from "@/hooks/display/useIsMobile";
@@ -20,17 +21,20 @@ import useFarmerActions from "@/hooks/useFarmerActions";
 import { useSeasonalSiloActiveFarmers } from "@/state/seasonal/seasonalDataHooks";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
+import { useSeedGauge } from "@/state/useSeedGauge";
 import { useSiloData } from "@/state/useSiloData";
 import { useSeason } from "@/state/useSunData";
 import useTokenData, { useWhitelistedTokens } from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { getClaimText } from "@/utils/string";
+import { getTokenIndex } from "@/utils/token";
 import { StatPanelData, Token } from "@/utils/types";
 import { getSiloConvertUrl } from "@/utils/url";
 import { cn } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { label } from "three/webgpu";
 import SiloTable from "./silo/SiloTable";
 
 function Silo() {
@@ -314,73 +318,188 @@ const LearnSilo = () => (
   </>
 );
 
-const SiloStats = () => {
-  const { data: siloStats, isLoading } = useSiloStats();
+const SiloStats = React.memo(() => {
+  const { data: siloStats, siloWhitelistData, isLoading } = useSiloStats();
 
-  const stats = useMemo(
-    () =>
-      [
-        {
-          label: "Total Deposited PDV",
-          subLabel: "Total Pinto Denominated Value deposited into the Silo",
-          value: formatter.twoDec(siloStats.totalDepositedBDV),
-        },
-        {
-          label: "Total Stalk",
-          subLabel: "Total Stalk issued to Silo Depositors",
-          value: formatter.twoDec(siloStats.totalStalk),
-        },
-        {
-          label: "Active Farmers",
-          subLabel: "Total number of unique depositors in the Silo",
-          value: siloStats.uniqueDepositors,
-        },
-      ] as const,
-    [siloStats.totalDepositedBDV, siloStats.totalStalk, siloStats.uniqueDepositors],
-  );
+  const [hoveredIndex, setHoveredIndex] = useState<number | undefined>(undefined);
+
+  const handleSetHoveredIndex = useCallback((index: number) => {
+    setHoveredIndex(index);
+  }, []);
 
   return (
-    <Row className="flex flex-col sm:flex-row gap-4 sm:gap-12 justify-between h-full">
-      {/*
-       * Stats section
-       */}
-      <Card className="flex flex-col p-4 h-auto" style={{ alignSelf: "stretch" }}>
-        <div className="hidden sm:flex flex-row gap-x-12 gap-y-4 flex-wrap w-full">
-          {stats.map(({ label, subLabel, value }) => {
-            return (
-              <div key={`silo-stat-desktop-${label}`} className="flex flex-col flex-grow gap-1 sm:gap-2">
-                <div className="pinto-sm-light sm:pinto-body-light font-thin">{label}</div>
-                <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">{subLabel}</div>
-                <div className="pinto-body sm:pinto-h3">{isLoading ? "--" : value}</div>
-              </div>
-            );
-          })}
+    <Card className="flex flex-col p-6 gap-6 h-auto w-full">
+      <Col className="gap-2">
+        <div className="flex flex-row gap-4">
+          <SiloStatContent data={siloStats} isLoading={isLoading} />
         </div>
-        <Col className="flex sm:hidden gap-2 w-full">
-          {stats.map(({ label, value }) => {
-            return (
-              <Row key={`silo-stat-mobile-${label}`} className="gap-2 items-center justify-between">
-                <div className="pinto-xs">{label}</div>
-                <div className="pinto-sm text-end">{value}</div>
-              </Row>
-            );
-          })}
-        </Col>
         <Link
           to="/explorer/silo"
           className="pinto-xs sm:pinto-sm font-light text-pinto-green-4 sm:text-pinto-green-4 hover:underline transition-all mt-2"
         >
           See more data →
         </Link>
-      </Card>
-      <Card className="flex flex-col p-4 w-full h-auto" style={{ alignSelf: "stretch" }}>
-        <DepositedByTokenDoughnutChart />
-      </Card>
-    </Row>
+      </Col>
+      <div className="grid grid-cols-[2fr_3fr] gap-4 w-full justify-between">
+        <Col className="gap-4 self-stretch pt-4">
+          {Object.entries(siloWhitelistData).map(([key, wlData], i) => {
+            return (
+              <HoveredSiloTokenStatContent
+                key={`${key}-${wlData.token.symbol}`}
+                wlTokenSiloDetails={wlData}
+                isHovered={(hoveredIndex || 0) === i}
+              />
+            );
+          })}
+        </Col>
+        <DepositedByTokenDoughnutChart
+          setHoveredIndex={handleSetHoveredIndex}
+          siloWhitelistData={siloWhitelistData}
+          isLoading={isLoading}
+        />
+        <div className="" />
+      </div>
+    </Card>
+  );
+});
+
+interface HoveredSiloTokenStatContentProps {
+  wlTokenSiloDetails: SiloTokenDepositOverallDetails;
+  isHovered: boolean;
+}
+
+const HoveredSiloTokenStatContent = ({ wlTokenSiloDetails, isHovered }: HoveredSiloTokenStatContentProps) => {
+  const {
+    token,
+    depositedBDV,
+    depositedAmount,
+    siloDepositedRatio,
+    optimalPctDepositedBdv,
+    currentDepositedLPBDVRatio,
+  } = wlTokenSiloDetails;
+  const { tokenPrices } = usePriceData();
+
+  if (!isHovered) return null;
+
+  const usdPrice = tokenPrices.get(token)?.instant;
+
+  const usdDeposited = usdPrice ? depositedAmount.mul(usdPrice) : undefined;
+
+  return (
+    <Col className="gap-4 justify-start self-stretch h-auto">
+      <div className="pinto-body sm:pinto-body-light flex flex-row gap-1">
+        <span>{<IconImage size={5} src={token.logoURI} />}</span>
+        <>{token.symbol}</>
+      </div>
+      <Row className="gap-2 justify-between">
+        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          Total Deposited Amount:
+        </div>
+        <div className="pinto-body sm:pinto-body-light flex flex-row gap-1">
+          <span>
+            <IconImage size={5} src={token.logoURI} />
+          </span>
+          {formatter.token(depositedAmount, token)}
+        </div>
+      </Row>
+      <Row className="gap-2 justify-between">
+        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          Total Deposited BDV:
+        </div>
+        <div className="pinto-body sm:pinto-body-light flex flex-row gap-2">{formatter.twoDec(depositedBDV)}</div>
+      </Row>
+      <Row className="gap-2 justify-between">
+        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          Total Deposited Value:
+        </div>
+        <div className="pinto-body sm:pinto-body-light flex flex-row gap-2">
+          {usdDeposited ? formatter.usd(usdDeposited) : "--"}
+        </div>
+      </Row>
+      <Row className="gap-2 justify-between">
+        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          % of Total Deposited PDV:
+        </div>
+        <div className="pinto-body sm:pinto-body-light flex flex-row gap-2">
+          {formatter.pct(siloDepositedRatio.mul(100))}
+        </div>
+      </Row>
+      <Row className="gap-2 justify-between">
+        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          Optimal % LP Deposited PDV:
+        </div>
+        <div className="pinto-body sm:pinto-body-light flex flex-row gap-2">
+          {token.isLP ? formatter.pct(optimalPctDepositedBdv) : "N/A"}
+        </div>
+      </Row>
+      <Row className="gap-2 justify-between">
+        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          Current % LP Deposited PDV:
+        </div>
+        <div className="pinto-body sm:pinto-body-light flex flex-row gap-2">
+          {token.isLP ? formatter.pct(currentDepositedLPBDVRatio.mul(100)) : "N/A"}
+        </div>
+      </Row>
+    </Col>
+  );
+};
+
+const SiloStatContent = ({
+  data,
+  isLoading,
+}: { data: ReturnType<typeof useSiloStats>["data"]; isLoading: boolean }) => {
+  const stats = useMemo(
+    () => [
+      {
+        label: "Total Deposited PDV",
+        subLabel: "Total Pinto Denominated Value deposited into the Silo",
+        value: formatter.twoDec(data.totalDepositedBDV),
+      },
+      {
+        label: "Total Stalk",
+        subLabel: "Total Stalk issued to Silo Depositors",
+        value: formatter.twoDec(data.totalStalk),
+      },
+      {
+        label: "Active Farmers",
+        subLabel: "Total number of unique depositors in the Silo",
+        value: data.uniqueDepositors,
+      },
+    ],
+    [data.totalDepositedBDV, data.totalStalk, data.uniqueDepositors],
+  );
+
+  return (
+    <>
+      <div className="hidden sm:flex flex-row gap-x-12 gap-y-4 flex-wrap w-full">
+        {stats.map(({ label, subLabel, value }) => {
+          return (
+            <div key={`silo-stat-desktop-${label}`} className="flex flex-col flex-grow gap-1 sm:gap-2">
+              <div className="pinto-sm-light sm:pinto-body-light font-thin">{label}</div>
+              <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">{subLabel}</div>
+              <div className="pinto-body sm:pinto-h3">{isLoading ? "--" : value}</div>
+            </div>
+          );
+        })}
+      </div>
+      <Col className="flex sm:hidden gap-2 w-full">
+        {stats.map(({ label, value }) => {
+          return (
+            <Row key={`silo-stat-mobile-${label}`} className="gap-2 items-center justify-between">
+              <div className="pinto-xs">{label}</div>
+              <div className="pinto-sm text-end">{value}</div>
+            </Row>
+          );
+        })}
+      </Col>
+    </>
   );
 };
 
 const donutOptions = {
+  layout: {
+    padding: 12,
+  },
   plugins: {
     tooltip: {
       enabled: true,
@@ -393,7 +512,6 @@ const donutOptions = {
   },
 } as const;
 
-// The length of chartColors determines how many charts you can plot at the same time
 const chartColors = [
   "#246645", // Pinto Green (pinto-green-3)
   "#1E6091", // Deep Blue
@@ -403,41 +521,50 @@ const chartColors = [
   "#00BCD4", // Light Blue / Cyan
 ];
 
-const DepositedByTokenDoughnutChart = React.memo(() => {
-  const { data: siloStats, isLoading } = useSiloStats();
+// Memoize to prevent chart animations from re-rendering
+const DepositedByTokenDoughnutChart = React.memo(
+  (
+    props: Omit<ReturnType<typeof useSiloStats>, "data"> & {
+      setHoveredIndex: (index: number) => void;
+    },
+  ) => {
+    const { siloWhitelistData, isLoading, setHoveredIndex } = props;
 
-  const isMobile = useIsMobile();
+    const isMobile = useIsMobile();
 
-  const donutChartProps = useMemo(() => {
-    return {
-      labels: isLoading ? [] : Object.keys(siloStats.depositedByToken),
-      datasets: [
-        {
-          label: "",
-          data: isLoading
-            ? []
-            : Object.values(siloStats.depositedByToken).map(({ ratio }) => ratio.mul(100).toNumber()),
-          backgroundColor: chartColors,
-          borderWidth: 0,
-        },
-      ],
-    };
-  }, [siloStats.depositedByToken]);
+    const donutChartProps = useMemo(() => {
+      return {
+        labels: Object.keys(siloWhitelistData),
+        datasets: [
+          {
+            label: "",
+            data: Object.values(siloWhitelistData).map((d) => d.siloDepositedRatio.mul(100).toNumber()),
+            backgroundColor: chartColors,
+            borderWidth: 0,
+            offset: 2,
+            borderRadius: 4,
+          },
+        ],
+      };
+    }, [siloWhitelistData]);
 
-  return (
-    <Col className="relative gap-4 items-center">
-      <div className="pinto-sm-light sm:pinto-body-light font-thin">Silo Deposits By Token</div>
-      <div className="flex flex-col self-stretch items-center">
-        <DonutChart
-          className={cn("w-72 h-72", isMobile && "w-40 h-40")}
-          size={isMobile ? 150 : 300}
-          data={donutChartProps}
-          options={donutOptions}
-        />
-      </div>
-    </Col>
-  );
-});
+    return (
+      <Col className="relative gap-4 items-center">
+        <div className="pinto-sm-light sm:pinto-body-light font-thin">Silo Deposits By Token</div>
+        <div className="flex flex-col self-stretch items-center">
+          <DonutChart
+            className={cn("w-72 h-72", isMobile && "w-40 h-40")}
+            size={isMobile ? 120 : 350}
+            data={donutChartProps}
+            options={donutOptions}
+            showLabels={true}
+            onHover={setHoveredIndex}
+          />
+        </div>
+      </Col>
+    );
+  },
+);
 
 const useUniqueDepositors = () => {
   const season = useSeason();
@@ -449,55 +576,89 @@ const useUniqueDepositors = () => {
   };
 };
 
-type BDVInfo = {
+type SiloTokenDepositOverallDetails = {
   token: Token;
   depositedBDV: TokenValue;
-  ratio: TokenValue;
+  depositedAmount: TokenValue;
+  siloDepositedRatio: TokenValue;
+  optimalPctDepositedBdv: TokenValue;
+  currentDepositedLPBDVRatio: TokenValue;
+};
+
+const baseObj: Omit<SiloTokenDepositOverallDetails, "token"> = {
+  depositedBDV: TokenValue.ZERO,
+  siloDepositedRatio: TokenValue.ZERO,
+  depositedAmount: TokenValue.ZERO,
+  optimalPctDepositedBdv: TokenValue.ZERO,
+  currentDepositedLPBDVRatio: TokenValue.ZERO,
 };
 
 const reduceTotalDepositedBDV = (tokenData: ReturnType<typeof useSiloData>["tokenData"]) => {
   const entries = [...tokenData.entries()];
-
   return entries.reduce<TokenValue>((acc, [_, tokenData]) => acc.add(tokenData.depositedBDV), TokenValue.ZERO);
 };
 
 const useSiloStats = () => {
+  const [totalDepositedBDV, setTotalDepositedBDV] = useState<TokenValue>(TokenValue.ZERO);
+  const [byToken, setByToken] = useState<Record<string, SiloTokenDepositOverallDetails>>({});
   const whitelist = useWhitelistedTokens();
 
   const uniqueDepositors = useUniqueDepositors();
+  const seedGauge = useSeedGauge();
   const silo = useSiloData();
 
-  const totals = useMemo(() => reduceTotalDepositedBDV(silo.tokenData), [silo.tokenData]);
+  const gaugeDataLoaded = !!Object.values(seedGauge.data.gaugeData).length && !seedGauge.isLoading;
+  const siloDataLoaded = !!silo.tokenData.size;
 
-  const byToken = useMemo(() => {
-    return whitelist.reduce<Record<string, BDVInfo>>((prev, token) => {
-      const obj = { token, depositedBDV: TokenValue.ZERO, ratio: TokenValue.ZERO };
+  const dataLoaded = gaugeDataLoaded && siloDataLoaded;
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    if (!dataLoaded) return;
+
+    const totalBDV = reduceTotalDepositedBDV(silo.tokenData);
+
+    // Only set data if data has changed.
+    if (totalBDV.gt(0) && totalDepositedBDV.eq(totalBDV)) return;
+
+    const map = whitelist.reduce<Record<string, SiloTokenDepositOverallDetails>>((prev, token) => {
+      const obj = { token, ...baseObj };
 
       const wlTokenData = silo.tokenData.get(token);
+      const tokenGaugeData = seedGauge.data.gaugeData[getTokenIndex(token)];
 
       if (wlTokenData) {
         obj.depositedBDV = wlTokenData.depositedBDV;
-        obj.ratio = wlTokenData.depositedBDV.div(totals);
+        obj.siloDepositedRatio = wlTokenData.depositedBDV.div(totalBDV);
+        obj.depositedAmount = wlTokenData.totalDeposited;
+      }
+
+      if (tokenGaugeData) {
+        obj.optimalPctDepositedBdv = tokenGaugeData.optimalPctDepositedBdv;
+        obj.currentDepositedLPBDVRatio = tokenGaugeData.currentDepositedLPBDVRatio ?? TokenValue.ZERO;
       }
 
       prev[token.symbol] = obj;
       return prev;
     }, {});
-  }, [totals, whitelist, silo.tokenData.size]);
 
-  const isLoading = uniqueDepositors.isLoading || totals.lte(0);
+    setTotalDepositedBDV(totalBDV);
+    setByToken(map);
+  }, [whitelist, silo.tokenData, seedGauge.data.gaugeData]);
+
+  const isLoading = uniqueDepositors.isLoading || totalDepositedBDV.lte(0);
 
   return useMemo(() => {
     return {
       data: {
-        totalDepositedBDV: totals,
+        totalDepositedBDV: totalDepositedBDV,
         uniqueDepositors: uniqueDepositors.data,
         totalStalk: silo.totalStalk,
-        depositedByToken: byToken,
       },
+      siloWhitelistData: byToken,
       isLoading,
     };
-  }, [totals, uniqueDepositors.data, silo.totalStalk, byToken]);
+  }, [totalDepositedBDV, uniqueDepositors.data, silo.totalStalk, byToken, isLoading]);
 };
 
 const FAQ_ITEMS: IBaseAccordionContent[] = [
