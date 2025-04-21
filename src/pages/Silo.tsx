@@ -474,36 +474,40 @@ const HoveredSiloTokenStatContent = ({
           </div>
         </TextSkeleton>
       </Row>
-      <Row className="gap-2 justify-between">
-        <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Optimal % LP Deposited PDV
-          <TooltipSimple
-            variant="outlined"
-            showOnMobile
-            content={<div className="pinto-sm">The optimal percentage of the total LP Deposited PDV.</div>}
-          />
-        </Row>
-        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
-          <div className="pinto-sm-light sm:pinto-body-light shrink-0">
-            {token.isLP ? formatter.pct(optimalPctDepositedBdv) : "N/A"}
-          </div>
-        </TextSkeleton>
-      </Row>
-      <Row className="gap-2 justify-between">
-        <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Current % LP Deposited PDV
-          <TooltipSimple
-            variant="outlined"
-            showOnMobile
-            content={<div className="pinto-sm">The current percentage of the total LP Deposited PDV.</div>}
-          />
-        </Row>
-        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
-          <div className="pinto-sm-light sm:pinto-body-light shrink-0">
-            {token.isLP ? formatter.pct(currentDepositedLPBDVRatio.mul(100)) : "N/A"}
-          </div>
-        </TextSkeleton>
-      </Row>
+      {!token.isMain && (
+        <>
+          <Row className="gap-2 justify-between">
+            <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+              Optimal % LP Deposited PDV
+              <TooltipSimple
+                variant="outlined"
+                showOnMobile
+                content={<div className="pinto-sm">The optimal percentage of the total LP Deposited PDV.</div>}
+              />
+            </Row>
+            <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
+              <div className="pinto-sm-light sm:pinto-body-light shrink-0">
+                {token.isLP ? formatter.pct(optimalPctDepositedBdv) : "N/A"}
+              </div>
+            </TextSkeleton>
+          </Row>
+          <Row className="gap-2 justify-between">
+            <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+              Current % LP Deposited PDV
+              <TooltipSimple
+                variant="outlined"
+                showOnMobile
+                content={<div className="pinto-sm">The current percentage of the total LP Deposited PDV.</div>}
+              />
+            </Row>
+            <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
+              <div className="pinto-sm-light sm:pinto-body-light shrink-0">
+                {token.isLP ? formatter.pct(currentDepositedLPBDVRatio.mul(100)) : "N/A"}
+              </div>
+            </TextSkeleton>
+          </Row>
+        </>
+      )}
     </Col>
   );
 };
