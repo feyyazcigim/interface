@@ -287,9 +287,11 @@ const TractorOrdersPanel = ({ refreshData }: TractorOrdersPanelProps) => {
                       </span>
                       <IconImage src={pintoIcon} size={4} />
                       <span className="text-pinto-green-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">
-                        {formatter.number(totalAmount)} PINTO 
+                        {formatter.number(totalAmount)} PINTO
                         <span className="text-pinto-gray-4">
-                          {" "}(max {formatter.number(TokenValue.fromBlockchain(data.sowAmounts.maxAmountToSowPerSeason, 6))} per Season)
+                          {" "}
+                          (max {formatter.number(TokenValue.fromBlockchain(data.sowAmounts.maxAmountToSowPerSeason, 6))}{" "}
+                          per Season)
                         </span>
                       </span>
                     </div>

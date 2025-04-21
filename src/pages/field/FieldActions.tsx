@@ -50,7 +50,11 @@ export default function FieldActions({ onTractorOrderPublished }: FieldActionsPr
       {showSowOrder && (
         <Card className="absolute inset-x-0 -top-[calc(2.5rem)] rounded-xl z-10" id="sow-order-dialog">
           <div className="flex flex-col w-full items-center p-4">
-            <SowOrderDialog open={showSowOrder} onOpenChange={setShowSowOrder} onOrderPublished={onTractorOrderPublished} />
+            <SowOrderDialog
+              open={showSowOrder}
+              onOpenChange={setShowSowOrder}
+              onOrderPublished={onTractorOrderPublished}
+            />
           </div>
         </Card>
       )}

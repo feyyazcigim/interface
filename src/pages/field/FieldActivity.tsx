@@ -9,8 +9,8 @@ import { diamondABI } from "@/constants/abi/diamondABI";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
 import { useHarvestableIndex } from "@/state/useFieldData";
-import { useSeason } from "@/state/useSunData";
 import { useTemperature } from "@/state/useFieldData";
+import { useSeason } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -126,25 +126,29 @@ const FieldActivity: React.FC = () => {
     return "-"; // Fallback value if we can't estimate
   };
 
-  // Helper function to get the predicted sow temperature 
+  // Helper function to get the predicted sow temperature
   const getPredictedSowTemperature = (order: OrderbookEntry): number => {
+    // Get the minimum temperature from the order
+    const minTemp = getOrderTemperature(order);
+
     const decodedData = getDecodedTractorData(order);
     if (decodedData && decodedData.runBlocksAfterSunriseAsString) {
       const runBlocks = parseInt(decodedData.runBlocksAfterSunriseAsString);
       if (runBlocks >= 300 && currentTemperature.scaled) {
-        // After morning auction - use current temperature
-        return currentTemperature.scaled.toNumber();
+        // After morning auction - use max of current temperature and minimum temperature
+        const currentTemp = currentTemperature.scaled.toNumber();
+        return Math.max(currentTemp, minTemp);
       }
     }
     // Otherwise use the minimum temperature from the order
-    return getOrderTemperature(order);
+    return minTemp;
   };
 
   // Helper function to estimate pods from an order
   const estimateOrderPods = (order: OrderbookEntry): TokenValue => {
     // Use the predicted temperature
     const temp = getPredictedSowTemperature(order);
-    
+
     // Calculate pods as PINTO amount * (1 + temperature/100)
     return order.amountSowableNextSeason.mul(1 + temp / 100);
   };
@@ -172,10 +176,24 @@ const FieldActivity: React.FC = () => {
           latestBlockInfo,
         );
 
-        console.log(`Found ${orderbook.length} tractor orders`);
+        // Filter out orders with predicted temperatures greater than current temperature + 1%
+        const currentTemp = currentTemperature.scaled?.toNumber() || 0;
+
+        const filteredOrders = orderbook.filter((order) => {
+          const predictedTemp = getPredictedSowTemperature(order);
+          const minTemp = getOrderTemperature(order);
+          const decodedData = getDecodedTractorData(order);
+          const runBlocksAfterSunrise = decodedData?.runBlocksAfterSunriseAsString
+            ? parseInt(decodedData.runBlocksAfterSunriseAsString)
+            : 0;
+
+          // Only include orders with temperature requirements that could reasonably execute soon
+          // Use the predicted temperature, which is now guaranteed to be at least the minimum
+          return predictedTemp <= currentTemp + 1;
+        });
 
         // Sort by predicted temperature (lowest to highest)
-        const sortedOrders = [...orderbook].sort((a, b) => {
+        const sortedOrders = [...filteredOrders].sort((a, b) => {
           // We want to sort by lowest predicted temperature first
           return getPredictedSowTemperature(a) - getPredictedSowTemperature(b);
         });
@@ -209,7 +227,6 @@ const FieldActivity: React.FC = () => {
             latestBlockNumber,
             latestBlockTimestamp,
           };
-          console.log(`Initial block data captured: Block ${latestBlockNumber}, Timestamp ${latestBlockTimestamp}`);
         }
 
         // Use the stored initial values for all calculations
@@ -223,8 +240,6 @@ const FieldActivity: React.FC = () => {
         const lookbackBlocks = 1_296_000n;
         const fromBlock = latestBlock.number > lookbackBlocks ? latestBlock.number - lookbackBlocks : 0n;
 
-        console.log(`Fetching events from block ${fromBlock} to ${latestBlock.number} (30 days of Base blocks)`);
-
         // Fetch the most recent sow events
         const sowEvents = await publicClient.getContractEvents({
           address: protocolAddress,
@@ -233,8 +248,6 @@ const FieldActivity: React.FC = () => {
           fromBlock,
           toBlock: "latest",
         });
-
-        console.log(`Found ${sowEvents.length} sow events`);
 
         // Blockchain events typically come in chronological order (oldest first)
         // Reverse the array to get newest first
@@ -428,11 +441,6 @@ const FieldActivity: React.FC = () => {
     return `${address.slice(0, 6)}...${address.slice(-3)}`;
   };
 
-  // Format the place in line for display with commas
-  const formatPlaceInLine = (value: string) => {
-    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
   // Helper function to format numbers with commas
   const formatNumberWithCommas = (value: number | string) => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -588,7 +596,8 @@ const FieldActivity: React.FC = () => {
                         <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
                           {estimateExecutionTime(order)}
                         </td>
-                        <td className="px-2 py-1"
+                        <td
+                          className="px-2 py-1"
                           onMouseEnter={() => setHoveredAddress(order.requisition.blueprint.publisher)}
                           onMouseLeave={() => setHoveredAddress(null)}
                         >
@@ -612,13 +621,20 @@ const FieldActivity: React.FC = () => {
                           {(() => {
                             const predictedTemp = getPredictedSowTemperature(order);
                             const minTemp = getOrderTemperature(order);
-                            
-                            // If predicted temp is higher than min temp, it's using current season temp
-                            if (predictedTemp > minTemp) {
-                              return `${predictedTemp.toFixed(2)}%`;
-                            } else {
-                              // It's using minimum temperature
+
+                            // For consistency with our filtering, always show the minimum temperature
+                            // with ≥ prefix for Morning Auction orders
+                            const decodedData = getDecodedTractorData(order);
+                            const runBlocks = decodedData?.runBlocksAfterSunriseAsString
+                              ? parseInt(decodedData.runBlocksAfterSunriseAsString)
+                              : 0;
+
+                            if (runBlocks < 300) {
+                              // Morning auction orders - show min temp
                               return `≥ ${minTemp.toFixed(2)}%`;
+                            } else {
+                              // After morning auction - show predicted temp (current temp)
+                              return `${predictedTemp.toFixed(2)}%`;
                             }
                           })()}
                         </td>
@@ -676,7 +692,8 @@ const FieldActivity: React.FC = () => {
                 <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
                   {formatTime(activity.timestamp)}
                 </td>
-                <td className="px-2 py-1"
+                <td
+                  className="px-2 py-1"
                   onMouseEnter={() => setHoveredAddress(activity.address)}
                   onMouseLeave={() => setHoveredAddress(null)}
                 >

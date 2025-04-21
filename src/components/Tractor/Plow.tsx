@@ -20,8 +20,8 @@ import { toast } from "sonner";
 import { http, createPublicClient, encodeFunctionData } from "viem";
 import { base } from "viem/chains";
 import { useAccount, usePublicClient } from "wagmi";
-import { PlowDetails } from "./PlowDetails";
 import LoadingSpinner from "../LoadingSpinner";
+import { PlowDetails } from "./PlowDetails";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 const UINT256_MAX = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
@@ -874,9 +874,7 @@ export function Plow() {
           <Button
             rounded="full"
             className={`flex-1 ${
-              simulatingAll || requisitions.length === 0
-                ? "bg-[#D9D9D9] text-[#9C9C9C]"
-                : "bg-[#2F8957] text-white"
+              simulatingAll || requisitions.length === 0 ? "bg-[#D9D9D9] text-[#9C9C9C]" : "bg-[#2F8957] text-white"
             }`}
             disabled={simulatingAll || requisitions.length === 0}
             onClick={handleSimulateAll}

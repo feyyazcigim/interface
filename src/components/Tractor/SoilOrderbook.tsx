@@ -19,9 +19,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { usePublicClient } from "wagmi";
 import { useChainId } from "wagmi";
+import LoadingSpinner from "../LoadingSpinner";
 import ReviewTractorOrderDialog, { ExecutionData } from "../ReviewTractorOrderDialog";
 import { Plow } from "./Plow";
-import LoadingSpinner from "../LoadingSpinner";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
@@ -327,7 +327,9 @@ export function SoilOrderbookContent() {
                   <div className="flex items-center gap-1">
                     <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
                     {decodedData && decodedData.sowAmounts.maxAmountToSowPerSeasonAsString
-                      ? formatter.number(TokenValue.fromHuman(decodedData.sowAmounts.maxAmountToSowPerSeasonAsString, 6))
+                      ? formatter.number(
+                          TokenValue.fromHuman(decodedData.sowAmounts.maxAmountToSowPerSeasonAsString, 6),
+                        )
                       : "Unknown"}
                   </div>
                 </TableCell>
@@ -357,7 +359,9 @@ export function SoilOrderbookContent() {
                     <LoadingSpinner size={20} />
                     <span>Loading tractor orders...</span>
                   </div>
-                ) : "No active requisitions found"}
+                ) : (
+                  "No active requisitions found"
+                )}
               </TableCell>
             </TableRow>
           )}

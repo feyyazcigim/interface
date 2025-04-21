@@ -23,7 +23,7 @@ import { useFarmerField } from "@/state/useFarmerField";
 import { useHarvestableIndex, useHarvestableIndexLoading } from "@/state/useFieldData";
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import FieldActions from "./field/FieldActions";
 import FieldActivity from "./field/FieldActivity";
@@ -43,7 +43,7 @@ function Field() {
   const [tractorRefreshCounter, setTractorRefreshCounter] = useState(0);
 
   const refreshTractorOrders = useCallback(() => {
-    setTractorRefreshCounter(prev => prev + 1);
+    setTractorRefreshCounter((prev) => prev + 1);
   }, []);
 
   const currentAction = searchParams.get("action");
