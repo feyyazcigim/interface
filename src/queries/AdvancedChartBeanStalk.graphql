@@ -47,5 +47,6 @@ query advancedChartBeanStalk($from: Int, $to: Int) {
     beanToMaxLpGpPerBdvRatio
     deltaBeanToMaxLpGpPerBdvRatio
     season
+    stalk
   }
 }

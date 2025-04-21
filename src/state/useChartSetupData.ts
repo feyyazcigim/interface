@@ -1,4 +1,5 @@
 import podIcon from "@/assets/protocol/Pod.png";
+import stalkIcon from "@/assets/protocol/Stalk.png";
 import { TokenValue } from "@/classes/TokenValue";
 import { formatNum, formatPct, formatUSD } from "@/utils/format";
 import { Token } from "@/utils/types";
@@ -226,6 +227,22 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     valueFormatter: (v: TokenValue) => v.toNumber(),
     tickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
     shortTickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
+  },
+  {
+    id: "stalk",
+    type: "Pinto",
+    name: "Stalk Supply",
+    tooltipTitle: "Stalk Supply",
+    tooltipHoverText: "The total number of Stalk.",
+    shortDescription: "The total number of Stalk.",
+    icon: stalkIcon,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "stalk",
+    valueAxisType: "stalk",
+    valueFormatter: (v: TokenValue) => v.toNumber(),
+    tickFormatter: (v: number) =>
+      formatNum(v, { allowZero: true, minDecimals: 2, maxDecimals: 2, showPositiveSign: false }),
+    shortTickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
   },
 ];
 

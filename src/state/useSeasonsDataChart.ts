@@ -1,5 +1,5 @@
 import { TokenValue } from "@/classes/TokenValue";
-import { PODS } from "@/constants/internalTokens";
+import { PODS, STALK } from "@/constants/internalTokens";
 import { subgraphs } from "@/constants/subgraph";
 import {
   AdvancedChartBeanDocument,
@@ -51,6 +51,7 @@ export interface SeasonsTableData {
   harvestedPods: TokenValue;
   numberOfSows: number;
   numberOfSowers: number;
+  stalk: TokenValue;
 }
 
 const stalkPaginateSettings: PaginationSettings<Season, AdvancedChartBeanStalkQuery, "seasons", SeasonalQueryVars> = {
@@ -179,6 +180,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
         harvestedPods: TokenValue.fromBlockchain(currFieldHourlySnapshots.harvestedPods || 0n, PODS.decimals),
         numberOfSowers: currFieldHourlySnapshots.numberOfSowers,
         numberOfSows: currFieldHourlySnapshots.numberOfSows,
+        stalk: TokenValue.fromBlockchain(currSiloHourlySnapshots.stalk || 0n, STALK.decimals),
         timestamp: Number(season.beanHourlySnapshot.season.timestamp || 0),
       });
       return acc;
