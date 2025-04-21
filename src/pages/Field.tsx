@@ -262,12 +262,13 @@ const FieldFAQ: IBaseAccordionContent[] = [
   {
     key: "does-temperature-have-a-cap",
     title: "Does Temperature have a cap?",
-    content: "Temperature has no fixed cap. Instead, the protocol raises or lowers it incrementally each Season in response to supply and demand—avoiding the systemic risks a hard ceiling would introduce."
+    content:
+      "Temperature has no fixed cap. Instead, the protocol raises or lowers it incrementally each Season in response to supply and demand—avoiding the systemic risks a hard ceiling would introduce.",
   },
   {
     key: "what-is-the-morning-auction",
     title: "What is the Morning Auction?",
     content:
-      "The Morning Auction is the first 10 minutes of each Season. During this window, Temperature ramps from its opening value to the Season's maximum, letting farmers Sow Soil at a lower rate when demand is significant."
+      "The Morning Auction is the first 10 minutes of each Season. During this window, Temperature ramps from its opening value to the Season's maximum, letting farmers Sow Soil at a lower rate when demand is significant.",
   },
 ] as const;
