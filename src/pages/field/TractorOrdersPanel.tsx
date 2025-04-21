@@ -365,10 +365,10 @@ const TractorOrdersPanel = ({ refreshData }: TractorOrdersPanelProps) => {
             </div>
 
             {/* External actions - positioned outside the cell */}
-            <div className="absolute right-[-170px] top-0 h-full flex flex-col justify-center gap-4 pl-2">
+            <div className="absolute right-[-190px] top-0 h-full flex flex-col justify-center gap-4 pl-4">
               <div className="flex items-center gap-2 text-pinto-gray-4 font-antarctica text-sm">
                 <ClockIcon className="h-4 w-4" />
-                <span>
+                <span className="inline-block w-36 whitespace-nowrap">
                   Executed {executionCount} time{executionCount !== 1 ? "s" : ""}
                 </span>
               </div>
