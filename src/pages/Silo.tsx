@@ -745,7 +745,8 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
             - Deposit more value into the Silo — every&nbsp;1 Pinto (or Pinto-denominated value) gives you&nbsp;1 Stalk.
           </li>
           <li>
-            - Every season you stay in the silo, you earn Stalk based on the amount of seeds you have. Each seed earns 1/10000 stalk. The amount of Seeds you have is based on the amount and token type you deposited in the Silo.
+            - Every season you stay in the silo, you earn Stalk based on the amount of seeds you have. Each seed earns
+            1/10000 stalk. The amount of Seeds you have is based on the amount and token type you deposited in the Silo.
           </li>
         </ul>
       </div>

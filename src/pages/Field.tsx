@@ -20,6 +20,7 @@ import { Col } from "@/components/Container";
 import MobileActionBar from "@/components/MobileActionBar";
 import ReadMoreAccordion from "@/components/ReadMoreAccordion";
 import TooltipSimple from "@/components/TooltipSimple";
+import { navLinks } from "@/components/nav/nav/Navbar";
 import { Skeleton } from "@/components/ui/Skeleton";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import useLocalStorage from "@/hooks/useLocalStorage";
@@ -33,7 +34,6 @@ import FieldActions from "./field/FieldActions";
 import FieldStats from "./field/FieldStats";
 import MorningPanel from "./field/MorningPanel";
 import TemperatureChart from "./field/Temperature";
-import { navLinks } from "@/components/nav/nav/Navbar";
 
 function Field() {
   useUpdateMorningTemperatureOnInterval();
@@ -254,8 +254,8 @@ const FieldFAQ: IBaseAccordionContent[] = [
         </>
         <ul className="flex flex-col gap-1 pl-2 list-disc">
           <li>
-            - Pods are placed in a FIFO queue, where newly issued pods are placed at the end of the line, and newly issued
-            pinto are used to pay off pods at the front of the line.
+            - Pods are placed in a FIFO queue, where newly issued pods are placed at the end of the line, and newly
+            issued pinto are used to pay off pods at the front of the line.
           </li>
           <li>- Maturity is determined by your place in line, rather than at some date.</li>
           <li>- Pods never expire.</li>
@@ -313,5 +313,5 @@ const FieldFAQ: IBaseAccordionContent[] = [
         community!
       </>
     ),
-  }
+  },
 ] as const;
