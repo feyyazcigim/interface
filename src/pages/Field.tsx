@@ -23,7 +23,7 @@ import { useFarmerField } from "@/state/useFarmerField";
 import { useHarvestableIndex, useHarvestableIndexLoading } from "@/state/useFieldData";
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import FieldActions from "./field/FieldActions";
 import FieldActivity from "./field/FieldActivity";
@@ -56,6 +56,14 @@ function Field() {
     // On desktop, use the param or default to 'activity'
     return tabParam === "activity" || tabParam === "pods" || tabParam === "tractor" ? tabParam : "activity";
   });
+
+  // Effect to update activeTab when URL parameters change
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "activity" || tabParam === "pods" || tabParam === "tractor") {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   const hasPods = farmerField.plots.length > 0;
   const totalPods = useMemo(
@@ -132,21 +140,36 @@ function Field() {
                   <button
                     type="button"
                     className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "activity" ? "text-pinto-dark" : "text-pinto-gray-4"}`}
-                    onClick={() => setActiveTab("activity")}
+                    onClick={() => {
+                      setActiveTab("activity");
+                      const params = new URLSearchParams(window.location.search);
+                      params.set("tab", "activity");
+                      navigate(`/field?${params.toString()}`);
+                    }}
                   >
                     Field Activity
                   </button>
                   <button
                     type="button"
                     className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "tractor" ? "text-pinto-dark" : "text-pinto-gray-4"}`}
-                    onClick={() => setActiveTab("tractor")}
+                    onClick={() => {
+                      setActiveTab("tractor");
+                      const params = new URLSearchParams(window.location.search);
+                      params.set("tab", "tractor");
+                      navigate(`/field?${params.toString()}`);
+                    }}
                   >
                     My Tractor Orders
                   </button>
                   <button
                     type="button"
                     className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "pods" ? "text-pinto-dark" : "text-pinto-gray-4"}`}
-                    onClick={() => setActiveTab("pods")}
+                    onClick={() => {
+                      setActiveTab("pods");
+                      const params = new URLSearchParams(window.location.search);
+                      params.set("tab", "pods");
+                      navigate(`/field?${params.toString()}`);
+                    }}
                   >
                     My Pods
                   </button>
