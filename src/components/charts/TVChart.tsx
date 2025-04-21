@@ -563,58 +563,6 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
           )}
         </div>
         <div ref={chartContainerRef} id="container" style={{ height: height - 200 }} />
-        {/*
-        <div className="absolute p-0 bottom-0 right-6">
-          <ResponsivePopover>
-            <ResponsivePopover.Trigger>
-              <GearIcon />
-            </ResponsivePopover.Trigger>
-            <ResponsivePopover.Content align={"end"}>
-              <div className="flex flex-col gap-0">
-                {priceScaleModes.map((mode, index) => (
-                  <button
-                    key={`priceScaleMode_right_${mode}`}
-                    className={`text-left font-normal text-primary py-2 px-4 h-auto justify-between rounded-none ${
-                      rightPriceScaleMode === index ? "bg-primary-light" : ""
-                    } hover:bg-gray-100 cursor-pointer`}
-                    onClick={() => setRightPriceScaleMode(index)}
-                    type="button"
-                  >
-                    {mode}
-                    {rightPriceScaleMode === index && <div className="text-inherit">CHECK ICON</div>}
-                  </button>
-                ))}
-              </div>
-            </ResponsivePopover.Content>
-          </ResponsivePopover>
-        </div>
-        {secondPriceScale && (
-          <div className="absolute p-0 bottom-0 left-6">
-            <ResponsivePopover>
-              <ResponsivePopover.Trigger>
-                <GearIcon />
-              </ResponsivePopover.Trigger>
-              <ResponsivePopover.Content align={"start"}>
-                <div className="flex flex-col gap-0">
-                  {priceScaleModes.map((mode, index) => (
-                    <button
-                      key={`priceScaleMode_left_${mode}`}
-                      className={`text-left font-normal text-primary py-2 px-4 h-auto justify-between rounded-none w-[150px] ${
-                        leftPriceScaleMode === index ? "bg-primary-light" : ""
-                      } hover:bg-gray-100 cursor-pointer`}
-                      onClick={() => setLeftPriceScaleMode(index)}
-                      type="button"
-                    >
-                      {mode}
-                      {leftPriceScaleMode === index && <div className="text-inherit">CHECK ICON</div>}
-                    </button>
-                  ))}
-                </div>
-              </ResponsivePopover.Content>
-            </ResponsivePopover>
-          </div>
-        )}
-        */}
       </div>
     </>
   );
