@@ -1231,7 +1231,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       </div>
                     </div>
 
-                    <div className="flex justify-between gap-2 mb-4">
+                    <div className="flex justify-between gap-2 mb-2">
                       <Button
                         variant="outline"
                         size="sm"
