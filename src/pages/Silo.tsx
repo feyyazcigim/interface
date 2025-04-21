@@ -8,6 +8,7 @@ import HelperLink from "@/components/HelperLink";
 import ReadMoreAccordion from "@/components/ReadMoreAccordion";
 import StatPanel from "@/components/StatPanel";
 import TableRowConnector from "@/components/TableRowConnector";
+import TextSkeleton from "@/components/TextSkeleton";
 import { TimeTab, tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Card } from "@/components/ui/Card";
@@ -340,14 +341,15 @@ const SiloStats = React.memo(() => {
           See more data →
         </Link>
       </Col>
-      <div className="grid grid-cols-[2fr_3fr] gap-4 w-full justify-between">
-        <Col className="gap-4 self-stretch pt-4">
+      <div className="grid pt-4 grid-cols-1 sm:grid-cols-[2fr_3fr] gap-4 w-full justify-between">
+        <Col className="gap-4 self-stretch">
           {Object.entries(siloWhitelistData).map(([key, wlData], i) => {
             return (
               <HoveredSiloTokenStatContent
                 key={`${key}-${wlData.token.symbol}`}
                 wlTokenSiloDetails={wlData}
                 isHovered={(hoveredIndex || 0) === i}
+                isLoading={isLoading}
               />
             );
           })}
@@ -357,7 +359,6 @@ const SiloStats = React.memo(() => {
           siloWhitelistData={siloWhitelistData}
           isLoading={isLoading}
         />
-        <div className="" />
       </div>
     </Card>
   );
@@ -366,9 +367,14 @@ const SiloStats = React.memo(() => {
 interface HoveredSiloTokenStatContentProps {
   wlTokenSiloDetails: SiloTokenDepositOverallDetails;
   isHovered: boolean;
+  isLoading: boolean;
 }
 
-const HoveredSiloTokenStatContent = ({ wlTokenSiloDetails, isHovered }: HoveredSiloTokenStatContentProps) => {
+const HoveredSiloTokenStatContent = ({
+  wlTokenSiloDetails,
+  isLoading,
+  isHovered,
+}: HoveredSiloTokenStatContentProps) => {
   const {
     token,
     depositedBDV,
@@ -377,7 +383,7 @@ const HoveredSiloTokenStatContent = ({ wlTokenSiloDetails, isHovered }: HoveredS
     optimalPctDepositedBdv,
     currentDepositedLPBDVRatio,
   } = wlTokenSiloDetails;
-  const { tokenPrices } = usePriceData();
+  const { tokenPrices, loading: priceLoading } = usePriceData();
 
   if (!isHovered) return null;
 
@@ -385,60 +391,76 @@ const HoveredSiloTokenStatContent = ({ wlTokenSiloDetails, isHovered }: HoveredS
 
   const usdDeposited = usdPrice ? depositedAmount.mul(usdPrice) : undefined;
 
+  const loading = isLoading || priceLoading;
+
   return (
     <Col className="gap-4 justify-start self-stretch h-auto">
-      <div className="pinto-body sm:pinto-body-light flex flex-row gap-1">
-        <span>{<IconImage size={5} src={token.logoURI} />}</span>
-        <>{token.symbol}</>
+      <div className="pinto-body-bold flex flex-row gap-1">
+        <TextSkeleton height="same-body" className="w-32" loading={loading}>
+          <>
+            <IconImage size={5} src={token.logoURI} />
+            <>{token.symbol}</>
+          </>
+        </TextSkeleton>
       </div>
       <Row className="gap-2 justify-between">
         <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
           Total Deposited Amount:
         </div>
-        <div className="pinto-body sm:pinto-body-light flex flex-row gap-1">
-          <span>
+        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
+          <div className="pinto-sm sm:pinto-body-light flex flex-row gap-1 shrink-0">
             <IconImage size={5} src={token.logoURI} />
-          </span>
-          {formatter.token(depositedAmount, token)}
-        </div>
+            {formatter.token(depositedAmount, token)}
+          </div>
+        </TextSkeleton>
       </Row>
       <Row className="gap-2 justify-between">
         <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
           Total Deposited BDV:
         </div>
-        <div className="pinto-body sm:pinto-body-light flex flex-row gap-2">{formatter.twoDec(depositedBDV)}</div>
+        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
+          <div className="pinto-sm-light sm:pinto-body-light shrink-0">{formatter.twoDec(depositedBDV)}</div>
+        </TextSkeleton>
       </Row>
       <Row className="gap-2 justify-between">
         <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
           Total Deposited Value:
         </div>
-        <div className="pinto-body sm:pinto-body-light flex flex-row gap-2">
-          {usdDeposited ? formatter.usd(usdDeposited) : "--"}
-        </div>
+        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
+          <div className="pinto-sm-light sm:pinto-body-light shrink-0">
+            {usdDeposited ? formatter.usd(usdDeposited) : "--"}
+          </div>
+        </TextSkeleton>
       </Row>
       <Row className="gap-2 justify-between">
         <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
           % of Total Deposited PDV:
         </div>
-        <div className="pinto-body sm:pinto-body-light flex flex-row gap-2">
-          {formatter.pct(siloDepositedRatio.mul(100))}
-        </div>
+        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
+          <div className="pinto-sm-light sm:pinto-body-light shrink-0">
+            {formatter.pct(siloDepositedRatio.mul(100))}
+          </div>
+        </TextSkeleton>
       </Row>
       <Row className="gap-2 justify-between">
         <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
           Optimal % LP Deposited PDV:
         </div>
-        <div className="pinto-body sm:pinto-body-light flex flex-row gap-2">
-          {token.isLP ? formatter.pct(optimalPctDepositedBdv) : "N/A"}
-        </div>
+        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
+          <div className="pinto-sm-light sm:pinto-body-light shrink-0">
+            {token.isLP ? formatter.pct(optimalPctDepositedBdv) : "N/A"}
+          </div>
+        </TextSkeleton>
       </Row>
       <Row className="gap-2 justify-between">
         <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
           Current % LP Deposited PDV:
         </div>
-        <div className="pinto-body sm:pinto-body-light flex flex-row gap-2">
-          {token.isLP ? formatter.pct(currentDepositedLPBDVRatio.mul(100)) : "N/A"}
-        </div>
+        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
+          <div className="pinto-sm-light sm:pinto-body-light shrink-0">
+            {token.isLP ? formatter.pct(currentDepositedLPBDVRatio.mul(100)) : "N/A"}
+          </div>
+        </TextSkeleton>
       </Row>
     </Col>
   );
@@ -477,7 +499,9 @@ const SiloStatContent = ({
             <div key={`silo-stat-desktop-${label}`} className="flex flex-col flex-grow gap-1 sm:gap-2">
               <div className="pinto-sm-light sm:pinto-body-light font-thin">{label}</div>
               <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">{subLabel}</div>
-              <div className="pinto-body sm:pinto-h3">{isLoading ? "--" : value}</div>
+              <TextSkeleton height="same-body" desktopHeight="h3" className="w-32" loading={isLoading}>
+                <div className="pinto-body sm:pinto-h3">{isLoading ? "--" : value}</div>
+              </TextSkeleton>
             </div>
           );
         })}
@@ -487,7 +511,9 @@ const SiloStatContent = ({
           return (
             <Row key={`silo-stat-mobile-${label}`} className="gap-2 items-center justify-between">
               <div className="pinto-xs">{label}</div>
-              <div className="pinto-sm text-end">{value}</div>
+              <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={isLoading}>
+                <div className="pinto-sm text-end">{value}</div>
+              </TextSkeleton>
             </Row>
           );
         })}
@@ -549,12 +575,11 @@ const DepositedByTokenDoughnutChart = React.memo(
     }, [siloWhitelistData]);
 
     return (
-      <Col className="relative gap-4 items-center">
-        <div className="pinto-sm-light sm:pinto-body-light font-thin">Silo Deposits By Token</div>
+      <Col className="relative gap-4 items-center order-1 sm:order-2">
         <div className="flex flex-col self-stretch items-center">
           <DonutChart
-            className={cn("w-72 h-72", isMobile && "w-40 h-40")}
-            size={isMobile ? 120 : 350}
+            className={cn("w-72 h-72", isMobile && "w-52 h-52")}
+            size={isMobile ? 200 : 350}
             data={donutChartProps}
             options={donutOptions}
             showLabels={true}
