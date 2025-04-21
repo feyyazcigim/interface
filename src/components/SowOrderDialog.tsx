@@ -1294,11 +1294,11 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       </Button>
                     </div>
 
-                    <div className="text-[#9C9C9C] text-base font-light mb-6">
+                    <div className="text-[#9C9C9C] text-base font-light mb-40">
                       each time they Sow part of my Tractor Order.
                     </div>
 
-                    <div className="flex flex-col gap-2 mb-6">
+                    <div className="flex flex-col gap-2">
                       <div className="flex justify-between">
                         <div className="text-[#9C9C9C] text-base font-light">Estimated total number of executions</div>
                         <div className="text-black text-base font-light">{calculateEstimatedExecutions()}</div>
