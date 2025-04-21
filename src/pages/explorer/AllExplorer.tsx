@@ -1,6 +1,4 @@
 import { AdvancedChart } from "@/components/charts/AdvancedChart";
-import TVChart from "@/components/charts/TVChart";
-import { AdvancedFieldDocument } from "@/generated/gql/graphql";
 
 const AllExplorer = () => {
   return (
