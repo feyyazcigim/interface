@@ -111,20 +111,20 @@ export function Market() {
 const FAQ_ITEMS: IBaseAccordionContent[] = [
   {
     key: "what-is-the-pod-market",
-    title: "What is the pod market?",
+    title: "What is the Pod Market?",
     content:
-      "The pod market is where farmers can purchase pods from other farmers in the secondary market. Pods are Pinto's unique Debt asset that are issued when the protocol borrows Pinto from the open market.",
+      "The Pod Market is where farmers can buy Pods from other farmers on the secondary market. Pods are Pinto's unique debt asset, minted whenever the protocol borrows Pinto from the open market.",
   },
   {
     key: "why-purchase-pods-on-the-pod-market",
-    title: "Why should I purchase pods on the pod market instead of directly from the field?",
+    title: "Why buy Pods on the Pod Market instead of directly in the Field?",
     content:
-      "The Field allows you to purchase pods at the end of the queue, or redeem your pods once they have reached the front of the queue. The pod marketplace allows you to purchase or sell pods at different points in the line.",
+      "In the Field, you can buy new Pods at the back of the queue or redeem your Pods once they reach the front. The Pod Market lets you buy or sell Pods at any position in the line.",
   },
   {
-    key: "how-do-i-purchase-pods-on-the-pod-market",
-    title: "What is the difference between a Pod listing and a Pod Order?",
+    key: "pod-listing-vs-pod-order",
+    title: "What's the difference between a Pod Listing and a Pod Order?",
     content:
-      "A Pod listing is an intent to sell pods at some price. A Pod Order is an intent to purchase pods at some price. A farmer can both create and fulfill pod orders and listings.",
+      "A Pod Listing is an offer to sell Pods at a specified price, while a Pod Order is an offer to buy Pods at a specified price. Farmers can both create and fill Pod Listings and Pod Orders.",
   },
 ];

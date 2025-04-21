@@ -691,24 +691,21 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
     key: "what-is-stalk",
     title: "What is Stalk?",
     content:
-      "Stalk is a Pinto native asset that represents your ownership of the Silo. When Pinto is above it's value target, more Pintos are issued and distributed amongst the Silo and Field. The higher your ownership, the larger your share of the pinto mints.",
+      "Stalk is a native Pinto asset representing your ownership share of the Silo. When Pinto trades above its value target, the protocol mints additional Pinto tokens and distributes them to the Silo and the Field. The larger your Stalk balance, the greater your share of those mints.",
   },
   {
     key: "how-do-i-get-more-stalk",
     title: "How do I get more Stalk?",
     content: (
       <div className="flex flex-col gap-2 pinto-sm font-thin text-pinto-light">
-        <>{"There are two ways to get more Stalk."}</>
-        <ul className="flex flex-col gap-1 pl-2">
+        <>There are two ways to increase your Stalk:</>
+        <ul className="flex flex-col gap-1 pl-2 list-disc">
           <li>
-            {
-              "- You can deposit more into the Silo to get more stalk. 1 Pinto (or Pinto Denominated Value) gives you 1 Stalk."
-            }
+            Deposit more value into the Silo — every&nbsp;1 Pinto (or Pinto-denominated value) gives you&nbsp;1 Stalk.
           </li>
           <li>
-            {
-              "- Every season you stay in the silo, you earn Stalk based on the amount of seeds you have. Each seed earns 1/10000 stalk. The amount of seeds you have is based on the amount and token type you deposited in the Silo."
-            }
+            Remain in the Silo — each Season your Seeds grow yield: every Seed accrues&nbsp;1/10,000 Stalk per Season,
+            based on the amount and token type you've deposited.
           </li>
         </ul>
       </div>
@@ -719,8 +716,8 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
     title: "Can I lose Stalk?",
     content: (
       <>
-        <span className="font-medium">Yes.</span> Upon withdrawing from the Silo, you forfeit all stalk grown from the
-        withdrawn amount, and cannot be regained.
+        <span className="font-medium">Yes.</span> When you withdraw from the Silo, you forfeit all Stalk grown on the
+        withdrawn amount, and it cannot be regained.
       </>
     ),
   },
@@ -728,13 +725,13 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
     key: "can-i-switch-my-deposit-type",
     title: "Can I switch my Deposit type?",
     content:
-      "Yes! Pinto allows you to Convert your Pinto Deposits to LP Deposits, when Pinto is above its value target, and LP Deposits to Pinto Deposits below its value target, without losing Stalk. Pinto also allows you to Convert between LP types.",
+      "Yes! Pinto lets you Convert Pinto Deposits to LP Deposits while Pinto is above its value target, and LP Deposits back to Pinto Deposits when Pinto is below the target — all without losing Stalk. You can also Convert between LP types.",
   },
   {
     key: "how-can-i-maximize-stalk-growth",
     title: "How can I maximize Stalk growth?",
     content:
-      "A user can maximize their stalk growth by maximizing their seeds, which may change on a season-by-season basis. The system incentivizes conversions to occur by adjusting the seed values of each Silo Token as needed every season.",
+      "Maximize your Seeds. Seed allocations can change each Season, and the protocol may adjusts Seed rates on a season-by-season basis to incentivize Converts that keep the system balanced.",
   },
   {
     key: "how-c",
