@@ -17,14 +17,12 @@ export const selectedChartsAtom = atom<number[]>([0]);
 function saveChartsToStorage(selection: number[], chartSetupData: ChartSetup[]) {
   const selectedIds = selection.map((selectedChartIndex) => chartSetupData[selectedChartIndex].id);
   localStorage.setItem("advancedChartSelectedCharts", safeJSONStringify(selectedIds));
-  // console.log("Saved charts to storage: ", selectedIds, selection);
 }
 
 function loadChartsFromStorage(chartSetupData: ChartSetup[]) {
   const storedIds = localStorage.getItem("advancedChartSelectedCharts");
   const selectedIds = storedIds ? safeJSONParse<string[], undefined>(storedIds, undefined) : undefined;
   if (!selectedIds) {
-    // console.log("Loaded charts from storage: undefined");
     return undefined;
   }
   const result = chartSetupData.reduce<number[]>((output, setupData, index) => {
@@ -33,7 +31,6 @@ function loadChartsFromStorage(chartSetupData: ChartSetup[]) {
     }
     return output;
   }, []);
-  //console.log("Loaded charts from storage: ", selectedIds, result);
   return result;
 }
 
