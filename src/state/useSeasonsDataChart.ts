@@ -1,23 +1,21 @@
 import { TokenValue } from "@/classes/TokenValue";
-import { SeasonalChartData } from "@/components/charts/SeasonalChart";
+import { PODS } from "@/constants/internalTokens";
 import { subgraphs } from "@/constants/subgraph";
 import {
   AdvancedChartBeanDocument,
   AdvancedChartBeanQuery,
+  AdvancedChartBeanStalkDocument,
+  AdvancedChartBeanStalkQuery,
   Season,
-  SeasonsTableBeanStalkDocument,
-  SeasonsTableBeanStalkQuery,
 } from "@/generated/gql/graphql";
 import { PaginationSettings, paginateMultiQuerySubgraph, paginateSubgraph } from "@/utils/paginateSubgraph";
 import { Duration } from "luxon";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useChainId } from "wagmi";
 import useSeasonalQueries, {
-  ConvertEntryFn,
   SeasonalQueryVars,
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
-import { useSeason } from "./useSunData";
 import useTokenData from "./useTokenData";
 
 export interface SeasonsTableData {
@@ -48,9 +46,14 @@ export interface SeasonsTableData {
   marketCap: number;
   supply: TokenValue;
   supplyInPegLP: TokenValue;
+  realRateOfReturn: TokenValue;
+  unharvestablePods: TokenValue;
+  harvestedPods: TokenValue;
+  numberOfSows: number;
+  numberOfSowers: number;
 }
 
-const stalkPaginateSettings: PaginationSettings<Season, SeasonsTableBeanStalkQuery, "seasons", SeasonalQueryVars> = {
+const stalkPaginateSettings: PaginationSettings<Season, AdvancedChartBeanStalkQuery, "seasons", SeasonalQueryVars> = {
   primaryPropertyName: "seasons",
   idField: "id",
   nextVars: (value1000: Season, prevVars: SeasonalQueryVars) => {
@@ -85,7 +88,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
     return paginateMultiQuerySubgraph(
       stalkPaginateSettings,
       subgraphs[chainId].beanstalk,
-      SeasonsTableBeanStalkDocument,
+      AdvancedChartBeanStalkDocument,
       vars,
     );
   };
@@ -171,6 +174,11 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
         supply: TokenValue.fromBlockchain(season.beanHourlySnapshot.supply, tokenData.mainToken.decimals),
         supplyInPegLP: TokenValue.fromBlockchain(season.beanHourlySnapshot.supply, tokenData.mainToken.decimals),
         deltaPodDemand: TokenValue.fromBlockchain(currFieldHourlySnapshots.deltaPodDemand, 18),
+        realRateOfReturn: TokenValue.fromHuman(currFieldHourlySnapshots.realRateOfReturn || 0n, 18).mul(100),
+        unharvestablePods: TokenValue.fromBlockchain(currFieldHourlySnapshots.unharvestablePods || 0n, PODS.decimals),
+        harvestedPods: TokenValue.fromBlockchain(currFieldHourlySnapshots.harvestedPods || 0n, PODS.decimals),
+        numberOfSowers: currFieldHourlySnapshots.numberOfSowers,
+        numberOfSows: currFieldHourlySnapshots.numberOfSows,
         timestamp: Number(season.beanHourlySnapshot.season.timestamp || 0),
       });
       return acc;
