@@ -1211,7 +1211,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 <Col className="gap-6">
                   <Col>
                     <div className="pinto-sm-light text-pinto-light mb-2">I'm willing to pay someone</div>
-                    <div className="flex rounded-[12px] border border-[#D9D9D9] mb-4">
+                    <div className="flex rounded-[12px] border border-[#D9D9D9] mb-2">
                       <input
                         className="h-12 px-3 py-1.5 flex-1 rounded-l-[12px] focus:outline-none text-base font-light"
                         placeholder="0.00"

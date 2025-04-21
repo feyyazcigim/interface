@@ -502,6 +502,18 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
         )}
       </AnimatePresence>
       {slippageWarning}
+
+      <div className="hidden sm:flex flex-row gap-2">
+        <SmartSubmitButton
+          variant={isMorning ? "morning" : "gradient"}
+          disabled={ctaDisabled}
+          token={!fromSilo ? tokenIn : undefined}
+          amount={!fromSilo ? amountIn : undefined}
+          balanceFrom={!fromSilo ? balanceFrom : undefined}
+          submitFunction={onSubmit}
+          submitButtonText={buttonText}
+        />
+      </div>
       <div className="hidden sm:flex justify-center relative">
         <div className="relative w-full mt-4 ">
           <button
@@ -535,17 +547,6 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
           </button>
           <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="0.75rem" />
         </div>
-      </div>
-      <div className="hidden sm:flex flex-row gap-2">
-        <SmartSubmitButton
-          variant={isMorning ? "morning" : "gradient"}
-          disabled={ctaDisabled}
-          token={!fromSilo ? tokenIn : undefined}
-          amount={!fromSilo ? amountIn : undefined}
-          balanceFrom={!fromSilo ? balanceFrom : undefined}
-          submitFunction={onSubmit}
-          submitButtonText={buttonText}
-        />
       </div>
       <MobileActionBar>
         <SmartSubmitButton
