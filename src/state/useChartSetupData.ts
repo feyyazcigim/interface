@@ -349,7 +349,7 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
     icon: podIcon,
     timeScaleKey: "timestamp",
     priceScaleKey: "numberOfSowers",
-    valueAxisType: "sows",
+    valueAxisType: "sowers",
     valueFormatter: (v: number) => v,
     tickFormatter: (v: number) => v.toFixed(0),
     shortTickFormatter: (v: number) => v.toFixed(0),
