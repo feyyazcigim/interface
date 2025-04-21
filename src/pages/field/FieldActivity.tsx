@@ -572,14 +572,15 @@ const FieldActivity: React.FC = () => {
                         <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
                           {estimateExecutionTime(order)}
                         </td>
-                        <td className="px-2 py-1">
+                        <td className="px-2 py-1"
+                          onMouseEnter={() => setHoveredAddress(order.requisition.blueprint.publisher)}
+                          onMouseLeave={() => setHoveredAddress(null)}
+                        >
                           <a
                             href={`https://basescan.org/address/${order.requisition.blueprint.publisher}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`text-xs font-antarctica font-light text-pinto-gray-4 underline ${hoveredAddress === order.requisition.blueprint.publisher ? "font-medium" : ""}`}
-                            onMouseEnter={() => setHoveredAddress(order.requisition.blueprint.publisher)}
-                            onMouseLeave={() => setHoveredAddress(null)}
                           >
                             {formatAddress(order.requisition.blueprint.publisher)}
                           </a>
@@ -648,14 +649,15 @@ const FieldActivity: React.FC = () => {
                 <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
                   {formatTime(activity.timestamp)}
                 </td>
-                <td className="px-2 py-1">
+                <td className="px-2 py-1"
+                  onMouseEnter={() => setHoveredAddress(activity.address)}
+                  onMouseLeave={() => setHoveredAddress(null)}
+                >
                   <a
                     href={`https://basescan.org/address/${activity.address}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`text-xs font-antarctica font-light text-pinto-dark underline ${hoveredAddress === activity.address ? "font-medium" : ""}`}
-                    onMouseEnter={() => setHoveredAddress(activity.address)}
-                    onMouseLeave={() => setHoveredAddress(null)}
                   >
                     {formatAddress(activity.address)}
                   </a>
