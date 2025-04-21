@@ -3,6 +3,7 @@ import {
   useSeasonalAvgSeeds,
   useSeasonalBDV,
   useSeasonalL2SR,
+  useSeasonalPintoVAPY,
   useSeasonalStalk,
   useSeasonalTotalLiquidity,
 } from "@/state/seasonal/seasonalDataHooks";
@@ -16,6 +17,7 @@ const SiloExplorer = () => {
   const [avgSeedsTab, setAvgSeedsTab] = useState(TimeTab.Week);
   const [stalkTab, setStalkTab] = useState(TimeTab.Week);
   const [bdvTab, setBdvTab] = useState(TimeTab.Week);
+  const [vapyTab, setVapyTab] = useState(TimeTab.Week);
 
   const season = useSunData().current;
 
@@ -24,6 +26,7 @@ const SiloExplorer = () => {
   const avgSeedsData = useSeasonalAvgSeeds(Math.max(0, season - tabToSeasonalLookback(avgSeedsTab)), season);
   const stalkData = useSeasonalStalk(Math.max(0, season - tabToSeasonalLookback(stalkTab)), season);
   const bdvData = useSeasonalBDV(Math.max(0, season - tabToSeasonalLookback(bdvTab)), season);
+  const vapyData = useSeasonalPintoVAPY(Math.max(0, season - tabToSeasonalLookback(vapyTab)), season);
 
   return (
     <>
@@ -87,6 +90,15 @@ const SiloExplorer = () => {
           />
         </div>
       </div>
+      <SeasonalChart
+        title="Deposited Pinto vAPY"
+        size="large"
+        activeTab={vapyTab}
+        onChangeTab={setVapyTab}
+        useSeasonalResult={vapyData}
+        valueFormatter={f.percent2dFormatter}
+        tickValueFormatter={f.percent0dFormatter}
+      />
     </>
   );
 };
