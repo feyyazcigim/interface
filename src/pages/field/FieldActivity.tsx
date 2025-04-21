@@ -181,11 +181,6 @@ const FieldActivity: React.FC = () => {
 
         const filteredOrders = orderbook.filter((order) => {
           const predictedTemp = getPredictedSowTemperature(order);
-          const minTemp = getOrderTemperature(order);
-          const decodedData = getDecodedTractorData(order);
-          const runBlocksAfterSunrise = decodedData?.runBlocksAfterSunriseAsString
-            ? parseInt(decodedData.runBlocksAfterSunriseAsString)
-            : 0;
 
           // Only include orders with temperature requirements that could reasonably execute soon
           // Use the predicted temperature, which is now guaranteed to be at least the minimum
