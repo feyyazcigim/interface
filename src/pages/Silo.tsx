@@ -745,8 +745,7 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
             - Deposit more value into the Silo — every&nbsp;1 Pinto (or Pinto-denominated value) gives you&nbsp;1 Stalk.
           </li>
           <li>
-            - Remain in the Silo — each Season your Seeds grow yield: every Seed accrues&nbsp;1/10,000 Stalk per Season,
-            based on the amount and token type you've deposited.
+            - Every season you stay in the silo, you earn Stalk based on the amount of seeds you have. Each seed earns 1/10000 stalk. The amount of Seeds you have is based on the amount and token type you deposited in the Silo.
           </li>
         </ul>
       </div>
@@ -775,7 +774,7 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
       "Maximize your Seeds. Seed allocations can change each Season, and the protocol may adjusts Seed rates on a season-by-season basis to incentivize Converts that keep the system balanced.",
   },
   {
-    key: "how-c",
+    key: "how-can-i-learn-more-on-the-silo",
     title: "How can I learn more on the Silo?",
     content: (
       <>

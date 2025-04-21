@@ -33,6 +33,7 @@ import FieldActions from "./field/FieldActions";
 import FieldStats from "./field/FieldStats";
 import MorningPanel from "./field/MorningPanel";
 import TemperatureChart from "./field/Temperature";
+import { navLinks } from "@/components/nav/nav/Navbar";
 
 function Field() {
   useUpdateMorningTemperatureOnInterval();
@@ -253,11 +254,11 @@ const FieldFAQ: IBaseAccordionContent[] = [
         </>
         <ul className="flex flex-col gap-1 pl-2 list-disc">
           <li>
-            Pods are placed in a FIFO queue, where newly issued pods are placed at the end of the line, and newly issued
+            - Pods are placed in a FIFO queue, where newly issued pods are placed at the end of the line, and newly issued
             pinto are used to pay off pods at the front of the line.
           </li>
-          <li>Maturity is determined by your place in line, rather than at some date.</li>
-          <li>Pods never expire.</li>
+          <li>- Maturity is determined by your place in line, rather than at some date.</li>
+          <li>- Pods never expire.</li>
         </ul>
       </div>
     ),
@@ -286,4 +287,31 @@ const FieldFAQ: IBaseAccordionContent[] = [
     content:
       "The Morning Auction is the first 10 minutes of each Season. During this window, Temperature ramps from its opening value to the Season's maximum, letting farmers Sow Soil at a lower rate when demand is significant.",
   },
+  {
+    key: "how-can-i-learn-more-on-the-field",
+    title: "How can I learn more on the Field?",
+    content: (
+      <>
+        Head to the{" "}
+        <Link
+          className="text-pinto-green-4 hover:underline transition-all"
+          to={`${navLinks.docs}/guides/field`}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Pinto docs
+        </Link>{" "}
+        for more info, or ask any questions in the{" "}
+        <Link
+          className="text-pinto-green-4 hover:underline transition-all"
+          to={navLinks.discord}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          discord
+        </Link>{" "}
+        community!
+      </>
+    ),
+  }
 ] as const;
