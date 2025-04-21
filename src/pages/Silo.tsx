@@ -779,8 +779,8 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
       "Maximize your Seeds. Seed allocations can change each Season, and the protocol may adjusts Seed rates on a season-by-season basis to incentivize Converts that keep the system balanced.",
   },
   {
-    key: "how-can-i-learn-more-on-the-silo",
-    title: "How can I learn more on the Silo?",
+    key: "how-can-i-learn-more-about-the-silo",
+    title: "How can I learn more about the Silo?",
     content: (
       <>
         Head to the{" "}

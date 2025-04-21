@@ -270,10 +270,22 @@ const FieldFAQ: IBaseAccordionContent[] = [
       "Soil is the amount of Pinto the protocol is willing to borrow in a given Season. The protocol issues debt every Season, but the exact Soil available varies with system conditions.",
   },
   {
+    key: "what-are-pods",
+    title: "What are Pods?",
+    content:
+      "Pods are the native debt asset of the Pinto protocol. They are minted whenever the protocol borrows Pinto from the open market. 1 Pod is redeemable for 1 Pinto once the Pods mature.",
+  },
+  {
+    key: "how-do-pods-mature",
+    title: "How do Pods mature?",
+    content:
+      "Pods mature on a first in first out (FIFO) basis. When Pinto is issued to the field, pods at the front of the line become mature and harvestable.",
+  },
+  {
     key: "what-is-temperature",
     title: "What is Temperature?",
     content:
-      "Temperature is the interest rate you earn when you Sow (buy) Pods. It adjusts automatically each Season based on market activity in the previous one.",
+      "Temperature is the interest rate you earn when you Sow (buy) Pods. It adjusts automatically each Season based on market activity in the previous Season.",
   },
   {
     key: "does-temperature-have-a-cap",
@@ -285,11 +297,17 @@ const FieldFAQ: IBaseAccordionContent[] = [
     key: "what-is-the-morning-auction",
     title: "What is the Morning Auction?",
     content:
-      "The Morning Auction is the first 10 minutes of each Season. During this window, Temperature ramps from its opening value to the Season's maximum, letting farmers Sow Soil at a lower rate when demand is significant.",
+      "The Morning Auction is a Dutch Auction system, where Temperature ramps up to the maximum over the course of the first 10 minutes of each Season.",
   },
   {
-    key: "how-can-i-learn-more-on-the-field",
-    title: "How can I learn more on the Field?",
+    key: "why-would-i-sow-during-the-morning-auction",
+    title: "Why would I sow during the Morning Auction if the Temperature is lower?",
+    content:
+      "When there is significant demand for Soil at the maximum Temperature, Farmers may be willing to purchase Pods at a lower rate now, rather than waiting for the protocol to decrease the maximum Temperature over time, with a longer pod line.",
+  },
+  {
+    key: "how-can-i-learn-more-about-the-field",
+    title: "How can I learn more about the Field?",
     content: (
       <>
         Head to the{" "}
