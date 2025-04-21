@@ -341,7 +341,7 @@ const SiloStats = React.memo(() => {
           See more data →
         </Link>
       </Col>
-      <div className="grid pt-4 grid-cols-1 sm:grid-cols-[2fr_3fr] gap-4 w-full justify-between">
+      <div className="grid pt-4 grid-cols-1 sm:grid-cols-2 gap-4 w-full justify-between">
         <Col className="gap-4 self-stretch">
           {Object.entries(siloWhitelistData).map(([key, wlData], i) => {
             return (
@@ -416,7 +416,7 @@ const HoveredSiloTokenStatContent = ({
       </Row>
       <Row className="gap-2 justify-between">
         <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Total Deposited BDV:
+          Total Deposited PDV:
         </div>
         <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
           <div className="pinto-sm-light sm:pinto-body-light shrink-0">{formatter.twoDec(depositedBDV)}</div>
@@ -582,7 +582,6 @@ const DepositedByTokenDoughnutChart = React.memo(
             size={isMobile ? 200 : 350}
             data={donutChartProps}
             options={donutOptions}
-            showLabels={true}
             onHover={setHoveredIndex}
           />
         </div>
@@ -701,10 +700,10 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
         <>There are two ways to increase your Stalk:</>
         <ul className="flex flex-col gap-1 pl-2 list-disc">
           <li>
-            Deposit more value into the Silo — every&nbsp;1 Pinto (or Pinto-denominated value) gives you&nbsp;1 Stalk.
+            - Deposit more value into the Silo — every&nbsp;1 Pinto (or Pinto-denominated value) gives you&nbsp;1 Stalk.
           </li>
           <li>
-            Remain in the Silo — each Season your Seeds grow yield: every Seed accrues&nbsp;1/10,000 Stalk per Season,
+            - Remain in the Silo — each Season your Seeds grow yield: every Seed accrues&nbsp;1/10,000 Stalk per Season,
             based on the amount and token type you've deposited.
           </li>
         </ul>

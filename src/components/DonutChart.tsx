@@ -1,12 +1,9 @@
 import { cn } from "@/utils/utils";
-import { ArcElement, Chart, ChartData, ChartOptions, PieController, Plugin, Tooltip } from "chart.js";
-import ChartDataLabels, { Context as DataLabelsContext } from "chartjs-plugin-datalabels";
+import { ArcElement, Chart, ChartData, ChartOptions, PieController, Tooltip } from "chart.js";
 import { useMemo } from "react";
 import { ReactChart } from "./ReactChart";
 
 Chart.register(PieController, ArcElement, Tooltip);
-
-const Plugins: Plugin[] = [ChartDataLabels];
 
 export interface DonutChartProps {
   data: ChartData;
@@ -17,37 +14,19 @@ export interface DonutChartProps {
   onHover?: (index: number) => void;
 }
 
-export default function DonutChart({
-  data,
-  size = 50,
-  className,
-  options,
-  showLabels = false,
-  onHover,
-}: DonutChartProps) {
+export default function DonutChart({ data, size = 50, className, options, onHover }: DonutChartProps) {
   const mergedOptions = useMemo(() => {
-    return mergeOptions(options, showLabels, onHover);
-  }, [options, showLabels, onHover]);
+    return mergeOptions(options, onHover);
+  }, [options, onHover]);
 
   return (
     <div className={cn("w-4 h-4", className)}>
-      <ReactChart
-        type="doughnut"
-        data={data}
-        options={mergedOptions as ChartOptions}
-        plugins={Plugins}
-        height={size}
-        width={size}
-      />
+      <ReactChart type="doughnut" data={data} options={mergedOptions as ChartOptions} height={size} width={size} />
     </div>
   );
 }
 
-const mergeOptions = (
-  options: ChartOptions | undefined,
-  showLabels?: boolean,
-  onHover?: (index: number) => void,
-): ChartOptions => {
+const mergeOptions = (options: ChartOptions | undefined, onHover?: (index: number) => void): ChartOptions => {
   const config: ChartOptions = {
     ...options,
     plugins: {
@@ -60,14 +39,14 @@ const mergeOptions = (
         enabled: false,
         ...options?.plugins?.tooltip,
       },
-      datalabels: {
-        color: "#000",
-        clip: false,
-        formatter: (_value: number, context: DataLabelsContext) => {
-          return showLabels ? context.chart.data.labels?.[context.dataIndex] || "" : "";
-        },
-        ...options?.plugins?.datalabels,
-      },
+      // datalabels: {
+      //   color: "#000",
+      //   clip: false,
+      //   formatter: (_value: number, context: DataLabelsContext) => {
+      //     return showLabels ? context.chart.data.labels?.[context.dataIndex] || "" : "";
+      //   },
+      //   ...options?.plugins?.datalabels,
+      // },
     },
     onHover: (_event, chartElement) => {
       if (onHover && chartElement.length > 0) {
