@@ -10,6 +10,7 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
 import { useHarvestableIndex } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
+import { useTemperature } from "@/state/useFieldData";
 import { formatter } from "@/utils/format";
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -64,6 +65,7 @@ const FieldActivity: React.FC = () => {
   const [tractorOrders, setTractorOrders] = React.useState<OrderbookEntry[]>([]);
   const [loadingTractorOrders, setLoadingTractorOrders] = React.useState(true);
   const currentSeason = useSeason();
+  const currentTemperature = useTemperature();
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
   const harvestableIndex = useHarvestableIndex();
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
@@ -89,7 +91,7 @@ const FieldActivity: React.FC = () => {
       }
     }
     // Default temperature if we can't decode
-    return 5.0; // 5% is a reasonable default
+    return 0.0; // 0% is a reasonable default
   };
 
   // Helper function to get the decoded tractor data
@@ -124,9 +126,25 @@ const FieldActivity: React.FC = () => {
     return "-"; // Fallback value if we can't estimate
   };
 
+  // Helper function to get the predicted sow temperature 
+  const getPredictedSowTemperature = (order: OrderbookEntry): number => {
+    const decodedData = getDecodedTractorData(order);
+    if (decodedData && decodedData.runBlocksAfterSunriseAsString) {
+      const runBlocks = parseInt(decodedData.runBlocksAfterSunriseAsString);
+      if (runBlocks >= 300 && currentTemperature.scaled) {
+        // After morning auction - use current temperature
+        return currentTemperature.scaled.toNumber();
+      }
+    }
+    // Otherwise use the minimum temperature from the order
+    return getOrderTemperature(order);
+  };
+
   // Helper function to estimate pods from an order
   const estimateOrderPods = (order: OrderbookEntry): TokenValue => {
-    const temp = getOrderTemperature(order);
+    // Use the predicted temperature
+    const temp = getPredictedSowTemperature(order);
+    
     // Calculate pods as PINTO amount * (1 + temperature/100)
     return order.amountSowableNextSeason.mul(1 + temp / 100);
   };
@@ -156,12 +174,10 @@ const FieldActivity: React.FC = () => {
 
         console.log(`Found ${orderbook.length} tractor orders`);
 
-        // Sort by temperature (already done by loadOrderbookData, but ensuring here)
-        // Using the helper function to get the temperature - sort by lowest temp first
+        // Sort by predicted temperature (lowest to highest)
         const sortedOrders = [...orderbook].sort((a, b) => {
-          const tempA = getOrderTemperature(a);
-          const tempB = getOrderTemperature(b);
-          return tempA - tempB; // Sort low to high temperature
+          // We want to sort by lowest predicted temperature first
+          return getPredictedSowTemperature(a) - getPredictedSowTemperature(b);
         });
 
         setTractorOrders(sortedOrders);
@@ -593,7 +609,18 @@ const FieldActivity: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
-                          ≥ {temp.toFixed(0)}%
+                          {(() => {
+                            const predictedTemp = getPredictedSowTemperature(order);
+                            const minTemp = getOrderTemperature(order);
+                            
+                            // If predicted temp is higher than min temp, it's using current season temp
+                            if (predictedTemp > minTemp) {
+                              return `${predictedTemp.toFixed(2)}%`;
+                            } else {
+                              // It's using minimum temperature
+                              return `≥ ${minTemp.toFixed(2)}%`;
+                            }
+                          })()}
                         </td>
                         <td className="px-2 py-1 text-right">
                           <div className="flex items-center justify-end gap-1">
@@ -673,7 +700,7 @@ const FieldActivity: React.FC = () => {
                   </a>
                 </td>
                 <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
-                  {activity.temperature.toFixed(0)}%
+                  {activity.temperature.toFixed(2)}%
                 </td>
                 <td className="px-2 py-1 text-right">
                   <div className="flex items-center justify-end gap-1">
