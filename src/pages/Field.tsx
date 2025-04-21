@@ -16,16 +16,18 @@ import {
 } from "@/state/protocol/field/field.updater";
 
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
+import { Col } from "@/components/Container";
 import MobileActionBar from "@/components/MobileActionBar";
 import ReadMoreAccordion from "@/components/ReadMoreAccordion";
 import TooltipSimple from "@/components/TooltipSimple";
 import { Skeleton } from "@/components/ui/Skeleton";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { useFarmerField } from "@/state/useFarmerField";
 import { useHarvestableIndex, useHarvestableIndexLoading } from "@/state/useFieldData";
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import FieldActions from "./field/FieldActions";
 import FieldStats from "./field/FieldStats";
@@ -66,16 +68,15 @@ function Field() {
       <div className="flex flex-col lg:flex-row justify-between gap-14 mt-0 sm:mt-0">
         <div className="flex flex-col w-full gap-4 sm:gap-8">
           {(!isMobile || (!currentAction && isMobile)) && (
-            <div className="flex flex-col gap-4">
-              <div className="pinto-h2 sm:pinto-h1">Field</div>
-              <div className="pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-                Lend in the decentralized credit facility for Pods, the Pinto debt asset.
-              </div>
-              <div className="hidden sm:block pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-                Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.
+            <Col className="gap-2">
+              <div className="flex flex-col gap-4">
+                <div className="pinto-h2 sm:pinto-h1">Field</div>
+                <div className="pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+                  Lend Pinto to the protocol to earn interest.
+                </div>
               </div>
               <ReadMoreField />
-            </div>
+            </Col>
           )}
           {currentAction && isMobile && (
             <Button variant={"outline"} rounded="full" noPadding className="h-9 w-9 sm:h-12 sm:w-12">
@@ -210,16 +211,30 @@ export const DynamicTemperatureChart = () => {
   }
 };
 
-const ReadMoreField = () => (
-  <ReadMoreAccordion defaultOpen>
-    <div>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-      magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-      consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-      Excepteur sint occaecat cupidatat non proident
-    </div>
-  </ReadMoreAccordion>
-);
+const ReadMoreField = () => {
+  const [open, set] = useLocalStorage("pinto-learn-state-field", { open: true }, { initializeIfEmpty: true });
+  const handleSet = useCallback((isOpen: boolean) => set({ open: isOpen }), [set]);
+
+  return (
+    <ReadMoreAccordion defaultOpen={open.open} onChange={handleSet}>
+      <div className="flex flex-col gap-2">
+        <p>
+          Pinto can be lent to the protocol in exchange for a fixed interest rate bond, where the rate payback is a
+          function of Pinto supply growth. The debt to the user is represented by Pods, which are defined by their
+          position in the Pod Line.
+        </p>
+        <p>
+          Soil is the amount of Pinto the protocol is willing to purchase on the open market and temperature is the
+          interest rate it will pay. Each season the Soil and maximum Temperature are set based on Protocol state.
+        </p>
+        <p>
+          When Pinto is priced over $1 new Pinto is minted with 48.5% being distributed to lenders in the Field. Loans
+          are paid back in first in first out (FIFO) ordering.
+        </p>
+      </div>
+    </ReadMoreAccordion>
+  );
+};
 
 const FieldFAQ: IBaseAccordionContent[] = [
   {

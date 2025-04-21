@@ -6,9 +6,10 @@ import { Col } from "./Container";
 interface IReadMoreAccordion {
   children: React.ReactNode;
   defaultOpen?: boolean;
+  onChange?: (open: boolean) => void;
 }
-export default function ReadMoreAccordion({ children, defaultOpen = false }: IReadMoreAccordion) {
-  const [open, toggle] = useBoolean(defaultOpen);
+export default function ReadMoreAccordion({ children, defaultOpen = false, onChange }: IReadMoreAccordion) {
+  const [open, toggle] = useBoolean(defaultOpen, onChange);
 
   return (
     <Col>

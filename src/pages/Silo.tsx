@@ -9,6 +9,7 @@ import ReadMoreAccordion from "@/components/ReadMoreAccordion";
 import StatPanel from "@/components/StatPanel";
 import TableRowConnector from "@/components/TableRowConnector";
 import TextSkeleton from "@/components/TextSkeleton";
+import TooltipSimple from "@/components/TooltipSimple";
 import { TimeTab, tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Card } from "@/components/ui/Card";
@@ -19,6 +20,7 @@ import useIsMobile from "@/hooks/display/useIsMobile";
 import useIsSmallDesktop from "@/hooks/display/useIsSmallDesktop";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useFarmerActions from "@/hooks/useFarmerActions";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { useSeasonalSiloActiveFarmers } from "@/state/seasonal/seasonalDataHooks";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
@@ -35,7 +37,6 @@ import { cn } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { label } from "three/webgpu";
 import SiloTable from "./silo/SiloTable";
 
 function Silo() {
@@ -114,7 +115,7 @@ function Silo() {
           <div className="flex flex-col gap-2">
             <div className="pinto-h2 sm:pinto-h1">Silo</div>
             <div className="pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-              Deposit value in the Silo to earn yield.
+              Deposit value in the Silo to earn passive yield from supply growth.
             </div>
             <LearnSilo />
           </div>
@@ -285,14 +286,12 @@ function Silo() {
             </div>
           </div>
           <div className="flex flex-col w-full gap-8">
-            {/* <div className="grid grid-cols-[1fr_2fr]"> */}
             <div className="w-full">
               <SiloStats />
             </div>
             <div className="w-full">
               <AccordionGroup items={FAQ_ITEMS} allExpanded={false} groupTitle="Frequently Asked Questions" />
             </div>
-            {/* </div> */}
           </div>
         </div>
       </div>
@@ -306,18 +305,32 @@ export default Silo;
 
 // ---------- Sub Components ----------
 
-const LearnSilo = () => (
-  <>
-    <ReadMoreAccordion defaultOpen>
-      <div>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-        magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-        consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-        pariatur. Excepteur sint occaecat cupidatat non proident
-      </div>
-    </ReadMoreAccordion>
-  </>
-);
+const LearnSilo = () => {
+  const [open, set] = useLocalStorage("pinto-learn-state-silo", { open: true }, { initializeIfEmpty: true });
+  const handleSet = useCallback((isOpen: boolean) => set({ open: isOpen }), [set]);
+
+  return (
+    <>
+      <ReadMoreAccordion defaultOpen={open.open} onChange={handleSet}>
+        <Col className="gap-2">
+          <p>
+            Pinto or Pinto-LP can be deposited into the Silo and can be withdrawn at any time. Deposits are eligible to
+            earn Pinto after at least 1 full season has passed.
+          </p>
+          <p>
+            When Pinto is priced over $1, new Pinto is minted with 48.5% being distributed to Silo depositors.
+            Depositors earn a share of the Pinto mints to the silo based on their Stalk balance proportional to total
+            Stalk supply.
+          </p>
+          <p>
+            A Deposit is issued an initial amount of Stalk and Seeds, which is determined by token type and value. Seeds
+            grow Stalk every season. All stalk is forfeit upon a withdrawal.
+          </p>
+        </Col>
+      </ReadMoreAccordion>
+    </>
+  );
+};
 
 const SiloStats = React.memo(() => {
   const { data: siloStats, siloWhitelistData, isLoading } = useSiloStats();
@@ -405,7 +418,7 @@ const HoveredSiloTokenStatContent = ({
       </div>
       <Row className="gap-2 justify-between">
         <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Total Deposited Amount:
+          Total Deposited Amount
         </div>
         <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
           <div className="pinto-sm sm:pinto-body-light flex flex-row gap-1 shrink-0">
@@ -415,17 +428,31 @@ const HoveredSiloTokenStatContent = ({
         </TextSkeleton>
       </Row>
       <Row className="gap-2 justify-between">
-        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Total Deposited PDV:
-        </div>
+        <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          Total Deposited PDV
+          <TooltipSimple
+            variant="outlined"
+            showOnMobile
+            content={
+              <div className="pinto-sm">
+                The total value of this token deposited into the Silo in value denominated in Pinto.
+              </div>
+            }
+          />
+        </Row>
         <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
           <div className="pinto-sm-light sm:pinto-body-light shrink-0">{formatter.twoDec(depositedBDV)}</div>
         </TextSkeleton>
       </Row>
       <Row className="gap-2 justify-between">
-        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Total Deposited Value:
-        </div>
+        <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          Total Deposited Value
+          <TooltipSimple
+            variant="outlined"
+            showOnMobile
+            content={<div className="pinto-sm">The USD total value of this token deposited into the Silo.</div>}
+          />
+        </Row>
         <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
           <div className="pinto-sm-light sm:pinto-body-light shrink-0">
             {usdDeposited ? formatter.usd(usdDeposited) : "--"}
@@ -433,9 +460,14 @@ const HoveredSiloTokenStatContent = ({
         </TextSkeleton>
       </Row>
       <Row className="gap-2 justify-between">
-        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          % of Total Deposited PDV:
-        </div>
+        <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          % of Total Deposited PDV
+          <TooltipSimple
+            variant="outlined"
+            showOnMobile
+            content={<div className="pinto-sm">The percentage of the total Deposited PDV in the Silo.</div>}
+          />
+        </Row>
         <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
           <div className="pinto-sm-light sm:pinto-body-light shrink-0">
             {formatter.pct(siloDepositedRatio.mul(100))}
@@ -443,9 +475,14 @@ const HoveredSiloTokenStatContent = ({
         </TextSkeleton>
       </Row>
       <Row className="gap-2 justify-between">
-        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Optimal % LP Deposited PDV:
-        </div>
+        <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          Optimal % LP Deposited PDV
+          <TooltipSimple
+            variant="outlined"
+            showOnMobile
+            content={<div className="pinto-sm">The optimal percentage of the total LP Deposited PDV.</div>}
+          />
+        </Row>
         <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
           <div className="pinto-sm-light sm:pinto-body-light shrink-0">
             {token.isLP ? formatter.pct(optimalPctDepositedBdv) : "N/A"}
@@ -453,9 +490,14 @@ const HoveredSiloTokenStatContent = ({
         </TextSkeleton>
       </Row>
       <Row className="gap-2 justify-between">
-        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Current % LP Deposited PDV:
-        </div>
+        <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+          Current % LP Deposited PDV
+          <TooltipSimple
+            variant="outlined"
+            showOnMobile
+            content={<div className="pinto-sm">The current percentage of the total LP Deposited PDV.</div>}
+          />
+        </Row>
         <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
           <div className="pinto-sm-light sm:pinto-body-light shrink-0">
             {token.isLP ? formatter.pct(currentDepositedLPBDVRatio.mul(100)) : "N/A"}
