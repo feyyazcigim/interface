@@ -23,7 +23,7 @@ import { useFarmerField } from "@/state/useFarmerField";
 import { useHarvestableIndex, useHarvestableIndexLoading } from "@/state/useFieldData";
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import FieldActions from "./field/FieldActions";
 import FieldActivity from "./field/FieldActivity";
@@ -40,6 +40,11 @@ function Field() {
   const harvestableIndexLoading = useHarvestableIndexLoading();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
+  const [tractorRefreshCounter, setTractorRefreshCounter] = useState(0);
+
+  const refreshTractorOrders = useCallback(() => {
+    setTractorRefreshCounter(prev => prev + 1);
+  }, []);
 
   const currentAction = searchParams.get("action");
 
@@ -193,7 +198,7 @@ function Field() {
 
               {activeTab === "tractor" && (
                 <div className="w-full">
-                  <TractorOrdersPanel />
+                  <TractorOrdersPanel refreshData={tractorRefreshCounter} />
                 </div>
               )}
             </>
@@ -205,7 +210,7 @@ function Field() {
         <div className="flex flex-col gap-6 w-full mb-14 sm:mb-0 lg:max-w-[384px] 3xl:max-w-[518px] 3xl:min-w-[425px] lg:mt-[5.25rem]">
           {(!isMobile || (currentAction && isMobile)) && (
             <OnlyMorningCard onlyMorning className="p-4 w-full">
-              <FieldActions />
+              <FieldActions onTractorOrderPublished={refreshTractorOrders} />
             </OnlyMorningCard>
           )}
           {!isMobile && (

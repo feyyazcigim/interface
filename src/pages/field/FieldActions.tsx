@@ -13,7 +13,11 @@ const slugs = ["sow", "harvest"] as const;
 
 const morningClass = clsx("data-[state=active]:bg-pinto-morning-orange data-[state=active]:text-pinto-morning");
 
-export default function FieldActions() {
+interface FieldActionsProps {
+  onTractorOrderPublished?: () => void;
+}
+
+export default function FieldActions({ onTractorOrderPublished }: FieldActionsProps) {
   const isMorning = useMorning().isMorning;
   const [tab, handleChangeTab] = useParamsTabs(slugs, "action", true);
   const [showSowOrder, setShowSowOrder] = useState(false);
@@ -46,7 +50,7 @@ export default function FieldActions() {
       {showSowOrder && (
         <Card className="absolute inset-x-0 -top-[calc(2.5rem)] rounded-xl z-10" id="sow-order-dialog">
           <div className="flex flex-col w-full items-center p-4">
-            <SowOrderDialog open={showSowOrder} onOpenChange={setShowSowOrder} />
+            <SowOrderDialog open={showSowOrder} onOpenChange={setShowSowOrder} onOrderPublished={onTractorOrderPublished} />
           </div>
         </Card>
       )}

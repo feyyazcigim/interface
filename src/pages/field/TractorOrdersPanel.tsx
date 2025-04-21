@@ -30,7 +30,11 @@ import { useAccount } from "wagmi";
 
 type ExecutionData = Awaited<ReturnType<typeof fetchTractorExecutions>>[number];
 
-const TractorOrdersPanel = () => {
+interface TractorOrdersPanelProps {
+  refreshData?: number; // A value that changes to trigger a refresh
+}
+
+const TractorOrdersPanel = ({ refreshData }: TractorOrdersPanelProps) => {
   const { address } = useAccount();
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
@@ -111,7 +115,7 @@ const TractorOrdersPanel = () => {
 
   useEffect(() => {
     fetchData();
-  }, [address, protocolAddress, publicClient]);
+  }, [address, protocolAddress, publicClient, refreshData]); // Add refreshData as dependency
 
   // Extract the sowBlueprintv0 call from the advancedFarm call
   const extractSowBlueprintCall = (data: `0x${string}`): `0x${string}` | null => {

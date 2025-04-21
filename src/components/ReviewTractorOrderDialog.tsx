@@ -43,6 +43,7 @@ interface ReviewTractorOrderProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  onOrderPublished?: () => void;
   orderData: {
     totalAmount: string;
     temperature: string;
@@ -64,6 +65,7 @@ export default function ReviewTractorOrderDialog({
   open,
   onOpenChange,
   onSuccess,
+  onOrderPublished,
   orderData,
   encodedData,
   operatorPasteInstrs,
@@ -142,6 +144,11 @@ export default function ReviewTractorOrderDialog({
       // Call the parent success callback to refresh data
       if (onSuccess) {
         onSuccess();
+      }
+
+      // Call the onOrderPublished callback if provided
+      if (onOrderPublished) {
+        onOrderPublished();
       }
     } catch (error) {
       console.error("Error publishing requisition:", error);

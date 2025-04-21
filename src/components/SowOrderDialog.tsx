@@ -41,9 +41,10 @@ import { Input } from "./ui/Input";
 interface SowOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onOrderPublished?: () => void;
 }
 
-export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogProps) {
+export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }: SowOrderDialogProps) {
   const podLine = usePodLine();
   const currentTemperature = useTemperature();
   const [podLineLength, setPodLineLength] = useState("");
@@ -1515,6 +1516,7 @@ export default function SowOrderDialog({ open, onOpenChange }: SowOrderDialogPro
           open={showReview}
           onOpenChange={setShowReview}
           onSuccess={() => onOpenChange(false)}
+          onOrderPublished={onOrderPublished}
           orderData={{
             totalAmount,
             temperature,
