@@ -21,7 +21,7 @@ function saveChartsToStorage(selection: number[], chartSetupData: ChartSetup[]) 
 
 function loadChartsFromStorage(chartSetupData: ChartSetup[]) {
   const storedIds = localStorage.getItem("advancedChartSelectedCharts");
-  const selectedIds = storedIds ? safeJSONParse<string[], undefined>(storedIds, undefined) : undefined;
+  const selectedIds = safeJSONParse<string[], undefined>(storedIds, undefined);
   if (!selectedIds) {
     return undefined;
   }
@@ -39,9 +39,7 @@ export const AdvancedChart = () => {
   const currentSeason = useSeason();
 
   const storedSetting1 = localStorage.getItem("advancedChartTimePeriod");
-  const storedTimePeriod = storedSetting1
-    ? safeJSONParse<IRange<Time>, undefined>(storedSetting1, undefined)
-    : undefined;
+  const storedTimePeriod = safeJSONParse<IRange<Time>, undefined>(storedSetting1, undefined);
 
   const storedSelectedCharts = useMemo(() => {
     return loadChartsFromStorage(chartSetupData);
