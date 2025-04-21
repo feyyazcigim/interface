@@ -1,3 +1,4 @@
+import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 import { Separator } from "@/components/ui/Separator";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -86,11 +87,17 @@ export function Market() {
               </div>
             </div>
             <div className="flex flex-col gap-4 self-start px-4 py-4 border-l border-pinto-gray-2 h-full w-[384px] min-w-[384px] 3xl:w-[540px] 3xl:min-w-[540px] flex-shrink-0 overflow-auto scrollbar-none">
-              <MarketModeSelect onSecondarySelectionChange={handleSecondaryTabClick} />
-              {viewMode === "buy" && !fillView && <CreateOrder />}
-              {viewMode === "buy" && fillView && <FillListing />}
-              {viewMode === "sell" && !fillView && <CreateListing />}
-              {viewMode === "sell" && fillView && <FillOrder />}
+              <div>
+                <MarketModeSelect onSecondarySelectionChange={handleSecondaryTabClick} />
+                {viewMode === "buy" && !fillView && <CreateOrder />}
+                {viewMode === "buy" && fillView && <FillListing />}
+                {viewMode === "sell" && !fillView && <CreateListing />}
+                {viewMode === "sell" && fillView && <FillOrder />}
+              </div>
+              <Separator className="bg-pinto-gray-2" />
+              <div className="pt-4">
+                <AccordionGroup items={FAQ_ITEMS} groupTitle="Frequently Asked Questions" allExpanded={false} />
+              </div>
             </div>
           </div>
         </div>
@@ -98,3 +105,26 @@ export function Market() {
     </>
   );
 }
+
+// ---------- MARKET FAQ ----------
+
+const FAQ_ITEMS: IBaseAccordionContent[] = [
+  {
+    key: "what-is-the-pod-market",
+    title: "What is the pod market?",
+    content:
+      "The pod market is where farmers can purchase pods from other farmers in the secondary market. Pods are Pinto's unique Debt asset that are issued when the protocol borrows Pinto from the open market.",
+  },
+  {
+    key: "why-purchase-pods-on-the-pod-market",
+    title: "Why should I purchase pods on the pod market instead of directly from the field?",
+    content:
+      "The Field allows you to purchase pods at the end of the queue, or redeem your pods once they have reached the front of the queue. The pod marketplace allows you to purchase or sell pods at different points in the line.",
+  },
+  {
+    key: "how-do-i-purchase-pods-on-the-pod-market",
+    title: "What is the difference between a Pod listing and a Pod Order?",
+    content:
+      "A Pod listing is an intent to sell pods at some price. A Pod Order is an intent to purchase pods at some price. A farmer can both create and fulfill pod orders and listings.",
+  },
+];
