@@ -507,14 +507,14 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
           <button
             type="button"
             onClick={() => onShowOrder()}
-            className={`group box-border flex flex-col items-start p-4 gap-1 w-full rounded-[0.75rem] hover:bg-[#E5F5E5] hover:border-pinto-green-4 transition-colors duration-200`}
+            className={`group box-border flex flex-col items-start p-4 gap-1 w-full rounded-[0.75rem] transition-colors duration-200`}
             onMouseEnter={() => setHoveredTractor(true)}
             onMouseLeave={() => setHoveredTractor(false)}
             style={{
-              backgroundColor: '#F8F8F8', 
+              backgroundColor: hoveredTractor ? '#E5F5E5' : '#F8F8F8', 
               borderWidth: '1px',
               borderStyle: 'solid',
-              borderColor: '#D9D9D9',
+              borderColor: hoveredTractor ? '#387F5C' : '#D9D9D9',
               // If input exceeds soil, apply special highlight styling
               ...(inputExceedsSoil && {
                 backgroundColor: '#E5F5E5',
@@ -526,10 +526,10 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
           >
             {/* Add the keyframe animation definition */}
             <div className="flex flex-row justify-center items-center gap-1">
-              <LightningIcon className={`w-4 h-4 ${inputExceedsSoil ? 'text-pinto-green-4' : 'text-[#404040]'} group-hover:text-pinto-green-4`} />
-              <span className={`pinto-h4 ${inputExceedsSoil ? 'text-pinto-green-4' : 'text-[#404040]'} group-hover:text-pinto-green-4`}>Want to Sow with size?</span>
+              <LightningIcon className={`w-4 h-4 ${inputExceedsSoil || hoveredTractor ? 'text-pinto-green-4' : 'text-[#404040]'}`} />
+              <span className={`pinto-h4 ${inputExceedsSoil || hoveredTractor ? 'text-pinto-green-4' : 'text-[#404040]'}`}>Want to Sow with size?</span>
             </div>
-            <span className={`pinto-body-light ${inputExceedsSoil ? 'text-pinto-green-3' : 'text-[#9C9C9C]'} group-hover:text-pinto-green-3`}>
+            <span className={`pinto-body-light ${inputExceedsSoil || hoveredTractor ? 'text-pinto-green-3' : 'text-[#9C9C9C]'}`}>
               Use 🚜 Tractor to set up an order for Pods over time
             </span>
           </button>
