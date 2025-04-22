@@ -1,6 +1,6 @@
-import useBoolean from "@/hooks/useBoolean";
 import { cn } from "@/utils/utils";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { Col } from "./Container";
 
 interface IReadMoreAccordion {
@@ -9,7 +9,13 @@ interface IReadMoreAccordion {
   onChange?: (open: boolean) => void;
 }
 export default function ReadMoreAccordion({ children, defaultOpen = false, onChange }: IReadMoreAccordion) {
-  const [open, toggle] = useBoolean(defaultOpen, onChange);
+  const [open, setOpen] = useState(defaultOpen);
+
+  const handleToggle = () => {
+    const newValue = !open;
+    setOpen(newValue);
+    onChange?.(newValue);
+  };
 
   return (
     <Col>
@@ -30,7 +36,10 @@ export default function ReadMoreAccordion({ children, defaultOpen = false, onCha
           {children}
         </motion.div>
       </Col>
-      <div onClick={toggle} className={cn("cursor-pointer w-max pinto-sm-light text-pinto-green", open && "mt-2")}>
+      <div
+        onClick={handleToggle}
+        className={cn("cursor-pointer w-max pinto-sm-light text-pinto-green", open && "mt-2")}
+      >
         {open ? "Read less" : "Read more"}
       </div>
     </Col>
