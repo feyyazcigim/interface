@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import Text from "./ui/Text";
 
 type EmptyTableProps = {
-  type?: "deposits" | "plots" | "plots-field";
+  type?: "deposits" | "plots" | "plots-field" | "tractor";
 };
 
 const EMPTY_TABLE_CONTENT = {
@@ -25,6 +25,13 @@ const EMPTY_TABLE_CONTENT = {
     link: {
       text: "",
       to: "",
+    },
+  },
+  tractor: {
+    message: "Your Tractor Orders will appear here.",
+    link: {
+      text: "Create a Tractor Order",
+      to: "/field",
     },
   },
 } as const;
