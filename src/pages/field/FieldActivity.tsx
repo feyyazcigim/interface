@@ -388,7 +388,7 @@ const FieldActivity: React.FC = () => {
         top: ${spanStartY}px;
         height: ${totalHeight}px;
         width: 1px;
-        background-color: #9CA3AF; /* pinto-gray-4 color */
+        background-color: #D9D9D9; /* pinto-gray-2 color */
         z-index: 10;
         pointer-events: none;
       `;
