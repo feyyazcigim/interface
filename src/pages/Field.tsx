@@ -89,14 +89,14 @@ function TractorButton({ onClick }: { onClick: () => void }) {
       <button
         type="button"
         onClick={onClick}
-        className="group box-border flex flex-col items-start p-4 gap-1 w-full rounded-[1rem] transition-colors duration-200"
+        className="group box-border flex flex-col items-start p-4 gap-1 w-full rounded-[1rem] transition-colors duration-200 bg-white border border-pinto-gray-2"
         onMouseEnter={() => setHoveredTractor(true)}
         onMouseLeave={() => setHoveredTractor(false)}
         style={{
-          backgroundColor: inputExceedsSoil || hoveredTractor ? "#E5F5E5" : "#F8F8F8",
-          borderWidth: "1px",
-          borderStyle: "solid",
-          borderColor: inputExceedsSoil || hoveredTractor ? "#387F5C" : "#D9D9D9",
+          ...(inputExceedsSoil || hoveredTractor ? {
+            backgroundColor: "#E5F5E5",
+            borderColor: "#387F5C",
+          } : {}),
           // If input exceeds soil, apply special highlight styling
           ...(inputExceedsSoil && {
             boxShadow: "0 0 0 2px rgba(56, 127, 92, 0.5)",
