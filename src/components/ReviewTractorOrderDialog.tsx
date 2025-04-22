@@ -183,7 +183,7 @@ export default function ReviewTractorOrderDialog({
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
         <DialogContent
-          className="sm:max-w-[1200px]"
+          className="sm:max-w-[1400px]"
           style={{
             padding: 0, // no  other way to set padding as 0
           }}
