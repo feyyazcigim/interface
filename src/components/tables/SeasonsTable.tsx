@@ -177,8 +177,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
         <SeasonsTableCell
           cellType={SeasonsTableCellType.TwoColumn}
           columnKey="deltaDemand"
-          value={convertDeltaDemandToPercentage(data.deltaPodDemand.toNumber())}
-          subValue={caseIdToDescriptiveText(data.caseId, "soil_demand")}
+          value={caseIdToDescriptiveText(data.caseId, "soil_demand")}
           hiddenFields={hiddenFields}
           hoverContent={
             data.season > 5 && (
@@ -189,6 +188,13 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
               />
             )
           }
+        />
+        <SeasonsTableCell
+          cellType={SeasonsTableCellType.Default}
+          columnKey="deltaSoilSown"
+          value={convertDeltaDemandToPercentage(data.deltaPodDemand.toNumber())}
+          subValue={caseIdToDescriptiveText(data.caseId, "soil_demand")}
+          hiddenFields={hiddenFields}
         />
         <SeasonsTableCell
           columnKey="cropScalar"

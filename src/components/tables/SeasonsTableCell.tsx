@@ -1,7 +1,7 @@
 import { TableCell } from "@/components/ui/Table";
 import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
-import TooltipSimple from "../TooltipSimple";
 import { TwoColumnCell } from "./TwoColumnCell";
+import TooltipSimple from "../TooltipSimple";
 export enum SeasonsTableCellType {
   Default = "default",
   TwoColumn = "twoColumn",
@@ -48,10 +48,9 @@ export const SeasonsTableCell = ({
     default:
       return hoverContent ? (
         <TableCell className={`${className} ${additionalClasses} group`}>
-          <div className="flex items-center justify-end gap-2">
-            <div className="opacity-0 group-hover:opacity-100">{hoverContent}</div>
+          <TooltipSimple content={hoverContent} side="left">
             {displayValue}
-          </div>
+          </TooltipSimple>
         </TableCell>
       ) : (
         <TableCell className={`${className} ${additionalClasses}`}>{displayValue}</TableCell>

@@ -94,7 +94,7 @@ export const DeltaDemandChart = ({ currentSeason, surroundingSeasons, filteredSo
       }
     });
     return data;
-  }, [sowEventTimings]);
+  }, [currentSeason.sunriseBlock, surroundingSeasons[0].sunriseBlock, surroundingSeasons[1].sunriseBlock]);
 
   return (
     <div className="w-[600px] bg-white">
