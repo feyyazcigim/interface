@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Button } from "./ui/Button";
 import Text from "./ui/Text";
 
 type EmptyTableProps = {
@@ -51,9 +52,13 @@ export default function EmptyTable({ type, onTractorClick }: EmptyTableProps) {
         {type !== "plots-field" && (
           <div className="pinto-body-light text-pinto-green-4 hover:underline">
             {type === "tractor" && onTractorClick ? (
-              <button type="button" onClick={onTractorClick} className="cursor-pointer">
+              <Button
+                variant="link"
+                onClick={onTractorClick}
+                className="text-pinto-green-4 pinto-body-light p-0 h-auto font-normal hover:no-underline"
+              >
                 {content.link.text}
-              </button>
+              </Button>
             ) : (
               <Link to={content.link.to}>{content.link.text}</Link>
             )}
