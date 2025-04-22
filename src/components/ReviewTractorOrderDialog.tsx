@@ -58,7 +58,7 @@ interface ReviewTractorOrderProps {
   operatorPasteInstrs: `0x${string}`[];
   blueprint: Blueprint;
   isViewOnly?: boolean;
-  executionHistory?: ExecutionData[]; // Add execution history
+  executionHistory?: ExecutionData[];
 }
 
 export default function ReviewTractorOrderDialog({
@@ -541,7 +541,7 @@ export default function ReviewTractorOrderDialog({
                             <th className="px-4 py-3 text-right text-gray-600 border-b">PINTO Sown</th>
                             <th className="px-4 py-3 text-right text-gray-600 border-b">Pods Received</th>
                             <th className="px-4 py-3 text-right text-gray-600 border-b">Temperature</th>
-                            <th className="px-4 py-3 text-left text-gray-600 border-b">Operator</th>
+                            <th className="px-4 py-3 text-right text-gray-600 border-b">Operator</th>
                             <th className="px-4 py-3 text-right text-gray-600 border-b min-w-[150px]">Date & Time</th>
                             <th className="px-4 py-3 text-right text-gray-600 border-b">Actions</th>
                           </tr>
@@ -584,7 +584,7 @@ export default function ReviewTractorOrderDialog({
                                       ? `${formatter.number(temperature)}%`
                                       : "-"}
                                   </td>
-                                  <td className="px-4 py-3 text-gray-500">{shortenAddress(execution.operator)}</td>
+                                  <td className="px-4 py-3 text-right text-gray-500">{shortenAddress(execution.operator)}</td>
                                   <td className="px-4 py-3 text-right text-gray-500">
                                     {execution.timestamp
                                       ? formatDate(execution.timestamp)
