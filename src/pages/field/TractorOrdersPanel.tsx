@@ -242,7 +242,9 @@ const TractorOrdersPanel = ({ refreshData }: TractorOrdersPanelProps) => {
 
           // Find latest execution for this blueprint
           const latestExecution =
-            blueprintExecutions.length > 0 ? blueprintExecutions.sort((a, b) => b.blockNumber - a.blockNumber)[0] : null;
+            blueprintExecutions.length > 0
+              ? blueprintExecutions.sort((a, b) => b.blockNumber - a.blockNumber)[0]
+              : null;
 
           // Determine token strategy based on sourceTokenIndices
           let strategyText = "Unknown strategy";
@@ -295,7 +297,8 @@ const TractorOrdersPanel = ({ refreshData }: TractorOrdersPanelProps) => {
                           {formatter.number(totalAmount)} PINTO
                           <span className="text-pinto-gray-4">
                             {" "}
-                            (max {formatter.number(TokenValue.fromBlockchain(data.sowAmounts.maxAmountToSowPerSeason, 6))}{" "}
+                            (max{" "}
+                            {formatter.number(TokenValue.fromBlockchain(data.sowAmounts.maxAmountToSowPerSeason, 6))}{" "}
                             per Season)
                           </span>
                         </span>

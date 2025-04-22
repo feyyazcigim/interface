@@ -584,7 +584,9 @@ export default function ReviewTractorOrderDialog({
                                       ? `${formatter.number(temperature)}%`
                                       : "-"}
                                   </td>
-                                  <td className="px-4 py-3 text-right text-gray-500">{shortenAddress(execution.operator)}</td>
+                                  <td className="px-4 py-3 text-right text-gray-500">
+                                    {shortenAddress(execution.operator)}
+                                  </td>
                                   <td className="px-4 py-3 text-right text-gray-500">
                                     {execution.timestamp
                                       ? formatDate(execution.timestamp)
