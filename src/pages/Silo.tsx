@@ -778,7 +778,7 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
     key: "how-can-i-maximize-stalk-growth",
     title: "How can I maximize Stalk growth?",
     content:
-      "Maximize your Seeds. Seed allocations can change each Season, and the protocol may adjusts Seed rates on a season-by-season basis to incentivize Converts that keep the system balanced.",
+      "Maximize your Seeds. Seeds represent the rate at which Stalk grows. Note that the protocol may adjust Seed rates each Season to incentivize Converts and keep the system balanced.",
   },
   {
     key: "how-can-i-learn-more-about-the-silo",
