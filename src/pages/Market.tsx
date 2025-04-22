@@ -11,6 +11,8 @@ import CreateListing from "./market/actions/CreateListing";
 import CreateOrder from "./market/actions/CreateOrder";
 import FillListing from "./market/actions/FillListing";
 import FillOrder from "./market/actions/FillOrder";
+import { Link } from "react-router-dom";
+import { navLinks } from "@/components/nav/nav/Navbar";
 
 const TABLE_SLUGS = ["activity", "listings", "orders", "my-activity"];
 const TABLE_LABELS = ["Activity", "Listings", "Orders", "My Activity"];
@@ -126,5 +128,32 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
     title: "What's the difference between a Pod Listing and a Pod Order?",
     content:
       "A Pod Listing is an offer to sell Pods at a specified price, while a Pod Order is an offer to buy Pods at a specified price. Farmers can both create and fill Pod Listings and Pod Orders.",
+  },
+  {
+    key: "how-can-i-learn-more-on-the-pod-marketplace",
+    title: "How can I learn more about the Pod marketplace?",
+    content: (
+      <>
+        Head to the{" "}
+        <Link
+          className="text-pinto-green-4 hover:underline transition-all"
+          to={`${navLinks.docs}/farm/toolshed/pod-market`}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Pinto docs
+        </Link>{" "}
+        for more info, or ask any questions in the{" "}
+        <Link
+          className="text-pinto-green-4 hover:underline transition-all"
+          to={navLinks.discord}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          discord
+        </Link>{" "}
+        community!
+      </>
+    ),
   },
 ];
