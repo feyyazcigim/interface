@@ -1,7 +1,9 @@
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
+import { navLinks } from "@/components/nav/nav/Navbar";
 import { Separator } from "@/components/ui/Separator";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { AllActivityTable } from "./market/AllActivityTable";
 import { FarmerActivityTable } from "./market/FarmerActivityTable";
 import MarketModeSelect from "./market/MarketModeSelect";
@@ -11,8 +13,6 @@ import CreateListing from "./market/actions/CreateListing";
 import CreateOrder from "./market/actions/CreateOrder";
 import FillListing from "./market/actions/FillListing";
 import FillOrder from "./market/actions/FillOrder";
-import { Link } from "react-router-dom";
-import { navLinks } from "@/components/nav/nav/Navbar";
 
 const TABLE_SLUGS = ["activity", "listings", "orders", "my-activity"];
 const TABLE_LABELS = ["Activity", "Listings", "Orders", "My Activity"];
