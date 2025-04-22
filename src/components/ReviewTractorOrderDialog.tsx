@@ -609,6 +609,7 @@ export default function ReviewTractorOrderDialog({
                     submitFunction={handlePublishRequisition}
                     submitButtonText={submitting ? "Publishing..." : "Publish Order"}
                     className="w-min"
+                    style={!signedRequisitionData ? { opacity: 0.15 } : undefined}
                   />
                 </Row>
               </Row>
