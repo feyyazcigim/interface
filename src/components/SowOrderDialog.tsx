@@ -27,6 +27,7 @@ import { isValidAddress } from "@/utils/string";
 import { DepositData } from "@/utils/types";
 import { isLocalhost } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -1583,6 +1584,31 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     </>
   );
 }
+
+export const AnimateSowOrderDialog = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={className}>
+      <AnimatePresence mode="wait">
+        <motion.div
+          initial={{ opacity: 0, scaleY: 0 }}
+          animate={{ opacity: 1, scaleY: 1 }}
+          exit={{ opacity: 0, scaleY: 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="overflow-hidden"
+          style={{ transformOrigin: "50% 70%" }}
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const styles = {
   inputs:

@@ -18,7 +18,7 @@ import {
 
 import CornerBorders from "@/components/CornerBorders";
 import MobileActionBar from "@/components/MobileActionBar";
-import SowOrderDialog from "@/components/SowOrderDialog";
+import SowOrderDialog, { AnimateSowOrderDialog } from "@/components/SowOrderDialog";
 import TooltipSimple from "@/components/TooltipSimple";
 import { Skeleton } from "@/components/ui/Skeleton";
 import useIsMobile from "@/hooks/display/useIsMobile";
@@ -313,18 +313,17 @@ function Field() {
                 <FieldActions onTractorOrderPublished={refreshTractorOrders} />
               </OnlyMorningCard>
               {showSowOrder && (
-                <Card
-                  className="absolute inset-x-0 -top-[calc(-1rem)] rounded-xl z-10 mx-auto w-[95%]"
-                  id="sow-order-dialog"
-                >
-                  <div className="flex flex-col w-full items-center p-4">
-                    <SowOrderDialog
-                      open={showSowOrder}
-                      onOpenChange={setShowSowOrder}
-                      onOrderPublished={refreshTractorOrders}
-                    />
-                  </div>
-                </Card>
+                <AnimateSowOrderDialog className="absolute inset-x-0 -top-[calc(-1rem)] z-10">
+                  <Card className="rounded-xl z-10 mx-auto w-[95%]" id="sow-order-dialog">
+                    <div className="flex flex-col w-full items-center p-4">
+                      <SowOrderDialog
+                        open={showSowOrder}
+                        onOpenChange={setShowSowOrder}
+                        onOrderPublished={refreshTractorOrders}
+                      />
+                    </div>
+                  </Card>
+                </AnimateSowOrderDialog>
               )}
             </div>
           )}
