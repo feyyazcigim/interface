@@ -30,6 +30,7 @@ import { formatter } from "@/utils/format";
 import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
+import { SizeIcon } from "@radix-ui/react-icons";
 import FieldActions from "./field/FieldActions";
 import FieldActivity from "./field/FieldActivity";
 import FieldStats from "./field/FieldStats";
@@ -89,7 +90,7 @@ function TractorButton({ onClick }: { onClick: () => void }) {
       <button
         type="button"
         onClick={onClick}
-        className="group box-border flex flex-col items-start p-4 gap-1 w-full rounded-[1rem] transition-colors duration-200 bg-white border border-pinto-gray-2"
+        className="group box-border flex flex-col items-start p-4 gap-1 w-full rounded-[1rem] transition-colors duration-200 bg-white border border-pinto-gray-2 relative"
         onMouseEnter={() => setHoveredTractor(true)}
         onMouseLeave={() => setHoveredTractor(false)}
         style={{
@@ -104,18 +105,22 @@ function TractorButton({ onClick }: { onClick: () => void }) {
           }),
         }}
       >
-        <div className="flex flex-row justify-center items-center gap-1">
-          <LightningIcon
-            className={`w-4 h-4 ${inputExceedsSoil || hoveredTractor ? "text-pinto-green-4" : "text-[#404040]"}`}
-          />
+        {/* Position the icon absolutely to place it on the right side and vertically centered */}
+        <SizeIcon 
+          className={`absolute top-1/2 right-4 transform -translate-y-1/2 w-5 h-5 text-[#404040] ${
+            inputExceedsSoil || hoveredTractor ? "hidden" : "block"
+          }`} 
+        />
+        
+        <div className="flex flex-row items-center gap-1">
           <span className={`pinto-h4 ${inputExceedsSoil || hoveredTractor ? "text-pinto-green-4" : "text-[#404040]"}`}>
-            Want to Sow with size?
+           🚜 Want to Sow with size?
           </span>
         </div>
         <span
           className={`pinto-body-light ${inputExceedsSoil || hoveredTractor ? "text-pinto-green-3" : "text-[#9C9C9C]"}`}
         >
-          Use 🚜 Tractor to set up an order for Pods over time
+          Set up a Tractor Order to automate Sowing
         </span>
       </button>
       <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="1rem" />
