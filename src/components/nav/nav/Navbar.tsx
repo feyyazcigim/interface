@@ -143,14 +143,29 @@ const Navbar = () => {
   const invalidateData = (panel: PanelType) => {
     if (panel === "wallet") {
       const allQueryKeys = [...priceData.queryKeys, ...farmerSilo.queryKeys, ...farmerBalances.queryKeys];
-      allQueryKeys.forEach((query) => queryClient.invalidateQueries({ queryKey: query, refetchType: "active" }));
+      allQueryKeys.forEach((query) =>
+        queryClient.invalidateQueries({
+          queryKey: query,
+          refetchType: "active",
+        }),
+      );
     } else if (panel === "seasons") {
       const allQueryKeys = [fieldSnapshots.queryKey, siloSnapshots.queryKey];
-      allQueryKeys.forEach((query) => queryClient.invalidateQueries({ queryKey: query, refetchType: "active" }));
+      allQueryKeys.forEach((query) =>
+        queryClient.invalidateQueries({
+          queryKey: query,
+          refetchType: "active",
+        }),
+      );
       invalidateSun("all", { refetchType: "active" });
     } else if (panel === "price") {
       const allQueryKeys = [...priceData.queryKeys, TwaDeltaBLPQuery];
-      allQueryKeys.forEach((query) => queryClient.invalidateQueries({ queryKey: query, refetchType: "active" }));
+      allQueryKeys.forEach((query) =>
+        queryClient.invalidateQueries({
+          queryKey: query,
+          refetchType: "active",
+        }),
+      );
     }
   };
 

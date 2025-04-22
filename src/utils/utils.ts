@@ -1,8 +1,9 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { FarmerBalance } from "@/state/useFarmerBalances";
+import { calculateConvertData } from "@/utils/convert";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { FarmFromMode } from "./types";
+import { FarmFromMode, Token } from "./types";
 import { MayArray } from "./types.generic";
 
 export function cn(...inputs: ClassValue[]) {
@@ -236,4 +237,8 @@ export function safeJSONStringify<T>(value: T | null | undefined, fallbackValue:
     console.error("Failed to stringify object:", error);
     return fallbackValue;
   }
+
+interface RatioDeposit {
+  stem: string;
+  ratio: TokenValue;
 }
