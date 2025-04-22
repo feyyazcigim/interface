@@ -299,9 +299,12 @@ export default function ReviewTractorOrderDialog({
                         <div className="flex items-center gap-0">
                           <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Sow</div>
                           <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
-                          <span className="text-box rounded-full">
-                            up to <span className="text-pinto-green-4">{orderData.totalAmount}</span>{" "}
-                            <span className="text-pinto-green-4">PINTO</span>
+                          <span className="text-box rounded-full inline-flex items-center">
+                            <span>up to</span>&nbsp;<span className="text-pinto-green-4">{orderData.totalAmount}</span>&nbsp;
+                            <span className="text-pinto-green-4 inline-flex items-center">
+                              <img src={pintoIcon} alt="PINTO" className="w-4 h-4 mx-1" />
+                              PINTO
+                            </span>
                           </span>
                         </div>
                         <ul className="list-none space-y-2">
@@ -350,7 +353,11 @@ export default function ReviewTractorOrderDialog({
                       <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Tip</div>
                       <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
                       <span className="text-box rounded-full">
-                        <span className="text-pinto-green-4">{orderData.operatorTip} PINTO</span>
+                        <span className="text-pinto-green-4 flex items-center inline-flex">
+                          {orderData.operatorTip}{" "}
+                          <img src={pintoIcon} alt="PINTO" className="w-4 h-4 mx-1" />
+                          PINTO
+                        </span>
                       </span>
                       <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
                       <span className="text-box rounded-full">to Operator</span>

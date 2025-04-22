@@ -401,8 +401,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   // Add this function to check if the pod line length is valid
   const isPodLineLengthValid = () => {
     try {
-      // Empty means use the placeholder (current pod line)
-      if (!podLineLength) return true;
+      // Empty is not valid, we require a value
+      if (!podLineLength) return false;
       
       // Remove commas and convert to a number
       const inputLength = parseFloat(podLineLength.replace(/,/g, ""));
@@ -415,15 +415,10 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   // Add this function to check if all required fields are filled
   const areRequiredFieldsFilled = () => {
     return (
-      // Check if temperature is filled
-      !!temperature &&
-      // Check if min soil is filled
-      !!minSoil &&
-      // Check if max per season is filled
-      !!maxPerSeason &&
-      // Check if total amount is filled
-      !!totalAmount &&
-      // Check if pod line length is valid (empty is valid, it will use the placeholder)
+      temperature &&
+      (minSoil !== undefined && minSoil !== null) &&
+      (maxPerSeason !== undefined && maxPerSeason !== null) &&
+      (totalAmount !== undefined && totalAmount !== null) &&
       isPodLineLengthValid()
     );
   };
