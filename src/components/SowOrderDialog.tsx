@@ -1043,9 +1043,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                     </div>
                   </div>
 
-                  {/* Error message */}
-                  {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
-
                   {/* Fund order using */}
                   <div className="flex flex-col gap-2">
                     <div className="flex justify-between items-center">
@@ -1327,6 +1324,19 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   </Col>
                 </Col>
               )}
+              
+              {/* Error message box */}
+              {error && formStep === 1 && (
+                <div className="w-full p-3 bg-red-50 rounded-lg mb-1 flex items-center gap-3">
+                  <WarningIcon color="#DC2626" width={24} height={24} />
+                  <span className="text-red-600 font-medium">
+                    {error === "Min per Season must be less than or equal to Max per Season"
+                      ? "Minimum per Season must be less than Maximum per Season"
+                      : error}
+                  </span>
+                </div>
+              )}
+              
               <Row className="gap-6">
                 <Button
                   variant="outline"
