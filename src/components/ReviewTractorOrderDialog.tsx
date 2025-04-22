@@ -12,7 +12,7 @@ import { Blueprint } from "@/lib/Tractor/types";
 import { formatter } from "@/utils/format";
 import { CornerBottomLeftIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
@@ -58,7 +58,7 @@ interface ReviewTractorOrderProps {
   operatorPasteInstrs: `0x${string}`[];
   blueprint: Blueprint;
   isViewOnly?: boolean;
-  executionHistory?: ExecutionData[]; // Add execution history
+  executionHistory?: ExecutionData[];
 }
 
 export default function ReviewTractorOrderDialog({
@@ -177,6 +177,26 @@ export default function ReviewTractorOrderDialog({
     if (!timestamp) return "Unknown";
     return format(new Date(timestamp), "MM/dd/yyyy h:mm a"); // Include hours and minutes with AM/PM
   };
+
+  // Create a style element for our custom button text size
+  useEffect(() => {
+    // Add a style tag to the document head
+    const styleEl = document.createElement("style");
+    styleEl.textContent = `
+      .smaller-button-text {
+        font-size: 1.125rem !important;
+      }
+      .smaller-button-text button {
+        font-size: 1.125rem !important;
+      }
+    `;
+    document.head.appendChild(styleEl);
+
+    // Cleanup function to remove the style tag when component unmounts
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -521,7 +541,7 @@ export default function ReviewTractorOrderDialog({
                             <th className="px-4 py-3 text-right text-gray-600 border-b">PINTO Sown</th>
                             <th className="px-4 py-3 text-right text-gray-600 border-b">Pods Received</th>
                             <th className="px-4 py-3 text-right text-gray-600 border-b">Temperature</th>
-                            <th className="px-4 py-3 text-left text-gray-600 border-b">Operator</th>
+                            <th className="px-4 py-3 text-right text-gray-600 border-b">Operator</th>
                             <th className="px-4 py-3 text-right text-gray-600 border-b min-w-[150px]">Date & Time</th>
                             <th className="px-4 py-3 text-right text-gray-600 border-b">Actions</th>
                           </tr>
@@ -564,7 +584,7 @@ export default function ReviewTractorOrderDialog({
                                       ? `${formatter.number(temperature)}%`
                                       : "-"}
                                   </td>
-                                  <td className="px-4 py-3 text-gray-500">{shortenAddress(execution.operator)}</td>
+                                  <td className="px-4 py-3 text-right text-gray-500">{shortenAddress(execution.operator)}</td>
                                   <td className="px-4 py-3 text-right text-gray-500">
                                     {execution.timestamp
                                       ? formatDate(execution.timestamp)
@@ -598,7 +618,7 @@ export default function ReviewTractorOrderDialog({
                   Your Order will remain active until you've Sown {orderData.totalAmount} Pinto under the specified
                   conditions or until Order cancellation
                 </p>
-                <Row className="flex flex-row gap-2 shrink-0">
+                <Row className="flex flex-row gap-2 shrink-0 smaller-button-text">
                   <SmartSubmitButton
                     variant="gradient"
                     disabled={signing || !!signedRequisitionData}
@@ -613,6 +633,7 @@ export default function ReviewTractorOrderDialog({
                     submitFunction={handlePublishRequisition}
                     submitButtonText={submitting ? "Publishing..." : "Publish Order"}
                     className="w-min"
+                    style={!signedRequisitionData ? { opacity: 0.15 } : undefined}
                   />
                 </Row>
               </Row>
