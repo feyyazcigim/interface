@@ -48,7 +48,7 @@ export const Web3Provider = ({ children }: { children: ReactNode }) => {
       {/**
        * If the cache that is found has a different buster string than what is set here, it will be discarded.
        * Should be changed whenever there's a significant change in the subgraphs.
-       * Current format is based on the current date that the string is being set, in the YYYYMMDD format.
+       * Currently it is based on the date that the string is being set, in the YYYYMMDD format.
        * But really it can be anything, as long as it's different than what's expected to be stored.
        */}
       <PersistQueryClientProvider
