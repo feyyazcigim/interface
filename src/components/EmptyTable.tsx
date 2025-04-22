@@ -3,6 +3,7 @@ import Text from "./ui/Text";
 
 type EmptyTableProps = {
   type?: "deposits" | "plots" | "plots-field" | "tractor";
+  onTractorClick?: () => void;
 };
 
 const EMPTY_TABLE_CONTENT = {
@@ -36,7 +37,7 @@ const EMPTY_TABLE_CONTENT = {
   },
 } as const;
 
-export default function EmptyTable({ type }: EmptyTableProps) {
+export default function EmptyTable({ type, onTractorClick }: EmptyTableProps) {
   const renderContent = () => {
     const content = type && EMPTY_TABLE_CONTENT[type];
 
@@ -49,7 +50,13 @@ export default function EmptyTable({ type }: EmptyTableProps) {
         <div className="pinto-body-light text-pinto-light">{content.message}</div>
         {type !== "plots-field" && (
           <div className="pinto-body-light text-pinto-green-4 hover:underline">
-            <Link to={content.link.to}>{content.link.text}</Link>
+            {type === "tractor" && onTractorClick ? (
+              <button type="button" onClick={onTractorClick} className="cursor-pointer">
+                {content.link.text}
+              </button>
+            ) : (
+              <Link to={content.link.to}>{content.link.text}</Link>
+            )}
           </div>
         )}
       </>
