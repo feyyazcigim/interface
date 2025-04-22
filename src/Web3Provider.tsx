@@ -1,8 +1,7 @@
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { ConnectKitProvider } from "connectkit";
 import { atom, useAtom } from "jotai";
 import { ReactNode, useEffect, useMemo } from "react";
@@ -27,7 +26,7 @@ import config from "./utils/wagmi/config";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      gcTime: 1000 * 60 * 60 * 24, // 24 hours
+      gcTime: 1000 * 60 * 60 * 24 * 30, // 30 days
     },
     dehydrate: {
       shouldDehydrateQuery: (query) => {
@@ -46,7 +45,16 @@ export const Web3Provider = ({ children }: { children: ReactNode }) => {
 
   return (
     <WagmiProvider config={config}>
-      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: localStoragePersister }}>
+      {/**
+       * If the cache that is found has a different buster string than what is set here, it will be discarded.
+       * Should be changed whenever there's a significant change in the subgraphs.
+       * Current format is based on the current date that the string is being set, in the YYYYMMDD format.
+       * But really it can be anything, as long as it's different than what's expected to be stored.
+       */}
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister: localStoragePersister, buster: "20250422" }}
+      >
         <MockConnectorManager />
         <ConnectKitProvider
           mode="light"
