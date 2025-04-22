@@ -963,8 +963,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   {/* I want to Sow up to */}
                   <div className="flex flex-col gap-2">
                     <label htmlFor={inputIds.totalAmount}>I want to Sow up to</label>
-                    <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
-                      <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
+                    <div className="flex rounded-[12px] overflow-hidden border border-[#D9D9D9] group focus-within:border-[#2F8957]">
+                      <div className="flex-1">
                         <Input
                           id={inputIds.totalAmount}
                           className="h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -974,7 +974,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                           type="text"
                         />
                       </div>
-                      <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-[12px] bg-white group-focus-within:border-[#2F8957]">
+                      <div className="flex items-center gap-2 px-4 bg-white">
                         <img src={pintoIcon} alt="PINTO" className="w-6 h-6" />
                         <span className="text-black">PINTO</span>
                       </div>
@@ -987,8 +987,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       {/* Min per Season */}
                       <div className="flex flex-col gap-2 flex-1">
                         <label htmlFor={inputIds.minPerSeason}>Min per Season</label>
-                        <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
-                          <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
+                        <div className="flex rounded-[12px] overflow-hidden border border-[#D9D9D9] group focus-within:border-[#2F8957]">
+                          <div className="flex-1">
                             <Input
                               id={inputIds.minPerSeason}
                               className={`h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${
@@ -1003,7 +1003,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                               type="text"
                             />
                           </div>
-                          <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-[12px] bg-white group-focus-within:border-[#2F8957]">
+                          <div className="flex items-center gap-2 px-4 bg-white">
                             <img src={pintoIcon} alt="PINTO" className="w-6 h-6" />
                             <span className="text-black">PINTO</span>
                           </div>
@@ -1013,8 +1013,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       {/* Max per Season */}
                       <div className="flex flex-col gap-2 flex-1">
                         <label htmlFor={inputIds.maxPerSeason}>Max per Season</label>
-                        <div className="flex rounded-[12px] group focus-within:ring-1 focus-within:ring-[#2F8957] focus-within:border-[#2F8957]">
-                          <div className="flex-1 border border-[#D9D9D9] border-r-0 rounded-l-[12px] group-focus-within:border-[#2F8957]">
+                        <div className="flex rounded-[12px] overflow-hidden border border-[#D9D9D9] group focus-within:border-[#2F8957]">
+                          <div className="flex-1">
                             <Input
                               id={inputIds.maxPerSeason}
                               className={`h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${
@@ -1029,7 +1029,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                               type="text"
                             />
                           </div>
-                          <div className="flex items-center gap-2 px-4 border border-[#D9D9D9] border-l-0 rounded-r-[12px] bg-white group-focus-within:border-[#2F8957]">
+                          <div className="flex items-center gap-2 px-4 bg-white">
                             <img src={pintoIcon} alt="PINTO" className="w-6 h-6" />
                             <span className="text-black">PINTO</span>
                           </div>
