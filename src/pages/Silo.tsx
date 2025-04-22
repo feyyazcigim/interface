@@ -305,28 +305,30 @@ export default Silo;
 
 // ---------- Sub Components ----------
 
+const initialValue = { silo: false };
+
 const LearnSilo = () => {
-  const [open, set] = useLocalStorage("pinto-learn-state-silo", { open: true }, { initializeIfEmpty: true });
-  const handleSet = useCallback((isOpen: boolean) => set({ open: isOpen }), [set]);
+  const [learnDidVisit, setLearnDidVisit] = useLocalStorage<{ silo: boolean }>("pinto-learn-state-silo", initialValue, {
+    initializeIfEmpty: true,
+  });
+
+  // Set the learnDidVisit state to true if it is not already true
+  useEffect(() => {
+    if (learnDidVisit.silo) return;
+    setLearnDidVisit({ ...learnDidVisit, silo: true });
+  }, []);
 
   return (
     <>
-      <ReadMoreAccordion defaultOpen={open.open} onChange={handleSet}>
-        <Col className="gap-2">
-          <p>
-            Pinto or Pinto-LP can be deposited into the Silo and can be withdrawn at any time. Deposits are eligible to
-            earn Pinto after at least 1 full season has passed.
-          </p>
-          <p>
-            When Pinto is priced over $1, new Pinto is minted with 48.5% being distributed to Silo depositors.
-            Depositors earn a share of the Pinto mints to the silo based on their Stalk balance proportional to total
-            Stalk supply.
-          </p>
-          <p>
-            A Deposit is issued an initial amount of Stalk and Seeds, which is determined by token type and value. Seeds
-            grow Stalk every season. All stalk is forfeit upon a withdrawal.
-          </p>
-        </Col>
+      <ReadMoreAccordion defaultOpen={!learnDidVisit.silo}>
+        <>
+          Pinto or Pinto-LP can be deposited into the Silo and can be withdrawn at any time. Deposits are eligible to
+          earn Pinto after at least 1 full season has passed. When Pinto is priced over $1, new Pinto is minted with
+          48.5% being distributed to Silo depositors. Depositors earn a share of the Pinto mints to the silo based on
+          their Stalk balance proportional to total Stalk supply. A Deposit is issued an initial amount of Stalk and
+          Seeds, which is determined by token type and value. Seeds grow Stalk every season. All stalk is forfeit upon a
+          withdrawal.
+        </>
       </ReadMoreAccordion>
     </>
   );

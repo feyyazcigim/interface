@@ -28,7 +28,7 @@ import { useFarmerField } from "@/state/useFarmerField";
 import { useHarvestableIndex, useHarvestableIndexLoading } from "@/state/useFieldData";
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
-import { useCallback, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import FieldActions from "./field/FieldActions";
 import FieldStats from "./field/FieldStats";
@@ -212,56 +212,41 @@ export const DynamicTemperatureChart = () => {
   }
 };
 
+const initialValue = { field: false };
+
 const ReadMoreField = () => {
-  const [open, set] = useLocalStorage("pinto-learn-state-field", { open: true }, { initializeIfEmpty: true });
-  const handleSet = useCallback((isOpen: boolean) => set({ open: isOpen }), [set]);
+  const [learnDidVisit, setLearnDidVisit] = useLocalStorage<{ field: boolean }>(
+    "pinto-learn-state-field",
+    initialValue,
+    { initializeIfEmpty: true },
+  );
+
+  // Set the learnDidVisit state to true if it is not already true
+  useEffect(() => {
+    if (learnDidVisit.field) return;
+    setLearnDidVisit({ field: true });
+  }, []);
 
   return (
-    <ReadMoreAccordion defaultOpen={open.open} onChange={handleSet}>
-      <div className="flex flex-col gap-2">
-        <p>
-          Pinto can be lent to the protocol in exchange for a fixed interest rate bond, where the rate payback is a
-          function of Pinto supply growth. The debt to the user is represented by Pods, which are defined by their
-          position in the Pod Line.
-        </p>
-        <p>
-          Soil is the amount of Pinto the protocol is willing to purchase on the open market and temperature is the
-          interest rate it will pay. Each season the Soil and maximum Temperature are set based on Protocol state.
-        </p>
-        <p>
-          When Pinto is priced over $1 new Pinto is minted with 48.5% being distributed to lenders in the Field. Loans
-          are paid back in first in first out (FIFO) ordering.
-        </p>
-      </div>
+    <ReadMoreAccordion defaultOpen={!learnDidVisit.field}>
+      <>
+        Pinto can be lent to the protocol in exchange for a fixed interest rate bond, where the rate payback is a
+        function of Pinto supply growth. The debt to the user is represented by Pods, which are defined by their
+        position in the Pod Line. Soil is the amount of Pinto the protocol is willing to purchase on the open market and
+        temperature is the interest rate it will pay. Each season the Soil and maximum Temperature are set based on
+        Protocol state. When Pinto is priced over $1 new Pinto is minted with 48.5% being distributed to lenders in the
+        Field. Loans are paid back in first in first out (FIFO) ordering.
+      </>
     </ReadMoreAccordion>
   );
 };
 
 const FieldFAQ: IBaseAccordionContent[] = [
   {
-    key: "what-is-a-pod",
-    title: "What are pods?",
-    content: "Pods are Pinto's native debt asset, minted whenever the protocol borrows Pinto from the open market.",
-  },
-  {
-    key: "what-makes-pods-unique",
-    title: "What makes pods unique?",
-    content: (
-      <div className="flex flex-col gap-2 pinto-sm font-thin text-pinto-light">
-        <>
-          Pods are similar to bonds in that 1 pod is redeemable for 1 Pinto once the pods mature, but have these unique
-          properties:
-        </>
-        <ul className="flex flex-col gap-1 pl-2 list-disc">
-          <li>
-            - Pods are placed in a FIFO queue, where newly issued pods are placed at the end of the line, and newly
-            issued pinto are used to pay off pods at the front of the line.
-          </li>
-          <li>- Maturity is determined by your place in line, rather than at some date.</li>
-          <li>- Pods never expire.</li>
-        </ul>
-      </div>
-    ),
+    key: "what-are-pods",
+    title: "What are Pods?",
+    content:
+      "Pods are the native debt asset of the Pinto protocol. They are minted when a user Sows Pinto in the Field. Pods are represented by their position in the Pod Line and mature on a first in first out (FIFO) basis. 48.5% of new Pinto mints are used to pay off Pods in the Pod Line.",
   },
   {
     key: "what-is-soil",
@@ -270,40 +255,16 @@ const FieldFAQ: IBaseAccordionContent[] = [
       "Soil is the amount of Pinto the protocol is willing to borrow in a given Season. The protocol issues debt every Season, but the exact Soil available varies with system conditions.",
   },
   {
-    key: "what-are-pods",
-    title: "What are Pods?",
-    content:
-      "Pods are the native debt asset of the Pinto protocol. They are minted whenever the protocol borrows Pinto from the open market. 1 Pod is redeemable for 1 Pinto once the Pods mature.",
-  },
-  {
-    key: "how-do-pods-mature",
-    title: "How do Pods mature?",
-    content:
-      "Pods mature on a first in first out (FIFO) basis. When Pinto is issued to the field, pods at the front of the line become mature and harvestable.",
-  },
-  {
     key: "what-is-temperature",
     title: "What is Temperature?",
     content:
-      "Temperature is the interest rate you earn when you Sow (buy) Pods. It adjusts automatically each Season based on market activity in the previous Season.",
-  },
-  {
-    key: "does-temperature-have-a-cap",
-    title: "Does Temperature have a cap?",
-    content:
-      "Temperature has no fixed cap. Instead, the protocol raises or lowers it incrementally each Season in response to supply and demand—avoiding the systemic risks a hard ceiling would introduce.",
+      "Temperature is the interest rate for Pods. It adjusts incrementally each season based on prior market activity, with no fixed cap to avoid systemic risk.",
   },
   {
     key: "what-is-the-morning-auction",
     title: "What is the Morning Auction?",
     content:
-      "The Morning Auction is a Dutch Auction system, where Temperature ramps up to the maximum over the course of the first 10 minutes of each Season.",
-  },
-  {
-    key: "why-would-i-sow-during-the-morning-auction",
-    title: "Why would I sow during the Morning Auction if the Temperature is lower?",
-    content:
-      "When there is significant demand for Soil at the maximum Temperature, Farmers may be willing to purchase Pods at a lower rate now, rather than waiting for the protocol to decrease the maximum Temperature over time, with a longer pod line.",
+      "The Morning Auction is a Dutch Auction where Temperature increases over the first 10 minutes of each Season. When demand for Soil is high at max Temperature, Farmers may choose to purchase Pods earlier—at lower rates—to avoid a longer pod line as the protocol reduces Temperature over time.",
   },
   {
     key: "how-can-i-learn-more-about-the-field",
@@ -313,7 +274,7 @@ const FieldFAQ: IBaseAccordionContent[] = [
         Head to the{" "}
         <Link
           className="text-pinto-green-4 hover:underline transition-all"
-          to={`${navLinks.docs}/guides/field`}
+          to={`${navLinks.docs}/farm/field`}
           rel="noopener noreferrer"
           target="_blank"
         >
