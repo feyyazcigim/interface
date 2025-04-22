@@ -334,6 +334,8 @@ const LearnSilo = () => {
   );
 };
 
+// ---------- Silo Stats ----------
+
 const SiloStats = React.memo(() => {
   const { data: siloStats, siloWhitelistData, isLoading } = useSiloStats();
 
@@ -381,6 +383,8 @@ const SiloStats = React.memo(() => {
   );
 });
 
+// ---------- Hovered Silo Token Stat Content ----------
+
 interface HoveredSiloTokenStatContentProps {
   wlTokenSiloDetails: SiloTokenDepositOverallDetails;
   isLoading: boolean;
@@ -391,6 +395,27 @@ const tooltipProps = {
   showOnMobile: true,
   className: "pinto-sm",
 } as const;
+
+const HoveredSiloStatRow = (props: {
+  label: string | JSX.Element;
+  value: string | JSX.Element;
+  loading: boolean;
+  tooltip?: string | JSX.Element;
+}) => {
+  const { label, value, loading, tooltip } = props;
+
+  return (
+    <Row className="gap-2 justify-between">
+      <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+        {label}
+        {tooltip && <TooltipSimple {...tooltipProps} content={tooltip} />}
+      </Row>
+      <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
+        <div className="pinto-sm-light sm:pinto-body-light shrink-0">{value}</div>
+      </TextSkeleton>
+    </Row>
+  );
+};
 
 const HoveredSiloTokenStatContent = ({
   wlTokenSiloDetails: {
@@ -421,20 +446,24 @@ const HoveredSiloTokenStatContent = ({
           </>
         </TextSkeleton>
       </div>
-      <SiloStatRow label="Total Deposited Amount" value={formatter.token(depositedAmount, token)} loading={loading} />
-      <SiloStatRow
+      <HoveredSiloStatRow
+        label="Total Deposited Amount"
+        value={formatter.token(depositedAmount, token)}
+        loading={loading}
+      />
+      <HoveredSiloStatRow
         label="Total Deposited PDV"
         value={formatter.twoDec(depositedBDV)}
         loading={loading}
         tooltip={<>The total Pinto-denominated value deposited into the Silo.</>}
       />
-      <SiloStatRow
+      <HoveredSiloStatRow
         label="Total Deposited Value"
         value={usdDeposited ? formatter.usd(usdDeposited) : "--"}
         loading={loading}
         tooltip={<>The total USD value deposited into the Silo.</>}
       />
-      <SiloStatRow
+      <HoveredSiloStatRow
         label=" % of Total Deposited PDV"
         value={formatter.pct(siloDepositedRatio.mul(100))}
         loading={loading}
@@ -442,13 +471,13 @@ const HoveredSiloTokenStatContent = ({
       />
       {!token.isMain && (
         <>
-          <SiloStatRow
+          <HoveredSiloStatRow
             label="Optimal % LP Deposited PDV"
             value={formatter.pct(optimalPctDepositedBdv)}
             loading={loading}
             tooltip={<>The optimal percentage of the total LP Deposited PDV deposited into the Silo.</>}
           />
-          <SiloStatRow
+          <HoveredSiloStatRow
             label="Current % LP Deposited PDV"
             value={formatter.pct(currentDepositedLPBDVRatio.mul(100))}
             loading={loading}
@@ -460,31 +489,7 @@ const HoveredSiloTokenStatContent = ({
   );
 };
 
-const SiloStatRow = (props: {
-  label: string | JSX.Element;
-  value: string | JSX.Element;
-  loading: boolean;
-  tooltip?: string | JSX.Element;
-}) => {
-  const { label, value, loading, tooltip } = props;
-
-  return (
-    <Row className="gap-2 justify-between">
-      <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-        {label}
-        {tooltip && <TooltipSimple {...tooltipProps} content={tooltip} />}
-      </Row>
-      <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
-        <div className="pinto-sm-light sm:pinto-body-light shrink-0">{value}</div>
-      </TextSkeleton>
-    </Row>
-  );
-};
-
-const styles = {
-  label: "gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light",
-  value: "pinto-sm-light sm:pinto-body-light shrink-0",
-} as const;
+// ---------- Upper Silo Stats ----------
 
 const SiloStatContent = ({
   data,
@@ -541,6 +546,8 @@ const SiloStatContent = ({
     </>
   );
 };
+
+// ---------- Deposited By Token Doughnut Chart ----------
 
 const donutOptions = {
   layout: {
@@ -609,6 +616,8 @@ const DepositedByTokenDoughnutChart = React.memo(
     );
   },
 );
+
+// ---------- Hooks ----------
 
 const useUniqueDepositors = () => {
   const season = useSeason();
@@ -704,6 +713,8 @@ const useSiloStats = () => {
     };
   }, [totalDepositedBDV, uniqueDepositors.data, silo.totalStalk, byToken, isLoading]);
 };
+
+// ---------- FAQ COPY ----------
 
 const FAQ_ITEMS: IBaseAccordionContent[] = [
   {
