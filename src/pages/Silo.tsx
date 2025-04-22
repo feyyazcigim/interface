@@ -344,7 +344,7 @@ const SiloStats = React.memo(() => {
   }, []);
 
   return (
-    <Card className="flex flex-col p-6 gap-6 h-auto w-full">
+    <Card className="flex flex-col p-4 sm:p-6 gap-2 sm:gap-6 h-auto w-full">
       <Col className="gap-2">
         <div className="flex flex-row gap-4">
           <SiloStatContent data={siloStats} isLoading={isLoading} />
@@ -356,14 +356,16 @@ const SiloStats = React.memo(() => {
           See more data →
         </Link>
       </Col>
-      <div className="grid pt-4 grid-cols-1 sm:grid-cols-2 gap-4 w-full justify-between">
-        <Col className="gap-4 self-stretch">
+      <div className="grid sm:pt-4 grid-cols-1 sm:grid-cols-2 gap-4 w-full justify-between">
+        <Col className="gap-4 self-stretch order-2 sm:order-1">
           {Object.entries(siloWhitelistData).map(([key, wlData], i) => {
+            const isHovered = (hoveredIndex || 0) === i;
+            if (!isHovered) return null;
+
             return (
               <HoveredSiloTokenStatContent
                 key={`${key}-${wlData.token.symbol}`}
                 wlTokenSiloDetails={wlData}
-                isHovered={(hoveredIndex || 0) === i}
                 isLoading={isLoading}
               />
             );
@@ -381,26 +383,27 @@ const SiloStats = React.memo(() => {
 
 interface HoveredSiloTokenStatContentProps {
   wlTokenSiloDetails: SiloTokenDepositOverallDetails;
-  isHovered: boolean;
   isLoading: boolean;
 }
 
+const tooltipProps = {
+  variant: "outlined",
+  showOnMobile: true,
+  className: "pinto-sm",
+} as const;
+
 const HoveredSiloTokenStatContent = ({
-  wlTokenSiloDetails,
-  isLoading,
-  isHovered,
-}: HoveredSiloTokenStatContentProps) => {
-  const {
+  wlTokenSiloDetails: {
     token,
     depositedBDV,
     depositedAmount,
     siloDepositedRatio,
     optimalPctDepositedBdv,
     currentDepositedLPBDVRatio,
-  } = wlTokenSiloDetails;
+  },
+  isLoading,
+}: HoveredSiloTokenStatContentProps) => {
   const { tokenPrices, loading: priceLoading } = usePriceData();
-
-  if (!isHovered) return null;
 
   const usdPrice = tokenPrices.get(token)?.instant;
 
@@ -418,101 +421,70 @@ const HoveredSiloTokenStatContent = ({
           </>
         </TextSkeleton>
       </div>
-      <Row className="gap-2 justify-between">
-        <div className="pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Total Deposited Amount
-        </div>
-        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
-          <div className="pinto-sm sm:pinto-body-light flex flex-row gap-1 shrink-0">
-            <IconImage size={5} src={token.logoURI} />
-            {formatter.token(depositedAmount, token)}
-          </div>
-        </TextSkeleton>
-      </Row>
-      <Row className="gap-2 justify-between">
-        <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Total Deposited PDV
-          <TooltipSimple
-            variant="outlined"
-            showOnMobile
-            content={
-              <div className="pinto-sm">
-                The total value of this token deposited into the Silo in value denominated in Pinto.
-              </div>
-            }
-          />
-        </Row>
-        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
-          <div className="pinto-sm-light sm:pinto-body-light shrink-0">{formatter.twoDec(depositedBDV)}</div>
-        </TextSkeleton>
-      </Row>
-      <Row className="gap-2 justify-between">
-        <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          Total Deposited Value
-          <TooltipSimple
-            variant="outlined"
-            showOnMobile
-            content={<div className="pinto-sm">The USD total value of this token deposited into the Silo.</div>}
-          />
-        </Row>
-        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
-          <div className="pinto-sm-light sm:pinto-body-light shrink-0">
-            {usdDeposited ? formatter.usd(usdDeposited) : "--"}
-          </div>
-        </TextSkeleton>
-      </Row>
-      <Row className="gap-2 justify-between">
-        <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          % of Total Deposited PDV
-          <TooltipSimple
-            variant="outlined"
-            showOnMobile
-            content={<div className="pinto-sm">The percentage of the total Deposited PDV in the Silo.</div>}
-          />
-        </Row>
-        <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
-          <div className="pinto-sm-light sm:pinto-body-light shrink-0">
-            {formatter.pct(siloDepositedRatio.mul(100))}
-          </div>
-        </TextSkeleton>
-      </Row>
+      <SiloStatRow label="Total Deposited Amount" value={formatter.token(depositedAmount, token)} loading={loading} />
+      <SiloStatRow
+        label="Total Deposited PDV"
+        value={formatter.twoDec(depositedBDV)}
+        loading={loading}
+        tooltip={<>The total Pinto-denominated value deposited into the Silo.</>}
+      />
+      <SiloStatRow
+        label="Total Deposited Value"
+        value={usdDeposited ? formatter.usd(usdDeposited) : "--"}
+        loading={loading}
+        tooltip={<>The total USD value deposited into the Silo.</>}
+      />
+      <SiloStatRow
+        label=" % of Total Deposited PDV"
+        value={formatter.pct(siloDepositedRatio.mul(100))}
+        loading={loading}
+        tooltip={<>The percentage of the total Pinto-denominated value deposited into the Silo.</>}
+      />
       {!token.isMain && (
         <>
-          <Row className="gap-2 justify-between">
-            <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-              Optimal % LP Deposited PDV
-              <TooltipSimple
-                variant="outlined"
-                showOnMobile
-                content={<div className="pinto-sm">The optimal percentage of the total LP Deposited PDV.</div>}
-              />
-            </Row>
-            <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
-              <div className="pinto-sm-light sm:pinto-body-light shrink-0">
-                {token.isLP ? formatter.pct(optimalPctDepositedBdv) : "N/A"}
-              </div>
-            </TextSkeleton>
-          </Row>
-          <Row className="gap-2 justify-between">
-            <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-              Current % LP Deposited PDV
-              <TooltipSimple
-                variant="outlined"
-                showOnMobile
-                content={<div className="pinto-sm">The current percentage of the total LP Deposited PDV.</div>}
-              />
-            </Row>
-            <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
-              <div className="pinto-sm-light sm:pinto-body-light shrink-0">
-                {token.isLP ? formatter.pct(currentDepositedLPBDVRatio.mul(100)) : "N/A"}
-              </div>
-            </TextSkeleton>
-          </Row>
+          <SiloStatRow
+            label="Optimal % LP Deposited PDV"
+            value={formatter.pct(optimalPctDepositedBdv)}
+            loading={loading}
+            tooltip={<>The optimal percentage of the total LP Deposited PDV deposited into the Silo.</>}
+          />
+          <SiloStatRow
+            label="Current % LP Deposited PDV"
+            value={formatter.pct(currentDepositedLPBDVRatio.mul(100))}
+            loading={loading}
+            tooltip={<>The current percentage of the total LP Deposited PDV in the Silo.</>}
+          />
         </>
       )}
     </Col>
   );
 };
+
+const SiloStatRow = (props: {
+  label: string | JSX.Element;
+  value: string | JSX.Element;
+  loading: boolean;
+  tooltip?: string | JSX.Element;
+}) => {
+  const { label, value, loading, tooltip } = props;
+
+  return (
+    <Row className="gap-2 justify-between">
+      <Row className="gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+        {label}
+        {tooltip && <TooltipSimple {...tooltipProps} content={tooltip} />}
+      </Row>
+      <TextSkeleton height="same-sm" desktopHeight="same-body" className="w-32" loading={loading}>
+        <div className="pinto-sm-light sm:pinto-body-light shrink-0">{value}</div>
+      </TextSkeleton>
+    </Row>
+  );
+};
+
+const styles = {
+  label: "gap-1 items-center pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light",
+  value: "pinto-sm-light sm:pinto-body-light shrink-0",
+} as const;
 
 const SiloStatContent = ({
   data,
