@@ -358,13 +358,13 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   }, [minSoil, maxPerSeason, totalAmount]);
 
   // Set initial pod line length to current + 100% when component mounts
-  useEffect(() => {
-    const increase = podLine.mul(100).div(100); // Calculate 100% increase
-    const newValue = podLine.add(increase);
-    const formattedValue = formatter.number(newValue);
-    setPodLineLength(formattedValue);
-    setRawPodLineLength(formattedValue.replace(/,/g, ""));
-  }, [podLine]); // Only run when podLine changes
+  // useEffect(() => {
+  //   const increase = podLine.mul(100).div(100); // Calculate 100% increase 
+  //   const newValue = podLine.add(increase);
+  //   const formattedValue = formatter.number(newValue);
+  //   setPodLineLength(formattedValue);
+  //   setRawPodLineLength(formattedValue.replace(/,/g, ""));
+  // }, [podLine]); // Only run when podLine changes
 
   // Add a function to calculate what the value would be for a given percentage
   const calculatePodLineValue = (increment: number) => {
@@ -401,10 +401,11 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   // Add this function to check if the pod line length is valid
   const isPodLineLengthValid = () => {
     try {
+      // Empty means use the placeholder (current pod line)
+      if (!podLineLength) return true;
+      
       // Remove commas and convert to a number
       const inputLength = parseFloat(podLineLength.replace(/,/g, ""));
-      const currentLength = parseFloat(formatter.number(podLine).replace(/,/g, ""));
-
       return !Number.isNaN(inputLength);
     } catch (e) {
       return false;
@@ -422,7 +423,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       !!maxPerSeason &&
       // Check if total amount is filled
       !!totalAmount &&
-      // Check if pod line length is valid
+      // Check if pod line length is valid (empty is valid, it will use the placeholder)
       isPodLineLengthValid()
     );
   };
@@ -551,7 +552,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         temperature: temperature || "0",
         minAmountPerSeason: minSoil || "0",
         maxAmountToSowPerSeason: maxPerSeason || "0",
-        maxPodlineLength: podLineLength || "0",
+        maxPodlineLength: podLineLength || formatter.number(podLine).replace(/,/g, ""),
         maxGrownStalkPerBdv: "10000000000000000", // default of 100 grown stalk per bdv, which would take about 21 years at 4 seeds. TODO: add input for this in the future
         runBlocksAfterSunrise: morningAuction ? "0" : "300",
         operatorTip: operatorTip || "0",
@@ -1101,7 +1102,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                     <Input
                       id={inputIds.podLineLength}
                       className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-[12px]"
-                      placeholder="9,000,000"
+                      placeholder={formatter.number(podLine)}
                       value={podLineLength}
                       onChange={(e) => {
                         // Allow numbers, commas, and at most one decimal point
