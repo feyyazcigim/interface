@@ -11,8 +11,7 @@ import IconImage from "@/components/ui/IconImage";
 import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
 import { PINTO } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
-import useSwap, { useSwapMany } from "@/hooks/swap/useSwap";
+import { useSwapMany } from "@/hooks/swap/useSwap";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useTransaction from "@/hooks/useTransaction";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
@@ -25,7 +24,7 @@ import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { isValidAddress } from "@/utils/string";
-import { DepositData, FarmFromMode, FarmToMode } from "@/utils/types";
+import { DepositData } from "@/utils/types";
 import { isLocalhost } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
@@ -44,7 +43,8 @@ interface SowOrderDialogProps {
   onOrderPublished?: () => void;
 }
 
-const minInput = TokenValue.fromHuman(0.000001, PINTO.decimals);
+// 0.000001 is the min for PINTO input & temperature
+const minInput = TokenValue.fromHuman(0.000001, 6);
 
 export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }: SowOrderDialogProps) {
   const podLine = usePodLine();
@@ -67,36 +67,37 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const { address } = useAccount();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handleClampAndToValidInput = (input: string) => {
+  const handleClampAndToValidInput = (input: string, prevValue?: string) => {
     const parsed = input.replace(/[^0-9.,]/g, "");
 
     const split = parsed.split(".");
     // prevent multiple decimals
-    if (split.length > 2) {
-      return;
-    }
-
-    const newAmount = TokenValue.fromHuman(parsed || "0", mainToken.decimals);
+    if (split.length > 2) return prevValue;
+    const newAmount = TokenValue.fromHuman(parsed || "0", 6);
     // if 0-ish amount, return the parsed value
     if (newAmount.eq(0)) return parsed;
-
     // if the amount is less than the min input, return the min input
-    if (minInput.gt(newAmount)) {
-      return minInput.toHuman();
-    }
-
+    if (minInput.gt(newAmount)) return minInput.toHuman();
     // If input has gt 6 decimal places, prevent input
-    if (split.length === 2 && split[1].length > 6) {
-      return;
-    }
-
+    if (split.length === 2 && split[1].length > 6) return prevValue;
+    
     // return the parsed value
     return parsed;
   }
 
   const handleSetTotalAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
     const validatedAmount = handleClampAndToValidInput(e.target.value);
-    validatedAmount && setTotalAmount(validatedAmount);
+    validatedAmount !== undefined && setTotalAmount(validatedAmount);
+  }
+
+  const handleSetMinSoil = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const validatedAmount = handleClampAndToValidInput(e.target.value);
+    validatedAmount !== undefined && setMinSoil(validatedAmount);
+  }
+
+  const handleSetMaxPerSeason = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const validatedAmount = handleClampAndToValidInput(e.target.value);
+    validatedAmount !== undefined && setMaxPerSeason(validatedAmount);
   }
 
   // Function to check if deposits are sorted from low stem to high stem
@@ -856,8 +857,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     }
 
     // Remove % and any non-numeric characters except decimal
-    const cleanValue = value.replace(/[^0-9.,]/g, "");
-    setTemperature(cleanValue); // Store clean value without %
+    const cleanValue = handleClampAndToValidInput(value, temperature) ?? "";
+    cleanValue && setTemperature(cleanValue); // Store clean value without %
 
     // Add % for display
     const newDisplayValue = `${cleanValue}%`;
@@ -932,10 +933,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   };
 
   if (!open) return null;
-
-  console.log({
-    formStep,
-  });
 
   return (
     <>
@@ -1032,10 +1029,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                               className="h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                               placeholder="0.00"
                               value={minSoil}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/[^0-9.,]/g, "");
-                                setMinSoil(value);
-                              }}
+                              onChange={handleSetMinSoil}
                               type="text"
                             />
                           </div>
@@ -1056,10 +1050,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                               className="h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                               placeholder="0.00"
                               value={maxPerSeason}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/[^0-9.,]/g, "");
-                                setMaxPerSeason(value);
-                              }}
+                              onChange={handleSetMaxPerSeason}
                               type="text"
                             />
                           </div>
@@ -1127,18 +1118,11 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       placeholder={formatter.number(podLine)}
                       value={podLineLength}
                       onChange={(e) => {
-                        // Allow numbers, commas, and at most one decimal point
-                        const value = e.target.value.replace(/[^\d,\.]/g, "");
-                        // Ensure at most one decimal point
-                        const decimalCount = (value.match(/\./g) || []).length;
-                        const sanitizedValue =
-                          decimalCount > 1
-                            ? value.replace(/\./g, (match, index) => (index === value.indexOf(".") ? match : ""))
-                            : value;
-
+                        const cleanValue = handleClampAndToValidInput(e.target.value, podLineLength) ?? "";
+                        
                         // Store raw input and update displayed value
-                        setRawPodLineLength(sanitizedValue.replace(/,/g, ""));
-                        setPodLineLength(sanitizedValue);
+                        setRawPodLineLength(cleanValue);
+                        setPodLineLength(cleanValue);
                       }}
                     />
 
