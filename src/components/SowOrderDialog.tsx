@@ -960,6 +960,14 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
               ) : formStep === 1 ? (
                 // Step 1 - Main Form
                 <Col className="gap-6 pinto-sm-light text-pinto-light">
+                  {/* Title and separator */}
+                  <div className="flex flex-col gap-2">
+                    <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: '20px' }}>
+                      🚜 Specify Conditions for automated Sowing
+                    </h2>
+                    <div className="h-[1px] w-full bg-[#D9D9D9]"></div>
+                  </div>
+                  
                   {/* I want to Sow up to */}
                   <div className="flex flex-col gap-2">
                     <label htmlFor={inputIds.totalAmount}>I want to Sow up to</label>
@@ -1210,8 +1218,15 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 // Step 2 - Operator Tip
                 <Col className="gap-6">
                   <Col>
-                    <div className="pinto-sm-light text-pinto-light mb-2">I'm willing to pay someone</div>
-                    <div className="flex rounded-[12px] border border-[#D9D9D9] mb-2">
+                      {/* Title and separator for Step 2 */}
+                    <div className="flex flex-col gap-2">
+                      <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: '20px' }}>
+                        🚜 Tip per Execution
+                      </h2>
+                      <div className="h-[1px] w-full bg-[#D9D9D9] mb-6"></div>
+                    </div>
+                    <div className="pinto-sm-light text-pinto-light gap-2 mb-4">I'm willing to pay someone</div>
+                    <div className="flex rounded-[12px] border border-[#D9D9D9] gap-2 mb-2">
                       <input
                         className="h-12 px-3 py-1.5 flex-1 rounded-l-[12px] focus:outline-none text-base font-light"
                         placeholder="0.00"
@@ -1294,7 +1309,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       </Button>
                     </div>
 
-                    <div className="text-[#9C9C9C] text-base font-light mb-40">
+                    <div className="text-[#9C9C9C] text-base font-light mb-32">
                       each time they Sow part of my Tractor Order.
                     </div>
 
