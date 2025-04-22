@@ -90,10 +90,10 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   // Create a comprehensive validation function that handles all validation cases
   const validateAllInputs = (
     minSoilAmount: string,
-    maxSeasonAmount: string, 
-    totalSowAmount: string, 
+    maxSeasonAmount: string,
+    totalSowAmount: string,
     podLineLengthValue: string,
-    temperatureValue: string
+    temperatureValue: string,
   ) => {
     // Skip validation if required fields are empty
     if (!minSoilAmount && !maxSeasonAmount && !totalSowAmount && !podLineLengthValue && !temperatureValue) {
@@ -106,42 +106,42 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       if (minSoilAmount && maxSeasonAmount) {
         const minClean = minSoilAmount.replace(/,/g, "");
         const maxClean = maxSeasonAmount.replace(/,/g, "");
-        
+
         const min = TokenValue.fromHuman(minClean, PINTO.decimals);
         const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
-        
+
         if (min.gt(max)) {
           setError("Min per Season must be less than or equal to Max per Season");
           return;
         }
       }
-      
+
       if (minSoilAmount && totalSowAmount) {
         const minClean = minSoilAmount.replace(/,/g, "");
         const totalClean = totalSowAmount.replace(/,/g, "");
-        
+
         const min = TokenValue.fromHuman(minClean, PINTO.decimals);
         const total = TokenValue.fromHuman(totalClean, PINTO.decimals);
-        
+
         if (min.gt(total)) {
           setError("Min per Season cannot exceed the total amount to Sow");
           return;
         }
       }
-      
+
       if (maxSeasonAmount && totalSowAmount) {
         const maxClean = maxSeasonAmount.replace(/,/g, "");
         const totalClean = totalSowAmount.replace(/,/g, "");
-        
+
         const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
         const total = TokenValue.fromHuman(totalClean, PINTO.decimals);
-        
+
         if (max.gt(total)) {
           setError("Max per Season cannot exceed the total amount to Sow");
           return;
         }
       }
-      
+
       // Validate pod line length if provided
       if (podLineLengthValue) {
         try {
@@ -155,7 +155,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           return;
         }
       }
-      
+
       // Validate temperature if provided
       if (temperatureValue) {
         try {
@@ -169,7 +169,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           return;
         }
       }
-      
+
       // If we made it here, no errors were found
       setError(null);
     } catch (e) {
@@ -919,7 +919,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     const cleanValue = handleClampAndToValidInput(value, temperature) ?? "";
     cleanValue && setTemperature(cleanValue); // Store clean value without %
     validateAllInputs(minSoil, maxPerSeason, totalAmount, podLineLength, cleanValue);
-    
+
     // Add % for display
     const newDisplayValue = `${cleanValue}%`;
     setDisplayTemperature(newDisplayValue);

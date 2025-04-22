@@ -10,7 +10,7 @@ import { createRequisition, useSignRequisition } from "@/lib/Tractor";
 import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { Blueprint } from "@/lib/Tractor/types";
 import { formatter } from "@/utils/format";
-import { CornerBottomLeftIcon, CheckIcon } from "@radix-ui/react-icons";
+import { CheckIcon, CornerBottomLeftIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
