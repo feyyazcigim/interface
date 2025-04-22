@@ -1,9 +1,9 @@
 import SeasonalChart, { tabToSeasonalLookback, TimeTab } from "@/components/charts/SeasonalChart";
+import { useSeasonalAPY } from "@/state/seasonal/queries/useSeasonalAPY";
 import {
   useSeasonalAvgSeeds,
   useSeasonalBDV,
   useSeasonalL2SR,
-  useSeasonalPintoVAPY,
   useSeasonalStalk,
   useSeasonalTotalLiquidity,
 } from "@/state/seasonal/seasonalDataHooks";
@@ -26,7 +26,7 @@ const SiloExplorer = () => {
   const avgSeedsData = useSeasonalAvgSeeds(Math.max(0, season - tabToSeasonalLookback(avgSeedsTab)), season);
   const stalkData = useSeasonalStalk(Math.max(0, season - tabToSeasonalLookback(stalkTab)), season);
   const bdvData = useSeasonalBDV(Math.max(0, season - tabToSeasonalLookback(bdvTab)), season);
-  const vapyData = useSeasonalPintoVAPY(Math.max(0, season - tabToSeasonalLookback(vapyTab)), season);
+  const vapyData = useSeasonalAPY(Math.max(0, season - tabToSeasonalLookback(vapyTab)), season);
 
   return (
     <>
@@ -98,6 +98,7 @@ const SiloExplorer = () => {
         useSeasonalResult={vapyData}
         valueFormatter={f.percent2dFormatter}
         tickValueFormatter={f.percent0dFormatter}
+        useLogarithmicScale={true}
       />
     </>
   );

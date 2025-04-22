@@ -16,9 +16,6 @@ import useSeasonalBeanstalkWrappedDepositsSG from "./queries/useSeasonalBeanstal
 import useSeasonalFarmerSG from "./queries/useSeasonalFarmerSG";
 import useSeasonalFarmerSiloAssetTokenSG from "./queries/useSeasonalFarmerSiloAssetTokenSG";
 import { mergeUseSeasonalQueriesResults } from "./utils";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { API_SERVICES } from "@/constants/endpoints";
-import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 
 /** ==================== Bean BeanHourlySnapshot ==================== **/
 
@@ -304,56 +301,4 @@ export function useSeasonalWrappedDepositTotalSupply(fromSeason: number, toSeaso
     value: TV.fromBlockchain(data.supply, token.decimals).toNumber(),
     timestamp,
   }));
-}
-
-/** ==================== Pinto API ==================== **/
-
-type PintoVapyResponse = {
-  [season: number]: {
-    bean: number;
-    stalk: number;
-    ownership: number;
-  };
-};
-
-export function useSeasonalPintoVAPY(fromSeason: number, toSeason: number): UseSeasonalResult {
-  const query = useQuery({
-    queryKey: ["api", "vapy", "pinto", fromSeason, toSeason],
-    queryFn: async (): Promise<PintoVapyResponse> => {
-      const res = await fetch(`${API_SERVICES.pinto}/silo/yield-history`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token: PINTO.address.toLowerCase(),
-          emaWindow: 720,
-          initType: "AVERAGE",
-          fromSeason,
-          toSeason,
-        }),
-      });
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      return await res.json();
-    },
-    select: (data: PintoVapyResponse): SeasonalChartData[] => {
-      const result: SeasonalChartData[] = [];
-      for (const season in data) {
-        result.push({
-          season: Number(season),
-          value: data[season].bean,
-          // TODO: need mapping of season to timestamp
-          timestamp: new Date(365 * 24 * 60 * 60 * 1000),
-        });
-      }
-      return result;
-    },
-  });
-  return {
-    data: query.data ?? undefined,
-    isLoading: query.isLoading,
-    isError: query.isError,
-  };
 }
