@@ -1126,7 +1126,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                           isButtonActive(5)
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         } flex-1`}
                         onClick={() => handlePodLineSelect(5)}
                       >
@@ -1138,7 +1138,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                           isButtonActive(10)
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         } flex-1`}
                         onClick={() => handlePodLineSelect(10)}
                       >
@@ -1150,7 +1150,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                           isButtonActive(25)
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         } flex-1`}
                         onClick={() => handlePodLineSelect(25)}
                       >
@@ -1162,7 +1162,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                           isButtonActive(50)
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         } flex-1`}
                         onClick={() => handlePodLineSelect(50)}
                       >
@@ -1174,7 +1174,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                           isButtonActive(100)
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         } flex-1`}
                         onClick={() => handlePodLineSelect(100)}
                       >
@@ -1193,7 +1193,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                           morningAuction
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         } flex-1`}
                         onClick={() => setMorningAuction(true)}
                       >
@@ -1205,7 +1205,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
                           !morningAuction
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         } flex-1`}
                         onClick={() => setMorningAuction(false)}
                       >
@@ -1253,7 +1253,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
                           activeTipButton === "down5"
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         }`}
                         onClick={() => handleTipButtonClick("down5")}
                       >
@@ -1265,7 +1265,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
                           activeTipButton === "down1"
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         }`}
                         onClick={() => handleTipButtonClick("down1")}
                       >
@@ -1277,7 +1277,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
                           activeTipButton === "average"
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         }`}
                         onClick={() => handleTipButtonClick("average")}
                       >
@@ -1289,7 +1289,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
                           activeTipButton === "up1"
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         }`}
                         onClick={() => handleTipButtonClick("up1")}
                       >
@@ -1301,7 +1301,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
                           activeTipButton === "up5"
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
-                            : "bg-pinto-gray-1 border-pinto-gray-3 text-black hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
+                            : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
                         }`}
                         onClick={() => handleTipButtonClick("up5")}
                       >
