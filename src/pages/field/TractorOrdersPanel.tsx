@@ -257,7 +257,7 @@ const TractorOrdersPanel = ({ refreshData }: TractorOrdersPanelProps) => {
           return (
             <div
               key={`requisition-${index}`}
-              className="box-border flex flex-col p-4 gap-2 bg-white border border-pinto-gray-2 rounded-[24px] cursor-pointer hover:shadow-md transition-shadow relative"
+              className="box-border flex flex-col p-4 gap-2 bg-white border border-pinto-gray-2 rounded-[24px] cursor-pointer hover:border-pinto-green-4 transition-colors relative"
               onClick={() => handleOrderClick(req)}
             >
               <div className="flex flex-col gap-2 w-full">
