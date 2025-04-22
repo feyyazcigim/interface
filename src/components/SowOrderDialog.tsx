@@ -80,25 +80,25 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     if (minInput.gt(newAmount)) return minInput.toHuman();
     // If input has gt 6 decimal places, prevent input
     if (split.length === 2 && split[1].length > 6) return prevValue;
-    
+
     // return the parsed value
     return parsed;
-  }
+  };
 
   const handleSetTotalAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
     const validatedAmount = handleClampAndToValidInput(e.target.value);
     validatedAmount !== undefined && setTotalAmount(validatedAmount);
-  }
+  };
 
   const handleSetMinSoil = (e: React.ChangeEvent<HTMLInputElement>) => {
     const validatedAmount = handleClampAndToValidInput(e.target.value);
     validatedAmount !== undefined && setMinSoil(validatedAmount);
-  }
+  };
 
   const handleSetMaxPerSeason = (e: React.ChangeEvent<HTMLInputElement>) => {
     const validatedAmount = handleClampAndToValidInput(e.target.value);
     validatedAmount !== undefined && setMaxPerSeason(validatedAmount);
-  }
+  };
 
   // Function to check if deposits are sorted from low stem to high stem
   const areDepositsSorted = (deposits: DepositData[]): boolean => {
@@ -394,7 +394,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
   // Set initial pod line length to current + 100% when component mounts
   // useEffect(() => {
-  //   const increase = podLine.mul(100).div(100); // Calculate 100% increase 
+  //   const increase = podLine.mul(100).div(100); // Calculate 100% increase
   //   const newValue = podLine.add(increase);
   //   const formattedValue = formatter.number(newValue);
   //   setPodLineLength(formattedValue);
@@ -438,7 +438,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     try {
       // Empty is not valid, we require a value
       if (!podLineLength) return false;
-      
+
       // Remove commas and convert to a number
       const inputLength = parseFloat(podLineLength.replace(/,/g, ""));
       return !Number.isNaN(inputLength);
@@ -451,9 +451,12 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const areRequiredFieldsFilled = () => {
     return (
       temperature &&
-      (minSoil !== undefined && minSoil !== null) &&
-      (maxPerSeason !== undefined && maxPerSeason !== null) &&
-      (totalAmount !== undefined && totalAmount !== null) &&
+      minSoil !== undefined &&
+      minSoil !== null &&
+      maxPerSeason !== undefined &&
+      maxPerSeason !== null &&
+      totalAmount !== undefined &&
+      totalAmount !== null &&
       isPodLineLengthValid()
     );
   };
@@ -989,12 +992,12 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 <Col className="gap-6 pinto-sm-light text-pinto-light">
                   {/* Title and separator */}
                   <div className="flex flex-col gap-2">
-                    <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: '20px' }}>
+                    <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: "20px" }}>
                       🚜 Specify Conditions for automated Sowing
                     </h2>
-                    <div className="h-[1px] w-full bg-[#D9D9D9]"></div>
+                    <div className="h-[1px] w-full bg-[#D9D9D9]" />
                   </div>
-                  
+
                   {/* I want to Sow up to */}
                   <div className="flex flex-col gap-2">
                     <label htmlFor={inputIds.totalAmount}>I want to Sow up to</label>
@@ -1022,7 +1025,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       {/* Min per Season */}
                       <div className="flex flex-col gap-2 flex-1">
                         <label htmlFor={inputIds.minPerSeason}>Min per Season</label>
-                        <div className={`flex rounded-[12px] overflow-hidden border ${error ? 'border-red-500' : 'border-[#D9D9D9]'} group focus-within:${error ? 'border-red-500' : 'border-[#2F8957]'}`}>
+                        <div
+                          className={`flex rounded-[12px] overflow-hidden border ${error ? "border-red-500" : "border-[#D9D9D9]"} group focus-within:${error ? "border-red-500" : "border-[#2F8957]"}`}
+                        >
                           <div className="flex-1">
                             <Input
                               id={inputIds.minPerSeason}
@@ -1043,7 +1048,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       {/* Max per Season */}
                       <div className="flex flex-col gap-2 flex-1">
                         <label htmlFor={inputIds.maxPerSeason}>Max per Season</label>
-                        <div className={`flex rounded-[12px] overflow-hidden border ${error ? 'border-red-500' : 'border-[#D9D9D9]'} group focus-within:${error ? 'border-red-500' : 'border-[#2F8957]'}`}>
+                        <div
+                          className={`flex rounded-[12px] overflow-hidden border ${error ? "border-red-500" : "border-[#D9D9D9]"} group focus-within:${error ? "border-red-500" : "border-[#2F8957]"}`}
+                        >
                           <div className="flex-1">
                             <Input
                               id={inputIds.maxPerSeason}
@@ -1119,7 +1126,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       value={podLineLength}
                       onChange={(e) => {
                         const cleanValue = handleClampAndToValidInput(e.target.value, podLineLength) ?? "";
-                        
+
                         // Store raw input and update displayed value
                         setRawPodLineLength(cleanValue);
                         setPodLineLength(cleanValue);
@@ -1225,12 +1232,12 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 // Step 2 - Operator Tip
                 <Col className="gap-6">
                   <Col>
-                      {/* Title and separator for Step 2 */}
+                    {/* Title and separator for Step 2 */}
                     <div className="flex flex-col gap-2">
-                      <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: '20px' }}>
+                      <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: "20px" }}>
                         🚜 Tip per Execution
                       </h2>
-                      <div className="h-[1px] w-full bg-[#D9D9D9] mb-6"></div>
+                      <div className="h-[1px] w-full bg-[#D9D9D9] mb-6" />
                     </div>
                     <div className="pinto-sm-light text-pinto-light gap-2 mb-4">I'm willing to pay someone</div>
                     <div className="flex rounded-[12px] border border-[#D9D9D9] gap-2 mb-2">
@@ -1337,7 +1344,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   </Col>
                 </Col>
               )}
-              
+
               {/* Error message box */}
               {error && formStep === 1 && (
                 <div className="w-full p-3 bg-red-50 rounded-lg mb-1 flex items-center gap-3">
@@ -1349,7 +1356,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   </span>
                 </div>
               )}
-              
+
               <Row className="gap-6">
                 <Button
                   variant="outline"

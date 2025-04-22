@@ -27,10 +27,10 @@ import { useFarmerField } from "@/state/useFarmerField";
 import { useHarvestableIndex, useHarvestableIndexLoading, useTotalSoil } from "@/state/useFieldData";
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
+import { SizeIcon } from "@radix-ui/react-icons";
 import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
-import { SizeIcon } from "@radix-ui/react-icons";
 import FieldActions from "./field/FieldActions";
 import FieldActivity from "./field/FieldActivity";
 import FieldStats from "./field/FieldStats";
@@ -94,10 +94,12 @@ function TractorButton({ onClick }: { onClick: () => void }) {
         onMouseEnter={() => setHoveredTractor(true)}
         onMouseLeave={() => setHoveredTractor(false)}
         style={{
-          ...(inputExceedsSoil || hoveredTractor ? {
-            backgroundColor: "#E5F5E5",
-            borderColor: "#387F5C",
-          } : {}),
+          ...(inputExceedsSoil || hoveredTractor
+            ? {
+                backgroundColor: "#E5F5E5",
+                borderColor: "#387F5C",
+              }
+            : {}),
           // If input exceeds soil, apply special highlight styling
           ...(inputExceedsSoil && {
             boxShadow: "0 0 0 2px rgba(56, 127, 92, 0.5)",
@@ -106,15 +108,15 @@ function TractorButton({ onClick }: { onClick: () => void }) {
         }}
       >
         {/* Position the icon absolutely to place it on the right side and vertically centered */}
-        <SizeIcon 
+        <SizeIcon
           className={`absolute top-1/2 right-4 transform -translate-y-1/2 w-5 h-5 text-[#404040] ${
             inputExceedsSoil || hoveredTractor ? "hidden" : "block"
-          }`} 
+          }`}
         />
-        
+
         <div className="flex flex-row items-center gap-1">
           <span className={`pinto-h4 ${inputExceedsSoil || hoveredTractor ? "text-pinto-green-4" : "text-[#404040]"}`}>
-           🚜 Want to Sow with size?
+            🚜 Want to Sow with size?
           </span>
         </div>
         <span

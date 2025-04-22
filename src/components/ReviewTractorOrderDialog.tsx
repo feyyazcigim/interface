@@ -229,7 +229,9 @@ export default function ReviewTractorOrderDialog({
               <button
                 type="button"
                 className={`pb-2 ${
-                  activeTab === "blueprint" ? "border-b-2 border-pinto-green-4 font-medium" : "border-b-2 border-transparent text-pinto-gray-4"
+                  activeTab === "blueprint"
+                    ? "border-b-2 border-pinto-green-4 font-medium"
+                    : "border-b-2 border-transparent text-pinto-gray-4"
                 }`}
                 onClick={() => setActiveTab("blueprint")}
               >
@@ -239,7 +241,9 @@ export default function ReviewTractorOrderDialog({
                 <button
                   type="button"
                   className={`pb-2 ${
-                    activeTab === "executions" ? "border-b-2 border-pinto-green-4 font-medium" : "border-b-2 border-transparent text-pinto-gray-4"
+                    activeTab === "executions"
+                      ? "border-b-2 border-pinto-green-4 font-medium"
+                      : "border-b-2 border-transparent text-pinto-gray-4"
                   }`}
                   onClick={() => setActiveTab("executions")}
                 >
@@ -300,7 +304,8 @@ export default function ReviewTractorOrderDialog({
                           <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Sow</div>
                           <div className="border-t-2 border-gray-300 w-3 flex-shrink-0" />
                           <span className="text-box rounded-full inline-flex items-center">
-                            <span>up to</span>&nbsp;<span className="text-pinto-green-4">{orderData.totalAmount}</span>&nbsp;
+                            <span>up to</span>&nbsp;<span className="text-pinto-green-4">{orderData.totalAmount}</span>
+                            &nbsp;
                             <span className="text-pinto-green-4 inline-flex items-center">
                               <img src={pintoIcon} alt="PINTO" className="w-4 h-4 mx-1" />
                               PINTO
@@ -354,8 +359,7 @@ export default function ReviewTractorOrderDialog({
                       <div className="border-t-2 border-gray-300 w-3 flex-shrink-0" />
                       <span className="text-box rounded-full">
                         <span className="text-pinto-green-4 flex items-center inline-flex">
-                          {orderData.operatorTip}{" "}
-                          <img src={pintoIcon} alt="PINTO" className="w-4 h-4 mx-1" />
+                          {orderData.operatorTip} <img src={pintoIcon} alt="PINTO" className="w-4 h-4 mx-1" />
                           PINTO
                         </span>
                       </span>
