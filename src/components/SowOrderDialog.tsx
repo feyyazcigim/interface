@@ -996,13 +996,11 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       {/* Min per Season */}
                       <div className="flex flex-col gap-2 flex-1">
                         <label htmlFor={inputIds.minPerSeason}>Min per Season</label>
-                        <div className="flex rounded-[12px] overflow-hidden border border-[#D9D9D9] group focus-within:border-[#2F8957]">
+                        <div className={`flex rounded-[12px] overflow-hidden border ${error ? 'border-red-500' : 'border-[#D9D9D9]'} group focus-within:${error ? 'border-red-500' : 'border-[#2F8957]'}`}>
                           <div className="flex-1">
                             <Input
                               id={inputIds.minPerSeason}
-                              className={`h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                                error ? "bg-red-50" : ""
-                              }`}
+                              className="h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                               placeholder="0.00"
                               value={minSoil}
                               onChange={(e) => {
@@ -1022,13 +1020,11 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       {/* Max per Season */}
                       <div className="flex flex-col gap-2 flex-1">
                         <label htmlFor={inputIds.maxPerSeason}>Max per Season</label>
-                        <div className="flex rounded-[12px] overflow-hidden border border-[#D9D9D9] group focus-within:border-[#2F8957]">
+                        <div className={`flex rounded-[12px] overflow-hidden border ${error ? 'border-red-500' : 'border-[#D9D9D9]'} group focus-within:${error ? 'border-red-500' : 'border-[#2F8957]'}`}>
                           <div className="flex-1">
                             <Input
                               id={inputIds.maxPerSeason}
-                              className={`h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                                error ? "bg-red-50" : ""
-                              }`}
+                              className="h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                               placeholder="0.00"
                               value={maxPerSeason}
                               onChange={(e) => {
