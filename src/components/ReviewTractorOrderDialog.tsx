@@ -263,12 +263,12 @@ export default function ReviewTractorOrderDialog({
                     <div className="bg-white rounded-xl px-2 py-2 shadow-sm flex flex-col gap-2 border border-gray-200">
                       <div className="flex items-center gap-0">
                         <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Withdraw</div>
-                        <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
+                        <div className="border-t-2 border-gray-300 w-3 flex-shrink-0" />
 
                         <span className="text-box rounded-full">
                           <span>Deposited Tokens</span>
                         </span>
-                        <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
+                        <div className="border-t-2 border-gray-300 w-3 flex-shrink-0" />
                         <span className="text-box rounded-full flex items-center">
                           <span>as</span>
                           <img src={pintoIcon} alt="PINTO" className="w-5 h-5 mx-1" />
@@ -298,7 +298,7 @@ export default function ReviewTractorOrderDialog({
                       <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-0">
                           <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Sow</div>
-                          <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
+                          <div className="border-t-2 border-gray-300 w-3 flex-shrink-0" />
                           <span className="text-box rounded-full inline-flex items-center">
                             <span>up to</span>&nbsp;<span className="text-pinto-green-4">{orderData.totalAmount}</span>&nbsp;
                             <span className="text-pinto-green-4 inline-flex items-center">
@@ -351,7 +351,7 @@ export default function ReviewTractorOrderDialog({
                   <div className="flex items-center justify-center mt-8">
                     <div className="bg-white rounded-xl px-2 py-2 shadow-sm flex items-center gap-0 border border-gray-200">
                       <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Tip</div>
-                      <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
+                      <div className="border-t-2 border-gray-300 w-3 flex-shrink-0" />
                       <span className="text-box rounded-full">
                         <span className="text-pinto-green-4 flex items-center inline-flex">
                           {orderData.operatorTip}{" "}
@@ -359,7 +359,7 @@ export default function ReviewTractorOrderDialog({
                           PINTO
                         </span>
                       </span>
-                      <div className="border-t-2 border-gray-300 w-6 flex-shrink-0" />
+                      <div className="border-t-2 border-gray-300 w-3 flex-shrink-0" />
                       <span className="text-box rounded-full">to Operator</span>
                     </div>
                   </div>
