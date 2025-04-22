@@ -1,22 +1,39 @@
 import { isFunction } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
-
 export interface UseLocalStorageOptions<T> {
-  /** Custom storage backend (defaults to window.localStorage) */
-  storage?: StorageLike;
   /**
-   * If the key is **missing** write `initialValue` into storage right away.
-   * Default: false (opt‑in so we don’t surprise anyone)
+   * If true, writes the initialValue to storage when the key is missing.
+   * This ensures the storage is populated with a default value.
+   * @default false
    */
   initializeIfEmpty?: boolean;
-  /** Serialize → string (defaults to JSON.stringify) */
+  /**
+   * Whether to enable cross-tab synchronization via CustomEvents.
+   * When true, changes in one tab will be reflected in other tabs.
+   * @default false
+   */
+  sync?: boolean;
+  /**
+   * Custom serialization function to convert the value to a string.
+   * @default JSON.stringify
+   */
   serialize?: (value: T) => string;
-  /** Deserialize ← string (defaults to JSON.parse) */
+  /**
+   * Custom deserialization function to convert a string back to the value type.
+   * @default JSON.parse
+   */
   deserialize?: (raw: string) => T;
 }
 
+/**
+ * Safely deserializes a value from storage, falling back to a default value if deserialization fails.
+ * @template T - The type of the value to be deserialized
+ * @param raw - The raw string value from storage
+ * @param fallback - The value to return if deserialization fails
+ * @param options - Deserialization options
+ * @returns The deserialized value or fallback
+ */
 function safeDeserialize<T>(
   raw: string | null,
   fallback: T,
@@ -30,33 +47,63 @@ function safeDeserialize<T>(
   }
 }
 
+/**
+ * A React hook for managing state that persists in localStorage.
+ *
+ * @template T - The type of the value to be stored
+ * @param key - The key under which to store the value in localStorage
+ * @param initialValue - The initial value or a function that returns the initial value
+ * @param options - Configuration options for the hook
+ * @returns A tuple containing:
+ *   - The current value
+ *   - A function to update the value
+ *   - A function to remove the value from storage
+ *
+ * @example
+ * ```tsx
+ * const [count, setCount, removeCount] = useLocalStorage('counter', 0);
+ *
+ * // Update the value
+ * setCount((prev) => prev + 1);
+ *
+ * // Remove the value
+ * removeCount();
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // With custom serialization and cross-tab sync
+ * const [data, setData] = useLocalStorage<Data | null>('local-data', null, {
+ *   serialize: (data) => JSON.stringify(data),
+ *   deserialize: (raw) => JSON.parse(raw),
+ *   sync: true
+ * });
+ * ```
+ */
 export default function useLocalStorage<T = unknown>(
   key: string,
   initialValue: T | (() => T),
-  {
-    storage = typeof window !== "undefined" ? window.localStorage : undefined,
-    initializeIfEmpty = false,
-    serialize,
-    deserialize,
-  }: UseLocalStorageOptions<T> = {},
+  { initializeIfEmpty = false, serialize, deserialize, sync = false }: UseLocalStorageOptions<T> = {},
 ): readonly [T, (v: T | ((p: T) => T)) => void, () => void] {
   /* ------------------------------------ init ----------------------------------- */
   const initial = useMemo(() => (isFunction(initialValue) ? initialValue() : initialValue), []);
 
   const writeInitialIfNeeded = (value: T) => {
-    if (!storage) return;
+    if (typeof window === "undefined") return;
     try {
-      storage.setItem(key, serialize ? serialize(value) : JSON.stringify(value));
-      window.dispatchEvent(new CustomEvent("local-storage", { detail: { key, value } }));
+      window.localStorage.setItem(key, serialize ? serialize(value) : JSON.stringify(value));
+      if (sync) {
+        window.dispatchEvent(new CustomEvent("local-storage", { detail: { key, value } }));
+      }
     } catch {
       /* swallow quota / serialisation errors */
     }
   };
 
   const read = () => {
-    if (!storage) return initial;
+    if (typeof window === "undefined") return initial;
 
-    const raw = storage.getItem(key);
+    const raw = window.localStorage.getItem(key);
 
     // Populate storage if empty and user asked for it
     if (raw === null && initializeIfEmpty) {
@@ -87,10 +134,15 @@ export default function useLocalStorage<T = unknown>(
       setState((prev) => {
         const value = typeof next === "function" ? (next as (p: T) => T)(prev) : next;
 
-        if (storage) {
+        if (typeof window !== "undefined") {
           try {
-            storage.setItem(key, serializeRef.current ? serializeRef.current(value) : JSON.stringify(value));
-            window.dispatchEvent(new CustomEvent("local-storage", { detail: { key, value } }));
+            window.localStorage.setItem(
+              key,
+              serializeRef.current ? serializeRef.current(value) : JSON.stringify(value),
+            );
+            if (sync) {
+              window.dispatchEvent(new CustomEvent("local-storage", { detail: { key, value } }));
+            }
           } catch {
             /* ignore */
           }
@@ -98,7 +150,7 @@ export default function useLocalStorage<T = unknown>(
         return value;
       });
     },
-    [key, storage],
+    [key, sync],
   );
 
   /* -------------------------------------------------------------------------- */
@@ -106,14 +158,16 @@ export default function useLocalStorage<T = unknown>(
   /* -------------------------------------------------------------------------- */
 
   const remove = useCallback(() => {
-    if (!storage) return;
+    if (typeof window === "undefined") return;
     try {
-      storage.removeItem(key);
-      window.dispatchEvent(new CustomEvent("local-storage", { detail: { key, value: initial } }));
+      window.localStorage.removeItem(key);
+      if (sync) {
+        window.dispatchEvent(new CustomEvent("local-storage", { detail: { key, value: initial } }));
+      }
     } finally {
       setState(initial);
     }
-  }, [key, storage, initial]);
+  }, [key, initial, sync]);
 
   /* -------------------------------------------------------------------------- */
   /*                resubscribe when key / storage backend changes              */
@@ -123,7 +177,7 @@ export default function useLocalStorage<T = unknown>(
   useEffect(() => {
     setState(read()); // sync immediately on key change
 
-    if (!storage) return;
+    if (typeof window === "undefined" || !sync) return;
 
     const handleStorage = (e: StorageEvent) => {
       if (e.key === key) setState(read());
@@ -140,7 +194,7 @@ export default function useLocalStorage<T = unknown>(
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener("local-storage", handleCustom);
     };
-  }, [key, storage]);
+  }, [key, sync]);
 
   /* -------------------------------------------------------------------------- */
   /*                              public API tuple                              */
