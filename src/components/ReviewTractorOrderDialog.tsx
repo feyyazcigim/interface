@@ -371,7 +371,7 @@ export default function ReviewTractorOrderDialog({
                 <div className="space-y-6">
                   {/* Decoded SowBlueprintv0 Call */}
                   <div>
-                    <h3 className="text-lg font-medium mb-2">SowBlueprintv0 Call</h3>
+                    <h3 className="pinto-sm font-medium mb-2">SowBlueprintv0 Call</h3>
                     <div className="bg-white p-4 rounded border border-gray-200 font-mono text-sm overflow-x-auto">
                       <HighlightedCallData
                         blueprintData={encodedData}
@@ -383,7 +383,7 @@ export default function ReviewTractorOrderDialog({
 
                   {/* Encoded Farm Data */}
                   <div>
-                    <h3 className="text-lg font-medium mb-2">Encoded Farm Data</h3>
+                    <h3 className="pinto-sm font-medium mb-2">Encoded Farm Data</h3>
                     <div className="bg-white p-4 rounded border border-gray-200 font-mono text-sm overflow-x-auto">
                       <HighlightedCallData
                         blueprintData={encodedData}
@@ -409,7 +409,7 @@ export default function ReviewTractorOrderDialog({
 
                   {/* Requisition Data */}
                   <div>
-                    <h3 className="text-lg font-medium mb-2">Requisition Data</h3>
+                    <h3 className="pinto-sm font-medium mb-2">Requisition Data</h3>
                     <div className="bg-white p-4 rounded border border-gray-200 font-mono text-sm overflow-x-auto">
                       <HighlightedCallData
                         blueprintData={encodedData}
