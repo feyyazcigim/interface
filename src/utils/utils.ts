@@ -1,8 +1,9 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { FarmerBalance } from "@/state/useFarmerBalances";
+import { calculateConvertData } from "@/utils/convert";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { FarmFromMode } from "./types";
+import { FarmFromMode, Token } from "./types";
 import { MayArray } from "./types.generic";
 
 export function cn(...inputs: ClassValue[]) {
@@ -184,4 +185,9 @@ export function identifyPlantDeposits(
   });
 
   return plantDepositMap;
+}
+
+interface RatioDeposit {
+  stem: string;
+  ratio: TokenValue;
 }
