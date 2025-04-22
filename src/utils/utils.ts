@@ -237,6 +237,7 @@ export function safeJSONStringify<T>(value: T | null | undefined, fallbackValue:
     console.error("Failed to stringify object:", error);
     return fallbackValue;
   }
+}
 
 interface RatioDeposit {
   stem: string;
