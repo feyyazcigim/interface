@@ -646,15 +646,10 @@ export function Plow() {
             <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[220px]">
               Operator Tip
             </TableHead>
-            {successfulSimulations.size > 0 && (
-              <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-                Estimated Profit
-              </TableHead>
-            )}
             <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[200px]">
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-row justify-between items-start">
                 <span>Simulate</span>
-                <div className="text-xs text-pinto-gray-4">
+                <div className="text-xs text-pinto-gray-4 text-right">
                   {(() => {
                     if (!gasPrice) return "Loading gas price...";
                     return `Gas Price: ${(Number(gasPrice) / 1e9).toFixed(6)} gwei`;
@@ -662,6 +657,11 @@ export function Plow() {
                 </div>
               </div>
             </TableHead>
+            {successfulSimulations.size > 0 && (
+              <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
+                Estimated Profit
+              </TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
@@ -707,30 +707,6 @@ export function Plow() {
                     ? formatOperatorTip(req.decodedData.operatorParams.operatorTipAmount, mainToken, tokenPrices)
                     : "Failed to decode"}
                 </TableCell>
-                {successfulSimulations.size > 0 && (
-                  <TableCell className="px-1.5 text-sm" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
-                    {(() => {
-                      // Skip if this simulation hasn't been run yet
-                      if (!successfulSimulations.has(req.requisition.blueprintHash) || !req.decodedData) {
-                        return "-";
-                      }
-
-                      const profit = calculateReqProfit(req);
-                      if (profit === -Infinity) return "-";
-
-                      // Format with color based on profit/loss
-                      const isPositive = profit >= 0;
-                      const color = isPositive ? "text-pinto-green-4" : "text-pinto-red-2";
-                      const sign = isPositive ? "+" : "-";
-
-                      return (
-                        <span className={color}>
-                          {isPositive ? `${sign}$${profit.toFixed(6)}` : `${sign}$${Math.abs(profit).toFixed(6)}`}
-                        </span>
-                      );
-                    })()}
-                  </TableCell>
-                )}
                 <TableCell className="px-1.5" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
                   <div className="flex items-center gap-1">
                     <Button
@@ -845,6 +821,30 @@ export function Plow() {
                       )}
                   </div>
                 </TableCell>
+                {successfulSimulations.size > 0 && (
+                  <TableCell className="px-1.5 text-sm" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
+                    {(() => {
+                      // Skip if this simulation hasn't been run yet
+                      if (!successfulSimulations.has(req.requisition.blueprintHash) || !req.decodedData) {
+                        return "-";
+                      }
+
+                      const profit = calculateReqProfit(req);
+                      if (profit === -Infinity) return "-";
+
+                      // Format with color based on profit/loss
+                      const isPositive = profit >= 0;
+                      const color = isPositive ? "text-pinto-green-4" : "text-pinto-red-2";
+                      const sign = isPositive ? "+" : "-";
+
+                      return (
+                        <span className={color}>
+                          {isPositive ? `${sign}$${profit.toFixed(6)}` : `${sign}$${Math.abs(profit).toFixed(6)}`}
+                        </span>
+                      );
+                    })()}
+                  </TableCell>
+                )}
               </TableRow>
             );
           })}
