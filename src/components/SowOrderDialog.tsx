@@ -44,6 +44,8 @@ interface SowOrderDialogProps {
   onOrderPublished?: () => void;
 }
 
+const minInput = TokenValue.fromHuman(0.000001, PINTO.decimals);
+
 export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }: SowOrderDialogProps) {
   const podLine = usePodLine();
   const currentTemperature = useTemperature();
@@ -64,6 +66,38 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const [operatorTip, setOperatorTip] = useState("1");
   const { address } = useAccount();
   const [loading, setLoading] = useState<string | null>(null);
+
+  const handleClampAndToValidInput = (input: string) => {
+    const parsed = input.replace(/[^0-9.,]/g, "");
+
+    const split = parsed.split(".");
+    // prevent multiple decimals
+    if (split.length > 2) {
+      return;
+    }
+
+    const newAmount = TokenValue.fromHuman(parsed || "0", mainToken.decimals);
+    // if 0-ish amount, return the parsed value
+    if (newAmount.eq(0)) return parsed;
+
+    // if the amount is less than the min input, return the min input
+    if (minInput.gt(newAmount)) {
+      return minInput.toHuman();
+    }
+
+    // If input has gt 6 decimal places, prevent input
+    if (split.length === 2 && split[1].length > 6) {
+      return;
+    }
+
+    // return the parsed value
+    return parsed;
+  }
+
+  const handleSetTotalAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const validatedAmount = handleClampAndToValidInput(e.target.value);
+    validatedAmount && setTotalAmount(validatedAmount);
+  }
 
   // Function to check if deposits are sorted from low stem to high stem
   const areDepositsSorted = (deposits: DepositData[]): boolean => {
@@ -974,7 +1008,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                           className="h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                           placeholder="0.00"
                           value={totalAmount}
-                          onChange={(e) => setTotalAmount(e.target.value.replace(/[^0-9.,]/g, ""))}
+                          onChange={handleSetTotalAmount}
                           type="text"
                         />
                       </div>
@@ -1350,7 +1384,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                     submitFunction={handleCombineAndSortAll}
                     disabled={sortingAllTokens || submitting}
                     submitButtonText={sortingAllTokens || submitting ? "Optimizing..." : "Combine & Sort"}
-                    className="flex-1 h-[60px] rounded-full text-2xl font-medium"
+                    className="flex-1 rounded-full text-2xl font-medium"
                   />
                 ) : (
                   <Button
