@@ -339,7 +339,7 @@ export default function ReviewTractorOrderDialog({
                           <li className="flex items-center gap-2">
                             <CornerBottomLeftIcon className="text-gray-300 ml-4" />
                             <span className="font-antarctica font-light text-[#9C9C9C]">
-                              AND {orderData.morningAuction ? "during" : "after"} the morning auction
+                              AND {orderData.morningAuction ? "during" : "after"} the Morning Auction
                             </span>
                           </li>
                         </ul>
