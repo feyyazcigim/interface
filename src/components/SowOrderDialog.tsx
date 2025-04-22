@@ -11,8 +11,7 @@ import IconImage from "@/components/ui/IconImage";
 import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
 import { PINTO } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
-import useSwap, { useSwapMany } from "@/hooks/swap/useSwap";
+import { useSwapMany } from "@/hooks/swap/useSwap";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useTransaction from "@/hooks/useTransaction";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
@@ -25,7 +24,7 @@ import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { isValidAddress } from "@/utils/string";
-import { DepositData, FarmFromMode, FarmToMode } from "@/utils/types";
+import { DepositData } from "@/utils/types";
 import { isLocalhost } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
@@ -43,6 +42,9 @@ interface SowOrderDialogProps {
   onOpenChange: (open: boolean) => void;
   onOrderPublished?: () => void;
 }
+
+// 0.000001 is the min for PINTO input & temperature
+const minInput = TokenValue.fromHuman(0.000001, 6);
 
 export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }: SowOrderDialogProps) {
   const podLine = usePodLine();
@@ -64,6 +66,40 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const [operatorTip, setOperatorTip] = useState("1");
   const { address } = useAccount();
   const [loading, setLoading] = useState<string | null>(null);
+
+  const handleClampAndToValidInput = (input: string, prevValue?: string) => {
+    const parsed = input.replace(/[^0-9.,]/g, "");
+
+    const split = parsed.split(".");
+    // prevent multiple decimals of If input has gt 6 decimal places, prevent input
+    if (split.length > 2 || (split.length === 2 && split[1].length > 6)) return prevValue;
+
+    const newAmount = TokenValue.fromHuman(parsed || "0", 6);
+    // if 0-ish amount, return the parsed value
+    if (newAmount.eq(0)) return parsed;
+    // if the amount is less than the min input, return the min input
+    if (minInput.gt(newAmount)) {
+      return minInput.toHuman();
+    }
+
+    // return the parsed value
+    return parsed;
+  };
+
+  const handleSetTotalAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const validatedAmount = handleClampAndToValidInput(e.target.value);
+    validatedAmount !== undefined && setTotalAmount(validatedAmount);
+  };
+
+  const handleSetMinSoil = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const validatedAmount = handleClampAndToValidInput(e.target.value);
+    validatedAmount !== undefined && setMinSoil(validatedAmount);
+  };
+
+  const handleSetMaxPerSeason = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const validatedAmount = handleClampAndToValidInput(e.target.value);
+    validatedAmount !== undefined && setMaxPerSeason(validatedAmount);
+  };
 
   // Function to check if deposits are sorted from low stem to high stem
   const areDepositsSorted = (deposits: DepositData[]): boolean => {
@@ -825,8 +861,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     }
 
     // Remove % and any non-numeric characters except decimal
-    const cleanValue = value.replace(/[^0-9.,]/g, "");
-    setTemperature(cleanValue); // Store clean value without %
+    const cleanValue = handleClampAndToValidInput(value, temperature) ?? "";
+    cleanValue && setTemperature(cleanValue); // Store clean value without %
 
     // Add % for display
     const newDisplayValue = `${cleanValue}%`;
@@ -902,10 +938,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
   if (!open) return null;
 
-  console.log({
-    formStep,
-  });
-
   return (
     <>
       <Col className="h-auto w-full">
@@ -929,7 +961,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   <div className="mt-2 p-3 bg-gray-50 rounded-md max-h-[180px] overflow-y-auto">
                     {unsortedTokensInfo.length > 0 && (
                       <div className="mb-3">
-                        <p className="text-sm font-medium text-[#ED7A00] mb-2">Tokens with unsorted deposits:</p>
+                        <p className="text-sm font-medium text-pinto-warning-orange mb-2">
+                          Tokens with unsorted deposits:
+                        </p>
                         <ul className="text-xs text-gray-600 ml-4 list-disc">
                           {unsortedTokensInfo.map(({ token, depositCount }) => (
                             <li key={token.address} className="mb-1">
@@ -942,7 +976,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
                     {tokensThatNeedCombining.length > 0 && (
                       <div>
-                        <p className="text-sm font-medium text-[#ED7A00] mb-2">Tokens with too many deposits:</p>
+                        <p className="text-sm font-medium text-pinto-warning-orange mb-2">
+                          Tokens with too many deposits:
+                        </p>
                         <ul className="text-xs text-gray-600 ml-4 list-disc">
                           {tokensThatNeedCombining.map(({ token, depositCount }) => (
                             <li key={token.address} className="mb-1">
@@ -961,23 +997,21 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 <Col className="gap-6 pinto-sm-light text-pinto-light">
                   {/* Title and separator */}
                   <div className="flex flex-col gap-2">
-                    <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: "20px" }}>
-                      🚜 Specify Conditions for automated Sowing
-                    </h2>
-                    <div className="h-[1px] w-full bg-[#D9D9D9]" />
+                    <h4 className="pinto-h4 text-pinto-dark mb-4">🚜 Specify Conditions for automated Sowing</h4>
+                    <div className="h-[1px] w-full bg-pinto-gray-2" />
                   </div>
 
                   {/* I want to Sow up to */}
                   <div className="flex flex-col gap-2">
                     <label htmlFor={inputIds.totalAmount}>I want to Sow up to</label>
-                    <div className="flex rounded-[12px] overflow-hidden border border-[#D9D9D9] group focus-within:border-[#2F8957]">
+                    <div className="flex rounded-lg overflow-hidden border border-pinto-gray-2 group focus-within:border-[#2F8957]">
                       <div className="flex-1">
                         <Input
                           id={inputIds.totalAmount}
-                          className="h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="h-12 px-3 py-1.5 border-0 rounded-l-lg flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                           placeholder="0.00"
                           value={totalAmount}
-                          onChange={(e) => setTotalAmount(e.target.value.replace(/[^0-9.,]/g, ""))}
+                          onChange={handleSetTotalAmount}
                           type="text"
                         />
                       </div>
@@ -995,18 +1029,15 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <div className="flex flex-col gap-2 flex-1">
                         <label htmlFor={inputIds.minPerSeason}>Min per Season</label>
                         <div
-                          className={`flex rounded-[12px] overflow-hidden border ${error ? "border-red-500" : "border-[#D9D9D9]"} group focus-within:${error ? "border-red-500" : "border-[#2F8957]"}`}
+                          className={`flex rounded-lg overflow-hidden border ${error ? "border-red-500" : "border-pinto-gray-2"} group focus-within:${error ? "border-red-500" : "border-[#2F8957]"}`}
                         >
                           <div className="flex-1">
                             <Input
                               id={inputIds.minPerSeason}
-                              className="h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                              className="h-12 px-3 py-1.5 border-0 rounded-l-lg flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                               placeholder="0.00"
                               value={minSoil}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/[^0-9.,]/g, "");
-                                setMinSoil(value);
-                              }}
+                              onChange={handleSetMinSoil}
                               type="text"
                             />
                           </div>
@@ -1021,18 +1052,15 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <div className="flex flex-col gap-2 flex-1">
                         <label htmlFor={inputIds.maxPerSeason}>Max per Season</label>
                         <div
-                          className={`flex rounded-[12px] overflow-hidden border ${error ? "border-red-500" : "border-[#D9D9D9]"} group focus-within:${error ? "border-red-500" : "border-[#2F8957]"}`}
+                          className={`flex rounded-lg overflow-hidden border ${error ? "border-red-500" : "border-pinto-gray-2"} group focus-within:${error ? "border-red-500" : "border-[#2F8957]"}`}
                         >
                           <div className="flex-1">
                             <Input
                               id={inputIds.maxPerSeason}
-                              className="h-12 px-3 py-1.5 border-0 rounded-l-[12px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                              className="h-12 px-3 py-1.5 border-0 rounded-l-lg flex-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                               placeholder="0.00"
                               value={maxPerSeason}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/[^0-9.,]/g, "");
-                                setMaxPerSeason(value);
-                              }}
+                              onChange={handleSetMaxPerSeason}
                               type="text"
                             />
                           </div>
@@ -1079,7 +1107,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                     <label htmlFor={inputIds.temperature}>Execute when Temperature is at least</label>
                     <Input
                       id={inputIds.temperature}
-                      className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-[12px] w-[140px]"
+                      className="h-12 px-3 py-1.5 border border-pinto-gray-2 rounded-lg w-[140px]"
                       placeholder={`${Math.max(10, Math.floor(currentTemperature.scaled?.toNumber() || 0) + 1)}%`}
                       value={displayTemperature}
                       onChange={handleTemperatureChange}
@@ -1096,22 +1124,15 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                     <label htmlFor={inputIds.podLineLength}>Execute when the length of the Pod Line is at most</label>
                     <Input
                       id={inputIds.podLineLength}
-                      className="h-12 px-3 py-1.5 border border-[#D9D9D9] rounded-[12px]"
+                      className="h-12 px-3 py-1.5 border border-pinto-gray-2 rounded-lg"
                       placeholder={formatter.number(podLine)}
                       value={podLineLength}
                       onChange={(e) => {
-                        // Allow numbers, commas, and at most one decimal point
-                        const value = e.target.value.replace(/[^\d,\.]/g, "");
-                        // Ensure at most one decimal point
-                        const decimalCount = (value.match(/\./g) || []).length;
-                        const sanitizedValue =
-                          decimalCount > 1
-                            ? value.replace(/\./g, (match, index) => (index === value.indexOf(".") ? match : ""))
-                            : value;
+                        const cleanValue = handleClampAndToValidInput(e.target.value, podLineLength) ?? "";
 
                         // Store raw input and update displayed value
-                        setRawPodLineLength(sanitizedValue.replace(/,/g, ""));
-                        setPodLineLength(sanitizedValue);
+                        setRawPodLineLength(cleanValue);
+                        setPodLineLength(cleanValue);
                       }}
                     />
 
@@ -1119,7 +1140,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] pinto-sm whitespace-nowrap ${
                           isButtonActive(5)
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1131,7 +1152,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] pinto-sm whitespace-nowrap ${
                           isButtonActive(10)
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1143,7 +1164,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] pinto-sm whitespace-nowrap ${
                           isButtonActive(25)
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1155,7 +1176,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] pinto-sm whitespace-nowrap ${
                           isButtonActive(50)
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1167,7 +1188,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] pinto-sm whitespace-nowrap ${
                           isButtonActive(100)
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1186,7 +1207,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] pinto-sm whitespace-nowrap ${
                           morningAuction
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1198,7 +1219,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap ${
+                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] pinto-sm whitespace-nowrap ${
                           !morningAuction
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1219,12 +1240,12 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: "20px" }}>
                         🚜 Tip per Execution
                       </h2>
-                      <div className="h-[1px] w-full bg-[#D9D9D9] mb-6" />
+                      <div className="h-[1px] w-full bg-pinto-gray-2 mb-6" />
                     </div>
                     <div className="pinto-sm-light text-pinto-light gap-2 mb-4">I'm willing to pay someone</div>
-                    <div className="flex rounded-[12px] border border-[#D9D9D9] gap-2 mb-2">
+                    <div className="flex rounded-lg border border-pinto-gray-2 gap-2 mb-2">
                       <input
-                        className="h-12 px-3 py-1.5 flex-1 rounded-l-[12px] focus:outline-none text-base font-light"
+                        className="h-12 px-3 py-1.5 flex-1 rounded-l-lg focus:outline-none text-base font-light"
                         placeholder="0.00"
                         value={operatorTip}
                         onChange={(e) => {
@@ -1236,7 +1257,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         }}
                         type="text"
                       />
-                      <div className="flex items-center gap-2 px-4 rounded-r-[12px] font-semibold bg-white">
+                      <div className="flex items-center gap-2 px-4 rounded-r-lg font-semibold bg-white">
                         <img src={pintoIcon} alt="PINTO" className="w-6 h-6" />
                         <span className="text-base font-normal">PINTO</span>
                       </div>
@@ -1246,7 +1267,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
+                        className={`${styles.inputs} ${
                           activeTipButton === "down5"
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1258,7 +1279,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
+                        className={`${styles.inputs} ${
                           activeTipButton === "down1"
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1270,7 +1291,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
+                        className={`${styles.inputs} ${
                           activeTipButton === "average"
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1282,7 +1303,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
+                        className={`${styles.inputs} ${
                           activeTipButton === "up1"
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1294,7 +1315,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] text-[1rem] leading-[1.1rem] -tracking-[0.02em] font-[400] whitespace-nowrap flex-1 ${
+                        className={`${styles.inputs} ${
                           activeTipButton === "up5"
                             ? "bg-[#D8F1E2] border border-[#387F5C] text-[#387F5C] hover:bg-[#D8F1E2] hover:text-[#387F5C] hover:border-[#387F5C]"
                             : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
@@ -1357,7 +1378,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                     submitFunction={handleCombineAndSortAll}
                     disabled={sortingAllTokens || submitting}
                     submitButtonText={sortingAllTokens || submitting ? "Optimizing..." : "Combine & Sort"}
-                    className="flex-1 h-[60px] rounded-full text-2xl font-medium"
+                    className="flex-1 rounded-full text-2xl font-medium"
                   />
                 ) : (
                   <Button
@@ -1365,7 +1386,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                     rounded="full"
                     className={`flex-1 ${
                       (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
-                        ? "bg-[#D9D9D9] text-[#9C9C9C]"
+                        ? "bg-pinto-gray-2 text-[#9C9C9C]"
                         : "bg-[#387F5C] text-white"
                     }`}
                     disabled={(formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading}
@@ -1393,7 +1414,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         <DialogPortal>
           <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
           <DialogContent
-            className="sm:max-w-[700px] mx-auto p-0 bg-white rounded-2xl border border-[#D9D9D9]"
+            className="sm:max-w-[700px] mx-auto p-0 bg-white rounded-2xl border border-pinto-gray-2"
             style={{ padding: 0, gap: 0 }}
           >
             <div className="p-3">
@@ -1403,7 +1424,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 </h2>
               </div>
               <p className="text-gray-500 mb-2">Tractor allows you to fund Orders for Soil using Deposits</p>
-              <div className="w-full h-[1px] bg-[#D9D9D9] mb-6" />
+              <div className="w-full h-[1px] bg-pinto-gray-2 mb-6" />
 
               {/* Dynamic funding source options */}
               <div className="flex flex-col gap-4 mb-6">
@@ -1412,8 +1433,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   <div
                     className={`flex items-center px-6 py-4 gap-2 rounded-[36px] cursor-pointer ${
                       selectedTokenStrategy.type === "LOWEST_PRICE"
-                        ? "bg-[#F8F8F8] border border-[#D9D9D9]"
-                        : "bg-[#F8F8F8] border border-[#D9D9D9]"
+                        ? "bg-[#F8F8F8] border border-pinto-gray-2"
+                        : "bg-[#F8F8F8] border border-pinto-gray-2"
                     }`}
                     onClick={() => {
                       setSelectedTokenStrategy({ type: "LOWEST_PRICE" });
@@ -1424,7 +1445,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       className={`w-10 h-10 rounded-full ${
                         selectedTokenStrategy.type === "LOWEST_PRICE"
                           ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]"
-                          : "border border-[#D9D9D9]"
+                          : "border border-pinto-gray-2"
                       }`}
                     />
                     <div className="flex flex-col gap-1">
@@ -1440,8 +1461,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   <div
                     className={`flex items-center px-6 py-4 gap-2 rounded-[36px] cursor-pointer ${
                       selectedTokenStrategy.type === "LOWEST_SEEDS"
-                        ? "bg-[#F8F8F8] border border-[#D9D9D9]"
-                        : "bg-[#F8F8F8] border border-[#D9D9D9]"
+                        ? "bg-[#F8F8F8] border border-pinto-gray-2"
+                        : "bg-[#F8F8F8] border border-pinto-gray-2"
                     }`}
                     onClick={() => {
                       setSelectedTokenStrategy({ type: "LOWEST_SEEDS" });
@@ -1452,7 +1473,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       className={`w-10 h-10 rounded-full ${
                         selectedTokenStrategy.type === "LOWEST_SEEDS"
                           ? "bg-[#D8F1E2] border border-dashed border-[#387F5C]"
-                          : "border border-[#D9D9D9]"
+                          : "border border-pinto-gray-2"
                       }`}
                     />
                     <div className="flex flex-col gap-1">
@@ -1562,6 +1583,11 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     </>
   );
 }
+
+const styles = {
+  inputs:
+    "rounded-full px-4 py-2 flex items-center justify-center transition-colors h-[2rem] sm:h-[2.25rem] pinto-sm whitespace-nowrap flex-1",
+} as const;
 
 //
 const inputIds = {
