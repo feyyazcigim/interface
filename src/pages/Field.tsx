@@ -3,12 +3,13 @@ import podIcon from "@/assets/protocol/Pod.png";
 import { TokenValue } from "@/classes/TokenValue";
 import EmptyTable from "@/components/EmptyTable";
 
-import { LeftArrowIcon, UpDownArrowsIcon } from "@/components/Icons";
+import { LeftArrowIcon, UpDownArrowsIcon, LightningIcon } from "@/components/Icons";
 import { OnlyMorningCard } from "@/components/MorningCard";
 import PlotsTable from "@/components/PlotsTable";
 import { Button } from "@/components/ui/Button";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import { Card } from "@/components/ui/Card";
 import MorningTemperatureChart from "@/pages/field/MorningTemperature";
 import {
   useUpdateMorningSoilOnInterval,
@@ -31,6 +32,56 @@ import FieldStats from "./field/FieldStats";
 import MorningPanel from "./field/MorningPanel";
 import TemperatureChart from "./field/Temperature";
 import TractorOrdersPanel from "./field/TractorOrdersPanel";
+import SowOrderDialog from "@/components/SowOrderDialog";
+import CornerBorders from "@/components/CornerBorders";
+
+// TractorButton component
+function TractorButton({ onClick }: { onClick: () => void }) {
+  const [hoveredTractor, setHoveredTractor] = useState(false);
+  
+  // Create the animation styles on mount
+  useEffect(() => {
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = `
+      @keyframes pulse-scale {
+        0%, 100% { transform: scale(0.98); }
+        50% { transform: scale(1.02); }
+      }
+    `;
+    document.head.appendChild(styleEl);
+    
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
+  
+  return (
+    <div className="relative w-full">
+      <button
+        type="button"
+        onClick={onClick}
+        className="group box-border flex flex-col items-start p-4 gap-1 w-full rounded-[1rem] transition-colors duration-200"
+        onMouseEnter={() => setHoveredTractor(true)}
+        onMouseLeave={() => setHoveredTractor(false)}
+        style={{
+          backgroundColor: hoveredTractor ? '#E5F5E5' : '#F8F8F8', 
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: hoveredTractor ? '#387F5C' : '#D9D9D9'
+        }}
+      >
+        <div className="flex flex-row justify-center items-center gap-1">
+          <LightningIcon className={`w-4 h-4 ${hoveredTractor ? 'text-pinto-green-4' : 'text-[#404040]'}`} />
+          <span className={`pinto-h4 ${hoveredTractor ? 'text-pinto-green-4' : 'text-[#404040]'}`}>Want to Sow with size?</span>
+        </div>
+        <span className={`pinto-body-light ${hoveredTractor ? 'text-pinto-green-3' : 'text-[#9C9C9C]'}`}>
+          Use 🚜 Tractor to set up an order for Pods over time
+        </span>
+      </button>
+      <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="1rem" />
+    </div>
+  );
+}
 
 function Field() {
   useUpdateMorningTemperatureOnInterval();
@@ -41,6 +92,7 @@ function Field() {
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const [tractorRefreshCounter, setTractorRefreshCounter] = useState(0);
+  const [showSowOrder, setShowSowOrder] = useState(false);
 
   const refreshTractorOrders = useCallback(() => {
     setTractorRefreshCounter((prev) => prev + 1);
@@ -209,9 +261,25 @@ function Field() {
          */}
         <div className="flex flex-col gap-6 w-full mb-14 sm:mb-0 lg:max-w-[384px] 3xl:max-w-[518px] 3xl:min-w-[425px] lg:mt-[5.25rem]">
           {(!isMobile || (currentAction && isMobile)) && (
-            <OnlyMorningCard onlyMorning className="p-4 w-full">
-              <FieldActions onTractorOrderPublished={refreshTractorOrders} />
-            </OnlyMorningCard>
+            <div className="relative">
+              <OnlyMorningCard onlyMorning className="p-4 w-full">
+                <FieldActions onTractorOrderPublished={refreshTractorOrders} />
+              </OnlyMorningCard>
+              {showSowOrder && (
+                <Card className="absolute inset-x-0 -top-[calc(2.5rem)] rounded-xl z-10 mx-auto w-[95%]" id="sow-order-dialog">
+                  <div className="flex flex-col w-full items-center p-4">
+                    <SowOrderDialog
+                      open={showSowOrder}
+                      onOpenChange={setShowSowOrder}
+                      onOrderPublished={refreshTractorOrders}
+                    />
+                  </div>
+                </Card>
+              )}
+            </div>
+          )}
+          {!isMobile && (
+            <TractorButton onClick={() => setShowSowOrder(true)} />
           )}
           {!isMobile && (
             <div className="p-2 rounded-[1rem] bg-pinto-off-white border-pinto-gray-2 border flex flex-col gap-2">

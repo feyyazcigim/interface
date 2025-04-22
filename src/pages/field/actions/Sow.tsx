@@ -25,8 +25,6 @@ import FrameAnimator from "@/components/LoadingSpinner";
 import MobileActionBar from "@/components/MobileActionBar";
 
 import { Col, Row } from "@/components/Container";
-import CornerBorders from "@/components/CornerBorders";
-import { LightningIcon } from "@/components/Icons";
 import RoutingAndSlippageInfo, { useRoutingAndSlippageWarning } from "@/components/RoutingAndSlippageInfo";
 import TextSkeleton from "@/components/TextSkeleton";
 import { Button } from "@/components/ui/Button";
@@ -91,9 +89,6 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
 
   const [didSetPreferred, setDidSetPreferred] = useState(!preferredLoading);
   const [inputError, setInputError] = useState(false);
-
-  // Tractor
-  const [hoveredTractor, setHoveredTractor] = useState(false);
 
   //
   const { loading, setLoading } = useDelayedLoading();
@@ -340,24 +335,6 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
     setLoading(swap.isLoading);
   }, [swap.isLoading]);
 
-  // Handle animation keyframes
-  useEffect(() => {
-    // Create a style element for the animation
-    const styleEl = document.createElement('style');
-    styleEl.innerHTML = `
-      @keyframes pulse-scale {
-        0%, 100% { transform: scale(0.98); }
-        50% { transform: scale(1.02); }
-      }
-    `;
-    document.head.appendChild(styleEl);
-    
-    // Clean up 
-    return () => {
-      document.head.removeChild(styleEl);
-    };
-  }, []);
-
   // Derived State
   const hasSoil = Boolean(!totalSoilLoading && totalSoil.gt(0));
   const inputExceedsSoil = hasSoil && soilSown && totalSoil && soilSown.gt(totalSoil);
@@ -513,40 +490,6 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
           submitFunction={onSubmit}
           submitButtonText={buttonText}
         />
-      </div>
-      <div className="hidden sm:flex justify-center relative">
-        <div className="relative w-full mt-4 ">
-          <button
-            type="button"
-            onClick={() => onShowOrder()}
-            className={`group box-border flex flex-col items-start p-4 gap-1 w-full rounded-[0.75rem] transition-colors duration-200`}
-            onMouseEnter={() => setHoveredTractor(true)}
-            onMouseLeave={() => setHoveredTractor(false)}
-            style={{
-              backgroundColor: hoveredTractor ? '#E5F5E5' : '#F8F8F8', 
-              borderWidth: '1px',
-              borderStyle: 'solid',
-              borderColor: hoveredTractor ? '#387F5C' : '#D9D9D9',
-              // If input exceeds soil, apply special highlight styling
-              ...(inputExceedsSoil && {
-                backgroundColor: '#E5F5E5',
-                borderColor: '#387F5C',
-                boxShadow: '0 0 0 2px rgba(56, 127, 92, 0.5)',
-                animation: 'pulse-scale 1.5s ease-in-out infinite'
-              })
-            }}
-          >
-            {/* Add the keyframe animation definition */}
-            <div className="flex flex-row justify-center items-center gap-1">
-              <LightningIcon className={`w-4 h-4 ${inputExceedsSoil || hoveredTractor ? 'text-pinto-green-4' : 'text-[#404040]'}`} />
-              <span className={`pinto-h4 ${inputExceedsSoil || hoveredTractor ? 'text-pinto-green-4' : 'text-[#404040]'}`}>Want to Sow with size?</span>
-            </div>
-            <span className={`pinto-body-light ${inputExceedsSoil || hoveredTractor ? 'text-pinto-green-3' : 'text-[#9C9C9C]'}`}>
-              Use 🚜 Tractor to set up an order for Pods over time
-            </span>
-          </button>
-          <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="0.75rem" />
-        </div>
       </div>
       <MobileActionBar>
         <SmartSubmitButton
