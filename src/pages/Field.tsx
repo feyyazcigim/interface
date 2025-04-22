@@ -312,7 +312,7 @@ function Field() {
               </OnlyMorningCard>
               {showSowOrder && (
                 <Card
-                  className="absolute inset-x-0 -top-[calc(2.5rem)] rounded-xl z-10 mx-auto w-[95%]"
+                  className="absolute inset-x-0 -top-[calc(-1rem)] rounded-xl z-10 mx-auto w-[95%]"
                   id="sow-order-dialog"
                 >
                   <div className="flex flex-col w-full items-center p-4">
