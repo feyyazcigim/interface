@@ -3,7 +3,7 @@ import podIcon from "@/assets/protocol/Pod.png";
 import { TokenValue } from "@/classes/TokenValue";
 import EmptyTable from "@/components/EmptyTable";
 
-import { LeftArrowIcon, LightningIcon, UpDownArrowsIcon } from "@/components/Icons";
+import { LeftArrowIcon, UpDownArrowsIcon } from "@/components/Icons";
 import { OnlyMorningCard } from "@/components/MorningCard";
 import PlotsTable from "@/components/PlotsTable";
 import { Button } from "@/components/ui/Button";
