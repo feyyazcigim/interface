@@ -19,6 +19,8 @@ import { AdvancedFarmCall, FarmFromMode, FarmToMode, Token } from "@/utils/types
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
+import { useSetAtom } from "jotai";
+import { inputExceedsSoilAtom } from "@/state/protocol/field/field.atoms";
 
 import settingsIcon from "@/assets/misc/Settings.svg";
 import FrameAnimator from "@/components/LoadingSpinner";
@@ -338,6 +340,13 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
   // Derived State
   const hasSoil = Boolean(!totalSoilLoading && totalSoil.gt(0));
   const inputExceedsSoil = hasSoil && soilSown && totalSoil && soilSown.gt(totalSoil);
+  const setInputExceedsSoil = useSetAtom(inputExceedsSoilAtom);
+
+  // Update shared state for the TractorButton animation in Field.tsx
+  useEffect(() => {
+    // Update the atom value instead of using localStorage
+    setInputExceedsSoil(Boolean(inputExceedsSoil));
+  }, [inputExceedsSoil, setInputExceedsSoil]);
 
   const initializing = !didSetPreferred || (hasSoil ? maxBuyQuery.isLoading : false);
 

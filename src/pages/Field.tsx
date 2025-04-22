@@ -21,11 +21,13 @@ import TooltipSimple from "@/components/TooltipSimple";
 import { Skeleton } from "@/components/ui/Skeleton";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useFarmerField } from "@/state/useFarmerField";
-import { useHarvestableIndex, useHarvestableIndexLoading } from "@/state/useFieldData";
+import { useHarvestableIndex, useHarvestableIndexLoading, useTotalSoil } from "@/state/useFieldData";
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
+import { useAtomValue } from "jotai";
+import { inputExceedsSoilAtom } from "@/state/protocol/field/field.atoms";
 import FieldActions from "./field/FieldActions";
 import FieldActivity from "./field/FieldActivity";
 import FieldStats from "./field/FieldStats";
@@ -35,9 +37,36 @@ import TractorOrdersPanel from "./field/TractorOrdersPanel";
 import SowOrderDialog from "@/components/SowOrderDialog";
 import CornerBorders from "@/components/CornerBorders";
 
+// Add a custom hook to track the current sow amount
+function useTotalSowAmount() {
+  // Simple hook to simulate fetching the current sow amount
+  // In a real implementation, this would fetch from the proper data source
+  const [data, setData] = useState<TokenValue | null>(null);
+  const { totalSoil } = useTotalSoil();
+  
+  // Simulate fetching data - in reality this would use proper data sources
+  useEffect(() => {
+    // Check localStorage for a debug value to simulate exceeding soil
+    const debugExceedSoil = localStorage.getItem('debug_exceed_soil') === 'true';
+    
+    if (debugExceedSoil && totalSoil) {
+      // Set a value higher than available soil for testing
+      setData(totalSoil.mul(1.2)); // 120% of available soil
+    } else {
+      // For now, set to null or some reasonable value
+      setData(null);
+    }
+  }, [totalSoil]);
+  
+  return { data, isLoading: false };
+}
+
 // TractorButton component
 function TractorButton({ onClick }: { onClick: () => void }) {
   const [hoveredTractor, setHoveredTractor] = useState(false);
+  const { totalSoil, isLoading: totalSoilLoading } = useTotalSoil();
+  // Use the atom value directly instead of localStorage
+  const inputExceedsSoil = useAtomValue(inputExceedsSoilAtom);
   
   // Create the animation styles on mount
   useEffect(() => {
@@ -64,17 +93,22 @@ function TractorButton({ onClick }: { onClick: () => void }) {
         onMouseEnter={() => setHoveredTractor(true)}
         onMouseLeave={() => setHoveredTractor(false)}
         style={{
-          backgroundColor: hoveredTractor ? '#E5F5E5' : '#F8F8F8', 
+          backgroundColor: inputExceedsSoil || hoveredTractor ? '#E5F5E5' : '#F8F8F8', 
           borderWidth: '1px',
           borderStyle: 'solid',
-          borderColor: hoveredTractor ? '#387F5C' : '#D9D9D9'
+          borderColor: inputExceedsSoil || hoveredTractor ? '#387F5C' : '#D9D9D9',
+          // If input exceeds soil, apply special highlight styling
+          ...(inputExceedsSoil && {
+            boxShadow: '0 0 0 2px rgba(56, 127, 92, 0.5)',
+            animation: 'pulse-scale 1.5s ease-in-out infinite'
+          })
         }}
       >
         <div className="flex flex-row justify-center items-center gap-1">
-          <LightningIcon className={`w-4 h-4 ${hoveredTractor ? 'text-pinto-green-4' : 'text-[#404040]'}`} />
-          <span className={`pinto-h4 ${hoveredTractor ? 'text-pinto-green-4' : 'text-[#404040]'}`}>Want to Sow with size?</span>
+          <LightningIcon className={`w-4 h-4 ${inputExceedsSoil || hoveredTractor ? 'text-pinto-green-4' : 'text-[#404040]'}`} />
+          <span className={`pinto-h4 ${inputExceedsSoil || hoveredTractor ? 'text-pinto-green-4' : 'text-[#404040]'}`}>Want to Sow with size?</span>
         </div>
-        <span className={`pinto-body-light ${hoveredTractor ? 'text-pinto-green-3' : 'text-[#9C9C9C]'}`}>
+        <span className={`pinto-body-light ${inputExceedsSoil || hoveredTractor ? 'text-pinto-green-3' : 'text-[#9C9C9C]'}`}>
           Use 🚜 Tractor to set up an order for Pods over time
         </span>
       </button>
