@@ -295,7 +295,7 @@ export default function ReviewTractorOrderDialog({
                   {/* Sow Section */}
                   <div className="flex flex-col items-center gap-4 mt-8">
                     <div className="bg-white rounded-xl px-2 py-2 shadow-sm border border-gray-200">
-                      <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-0">
                           <div className="bg-pinto-green-4 text-white px-3 py-0.5 rounded-full">Sow</div>
                           <div className="border-t-2 border-gray-300 w-3 flex-shrink-0" />
@@ -307,7 +307,7 @@ export default function ReviewTractorOrderDialog({
                             </span>
                           </span>
                         </div>
-                        <ul className="list-none space-y-2">
+                        <ul className="list-none space-y-1">
                           <li className="flex items-center gap-2">
                             <CornerBottomLeftIcon className="text-gray-300 ml-4" />
                             <span className="font-antarctica font-light text-[#9C9C9C]">
