@@ -251,7 +251,7 @@ export function SoilOrderbookContent() {
       <Table>
         <TableHeader className="[&_tr]:border-b-0">
           <TableRow className="border-b-0">
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
+            <TableHead className="py-2 px-0 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
               Temperature
             </TableHead>
             <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
@@ -309,7 +309,7 @@ export function SoilOrderbookContent() {
                 noHoverMute
                 onClick={() => handleRowClick(req)}
               >
-                <TableCell className="py-2">≥ {temperature.toFixed(0)}%</TableCell>
+                <TableCell className="py-2 px-0">≥ {temperature.toFixed(0)}%</TableCell>
                 <TableCell className="py-2">≤ {maxPodLineLength}</TableCell>
                 <TableCell className="py-2">
                   <div className="flex items-center gap-1">
