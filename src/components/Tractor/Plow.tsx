@@ -702,7 +702,9 @@ export function Plow() {
                   </a>
                 </TableCell>
                 <TableCell className="px-1.5 text-sm" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
-                  {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
+                  <span className="text-pinto-green-4">
+                    {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
+                  </span>
                 </TableCell>
                 <TableCell className="px-1.5 text-sm" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
                   {req.decodedData ? `${(Number(req.decodedData.minTemp) / 1e6).toFixed(2)}%` : "Unknown"}
