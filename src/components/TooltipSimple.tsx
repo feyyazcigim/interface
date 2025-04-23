@@ -20,6 +20,7 @@ interface TooltipSimpleProps {
   showOnMobile?: boolean;
   triggerClassName?: string;
   sideOffset?: number;
+  disabled?: boolean;
 }
 
 const variantMap = {
@@ -43,9 +44,15 @@ export default function TooltipSimple({
   showOnMobile,
   triggerClassName,
   sideOffset = 0,
+  disabled = false,
   ...props
 }: TooltipSimpleProps) {
   const ContentComponent = variant === "unstyled" ? TooltipContent : RadixStyledTooltipContent;
+
+  if (disabled) {
+    return <>{children}</>;
+  }
+
   return (
     <TooltipProvider>
       <Tooltip delayDuration={0}>

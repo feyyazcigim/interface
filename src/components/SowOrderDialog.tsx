@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { PublicClient, encodeFunctionData } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { Col, Row } from "./Container";
+import TooltipSimple from "./TooltipSimple";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
 import { Input } from "./ui/Input";
@@ -506,11 +507,16 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   // Add this function to check if all required fields are filled
   const areRequiredFieldsFilled = () => {
     return (
-      temperature &&
+      temperature !== "" &&
+      temperature !== undefined &&
+      temperature !== null &&
+      minSoil !== "" &&
       minSoil !== undefined &&
       minSoil !== null &&
+      maxPerSeason !== "" &&
       maxPerSeason !== undefined &&
       maxPerSeason !== null &&
+      totalAmount !== "" &&
       totalAmount !== undefined &&
       totalAmount !== null &&
       isPodLineLengthValid()
@@ -992,6 +998,35 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     }
   };
 
+  // Add this function to check which fields are missing
+  const getMissingFields = (
+    temperature: string,
+    minSoil: string,
+    maxPerSeason: string,
+    totalAmount: string,
+    isPodLineLengthValidFn: () => boolean,
+  ) => {
+    const missingFields: string[] = [];
+
+    if (!temperature || temperature === "") {
+      missingFields.push("Temperature");
+    }
+    if (!minSoil || minSoil === "") {
+      missingFields.push("Min Soil per Season");
+    }
+    if (!maxPerSeason || maxPerSeason === "") {
+      missingFields.push("Max per Season");
+    }
+    if (!totalAmount || totalAmount === "") {
+      missingFields.push("Total Amount");
+    }
+    if (!isPodLineLengthValidFn()) {
+      missingFields.push("Pod Line Length");
+    }
+
+    return missingFields;
+  };
+
   if (!open) return null;
 
   return (
@@ -1437,27 +1472,55 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                     className="flex-1 rounded-full text-2xl font-medium"
                   />
                 ) : (
-                  <Button
-                    size="xlargest"
-                    rounded="full"
-                    className={`flex-1 ${
-                      (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
-                        ? "bg-pinto-gray-2 text-[#9C9C9C]"
-                        : "bg-[#387F5C] text-white"
-                    }`}
-                    disabled={(formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading}
-                    onClick={handleNext}
+                  <TooltipSimple
+                    content={
+                      formStep === 1 && (!areRequiredFieldsFilled() || !!error) ? (
+                        <div className="p-1">
+                          <div className="font-medium mb-1">Please fill in the following fields:</div>
+                          <ul className="list-disc pl-4 text-sm">
+                            {getMissingFields(
+                              temperature,
+                              minSoil,
+                              maxPerSeason,
+                              totalAmount,
+                              isPodLineLengthValid,
+                            ).map((field) => (
+                              <li key={field}>{field}</li>
+                            ))}
+                            {error && <li className="text-red-500 mt-1">{error}</li>}
+                          </ul>
+                        </div>
+                      ) : null
+                    }
+                    side="top"
+                    align="center"
+                    // Only show tooltip when there are missing fields or errors
+                    disabled={!(formStep === 1 && (!areRequiredFieldsFilled() || !!error))}
                   >
-                    {isLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
-                      </div>
-                    ) : formStep === 1 ? (
-                      "Next"
-                    ) : (
-                      "Review"
-                    )}
-                  </Button>
+                    <div className="flex-1">
+                      <Button
+                        size="xlargest"
+                        rounded="full"
+                        className={`w-full ${
+                          (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
+                            ? "bg-pinto-gray-2 text-[#9C9C9C]"
+                            : "bg-[#387F5C] text-white"
+                        }`}
+                        disabled={(formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading}
+                        onClick={handleNext}
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+                          </div>
+                        ) : formStep === 1 ? (
+                          "Next"
+                        ) : (
+                          "Review"
+                        )}
+                      </Button>
+                    </div>
+                  </TooltipSimple>
                 )}
               </Row>
             </div>
