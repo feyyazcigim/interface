@@ -473,6 +473,15 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   }, [rawPodLineLength]);
 
   const handlePodLineSelect = (increment: number) => {
+    // If the button is already active (same value), clear the input
+    if (isButtonActive(increment)) {
+      setPodLineLength("");
+      setRawPodLineLength("");
+      validateAllInputs(minSoil, maxPerSeason, totalAmount, "", temperature);
+      return;
+    }
+
+    // Otherwise, set to the calculated value
     if (increment === 0) {
       // Set to current pod line length in human readable format
       const formattedValue = formatter.number(podLine);
@@ -488,6 +497,18 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       setRawPodLineLength(formattedValue.replace(/,/g, ""));
       validateAllInputs(minSoil, maxPerSeason, totalAmount, formattedValue, temperature);
     }
+  };
+
+  // Add handling for pasting into the pod line length input
+  const handlePodLineLengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleanValue = handleClampAndToValidInput(e.target.value, podLineLength) ?? "";
+
+    // Store raw input and update displayed value
+    setRawPodLineLength(cleanValue);
+    setPodLineLength(cleanValue);
+
+    // Run validation
+    validateAllInputs(minSoil, maxPerSeason, totalAmount, cleanValue, temperature);
   };
 
   // Add a function to check if the pod line length is valid
@@ -1027,6 +1048,16 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     return missingFields;
   };
 
+  // Add handler for operator tip input changes
+  const handleOperatorTipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value.replace(/[^0-9.,]/g, "");
+    setOperatorTip(newValue);
+
+    // Check if the new value matches any of our buttons
+    const activeButton = checkActiveTipButton(newValue);
+    setActiveTipButton(activeButton);
+  };
+
   if (!open) return null;
 
   return (
@@ -1219,11 +1250,19 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       placeholder={formatter.number(podLine)}
                       value={podLineLength}
                       onChange={(e) => {
-                        const cleanValue = handleClampAndToValidInput(e.target.value, podLineLength) ?? "";
+                        const cleanValue = e.target.value.replace(/[^0-9.,]/g, "");
 
-                        // Store raw input and update displayed value
+                        // Set raw value immediately to enable pasting
                         setRawPodLineLength(cleanValue);
-                        setPodLineLength(cleanValue);
+
+                        // Set formatted value and validate
+                        if (cleanValue) {
+                          setPodLineLength(cleanValue);
+                          validateAllInputs(minSoil, maxPerSeason, totalAmount, cleanValue, temperature);
+                        } else {
+                          setPodLineLength("");
+                          validateAllInputs(minSoil, maxPerSeason, totalAmount, "", temperature);
+                        }
                       }}
                     />
 
@@ -1339,13 +1378,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className="h-12 px-3 py-1.5 flex-1 rounded-l-lg focus:outline-none text-base font-light"
                         placeholder="0.00"
                         value={operatorTip}
-                        onChange={(e) => {
-                          const newValue = e.target.value.replace(/[^0-9.,]/g, "");
-                          setOperatorTip(newValue);
-                          // Check if the new value matches any of our buttons
-                          const activeButton = checkActiveTipButton(newValue);
-                          setActiveTipButton(activeButton);
-                        }}
+                        onChange={handleOperatorTipChange}
                         type="text"
                       />
                       <div className="flex items-center gap-2 px-4 rounded-r-lg font-semibold bg-white">
