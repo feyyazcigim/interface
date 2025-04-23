@@ -42,7 +42,7 @@ export default function AccordionGroup({ groupTitle, items, allExpanded = true, 
               <AccordionTrigger>
                 {typeof title === "string" ? <div className="pinto-lg text-pinto-secondary">{title}</div> : title}
               </AccordionTrigger>
-              <AccordionContent className="pinto-sm font-thin text-pinto-light">{content}</AccordionContent>
+              <AccordionContent className="pinto-sm font-thin text-pinto-secondary">{content}</AccordionContent>
             </AccordionItem>
           ))}
         </div>

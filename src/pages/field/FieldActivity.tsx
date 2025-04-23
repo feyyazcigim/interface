@@ -1,11 +1,12 @@
 import podIcon from "@/assets/protocol/Pod.png";
 import pintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
-import TooltipSimple from "@/components/TooltipSimple";
+import { Col } from "@/components/Container";
 import { SoilOrderbookDialog } from "@/components/Tractor/SoilOrderbook";
 import IconImage from "@/components/ui/IconImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { diamondABI } from "@/constants/abi/diamondABI";
+import useIsZoomed from "@/hooks/display/useIsZoomed";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
 import { useHarvestableIndex } from "@/state/useFieldData";
@@ -13,8 +14,6 @@ import { useTemperature } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { parseEther } from "viem";
 import { usePublicClient } from "wagmi";
 
 interface FieldActivityItem {
@@ -71,6 +70,10 @@ const FieldActivity: React.FC = () => {
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const tractorLinksRef = useRef<HTMLDivElement>(null);
+  const verticalBarRef = useRef<HTMLDivElement>(null);
+
+  const isZoomed = useIsZoomed();
+
 
   // Add a ref to store initial block data that won't trigger re-renders
   const initialBlockDataRef = useRef<{
@@ -326,13 +329,13 @@ const FieldActivity: React.FC = () => {
 
   // Effect for creating the vertical bar
   useEffect(() => {
+    // if loading, set the vertical bar to the loading row
     if (loadingTractorOrders) {
+      if (verticalBarRef.current) {
+        verticalBarRef.current.style.height = "10.75rem";
+      }
       return;
     }
-
-    // Remove any existing bars
-    const existingBars = document.querySelectorAll(".vertical-tractor-bar");
-    existingBars.forEach((bar) => bar.remove());
 
     // Wait for next render cycle to ensure rows are fully rendered
     setTimeout(() => {
@@ -379,20 +382,10 @@ const FieldActivity: React.FC = () => {
         }
       }
 
-      // Create the vertical bar
-      const bar = document.createElement("div");
-      bar.className = "vertical-tractor-bar";
-      bar.style.cssText = `
-        position: absolute;
-        right: -1rem;
-        top: ${spanStartY}px;
-        height: ${totalHeight}px;
-        width: 1px;
-        background-color: #D9D9D9; /* pinto-gray-2 color */
-        z-index: 10;
-        pointer-events: none;
-      `;
-      tableContainerRef.current.appendChild(bar);
+      if (verticalBarRef.current) {
+        verticalBarRef.current.style.top = `${spanStartY}px`;
+        verticalBarRef.current.style.height = `${totalHeight}px`;
+      }
 
       // Calculate the vertical center of the bar
       const centerY = spanStartY + totalHeight / 2;
@@ -403,13 +396,7 @@ const FieldActivity: React.FC = () => {
         tractorLinksRef.current.style.top = `${centerY - linksHeight / 2}px`;
       }
     }, 100);
-
-    // Cleanup
-    return () => {
-      const bars = document.querySelectorAll(".vertical-tractor-bar");
-      bars.forEach((bar) => bar.remove());
-    };
-  }, [tractorOrders, loadingTractorOrders]);
+  }, [tractorOrders, loadingTractorOrders, isZoomed]);
 
   const formatType = (type: string) => {
     switch (type) {
@@ -523,11 +510,15 @@ const FieldActivity: React.FC = () => {
 
   return (
     <div className="w-full relative">
+      <div 
+        ref={verticalBarRef} 
+        // style={{ height: '10.75rem' }}
+        className="absolute top-[1.5rem] w-[1px] -right-[1rem] bg-pinto-gray-2 z-10 pointer-events-none" />
       {/* Add Tractor Orders label and link */}
       <div
         ref={tractorLinksRef}
-        style={{ position: "absolute", right: "-18rem" }}
-        className="flex flex-col items-start transition-all duration-300"
+        style={{ top: "5rem" }}
+        className="absolute flex flex-col items-start -right-[18rem] transition-all duration-300"
       >
         <span className="text-sm font-antarctica font-light text-pinto-dark mb-2">
           Tractor Soil Orders for next Season
@@ -567,8 +558,10 @@ const FieldActivity: React.FC = () => {
             {/* Tractor Orders Section */}
             {loadingTractorOrders ? (
               <tr>
-                <td colSpan={9} className="px-2 py-2 text-center text-xs font-antarctica font-light text-pinto-gray-4">
-                  Loading Tractor orders...
+                <td colSpan={9} className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
+                  <Col className="items-center justify-center sm:min-h-[10rem] sm:h-[10rem]">
+                    Loading Tractor orders...
+                  </Col>
                 </td>
               </tr>
             ) : tractorOrders.filter((order) => order.amountSowableNextSeason.gt(0)).length > 0 ? (
@@ -659,7 +652,9 @@ const FieldActivity: React.FC = () => {
             ) : (
               <tr>
                 <td colSpan={9} className="px-2 py-4 text-center text-xs font-antarctica font-light text-pinto-gray-4">
-                  No Tractor orders executable next Season
+                  <Col className="items-center justify-center sm:min-h-[10rem] sm:h-[10rem]">
+                    No Tractor orders executable next Season
+                  </Col>
                 </td>
               </tr>
             )}
@@ -743,3 +738,6 @@ const FieldActivity: React.FC = () => {
 };
 
 export default FieldActivity;
+
+
+const pxToRem = (px: number) => `${px / 16}rem`
