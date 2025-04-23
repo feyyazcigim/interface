@@ -2692,6 +2692,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@number-flow/react@npm:^0.5.9":
+  version: 0.5.9
+  resolution: "@number-flow/react@npm:0.5.9"
+  dependencies:
+    esm-env: "npm:^1.1.4"
+    number-flow: "npm:0.5.7"
+  peerDependencies:
+    react: ^18 || ^19
+    react-dom: ^18 || ^19
+  checksum: 10c0/73403c131c371bda892d83ec2c9d5b931f53b9d3db987d0b14aa2e93c950598a8b7fc21f8b59fa2807dadbe3f76d1d3a833360606953c199a91b751d69a67dd5
+  languageName: node
+  linkType: hard
+
 "@parcel/watcher-android-arm64@npm:2.4.1":
   version: 2.4.1
   resolution: "@parcel/watcher-android-arm64@npm:2.4.1"
@@ -8079,6 +8092,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"esm-env@npm:^1.1.4":
+  version: 1.2.2
+  resolution: "esm-env@npm:1.2.2"
+  checksum: 10c0/3d25c973f2fd69c25ffff29c964399cea573fe10795ecc1d26f6f957ce0483d3254e1cceddb34bf3296a0d7b0f1d53a28992f064ba509dfe6366751e752c4166
+  languageName: node
+  linkType: hard
+
 "estree-walker@npm:^2.0.2":
   version: 2.0.2
   resolution: "estree-walker@npm:2.0.2"
@@ -9084,6 +9104,7 @@ __metadata:
     "@graphql-codegen/client-preset": "npm:4.3.2"
     "@hookform/resolvers": "npm:^3.9.0"
     "@netlify/functions": "npm:^2.8.1"
+    "@number-flow/react": "npm:^0.5.9"
     "@parcel/watcher": "npm:2.4.1"
     "@radix-ui/react-accordion": "npm:^1.2.3"
     "@radix-ui/react-checkbox": "npm:^1.1.2"
@@ -10484,6 +10505,15 @@ __metadata:
   version: 1.1.1
   resolution: "nullthrows@npm:1.1.1"
   checksum: 10c0/56f34bd7c3dcb3bd23481a277fa22918120459d3e9d95ca72976c72e9cac33a97483f0b95fc420e2eb546b9fe6db398273aba9a938650cdb8c98ee8f159dcb30
+  languageName: node
+  linkType: hard
+
+"number-flow@npm:0.5.7":
+  version: 0.5.7
+  resolution: "number-flow@npm:0.5.7"
+  dependencies:
+    esm-env: "npm:^1.1.4"
+  checksum: 10c0/3e7dbd90793b22246696cc9a1c1aecf98e1cae54cc91fb98852fe46515d2e81a07f9434dd8da690d972738d39719d4d185512c655055695049054cf79934172f
   languageName: node
   linkType: hard
 

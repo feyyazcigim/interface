@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as THREE from "three";
-import { landingImages } from "../Landing";
+import { landingImages } from "../LandingOld";
 import Slide from "../landing/Slide";
 
 interface UseAnimationFrameProps {
