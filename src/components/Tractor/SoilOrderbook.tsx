@@ -267,6 +267,12 @@ export function SoilOrderbookContent() {
               Max per Season
             </TableHead>
             <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
+              Morning Auction
+            </TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
+              Operator Tip
+            </TableHead>
+            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
               Blueprint Hash
             </TableHead>
             <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
@@ -333,6 +339,25 @@ export function SoilOrderbookContent() {
                       : "Unknown"}
                   </div>
                 </TableCell>
+                <TableCell className="py-2">
+                  {decodedData && decodedData.runBlocksAfterSunrise !== undefined ? (
+                    Number(decodedData.runBlocksAfterSunrise) < 300 ? (
+                      <span className="text-pinto-green-4 font-medium">Yes</span>
+                    ) : (
+                      <span className="text-pinto-gray-4">No</span>
+                    )
+                  ) : (
+                    "Unknown"
+                  )}
+                </TableCell>
+                <TableCell className="py-2">
+                  <div className="flex items-center gap-1">
+                    <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                    {decodedData && decodedData.operatorParams.operatorTipAmount
+                      ? formatter.number(TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6))
+                      : "Unknown"}
+                  </div>
+                </TableCell>
                 <TableCell className="py-2 text-pinto-dark">
                   {`0x${req.requisition.blueprintHash.slice(2, 7)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
@@ -353,7 +378,7 @@ export function SoilOrderbookContent() {
           })}
           {requisitions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={8} className="p-2 text-center text-gray-500">
+              <TableCell colSpan={10} className="p-2 text-center text-gray-500">
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <LoadingSpinner size={20} />
@@ -418,12 +443,12 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
-        <DialogContent className="max-w-7xl w-[95vw] bg-gray-50 border border-gray-200 p-0">
-          <DialogHeader className="px-6 pt-6 pb-4">
+        <DialogContent className="max-w-[90rem] w-[98vw] bg-gray-50 border border-gray-200 p-0">
+          <DialogHeader className="pt-2 pb-2">
             <DialogTitle className="text-xl font-antarctica font-bold">Tractor Soil Orders</DialogTitle>
           </DialogHeader>
 
-          <div className="w-full px-6">
+          <div className="w-full">
             <div className="flex gap-4 border-b pinto-sm">
               <button
                 type="button"
