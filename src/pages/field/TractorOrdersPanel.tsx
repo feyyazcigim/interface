@@ -22,7 +22,8 @@ import {
 } from "@/lib/Tractor/utils";
 import { formatter } from "@/utils/format";
 import { getTokenNameByIndex } from "@/utils/token";
-import { ClockIcon, CornerBottomLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
+import { CalendarIcon, ClockIcon, CornerBottomLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { decodeFunctionData } from "viem";
 import { usePublicClient } from "wagmi";
@@ -32,9 +33,10 @@ type ExecutionData = Awaited<ReturnType<typeof fetchTractorExecutions>>[number];
 
 interface TractorOrdersPanelProps {
   refreshData?: number; // A value that changes to trigger a refresh
+  onCreateOrder?: () => void; // Callback to create a new order
 }
 
-const TractorOrdersPanel = ({ refreshData }: TractorOrdersPanelProps) => {
+const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelProps) => {
   const { address } = useAccount();
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
@@ -201,7 +203,7 @@ const TractorOrdersPanel = ({ refreshData }: TractorOrdersPanelProps) => {
   }
 
   if (requisitions.length === 0 && executions.length === 0) {
-    return <EmptyTable type="tractor" />;
+    return <EmptyTable type="tractor" onTractorClick={onCreateOrder} />;
   }
 
   return (
@@ -245,6 +247,9 @@ const TractorOrdersPanel = ({ refreshData }: TractorOrdersPanelProps) => {
             blueprintExecutions.length > 0
               ? blueprintExecutions.sort((a, b) => b.blockNumber - a.blockNumber)[0]
               : null;
+
+          // Format the publish date
+          const publishDate = req.timestamp ? format(new Date(req.timestamp), "dd MMM yyyy") : "Unknown";
 
           // Determine token strategy based on sourceTokenIndices
           let strategyText = "Unknown strategy";
@@ -374,6 +379,10 @@ const TractorOrdersPanel = ({ refreshData }: TractorOrdersPanelProps) => {
 
               {/* External actions - positioned outside the cell */}
               <div className="absolute right-[-190px] top-0 h-full flex flex-col justify-center gap-4 pl-4">
+                <div className="flex items-center gap-2 text-pinto-gray-4 font-antarctica text-sm">
+                  <CalendarIcon className="h-4 w-4" />
+                  <span className="inline-block w-36 whitespace-nowrap">Published {publishDate}</span>
+                </div>
                 <div className="flex items-center gap-2 text-pinto-gray-4 font-antarctica text-sm">
                   <ClockIcon className="h-4 w-4" />
                   <span className="inline-block w-36 whitespace-nowrap">
