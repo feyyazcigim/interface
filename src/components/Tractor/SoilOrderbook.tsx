@@ -420,7 +420,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
         <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
         <DialogContent className="max-w-7xl w-[95vw] bg-gray-50 border border-gray-200 p-0">
           <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="text-xl font-antarctica font-bold">Tractor</DialogTitle>
+            <DialogTitle className="text-xl font-antarctica font-bold">Tractor Soil Orders</DialogTitle>
           </DialogHeader>
 
           <div className="w-full px-6">
