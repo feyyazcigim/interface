@@ -427,14 +427,14 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
             <div className="flex gap-4 border-b pinto-sm">
               <button
                 type="button"
-                className={`pb-2 font-antarctica ${activeTab === "view" ? "border-b-2 border-green-600 font-medium" : "border-b-2 border-transparent text-pinto-gray-4"}`}
+                className={`pb-2 font-antarctica ${activeTab === "view" ? "border-b-2 border-pinto-green-4 font-medium" : "border-b-2 border-transparent text-pinto-gray-4"}`}
                 onClick={() => setActiveTab("view")}
               >
                 View Soil Orders
               </button>
               <button
                 type="button"
-                className={`pb-2 font-antarctica ${activeTab === "execute" ? "border-b-2 border-green-600 font-medium" : "border-b-2 border-transparent text-pinto-gray-4"}`}
+                className={`pb-2 font-antarctica ${activeTab === "execute" ? "border-b-2 border-pinto-green-4 font-medium" : "border-b-2 border-transparent text-pinto-gray-4"}`}
                 onClick={() => setActiveTab("execute")}
               >
                 Execute Soil Orders
