@@ -882,7 +882,7 @@ export function Plow() {
           <Button
             rounded="full"
             className={`flex-1 ${
-              simulatingAll || requisitions.length === 0 ? "bg-[#D9D9D9] text-[#9C9C9C]" : "bg-[#2F8957] text-white"
+              simulatingAll || requisitions.length === 0 ? "bg-[#D9D9D9] text-[#9C9C9C]" : "bg-pinto-green-4 text-white"
             }`}
             disabled={simulatingAll || requisitions.length === 0}
             onClick={handleSimulateAll}
