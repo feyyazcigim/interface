@@ -418,12 +418,12 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
-        <DialogContent className="max-w-7xl w-[95vw] bg-gray-50 border border-gray-200">
-          <DialogHeader className="pb-4">
+        <DialogContent className="max-w-7xl w-[95vw] bg-gray-50 border border-gray-200 p-0">
+          <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="text-xl font-antarctica font-bold">Tractor</DialogTitle>
           </DialogHeader>
 
-          <div className="w-full">
+          <div className="w-full px-6">
             <div className="flex gap-4 border-b pinto-sm">
               <button
                 type="button"
@@ -441,7 +441,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
               </button>
             </div>
 
-            <div className="pt-6">{activeTab === "view" ? <SoilOrderbookContent /> : <Plow />}</div>
+            <div className="py-4">{activeTab === "view" ? <SoilOrderbookContent /> : <Plow />}</div>
           </div>
         </DialogContent>
       </DialogPortal>
