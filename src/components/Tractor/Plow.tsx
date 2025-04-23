@@ -663,7 +663,7 @@ export function Plow() {
               </div>
             </TableHead>
             {successfulSimulations.size > 0 && (
-              <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
+              <TableHead className="px-1.5 text-right text-xs font-antarctica font-light text-pinto-gray-4">
                 Estimated Profit
               </TableHead>
             )}
@@ -827,7 +827,10 @@ export function Plow() {
                   </div>
                 </TableCell>
                 {successfulSimulations.size > 0 && (
-                  <TableCell className="px-1.5 text-sm" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
+                  <TableCell
+                    className="px-1.5 text-sm text-right"
+                    style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}
+                  >
                     {(() => {
                       // Skip if this simulation hasn't been run yet
                       if (!successfulSimulations.has(req.requisition.blueprintHash) || !req.decodedData) {
