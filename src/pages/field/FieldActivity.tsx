@@ -15,6 +15,8 @@ import { useSeason } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
 import React, { useState, useRef, useEffect } from "react";
 import { usePublicClient } from "wagmi";
+import { useHideShowTractorOrdersButton } from "../Field";
+import { cn } from "@/utils/utils";
 
 interface FieldActivityItem {
   id: string;
@@ -56,7 +58,7 @@ const estimateSeasonFromBlock = (
   return estimatedSeason > 0 ? estimatedSeason : null;
 };
 
-const FieldActivity: React.FC = () => {
+const FieldActivity = () => {
   const publicClient = usePublicClient();
   const protocolAddress = useProtocolAddress();
   const [loading, setLoading] = React.useState(true);
@@ -73,7 +75,6 @@ const FieldActivity: React.FC = () => {
   const verticalBarRef = useRef<HTMLDivElement>(null);
 
   const isZoomed = useIsZoomed();
-
 
   // Add a ref to store initial block data that won't trigger re-renders
   const initialBlockDataRef = useRef<{
@@ -332,7 +333,8 @@ const FieldActivity: React.FC = () => {
     // if loading, set the vertical bar to the loading row
     if (loadingTractorOrders) {
       if (verticalBarRef.current) {
-        verticalBarRef.current.style.height = "10.75rem";
+        verticalBarRef.current.style.height = "11rem";
+        verticalBarRef.current.style.top = "1.5rem";
       }
       return;
     }
@@ -508,28 +510,20 @@ const FieldActivity: React.FC = () => {
     );
   }
 
+
   return (
     <div className="w-full relative">
-      <div 
-        ref={verticalBarRef} 
-        // style={{ height: '10.75rem' }}
-        className="absolute top-[1.5rem] w-[1px] -right-[1rem] bg-pinto-gray-2 z-10 pointer-events-none" />
+      <div
+        ref={verticalBarRef}
+        className="absolute top-[1.5rem] w-[1px] -right-[1rem] bg-pinto-gray-2 z-10 pointer-events-none"
+      />
       {/* Add Tractor Orders label and link */}
       <div
         ref={tractorLinksRef}
-        style={{ top: "5rem" }}
-        className="absolute flex flex-col items-start -right-[18rem] transition-all duration-300"
+        style={{ top: "5.5rem" }}
+        className="absolute -right-[18rem] transition-all duration-300"
       >
-        <span className="text-sm font-antarctica font-light text-pinto-dark mb-2">
-          Tractor Soil Orders for next Season
-        </span>
-        <button
-          type="button"
-          onClick={() => setShowTractorOrdersDialog(true)}
-          className="text-sm font-antarctica font-light text-pinto-green-4 hover:text-pinto-green-5 hover:underline text-left"
-        >
-          See all Tractor Orders
-        </button>
+        <SeeAllTractorOrdersButton setShowOrdersDialog={setShowTractorOrdersDialog}/>
       </div>
 
       {/* Tractor Orders Dialog */}
@@ -559,7 +553,7 @@ const FieldActivity: React.FC = () => {
             {loadingTractorOrders ? (
               <tr>
                 <td colSpan={9} className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
-                  <Col className="items-center justify-center sm:min-h-[10rem] sm:h-[10rem]">
+                  <Col className="items-center justify-center sm:min-h-[11rem] sm:h-[11rem]">
                     Loading Tractor orders...
                   </Col>
                 </td>
@@ -739,5 +733,22 @@ const FieldActivity: React.FC = () => {
 
 export default FieldActivity;
 
+const SeeAllTractorOrdersButton = ({ setShowOrdersDialog }: { setShowOrdersDialog: (show: boolean) => void }) => {
+  const shouldHideShowTractorOrdersButton = useHideShowTractorOrdersButton();
 
-const pxToRem = (px: number) => `${px / 16}rem`
+
+  return (
+    <div className={cn("flex flex-col items-start", shouldHideShowTractorOrdersButton ? "hidden" : "")}>
+      <span className="text-sm font-antarctica font-light text-pinto-dark mb-2">
+        Tractor Soil Orders for next Season
+      </span>
+      <button
+        type="button"
+        onClick={() => setShowOrdersDialog(true)}
+        className="text-sm font-antarctica font-light text-pinto-green-4 hover:text-pinto-green-5 hover:underline text-left"
+      >
+        See all Tractor Orders
+      </button>
+    </div> 
+  )
+}

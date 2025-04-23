@@ -1,4 +1,4 @@
-import { HTMLAttributes } from "react";
+import React, { HTMLAttributes, useCallback, useState } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/Accordion";
 
 /**
@@ -20,25 +20,43 @@ export interface IAccordionGroup extends HTMLAttributes<HTMLDivElement> {
   groupTitle: string | JSX.Element;
   items: IBaseAccordionContent[];
   allExpanded?: boolean;
+  onAnyOpenChanged?: (openItems: boolean) => void;
 }
 
 const empty: string[] = [];
 
-export default function AccordionGroup({ groupTitle, items, allExpanded = true, ...props }: IAccordionGroup) {
+const AccordionGroup = ({
+  groupTitle,
+  items,
+  allExpanded = true,
+  onAnyOpenChanged,
+  ...props
+}: IAccordionGroup) => {
   const defaultValue = allExpanded ? items.map(({ key }) => key) : empty;
+  const [openItems, setOpenItems] = useState<string[]>(defaultValue);
+
+  const handleValueChange = (value: string[]) => {
+    setOpenItems(value);
+    onAnyOpenChanged?.(!!value.length);
+  };
+
   return (
     // Gap is 5 b/c accordion trigger has p-y of 4
     <div className="flex flex-col gap-5 w-full" {...props}>
       <div className="pinto-h3 text-pinto-primary">{groupTitle}</div>
-      <Accordion
-        defaultChecked={props.defaultChecked}
-        className="AccordionRoot"
+      <Accordion 
+        value={openItems} 
+        onValueChange={handleValueChange}
+        className="AccordionRoot" 
         type="multiple"
-        defaultValue={defaultValue}
       >
         <div className="flex flex-col w-full gap-1">
           {items.map(({ title, content, key }, i) => (
-            <AccordionItem className="AccordionItem" value={key} key={`accordion-group-item-${i}-${key}`}>
+            <AccordionItem
+              className="AccordionItem"
+              value={key}
+              key={`accordion-group-item-${i}-${key}`}
+            >
               <AccordionTrigger>
                 {typeof title === "string" ? <div className="pinto-lg text-pinto-secondary">{title}</div> : title}
               </AccordionTrigger>
@@ -50,3 +68,5 @@ export default function AccordionGroup({ groupTitle, items, allExpanded = true, 
     </div>
   );
 }
+
+export default React.memo(AccordionGroup);

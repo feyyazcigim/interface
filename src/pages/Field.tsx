@@ -33,7 +33,7 @@ import { useHarvestableIndex, useHarvestableIndexLoading, useTotalSoil } from "@
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
 import { SizeIcon } from "@radix-ui/react-icons";
-import { useAtomValue } from "jotai";
+import { atom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import FieldActions from "./field/FieldActions";
@@ -42,6 +42,9 @@ import FieldStats from "./field/FieldStats";
 import MorningPanel from "./field/MorningPanel";
 import TemperatureChart from "./field/Temperature";
 import TractorOrdersPanel from "./field/TractorOrdersPanel";
+
+const hideShowOrdersAtom = atom(false);
+
 
 // Add a custom hook to track the current sow amount
 function useTotalSowAmount() {
@@ -145,6 +148,9 @@ function Field() {
   const isMobile = useIsMobile();
   const [tractorRefreshCounter, setTractorRefreshCounter] = useState(0);
   const [showSowOrder, setShowSowOrder] = useState(false);
+  const [shouldHideShowOrders, setShouldHideShowOrders] = useState(false);
+
+  const handleOnAnyOpenChanged = useSetAtom(hideShowOrdersAtom);
 
   const refreshTractorOrders = useCallback(() => {
     setTractorRefreshCounter((prev) => prev + 1);
@@ -367,7 +373,12 @@ function Field() {
               </Button>
             </div>
           )}
-          <AccordionGroup groupTitle="Frequently Asked Questions" items={FieldFAQ} allExpanded={false} />
+          <AccordionGroup
+            groupTitle="Frequently Asked Questions"
+            items={FieldFAQ}
+            allExpanded={false}
+            onAnyOpenChanged={handleOnAnyOpenChanged}
+          />
           {!currentAction && (
             <MobileActionBar>
               <Button
@@ -487,3 +498,9 @@ const FieldFAQ: IBaseAccordionContent[] = [
     ),
   },
 ] as const;
+
+// Custom hook to hide/show the tractor orders button
+
+export const useHideShowTractorOrdersButton = () => {
+  return useAtomValue(hideShowOrdersAtom);
+}
