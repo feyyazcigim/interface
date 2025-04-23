@@ -297,14 +297,18 @@ export function Plow() {
       const aHash = a.requisition.blueprintHash;
       const bHash = b.requisition.blueprintHash;
 
+      // If one simulation failed, put it at the bottom
+      if (failedSimulations.has(aHash) && !failedSimulations.has(bHash)) return 1;
+      if (!failedSimulations.has(aHash) && failedSimulations.has(bHash)) return -1;
+
       // If both requisitions are successful, sort by profit
       if (successfulSimulations.has(aHash) && successfulSimulations.has(bHash)) {
         return calculateReqProfit(b) - calculateReqProfit(a); // Higher profit first
       }
 
       // If only one is successful, prioritize it
-      if (successfulSimulations.has(aHash)) return 1;
-      if (successfulSimulations.has(bHash)) return -1;
+      if (successfulSimulations.has(aHash)) return -1;
+      if (successfulSimulations.has(bHash)) return 1;
 
       // Otherwise, keep original order
       return 0;
@@ -315,6 +319,7 @@ export function Plow() {
     requisitions,
     // Only re-sort when these specific values change
     successfulSimulations.size,
+    failedSimulations.size,
     sortingEnabled,
     // calculateReqProfit is a derived value, don't include it in deps
     // Instead, include its dependencies explicitly
