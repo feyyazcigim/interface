@@ -332,10 +332,6 @@ const FieldActivity = () => {
   useEffect(() => {
     // if loading, set the vertical bar to the loading row
     if (loadingTractorOrders) {
-      if (verticalBarRef.current) {
-        verticalBarRef.current.style.height = "11rem";
-        verticalBarRef.current.style.top = "1.5rem";
-      }
       return;
     }
 
@@ -515,7 +511,8 @@ const FieldActivity = () => {
     <div className="w-full relative">
       <div
         ref={verticalBarRef}
-        className="absolute top-[1.5rem] w-[1px] -right-[1rem] bg-pinto-gray-2 z-10 pointer-events-none"
+        style={{ height: "11rem", top: "1.5rem" }}
+        className="absolute  w-[1px] -right-[1rem] bg-pinto-gray-2 z-10 pointer-events-none"
       />
       {/* Add Tractor Orders label and link */}
       <div
