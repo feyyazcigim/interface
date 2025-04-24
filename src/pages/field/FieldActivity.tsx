@@ -7,17 +7,14 @@ import { Button } from "@/components/ui/Button";
 import IconImage from "@/components/ui/IconImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { diamondABI } from "@/constants/abi/diamondABI";
-import useIsZoomed from "@/hooks/display/useIsZoomed";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
 import { useHarvestableIndex } from "@/state/useFieldData";
 import { useTemperature } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
-import { cn } from "@/utils/utils";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { usePublicClient } from "wagmi";
-import { useHideShowTractorOrdersButton } from "../Field";
 
 interface FieldActivityItem {
   id: string;
@@ -72,10 +69,6 @@ const FieldActivity = () => {
   const harvestableIndex = useHarvestableIndex();
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const tractorLinksRef = useRef<HTMLDivElement>(null);
-  const verticalBarRef = useRef<HTMLDivElement>(null);
-
-  const isZoomed = useIsZoomed();
 
   // Add a ref to store initial block data that won't trigger re-renders
   const initialBlockDataRef = useRef<{
@@ -85,78 +78,6 @@ const FieldActivity = () => {
     latestBlockNumber: null,
     latestBlockTimestamp: null,
   });
-
-  // Helper function to estimate temperature from an order
-  const getOrderTemperature = (order: OrderbookEntry): number => {
-    // Try to decode the data to get the temperature
-    if (order.requisition && order.requisition.blueprint && order.requisition.blueprint.data) {
-      const decodedData = decodeSowTractorData(order.requisition.blueprint.data);
-      if (decodedData && decodedData.minTempAsString) {
-        return parseFloat(decodedData.minTempAsString);
-      }
-    }
-    // Default temperature if we can't decode
-    return 0.0; // 0% is a reasonable default
-  };
-
-  // Helper function to get the decoded tractor data
-  const getDecodedTractorData = (order: OrderbookEntry): SowBlueprintData | null => {
-    if (order.requisition && order.requisition.blueprint && order.requisition.blueprint.data) {
-      return decodeSowTractorData(order.requisition.blueprint.data);
-    }
-    return null;
-  };
-
-  // Helper function to estimate execution time based on runBlocksAfterSunrise
-  const estimateExecutionTime = (order: OrderbookEntry): string => {
-    const decodedData = getDecodedTractorData(order);
-
-    if (decodedData && decodedData.runBlocksAfterSunriseAsString) {
-      const runBlocks = parseInt(decodedData.runBlocksAfterSunriseAsString);
-
-      // Estimate execution time as next hour + 2 seconds × runBlocksAfterSunrise
-      const now = new Date();
-      const nextHour = new Date(now);
-      nextHour.setHours(nextHour.getHours() + 1);
-      nextHour.setMinutes(0);
-      nextHour.setSeconds(0);
-      nextHour.setMilliseconds(0);
-
-      // Add delay based on runBlocksAfterSunrise (2 seconds per block)
-      const estimatedTime = new Date(nextHour.getTime() + runBlocks * 2 * 1000);
-
-      return estimatedTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    }
-
-    return "-"; // Fallback value if we can't estimate
-  };
-
-  // Helper function to get the predicted sow temperature
-  const getPredictedSowTemperature = (order: OrderbookEntry): number => {
-    // Get the minimum temperature from the order
-    const minTemp = getOrderTemperature(order);
-
-    const decodedData = getDecodedTractorData(order);
-    if (decodedData && decodedData.runBlocksAfterSunriseAsString) {
-      const runBlocks = parseInt(decodedData.runBlocksAfterSunriseAsString);
-      if (runBlocks >= 300 && currentTemperature.max) {
-        // After morning auction - use max of current temperature and minimum temperature
-        const currentTemp = currentTemperature.max.toNumber();
-        return Math.max(currentTemp, minTemp);
-      }
-    }
-    // Otherwise use the minimum temperature from the order
-    return minTemp;
-  };
-
-  // Helper function to estimate pods from an order
-  const estimateOrderPods = (order: OrderbookEntry): TokenValue => {
-    // Use the predicted temperature
-    const temp = getPredictedSowTemperature(order);
-
-    // Calculate pods as PINTO amount * (1 + temperature/100)
-    return order.amountSowableNextSeason.mul(1 + temp / 100);
-  };
 
   // Fetch tractor orders
   React.useEffect(() => {
@@ -185,7 +106,7 @@ const FieldActivity = () => {
         const currentTemp = currentTemperature.max?.toNumber() || 0;
 
         const filteredOrders = orderbook.filter((order) => {
-          const predictedTemp = getPredictedSowTemperature(order);
+          const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
 
           // Only include orders with temperature requirements that could reasonably execute soon
           // Use the predicted temperature, which is now guaranteed to be at least the minimum
@@ -195,7 +116,7 @@ const FieldActivity = () => {
         // Sort by predicted temperature (lowest to highest)
         const sortedOrders = [...filteredOrders].sort((a, b) => {
           // We want to sort by lowest predicted temperature first
-          return getPredictedSowTemperature(a) - getPredictedSowTemperature(b);
+          return getPredictedSowTemperature(a, currentTemperature) - getPredictedSowTemperature(b, currentTemperature);
         });
 
         setTractorOrders(sortedOrders);
@@ -327,110 +248,7 @@ const FieldActivity = () => {
     };
 
     fetchSowEvents();
-  }, [publicClient, protocolAddress, currentSeason, harvestableIndex]);
-
-  // Effect for creating the vertical bar
-  useEffect(() => {
-    // if loading, set the vertical bar to the loading row
-    if (loadingTractorOrders) {
-      return;
-    }
-
-    // Wait for next render cycle to ensure rows are fully rendered
-    setTimeout(() => {
-      if (!tableContainerRef.current) return;
-
-      // Get tractor order rows if they exist
-      const rows = document.querySelectorAll(".tractor-order-row");
-
-      let spanStartY: number;
-      let totalHeight: number;
-
-      if (rows.length > 0) {
-        // If we have tractor order rows, use their position and height
-        spanStartY = (rows[0] as HTMLElement).offsetTop;
-        totalHeight = 0;
-
-        rows.forEach((row) => {
-          totalHeight += (row as HTMLElement).offsetHeight;
-        });
-      } else {
-        // If no tractor orders, use the "No Tractor orders" row or the first available row
-        const noOrdersRow = document.querySelector('tr td[colspan="9"]');
-        if (noOrdersRow) {
-          const rowElement = noOrdersRow.closest("tr") as HTMLElement;
-          if (rowElement) {
-            spanStartY = rowElement.offsetTop;
-            totalHeight = rowElement.offsetHeight;
-          } else {
-            // Fallback position if no rows at all
-            spanStartY = 100;
-            totalHeight = 40;
-          }
-        } else {
-          // Fallback position if no specific row found
-          const firstRow = document.querySelector("tbody tr") as HTMLElement;
-          if (firstRow) {
-            spanStartY = firstRow.offsetTop;
-            totalHeight = firstRow.offsetHeight;
-          } else {
-            // Default values if no rows found
-            spanStartY = 100;
-            totalHeight = 40;
-          }
-        }
-      }
-
-      if (verticalBarRef.current) {
-        verticalBarRef.current.style.top = `${spanStartY}px`;
-        verticalBarRef.current.style.height = `${totalHeight}px`;
-      }
-
-      // Calculate the vertical center of the bar
-      const centerY = spanStartY + totalHeight / 2;
-
-      // Position the links container vertically centered
-      if (tractorLinksRef.current) {
-        const linksHeight = tractorLinksRef.current.offsetHeight;
-        tractorLinksRef.current.style.top = `${centerY - linksHeight / 2}px`;
-      }
-    }, 100);
-  }, [tractorOrders, loadingTractorOrders, isZoomed]);
-
-  const formatType = (type: string) => {
-    switch (type) {
-      case "sow":
-        return "Sow";
-      case "harvest":
-        return "Harvest";
-      case "transfer":
-        return "Transfer";
-      default:
-        return "Other";
-    }
-  };
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString();
-  };
-
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  };
-
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-3)}`;
-  };
-
-  // Helper function to format numbers with commas
-  const formatNumberWithCommas = (value: number | string) => {
-    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
-  // Update the formatType function or add a new formatting function for seasons
-  const formatSeason = (season: number | null): string => {
-    return season !== null ? season.toString() : "-";
-  };
+  }, [publicClient, protocolAddress, currentSeason, harvestableIndex, currentTemperature.max.blockchainString]);
 
   // Render a loading skeleton for the entire table
   if (loading && loadingTractorOrders) {
@@ -468,81 +286,14 @@ const FieldActivity = () => {
                   .map((order, index) => {
                     const temp = getOrderTemperature(order);
                     return (
-                      <tr
+                      <TractorOrderRow
                         key={`tractor-${order.requisition.blueprintHash}`}
-                        className={`tractor-order-row hover:bg-pinto-green-1 transition-colors ${hoveredAddress === order.requisition.blueprint.publisher ? "bg-pinto-green-1" : ""}`}
-                      >
-                        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
-                          {formatSeason(Number(currentSeason) + 1)}
-                        </td>
-                        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
-                          {new Date().toLocaleDateString()}
-                        </td>
-                        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
-                          {estimateExecutionTime(order)}
-                        </td>
-                        <td
-                          className="px-2 py-1"
-                          onMouseEnter={() => setHoveredAddress(order.requisition.blueprint.publisher)}
-                          onMouseLeave={() => setHoveredAddress(null)}
-                        >
-                          <a
-                            href={`https://basescan.org/address/${order.requisition.blueprint.publisher}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`text-xs font-antarctica font-light text-pinto-gray-4 underline ${hoveredAddress === order.requisition.blueprint.publisher ? "font-medium" : ""}`}
-                          >
-                            {formatAddress(order.requisition.blueprint.publisher)}
-                          </a>
-                        </td>
-                        <td className="px-2 py-1 flex items-center">
-                          <span className="text-xs font-antarctica font-light text-pinto-gray-4 mr-2">
-                            <span className="text-xs" role="img" aria-label="Tractor">
-                              🚜
-                            </span>
-                          </span>
-                        </td>
-                        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
-                          {(() => {
-                            const predictedTemp = getPredictedSowTemperature(order);
-                            const minTemp = getOrderTemperature(order);
-
-                            // For consistency with our filtering, always show the minimum temperature
-                            // with ≥ prefix for Morning Auction orders
-                            const decodedData = getDecodedTractorData(order);
-                            const runBlocks = decodedData?.runBlocksAfterSunriseAsString
-                              ? parseInt(decodedData.runBlocksAfterSunriseAsString)
-                              : 0;
-
-                            if (runBlocks < 300) {
-                              // Morning auction orders - show min temp
-                              return `≥ ${minTemp.toFixed(2)}%`;
-                            } else {
-                              // After morning auction - show predicted temp (current temp)
-                              return `${predictedTemp.toFixed(2)}%`;
-                            }
-                          })()}
-                        </td>
-                        <td className="px-2 py-1 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <IconImage src={pintoIcon} alt="PINTO" size={3} />
-                            <span className="text-xs font-antarctica font-light text-pinto-gray-4">
-                              {`${formatNumberWithCommas(parseFloat(order.amountSowableNextSeason.toHuman()).toFixed(2))}`}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-2 py-1 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <IconImage src={podIcon} alt="Pods" size={3} />
-                            <span className="text-xs font-antarctica font-light text-pinto-gray-4">
-                              {`${formatNumberWithCommas(parseFloat(estimateOrderPods(order).toHuman()).toFixed(2))}`}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4 text-right">
-                          {Math.round(order.estimatedPlaceInLine.toNumber()).toLocaleString()}
-                        </td>
-                      </tr>
+                        order={order}
+                        hoveredAddress={hoveredAddress}
+                        currentSeason={currentSeason}
+                        currentTemperature={currentTemperature}
+                        setHoveredAddress={setHoveredAddress}
+                      />
                     );
                   })}
               </>
@@ -567,69 +318,14 @@ const FieldActivity = () => {
              * See All Tractor Orders Row
              */}
             {!loadingTractorOrders && <SeeAllTractorOrdersRow setShowOrdersDialog={setShowTractorOrdersDialog} />}
-
             {/* Regular Activity Section */}
             {activities.map((activity) => (
-              <tr
+              <FieldActivityRow
                 key={activity.id}
-                className={`hover:bg-pinto-green-1 transition-colors ${hoveredAddress === activity.address ? "bg-pinto-green-1" : ""}`}
-              >
-                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
-                  {formatSeason(activity.season)}
-                </td>
-                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
-                  {formatDate(activity.timestamp)}
-                </td>
-                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
-                  {formatTime(activity.timestamp)}
-                </td>
-                <td
-                  className="px-2 py-1"
-                  onMouseEnter={() => setHoveredAddress(activity.address)}
-                  onMouseLeave={() => setHoveredAddress(null)}
-                >
-                  <a
-                    href={`https://basescan.org/address/${activity.address}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`text-xs font-antarctica font-light text-pinto-dark underline ${hoveredAddress === activity.address ? "font-medium" : ""}`}
-                  >
-                    {formatAddress(activity.address)}
-                  </a>
-                </td>
-                <td className="px-2 py-1">
-                  <a
-                    href={`https://basescan.org/tx/${activity.txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-antarctica font-light text-pinto-dark underline"
-                  >
-                    {formatAddress(activity.txHash)}
-                  </a>
-                </td>
-                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
-                  {activity.temperature.toFixed(2)}%
-                </td>
-                <td className="px-2 py-1 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <IconImage src={pintoIcon} alt="PINTO" size={3} />
-                    <span className="text-xs font-antarctica font-light text-pinto-dark">
-                      {`${formatNumberWithCommas(parseFloat(activity.amount.toHuman()).toFixed(2))}`}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-2 py-1 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <IconImage src={podIcon} alt="Pods" size={3} />
-                    <span className="text-xs font-antarctica font-light text-pinto-dark">
-                      {`${formatNumberWithCommas(parseFloat(activity.pods.toHuman()).toFixed(2))}`}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark text-right">
-                  {activity.placeInLine.split(".")[0]}
-                </td>
-              </tr>
+                activity={activity}
+                hoveredAddress={hoveredAddress}
+                setHoveredAddress={setHoveredAddress}
+              />
             ))}
           </tbody>
         </table>
@@ -649,6 +345,161 @@ const SeeAllTractorOrdersRow = ({ setShowOrdersDialog }: { setShowOrdersDialog: 
             See all Tractor Orders
           </Button>
         </div>
+      </td>
+    </tr>
+  );
+};
+
+const TractorOrderRow = ({
+  order,
+  hoveredAddress,
+  currentSeason,
+  currentTemperature,
+  setHoveredAddress,
+}: {
+  order: OrderbookEntry;
+  hoveredAddress: string | null;
+  currentSeason: number | undefined;
+  setHoveredAddress: (address: string | null) => void;
+  currentTemperature: { max: TokenValue };
+}) => {
+  return (
+    <tr
+      className={`tractor-order-row hover:bg-pinto-green-1 transition-colors ${hoveredAddress === order.requisition.blueprint.publisher ? "bg-pinto-green-1" : ""}`}
+    >
+      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+        {formatSeason(Number(currentSeason) + 1)}
+      </td>
+      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+        {new Date().toLocaleDateString()}
+      </td>
+      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">{estimateExecutionTime(order)}</td>
+      <td
+        className="px-2 py-1"
+        onMouseEnter={() => setHoveredAddress(order.requisition.blueprint.publisher)}
+        onMouseLeave={() => setHoveredAddress(null)}
+      >
+        <a
+          href={`https://basescan.org/address/${order.requisition.blueprint.publisher}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`text-xs font-antarctica font-light text-pinto-gray-4 underline ${hoveredAddress === order.requisition.blueprint.publisher ? "font-medium" : ""}`}
+        >
+          {formatAddress(order.requisition.blueprint.publisher)}
+        </a>
+      </td>
+      <td className="px-2 py-1 flex items-center">
+        <span className="text-xs font-antarctica font-light text-pinto-gray-4 mr-2">
+          <span className="text-xs" role="img" aria-label="Tractor">
+            🚜
+          </span>
+        </span>
+      </td>
+      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+        {(() => {
+          const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
+          const minTemp = getOrderTemperature(order);
+
+          // For consistency with our filtering, always show the minimum temperature
+          // with ≥ prefix for Morning Auction orders
+          const decodedData = getDecodedTractorData(order);
+          const runBlocks = decodedData?.runBlocksAfterSunriseAsString
+            ? parseInt(decodedData.runBlocksAfterSunriseAsString)
+            : 0;
+
+          if (runBlocks < 300) {
+            // Morning auction orders - show min temp
+            return `≥ ${minTemp.toFixed(2)}%`;
+          } else {
+            // After morning auction - show predicted temp (current temp)
+            return `${predictedTemp.toFixed(2)}%`;
+          }
+        })()}
+      </td>
+      <td className="px-2 py-1 text-right">
+        <div className="flex items-center justify-end gap-1">
+          <IconImage src={pintoIcon} alt="PINTO" size={3} />
+          <span className="text-xs font-antarctica font-light text-pinto-gray-4">
+            {`${formatNumberWithCommas(parseFloat(order.amountSowableNextSeason.toHuman()).toFixed(2))}`}
+          </span>
+        </div>
+      </td>
+      <td className="px-2 py-1 text-right">
+        <div className="flex items-center justify-end gap-1">
+          <IconImage src={podIcon} alt="Pods" size={3} />
+          <span className="text-xs font-antarctica font-light text-pinto-gray-4">
+            {`${formatNumberWithCommas(parseFloat(estimateOrderPods(order, currentTemperature).toHuman()).toFixed(2))}`}
+          </span>
+        </div>
+      </td>
+      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4 text-right">
+        {Math.round(order.estimatedPlaceInLine.toNumber()).toLocaleString()}
+      </td>
+    </tr>
+  );
+};
+
+const FieldActivityRow = ({
+  activity,
+  hoveredAddress,
+  setHoveredAddress,
+}: {
+  activity: FieldActivityItem;
+  hoveredAddress: string | null;
+  setHoveredAddress: (address: string | null) => void;
+}) => {
+  return (
+    <tr
+      className={`hover:bg-pinto-green-1 transition-colors ${hoveredAddress === activity.address ? "bg-pinto-green-1" : ""}`}
+    >
+      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatSeason(activity.season)}</td>
+      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatDate(activity.timestamp)}</td>
+      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatTime(activity.timestamp)}</td>
+      <td
+        className="px-2 py-1"
+        onMouseEnter={() => setHoveredAddress(activity.address)}
+        onMouseLeave={() => setHoveredAddress(null)}
+      >
+        <a
+          href={`https://basescan.org/address/${activity.address}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`text-xs font-antarctica font-light text-pinto-dark underline ${hoveredAddress === activity.address ? "font-medium" : ""}`}
+        >
+          {formatAddress(activity.address)}
+        </a>
+      </td>
+      <td className="px-2 py-1">
+        <a
+          href={`https://basescan.org/tx/${activity.txHash}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs font-antarctica font-light text-pinto-dark underline"
+        >
+          {formatAddress(activity.txHash)}
+        </a>
+      </td>
+      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
+        {activity.temperature.toFixed(2)}%
+      </td>
+      <td className="px-2 py-1 text-right">
+        <div className="flex items-center justify-end gap-1">
+          <IconImage src={pintoIcon} alt="PINTO" size={3} />
+          <span className="text-xs font-antarctica font-light text-pinto-dark">
+            {`${formatNumberWithCommas(parseFloat(activity.amount.toHuman()).toFixed(2))}`}
+          </span>
+        </div>
+      </td>
+      <td className="px-2 py-1 text-right">
+        <div className="flex items-center justify-end gap-1">
+          <IconImage src={podIcon} alt="Pods" size={3} />
+          <span className="text-xs font-antarctica font-light text-pinto-dark">
+            {`${formatNumberWithCommas(parseFloat(activity.pods.toHuman()).toFixed(2))}`}
+          </span>
+        </div>
+      </td>
+      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark text-right">
+        {activity.placeInLine.split(".")[0]}
       </td>
     </tr>
   );
@@ -721,3 +572,112 @@ const FieldActivityNoDataDisplay = () => (
     <p className="text-xs text-pinto-gray-3">Activities like Sowing and Harvesting will appear here</p>
   </div>
 );
+
+// Helper functions
+
+// Helper function to estimate temperature from an order
+const getOrderTemperature = (order: OrderbookEntry): number => {
+  // Try to decode the data to get the temperature
+  if (order.requisition && order.requisition.blueprint && order.requisition.blueprint.data) {
+    const decodedData = decodeSowTractorData(order.requisition.blueprint.data);
+    if (decodedData && decodedData.minTempAsString) {
+      return parseFloat(decodedData.minTempAsString);
+    }
+  }
+  // Default temperature if we can't decode
+  return 0.0; // 0% is a reasonable default
+};
+
+// Helper function to get the decoded tractor data
+const getDecodedTractorData = (order: OrderbookEntry): SowBlueprintData | null => {
+  if (order.requisition && order.requisition.blueprint && order.requisition.blueprint.data) {
+    return decodeSowTractorData(order.requisition.blueprint.data);
+  }
+  return null;
+};
+
+// Helper function to estimate execution time based on runBlocksAfterSunrise
+const estimateExecutionTime = (order: OrderbookEntry): string => {
+  const decodedData = getDecodedTractorData(order);
+
+  if (decodedData && decodedData.runBlocksAfterSunriseAsString) {
+    const runBlocks = parseInt(decodedData.runBlocksAfterSunriseAsString);
+
+    // Estimate execution time as next hour + 2 seconds × runBlocksAfterSunrise
+    const now = new Date();
+    const nextHour = new Date(now);
+    nextHour.setHours(nextHour.getHours() + 1);
+    nextHour.setMinutes(0);
+    nextHour.setSeconds(0);
+    nextHour.setMilliseconds(0);
+
+    // Add delay based on runBlocksAfterSunrise (2 seconds per block)
+    const estimatedTime = new Date(nextHour.getTime() + runBlocks * 2 * 1000);
+
+    return estimatedTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+
+  return "-"; // Fallback value if we can't estimate
+};
+
+// Helper function to get the predicted sow temperature
+const getPredictedSowTemperature = (order: OrderbookEntry, currentTemperature: { max: TokenValue }): number => {
+  // Get the minimum temperature from the order
+  const minTemp = getOrderTemperature(order);
+
+  const decodedData = getDecodedTractorData(order);
+  if (decodedData && decodedData.runBlocksAfterSunriseAsString) {
+    const runBlocks = parseInt(decodedData.runBlocksAfterSunriseAsString);
+    if (runBlocks >= 300 && currentTemperature.max) {
+      // After morning auction - use max of current temperature and minimum temperature
+      const currentTemp = currentTemperature.max.toNumber();
+      return Math.max(currentTemp, minTemp);
+    }
+  }
+  // Otherwise use the minimum temperature from the order
+  return minTemp;
+};
+
+// Helper function to estimate pods from an order
+const estimateOrderPods = (order: OrderbookEntry, currentTemperature: { max: TokenValue }): TokenValue => {
+  // Use the predicted temperature
+  const temp = getPredictedSowTemperature(order, currentTemperature);
+
+  // Calculate pods as PINTO amount * (1 + temperature/100)
+  return order.amountSowableNextSeason.mul(1 + temp / 100);
+};
+
+const formatType = (type: string) => {
+  switch (type) {
+    case "sow":
+      return "Sow";
+    case "harvest":
+      return "Harvest";
+    case "transfer":
+      return "Transfer";
+    default:
+      return "Other";
+  }
+};
+
+const formatDate = (timestamp: number) => {
+  return new Date(timestamp * 1000).toLocaleDateString();
+};
+
+const formatTime = (timestamp: number) => {
+  return new Date(timestamp * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+};
+
+const formatAddress = (address: string) => {
+  return `${address.slice(0, 6)}...${address.slice(-3)}`;
+};
+
+// Helper function to format numbers with commas
+const formatNumberWithCommas = (value: number | string) => {
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
+// Update the formatType function or add a new formatting function for seasons
+const formatSeason = (season: number | null): string => {
+  return season !== null ? season.toString() : "-";
+};
