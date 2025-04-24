@@ -230,7 +230,7 @@ export default function ReviewTractorOrderDialog({
                 </p>
               ) : (
                 <Col className="gap-3">
-                  <p className="flex items-center">
+                  <p>
                     A Tractor Order allows you to pay an Operator to execute a transaction for you on the
                     <span className="whitespace-nowrap">
                       <IconImage
