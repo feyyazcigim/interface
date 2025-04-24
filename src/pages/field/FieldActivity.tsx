@@ -354,7 +354,7 @@ const SeeAllTractorOrdersRow = ({ setShowOrdersDialog }: { setShowOrdersDialog: 
   );
 };
 
-const TractorOrderRow = ({
+const TractorOrderRow = React.memo(({
   order,
   hoveredAddress,
   currentSeason,
@@ -364,12 +364,15 @@ const TractorOrderRow = ({
   order: OrderbookEntry;
   hoveredAddress: string | null;
   currentSeason: number | undefined;
-  setHoveredAddress: (address: string | null) => void;
   currentTemperature: { max: TokenValue };
+  setHoveredAddress: (address: string | null) => void;
 }) => {
+  const address = order.requisition.blueprint.publisher;
+  const isHovered = hoveredAddress === address;
+
   return (
     <tr
-      className={`tractor-order-row hover:bg-pinto-green-1 transition-colors ${hoveredAddress === order.requisition.blueprint.publisher ? "bg-pinto-green-1" : ""}`}
+      className={`tractor-order-row hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}
     >
       <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
         {formatSeason(Number(currentSeason) + 1)}
@@ -380,16 +383,16 @@ const TractorOrderRow = ({
       <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">{estimateExecutionTime(order)}</td>
       <td
         className="px-2 py-1"
-        onMouseEnter={() => setHoveredAddress(order.requisition.blueprint.publisher)}
+        onMouseEnter={() => setHoveredAddress(address)}
         onMouseLeave={() => setHoveredAddress(null)}
       >
         <a
-          href={`https://basescan.org/address/${order.requisition.blueprint.publisher}`}
+          href={`https://basescan.org/address/${address}`}
           target="_blank"
           rel="noopener noreferrer"
-          className={`text-xs font-antarctica font-light text-pinto-gray-4 underline ${hoveredAddress === order.requisition.blueprint.publisher ? "font-medium" : ""}`}
+          className={`text-xs font-antarctica font-light text-pinto-gray-4 underline ${isHovered ? "font-medium" : ""}`}
         >
-          {formatAddress(order.requisition.blueprint.publisher)}
+          {formatAddress(address)}
         </a>
       </td>
       <td className="px-2 py-1 flex items-center">
@@ -441,9 +444,21 @@ const TractorOrderRow = ({
       </td>
     </tr>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if:
+  // 1. The hoveredAddress matches this row's address
+  // 2. The order data has changed
+  return (
+    prevProps.hoveredAddress !== nextProps.hoveredAddress && 
+    prevProps.hoveredAddress !== prevProps.order.requisition.blueprint.publisher &&
+    nextProps.hoveredAddress !== nextProps.order.requisition.blueprint.publisher &&
+    prevProps.order === nextProps.order &&
+    prevProps.currentSeason === nextProps.currentSeason &&
+    prevProps.currentTemperature === nextProps.currentTemperature
+  );
+});
 
-const FieldActivityRow = ({
+const FieldActivityRow = React.memo(({
   activity,
   hoveredAddress,
   setHoveredAddress,
@@ -452,9 +467,11 @@ const FieldActivityRow = ({
   hoveredAddress: string | null;
   setHoveredAddress: (address: string | null) => void;
 }) => {
+  const isHovered = hoveredAddress === activity.address;
+
   return (
     <tr
-      className={`hover:bg-pinto-green-1 transition-colors ${hoveredAddress === activity.address ? "bg-pinto-green-1" : ""}`}
+      className={`hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}
     >
       <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatSeason(activity.season)}</td>
       <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatDate(activity.timestamp)}</td>
@@ -468,7 +485,7 @@ const FieldActivityRow = ({
           href={`https://basescan.org/address/${activity.address}`}
           target="_blank"
           rel="noopener noreferrer"
-          className={`text-xs font-antarctica font-light text-pinto-dark underline ${hoveredAddress === activity.address ? "font-medium" : ""}`}
+          className={`text-xs font-antarctica font-light text-pinto-dark underline ${isHovered ? "font-medium" : ""}`}
         >
           {formatAddress(activity.address)}
         </a>
@@ -507,7 +524,17 @@ const FieldActivityRow = ({
       </td>
     </tr>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if:
+  // 1. The hoveredAddress matches this row's address
+  // 2. The activity data has changed
+  return (
+    prevProps.hoveredAddress !== nextProps.hoveredAddress && 
+    prevProps.hoveredAddress !== prevProps.activity.address &&
+    nextProps.hoveredAddress !== nextProps.activity.address &&
+    prevProps.activity === nextProps.activity
+  );
+});
 
 const FieldActivityHeader = () => (
   <thead>
