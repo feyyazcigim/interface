@@ -19,6 +19,7 @@ interface TooltipSimpleProps {
   align?: "start" | "center" | "end";
   showOnMobile?: boolean;
   triggerClassName?: string;
+  className?: string;
   sideOffset?: number;
   disabled?: boolean;
 }
@@ -43,6 +44,7 @@ export default function TooltipSimple({
   align = "center",
   showOnMobile,
   triggerClassName,
+  className,
   sideOffset = 0,
   disabled = false,
   ...props
@@ -73,7 +75,7 @@ export default function TooltipSimple({
           )}
         </TooltipTrigger>
         <TooltipPortal>
-          <ContentComponent side={side} align={align} sideOffset={sideOffset} {...props}>
+          <ContentComponent side={side} align={align} sideOffset={sideOffset} className={className} {...props}>
             {content}
           </ContentComponent>
         </TooltipPortal>

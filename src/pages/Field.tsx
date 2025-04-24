@@ -16,12 +16,17 @@ import {
   useUpdateMorningTemperatureOnInterval,
 } from "@/state/protocol/field/field.updater";
 
+import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
+import { Col } from "@/components/Container";
 import CornerBorders from "@/components/CornerBorders";
 import MobileActionBar from "@/components/MobileActionBar";
+import ReadMoreAccordion from "@/components/ReadMoreAccordion";
 import SowOrderDialog, { AnimateSowOrderDialog } from "@/components/SowOrderDialog";
+import TextSkeleton from "@/components/TextSkeleton";
 import TooltipSimple from "@/components/TooltipSimple";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { navLinks } from "@/components/nav/nav/Navbar";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { inputExceedsSoilAtom } from "@/state/protocol/field/field.atoms";
 import { useFarmerField } from "@/state/useFarmerField";
 import { useHarvestableIndex, useHarvestableIndexLoading, useTotalSoil } from "@/state/useFieldData";
@@ -31,6 +36,7 @@ import { SizeIcon } from "@radix-ui/react-icons";
 import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
+import { useAccount } from "wagmi";
 import FieldActions from "./field/FieldActions";
 import FieldActivity from "./field/FieldActivity";
 import FieldStats from "./field/FieldStats";
@@ -140,6 +146,11 @@ function Field() {
   const isMobile = useIsMobile();
   const [tractorRefreshCounter, setTractorRefreshCounter] = useState(0);
   const [showSowOrder, setShowSowOrder] = useState(false);
+  const [shouldHideShowOrders, setShouldHideShowOrders] = useState(false);
+
+  const { address, isConnecting } = useAccount();
+
+  const isPodsLoading = (!address && isConnecting) || farmerField.isLoading;
 
   const refreshTractorOrders = useCallback(() => {
     setTractorRefreshCounter((prev) => prev + 1);
@@ -192,15 +203,15 @@ function Field() {
       <div className="flex flex-col lg:flex-row justify-between gap-14 mt-0 sm:mt-0">
         <div className="flex flex-col w-full gap-4 sm:gap-8">
           {(!isMobile || (!currentAction && isMobile)) && (
-            <div className="flex flex-col gap-4">
-              <div className="pinto-h2 sm:pinto-h1">Field</div>
-              <div className="pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-                Lend in the decentralized credit facility for Pods, the Pinto debt asset.
+            <Col className="gap-2">
+              <div className="flex flex-col gap-4">
+                <div className="pinto-h2 sm:pinto-h1">Field</div>
+                <div className="pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
+                  Lend Pinto to the protocol to earn interest.
+                </div>
               </div>
-              <div className="hidden sm:block pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-                Pods become redeemable for Pinto 1:1 when they reach the front of the Pod Line.
-              </div>
-            </div>
+              <ReadMoreField />
+            </Col>
           )}
           {currentAction && isMobile && (
             <Button variant={"outline"} rounded="full" noPadding className="h-9 w-9 sm:h-12 sm:w-12">
@@ -223,13 +234,9 @@ function Field() {
                     content="Debt repaid to Pod holders since deployment. These Pods do not count towards the current Pod Line"
                   />
                 </div>
-                <div className="pinto-h4 sm:pinto-h3">
-                  {harvestableIndexLoading ? (
-                    <Skeleton className="flex w-20 h-4 sm:w-24 sm:h-[2.2rem] rounded-[0.75rem]" />
-                  ) : (
-                    formatter.noDec(harvestableIndex)
-                  )}
-                </div>
+                <TextSkeleton loading={harvestableIndexLoading} desktopHeight="h3" height="h4" className="w-20">
+                  <div className="pinto-h4 sm:pinto-h3">{formatter.noDec(harvestableIndex)}</div>
+                </TextSkeleton>
               </div>
               <Button asChild variant={"outline"} className="rounded-full text-[1rem] sm:text-[1.25rem]">
                 <Link to="/explorer/field">View Data</Link>
@@ -243,7 +250,7 @@ function Field() {
                 <div className="flex space-x-1">
                   <button
                     type="button"
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "activity" ? "text-pinto-dark" : "text-pinto-gray-4"}`}
+                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "activity" ? "text-pinto-secondary" : "text-pinto-gray-4"}`}
                     onClick={() => {
                       setActiveTab("activity");
                       const params = new URLSearchParams(window.location.search);
@@ -255,7 +262,7 @@ function Field() {
                   </button>
                   <button
                     type="button"
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "tractor" ? "text-pinto-dark" : "text-pinto-gray-4"}`}
+                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "tractor" ? "text-pinto-secondary" : "text-pinto-gray-4"}`}
                     onClick={() => {
                       setActiveTab("tractor");
                       const params = new URLSearchParams(window.location.search);
@@ -267,7 +274,7 @@ function Field() {
                   </button>
                   <button
                     type="button"
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "pods" ? "text-pinto-dark" : "text-pinto-gray-4"}`}
+                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "pods" ? "text-pinto-secondary" : "text-pinto-gray-4"}`}
                     onClick={() => {
                       setActiveTab("pods");
                       const params = new URLSearchParams(window.location.search);
@@ -281,20 +288,16 @@ function Field() {
 
                 <div className="flex flex-row gap-2 items-center">
                   <img src={podIcon} className="w-8 h-8" alt={"total pods"} />
-                  {harvestableIndexLoading ? (
-                    <Skeleton className="w-6 h-8" />
-                  ) : (
+                  <TextSkeleton loading={isPodsLoading} height="h3" className="w-20">
                     <div className="pinto-h3">{formatter.number(totalPods)}</div>
-                  )}
+                  </TextSkeleton>
                 </div>
               </div>
 
               {activeTab === "activity" && <FieldActivity />}
-
               {activeTab === "pods" && (
                 <div>{hasPods ? <PlotsTable showClaimable disableHover /> : <EmptyTable type="plots-field" />}</div>
               )}
-
               {activeTab === "tractor" && (
                 <div className="w-full">
                   <TractorOrdersPanel refreshData={tractorRefreshCounter} onCreateOrder={() => setShowSowOrder(true)} />
@@ -350,7 +353,6 @@ function Field() {
                   Send Pods
                 </NavLink>
               </Button>
-
               <Button asChild variant="silo-action" className="w-full">
                 <NavLink to="/market/pods" className="flex flex-row gap-2 items-center">
                   <div className="rounded-full bg-pinto-green h-6 w-6 flex justify-evenly">
@@ -363,6 +365,7 @@ function Field() {
               </Button>
             </div>
           )}
+          <AccordionGroup groupTitle="Frequently Asked Questions" items={FieldFAQ} allExpanded={false} size="small" />
           {!currentAction && (
             <MobileActionBar>
               <Button
@@ -399,3 +402,86 @@ export const DynamicTemperatureChart = () => {
     return <TemperatureChart />;
   }
 };
+
+const initialValue = { field: false };
+
+const ReadMoreField = () => {
+  const [learnDidVisit, setLearnDidVisit] = useLocalStorage<{ field: boolean }>(
+    "pinto-learn-state-field",
+    initialValue,
+    { initializeIfEmpty: true },
+  );
+
+  // Set the learnDidVisit state to true if it is not already true
+  useEffect(() => {
+    if (learnDidVisit.field) return;
+    setLearnDidVisit({ field: true });
+  }, []);
+
+  return (
+    <ReadMoreAccordion defaultOpen={!learnDidVisit.field}>
+      <>
+        Pinto can be lent to the protocol in exchange for a fixed interest rate bond, where the rate payback is a
+        function of Pinto supply growth. The debt to the user is represented by Pods, which are defined by their
+        position in the Pod Line. Soil is the amount of Pinto the protocol is willing to purchase on the open market and
+        temperature is the interest rate it will pay. Each season the Soil and maximum Temperature are set based on
+        Protocol state. When Pinto is priced over $1 new Pinto is minted with 48.5% being distributed to lenders in the
+        Field. Loans are paid back in first in first out (FIFO) ordering.
+      </>
+    </ReadMoreAccordion>
+  );
+};
+
+const FieldFAQ: IBaseAccordionContent[] = [
+  {
+    key: "what-are-pods",
+    title: "What are Pods?",
+    content:
+      "Pods are the native debt asset of the Pinto protocol. They are minted when a user Sows Pinto in the Field. Pods are represented by their position in the Pod Line and mature on a first in first out (FIFO) basis. 48.5% of new Pinto mints are used to pay off Pods in the Pod Line.",
+  },
+  {
+    key: "what-is-soil",
+    title: "What is Soil?",
+    content:
+      "Soil is the amount of Pinto the protocol is willing to borrow in a given Season. The protocol issues debt every Season, but the exact Soil available varies with system conditions.",
+  },
+  {
+    key: "what-is-temperature",
+    title: "What is Temperature?",
+    content:
+      "Temperature is the interest rate for Pods. It adjusts incrementally each season based on prior market activity, with no fixed cap to avoid systemic risk.",
+  },
+  {
+    key: "what-is-the-morning-auction",
+    title: "What is the Morning Auction?",
+    content:
+      "The Morning Auction is a Dutch Auction where Temperature increases over the first 10 minutes of each Season. When demand for Soil is high at max Temperature, Farmers may choose to purchase Pods earlier—at lower rates—to avoid a longer pod line as the protocol reduces Temperature over time.",
+  },
+  {
+    key: "how-can-i-learn-more-about-the-field",
+    title: "How can I learn more about the Field?",
+    content: (
+      <>
+        Head to the{" "}
+        <Link
+          className="text-pinto-green-4 hover:underline transition-all"
+          to={`${navLinks.docs}/farm/field`}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Pinto docs
+        </Link>{" "}
+        for more info, or ask any questions in the{" "}
+        <Link
+          className="text-pinto-green-4 hover:underline transition-all"
+          to={navLinks.discord}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          discord
+        </Link>{" "}
+        community!
+      </>
+    ),
+  },
+] as const;
