@@ -498,36 +498,18 @@ export function SoilOrderbookContent({
       <Table>
         <TableHeader className="[&_tr]:border-b-0">
           <TableRow className="border-b-0">
-            <TableHead className="py-2 px-0 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Temperature
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
+            <TableHead className="py-2 px-0 font-light text-[#9C9C9C] text-base leading-[110%]">Temperature</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">
               Max Podline Length
             </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">
               Total Soil Order Size
             </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Available Pinto
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Max per Season
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Morning Auction
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Operator Tip
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Blueprint Hash
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Publisher
-            </TableHead>
-            <TableHead className="py-2 font-antarctica font-light text-[#9C9C9C] text-base leading-[110%]">
-              Created at
-            </TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Available Pinto</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Max per Season</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Blueprint Hash</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Publisher</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Created at</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -755,7 +737,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
         <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
         <DialogContent className="max-w-[90rem] w-[98vw] bg-gray-50 border border-gray-200 p-0">
           <DialogHeader className="pt-2">
-            <DialogTitle className="text-xl font-antarctica font-bold">Tractor Soil Orders</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Tractor Soil Orders</DialogTitle>
           </DialogHeader>
 
           <div className="w-full">
@@ -764,14 +746,14 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                 <div className="flex gap-4">
                   <button
                     type="button"
-                    className={`pb-2 pt-1 font-antarctica ${activeTab === "view" ? "border-b-2 border-pinto-green-4 font-medium -mb-[2px]" : "border-b-2 border-transparent text-pinto-gray-4 -mb-[2px]"}`}
+                    className={`pb-2 pt-1 ${activeTab === "view" ? "border-b-2 border-pinto-green-4 font-medium -mb-[2px]" : "border-b-2 border-transparent text-pinto-gray-4 -mb-[2px]"}`}
                     onClick={() => setActiveTab("view")}
                   >
                     View Soil Orders
                   </button>
                   <button
                     type="button"
-                    className={`pb-2 pt-1 font-antarctica ${activeTab === "execute" ? "border-b-2 border-pinto-green-4 font-medium -mb-[2px]" : "border-b-2 border-transparent text-pinto-gray-4 -mb-[2px]"}`}
+                    className={`pb-2 pt-1 ${activeTab === "execute" ? "border-b-2 border-pinto-green-4 font-medium -mb-[2px]" : "border-b-2 border-transparent text-pinto-gray-4 -mb-[2px]"}`}
                     onClick={() => setActiveTab("execute")}
                   >
                     Execute Soil Orders
