@@ -476,13 +476,13 @@ const FieldActivityRow = React.memo(
 
     return (
       <tr className={`hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-secondary">
           {formatSeason(activity.season)}
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-secondary">
           {formatDate(activity.timestamp)}
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-secondary">
           {formatTime(activity.timestamp)}
         </td>
         <td
@@ -494,7 +494,7 @@ const FieldActivityRow = React.memo(
             href={`https://basescan.org/address/${activity.address}`}
             target="_blank"
             rel="noopener noreferrer"
-            className={`text-xs font-antarctica font-light text-pinto-dark underline ${isHovered ? "font-medium" : ""}`}
+            className={`text-xs font-antarctica font-light text-pinto-secondary underline ${isHovered ? "font-medium" : ""}`}
           >
             {formatAddress(activity.address)}
           </a>
@@ -504,18 +504,18 @@ const FieldActivityRow = React.memo(
             href={`https://basescan.org/tx/${activity.txHash}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-antarctica font-light text-pinto-dark underline"
+            className="text-xs font-antarctica font-light text-pinto-secondary underline"
           >
             {formatAddress(activity.txHash)}
           </a>
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-secondary">
           {activity.temperature.toFixed(2)}%
         </td>
         <td className="px-2 py-1 text-right">
           <div className="flex items-center justify-end gap-1">
             <IconImage src={pintoIcon} alt="PINTO" size={3} />
-            <span className="text-xs font-antarctica font-light text-pinto-dark">
+            <span className="text-xs font-antarctica font-light text-pinto-secondary">
               {`${formatNumberWithCommas(parseFloat(activity.amount.toHuman()).toFixed(2))}`}
             </span>
           </div>
@@ -523,12 +523,12 @@ const FieldActivityRow = React.memo(
         <td className="px-2 py-1 text-right">
           <div className="flex items-center justify-end gap-1">
             <IconImage src={podIcon} alt="Pods" size={3} />
-            <span className="text-xs font-antarctica font-light text-pinto-dark">
+            <span className="text-xs font-antarctica font-light text-pinto-secondary">
               {`${formatNumberWithCommas(parseFloat(activity.pods.toHuman()).toFixed(2))}`}
             </span>
           </div>
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark text-right">
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-secondary text-right">
           {activity.placeInLine.split(".")[0]}
         </td>
       </tr>

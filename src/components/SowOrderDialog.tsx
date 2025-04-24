@@ -1053,7 +1053,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 <Col className="gap-6 pinto-sm-light text-pinto-light">
                   {/* Title and separator */}
                   <div className="flex flex-col gap-2">
-                    <h4 className="pinto-body text-pinto-dark mb-4">🚜 Specify Conditions for automated Sowing</h4>
+                    <h4 className="pinto-body text-pinto-secondary mb-4">🚜 Specify Conditions for automated Sowing</h4>
                     <div className="h-[1px] w-full bg-pinto-gray-2" />
                   </div>
 
@@ -1293,7 +1293,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   <Col>
                     {/* Title and separator for Step 2 */}
                     <div className="flex flex-col gap-2">
-                      <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: "20px" }}>
+                      <h2 className="pinto-h4 text-pinto-secondary mb-4" style={{ fontSize: "20px" }}>
                         🚜 Tip per Execution
                       </h2>
                       <div className="h-[1px] w-full bg-pinto-gray-2 mb-6" />

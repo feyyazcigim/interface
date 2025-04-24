@@ -333,7 +333,7 @@ export function SoilOrderbookContent() {
                       : "Unknown"}
                   </div>
                 </TableCell>
-                <TableCell className="py-2 text-pinto-dark">
+                <TableCell className="py-2 text-pinto-secondary">
                   {`0x${req.requisition.blueprintHash.slice(2, 7)}...${req.requisition.blueprintHash.slice(-4)}`}
                 </TableCell>
                 <TableCell className="py-2">
@@ -341,7 +341,7 @@ export function SoilOrderbookContent() {
                     href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-pinto-dark underline hover:opacity-80"
+                    className="text-pinto-secondary underline hover:opacity-80"
                     onClick={(e) => e.stopPropagation()} // Prevent row click when clicking the link
                   >
                     {`0x${req.requisition.blueprint.publisher.slice(2, 7)}...${req.requisition.blueprint.publisher.slice(-4)}`}
