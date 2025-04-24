@@ -13,7 +13,7 @@ import { useHarvestableIndex } from "@/state/useFieldData";
 import { useTemperature } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { usePublicClient } from "wagmi";
 
 interface FieldActivityItem {
@@ -250,6 +250,11 @@ const FieldActivity = () => {
     fetchSowEvents();
   }, [publicClient, protocolAddress, currentSeason, harvestableIndex, currentTemperature.max.blockchainString]);
 
+  const ordersWithSowableAmount = useMemo(
+    () => tractorOrders.filter((order) => order.amountSowableNextSeason.gt(0)),
+    [tractorOrders],
+  );
+
   // Render a loading skeleton for the entire table
   if (loading && loadingTractorOrders) {
     return <FieldActivitySkeleton />;
@@ -277,23 +282,21 @@ const FieldActivity = () => {
                   <Col className="items-center justify-center p-4">Loading Tractor orders...</Col>
                 </td>
               </tr>
-            ) : tractorOrders.filter((order) => order.amountSowableNextSeason.gt(0)).length > 0 ? (
+            ) : !!ordersWithSowableAmount.length ? (
               <>
-                {tractorOrders
-                  .filter((order) => order.amountSowableNextSeason.gt(0)) // Filter out orders with 0 amountSowableNextSeason
-                  .map((order, index) => {
-                    const temp = getOrderTemperature(order);
-                    return (
-                      <TractorOrderRow
-                        key={`tractor-${order.requisition.blueprintHash}`}
-                        order={order}
-                        hoveredAddress={hoveredAddress}
-                        currentSeason={currentSeason}
-                        currentTemperature={currentTemperature}
-                        setHoveredAddress={setHoveredAddress}
-                      />
-                    );
-                  })}
+                {ordersWithSowableAmount.map((order, index) => {
+                  // const temp = getOrderTemperature(order);
+                  return (
+                    <TractorOrderRow
+                      key={`tractor-${order.requisition.blueprintHash}`}
+                      order={order}
+                      hoveredAddress={hoveredAddress}
+                      currentSeason={currentSeason}
+                      currentTemperature={currentTemperature}
+                      setHoveredAddress={setHoveredAddress}
+                    />
+                  );
+                })}
               </>
             ) : (
               <>
@@ -304,12 +307,11 @@ const FieldActivity = () => {
             )}
 
             {/* Separator row between tractor orders and regular activity */}
-            {activities.length > 0 &&
-              tractorOrders.filter((order) => order.amountSowableNextSeason.gt(0)).length > 0 && (
-                <tr>
-                  <td colSpan={9} className="border-b-2 border-pinto-gray-3/20 py-0" />
-                </tr>
-              )}
+            {activities.length > 0 && ordersWithSowableAmount.length > 0 && (
+              <tr>
+                <td colSpan={9} className="border-b-2 border-pinto-gray-3/20 py-0" />
+              </tr>
+            )}
             {/**
              * See All Tractor Orders Row
              */}

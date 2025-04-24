@@ -217,7 +217,14 @@ export default function ReviewTractorOrderDialog({
                 <p>
                   This is your active Tractor Order. It allows an Operator to execute a transaction for you on the{" "}
                   <span className="whitespace-nowrap">
-                    <IconImage src={baseLogo} nudge={-6} mobileSize={4} size={6} className="inline align-baseline mx-[0.5px] rounded-full" /> Base&nbsp;
+                    <IconImage
+                      src={baseLogo}
+                      nudge={-6}
+                      mobileSize={4}
+                      size={6}
+                      className="inline align-baseline mx-[0.5px] rounded-full"
+                    />{" "}
+                    Base&nbsp;
                   </span>
                   network when the conditions are met.
                 </p>
@@ -226,7 +233,14 @@ export default function ReviewTractorOrderDialog({
                   <p className="flex items-center">
                     A Tractor Order allows you to pay an Operator to execute a transaction for you on the
                     <span className="whitespace-nowrap">
-                      <IconImage src={baseLogo} nudge={-6} mobileSize={4} size={6} className="inline align-baseline mx-[0.5px] rounded-full" /> Base&nbsp;  
+                      <IconImage
+                        src={baseLogo}
+                        nudge={-6}
+                        mobileSize={4}
+                        size={6}
+                        className="inline align-baseline mx-[0.5px] rounded-full"
+                      />{" "}
+                      Base&nbsp;
                     </span>
                     network.
                   </p>
