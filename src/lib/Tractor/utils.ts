@@ -862,6 +862,25 @@ export async function loadOrderbookData(
       // Continue with zero if we can't get the current pod line
     }
 
+    // Fetch SowOrderComplete events to identify completed orders
+    console.log("Fetching SowOrderComplete events...");
+    const sowOrderCompleteEvents = await publicClient.getContractEvents({
+      address: SOW_BLUEPRINT_V0_ADDRESS,
+      abi: sowBlueprintv0ABI,
+      eventName: "SowOrderComplete",
+      fromBlock: TRACTOR_DEPLOYMENT_BLOCK,
+      toBlock: "latest",
+    });
+
+    // Create a set of completed blueprint hashes
+    const completedOrders = new Set<`0x${string}`>(
+      sowOrderCompleteEvents
+        .map((event) => event.args?.blueprintHash)
+        .filter((hash): hash is `0x${string}` => hash !== undefined),
+    );
+
+    console.log(`Found ${completedOrders.size} completed orders`);
+
     const requisitions = await loadPublishedRequisitions(
       address,
       protocolAddress,
@@ -870,7 +889,12 @@ export async function loadOrderbookData(
       "sowBlueprintv0",
     );
 
-    const activeRequisitions = requisitions.filter((req) => !req.isCancelled);
+    // Filter out cancelled and completed orders
+    const activeRequisitions = requisitions.filter(
+      (req) => !req.isCancelled && !completedOrders.has(req.requisition.blueprintHash),
+    );
+
+    console.log(`Total requisitions: ${requisitions.length}, Active: ${activeRequisitions.length}`);
 
     // Decode data and sort requisitions by temperature (lowest first)
     const requisitionsWithTemperature = activeRequisitions.map((requisition) => {
