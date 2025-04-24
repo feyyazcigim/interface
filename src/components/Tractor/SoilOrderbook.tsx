@@ -328,13 +328,11 @@ export function SoilOrderbookContent({
 
     // No need to multiply by 100, the temperature is already in percentage
     const maxTemp = temperature.max.toNumber();
-    console.log("Current max temperature:", maxTemp);
 
     let insertIndex = 0;
 
     // Debug data about requisitions and their temperatures
     if (sortedReqs.length > 0) {
-      console.log("Requisitions sorted by temperature:");
       sortedReqs.forEach((req, idx) => {
         try {
           const data = decodeSowTractorData(req.requisition.blueprint.data);
@@ -358,7 +356,6 @@ export function SoilOrderbookContent({
       insertIndex++;
     }
 
-    console.log("Inserting max temperature row at index:", insertIndex);
     return insertIndex;
   };
 
@@ -399,6 +396,29 @@ export function SoilOrderbookContent({
   };
 
   const summaryData = calculateSummaryData();
+
+  // Helper function to render the temperature indicator row
+  const renderTemperatureIndicatorRow = () => (
+    <TableRow className="border-b-0">
+      <TableCell className="py-1 px-0 text-pinto-green-4 border-b-0" colSpan={2}>
+        ↑ {formatter.pct(temperature.max)} - Current Temp
+      </TableCell>
+      <TableCell className="py-1 border-b-0 text-pinto-green-4 justify-end text-right">Totals:</TableCell>
+      <TableCell className="py-1 text-right border-b-0">
+        <div className="flex items-center justify-start gap-1">
+          <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+          <span className="text-pinto-green-4 font-medium">{formatter.number(summaryData.totalAvailablePinto)}</span>
+        </div>
+      </TableCell>
+      <TableCell className="py-1 text-right border-b-0">
+        <div className="flex items-center justify-start gap-1">
+          <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+          <span className="text-pinto-green-4 font-medium">{formatter.number(summaryData.totalMaxPerSeason)}</span>
+        </div>
+      </TableCell>
+      <TableCell className="py-1 border-b-0" colSpan={5} />
+    </TableRow>
+  );
 
   // Helper function to render a requisition row
   const renderRequisitionRow = (req, index) => {
@@ -518,60 +538,14 @@ export function SoilOrderbookContent({
             if (sortBy === "temperature" && index === maxTempPosition) {
               return (
                 <React.Fragment key="current-max-temp">
-                  <TableRow className="border-b-0">
-                    <TableCell className="py-1 px-0 text-pinto-green-4 border-b-0" colSpan={2}>
-                      ↑ {formatter.pct(temperature.max)} - Current Temp
-                    </TableCell>
-                    <TableCell className="py-1 border-b-0 text-pinto-green-4 justify-end text-right">Totals:</TableCell>
-                    <TableCell className="py-1 text-right border-b-0">
-                      <div className="flex items-center justify-start gap-1">
-                        <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                        <span className="text-pinto-green-4 font-medium">
-                          {formatter.number(summaryData.totalAvailablePinto)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-1 text-right border-b-0">
-                      <div className="flex items-center justify-start gap-1">
-                        <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                        <span className="text-pinto-green-4 font-medium">
-                          {formatter.number(summaryData.totalMaxPerSeason)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-1 border-b-0" colSpan={5} />
-                  </TableRow>
+                  {renderTemperatureIndicatorRow()}
                   {renderRequisitionRow(req, index)}
                 </React.Fragment>
               );
             }
             return renderRequisitionRow(req, index);
           })}
-          {sortBy === "temperature" && maxTempPosition === sortedRequisitions.length && (
-            <TableRow className="border-b-0">
-              <TableCell className="py-1 px-0 text-pinto-green-4 border-b-0" colSpan={2}>
-                ↑ {formatter.pct(temperature.max)} - Current Temp
-              </TableCell>
-              <TableCell className="py-1 border-b-0 text-pinto-green-4 justify-end text-right">Totals:</TableCell>
-              <TableCell className="py-1 text-right border-b-0">
-                <div className="flex items-center justify-start gap-1">
-                  <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                  <span className="text-pinto-green-4 font-medium">
-                    {formatter.number(summaryData.totalAvailablePinto)}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell className="py-1 text-right border-b-0">
-                <div className="flex items-center justify-start gap-1">
-                  <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                  <span className="text-pinto-green-4 font-medium">
-                    {formatter.number(summaryData.totalMaxPerSeason)}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell className="py-1 border-b-0" colSpan={5} />
-            </TableRow>
-          )}
+          {sortBy === "temperature" && maxTempPosition === sortedRequisitions.length && renderTemperatureIndicatorRow()}
           {sortedRequisitions.length === 0 && (
             <TableRow>
               <TableCell colSpan={10} className="p-2 text-center text-gray-500">
