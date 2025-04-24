@@ -36,13 +36,13 @@ import { SizeIcon } from "@radix-ui/react-icons";
 import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
+import { useAccount } from "wagmi";
 import FieldActions from "./field/FieldActions";
 import FieldActivity from "./field/FieldActivity";
 import FieldStats from "./field/FieldStats";
 import MorningPanel from "./field/MorningPanel";
 import TemperatureChart from "./field/Temperature";
 import TractorOrdersPanel from "./field/TractorOrdersPanel";
-import { useAccount } from "wagmi";
 
 // Add a custom hook to track the current sow amount
 function useTotalSowAmount() {

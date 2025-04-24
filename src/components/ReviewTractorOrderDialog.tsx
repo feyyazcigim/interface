@@ -214,19 +214,21 @@ export default function ReviewTractorOrderDialog({
             </div>
             <DialogDescription className="px-6 pinto-sm-light text-pinto-light">
               {isViewOnly ? (
-                <div className="flex items-center">
-                  <span>
-                    This is your active Tractor Order. It allows an Operator to execute a transaction for you on the{" "}
+                <p>
+                  This is your active Tractor Order. It allows an Operator to execute a transaction for you on the{" "}
+                  <span className="whitespace-nowrap">
+                    <IconImage src={baseLogo} nudge={-6} mobileSize={4} size={6} className="inline align-baseline mx-[0.5px] rounded-full" /> Base&nbsp;
                   </span>
-                  <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
-                  <span>Base network when the conditions are met.</span>
-                </div>
+                  network when the conditions are met.
+                </p>
               ) : (
                 <Col className="gap-3">
                   <p className="flex items-center">
                     A Tractor Order allows you to pay an Operator to execute a transaction for you on the
-                    <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
-                    Base network.
+                    <span className="whitespace-nowrap">
+                      <IconImage src={baseLogo} nudge={-6} mobileSize={4} size={6} className="inline align-baseline mx-[0.5px] rounded-full" /> Base&nbsp;  
+                    </span>
+                    network.
                   </p>
                   <p>
                     This allows you to interact with the Pinto protocol autonomously when the conditions of your Order

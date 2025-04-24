@@ -264,13 +264,8 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
           }
 
           return (
-            <Col
-              key={`requisition-${index}`}
-              className="gap-4"
-            // className="box-border flex flex-col p-4 gap-2 bg-white border border-pinto-gray-2 rounded-[24px] cursor-pointer hover:border-pinto-green-4 transition-colors relative"
-            // onClick={() => handleOrderClick(req)}
-            >
-              <Card 
+            <Col key={`requisition-${index}`} className="gap-2">
+              <Card
                 className="box-border flex flex-col p-4 gap-2 bg-white border border-pinto-gray-2 rounded-xl cursor-pointer hover:border-pinto-green-4 transition-colors"
                 onClick={() => handleOrderClick(req)}
               >
@@ -280,7 +275,9 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                     <div className="flex items-center gap-0">
                       {/* Withdraw pill */}
                       <div className="flex items-center px-2 py-1 bg-pinto-green-4 rounded-xl">
-                        <span className="text-white text-sm font-antarctica font-normal whitespace-nowrap">Withdraw</span>
+                        <span className="text-white text-sm font-antarctica font-normal whitespace-nowrap">
+                          Withdraw
+                        </span>
                       </div>
                       {/* Divider */}
                       <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0" />
@@ -386,7 +383,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
               </Card>
 
               {/* External actions - positioned outside the cell */}
-              <Row className="font-antarctica self-end gap-4 pinto-sm text-pinto-light">
+              <Row className="font-antarctica self-end gap-2 pinto-sm text-pinto-light">
                 <div className="inline-flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
                   <span className="inline-block whitespace-nowrap">Published {publishDate}</span>
