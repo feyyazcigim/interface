@@ -40,11 +40,13 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         "silo-action":
           "hover:bg-pinto-green-1 h-[2.5rem] rounded-[1rem] font-[400] text-[1.25rem] text-pinto-gray-5 flex flex-row justify-start gap-[0.625rem] disabled:bg-transparent disabled:text-pinto-gray-5 disabled:opacity-30",
+        hoverTextPrimary:
+          "text-sm font-light font-antarctica text-pinto-green-4 hover:text-pinto-green-5 hover:underline",
         morning: "bg-pinto-morning-orange text-pinto-morning",
         gradient:
           "bg-gradient-primary hover:bg-gradient-primary-hover text-white disabled:text-white disabled:opacity-60",
         pagination:
-          "bg-pinto-green-1 text-pinto-green hover:bg-pinto-green-1/80 transition-all rounded-sm disabled:bg-transparent disabled:text-pinto-gray-4 text-pinto-green-4",
+          "bg-pinto-green-1 hover:bg-pinto-green-1/80 transition-all rounded-sm disabled:bg-transparent disabled:text-pinto-gray-4 text-pinto-green-4",
       },
       size: {
         default: `h-10 w-max px-2 py-2 sm:px-4 sm:py-2 ${deriveTextStyles("body-light", true)}`,

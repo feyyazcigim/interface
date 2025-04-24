@@ -3,6 +3,7 @@ import pintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import { Col } from "@/components/Container";
 import { SoilOrderbookDialog } from "@/components/Tractor/SoilOrderbook";
+import { Button } from "@/components/ui/Button";
 import IconImage from "@/components/ui/IconImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { diamondABI } from "@/constants/abi/diamondABI";
@@ -433,117 +434,23 @@ const FieldActivity = () => {
 
   // Render a loading skeleton for the entire table
   if (loading && loadingTractorOrders) {
-    return (
-      <div className="w-full">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Season</th>
-                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Date</th>
-                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Time</th>
-                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Address</th>
-                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Txn Hash</th>
-                <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Temp</th>
-                <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">
-                  Amount Sown
-                </th>
-                <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">
-                  Pods minted
-                </th>
-                <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">
-                  Place in Line
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array(5)
-                .fill(0)
-                .map((_, index) => (
-                  <tr key={index}>
-                    <td className="px-2 py-1">
-                      <Skeleton className="h-3 w-12" />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Skeleton className="h-3 w-24" />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Skeleton className="h-3 w-20" />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Skeleton className="h-3 w-28" />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Skeleton className="h-3 w-28" />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Skeleton className="h-3 w-14" />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Skeleton className="h-3 w-20" />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Skeleton className="h-3 w-20" />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Skeleton className="h-3 w-24" />
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
+    return <FieldActivitySkeleton />;
   }
 
   if (activities.length === 0 && tractorOrders.length === 0) {
-    return (
-      <div className="w-full p-8 flex flex-col items-center justify-center">
-        <p className="text-sm text-pinto-gray-4 mb-2">No field activity found</p>
-        <p className="text-xs text-pinto-gray-3">Activities like Sowing and Harvesting will appear here</p>
-      </div>
-    );
+    return <FieldActivityNoDataDisplay />;
   }
 
   return (
     <div className="w-full relative">
-      <div
-        ref={verticalBarRef}
-        style={{ height: "11rem", top: "1.5rem" }}
-        className="absolute  w-[1px] -right-[1rem] bg-pinto-gray-2 z-10 pointer-events-none"
-      />
-      {/* Add Tractor Orders label and link */}
-      <div
-        ref={tractorLinksRef}
-        style={{ top: "5.5rem" }}
-        className="absolute -right-[18rem] transition-all duration-300"
-      >
-        <SeeAllTractorOrdersButton setShowOrdersDialog={setShowTractorOrdersDialog} />
-      </div>
-
       {/* Tractor Orders Dialog */}
       <SoilOrderbookDialog open={showTractorOrdersDialog} onOpenChange={setShowTractorOrdersDialog} />
-
+      {/*
+       * Table
+       */}
       <div className="overflow-x-auto" ref={tableContainerRef}>
         <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-pinto-gray-3/20">
-              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Season</th>
-              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Date</th>
-              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Time</th>
-              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Address</th>
-              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Txn Hash</th>
-              <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[75px]">
-                Temp
-              </th>
-              <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Amount Sown</th>
-              <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Pods minted</th>
-              <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">
-                Place in Line
-              </th>
-            </tr>
-          </thead>
+          <FieldActivityHeader />
           <tbody>
             {/* Tractor Orders Section */}
             {loadingTractorOrders ? (
@@ -640,13 +547,13 @@ const FieldActivity = () => {
                   })}
               </>
             ) : (
-              <tr>
+              <>
                 <td colSpan={9} className="px-2 py-4 text-center text-xs font-antarctica font-light text-pinto-gray-4">
                   <Col className="items-center justify-center sm:min-h-[10rem] sm:h-[10rem]">
                     No Tractor orders executable next Season
                   </Col>
                 </td>
-              </tr>
+              </>
             )}
 
             {/* Separator row between tractor orders and regular activity */}
@@ -656,6 +563,10 @@ const FieldActivity = () => {
                   <td colSpan={9} className="border-b-2 border-pinto-gray-3/20 py-0" />
                 </tr>
               )}
+            {/**
+             * See All Tractor Orders Row
+             */}
+            {!loadingTractorOrders && <SeeAllTractorOrdersRow setShowOrdersDialog={setShowTractorOrdersDialog} />}
 
             {/* Regular Activity Section */}
             {activities.map((activity) => (
@@ -729,21 +640,84 @@ const FieldActivity = () => {
 
 export default FieldActivity;
 
-const SeeAllTractorOrdersButton = ({ setShowOrdersDialog }: { setShowOrdersDialog: (show: boolean) => void }) => {
-  const shouldHideShowTractorOrdersButton = useHideShowTractorOrdersButton();
-
+const SeeAllTractorOrdersRow = ({ setShowOrdersDialog }: { setShowOrdersDialog: (show: boolean) => void }) => {
   return (
-    <div className={cn("flex flex-col items-start", shouldHideShowTractorOrdersButton ? "hidden" : "")}>
-      <span className="text-sm font-antarctica font-light text-pinto-dark mb-2">
-        Tractor Soil Orders for next Season
-      </span>
-      <button
-        type="button"
-        onClick={() => setShowOrdersDialog(true)}
-        className="text-sm font-antarctica font-light text-pinto-green-4 hover:text-pinto-green-5 hover:underline text-left"
-      >
-        See all Tractor Orders
-      </button>
-    </div>
+    <tr className="border-b-2 border-pinto-gray-3/20">
+      <td colSpan={9}>
+        <div className="flex flex-col items-center justify-center w-full">
+          <Button variant="hoverTextPrimary" onClick={() => setShowOrdersDialog(true)} noPadding className="text-sm">
+            See all Tractor Orders
+          </Button>
+        </div>
+      </td>
+    </tr>
   );
 };
+
+const FieldActivityHeader = () => (
+  <thead>
+    <tr className="border-b border-pinto-gray-3/20">
+      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Season</th>
+      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Date</th>
+      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Time</th>
+      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Address</th>
+      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Txn Hash</th>
+      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[75px]">Temp</th>
+      <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Amount Sown</th>
+      <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Pods minted</th>
+      <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Place in Line</th>
+    </tr>
+  </thead>
+);
+
+const FieldActivitySkeleton = () => (
+  <div className="w-full">
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <FieldActivityHeader />
+        <tbody>
+          {Array(5)
+            .fill(0)
+            .map((_, index) => (
+              <tr key={index}>
+                <td className="px-2 py-1">
+                  <Skeleton className="h-3 w-12" />
+                </td>
+                <td className="px-2 py-1">
+                  <Skeleton className="h-3 w-24" />
+                </td>
+                <td className="px-2 py-1">
+                  <Skeleton className="h-3 w-20" />
+                </td>
+                <td className="px-2 py-1">
+                  <Skeleton className="h-3 w-28" />
+                </td>
+                <td className="px-2 py-1">
+                  <Skeleton className="h-3 w-28" />
+                </td>
+                <td className="px-2 py-1">
+                  <Skeleton className="h-3 w-14" />
+                </td>
+                <td className="px-2 py-1">
+                  <Skeleton className="h-3 w-20" />
+                </td>
+                <td className="px-2 py-1">
+                  <Skeleton className="h-3 w-20" />
+                </td>
+                <td className="px-2 py-1">
+                  <Skeleton className="h-3 w-24" />
+                </td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
+const FieldActivityNoDataDisplay = () => (
+  <div className="w-full p-8 flex flex-col items-center justify-center">
+    <p className="text-sm text-pinto-gray-4 mb-2">No field activity found</p>
+    <p className="text-xs text-pinto-gray-3">Activities like Sowing and Harvesting will appear here</p>
+  </div>
+);
