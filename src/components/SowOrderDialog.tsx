@@ -1053,7 +1053,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 <Col className="gap-6 pinto-sm-light text-pinto-light">
                   {/* Title and separator */}
                   <div className="flex flex-col gap-2">
-                    <div className="pinto-body font-medium text-pinto-secondary mb-4">🚜 Specify Conditions for automated Sowing</div>
+                    <div className="pinto-body font-medium text-pinto-secondary mb-4">
+                      🚜 Specify Conditions for automated Sowing
+                    </div>
                     <div className="h-[1px] w-full bg-pinto-gray-2" />
                   </div>
 
@@ -1293,9 +1295,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   <Col>
                     {/* Title and separator for Step 2 */}
                     <div className="flex flex-col gap-2">
-                      <div className="pinto-body font-medium text-pinto-secondary mb-4">
-                        🚜 Tip per Execution
-                      </div>
+                      <div className="pinto-body font-medium text-pinto-secondary mb-4">🚜 Tip per Execution</div>
                       <div className="h-[1px] w-full bg-pinto-gray-2 mb-6" />
                     </div>
                     <div className="pinto-sm-light text-pinto-light gap-2 mb-4">I'm willing to pay someone</div>

@@ -396,7 +396,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                 </Row>
                 <Button
                   variant="ghost"
-                  className="antarctica inline-flex items-center gap-1 text-sm text-pinto-red-2 hover:bg-pinto-red-1"
+                  className="font-antarctica inline-flex items-center gap-1 text-sm text-pinto-red-2 hover:bg-pinto-red-1"
                   onClick={(e) => handleCancelBlueprint(req, e)}
                   disabled={submitting}
                 >
