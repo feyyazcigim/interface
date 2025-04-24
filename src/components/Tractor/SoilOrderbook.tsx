@@ -17,6 +17,7 @@ import {
   getSowBlueprintDisplayData,
   loadOrderbookData,
 } from "@/lib/Tractor/utils";
+import { useTemperature } from "@/state/useFieldData";
 import { formatter } from "@/utils/format";
 import { getChainToken } from "@/utils/token";
 import { cn } from "@/utils/utils";
@@ -51,6 +52,7 @@ export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "tempe
   const chainId = useChainId();
   const isMounted = useRef(true);
   const loadAttempted = useRef(false);
+  const temperature = useTemperature();
 
   console.log("SoilOrderbook render - Dependencies:", {
     protocolAddress,
@@ -260,10 +262,11 @@ export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "tempe
     }
   };
 
-  // Apply sorting for display
+  // Apply sorting for display and insert temperature indicator
   const getSortedRequisitions = () => {
+    let sorted: OrderbookEntry[];
     if (sortBy === "temperature") {
-      return [...requisitions].sort((a, b) => {
+      sorted = [...requisitions].sort((a, b) => {
         try {
           const dataA = decodeSowTractorData(a.requisition.blueprint.data);
           const dataB = decodeSowTractorData(b.requisition.blueprint.data);
@@ -275,7 +278,7 @@ export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "tempe
         }
       });
     } else if (sortBy === "tip") {
-      return [...requisitions].sort((a, b) => {
+      sorted = [...requisitions].sort((a, b) => {
         try {
           const dataA = decodeSowTractorData(a.requisition.blueprint.data);
           const dataB = decodeSowTractorData(b.requisition.blueprint.data);
@@ -288,8 +291,147 @@ export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "tempe
           return 0;
         }
       });
+    } else {
+      sorted = requisitions;
     }
-    return requisitions;
+
+    return sorted.filter((req) => showZeroAvailable || parseFloat(req.currentlySowable.toHuman()) > 0);
+  };
+
+  // Find where to place the temperature indicator row
+  const getMaxTempPosition = (sortedReqs) => {
+    if (sortBy !== "temperature" || !sortedReqs.length) return -1;
+
+    // No need to multiply by 100, the temperature is already in percentage
+    const maxTemp = temperature.max.toNumber();
+    console.log("Current max temperature:", maxTemp);
+
+    let insertIndex = 0;
+
+    // Debug data about requisitions and their temperatures
+    if (sortedReqs.length > 0) {
+      console.log("Requisitions sorted by temperature:");
+      sortedReqs.forEach((req, idx) => {
+        try {
+          const data = decodeSowTractorData(req.requisition.blueprint.data);
+          if (data) {
+            // Parse the percentage string to just get the number
+            const tempValue = parseFloat(data.minTempAsString);
+            console.log(`  ${idx}: Temperature ${tempValue}% (${data.minTempAsString})`);
+          }
+        } catch (error) {
+          console.error(`Failed to decode data for requisition ${idx}:`, error);
+        }
+      });
+    }
+
+    // Insert at the position where the first requisition temperature is GREATER than max temperature
+    while (
+      insertIndex < sortedReqs.length &&
+      parseFloat(decodeSowTractorData(sortedReqs[insertIndex].requisition.blueprint.data)?.minTempAsString || "0") <=
+        maxTemp
+    ) {
+      insertIndex++;
+    }
+
+    console.log("Inserting max temperature row at index:", insertIndex);
+    return insertIndex;
+  };
+
+  const sortedRequisitions = getSortedRequisitions();
+  const maxTempPosition = getMaxTempPosition(sortedRequisitions);
+
+  // Helper function to render a requisition row
+  const renderRequisitionRow = (req, index) => {
+    let decodedData: SowBlueprintData | null = null;
+    try {
+      decodedData = decodeSowTractorData(req.requisition.blueprint.data);
+    } catch (error) {
+      console.error("Failed to decode data for requisition:", error);
+    }
+
+    // Get temperature
+    const temperature = decodedData ? parseFloat(decodedData.minTempAsString) : 0;
+
+    // Get max pod line length
+    const maxPodLineLength = decodedData ? parseInt(decodedData.maxPodlineLengthAsString).toLocaleString() : "Unknown";
+
+    // Total order size
+    const totalSize = decodedData
+      ? formatter.number(TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6))
+      : "Unknown";
+
+    // Available Pinto
+    const availablePinto = formatter.number(req.currentlySowable);
+
+    return (
+      <TableRow
+        key={`req-${index}`}
+        className="border-b border-gray-100 hover:bg-pinto-green-1 cursor-pointer transition-colors"
+        noHoverMute
+        onClick={() => handleRowClick(req)}
+      >
+        <TableCell className="py-2 px-0">≥ {temperature.toFixed(0)}%</TableCell>
+        <TableCell className="py-2">≤ {maxPodLineLength}</TableCell>
+        <TableCell className="py-2">
+          <div className="flex items-center gap-1">
+            <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+            {totalSize}
+          </div>
+        </TableCell>
+        <TableCell className="py-2">
+          <div className="flex items-center gap-1">
+            <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+            {availablePinto}
+          </div>
+        </TableCell>
+        <TableCell className="py-2">
+          <div className="flex items-center gap-1">
+            <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+            {decodedData && decodedData.sowAmounts.maxAmountToSowPerSeasonAsString
+              ? formatter.number(TokenValue.fromHuman(decodedData.sowAmounts.maxAmountToSowPerSeasonAsString, 6))
+              : "Unknown"}
+          </div>
+        </TableCell>
+        <TableCell className="py-2">
+          {decodedData && decodedData.runBlocksAfterSunrise !== undefined ? (
+            Number(decodedData.runBlocksAfterSunrise) < 300 ? (
+              <span className="text-pinto-green-4 font-medium">Yes</span>
+            ) : (
+              <span className="text-pinto-gray-4">No</span>
+            )
+          ) : (
+            "Unknown"
+          )}
+        </TableCell>
+        <TableCell className="py-2">
+          <div className="flex items-center gap-1">
+            <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+            {decodedData && decodedData.operatorParams.operatorTipAmount
+              ? formatter.number(TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6), {
+                  minDecimals: 2,
+                  maxDecimals: 2,
+                })
+              : "Unknown"}
+          </div>
+        </TableCell>
+        <TableCell className="py-2 text-pinto-dark">
+          {`0x${req.requisition.blueprintHash.slice(2, 7)}...${req.requisition.blueprintHash.slice(-4)}`}
+        </TableCell>
+        <TableCell className="py-2">
+          <a
+            href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-pinto-dark underline hover:opacity-80"
+            onClick={(e) => e.stopPropagation()} // Prevent row click when clicking the link
+          >
+            {`0x${req.requisition.blueprint.publisher.slice(2, 7)}...${req.requisition.blueprint.publisher.slice(-4)}`}
+          </a>
+        </TableCell>
+        <TableCell className="py-2">{formatDate(req.timestamp)}</TableCell>
+      </TableRow>
+    );
   };
 
   return (
@@ -330,104 +472,30 @@ export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "tempe
           </TableRow>
         </TableHeader>
         <TableBody>
-          {getSortedRequisitions()
-            .filter((req) => showZeroAvailable || parseFloat(req.currentlySowable.toHuman()) > 0)
-            .map((req, index) => {
-              let decodedData: SowBlueprintData | null = null;
-              try {
-                decodedData = decodeSowTractorData(req.requisition.blueprint.data);
-              } catch (error) {
-                console.error("Failed to decode data for requisition:", error);
-              }
-
-              // Get temperature
-              const temperature = decodedData ? parseFloat(decodedData.minTempAsString) : 0;
-
-              // Get max pod line length
-              const maxPodLineLength = decodedData
-                ? parseInt(decodedData.maxPodlineLengthAsString).toLocaleString()
-                : "Unknown";
-
-              // Total order size
-              const totalSize = decodedData
-                ? formatter.number(TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6))
-                : "Unknown";
-
-              // Available Pinto
-              const availablePinto = formatter.number(req.currentlySowable);
-
+          {sortedRequisitions.map((req, index) => {
+            // Insert the current max temperature indicator at the appropriate position
+            if (sortBy === "temperature" && index === maxTempPosition) {
               return (
-                <TableRow
-                  key={index}
-                  className="border-b border-gray-100 hover:bg-pinto-green-1 cursor-pointer transition-colors"
-                  noHoverMute
-                  onClick={() => handleRowClick(req)}
-                >
-                  <TableCell className="py-2 px-0">≥ {temperature.toFixed(0)}%</TableCell>
-                  <TableCell className="py-2">≤ {maxPodLineLength}</TableCell>
-                  <TableCell className="py-2">
-                    <div className="flex items-center gap-1">
-                      <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                      {totalSize}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <div className="flex items-center gap-1">
-                      <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                      {availablePinto}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <div className="flex items-center gap-1">
-                      <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                      {decodedData && decodedData.sowAmounts.maxAmountToSowPerSeasonAsString
-                        ? formatter.number(
-                            TokenValue.fromHuman(decodedData.sowAmounts.maxAmountToSowPerSeasonAsString, 6),
-                          )
-                        : "Unknown"}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2">
-                    {decodedData && decodedData.runBlocksAfterSunrise !== undefined ? (
-                      Number(decodedData.runBlocksAfterSunrise) < 300 ? (
-                        <span className="text-pinto-green-4 font-medium">Yes</span>
-                      ) : (
-                        <span className="text-pinto-gray-4">No</span>
-                      )
-                    ) : (
-                      "Unknown"
-                    )}
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <div className="flex items-center gap-1">
-                      <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                      {decodedData && decodedData.operatorParams.operatorTipAmount
-                        ? formatter.number(TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6), {
-                            minDecimals: 2,
-                            maxDecimals: 2,
-                          })
-                        : "Unknown"}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2 text-pinto-dark">
-                    {`0x${req.requisition.blueprintHash.slice(2, 7)}...${req.requisition.blueprintHash.slice(-4)}`}
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <a
-                      href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-pinto-dark underline hover:opacity-80"
-                      onClick={(e) => e.stopPropagation()} // Prevent row click when clicking the link
-                    >
-                      {`0x${req.requisition.blueprint.publisher.slice(2, 7)}...${req.requisition.blueprint.publisher.slice(-4)}`}
-                    </a>
-                  </TableCell>
-                  <TableCell className="py-2">{formatDate(req.timestamp)}</TableCell>
-                </TableRow>
+                <React.Fragment key="current-max-temp">
+                  <TableRow className="border-b border-pinto-green-4 bg-pinto-green-1/50">
+                    <TableCell colSpan={10} className="py-1 text-center text-pinto-green-4 font-medium">
+                      Current Max Temperature: {formatter.pct(temperature.max)} ↑
+                    </TableCell>
+                  </TableRow>
+                  {renderRequisitionRow(req, index)}
+                </React.Fragment>
               );
-            })}
-          {requisitions.length === 0 && (
+            }
+            return renderRequisitionRow(req, index);
+          })}
+          {sortBy === "temperature" && maxTempPosition === sortedRequisitions.length && (
+            <TableRow className="border-b border-pinto-green-4 bg-pinto-green-1/50">
+              <TableCell colSpan={10} className="py-1 text-center text-pinto-green-4 font-medium">
+                Current Max Temperature: {formatter.pct(temperature.max)} ↑
+              </TableCell>
+            </TableRow>
+          )}
+          {sortedRequisitions.length === 0 && (
             <TableRow>
               <TableCell colSpan={10} className="p-2 text-center text-gray-500">
                 {isLoading ? (
