@@ -22,6 +22,7 @@ import CornerBorders from "@/components/CornerBorders";
 import MobileActionBar from "@/components/MobileActionBar";
 import ReadMoreAccordion from "@/components/ReadMoreAccordion";
 import SowOrderDialog, { AnimateSowOrderDialog } from "@/components/SowOrderDialog";
+import TextSkeleton from "@/components/TextSkeleton";
 import TooltipSimple from "@/components/TooltipSimple";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -233,13 +234,9 @@ function Field() {
                     content="Debt repaid to Pod holders since deployment. These Pods do not count towards the current Pod Line"
                   />
                 </div>
-                <div className="pinto-h4 sm:pinto-h3">
-                  {harvestableIndexLoading ? (
-                    <Skeleton className="flex w-20 h-4 sm:w-24 sm:h-[2.2rem] rounded-[0.75rem]" />
-                  ) : (
-                    formatter.noDec(harvestableIndex)
-                  )}
-                </div>
+                <TextSkeleton loading={harvestableIndexLoading} desktopHeight="h3" height="h4" className="w-20">
+                  <div className="pinto-h4 sm:pinto-h3">{formatter.noDec(harvestableIndex)}</div>
+                </TextSkeleton>
               </div>
               <Button asChild variant={"outline"} className="rounded-full text-[1rem] sm:text-[1.25rem]">
                 <Link to="/explorer/field">View Data</Link>
@@ -291,11 +288,13 @@ function Field() {
 
                 <div className="flex flex-row gap-2 items-center">
                   <img src={podIcon} className="w-8 h-8" alt={"total pods"} />
-                  {harvestableIndexLoading ? (
+                  <TextSkeleton loading={harvestableIndexLoading} height="h3" className="w-20">
+                    <div className="pinto-h3">{formatter.number(totalPods)}</div>
+                  </TextSkeleton>
+                  {/* {harvestableIndexLoading ? (
                     <Skeleton className="w-6 h-8" />
                   ) : (
-                    <div className="pinto-h3">{formatter.number(totalPods)}</div>
-                  )}
+                  )} */}
                 </div>
               </div>
 
