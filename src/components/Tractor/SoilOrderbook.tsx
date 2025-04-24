@@ -42,10 +42,10 @@ interface SoilOrderbookContentProps {
 }
 
 // Shared logic for loading and displaying the orderbook data
-export function SoilOrderbookContent({ 
-  showZeroAvailable = true, 
+export function SoilOrderbookContent({
+  showZeroAvailable = true,
   sortBy = "temperature",
-  showAboveCurrentTemp = true 
+  showAboveCurrentTemp = true,
 }: SoilOrderbookContentProps) {
   const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
   const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
@@ -299,7 +299,7 @@ export function SoilOrderbookContent({
     } else {
       sorted = requisitions;
     }
-    
+
     return sorted.filter((req) => {
       // Filter for zero available
       const hasAvailablePinto = showZeroAvailable || parseFloat(req.currentlySowable.toHuman()) > 0;
@@ -364,6 +364,41 @@ export function SoilOrderbookContent({
 
   const sortedRequisitions = getSortedRequisitions();
   const maxTempPosition = getMaxTempPosition(sortedRequisitions);
+
+  // Calculate summary data for orders below current max temperature
+  const calculateSummaryData = () => {
+    let totalAvailablePinto = TokenValue.ZERO;
+    let totalMaxPerSeason = TokenValue.ZERO;
+
+    requisitions.forEach((req) => {
+      try {
+        const data = decodeSowTractorData(req.requisition.blueprint.data);
+        if (data) {
+          const reqTemp = parseFloat(data.minTempAsString);
+          // Only include orders with temperature below current max
+          if (reqTemp < temperature.max.toNumber()) {
+            // Sum available Pinto
+            totalAvailablePinto = totalAvailablePinto.add(req.currentlySowable);
+
+            // Sum max per season
+            if (data.sowAmounts.maxAmountToSowPerSeasonAsString) {
+              const maxPerSeason = TokenValue.fromHuman(data.sowAmounts.maxAmountToSowPerSeasonAsString, 6);
+              totalMaxPerSeason = totalMaxPerSeason.add(maxPerSeason);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to calculate summary data for requisition:", error);
+      }
+    });
+
+    return {
+      totalAvailablePinto,
+      totalMaxPerSeason,
+    };
+  };
+
+  const summaryData = calculateSummaryData();
 
   // Helper function to render a requisition row
   const renderRequisitionRow = (req, index) => {
@@ -502,9 +537,27 @@ export function SoilOrderbookContent({
               return (
                 <React.Fragment key="current-max-temp">
                   <TableRow className="border-b-0">
-                    <TableCell colSpan={10} className="py-1 text-center text-pinto-green-4 font-medium border-b-0">
-                      Current Max Temperature: {formatter.pct(temperature.max)} ↑
+                    <TableCell className="py-1 px-0 text-pinto-green-4 border-b-0" colSpan={2}>
+                      ↑ {formatter.pct(temperature.max)} - Current Temp
                     </TableCell>
+                    <TableCell className="py-1 border-b-0 text-pinto-green-4 justify-end text-right">Totals:</TableCell>
+                    <TableCell className="py-1 text-right border-b-0">
+                      <div className="flex items-center justify-start gap-1">
+                        <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                        <span className="text-pinto-green-4 font-medium">
+                          {formatter.number(summaryData.totalAvailablePinto)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-1 text-right border-b-0">
+                      <div className="flex items-center justify-start gap-1">
+                        <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                        <span className="text-pinto-green-4 font-medium">
+                          {formatter.number(summaryData.totalMaxPerSeason)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-1 border-b-0" colSpan={5} />
                   </TableRow>
                   {renderRequisitionRow(req, index)}
                 </React.Fragment>
@@ -514,9 +567,27 @@ export function SoilOrderbookContent({
           })}
           {sortBy === "temperature" && maxTempPosition === sortedRequisitions.length && (
             <TableRow className="border-b-0">
-              <TableCell colSpan={10} className="py-1 text-center text-pinto-green-4 font-medium border-b-0">
-                Current Max Temperature: {formatter.pct(temperature.max)} ↑
+              <TableCell className="py-1 px-0 text-pinto-green-4 border-b-0" colSpan={2}>
+                ↑ {formatter.pct(temperature.max)} - Current Temp
               </TableCell>
+              <TableCell className="py-1 border-b-0 text-pinto-green-4 justify-end text-right">Totals:</TableCell>
+              <TableCell className="py-1 text-right border-b-0">
+                <div className="flex items-center justify-start gap-1">
+                  <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                  <span className="text-pinto-green-4 font-medium">
+                    {formatter.number(summaryData.totalAvailablePinto)}
+                  </span>
+                </div>
+              </TableCell>
+              <TableCell className="py-1 text-right border-b-0">
+                <div className="flex items-center justify-start gap-1">
+                  <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                  <span className="text-pinto-green-4 font-medium">
+                    {formatter.number(summaryData.totalMaxPerSeason)}
+                  </span>
+                </div>
+              </TableCell>
+              <TableCell className="py-1 border-b-0" colSpan={5} />
             </TableRow>
           )}
           {sortedRequisitions.length === 0 && (
@@ -603,14 +674,18 @@ export function SoilOrderbook() {
                 </Label>
                 <Switch id="standalone-show-zero" checked={showZeroAvailable} onCheckedChange={setShowZeroAvailable} />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <Label htmlFor="standalone-show-above-temp" className="text-sm">
                   Show Orders Above Current Temp
                 </Label>
-                <Switch id="standalone-show-above-temp" checked={showAboveCurrentTemp} onCheckedChange={setShowAboveCurrentTemp} />
+                <Switch
+                  id="standalone-show-above-temp"
+                  checked={showAboveCurrentTemp}
+                  onCheckedChange={setShowAboveCurrentTemp}
+                />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <Label className="text-sm">Sort By</Label>
                 <div className="flex flex-row w-fit items-center">
@@ -642,9 +717,9 @@ export function SoilOrderbook() {
           </PopoverContent>
         </Popover>
       </div>
-      <SoilOrderbookContent 
-        showZeroAvailable={showZeroAvailable} 
-        sortBy={sortBy} 
+      <SoilOrderbookContent
+        showZeroAvailable={showZeroAvailable}
+        sortBy={sortBy}
         showAboveCurrentTemp={showAboveCurrentTemp}
       />
     </div>
@@ -729,7 +804,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                             onCheckedChange={setShowZeroAvailable}
                           />
                         </div>
-                        
+
                         <div className="flex items-center justify-between">
                           <Label htmlFor="show-above-temp" className="text-sm">
                             Show Orders Above Current Temp
@@ -740,7 +815,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                             onCheckedChange={setShowAboveCurrentTemp}
                           />
                         </div>
-                        
+
                         <div className="flex items-center justify-between">
                           <Label className="text-sm">Sort By</Label>
                           <div className="flex flex-row w-fit items-center">
@@ -777,9 +852,9 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
 
             <div className="py-4">
               {activeTab === "view" ? (
-                <SoilOrderbookContent 
-                  showZeroAvailable={showZeroAvailable} 
-                  sortBy={sortBy} 
+                <SoilOrderbookContent
+                  showZeroAvailable={showZeroAvailable}
+                  sortBy={sortBy}
                   showAboveCurrentTemp={showAboveCurrentTemp}
                 />
               ) : (
