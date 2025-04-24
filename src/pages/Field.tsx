@@ -45,7 +45,6 @@ import TractorOrdersPanel from "./field/TractorOrdersPanel";
 
 const hideShowOrdersAtom = atom(false);
 
-
 // Add a custom hook to track the current sow amount
 function useTotalSowAmount() {
   // Simple hook to simulate fetching the current sow amount
@@ -373,12 +372,7 @@ function Field() {
               </Button>
             </div>
           )}
-          <AccordionGroup
-            groupTitle="Frequently Asked Questions"
-            items={FieldFAQ}
-            allExpanded={false}
-            onAnyOpenChanged={handleOnAnyOpenChanged}
-          />
+          <AccordionGroup groupTitle="Frequently Asked Questions" items={FieldFAQ} allExpanded={false} size="small" />
           {!currentAction && (
             <MobileActionBar>
               <Button
@@ -503,4 +497,4 @@ const FieldFAQ: IBaseAccordionContent[] = [
 
 export const useHideShowTractorOrdersButton = () => {
   return useAtomValue(hideShowOrdersAtom);
-}
+};

@@ -83,7 +83,7 @@ function safeDeserialize<T>(
 export default function useLocalStorage<T = unknown>(
   key: string,
   initialValue: T | (() => T),
-  { initializeIfEmpty = false, serialize, deserialize, sync = false }: UseLocalStorageOptions<T> = {},
+  { initializeIfEmpty = false, sync = false, serialize, deserialize }: UseLocalStorageOptions<T> = {},
 ): readonly [T, (v: T | ((p: T) => T)) => void, () => void] {
   /* ------------------------------------ init ----------------------------------- */
   const initial = useMemo(() => (isFunction(initialValue) ? initialValue() : initialValue), []);

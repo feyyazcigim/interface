@@ -13,10 +13,10 @@ import { useHarvestableIndex } from "@/state/useFieldData";
 import { useTemperature } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
+import { cn } from "@/utils/utils";
 import React, { useState, useRef, useEffect } from "react";
 import { usePublicClient } from "wagmi";
 import { useHideShowTractorOrdersButton } from "../Field";
-import { cn } from "@/utils/utils";
 
 interface FieldActivityItem {
   id: string;
@@ -506,7 +506,6 @@ const FieldActivity = () => {
     );
   }
 
-
   return (
     <div className="w-full relative">
       <div
@@ -520,7 +519,7 @@ const FieldActivity = () => {
         style={{ top: "5.5rem" }}
         className="absolute -right-[18rem] transition-all duration-300"
       >
-        <SeeAllTractorOrdersButton setShowOrdersDialog={setShowTractorOrdersDialog}/>
+        <SeeAllTractorOrdersButton setShowOrdersDialog={setShowTractorOrdersDialog} />
       </div>
 
       {/* Tractor Orders Dialog */}
@@ -733,7 +732,6 @@ export default FieldActivity;
 const SeeAllTractorOrdersButton = ({ setShowOrdersDialog }: { setShowOrdersDialog: (show: boolean) => void }) => {
   const shouldHideShowTractorOrdersButton = useHideShowTractorOrdersButton();
 
-
   return (
     <div className={cn("flex flex-col items-start", shouldHideShowTractorOrdersButton ? "hidden" : "")}>
       <span className="text-sm font-antarctica font-light text-pinto-dark mb-2">
@@ -746,6 +744,6 @@ const SeeAllTractorOrdersButton = ({ setShowOrdersDialog }: { setShowOrdersDialo
       >
         See all Tractor Orders
       </button>
-    </div> 
-  )
-}
+    </div>
+  );
+};
