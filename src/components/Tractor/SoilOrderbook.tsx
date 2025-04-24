@@ -158,6 +158,7 @@ export function SoilOrderbookContent({
               timestamp: BigInt(latestBlockInfo.timestamp / 1000),
             }
           : undefined,
+        temperature?.max ? temperature.max.toNumber() : undefined,
       );
 
       console.log("Got orderbook data:", {
@@ -191,7 +192,7 @@ export function SoilOrderbookContent({
     } finally {
       setIsLoading(false);
     }
-  }, [protocolAddress, publicClient, latestBlockInfo, getApproximateTimestamps]);
+  }, [protocolAddress, publicClient, latestBlockInfo, getApproximateTimestamps, temperature]);
 
   // Load requisitions once when component mounts and dependencies are ready
   useEffect(() => {
