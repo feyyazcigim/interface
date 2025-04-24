@@ -33,7 +33,7 @@ const FieldStats = () => {
           </div>
         </div>
 
-        <TextSkeleton desktopHeight="h3" height="body" className="w-14" loading={isLoading}>
+        <TextSkeleton desktopHeight="same-h3" height="body" className="w-14" loading={isLoading}>
           <div
             className={`pinto-body sm:pinto-h3 ${isMorning ? "text-pinto-light sm:text-pinto-light" : "text-pinto-primary sm:text-pinto-primary"}`}
           >
@@ -49,7 +49,7 @@ const FieldStats = () => {
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <TextSkeleton desktopHeight="h3" height="body" className="w-14" loading={isLoading}>
+          <TextSkeleton desktopHeight="same-h3" height="body" className="w-14" loading={isLoading}>
             <div className="pinto-body sm:pinto-h3">{formatter.number(soil, { minValue: 0.01 })}</div>
           </TextSkeleton>
           {isMorning && abovePeg && (

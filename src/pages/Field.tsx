@@ -25,7 +25,6 @@ import SowOrderDialog, { AnimateSowOrderDialog } from "@/components/SowOrderDial
 import TextSkeleton from "@/components/TextSkeleton";
 import TooltipSimple from "@/components/TooltipSimple";
 import { navLinks } from "@/components/nav/nav/Navbar";
-import { Skeleton } from "@/components/ui/Skeleton";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { inputExceedsSoilAtom } from "@/state/protocol/field/field.atoms";
@@ -34,7 +33,7 @@ import { useHarvestableIndex, useHarvestableIndexLoading, useTotalSoil } from "@
 import { useMorning } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
 import { SizeIcon } from "@radix-ui/react-icons";
-import { atom, useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import FieldActions from "./field/FieldActions";
@@ -43,8 +42,7 @@ import FieldStats from "./field/FieldStats";
 import MorningPanel from "./field/MorningPanel";
 import TemperatureChart from "./field/Temperature";
 import TractorOrdersPanel from "./field/TractorOrdersPanel";
-
-const hideShowOrdersAtom = atom(false);
+import { useAccount } from "wagmi";
 
 // Add a custom hook to track the current sow amount
 function useTotalSowAmount() {
@@ -150,7 +148,9 @@ function Field() {
   const [showSowOrder, setShowSowOrder] = useState(false);
   const [shouldHideShowOrders, setShouldHideShowOrders] = useState(false);
 
-  const handleOnAnyOpenChanged = useSetAtom(hideShowOrdersAtom);
+  const { address, isConnecting } = useAccount();
+
+  const isPodsLoading = (!address && isConnecting) || farmerField.isLoading;
 
   const refreshTractorOrders = useCallback(() => {
     setTractorRefreshCounter((prev) => prev + 1);
@@ -288,13 +288,9 @@ function Field() {
 
                 <div className="flex flex-row gap-2 items-center">
                   <img src={podIcon} className="w-8 h-8" alt={"total pods"} />
-                  <TextSkeleton loading={harvestableIndexLoading} height="h3" className="w-20">
+                  <TextSkeleton loading={isPodsLoading} height="h3" className="w-20">
                     <div className="pinto-h3">{formatter.number(totalPods)}</div>
                   </TextSkeleton>
-                  {/* {harvestableIndexLoading ? (
-                    <Skeleton className="w-6 h-8" />
-                  ) : (
-                  )} */}
                 </div>
               </div>
 
@@ -489,9 +485,3 @@ const FieldFAQ: IBaseAccordionContent[] = [
     ),
   },
 ] as const;
-
-// Custom hook to hide/show the tractor orders button
-
-export const useHideShowTractorOrdersButton = () => {
-  return useAtomValue(hideShowOrdersAtom);
-};
