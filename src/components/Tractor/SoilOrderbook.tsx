@@ -27,16 +27,20 @@ import { useChainId } from "wagmi";
 import LoadingSpinner from "../LoadingSpinner";
 import ReviewTractorOrderDialog, { ExecutionData } from "../ReviewTractorOrderDialog";
 import { Plow } from "./Plow";
+import { cn } from "@/utils/utils";
+import { Separator } from "@radix-ui/react-separator";
+import React from "react";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
 // Define props interface for SoilOrderbookContent
 interface SoilOrderbookContentProps {
   showZeroAvailable?: boolean;
+  sortBy?: "temperature" | "tip";
 }
 
 // Shared logic for loading and displaying the orderbook data
-export function SoilOrderbookContent({ showZeroAvailable = true }: SoilOrderbookContentProps) {
+export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "temperature" }: SoilOrderbookContentProps) {
   const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
   const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -158,7 +162,7 @@ export function SoilOrderbookContent({ showZeroAvailable = true }: SoilOrderbook
       const dataWithTimestamps = getApproximateTimestamps(orderbookData);
       console.log("Added timestamps to data");
 
-      // Sort by temperature
+      // Sort data by temperature by default
       const sortedData = dataWithTimestamps.sort((a, b) => {
         try {
           const dataA = decodeSowTractorData(a.requisition.blueprint.data);
@@ -256,6 +260,38 @@ export function SoilOrderbookContent({ showZeroAvailable = true }: SoilOrderbook
     }
   };
 
+  // Apply sorting for display
+  const getSortedRequisitions = () => {
+    if (sortBy === "temperature") {
+      return [...requisitions].sort((a, b) => {
+        try {
+          const dataA = decodeSowTractorData(a.requisition.blueprint.data);
+          const dataB = decodeSowTractorData(b.requisition.blueprint.data);
+          if (!dataA || !dataB) return 0;
+          return parseFloat(dataA.minTempAsString) - parseFloat(dataB.minTempAsString);
+        } catch (error) {
+          console.error("Failed to decode data for requisition:", error);
+          return 0;
+        }
+      });
+    } else if (sortBy === "tip") {
+      return [...requisitions].sort((a, b) => {
+        try {
+          const dataA = decodeSowTractorData(a.requisition.blueprint.data);
+          const dataB = decodeSowTractorData(b.requisition.blueprint.data);
+          if (!dataA || !dataB) return 0;
+          const tipA = BigInt(dataA.operatorParams.operatorTipAmount);
+          const tipB = BigInt(dataB.operatorParams.operatorTipAmount);
+          return tipB > tipA ? 1 : tipB < tipA ? -1 : 0; // Highest tip first
+        } catch (error) {
+          console.error("Failed to decode data for requisition:", error);
+          return 0;
+        }
+      });
+    }
+    return requisitions;
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -294,7 +330,7 @@ export function SoilOrderbookContent({ showZeroAvailable = true }: SoilOrderbook
           </TableRow>
         </TableHeader>
         <TableBody>
-          {requisitions
+          {getSortedRequisitions()
             .filter((req) => showZeroAvailable || parseFloat(req.currentlySowable.toHuman()) > 0)
             .map((req, index) => {
               let decodedData: SowBlueprintData | null = null;
@@ -366,7 +402,7 @@ export function SoilOrderbookContent({ showZeroAvailable = true }: SoilOrderbook
                     <div className="flex items-center gap-1">
                       <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
                       {decodedData && decodedData.operatorParams.operatorTipAmount
-                        ? formatter.number(TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6))
+                        ? formatter.number(TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6), { minDecimals: 2, maxDecimals: 2 })
                         : "Unknown"}
                     </div>
                   </TableCell>
@@ -440,6 +476,18 @@ export function SoilOrderbookContent({ showZeroAvailable = true }: SoilOrderbook
 // Original standalone component
 export function SoilOrderbook() {
   const [showZeroAvailable, setShowZeroAvailable] = useState(true);
+  const [sortBy, setSortBy] = useState<"temperature" | "tip">("temperature");
+
+  const sortOptions = [
+    {
+      id: "temperature",
+      text: "Temperature",
+    },
+    {
+      id: "tip",
+      text: "Tip",
+    },
+  ] as const;
 
   return (
     <div className="relative">
@@ -452,16 +500,48 @@ export function SoilOrderbook() {
           </PopoverTrigger>
           <PopoverContent className="w-80 p-4" align="end">
             <h3 className="text-sm font-medium mb-3">Table Settings</h3>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="standalone-show-zero" className="text-sm">
-                Show Zero Available Pinto
-              </Label>
-              <Switch id="standalone-show-zero" checked={showZeroAvailable} onCheckedChange={setShowZeroAvailable} />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="standalone-show-zero" className="text-sm">
+                  Show Zero Available Pinto
+                </Label>
+                <Switch id="standalone-show-zero" checked={showZeroAvailable} onCheckedChange={setShowZeroAvailable} />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Sort By</Label>
+                <div className="flex flex-row w-fit items-center">
+                  {sortOptions.map((option, index) => (
+                    <React.Fragment key={`${option.id}-${index}`}>
+                      <div
+                        className={cn(
+                          "flex flex-row items-center px-3 py-1.5 justify-center cursor-pointer",
+                          sortBy === option.id ? "bg-pinto-green-1" : "bg-pinto-gray-1",
+                          index === 0 ? "rounded-l-full" : "rounded-r-full",
+                          sortBy === option.id ? "border border-pinto-green-4" : "border border-pinto-gray-2",
+                          index === 0 ? "border-r-0" : "border-l-0",
+                        )}
+                        onClick={() => setSortBy(option.id)}
+                      >
+                        <div className="text-xs text-pinto-green-3">
+                          {option.text}
+                        </div>
+                      </div>
+                      {index < sortOptions.length - 1 && (
+                        <Separator
+                          orientation="vertical"
+                          className={cn("bg-pinto-gray-2 w-[1px] h-[1.75rem]", sortBy && "bg-pinto-green-4")}
+                        />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
             </div>
           </PopoverContent>
         </Popover>
       </div>
-      <SoilOrderbookContent showZeroAvailable={showZeroAvailable} />
+      <SoilOrderbookContent showZeroAvailable={showZeroAvailable} sortBy={sortBy} />
     </div>
   );
 }
@@ -475,6 +555,18 @@ interface SoilOrderbookDialogProps {
 export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogProps) {
   const [activeTab, setActiveTab] = useState<"view" | "execute">("view");
   const [showZeroAvailable, setShowZeroAvailable] = useState(true);
+  const [sortBy, setSortBy] = useState<"temperature" | "tip">("temperature");
+
+  const sortOptions = [
+    {
+      id: "temperature",
+      text: "Temperature",
+    },
+    {
+      id: "tip",
+      text: "Tip",
+    },
+  ] as const;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -520,15 +612,47 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-4" align="end">
                       <h3 className="text-sm font-medium mb-3">Table Settings</h3>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="show-zero-available" className="text-sm">
-                          Show Zero Available Pinto
-                        </Label>
-                        <Switch
-                          id="show-zero-available"
-                          checked={showZeroAvailable}
-                          onCheckedChange={setShowZeroAvailable}
-                        />
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="show-zero-available" className="text-sm">
+                            Show Zero Available Pinto
+                          </Label>
+                          <Switch
+                            id="show-zero-available"
+                            checked={showZeroAvailable}
+                            onCheckedChange={setShowZeroAvailable}
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Sort By</Label>
+                          <div className="flex flex-row w-fit items-center">
+                            {sortOptions.map((option, index) => (
+                              <React.Fragment key={`dialog-${option.id}-${index}`}>
+                                <div
+                                  className={cn(
+                                    "flex flex-row items-center px-3 py-1.5 justify-center cursor-pointer",
+                                    sortBy === option.id ? "bg-pinto-green-1" : "bg-pinto-gray-1",
+                                    index === 0 ? "rounded-l-full" : "rounded-r-full",
+                                    sortBy === option.id ? "border border-pinto-green-4" : "border border-pinto-gray-2",
+                                    index === 0 ? "border-r-0" : "border-l-0",
+                                  )}
+                                  onClick={() => setSortBy(option.id)}
+                                >
+                                  <div className="text-xs text-pinto-green-3">
+                                    {option.text}
+                                  </div>
+                                </div>
+                                {index < sortOptions.length - 1 && (
+                                  <Separator
+                                    orientation="vertical"
+                                    className={cn("bg-pinto-gray-2 w-[1px] h-[1.75rem]", sortBy && "bg-pinto-green-4")}
+                                  />
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -537,7 +661,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
             </div>
 
             <div className="py-4">
-              {activeTab === "view" ? <SoilOrderbookContent showZeroAvailable={showZeroAvailable} /> : <Plow />}
+              {activeTab === "view" ? <SoilOrderbookContent showZeroAvailable={showZeroAvailable} sortBy={sortBy} /> : <Plow />}
             </div>
           </div>
         </DialogContent>
