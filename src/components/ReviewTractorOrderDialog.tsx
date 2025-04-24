@@ -231,7 +231,7 @@ export default function ReviewTractorOrderDialog({
               ) : (
                 <Col className="gap-3">
                   <p>
-                    A Tractor Order allows you to pay an Operator to execute a transaction for you on the
+                    A Tractor Order allows you to pay an Operator to execute a transaction for you on the{" "}
                     <span className="whitespace-nowrap">
                       <IconImage
                         src={baseLogo}
