@@ -1007,7 +1007,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   <div className="flex items-center justify-center">
                     <WarningIcon color="#DC2626" width={40} height={40} />
                   </div>
-                  <h3 className="text-center pinto-h3 font-antarctica mt-4 mb-2">Fragmented Silo Deposits</h3>
+                  <h3 className="text-center pinto-h3 mt-4 mb-2">Fragmented Silo Deposits</h3>
                   <p className="text-center pinto-body text-gray-700 mb-2">
                     Pinto does not combine and sort deposits by default, due to gas costs. A one-time claim and combine
                     will optimize your deposits and allow you to create Tractor orders.
@@ -1053,7 +1053,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 <Col className="gap-6 pinto-sm-light text-pinto-light">
                   {/* Title and separator */}
                   <div className="flex flex-col gap-2">
-                    <h4 className="pinto-body text-pinto-dark mb-4">🚜 Specify Conditions for automated Sowing</h4>
+                    <div className="pinto-body font-medium text-pinto-secondary mb-4">
+                      🚜 Specify Conditions for automated Sowing
+                    </div>
                     <div className="h-[1px] w-full bg-pinto-gray-2" />
                   </div>
 
@@ -1293,9 +1295,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   <Col>
                     {/* Title and separator for Step 2 */}
                     <div className="flex flex-col gap-2">
-                      <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: "20px" }}>
-                        🚜 Tip per Execution
-                      </h2>
+                      <div className="pinto-body font-medium text-pinto-secondary mb-4">🚜 Tip per Execution</div>
                       <div className="h-[1px] w-full bg-pinto-gray-2 mb-6" />
                     </div>
                     <div className="pinto-sm-light text-pinto-light gap-2 mb-4">I'm willing to pay someone</div>
@@ -1475,9 +1475,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           >
             <div className="p-3">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="font-antarctica font-medium text-[20px] leading-[115%] text-pinto-primary">
-                  Select Token from Silo Deposits
-                </h2>
+                <div className="pinto-body font-medium text-pinto-primary">Select Token from Silo Deposits</div>
               </div>
               <p className="text-gray-500 mb-2">Tractor allows you to fund Orders for Soil using Deposits</p>
               <div className="w-full h-[1px] bg-pinto-gray-2 mb-6" />
@@ -1505,12 +1503,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       }`}
                     />
                     <div className="flex flex-col gap-1">
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">
-                        Token with Best Price
-                      </span>
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">
-                        at time of execution
-                      </span>
+                      <span className="text-base font-normal leading-[110%] text-black">Token with Best Price</span>
+                      <span className="text-base font-normal leading-[110%] text-[#9C9C9C]">at time of execution</span>
                     </div>
                   </div>
 
@@ -1533,12 +1527,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       }`}
                     />
                     <div className="flex flex-col gap-1">
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">
-                        Token with Least Seeds
-                      </span>
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">
-                        at time of execution
-                      </span>
+                      <span className="text-base font-normal leading-[110%] text-black">Token with Least Seeds</span>
+                      <span className="text-base font-normal leading-[110%] text-[#9C9C9C]">at time of execution</span>
                     </div>
                   </div>
                 </div>

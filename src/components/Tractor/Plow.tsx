@@ -631,22 +631,14 @@ export function Plow() {
       <Table>
         <TableHeader>
           <TableRow className="border-b border-pinto-gray-3/20">
-            <TableHead className="px-0 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-              Created At
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-              Publisher
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-              Blueprint Hash
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-              Temperature
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[220px]">
+            <TableHead className="px-0 text-left text-xs font-light text-pinto-gray-4">Created At</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Publisher</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Blueprint Hash</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Temperature</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4 min-w-[220px]">
               Operator Tip
             </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[200px]">
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4 min-w-[200px]">
               <div className="flex flex-row justify-between items-start">
                 <span>Simulate</span>
                 <div className="text-xs text-pinto-gray-4 text-right">
@@ -658,9 +650,7 @@ export function Plow() {
               </div>
             </TableHead>
             {successfulSimulations.size > 0 && (
-              <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-                Estimated Profit
-              </TableHead>
+              <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Estimated Profit</TableHead>
             )}
           </TableRow>
         </TableHeader>
@@ -864,7 +854,7 @@ export function Plow() {
       />
 
       <div className="mt-6 flex justify-between items-center">
-        <div className="font-antarctica pinto-sm-light text-pinto-light">
+        <div className="pinto-sm-light text-pinto-light">
           <div>Select Soil Orders to Simulate and Execute for a tip.</div>
           <div className="mt-1">
             Note that executing an order will likely affect the ability to execute another order.

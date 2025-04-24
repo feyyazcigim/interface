@@ -214,19 +214,35 @@ export default function ReviewTractorOrderDialog({
             </div>
             <DialogDescription className="px-6 pinto-sm-light text-pinto-light">
               {isViewOnly ? (
-                <div className="flex items-center">
-                  <span>
-                    This is your active Tractor Order. It allows an Operator to execute a transaction for you on the{" "}
+                <p>
+                  This is your active Tractor Order. It allows an Operator to execute a transaction for you on the{" "}
+                  <span className="whitespace-nowrap">
+                    <IconImage
+                      src={baseLogo}
+                      nudge={-6}
+                      mobileSize={4}
+                      size={6}
+                      className="inline align-baseline mx-[0.5px] rounded-full"
+                    />{" "}
+                    Base&nbsp;
                   </span>
-                  <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
-                  <span>Base network when the conditions are met.</span>
-                </div>
+                  network when the conditions are met.
+                </p>
               ) : (
                 <Col className="gap-3">
                   <p className="flex items-center">
                     A Tractor Order allows you to pay an Operator to execute a transaction for you on the
-                    <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
-                    Base network.
+                    <span className="whitespace-nowrap">
+                      <IconImage
+                        src={baseLogo}
+                        nudge={-6}
+                        mobileSize={4}
+                        size={6}
+                        className="inline align-baseline mx-[0.5px] rounded-full"
+                      />{" "}
+                      Base&nbsp;
+                    </span>
+                    network.
                   </p>
                   <p>
                     This allows you to interact with the Pinto protocol autonomously when the conditions of your Order
@@ -303,7 +319,7 @@ export default function ReviewTractorOrderDialog({
                       <div className="text-gray-500 text-sm">
                         <div className="flex items-center gap-1">
                           <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                          <span className="font-antarctica font-light text-[#9C9C9C]">
+                          <span className="font-light text-[#9C9C9C]">
                             Withdraw Deposited Tokens from the Silo with the{" "}
                             {orderData.tokenStrategy === "LOWEST_SEEDS"
                               ? "Lowest Seeds"
@@ -335,7 +351,7 @@ export default function ReviewTractorOrderDialog({
                         <ul className="list-none space-y-1">
                           <li className="flex items-center gap-2">
                             <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                            <span className="font-antarctica font-light text-[#9C9C9C]">
+                            <span className="font-light text-[#9C9C9C]">
                               Execute when Temperature is at least{" "}
                               <span className="text-pinto-green-4">{orderData.temperature}</span>
                               <span className="text-pinto-green-4">%</span>
@@ -343,7 +359,7 @@ export default function ReviewTractorOrderDialog({
                           </li>
                           <li className="flex items-center gap-2">
                             <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                            <span className="font-antarctica font-light text-[#9C9C9C]">
+                            <span className="font-light text-[#9C9C9C]">
                               AND when Pod Line Length is at most{" "}
                               <span className="text-pinto-green-4">
                                 {typeof orderData.podLineLength === "string" && orderData.podLineLength.includes(".")
@@ -356,14 +372,14 @@ export default function ReviewTractorOrderDialog({
                           </li>
                           <li className="flex items-center gap-2">
                             <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                            <span className="font-antarctica font-light text-[#9C9C9C]">
+                            <span className="font-light text-[#9C9C9C]">
                               AND when Available Soil is at least{" "}
                               <span className="text-pinto-green-4">{orderData.minSoil}</span>
                             </span>
                           </li>
                           <li className="flex items-center gap-2">
                             <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                            <span className="font-antarctica font-light text-[#9C9C9C]">
+                            <span className="font-light text-[#9C9C9C]">
                               AND {orderData.morningAuction ? "during" : "after"} the Morning Auction
                             </span>
                           </li>
