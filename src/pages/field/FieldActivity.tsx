@@ -353,187 +353,199 @@ const SeeAllTractorOrdersRow = ({ setShowOrdersDialog }: { setShowOrdersDialog: 
   );
 };
 
-const TractorOrderRow = React.memo(({
-  order,
-  hoveredAddress,
-  currentSeason,
-  currentTemperature,
-  setHoveredAddress,
-}: {
-  order: OrderbookEntry;
-  hoveredAddress: string | null;
-  currentSeason: number | undefined;
-  currentTemperature: { max: TokenValue };
-  setHoveredAddress: (address: string | null) => void;
-}) => {
-  const address = order.requisition.blueprint.publisher;
-  const isHovered = hoveredAddress === address;
+const TractorOrderRow = React.memo(
+  ({
+    order,
+    hoveredAddress,
+    currentSeason,
+    currentTemperature,
+    setHoveredAddress,
+  }: {
+    order: OrderbookEntry;
+    hoveredAddress: string | null;
+    currentSeason: number | undefined;
+    currentTemperature: { max: TokenValue };
+    setHoveredAddress: (address: string | null) => void;
+  }) => {
+    const address = order.requisition.blueprint.publisher;
+    const isHovered = hoveredAddress === address;
 
-  return (
-    <tr
-      className={`tractor-order-row hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}
-    >
-      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
-        {formatSeason(Number(currentSeason) + 1)}
-      </td>
-      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
-        {new Date().toLocaleDateString()}
-      </td>
-      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">{estimateExecutionTime(order)}</td>
-      <td
-        className="px-2 py-1"
-        onMouseEnter={() => setHoveredAddress(address)}
-        onMouseLeave={() => setHoveredAddress(null)}
+    return (
+      <tr
+        className={`tractor-order-row hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}
       >
-        <a
-          href={`https://basescan.org/address/${address}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`text-xs font-antarctica font-light text-pinto-gray-4 underline ${isHovered ? "font-medium" : ""}`}
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+          {formatSeason(Number(currentSeason) + 1)}
+        </td>
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+          {new Date().toLocaleDateString()}
+        </td>
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+          {estimateExecutionTime(order)}
+        </td>
+        <td
+          className="px-2 py-1"
+          onMouseEnter={() => setHoveredAddress(address)}
+          onMouseLeave={() => setHoveredAddress(null)}
         >
-          {formatAddress(address)}
-        </a>
-      </td>
-      <td className="px-2 py-1 flex items-center">
-        <span className="text-xs font-antarctica font-light text-pinto-gray-4 mr-2">
-          <span className="text-xs" role="img" aria-label="Tractor">
-            🚜
+          <a
+            href={`https://basescan.org/address/${address}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`text-xs font-antarctica font-light text-pinto-gray-4 underline ${isHovered ? "font-medium" : ""}`}
+          >
+            {formatAddress(address)}
+          </a>
+        </td>
+        <td className="px-2 py-1 flex items-center">
+          <span className="text-xs font-antarctica font-light text-pinto-gray-4 mr-2">
+            <span className="text-xs" role="img" aria-label="Tractor">
+              🚜
+            </span>
           </span>
-        </span>
-      </td>
-      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
-        {(() => {
-          const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
-          const minTemp = getOrderTemperature(order);
+        </td>
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+          {(() => {
+            const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
+            const minTemp = getOrderTemperature(order);
 
-          // For consistency with our filtering, always show the minimum temperature
-          // with ≥ prefix for Morning Auction orders
-          const decodedData = getDecodedTractorData(order);
-          const runBlocks = decodedData?.runBlocksAfterSunriseAsString
-            ? parseInt(decodedData.runBlocksAfterSunriseAsString)
-            : 0;
+            // For consistency with our filtering, always show the minimum temperature
+            // with ≥ prefix for Morning Auction orders
+            const decodedData = getDecodedTractorData(order);
+            const runBlocks = decodedData?.runBlocksAfterSunriseAsString
+              ? parseInt(decodedData.runBlocksAfterSunriseAsString)
+              : 0;
 
-          if (runBlocks < 300) {
-            // Morning auction orders - show min temp
-            return `≥ ${minTemp.toFixed(2)}%`;
-          } else {
-            // After morning auction - show predicted temp (current temp)
-            return `${predictedTemp.toFixed(2)}%`;
-          }
-        })()}
-      </td>
-      <td className="px-2 py-1 text-right">
-        <div className="flex items-center justify-end gap-1">
-          <IconImage src={pintoIcon} alt="PINTO" size={3} />
-          <span className="text-xs font-antarctica font-light text-pinto-gray-4">
-            {`${formatNumberWithCommas(parseFloat(order.amountSowableNextSeason.toHuman()).toFixed(2))}`}
-          </span>
-        </div>
-      </td>
-      <td className="px-2 py-1 text-right">
-        <div className="flex items-center justify-end gap-1">
-          <IconImage src={podIcon} alt="Pods" size={3} />
-          <span className="text-xs font-antarctica font-light text-pinto-gray-4">
-            {`${formatNumberWithCommas(parseFloat(estimateOrderPods(order, currentTemperature).toHuman()).toFixed(2))}`}
-          </span>
-        </div>
-      </td>
-      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4 text-right">
-        {Math.round(order.estimatedPlaceInLine.toNumber()).toLocaleString()}
-      </td>
-    </tr>
-  );
-}, (prevProps, nextProps) => {
-  // Only re-render if:
-  // 1. The hoveredAddress matches this row's address
-  // 2. The order data has changed
-  return (
-    prevProps.hoveredAddress !== nextProps.hoveredAddress && 
-    prevProps.hoveredAddress !== prevProps.order.requisition.blueprint.publisher &&
-    nextProps.hoveredAddress !== nextProps.order.requisition.blueprint.publisher &&
-    prevProps.order === nextProps.order &&
-    prevProps.currentSeason === nextProps.currentSeason &&
-    prevProps.currentTemperature === nextProps.currentTemperature
-  );
-});
+            if (runBlocks < 300) {
+              // Morning auction orders - show min temp
+              return `≥ ${minTemp.toFixed(2)}%`;
+            } else {
+              // After morning auction - show predicted temp (current temp)
+              return `${predictedTemp.toFixed(2)}%`;
+            }
+          })()}
+        </td>
+        <td className="px-2 py-1 text-right">
+          <div className="flex items-center justify-end gap-1">
+            <IconImage src={pintoIcon} alt="PINTO" size={3} />
+            <span className="text-xs font-antarctica font-light text-pinto-gray-4">
+              {`${formatNumberWithCommas(parseFloat(order.amountSowableNextSeason.toHuman()).toFixed(2))}`}
+            </span>
+          </div>
+        </td>
+        <td className="px-2 py-1 text-right">
+          <div className="flex items-center justify-end gap-1">
+            <IconImage src={podIcon} alt="Pods" size={3} />
+            <span className="text-xs font-antarctica font-light text-pinto-gray-4">
+              {`${formatNumberWithCommas(parseFloat(estimateOrderPods(order, currentTemperature).toHuman()).toFixed(2))}`}
+            </span>
+          </div>
+        </td>
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4 text-right">
+          {Math.round(order.estimatedPlaceInLine.toNumber()).toLocaleString()}
+        </td>
+      </tr>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if:
+    // 1. The hoveredAddress matches this row's address
+    // 2. The order data has changed
+    return (
+      prevProps.hoveredAddress !== nextProps.hoveredAddress &&
+      prevProps.hoveredAddress !== prevProps.order.requisition.blueprint.publisher &&
+      nextProps.hoveredAddress !== nextProps.order.requisition.blueprint.publisher &&
+      prevProps.order === nextProps.order &&
+      prevProps.currentSeason === nextProps.currentSeason &&
+      prevProps.currentTemperature === nextProps.currentTemperature
+    );
+  },
+);
 
-const FieldActivityRow = React.memo(({
-  activity,
-  hoveredAddress,
-  setHoveredAddress,
-}: {
-  activity: FieldActivityItem;
-  hoveredAddress: string | null;
-  setHoveredAddress: (address: string | null) => void;
-}) => {
-  const isHovered = hoveredAddress === activity.address;
+const FieldActivityRow = React.memo(
+  ({
+    activity,
+    hoveredAddress,
+    setHoveredAddress,
+  }: {
+    activity: FieldActivityItem;
+    hoveredAddress: string | null;
+    setHoveredAddress: (address: string | null) => void;
+  }) => {
+    const isHovered = hoveredAddress === activity.address;
 
-  return (
-    <tr
-      className={`hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}
-    >
-      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatSeason(activity.season)}</td>
-      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatDate(activity.timestamp)}</td>
-      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">{formatTime(activity.timestamp)}</td>
-      <td
-        className="px-2 py-1"
-        onMouseEnter={() => setHoveredAddress(activity.address)}
-        onMouseLeave={() => setHoveredAddress(null)}
-      >
-        <a
-          href={`https://basescan.org/address/${activity.address}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`text-xs font-antarctica font-light text-pinto-dark underline ${isHovered ? "font-medium" : ""}`}
+    return (
+      <tr className={`hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}>
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
+          {formatSeason(activity.season)}
+        </td>
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
+          {formatDate(activity.timestamp)}
+        </td>
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
+          {formatTime(activity.timestamp)}
+        </td>
+        <td
+          className="px-2 py-1"
+          onMouseEnter={() => setHoveredAddress(activity.address)}
+          onMouseLeave={() => setHoveredAddress(null)}
         >
-          {formatAddress(activity.address)}
-        </a>
-      </td>
-      <td className="px-2 py-1">
-        <a
-          href={`https://basescan.org/tx/${activity.txHash}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs font-antarctica font-light text-pinto-dark underline"
-        >
-          {formatAddress(activity.txHash)}
-        </a>
-      </td>
-      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
-        {activity.temperature.toFixed(2)}%
-      </td>
-      <td className="px-2 py-1 text-right">
-        <div className="flex items-center justify-end gap-1">
-          <IconImage src={pintoIcon} alt="PINTO" size={3} />
-          <span className="text-xs font-antarctica font-light text-pinto-dark">
-            {`${formatNumberWithCommas(parseFloat(activity.amount.toHuman()).toFixed(2))}`}
-          </span>
-        </div>
-      </td>
-      <td className="px-2 py-1 text-right">
-        <div className="flex items-center justify-end gap-1">
-          <IconImage src={podIcon} alt="Pods" size={3} />
-          <span className="text-xs font-antarctica font-light text-pinto-dark">
-            {`${formatNumberWithCommas(parseFloat(activity.pods.toHuman()).toFixed(2))}`}
-          </span>
-        </div>
-      </td>
-      <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark text-right">
-        {activity.placeInLine.split(".")[0]}
-      </td>
-    </tr>
-  );
-}, (prevProps, nextProps) => {
-  // Only re-render if:
-  // 1. The hoveredAddress matches this row's address
-  // 2. The activity data has changed
-  return (
-    prevProps.hoveredAddress !== nextProps.hoveredAddress && 
-    prevProps.hoveredAddress !== prevProps.activity.address &&
-    nextProps.hoveredAddress !== nextProps.activity.address &&
-    prevProps.activity === nextProps.activity
-  );
-});
+          <a
+            href={`https://basescan.org/address/${activity.address}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`text-xs font-antarctica font-light text-pinto-dark underline ${isHovered ? "font-medium" : ""}`}
+          >
+            {formatAddress(activity.address)}
+          </a>
+        </td>
+        <td className="px-2 py-1">
+          <a
+            href={`https://basescan.org/tx/${activity.txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-antarctica font-light text-pinto-dark underline"
+          >
+            {formatAddress(activity.txHash)}
+          </a>
+        </td>
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark">
+          {activity.temperature.toFixed(2)}%
+        </td>
+        <td className="px-2 py-1 text-right">
+          <div className="flex items-center justify-end gap-1">
+            <IconImage src={pintoIcon} alt="PINTO" size={3} />
+            <span className="text-xs font-antarctica font-light text-pinto-dark">
+              {`${formatNumberWithCommas(parseFloat(activity.amount.toHuman()).toFixed(2))}`}
+            </span>
+          </div>
+        </td>
+        <td className="px-2 py-1 text-right">
+          <div className="flex items-center justify-end gap-1">
+            <IconImage src={podIcon} alt="Pods" size={3} />
+            <span className="text-xs font-antarctica font-light text-pinto-dark">
+              {`${formatNumberWithCommas(parseFloat(activity.pods.toHuman()).toFixed(2))}`}
+            </span>
+          </div>
+        </td>
+        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-dark text-right">
+          {activity.placeInLine.split(".")[0]}
+        </td>
+      </tr>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if:
+    // 1. The hoveredAddress matches this row's address
+    // 2. The activity data has changed
+    return (
+      prevProps.hoveredAddress !== nextProps.hoveredAddress &&
+      prevProps.hoveredAddress !== prevProps.activity.address &&
+      nextProps.hoveredAddress !== nextProps.activity.address &&
+      prevProps.activity === nextProps.activity
+    );
+  },
+);
 
 const FieldActivityHeader = () => (
   <thead>

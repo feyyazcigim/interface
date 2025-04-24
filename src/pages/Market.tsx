@@ -98,7 +98,12 @@ export function Market() {
               </div>
               <Separator className="bg-pinto-gray-2" />
               <div className="pt-4">
-                <AccordionGroup items={FAQ_ITEMS} groupTitle="Frequently Asked Questions" allExpanded={false} />
+                <AccordionGroup
+                  items={FAQ_ITEMS}
+                  size="small"
+                  groupTitle="Frequently Asked Questions"
+                  allExpanded={false}
+                />
               </div>
             </div>
           </div>
