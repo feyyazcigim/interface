@@ -299,11 +299,9 @@ function Field() {
               </div>
 
               {activeTab === "activity" && <FieldActivity />}
-
               {activeTab === "pods" && (
                 <div>{hasPods ? <PlotsTable showClaimable disableHover /> : <EmptyTable type="plots-field" />}</div>
               )}
-
               {activeTab === "tractor" && (
                 <div className="w-full">
                   <TractorOrdersPanel refreshData={tractorRefreshCounter} onCreateOrder={() => setShowSowOrder(true)} />

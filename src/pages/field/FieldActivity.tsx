@@ -274,9 +274,7 @@ const FieldActivity = () => {
             {loadingTractorOrders ? (
               <tr>
                 <td colSpan={9} className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
-                  <Col className="items-center justify-center sm:min-h-[11rem] sm:h-[11rem]">
-                    Loading Tractor orders...
-                  </Col>
+                  <Col className="items-center justify-center p-4">Loading Tractor orders...</Col>
                 </td>
               </tr>
             ) : tractorOrders.filter((order) => order.amountSowableNextSeason.gt(0)).length > 0 ? (
@@ -299,10 +297,8 @@ const FieldActivity = () => {
               </>
             ) : (
               <>
-                <td colSpan={9} className="px-2 py-4 text-center text-xs font-antarctica font-light text-pinto-gray-4">
-                  <Col className="items-center justify-center sm:min-h-[10rem] sm:h-[10rem]">
-                    No Tractor orders executable next Season
-                  </Col>
+                <td colSpan={9} className="px-2 pt-4 text-center text-xs font-antarctica font-light text-pinto-gray-4">
+                  <Col className="items-center justify-center">No Tractor orders executable next Season</Col>
                 </td>
               </>
             )}
@@ -557,13 +553,13 @@ const FieldActivitySkeleton = () => (
                 <td className="px-2 py-1">
                   <Skeleton className="h-3 w-14" />
                 </td>
-                <td className="px-2 py-1">
+                <td className="px-2 py-1" align="right">
                   <Skeleton className="h-3 w-20" />
                 </td>
-                <td className="px-2 py-1">
+                <td className="px-2 py-1" align="right">
                   <Skeleton className="h-3 w-20" />
                 </td>
-                <td className="px-2 py-1">
+                <td className="px-2 py-1" align="right">
                   <Skeleton className="h-3 w-24" />
                 </td>
               </tr>
