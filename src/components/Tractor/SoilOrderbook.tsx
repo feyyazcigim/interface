@@ -615,6 +615,11 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
   const [sortBy, setSortBy] = useState<"temperature" | "tip">("temperature");
   const [showAboveCurrentTemp, setShowAboveCurrentTemp] = useState(true);
 
+  // Small Label component with forced small text size
+  const SmallLabel = (props: React.ComponentProps<typeof Label>) => (
+    <Label {...props} style={{ fontSize: "1rem", lineHeight: "1rem" }} />
+  );
+
   const sortOptions = [
     {
       id: "temperature",
@@ -669,12 +674,12 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-4" align="end">
-                      <h3 className="text-sm font-medium mb-3">Table Settings</h3>
+                      <h3 className="text-xs font-medium mb-3" style={{ fontSize: "1rem", lineHeight: "1rem" }}>
+                        Table Settings
+                      </h3>
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <Label htmlFor="show-zero-available" className="text-sm">
-                            Show Zero Available Pinto
-                          </Label>
+                          <SmallLabel htmlFor="show-zero-available">Show Zero Available Pinto</SmallLabel>
                           <Switch
                             id="show-zero-available"
                             checked={showZeroAvailable}
@@ -683,9 +688,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label htmlFor="show-above-temp" className="text-sm">
-                            Show Orders Above Current Temp
-                          </Label>
+                          <SmallLabel htmlFor="show-above-temp">Show Orders Above Current Temp</SmallLabel>
                           <Switch
                             id="show-above-temp"
                             checked={showAboveCurrentTemp}
@@ -694,7 +697,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Sort By</Label>
+                          <SmallLabel>Sort By</SmallLabel>
                           <div className="flex flex-row w-fit items-center">
                             {sortOptions.map((option, index) => (
                               <React.Fragment key={`dialog-${option.id}-${index}`}>
