@@ -1,6 +1,10 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogHeader, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/Dialog";
 import IconImage from "@/components/ui/IconImage";
+import { Label } from "@/components/ui/Label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { Switch } from "@/components/ui/Switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { PINTO } from "@/constants/tokens";
@@ -15,6 +19,7 @@ import {
 } from "@/lib/Tractor/utils";
 import { formatter } from "@/utils/format";
 import { getChainToken } from "@/utils/token";
+import { GearIcon } from "@radix-ui/react-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { usePublicClient } from "wagmi";
@@ -25,8 +30,13 @@ import { Plow } from "./Plow";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
+// Define props interface for SoilOrderbookContent
+interface SoilOrderbookContentProps {
+  showZeroAvailable?: boolean;
+}
+
 // Shared logic for loading and displaying the orderbook data
-export function SoilOrderbookContent() {
+export function SoilOrderbookContent({ showZeroAvailable = true }: SoilOrderbookContentProps) {
   const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
   const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -284,98 +294,100 @@ export function SoilOrderbookContent() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {requisitions.map((req, index) => {
-            let decodedData: SowBlueprintData | null = null;
-            try {
-              decodedData = decodeSowTractorData(req.requisition.blueprint.data);
-            } catch (error) {
-              console.error("Failed to decode data for requisition:", error);
-            }
+          {requisitions
+            .filter((req) => showZeroAvailable || parseFloat(req.currentlySowable.toHuman()) > 0)
+            .map((req, index) => {
+              let decodedData: SowBlueprintData | null = null;
+              try {
+                decodedData = decodeSowTractorData(req.requisition.blueprint.data);
+              } catch (error) {
+                console.error("Failed to decode data for requisition:", error);
+              }
 
-            // Get temperature
-            const temperature = decodedData ? parseFloat(decodedData.minTempAsString) : 0;
+              // Get temperature
+              const temperature = decodedData ? parseFloat(decodedData.minTempAsString) : 0;
 
-            // Get max pod line length
-            const maxPodLineLength = decodedData
-              ? parseInt(decodedData.maxPodlineLengthAsString).toLocaleString()
-              : "Unknown";
+              // Get max pod line length
+              const maxPodLineLength = decodedData
+                ? parseInt(decodedData.maxPodlineLengthAsString).toLocaleString()
+                : "Unknown";
 
-            // Total order size
-            const totalSize = decodedData
-              ? formatter.number(TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6))
-              : "Unknown";
+              // Total order size
+              const totalSize = decodedData
+                ? formatter.number(TokenValue.fromBlockchain(decodedData.sowAmounts.totalAmountToSow, 6))
+                : "Unknown";
 
-            // Available Pinto
-            const availablePinto = formatter.number(req.currentlySowable);
+              // Available Pinto
+              const availablePinto = formatter.number(req.currentlySowable);
 
-            return (
-              <TableRow
-                key={index}
-                className="border-b border-gray-100 hover:bg-pinto-green-1 cursor-pointer transition-colors"
-                noHoverMute
-                onClick={() => handleRowClick(req)}
-              >
-                <TableCell className="py-2 px-0">≥ {temperature.toFixed(0)}%</TableCell>
-                <TableCell className="py-2">≤ {maxPodLineLength}</TableCell>
-                <TableCell className="py-2">
-                  <div className="flex items-center gap-1">
-                    <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                    {totalSize}
-                  </div>
-                </TableCell>
-                <TableCell className="py-2">
-                  <div className="flex items-center gap-1">
-                    <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                    {availablePinto}
-                  </div>
-                </TableCell>
-                <TableCell className="py-2">
-                  <div className="flex items-center gap-1">
-                    <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                    {decodedData && decodedData.sowAmounts.maxAmountToSowPerSeasonAsString
-                      ? formatter.number(
-                          TokenValue.fromHuman(decodedData.sowAmounts.maxAmountToSowPerSeasonAsString, 6),
-                        )
-                      : "Unknown"}
-                  </div>
-                </TableCell>
-                <TableCell className="py-2">
-                  {decodedData && decodedData.runBlocksAfterSunrise !== undefined ? (
-                    Number(decodedData.runBlocksAfterSunrise) < 300 ? (
-                      <span className="text-pinto-green-4 font-medium">Yes</span>
+              return (
+                <TableRow
+                  key={index}
+                  className="border-b border-gray-100 hover:bg-pinto-green-1 cursor-pointer transition-colors"
+                  noHoverMute
+                  onClick={() => handleRowClick(req)}
+                >
+                  <TableCell className="py-2 px-0">≥ {temperature.toFixed(0)}%</TableCell>
+                  <TableCell className="py-2">≤ {maxPodLineLength}</TableCell>
+                  <TableCell className="py-2">
+                    <div className="flex items-center gap-1">
+                      <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                      {totalSize}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-2">
+                    <div className="flex items-center gap-1">
+                      <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                      {availablePinto}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-2">
+                    <div className="flex items-center gap-1">
+                      <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                      {decodedData && decodedData.sowAmounts.maxAmountToSowPerSeasonAsString
+                        ? formatter.number(
+                            TokenValue.fromHuman(decodedData.sowAmounts.maxAmountToSowPerSeasonAsString, 6),
+                          )
+                        : "Unknown"}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-2">
+                    {decodedData && decodedData.runBlocksAfterSunrise !== undefined ? (
+                      Number(decodedData.runBlocksAfterSunrise) < 300 ? (
+                        <span className="text-pinto-green-4 font-medium">Yes</span>
+                      ) : (
+                        <span className="text-pinto-gray-4">No</span>
+                      )
                     ) : (
-                      <span className="text-pinto-gray-4">No</span>
-                    )
-                  ) : (
-                    "Unknown"
-                  )}
-                </TableCell>
-                <TableCell className="py-2">
-                  <div className="flex items-center gap-1">
-                    <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
-                    {decodedData && decodedData.operatorParams.operatorTipAmount
-                      ? formatter.number(TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6))
-                      : "Unknown"}
-                  </div>
-                </TableCell>
-                <TableCell className="py-2 text-pinto-dark">
-                  {`0x${req.requisition.blueprintHash.slice(2, 7)}...${req.requisition.blueprintHash.slice(-4)}`}
-                </TableCell>
-                <TableCell className="py-2">
-                  <a
-                    href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-pinto-dark underline hover:opacity-80"
-                    onClick={(e) => e.stopPropagation()} // Prevent row click when clicking the link
-                  >
-                    {`0x${req.requisition.blueprint.publisher.slice(2, 7)}...${req.requisition.blueprint.publisher.slice(-4)}`}
-                  </a>
-                </TableCell>
-                <TableCell className="py-2">{formatDate(req.timestamp)}</TableCell>
-              </TableRow>
-            );
-          })}
+                      "Unknown"
+                    )}
+                  </TableCell>
+                  <TableCell className="py-2">
+                    <div className="flex items-center gap-1">
+                      <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
+                      {decodedData && decodedData.operatorParams.operatorTipAmount
+                        ? formatter.number(TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6))
+                        : "Unknown"}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-2 text-pinto-dark">
+                    {`0x${req.requisition.blueprintHash.slice(2, 7)}...${req.requisition.blueprintHash.slice(-4)}`}
+                  </TableCell>
+                  <TableCell className="py-2">
+                    <a
+                      href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-pinto-dark underline hover:opacity-80"
+                      onClick={(e) => e.stopPropagation()} // Prevent row click when clicking the link
+                    >
+                      {`0x${req.requisition.blueprint.publisher.slice(2, 7)}...${req.requisition.blueprint.publisher.slice(-4)}`}
+                    </a>
+                  </TableCell>
+                  <TableCell className="py-2">{formatDate(req.timestamp)}</TableCell>
+                </TableRow>
+              );
+            })}
           {requisitions.length === 0 && (
             <TableRow>
               <TableCell colSpan={10} className="p-2 text-center text-gray-500">
@@ -427,7 +439,31 @@ export function SoilOrderbookContent() {
 
 // Original standalone component
 export function SoilOrderbook() {
-  return <SoilOrderbookContent />;
+  const [showZeroAvailable, setShowZeroAvailable] = useState(true);
+
+  return (
+    <div className="relative">
+      <div className="absolute top-2 right-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="ghost" size="sm" className="rounded-full h-8" aria-label="Table Settings">
+              <GearIcon className="h-5 w-5 text-pinto-gray-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-4" align="end">
+            <h3 className="text-sm font-medium mb-3">Table Settings</h3>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="standalone-show-zero" className="text-sm">
+                Show Zero Available Pinto
+              </Label>
+              <Switch id="standalone-show-zero" checked={showZeroAvailable} onCheckedChange={setShowZeroAvailable} />
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+      <SoilOrderbookContent showZeroAvailable={showZeroAvailable} />
+    </div>
+  );
 }
 
 // Dialog version of the component
@@ -438,35 +474,71 @@ interface SoilOrderbookDialogProps {
 
 export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogProps) {
   const [activeTab, setActiveTab] = useState<"view" | "execute">("view");
+  const [showZeroAvailable, setShowZeroAvailable] = useState(true);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
         <DialogContent className="max-w-[90rem] w-[98vw] bg-gray-50 border border-gray-200 p-0">
-          <DialogHeader className="pt-2 pb-2">
+          <DialogHeader className="pt-2">
             <DialogTitle className="text-xl font-antarctica font-bold">Tractor Soil Orders</DialogTitle>
           </DialogHeader>
 
           <div className="w-full">
-            <div className="flex gap-4 border-b pinto-sm">
-              <button
-                type="button"
-                className={`pb-2 font-antarctica ${activeTab === "view" ? "border-b-2 border-pinto-green-4 font-medium" : "border-b-2 border-transparent text-pinto-gray-4"}`}
-                onClick={() => setActiveTab("view")}
-              >
-                View Soil Orders
-              </button>
-              <button
-                type="button"
-                className={`pb-2 font-antarctica ${activeTab === "execute" ? "border-b-2 border-pinto-green-4 font-medium" : "border-b-2 border-transparent text-pinto-gray-4"}`}
-                onClick={() => setActiveTab("execute")}
-              >
-                Execute Soil Orders
-              </button>
+            <div className="border-b">
+              <div className="flex items-end justify-between">
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    className={`pb-2 pt-1 font-antarctica ${activeTab === "view" ? "border-b-2 border-pinto-green-4 font-medium -mb-[2px]" : "border-b-2 border-transparent text-pinto-gray-4 -mb-[2px]"}`}
+                    onClick={() => setActiveTab("view")}
+                  >
+                    View Soil Orders
+                  </button>
+                  <button
+                    type="button"
+                    className={`pb-2 pt-1 font-antarctica ${activeTab === "execute" ? "border-b-2 border-pinto-green-4 font-medium -mb-[2px]" : "border-b-2 border-transparent text-pinto-gray-4 -mb-[2px]"}`}
+                    onClick={() => setActiveTab("execute")}
+                  >
+                    Execute Soil Orders
+                  </button>
+                </div>
+
+                <div className="pb-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-full h-8"
+                        aria-label="Table Settings"
+                      >
+                        <GearIcon className="h-5 w-5 text-pinto-gray-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4" align="end">
+                      <h3 className="text-sm font-medium mb-3">Table Settings</h3>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="show-zero-available" className="text-sm">
+                          Show Zero Available Pinto
+                        </Label>
+                        <Switch
+                          id="show-zero-available"
+                          checked={showZeroAvailable}
+                          onCheckedChange={setShowZeroAvailable}
+                        />
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
             </div>
 
-            <div className="py-4">{activeTab === "view" ? <SoilOrderbookContent /> : <Plow />}</div>
+            <div className="py-4">
+              {activeTab === "view" ? <SoilOrderbookContent showZeroAvailable={showZeroAvailable} /> : <Plow />}
+            </div>
           </div>
         </DialogContent>
       </DialogPortal>
