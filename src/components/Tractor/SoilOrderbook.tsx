@@ -19,17 +19,17 @@ import {
 } from "@/lib/Tractor/utils";
 import { formatter } from "@/utils/format";
 import { getChainToken } from "@/utils/token";
+import { cn } from "@/utils/utils";
 import { GearIcon } from "@radix-ui/react-icons";
+import { Separator } from "@radix-ui/react-separator";
 import { useCallback, useEffect, useRef, useState } from "react";
+import React from "react";
 import { toast } from "sonner";
 import { usePublicClient } from "wagmi";
 import { useChainId } from "wagmi";
 import LoadingSpinner from "../LoadingSpinner";
 import ReviewTractorOrderDialog, { ExecutionData } from "../ReviewTractorOrderDialog";
 import { Plow } from "./Plow";
-import { cn } from "@/utils/utils";
-import { Separator } from "@radix-ui/react-separator";
-import React from "react";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
@@ -402,7 +402,10 @@ export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "tempe
                     <div className="flex items-center gap-1">
                       <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
                       {decodedData && decodedData.operatorParams.operatorTipAmount
-                        ? formatter.number(TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6), { minDecimals: 2, maxDecimals: 2 })
+                        ? formatter.number(TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6), {
+                            minDecimals: 2,
+                            maxDecimals: 2,
+                          })
                         : "Unknown"}
                     </div>
                   </TableCell>
@@ -507,7 +510,7 @@ export function SoilOrderbook() {
                 </Label>
                 <Switch id="standalone-show-zero" checked={showZeroAvailable} onCheckedChange={setShowZeroAvailable} />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <Label className="text-sm">Sort By</Label>
                 <div className="flex flex-row w-fit items-center">
@@ -523,9 +526,7 @@ export function SoilOrderbook() {
                         )}
                         onClick={() => setSortBy(option.id)}
                       >
-                        <div className="text-xs text-pinto-green-3">
-                          {option.text}
-                        </div>
+                        <div className="text-xs text-pinto-green-3">{option.text}</div>
                       </div>
                       {index < sortOptions.length - 1 && (
                         <Separator
@@ -623,7 +624,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                             onCheckedChange={setShowZeroAvailable}
                           />
                         </div>
-                        
+
                         <div className="flex items-center justify-between">
                           <Label className="text-sm">Sort By</Label>
                           <div className="flex flex-row w-fit items-center">
@@ -639,9 +640,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                                   )}
                                   onClick={() => setSortBy(option.id)}
                                 >
-                                  <div className="text-xs text-pinto-green-3">
-                                    {option.text}
-                                  </div>
+                                  <div className="text-xs text-pinto-green-3">{option.text}</div>
                                 </div>
                                 {index < sortOptions.length - 1 && (
                                   <Separator
@@ -661,7 +660,11 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
             </div>
 
             <div className="py-4">
-              {activeTab === "view" ? <SoilOrderbookContent showZeroAvailable={showZeroAvailable} sortBy={sortBy} /> : <Plow />}
+              {activeTab === "view" ? (
+                <SoilOrderbookContent showZeroAvailable={showZeroAvailable} sortBy={sortBy} />
+              ) : (
+                <Plow />
+              )}
             </div>
           </div>
         </DialogContent>
