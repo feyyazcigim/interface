@@ -477,8 +477,8 @@ export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "tempe
             if (sortBy === "temperature" && index === maxTempPosition) {
               return (
                 <React.Fragment key="current-max-temp">
-                  <TableRow className="border-b border-pinto-green-4 bg-pinto-green-1/50">
-                    <TableCell colSpan={10} className="py-1 text-center text-pinto-green-4 font-medium">
+                  <TableRow className="border-b-0">
+                    <TableCell colSpan={10} className="py-1 text-center text-pinto-green-4 font-medium border-b-0">
                       Current Max Temperature: {formatter.pct(temperature.max)} ↑
                     </TableCell>
                   </TableRow>
@@ -489,8 +489,8 @@ export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "tempe
             return renderRequisitionRow(req, index);
           })}
           {sortBy === "temperature" && maxTempPosition === sortedRequisitions.length && (
-            <TableRow className="border-b border-pinto-green-4 bg-pinto-green-1/50">
-              <TableCell colSpan={10} className="py-1 text-center text-pinto-green-4 font-medium">
+            <TableRow className="border-b-0">
+              <TableCell colSpan={10} className="py-1 text-center text-pinto-green-4 font-medium border-b-0">
                 Current Max Temperature: {formatter.pct(temperature.max)} ↑
               </TableCell>
             </TableRow>
