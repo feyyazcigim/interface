@@ -275,7 +275,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                     <div className="flex items-center gap-0">
                       {/* Withdraw pill */}
                       <div className="flex items-center px-2 py-1 bg-pinto-green-4 rounded-xl">
-                        <span className="text-white text-sm font-antarctica font-normal whitespace-nowrap">
+                        <span className="text-white text-sm font-normal whitespace-nowrap">
                           Withdraw
                         </span>
                       </div>
@@ -283,7 +283,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                       <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0" />
                       {/* From label */}
                       <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
-                        <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap">
+                        <span className="text-pinto-gray-4 text-sm font-thin whitespace-nowrap">
                           from Silo
                         </span>
                       </div>
@@ -291,18 +291,18 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                       <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0" />
                       {/* Sow pill */}
                       <div className="flex items-center px-2 py-1 bg-pinto-green-4 rounded-xl">
-                        <span className="text-white text-sm font-antarctica font-normal whitespace-nowrap">Sow</span>
+                        <span className="text-white text-sm font-normal whitespace-nowrap">Sow</span>
                       </div>
                       {/* Divider */}
                       <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0" />
                       {/* Up to */}
                       <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
                         <div className="flex items-center gap-1">
-                          <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap">
+                          <span className="text-pinto-gray-4 text-sm font-thin whitespace-nowrap">
                             up to
                           </span>
                           <IconImage src={pintoIcon} size={4} />
-                          <span className="text-pinto-green-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">
+                          <span className="text-pinto-green-4 text-sm font-thin whitespace-nowrap overflow-hidden text-ellipsis">
                             {formatter.number(totalAmount)} PINTO
                             <span className="text-pinto-gray-4">
                               {" "}
@@ -315,10 +315,10 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-pinto-gray-4 text-sm font-antarctica whitespace-nowrap">Operator Tip:</span>
+                      <span className="text-pinto-gray-4 text-sm whitespace-nowrap">Operator Tip:</span>
                       <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl flex items-center gap-1">
                         <IconImage src={pintoIcon} size={4} />
-                        <span className="text-pinto-green-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="text-pinto-green-4 text-sm font-thin whitespace-nowrap overflow-hidden text-ellipsis">
                           {formatter.number(TokenValue.fromBlockchain(data.operatorParams.operatorTipAmount, 6))} PINTO
                         </span>
                       </div>
@@ -328,7 +328,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                   {/* Strategy description - new row */}
                   <div className="flex items-center pl-6 gap-2">
                     <CornerBottomLeftIcon className="h-4 w-4 text-pinto-gray-4" />
-                    <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">
+                    <span className="text-pinto-gray-4 text-sm font-thin whitespace-nowrap overflow-hidden text-ellipsis">
                       Withdraw Deposited Tokens from the Silo with the{" "}
                       {data.sourceTokenIndices.includes(255)
                         ? "Lowest Seeds"
@@ -343,27 +343,27 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center pl-6 gap-2">
                         <CornerBottomLeftIcon className="h-4 w-4 text-pinto-gray-4" />
-                        <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="text-pinto-gray-4 text-sm font-thin whitespace-nowrap overflow-hidden text-ellipsis">
                           Execute when Temperature is at least {formatPercentage(data.minTemp)}
                         </span>
                       </div>
                       <div className="flex items-center pl-6 gap-2">
                         <CornerBottomLeftIcon className="h-4 w-4 text-pinto-gray-4" />
-                        <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="text-pinto-gray-4 text-sm font-thin whitespace-nowrap overflow-hidden text-ellipsis">
                           AND when Pod Line Length is at most{" "}
                           {formatter.number(TokenValue.fromHuman(data.maxPodlineLengthAsString, 6))}
                         </span>
                       </div>
                       <div className="flex items-center pl-6 gap-2">
                         <CornerBottomLeftIcon className="h-4 w-4 text-pinto-gray-4" />
-                        <span className="text-pinto-gray-4 text-sm font-antarctica font-thin whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="text-pinto-gray-4 text-sm font-thin whitespace-nowrap overflow-hidden text-ellipsis">
                           AND when Available Soil is at least {data.sowAmounts.minAmountToSowPerSeasonAsString}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
                       <IconImage src={pintoIcon} size={4} />
-                      <span className="text-pinto-gray-4 text-sm font-antarctica whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span className="text-pinto-gray-4 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                         PINTO Sown through this Order:
                         <span className="text-black">
                           {" "}
@@ -383,7 +383,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
               </Card>
 
               {/* External actions - positioned outside the cell */}
-              <Row className="font-antarctica self-end gap-2 pinto-sm text-pinto-light">
+              <Row className="self-end gap-2 pinto-sm text-pinto-light">
                 <div className="inline-flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
                   <span className="inline-block whitespace-nowrap">Published {publishDate}</span>
@@ -396,7 +396,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                 </Row>
                 <Button
                   variant="ghost"
-                  className="font-antarctica inline-flex items-center gap-1 text-sm text-pinto-red-2 hover:bg-pinto-red-1"
+                  className="inline-flex items-center gap-1 text-sm text-pinto-red-2 hover:bg-pinto-red-1"
                   onClick={(e) => handleCancelBlueprint(req, e)}
                   disabled={submitting}
                 >

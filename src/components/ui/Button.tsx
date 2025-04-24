@@ -41,7 +41,7 @@ const buttonVariants = cva(
         "silo-action":
           "hover:bg-pinto-green-1 h-[2.5rem] rounded-[1rem] font-[400] text-[1.25rem] text-pinto-gray-5 flex flex-row justify-start gap-[0.625rem] disabled:bg-transparent disabled:text-pinto-gray-5 disabled:opacity-30",
         hoverTextPrimary:
-          "text-sm font-light font-antarctica text-pinto-green-4 hover:text-pinto-green-5 hover:underline",
+          "text-sm font-light text-pinto-green-4 hover:text-pinto-green-5 hover:underline",
         morning: "bg-pinto-morning-orange text-pinto-morning",
         gradient:
           "bg-gradient-primary hover:bg-gradient-primary-hover text-white disabled:text-white disabled:opacity-60",

@@ -277,7 +277,7 @@ const FieldActivity = () => {
             {/* Tractor Orders Section */}
             {loadingTractorOrders ? (
               <tr>
-                <td colSpan={9} className="px-2 py-2 text-xs font-antarctica font-light text-pinto-gray-4">
+                <td colSpan={9} className="px-2 py-2 text-xs font-light text-pinto-gray-4">
                   <Col className="items-center justify-center p-4">Loading Tractor orders...</Col>
                 </td>
               </tr>
@@ -299,7 +299,7 @@ const FieldActivity = () => {
               </>
             ) : (
               <>
-                <td colSpan={9} className="px-2 pt-4 text-center text-xs font-antarctica font-light text-pinto-gray-4">
+                <td colSpan={9} className="px-2 pt-4 text-center text-xs font-light text-pinto-gray-4">
                   <Col className="items-center justify-center">No Tractor orders executable next Season</Col>
                 </td>
               </>
@@ -374,13 +374,13 @@ const TractorOrderRow = React.memo(
       <tr
         className={`tractor-order-row hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}
       >
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4">
           {formatSeason(Number(currentSeason) + 1)}
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4">
           {new Date().toLocaleDateString()}
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4">
           {estimateExecutionTime(order)}
         </td>
         <td
@@ -392,19 +392,19 @@ const TractorOrderRow = React.memo(
             href={`https://basescan.org/address/${address}`}
             target="_blank"
             rel="noopener noreferrer"
-            className={`text-xs font-antarctica font-light text-pinto-gray-4 underline ${isHovered ? "font-medium" : ""}`}
+            className={`text-xs font-light text-pinto-gray-4 underline ${isHovered ? "font-medium" : ""}`}
           >
             {formatAddress(address)}
           </a>
         </td>
         <td className="px-2 py-1 flex items-center">
-          <span className="text-xs font-antarctica font-light text-pinto-gray-4 mr-2">
+          <span className="text-xs font-light text-pinto-gray-4 mr-2">
             <span className="text-xs" role="img" aria-label="Tractor">
               🚜
             </span>
           </span>
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4">
+        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4">
           {(() => {
             const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
             const minTemp = getOrderTemperature(order);
@@ -428,7 +428,7 @@ const TractorOrderRow = React.memo(
         <td className="px-2 py-1 text-right">
           <div className="flex items-center justify-end gap-1">
             <IconImage src={pintoIcon} alt="PINTO" size={3} />
-            <span className="text-xs font-antarctica font-light text-pinto-gray-4">
+            <span className="text-xs font-light text-pinto-gray-4">
               {`${formatNumberWithCommas(parseFloat(order.amountSowableNextSeason.toHuman()).toFixed(2))}`}
             </span>
           </div>
@@ -436,12 +436,12 @@ const TractorOrderRow = React.memo(
         <td className="px-2 py-1 text-right">
           <div className="flex items-center justify-end gap-1">
             <IconImage src={podIcon} alt="Pods" size={3} />
-            <span className="text-xs font-antarctica font-light text-pinto-gray-4">
+            <span className="text-xs font-light text-pinto-gray-4">
               {`${formatNumberWithCommas(parseFloat(estimateOrderPods(order, currentTemperature).toHuman()).toFixed(2))}`}
             </span>
           </div>
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-gray-4 text-right">
+        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4 text-right">
           {Math.round(order.estimatedPlaceInLine.toNumber()).toLocaleString()}
         </td>
       </tr>
@@ -476,13 +476,13 @@ const FieldActivityRow = React.memo(
 
     return (
       <tr className={`hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-secondary">
+        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">
           {formatSeason(activity.season)}
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-secondary">
+        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">
           {formatDate(activity.timestamp)}
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-secondary">
+        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">
           {formatTime(activity.timestamp)}
         </td>
         <td
@@ -494,7 +494,7 @@ const FieldActivityRow = React.memo(
             href={`https://basescan.org/address/${activity.address}`}
             target="_blank"
             rel="noopener noreferrer"
-            className={`text-xs font-antarctica font-light text-pinto-secondary underline ${isHovered ? "font-medium" : ""}`}
+            className={`text-xs font-light text-pinto-secondary underline ${isHovered ? "font-medium" : ""}`}
           >
             {formatAddress(activity.address)}
           </a>
@@ -504,18 +504,18 @@ const FieldActivityRow = React.memo(
             href={`https://basescan.org/tx/${activity.txHash}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-antarctica font-light text-pinto-secondary underline"
+            className="text-xs font-light text-pinto-secondary underline"
           >
             {formatAddress(activity.txHash)}
           </a>
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-secondary">
+        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">
           {activity.temperature.toFixed(2)}%
         </td>
         <td className="px-2 py-1 text-right">
           <div className="flex items-center justify-end gap-1">
             <IconImage src={pintoIcon} alt="PINTO" size={3} />
-            <span className="text-xs font-antarctica font-light text-pinto-secondary">
+            <span className="text-xs font-light text-pinto-secondary">
               {`${formatNumberWithCommas(parseFloat(activity.amount.toHuman()).toFixed(2))}`}
             </span>
           </div>
@@ -523,12 +523,12 @@ const FieldActivityRow = React.memo(
         <td className="px-2 py-1 text-right">
           <div className="flex items-center justify-end gap-1">
             <IconImage src={podIcon} alt="Pods" size={3} />
-            <span className="text-xs font-antarctica font-light text-pinto-secondary">
+            <span className="text-xs font-light text-pinto-secondary">
               {`${formatNumberWithCommas(parseFloat(activity.pods.toHuman()).toFixed(2))}`}
             </span>
           </div>
         </td>
-        <td className="px-2 py-1 text-xs font-antarctica font-light text-pinto-secondary text-right">
+        <td className="px-2 py-1 text-xs font-light text-pinto-secondary text-right">
           {activity.placeInLine.split(".")[0]}
         </td>
       </tr>
@@ -550,15 +550,15 @@ const FieldActivityRow = React.memo(
 const FieldActivityHeader = () => (
   <thead>
     <tr className="border-b border-pinto-gray-3/20">
-      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Season</th>
-      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Date</th>
-      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Time</th>
-      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Address</th>
-      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4">Txn Hash</th>
-      <th className="px-2 py-1 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[75px]">Temp</th>
-      <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Amount Sown</th>
-      <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Pods minted</th>
-      <th className="px-2 py-1 text-right text-xs font-antarctica font-light text-pinto-gray-4">Place in Line</th>
+      <th className="px-2 py-1 text-left text-xs font-light text-pinto-gray-4">Season</th>
+      <th className="px-2 py-1 text-left text-xs font-light text-pinto-gray-4">Date</th>
+      <th className="px-2 py-1 text-left text-xs font-light text-pinto-gray-4">Time</th>
+      <th className="px-2 py-1 text-left text-xs font-light text-pinto-gray-4">Address</th>
+      <th className="px-2 py-1 text-left text-xs font-light text-pinto-gray-4">Txn Hash</th>
+      <th className="px-2 py-1 text-left text-xs font-light text-pinto-gray-4 min-w-[75px]">Temp</th>
+      <th className="px-2 py-1 text-right text-xs font-light text-pinto-gray-4">Amount Sown</th>
+      <th className="px-2 py-1 text-right text-xs font-light text-pinto-gray-4">Pods minted</th>
+      <th className="px-2 py-1 text-right text-xs font-light text-pinto-gray-4">Place in Line</th>
     </tr>
   </thead>
 );

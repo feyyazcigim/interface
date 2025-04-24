@@ -1007,7 +1007,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   <div className="flex items-center justify-center">
                     <WarningIcon color="#DC2626" width={40} height={40} />
                   </div>
-                  <h3 className="text-center pinto-h3 font-antarctica mt-4 mb-2">Fragmented Silo Deposits</h3>
+                  <h3 className="text-center pinto-h3 mt-4 mb-2">Fragmented Silo Deposits</h3>
                   <p className="text-center pinto-body text-gray-700 mb-2">
                     Pinto does not combine and sort deposits by default, due to gas costs. A one-time claim and combine
                     will optimize your deposits and allow you to create Tractor orders.
@@ -1475,7 +1475,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           >
             <div className="p-3">
               <div className="flex justify-between items-center mb-2">
-                <div className="font-antarctica pinto-body font-medium text-pinto-primary">
+                <div className="pinto-body font-medium text-pinto-primary">
                   Select Token from Silo Deposits
                 </div>
               </div>
@@ -1505,10 +1505,10 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       }`}
                     />
                     <div className="flex flex-col gap-1">
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">
+                      <span className="text-base font-normal leading-[110%] text-black">
                         Token with Best Price
                       </span>
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">
+                      <span className="text-base font-normal leading-[110%] text-[#9C9C9C]">
                         at time of execution
                       </span>
                     </div>
@@ -1533,10 +1533,10 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       }`}
                     />
                     <div className="flex flex-col gap-1">
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">
+                      <span className="text-base font-normal leading-[110%] text-black">
                         Token with Least Seeds
                       </span>
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">
+                      <span className="text-base font-normal leading-[110%] text-[#9C9C9C]">
                         at time of execution
                       </span>
                     </div>
