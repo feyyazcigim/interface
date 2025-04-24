@@ -275,17 +275,13 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                     <div className="flex items-center gap-0">
                       {/* Withdraw pill */}
                       <div className="flex items-center px-2 py-1 bg-pinto-green-4 rounded-xl">
-                        <span className="text-white text-sm font-normal whitespace-nowrap">
-                          Withdraw
-                        </span>
+                        <span className="text-white text-sm font-normal whitespace-nowrap">Withdraw</span>
                       </div>
                       {/* Divider */}
                       <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0" />
                       {/* From label */}
                       <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
-                        <span className="text-pinto-gray-4 text-sm font-thin whitespace-nowrap">
-                          from Silo
-                        </span>
+                        <span className="text-pinto-gray-4 text-sm font-thin whitespace-nowrap">from Silo</span>
                       </div>
                       {/* Divider */}
                       <div className="border-t-2 border-pinto-gray-2 w-6 flex-shrink-0" />
@@ -298,9 +294,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                       {/* Up to */}
                       <div className="bg-[#F8F8F8] px-2 py-1 rounded-xl">
                         <div className="flex items-center gap-1">
-                          <span className="text-pinto-gray-4 text-sm font-thin whitespace-nowrap">
-                            up to
-                          </span>
+                          <span className="text-pinto-gray-4 text-sm font-thin whitespace-nowrap">up to</span>
                           <IconImage src={pintoIcon} size={4} />
                           <span className="text-pinto-green-4 text-sm font-thin whitespace-nowrap overflow-hidden text-ellipsis">
                             {formatter.number(totalAmount)} PINTO

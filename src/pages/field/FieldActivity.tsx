@@ -374,15 +374,9 @@ const TractorOrderRow = React.memo(
       <tr
         className={`tractor-order-row hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}
       >
-        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4">
-          {formatSeason(Number(currentSeason) + 1)}
-        </td>
-        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4">
-          {new Date().toLocaleDateString()}
-        </td>
-        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4">
-          {estimateExecutionTime(order)}
-        </td>
+        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4">{formatSeason(Number(currentSeason) + 1)}</td>
+        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4">{new Date().toLocaleDateString()}</td>
+        <td className="px-2 py-1 text-xs font-light text-pinto-gray-4">{estimateExecutionTime(order)}</td>
         <td
           className="px-2 py-1"
           onMouseEnter={() => setHoveredAddress(address)}
@@ -476,15 +470,9 @@ const FieldActivityRow = React.memo(
 
     return (
       <tr className={`hover:bg-pinto-green-1 transition-colors ${isHovered ? "bg-pinto-green-1" : ""}`}>
-        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">
-          {formatSeason(activity.season)}
-        </td>
-        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">
-          {formatDate(activity.timestamp)}
-        </td>
-        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">
-          {formatTime(activity.timestamp)}
-        </td>
+        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">{formatSeason(activity.season)}</td>
+        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">{formatDate(activity.timestamp)}</td>
+        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">{formatTime(activity.timestamp)}</td>
         <td
           className="px-2 py-1"
           onMouseEnter={() => setHoveredAddress(activity.address)}
@@ -509,9 +497,7 @@ const FieldActivityRow = React.memo(
             {formatAddress(activity.txHash)}
           </a>
         </td>
-        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">
-          {activity.temperature.toFixed(2)}%
-        </td>
+        <td className="px-2 py-1 text-xs font-light text-pinto-secondary">{activity.temperature.toFixed(2)}%</td>
         <td className="px-2 py-1 text-right">
           <div className="flex items-center justify-end gap-1">
             <IconImage src={pintoIcon} alt="PINTO" size={3} />

@@ -1475,9 +1475,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           >
             <div className="p-3">
               <div className="flex justify-between items-center mb-2">
-                <div className="pinto-body font-medium text-pinto-primary">
-                  Select Token from Silo Deposits
-                </div>
+                <div className="pinto-body font-medium text-pinto-primary">Select Token from Silo Deposits</div>
               </div>
               <p className="text-gray-500 mb-2">Tractor allows you to fund Orders for Soil using Deposits</p>
               <div className="w-full h-[1px] bg-pinto-gray-2 mb-6" />
@@ -1505,12 +1503,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       }`}
                     />
                     <div className="flex flex-col gap-1">
-                      <span className="text-base font-normal leading-[110%] text-black">
-                        Token with Best Price
-                      </span>
-                      <span className="text-base font-normal leading-[110%] text-[#9C9C9C]">
-                        at time of execution
-                      </span>
+                      <span className="text-base font-normal leading-[110%] text-black">Token with Best Price</span>
+                      <span className="text-base font-normal leading-[110%] text-[#9C9C9C]">at time of execution</span>
                     </div>
                   </div>
 
@@ -1533,12 +1527,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       }`}
                     />
                     <div className="flex flex-col gap-1">
-                      <span className="text-base font-normal leading-[110%] text-black">
-                        Token with Least Seeds
-                      </span>
-                      <span className="text-base font-normal leading-[110%] text-[#9C9C9C]">
-                        at time of execution
-                      </span>
+                      <span className="text-base font-normal leading-[110%] text-black">Token with Least Seeds</span>
+                      <span className="text-base font-normal leading-[110%] text-[#9C9C9C]">at time of execution</span>
                     </div>
                   </div>
                 </div>

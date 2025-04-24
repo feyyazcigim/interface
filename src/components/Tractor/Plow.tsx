@@ -631,18 +631,10 @@ export function Plow() {
       <Table>
         <TableHeader>
           <TableRow className="border-b border-pinto-gray-3/20">
-            <TableHead className="px-0 text-left text-xs font-light text-pinto-gray-4">
-              Created At
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">
-              Publisher
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">
-              Blueprint Hash
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">
-              Temperature
-            </TableHead>
+            <TableHead className="px-0 text-left text-xs font-light text-pinto-gray-4">Created At</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Publisher</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Blueprint Hash</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Temperature</TableHead>
             <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4 min-w-[220px]">
               Operator Tip
             </TableHead>
@@ -658,9 +650,7 @@ export function Plow() {
               </div>
             </TableHead>
             {successfulSimulations.size > 0 && (
-              <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">
-                Estimated Profit
-              </TableHead>
+              <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Estimated Profit</TableHead>
             )}
           </TableRow>
         </TableHeader>

@@ -251,30 +251,18 @@ export function SoilOrderbookContent() {
       <Table>
         <TableHeader className="[&_tr]:border-b-0">
           <TableRow className="border-b-0">
-            <TableHead className="py-2 px-0 font-light text-[#9C9C9C] text-base leading-[110%]">
-              Temperature
-            </TableHead>
+            <TableHead className="py-2 px-0 font-light text-[#9C9C9C] text-base leading-[110%]">Temperature</TableHead>
             <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">
               Max Podline Length
             </TableHead>
             <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">
               Total Soil Order Size
             </TableHead>
-            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">
-              Available Pinto
-            </TableHead>
-            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">
-              Max per Season
-            </TableHead>
-            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">
-              Blueprint Hash
-            </TableHead>
-            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">
-              Publisher
-            </TableHead>
-            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">
-              Created at
-            </TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Available Pinto</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Max per Season</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Blueprint Hash</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Publisher</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Created at</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
