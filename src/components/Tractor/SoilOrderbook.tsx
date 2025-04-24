@@ -661,71 +661,78 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                 </div>
 
                 <div className="pb-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="rounded-full h-8"
-                        aria-label="Table Settings"
-                      >
-                        <GearIcon className="h-5 w-5 text-pinto-gray-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 p-4" align="end">
-                      <h3 className="text-xs font-medium mb-3" style={{ fontSize: "1rem", lineHeight: "1rem" }}>
-                        Table Settings
-                      </h3>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <SmallLabel htmlFor="show-zero-available">Show Zero Available Pinto</SmallLabel>
-                          <Switch
-                            id="show-zero-available"
-                            checked={showZeroAvailable}
-                            onCheckedChange={setShowZeroAvailable}
-                          />
-                        </div>
+                  {activeTab === "view" && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-full h-8"
+                          aria-label="Table Settings"
+                        >
+                          <GearIcon className="h-5 w-5 text-pinto-gray-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-4" align="end">
+                        <h3 className="text-xs font-medium mb-3" style={{ fontSize: "1rem", lineHeight: "1rem" }}>
+                          Table Settings
+                        </h3>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <SmallLabel htmlFor="show-zero-available">Show Zero Available Pinto</SmallLabel>
+                            <Switch
+                              id="show-zero-available"
+                              checked={showZeroAvailable}
+                              onCheckedChange={setShowZeroAvailable}
+                            />
+                          </div>
 
-                        <div className="flex items-center justify-between">
-                          <SmallLabel htmlFor="show-above-temp">Show Orders Above Current Temp</SmallLabel>
-                          <Switch
-                            id="show-above-temp"
-                            checked={showAboveCurrentTemp}
-                            onCheckedChange={setShowAboveCurrentTemp}
-                          />
-                        </div>
+                          <div className="flex items-center justify-between">
+                            <SmallLabel htmlFor="show-above-temp">Show Orders Above Current Temp</SmallLabel>
+                            <Switch
+                              id="show-above-temp"
+                              checked={showAboveCurrentTemp}
+                              onCheckedChange={setShowAboveCurrentTemp}
+                            />
+                          </div>
 
-                        <div className="flex items-center justify-between">
-                          <SmallLabel>Sort By</SmallLabel>
-                          <div className="flex flex-row w-fit items-center">
-                            {sortOptions.map((option, index) => (
-                              <React.Fragment key={`dialog-${option.id}-${index}`}>
-                                <div
-                                  className={cn(
-                                    "flex flex-row items-center px-3 py-1.5 justify-center cursor-pointer",
-                                    sortBy === option.id ? "bg-pinto-green-1" : "bg-pinto-gray-1",
-                                    index === 0 ? "rounded-l-full" : "rounded-r-full",
-                                    sortBy === option.id ? "border border-pinto-green-4" : "border border-pinto-gray-2",
-                                    index === 0 ? "border-r-0" : "border-l-0",
+                          <div className="flex items-center justify-between">
+                            <SmallLabel>Sort By</SmallLabel>
+                            <div className="flex flex-row w-fit items-center">
+                              {sortOptions.map((option, index) => (
+                                <React.Fragment key={`dialog-${option.id}-${index}`}>
+                                  <div
+                                    className={cn(
+                                      "flex flex-row items-center px-3 py-1.5 justify-center cursor-pointer",
+                                      sortBy === option.id ? "bg-pinto-green-1" : "bg-pinto-gray-1",
+                                      index === 0 ? "rounded-l-full" : "rounded-r-full",
+                                      sortBy === option.id
+                                        ? "border border-pinto-green-4"
+                                        : "border border-pinto-gray-2",
+                                      index === 0 ? "border-r-0" : "border-l-0",
+                                    )}
+                                    onClick={() => setSortBy(option.id)}
+                                  >
+                                    <div className="text-xs text-pinto-green-3">{option.text}</div>
+                                  </div>
+                                  {index < sortOptions.length - 1 && (
+                                    <Separator
+                                      orientation="vertical"
+                                      className={cn(
+                                        "bg-pinto-gray-2 w-[1px] h-[1.75rem]",
+                                        sortBy && "bg-pinto-green-4",
+                                      )}
+                                    />
                                   )}
-                                  onClick={() => setSortBy(option.id)}
-                                >
-                                  <div className="text-xs text-pinto-green-3">{option.text}</div>
-                                </div>
-                                {index < sortOptions.length - 1 && (
-                                  <Separator
-                                    orientation="vertical"
-                                    className={cn("bg-pinto-gray-2 w-[1px] h-[1.75rem]", sortBy && "bg-pinto-green-4")}
-                                  />
-                                )}
-                              </React.Fragment>
-                            ))}
+                                </React.Fragment>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                      </PopoverContent>
+                    </Popover>
+                  )}
                 </div>
               </div>
             </div>
