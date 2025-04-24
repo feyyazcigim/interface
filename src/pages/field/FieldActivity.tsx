@@ -68,7 +68,6 @@ const FieldActivity = () => {
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
   const harvestableIndex = useHarvestableIndex();
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
-  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   // Add a ref to store initial block data that won't trigger re-renders
   const initialBlockDataRef = useRef<{
@@ -271,7 +270,7 @@ const FieldActivity = () => {
       {/*
        * Table
        */}
-      <div className="overflow-x-auto" ref={tableContainerRef}>
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <FieldActivityHeader />
           <tbody>
