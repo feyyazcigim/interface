@@ -170,6 +170,7 @@ module.exports = {
         pinto: ["Pinto", "system-ui", "sans-serif"],
         roboto: ["Roboto", "system-ui", "sans-serif"],
         menlo: ["Menlo", "Monaco", "Courier New", "monospace"],
+        antarctica: ["Antarctica", "system-ui", "sans-serif"],
       },
       gridTemplateColumns: {
         frame: "350px, 1fr, 200px",
