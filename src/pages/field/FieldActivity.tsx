@@ -336,6 +336,12 @@ const FieldActivity = () => {
 
 export default FieldActivity;
 
+// ================================================================================
+// *                                  COMPONENTS                                  *
+// ================================================================================
+
+// -------------------- TABLE --------------------
+
 const SeeAllTractorOrdersRow = ({ setShowOrdersDialog }: { setShowOrdersDialog: (show: boolean) => void }) => {
   return (
     <tr className="border-b-2 border-pinto-gray-3/20">
@@ -521,6 +527,8 @@ const FieldActivityHeader = () => (
   </thead>
 );
 
+// -------------------- SKELETON --------------------
+
 const FieldActivitySkeleton = () => (
   <div className="w-full">
     <div className="overflow-x-auto">
@@ -566,6 +574,8 @@ const FieldActivitySkeleton = () => (
   </div>
 );
 
+// -------------------- NO DATA DISPLAY --------------------
+
 const FieldActivityNoDataDisplay = () => (
   <div className="w-full p-8 flex flex-col items-center justify-center">
     <p className="text-sm text-pinto-gray-4 mb-2">No field activity found</p>
@@ -573,7 +583,9 @@ const FieldActivityNoDataDisplay = () => (
   </div>
 );
 
-// Helper functions
+// ================================================================================
+// *                                    HELPERS                                   *
+// ================================================================================
 
 // Helper function to estimate temperature from an order
 const getOrderTemperature = (order: OrderbookEntry): number => {
@@ -646,6 +658,8 @@ const estimateOrderPods = (order: OrderbookEntry, currentTemperature: { max: Tok
   // Calculate pods as PINTO amount * (1 + temperature/100)
   return order.amountSowableNextSeason.mul(1 + temp / 100);
 };
+
+// -------------------- FORMATTING --------------------
 
 const formatType = (type: string) => {
   switch (type) {
