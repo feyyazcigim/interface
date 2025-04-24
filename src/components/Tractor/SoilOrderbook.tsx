@@ -38,10 +38,15 @@ const BASESCAN_URL = "https://basescan.org/address/";
 interface SoilOrderbookContentProps {
   showZeroAvailable?: boolean;
   sortBy?: "temperature" | "tip";
+  showAboveCurrentTemp?: boolean;
 }
 
 // Shared logic for loading and displaying the orderbook data
-export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "temperature" }: SoilOrderbookContentProps) {
+export function SoilOrderbookContent({ 
+  showZeroAvailable = true, 
+  sortBy = "temperature",
+  showAboveCurrentTemp = true 
+}: SoilOrderbookContentProps) {
   const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
   const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -294,8 +299,27 @@ export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "tempe
     } else {
       sorted = requisitions;
     }
+    
+    return sorted.filter((req) => {
+      // Filter for zero available
+      const hasAvailablePinto = showZeroAvailable || parseFloat(req.currentlySowable.toHuman()) > 0;
 
-    return sorted.filter((req) => showZeroAvailable || parseFloat(req.currentlySowable.toHuman()) > 0);
+      // Filter for current temperature
+      let matchesTemperatureFilter = true;
+      if (!showAboveCurrentTemp) {
+        try {
+          const data = decodeSowTractorData(req.requisition.blueprint.data);
+          if (data) {
+            const reqTemp = parseFloat(data.minTempAsString);
+            matchesTemperatureFilter = reqTemp < temperature.max.toNumber();
+          }
+        } catch (error) {
+          console.error("Failed to decode data for temperature filtering:", error);
+        }
+      }
+
+      return hasAvailablePinto && matchesTemperatureFilter;
+    });
   };
 
   // Find where to place the temperature indicator row
@@ -548,6 +572,7 @@ export function SoilOrderbookContent({ showZeroAvailable = true, sortBy = "tempe
 export function SoilOrderbook() {
   const [showZeroAvailable, setShowZeroAvailable] = useState(true);
   const [sortBy, setSortBy] = useState<"temperature" | "tip">("temperature");
+  const [showAboveCurrentTemp, setShowAboveCurrentTemp] = useState(true);
 
   const sortOptions = [
     {
@@ -578,7 +603,14 @@ export function SoilOrderbook() {
                 </Label>
                 <Switch id="standalone-show-zero" checked={showZeroAvailable} onCheckedChange={setShowZeroAvailable} />
               </div>
-
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="standalone-show-above-temp" className="text-sm">
+                  Show Orders Above Current Temp
+                </Label>
+                <Switch id="standalone-show-above-temp" checked={showAboveCurrentTemp} onCheckedChange={setShowAboveCurrentTemp} />
+              </div>
+              
               <div className="flex items-center justify-between">
                 <Label className="text-sm">Sort By</Label>
                 <div className="flex flex-row w-fit items-center">
@@ -610,7 +642,11 @@ export function SoilOrderbook() {
           </PopoverContent>
         </Popover>
       </div>
-      <SoilOrderbookContent showZeroAvailable={showZeroAvailable} sortBy={sortBy} />
+      <SoilOrderbookContent 
+        showZeroAvailable={showZeroAvailable} 
+        sortBy={sortBy} 
+        showAboveCurrentTemp={showAboveCurrentTemp}
+      />
     </div>
   );
 }
@@ -625,6 +661,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
   const [activeTab, setActiveTab] = useState<"view" | "execute">("view");
   const [showZeroAvailable, setShowZeroAvailable] = useState(true);
   const [sortBy, setSortBy] = useState<"temperature" | "tip">("temperature");
+  const [showAboveCurrentTemp, setShowAboveCurrentTemp] = useState(true);
 
   const sortOptions = [
     {
@@ -692,7 +729,18 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                             onCheckedChange={setShowZeroAvailable}
                           />
                         </div>
-
+                        
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="show-above-temp" className="text-sm">
+                            Show Orders Above Current Temp
+                          </Label>
+                          <Switch
+                            id="show-above-temp"
+                            checked={showAboveCurrentTemp}
+                            onCheckedChange={setShowAboveCurrentTemp}
+                          />
+                        </div>
+                        
                         <div className="flex items-center justify-between">
                           <Label className="text-sm">Sort By</Label>
                           <div className="flex flex-row w-fit items-center">
@@ -729,7 +777,11 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
 
             <div className="py-4">
               {activeTab === "view" ? (
-                <SoilOrderbookContent showZeroAvailable={showZeroAvailable} sortBy={sortBy} />
+                <SoilOrderbookContent 
+                  showZeroAvailable={showZeroAvailable} 
+                  sortBy={sortBy} 
+                  showAboveCurrentTemp={showAboveCurrentTemp}
+                />
               ) : (
                 <Plow />
               )}
