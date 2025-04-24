@@ -397,6 +397,9 @@ export function SoilOrderbookContent({
 
   const summaryData = calculateSummaryData();
 
+  // Flag to enable/disable temperature indicator row - set to false to hide, true to show. We are awaiting design on this.
+  const showTemperatureIndicator = false;
+
   // Helper function to render the temperature indicator row
   const renderTemperatureIndicatorRow = () => (
     <TableRow className="border-b-0">
@@ -538,14 +541,19 @@ export function SoilOrderbookContent({
             if (sortBy === "temperature" && index === maxTempPosition) {
               return (
                 <React.Fragment key="current-max-temp">
-                  {renderTemperatureIndicatorRow()}
+                  {/* Temperature indicator row - disabled when showTemperatureIndicator is false */}
+                  {showTemperatureIndicator && renderTemperatureIndicatorRow()}
                   {renderRequisitionRow(req, index)}
                 </React.Fragment>
               );
             }
             return renderRequisitionRow(req, index);
           })}
-          {sortBy === "temperature" && maxTempPosition === sortedRequisitions.length && renderTemperatureIndicatorRow()}
+          {/* Temperature indicator row at the end - disabled when showTemperatureIndicator is false */}
+          {sortBy === "temperature" &&
+            maxTempPosition === sortedRequisitions.length &&
+            showTemperatureIndicator &&
+            renderTemperatureIndicatorRow()}
           {sortedRequisitions.length === 0 && (
             <TableRow>
               <TableCell colSpan={10} className="p-2 text-center text-gray-500">
