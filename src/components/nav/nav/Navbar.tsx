@@ -2,6 +2,7 @@ import AnnouncementBanner from "@/components/AnnouncementBanner";
 import HelperLink, { hoveredIdAtom } from "@/components/HelperLink";
 import NoBaseValueAlert from "@/components/NoBaseValueAlert";
 import { ScrollHideComponent } from "@/components/ScrollHideComponent";
+import Panel from "@/components/ui/Panel";
 import useFarmerActions from "@/hooks/useFarmerActions";
 import useFarmerStatus from "@/hooks/useFarmerStatus";
 import { NavbarPanelType, navbarPanelAtom } from "@/state/app/navBar.atoms";
@@ -21,12 +22,13 @@ import { useMatch } from "react-router-dom";
 import { useAccount } from "wagmi";
 import WalletButton from "../../WalletButton";
 import Backdrop from "../../ui/Backdrop";
+import ChartSelectPanel from "../ChartSelectPanel";
 import PriceButton from "../PriceButton";
 import SeasonsButton from "../SeasonsButton";
 import Navi from "./Navi.desktop";
 import MobileNavi from "./Navi.mobile";
 
-type Panel = "price" | "seasons" | "wallet" | "mobile-navi";
+type PanelType = "price" | "seasons" | "wallet" | "mobile-navi" | "chart-select";
 
 const DURATION = 150;
 
@@ -138,7 +140,7 @@ const Navbar = () => {
     });
   };
 
-  const invalidateData = (panel: Panel) => {
+  const invalidateData = (panel: PanelType) => {
     if (panel === "wallet") {
       const allQueryKeys = [...priceData.queryKeys, ...farmerSilo.queryKeys, ...farmerBalances.queryKeys];
       allQueryKeys.forEach((query) =>
@@ -195,6 +197,17 @@ const Navbar = () => {
               onMouseEnter={() => invalidateData("seasons")}
             />
           </div>
+          <Panel
+            isOpen={panelState.openPanel === "chart-select"}
+            side="left"
+            panelProps={{
+              className: cn("max-w-panel-price w-panel-price", "mt-14"),
+            }}
+            trigger={<></>}
+            toggle={() => togglePanel(panelState.openPanel)}
+          >
+            <ChartSelectPanel />
+          </Panel>
         </div>
         <div className="hidden lg:flex lg:justify-center pr-[208px]">
           <Navi />
@@ -247,7 +260,12 @@ const Navbar = () => {
             </div>
           </div>
           <div className="hidden sm:block">
-            <Backdrop active={panelState.backdropVisible} onClick={closePanel} transitionDuration={DURATION} />
+            <Backdrop
+              active={panelState.backdropVisible}
+              noBlur={panelState.openPanel === "chart-select"}
+              onClick={closePanel}
+              transitionDuration={DURATION}
+            />
           </div>
         </div>
       </div>
