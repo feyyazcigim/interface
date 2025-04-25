@@ -558,7 +558,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     if (!address || !publicClient || !protocolAddress || !farmerDeposits) return;
 
     const effectiveAddress = isLocal && isValidAddress(mockAddress) ? mockAddress : address;
-    console.log("Combine & Sort All - Using address:", effectiveAddress);
+    console.debug("Combine & Sort All - Using address:", effectiveAddress);
 
     setSortingAllTokens(true);
     setSubmitting(true);
@@ -566,7 +566,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     try {
       toast.info("Preparing to combine and sort all deposits...");
 
-      console.log(`Processing ${farmerDeposits.size} tokens for sorting`);
+      console.debug(`Processing ${farmerDeposits.size} tokens for sorting`);
 
       // Use the utility function to generate batch sort deposits call data
       const callData = await generateBatchSortDepositsCallData(
@@ -588,10 +588,10 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         args: [callData],
       });
 
-      console.log(`=== Raw Farm Calldata for All Tokens ===`);
-      console.log(rawCalldata);
-      console.log(`Number of calls: ${callData.length}`);
-      console.log("======================================");
+      console.debug(`=== Raw Farm Calldata for All Tokens ===`);
+      console.debug(rawCalldata);
+      console.debug(`Number of calls: ${callData.length}`);
+      console.debug("======================================");
 
       toast.info(`Executing ${callData.length} operations for all tokens (combines + sort updates)...`);
 
@@ -605,12 +605,12 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           account: effectiveAddress,
         })
         .catch((e) => {
-          console.error("Simulation failed:", e);
+          console.debug("Simulation failed:", e);
           return { error: e };
         });
 
       if ("error" in simulateFirst) {
-        console.error("Transaction would fail in simulation, not submitting");
+        // console.error("Transaction would fail in simulation, not submitting");
         toast.error("Transaction would fail: " + (simulateFirst.error as any)?.shortMessage || "unknown error");
         setSubmitting(false);
         setSortingAllTokens(false);
@@ -630,11 +630,11 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       // Extract error details for debugging
       const errorObj = error as any;
 
-      if (errorObj.cause) console.log("Error cause:", errorObj.cause);
-      if (errorObj.details) console.log("Error details:", errorObj.details);
-      if (errorObj.data) console.log("Error data:", errorObj.data);
-      if (errorObj.reason) console.log("Error reason:", errorObj.reason);
-      if (errorObj.shortMessage) console.log("Short message:", errorObj.shortMessage);
+      if (errorObj.cause) console.debug("Error cause:", errorObj.cause);
+      if (errorObj.details) console.debug("Error details:", errorObj.details);
+      if (errorObj.data) console.debug("Error data:", errorObj.data);
+      if (errorObj.reason) console.debug("Error reason:", errorObj.reason);
+      if (errorObj.shortMessage) console.debug("Short message:", errorObj.shortMessage);
 
       // Display toast with specific error information
       const errorMessage =
@@ -686,8 +686,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         publicClient,
       });
 
-      console.log("createSowTractorData, data:", data);
-      console.log("rawCall:", rawCall);
+      console.debug("createSowTractorData, data:", data);
+      console.debug("rawCall:", rawCall);
 
       if (!address) {
         toast.error("Please connect your wallet");
