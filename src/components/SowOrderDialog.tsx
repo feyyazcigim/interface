@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { PublicClient, encodeFunctionData } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { Col, Row } from "./Container";
+import TooltipSimple from "./TooltipSimple";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
 import { Input } from "./ui/Input";
@@ -472,6 +473,15 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   }, [rawPodLineLength]);
 
   const handlePodLineSelect = (increment: number) => {
+    // If the button is already active (same value), clear the input
+    if (isButtonActive(increment)) {
+      setPodLineLength("");
+      setRawPodLineLength("");
+      validateAllInputs(minSoil, maxPerSeason, totalAmount, "", temperature);
+      return;
+    }
+
+    // Otherwise, set to the calculated value
     if (increment === 0) {
       // Set to current pod line length in human readable format
       const formattedValue = formatter.number(podLine);
@@ -487,6 +497,18 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       setRawPodLineLength(formattedValue.replace(/,/g, ""));
       validateAllInputs(minSoil, maxPerSeason, totalAmount, formattedValue, temperature);
     }
+  };
+
+  // Add handling for pasting into the pod line length input
+  const handlePodLineLengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleanValue = handleClampAndToValidInput(e.target.value, podLineLength) ?? "";
+
+    // Store raw input and update displayed value
+    setRawPodLineLength(cleanValue);
+    setPodLineLength(cleanValue);
+
+    // Run validation
+    validateAllInputs(minSoil, maxPerSeason, totalAmount, cleanValue, temperature);
   };
 
   // Add a function to check if the pod line length is valid
@@ -506,11 +528,16 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   // Add this function to check if all required fields are filled
   const areRequiredFieldsFilled = () => {
     return (
-      temperature &&
+      temperature !== "" &&
+      temperature !== undefined &&
+      temperature !== null &&
+      minSoil !== "" &&
       minSoil !== undefined &&
       minSoil !== null &&
+      maxPerSeason !== "" &&
       maxPerSeason !== undefined &&
       maxPerSeason !== null &&
+      totalAmount !== "" &&
       totalAmount !== undefined &&
       totalAmount !== null &&
       isPodLineLengthValid()
@@ -992,6 +1019,45 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     }
   };
 
+  // Add this function to check which fields are missing
+  const getMissingFields = (
+    temperature: string,
+    minSoil: string,
+    maxPerSeason: string,
+    totalAmount: string,
+    isPodLineLengthValidFn: () => boolean,
+  ) => {
+    const missingFields: string[] = [];
+
+    if (!temperature || temperature === "") {
+      missingFields.push("Temperature");
+    }
+    if (!minSoil || minSoil === "") {
+      missingFields.push("Min Soil per Season");
+    }
+    if (!maxPerSeason || maxPerSeason === "") {
+      missingFields.push("Max per Season");
+    }
+    if (!totalAmount || totalAmount === "") {
+      missingFields.push("Total Amount");
+    }
+    if (!isPodLineLengthValidFn()) {
+      missingFields.push("Pod Line Length");
+    }
+
+    return missingFields;
+  };
+
+  // Add handler for operator tip input changes
+  const handleOperatorTipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value.replace(/[^0-9.,]/g, "");
+    setOperatorTip(newValue);
+
+    // Check if the new value matches any of our buttons
+    const activeButton = checkActiveTipButton(newValue);
+    setActiveTipButton(activeButton);
+  };
+
   if (!open) return null;
 
   return (
@@ -1007,7 +1073,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   <div className="flex items-center justify-center">
                     <WarningIcon color="#DC2626" width={40} height={40} />
                   </div>
-                  <h3 className="text-center pinto-h3 font-antarctica mt-4 mb-2">Fragmented Silo Deposits</h3>
+                  <h3 className="text-center pinto-h3 mt-4 mb-2">Fragmented Silo Deposits</h3>
                   <p className="text-center pinto-body text-gray-700 mb-2">
                     Pinto does not combine and sort deposits by default, due to gas costs. A one-time claim and combine
                     will optimize your deposits and allow you to create Tractor orders.
@@ -1053,7 +1119,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 <Col className="gap-6 pinto-sm-light text-pinto-light">
                   {/* Title and separator */}
                   <div className="flex flex-col gap-2">
-                    <h4 className="pinto-body text-pinto-dark mb-4">🚜 Specify Conditions for automated Sowing</h4>
+                    <div className="pinto-body font-medium text-pinto-secondary mb-4">
+                      🚜 Specify Conditions for automated Sowing
+                    </div>
                     <div className="h-[1px] w-full bg-pinto-gray-2" />
                   </div>
 
@@ -1184,11 +1252,19 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       placeholder={formatter.number(podLine)}
                       value={podLineLength}
                       onChange={(e) => {
-                        const cleanValue = handleClampAndToValidInput(e.target.value, podLineLength) ?? "";
+                        const cleanValue = e.target.value.replace(/[^0-9.,]/g, "");
 
-                        // Store raw input and update displayed value
+                        // Set raw value immediately to enable pasting
                         setRawPodLineLength(cleanValue);
-                        setPodLineLength(cleanValue);
+
+                        // Set formatted value and validate
+                        if (cleanValue) {
+                          setPodLineLength(cleanValue);
+                          validateAllInputs(minSoil, maxPerSeason, totalAmount, cleanValue, temperature);
+                        } else {
+                          setPodLineLength("");
+                          validateAllInputs(minSoil, maxPerSeason, totalAmount, "", temperature);
+                        }
                       }}
                     />
 
@@ -1293,9 +1369,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                   <Col>
                     {/* Title and separator for Step 2 */}
                     <div className="flex flex-col gap-2">
-                      <h2 className="pinto-h4 text-pinto-dark mb-4" style={{ fontSize: "20px" }}>
-                        🚜 Tip per Execution
-                      </h2>
+                      <div className="pinto-body font-medium text-pinto-secondary mb-4">🚜 Tip per Execution</div>
                       <div className="h-[1px] w-full bg-pinto-gray-2 mb-6" />
                     </div>
                     <div className="pinto-sm-light text-pinto-light gap-2 mb-4">I'm willing to pay someone</div>
@@ -1304,13 +1378,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         className="h-12 px-3 py-1.5 flex-1 rounded-l-lg focus:outline-none text-base font-light"
                         placeholder="0.00"
                         value={operatorTip}
-                        onChange={(e) => {
-                          const newValue = e.target.value.replace(/[^0-9.,]/g, "");
-                          setOperatorTip(newValue);
-                          // Check if the new value matches any of our buttons
-                          const activeButton = checkActiveTipButton(newValue);
-                          setActiveTipButton(activeButton);
-                        }}
+                        onChange={handleOperatorTipChange}
                         type="text"
                       />
                       <div className="flex items-center gap-2 px-4 rounded-r-lg font-semibold bg-white">
@@ -1437,27 +1505,55 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                     className="flex-1 rounded-full text-2xl font-medium"
                   />
                 ) : (
-                  <Button
-                    size="xlargest"
-                    rounded="full"
-                    className={`flex-1 ${
-                      (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
-                        ? "bg-pinto-gray-2 text-[#9C9C9C]"
-                        : "bg-[#387F5C] text-white"
-                    }`}
-                    disabled={(formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading}
-                    onClick={handleNext}
+                  <TooltipSimple
+                    content={
+                      formStep === 1 && (!areRequiredFieldsFilled() || !!error) ? (
+                        <div className="p-1">
+                          <div className="font-medium mb-1">Please fill in the following fields:</div>
+                          <ul className="list-disc pl-4 text-sm">
+                            {getMissingFields(
+                              temperature,
+                              minSoil,
+                              maxPerSeason,
+                              totalAmount,
+                              isPodLineLengthValid,
+                            ).map((field) => (
+                              <li key={field}>{field}</li>
+                            ))}
+                            {error && <li className="text-red-500 mt-1">{error}</li>}
+                          </ul>
+                        </div>
+                      ) : null
+                    }
+                    side="top"
+                    align="center"
+                    // Only show tooltip when there are missing fields or errors
+                    disabled={!(formStep === 1 && (!areRequiredFieldsFilled() || !!error))}
                   >
-                    {isLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
-                      </div>
-                    ) : formStep === 1 ? (
-                      "Next"
-                    ) : (
-                      "Review"
-                    )}
-                  </Button>
+                    <div className="flex-1">
+                      <Button
+                        size="xlargest"
+                        rounded="full"
+                        className={`w-full ${
+                          (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
+                            ? "bg-pinto-gray-2 text-[#9C9C9C]"
+                            : "bg-[#387F5C] text-white"
+                        }`}
+                        disabled={(formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading}
+                        onClick={handleNext}
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+                          </div>
+                        ) : formStep === 1 ? (
+                          "Next"
+                        ) : (
+                          "Review"
+                        )}
+                      </Button>
+                    </div>
+                  </TooltipSimple>
                 )}
               </Row>
             </div>
@@ -1475,9 +1571,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           >
             <div className="p-3">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="font-antarctica font-medium text-[20px] leading-[115%] text-pinto-primary">
-                  Select Token from Silo Deposits
-                </h2>
+                <div className="pinto-body font-medium text-pinto-primary">Select Token from Silo Deposits</div>
               </div>
               <p className="text-gray-500 mb-2">Tractor allows you to fund Orders for Soil using Deposits</p>
               <div className="w-full h-[1px] bg-pinto-gray-2 mb-6" />
@@ -1505,12 +1599,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       }`}
                     />
                     <div className="flex flex-col gap-1">
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">
-                        Token with Best Price
-                      </span>
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">
-                        at time of execution
-                      </span>
+                      <span className="text-base font-normal leading-[110%] text-black">Token with Best Price</span>
+                      <span className="text-base font-normal leading-[110%] text-[#9C9C9C]">at time of execution</span>
                     </div>
                   </div>
 
@@ -1533,12 +1623,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       }`}
                     />
                     <div className="flex flex-col gap-1">
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-black">
-                        Token with Least Seeds
-                      </span>
-                      <span className="font-antarctica text-base font-normal leading-[110%] text-[#9C9C9C]">
-                        at time of execution
-                      </span>
+                      <span className="text-base font-normal leading-[110%] text-black">Token with Least Seeds</span>
+                      <span className="text-base font-normal leading-[110%] text-[#9C9C9C]">at time of execution</span>
                     </div>
                   </div>
                 </div>

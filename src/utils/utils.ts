@@ -60,6 +60,10 @@ export function existsNot(value: any): value is undefined | null {
   return !exists(value);
 }
 
+export function isFunction<T>(v: T | (() => T)): v is () => T {
+  return typeof v === "function";
+}
+
 /**
  * Check if a value is an object
  * @param value - The value to check
