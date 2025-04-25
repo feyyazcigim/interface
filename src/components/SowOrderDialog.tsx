@@ -1579,11 +1579,11 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
             style={{ padding: 0, gap: 0 }}
           >
             <div className="p-3">
-              <DialogHeader className="mb-6">
-                <DialogTitle className="font-medium mb-2 text-[1.25rem] tracking-normal">
+              <DialogHeader className="mb-6 -mt-1">
+                <DialogTitle className="font-medium mb-1 text-[1.25rem] tracking-normal">
                   Select Token from Silo Deposits
                 </DialogTitle>
-                <DialogDescription className="text-gray-500 pb-2">
+                <DialogDescription className="text-gray-500 pb-1">
                   Tractor allows you to fund Orders for Soil using Deposits
                 </DialogDescription>
                 <Separator />
