@@ -36,8 +36,17 @@ import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { Col, Row } from "./Container";
 import TooltipSimple from "./TooltipSimple";
 import { Button } from "./ui/Button";
-import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "./ui/Dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+} from "./ui/Dialog";
 import { Input } from "./ui/Input";
+import { Separator } from "./ui/Separator";
 
 interface SowOrderDialogProps {
   open: boolean;
@@ -1570,12 +1579,15 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
             style={{ padding: 0, gap: 0 }}
           >
             <div className="p-3">
-              <div className="flex justify-between items-center mb-2">
-                <div className="pinto-body font-medium text-pinto-primary">Select Token from Silo Deposits</div>
-              </div>
-              <p className="text-gray-500 mb-2">Tractor allows you to fund Orders for Soil using Deposits</p>
-              <div className="w-full h-[1px] bg-pinto-gray-2 mb-6" />
-
+              <DialogHeader className="mb-6 -mt-1">
+                <DialogTitle className="font-medium mb-1 text-[1.25rem] tracking-normal">
+                  Select Token from Silo Deposits
+                </DialogTitle>
+                <DialogDescription className="text-gray-500 pb-1">
+                  Tractor allows you to fund Orders for Soil using Deposits
+                </DialogDescription>
+                <Separator />
+              </DialogHeader>
               {/* Dynamic funding source options */}
               <div className="flex flex-col gap-4 mb-6">
                 <div className="text-gray-500">Dynamic funding source</div>
