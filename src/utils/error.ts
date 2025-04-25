@@ -1,4 +1,4 @@
-import { isObject } from "./utils";
+import { isDev, isObject } from "./utils";
 
 interface ErrorWithShortMessage {
   shortMessage: string;
@@ -19,4 +19,37 @@ export const tryExtractErrorMessage = (value: unknown, defaultMessage: string): 
   }
 
   return defaultMessage;
+};
+
+// Discord webhook for logging site-wide errors
+export const activateDiscordLogging = () => {
+  const webhookUrl =
+    "https://discord.com/api/webhooks/1365024536386605210/vuTrpuicFeFYgpkPKoUcX34Whpii5crIIR9GFAwvsmy5LIvQLqiRxTam0wWH0SzQrZ7a";
+  // Dont send messages with this content
+  const WEBHOOK_BLACKLIST = ["validateDOMNesting"];
+
+  const originalConsoleError = console.error;
+
+  // biome-ignore lint/suspicious/noExplicitAny:
+  console.error = (...args: any[]) => {
+    // Keep printing errors in the console
+    originalConsoleError.apply(console, args);
+
+    if (!isDev()) {
+      const content = `🚨 Console error on ${window.location.href}:\n${args.map((arg) => (typeof arg === "object" ? JSON.stringify(arg) : String(arg))).join(" ")}`;
+
+      if (WEBHOOK_BLACKLIST.some((blacklist) => content.includes(blacklist))) {
+        return;
+      }
+
+      // Send to Discord
+      fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: content.slice(0, 1950),
+        }),
+      }).catch(() => {});
+    }
+  };
 };

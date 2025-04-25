@@ -6,6 +6,7 @@ import App from "./App.tsx";
 import Providers from "./Providers.tsx";
 
 import "./index.css";
+import { activateDiscordLogging } from "./utils/error.ts";
 
 // biome-ignore lint/style/noNonNullAssertion:
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -18,31 +19,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   </React.StrictMode>,
 );
 
-// Discord webhook for logging site-wide errors
+activateDiscordLogging();
 
-const webhookUrl =
-  "https://discord.com/api/webhooks/1365024536386605210/vuTrpuicFeFYgpkPKoUcX34Whpii5crIIR9GFAwvsmy5LIvQLqiRxTam0wWH0SzQrZ7a";
-
-const originalConsoleError = console.error;
-
-// biome-ignore lint/suspicious/noExplicitAny:
-console.error = (...args: any[]) => {
-  // Keep printing errors in the console
-  originalConsoleError.apply(console, args);
-
-  const content = `🚨 Console error on ${window.location.href}:\n${args.map((arg) => (typeof arg === "object" ? JSON.stringify(arg) : String(arg))).join(" ")}`;
-
-  // Send to Discord
-  fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      content: content.slice(0, 1950),
-    }),
-  }).catch(() => {});
-};
-
-// Also catch/log unhandled errors
+// Log unhandled errors
 window.addEventListener("error", (event) => {
   console.error("Unhandled error:", event.message, event.filename, event.lineno);
 });
