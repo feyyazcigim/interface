@@ -96,7 +96,6 @@ const SiloExplorer = () => {
         season={season}
         title="Deposited Pinto vAPY"
         size="large"
-        valueFormatter={f.percent2dFormatter}
         tickValueFormatter={f.percent0dFormatter}
         // yAxisRanges={{
         //   [TimeTab.Week]: {

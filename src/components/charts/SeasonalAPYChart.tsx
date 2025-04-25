@@ -1,5 +1,5 @@
 import FrameAnimator from "@/components/LoadingSpinner.tsx";
-import { formatDate } from "@/utils/format";
+import { chartFormatters as f, formatDate } from "@/utils/format";
 import { cn } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
@@ -8,7 +8,7 @@ import { metallicGreenStrokeGradientFn } from "./chartHelpers";
 import { tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { APY_EMA_WINDOWS, APYWindow, useSeasonalAPYs } from "@/state/seasonal/queries/useSeasonalAPY";
-import { SeasonalAPYChartData, SeasonalAPYChartDataSingle } from "@/utils/types";
+import { SeasonalAPYChartData } from "@/utils/types";
 
 // TODO(pp): Does seasonal apy chart need any props at all?
 interface SeasonalAPYChartProps {
@@ -31,7 +31,6 @@ const SeasonalAPYChart = ({
   season,
   title,
   size,
-  valueFormatter,
   tickValueFormatter,
   statVariant = "explorer",
   className,
@@ -77,7 +76,7 @@ const SeasonalAPYChart = ({
   const handleMouseOver = useCallback(
     (index: number) => {
       if (allData) {
-        setDisplayIndex(index ?? allData[allData[APYWindow.MONTHLY].length - 1]);
+        setDisplayIndex(index ?? allData[APYWindow.MONTHLY].length - 1);
       }
     },
     [allData],
@@ -116,23 +115,25 @@ const SeasonalAPYChart = ({
           </div>
         </>
       )}
-      {allData && (
+      {allData && displayIndex !== null && (
         <>
-          {/* <div className="h-[85px] px-4 sm:px-6">
+          <div className="h-[85px] px-4 sm:px-6">
             <div
               className={`${statVariant === "explorer" ? "text-pinto-green-3 sm:text-pinto-green-3" : "text-pinto-primary sm:text-pinto-primary"} pinto-body sm:pinto-h3`}
             >
-              {valueFormatter(displayData.value)}
+              30D: {f.percent2dFormatter(allData[APYWindow.MONTHLY][displayIndex].value)} | 7D:{" "}
+              {f.percent2dFormatter(allData[APYWindow.WEEKLY][displayIndex].value)} | 24H:{" "}
+              {f.percent2dFormatter(allData[APYWindow.DAILY][displayIndex].value)}
             </div>
             <div className="flex flex-col gap-0 mt-2 sm:gap-2 sm:mt-3">
               <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
-                Season {displayData.season}
+                Season {allData[APYWindow.DAILY][displayIndex].season}
               </div>
               <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
-                {formatDate(displayData.timestamp)}
+                {formatDate(allData[APYWindow.DAILY][displayIndex].timestamp)}
               </div>
             </div>
-          </div> */}
+          </div>
           <div className={size === "small" ? "aspect-3/1" : "aspect-6/1"}>
             {!chartData.length && !seasonalApy.isLoading ? (
               <div className="w-full h-full flex items-center justify-center">

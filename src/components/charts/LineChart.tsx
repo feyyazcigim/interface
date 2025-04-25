@@ -153,7 +153,8 @@ const LineChart = React.memo(
       return [finalMin, finalMax];
     }, [data, useLogarithmicScale, yAxisMin, yAxisMax, horizontalReferenceLines]);
 
-    console.log("minmax", yTickMin, yTickMax);
+    // TODO(pp): remove
+    // console.log("minmax", yTickMin, yTickMax);
 
     const chartData = useCallback(
       (ctx: CanvasRenderingContext2D | null): ChartData => {
@@ -401,8 +402,7 @@ const LineChart = React.memo(
 
           // Draw selection point for the hovered data point
           const activeElements = chart.getActiveElements();
-          if (activeElements.length > 0) {
-            const activeElement = activeElements[0];
+          for (const activeElement of activeElements) {
             const datasetIndex = activeElement.datasetIndex;
             const index = activeElement.index;
             const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];

@@ -315,7 +315,6 @@ export type UseMultiSeasonalResult = {
 };
 
 export type SeasonalAPYChartData = Record<APYWindow, SeasonalChartData[]>;
-export type SeasonalAPYChartDataSingle = Record<APYWindow, SeasonalChartData>;
 export type UseSeasonalAPYResult = {
   data: SeasonalAPYChartData | undefined;
   isLoading: boolean;
