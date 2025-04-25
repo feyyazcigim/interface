@@ -2,7 +2,7 @@ import FrameAnimator from "@/components/LoadingSpinner.tsx";
 import { formatDate } from "@/utils/format";
 import { UseSeasonalResult } from "@/utils/types";
 import { cn } from "@/utils/utils";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
 import LineChart, { LineChartData } from "./LineChart";
 import {
@@ -10,7 +10,7 @@ import {
   metallicMorningAreaGradientFn,
   metallicMorningStrokeGradientFn,
 } from "./chartHelpers";
-import { TIME_TABS, TimeTab } from "./TimeTabs";
+import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 
 export const tabToSeasonalLookback = (tab: TimeTab): number => {
   if (tab === TimeTab.Week) {
@@ -86,8 +86,8 @@ const SeasonalChart = ({
     }
   }, [inputData, allData]);
 
-  const handleChangeTabFactory = useCallback(
-    (tab: TimeTab) => () => {
+  const handleChangeTab = useCallback(
+    (tab: TimeTab) => {
       onChangeTab(tab);
       setAllData(null);
       setDisplayData(null);
@@ -142,18 +142,7 @@ const SeasonalChart = ({
         >
           {title}
         </div>
-        <div className="flex gap-4 sm:gap-8">
-          {TIME_TABS.map((tabName: string, idx: number) => (
-            <div
-              key={tabName}
-              data-state={activeTab === idx ? "active" : "inactive"}
-              onClick={handleChangeTabFactory(idx)}
-              className={`${activeTab === idx ? "text-pinto-green-3 sm:text-pinto-green-3" : "text-pinto-light sm:text-pinto-light"} pinto-sm sm:pinto-body-light cursor-pointer data-[state=inactive]:hover:text-pinto-green-4`}
-            >
-              {tabName}
-            </div>
-          ))}
-        </div>
+        <TimeTabsSelector tab={activeTab} setTab={handleChangeTab} />
       </div>
 
       {!allData && !displayData && (

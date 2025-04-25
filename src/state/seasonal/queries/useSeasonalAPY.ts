@@ -1,10 +1,17 @@
-import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 import { API_SERVICES } from "@/constants/endpoints";
 import { PINTO } from "@/constants/tokens";
 import useSeasonsData from "@/state/useSeasonsData";
-import { UseSeasonalResult } from "@/utils/types";
+import { SeasonalAPYChartData, UseSeasonalAPYResult } from "@/utils/types";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+
+export enum APYWindow {
+  DAILY = 24, // 24 hours
+  WEEKLY = 168, // 7 days * 24 hours
+  MONTHLY = 720, // 30 days * 24 hours
+}
+
+export const APY_EMA_WINDOWS = Object.values(APYWindow).filter((v) => typeof v === "number");
 
 type PintoVapyResponse = {
   [season: number]: {
@@ -14,28 +21,32 @@ type PintoVapyResponse = {
   };
 };
 
-export function useSeasonalAPY(fromSeason: number, toSeason: number): UseSeasonalResult {
+const fetchApys = async (window: number, fromSeason: number, toSeason: number) => {
+  const res = await fetch(`${API_SERVICES.pinto}/silo/yield-history`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      token: PINTO.address.toLowerCase(),
+      emaWindow: window,
+      initType: "AVERAGE",
+      fromSeason,
+      toSeason,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`HTTP error! status: ${res.status}`);
+  }
+  return await res.json();
+};
+
+export function useSeasonalAPYs(fromSeason: number, toSeason: number): UseSeasonalAPYResult {
   // HistoricalAPY from Pinto API
   const apyDataQuery = useQuery({
     queryKey: ["api", "vapy", "pinto", "raw", fromSeason, toSeason],
-    queryFn: async (): Promise<PintoVapyResponse> => {
-      const res = await fetch(`${API_SERVICES.pinto}/silo/yield-history`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token: PINTO.address.toLowerCase(),
-          emaWindow: 720,
-          initType: "AVERAGE",
-          fromSeason,
-          toSeason,
-        }),
-      });
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      return await res.json();
+    queryFn: async (): Promise<PintoVapyResponse[]> => {
+      return await Promise.all(APY_EMA_WINDOWS.map((window) => fetchApys(window, fromSeason, toSeason)));
     },
     staleTime: Infinity,
   });
@@ -59,17 +70,24 @@ export function useSeasonalAPY(fromSeason: number, toSeason: number): UseSeasona
   const transformQuery = useQuery({
     queryKey: ["api", "vapy", "pinto", "transformed", fromSeason, toSeason],
     queryFn: () => {
-      const result: SeasonalChartData[] = [];
-      for (const season in apyDataQuery.data) {
-        result.push({
-          season: Number(season),
-          value: apyDataQuery.data[season].bean,
-          timestamp: seasonToTimestamp[season],
-        });
+      if (!apyDataQuery.data) {
+        throw new Error("Data not available");
       }
-      return result;
+
+      const result = {};
+      for (let i = 0; i < APY_EMA_WINDOWS.length; i++) {
+        result[APY_EMA_WINDOWS[i]] = [];
+        for (const season in apyDataQuery.data[i]) {
+          result[APY_EMA_WINDOWS[i]].push({
+            season: Number(season),
+            value: apyDataQuery.data[i][season].bean,
+            timestamp: seasonToTimestamp[season],
+          });
+        }
+      }
+      return result as SeasonalAPYChartData;
     },
-    enabled: Object.keys(apyDataQuery.data || {}).length > 0 && !!seasonToTimestamp,
+    enabled: !!apyDataQuery.data && !!seasonToTimestamp,
     staleTime: Infinity,
   });
 

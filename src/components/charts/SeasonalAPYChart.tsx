@@ -1,68 +1,75 @@
 import FrameAnimator from "@/components/LoadingSpinner.tsx";
 import { formatDate } from "@/utils/format";
-import { UseSeasonalResult } from "@/utils/types";
 import { cn } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
 import LineChart, { LineChartData } from "./LineChart";
 import { metallicGreenStrokeGradientFn } from "./chartHelpers";
-import { SeasonalChartData } from "./SeasonalChart";
+import { tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
+import { APY_EMA_WINDOWS, APYWindow, useSeasonalAPYs } from "@/state/seasonal/queries/useSeasonalAPY";
+import { SeasonalAPYChartData, SeasonalAPYChartDataSingle } from "@/utils/types";
 
 // TODO(pp): Does seasonal apy chart need any props at all?
 interface SeasonalAPYChartProps {
+  season: number;
   title: string;
   size: "small" | "large";
-  activeTab: TimeTab;
-  onChangeTab: (tab: TimeTab) => void;
-  useSeasonalResult: UseSeasonalResult;
   valueFormatter: (value: number) => string;
   tickValueFormatter?: (value: number) => string;
   statVariant?: "explorer" | "non-colored";
   className?: string;
 }
 
-const greenStrokeGradients = [metallicGreenStrokeGradientFn];
+const greenStrokeGradients = [
+  metallicGreenStrokeGradientFn,
+  metallicGreenStrokeGradientFn,
+  metallicGreenStrokeGradientFn,
+];
 
 const SeasonalAPYChart = ({
+  season,
   title,
   size,
-  activeTab,
-  onChangeTab,
-  useSeasonalResult,
   valueFormatter,
   tickValueFormatter,
   statVariant = "explorer",
   className,
 }: SeasonalAPYChartProps) => {
-  const [allData, setAllData] = useState<SeasonalChartData[] | null>(null);
-  const [displayData, setDisplayData] = useState<SeasonalChartData | null>(null);
+  const [allData, setAllData] = useState<SeasonalAPYChartData | null>(null);
+  const [displayIndex, setDisplayIndex] = useState<number | null>(null);
 
-  const inputData = useSeasonalResult.data;
+  const [timeTab, setTimeTab] = useState(TimeTab.Week);
+  const seasonalApy = useSeasonalAPYs(Math.max(0, season - tabToSeasonalLookback(timeTab)), season);
+  const apyData = seasonalApy.data;
 
   useEffect(() => {
-    if (inputData && !allData) {
-      setAllData(inputData);
-      setDisplayData(inputData[inputData.length - 1]);
+    if (apyData && !allData) {
+      setAllData(apyData);
+      setDisplayIndex(apyData[APYWindow.MONTHLY].length - 1);
     }
-  }, [inputData, allData]);
+  }, [apyData, allData]);
 
-  const handleChangeTab = useCallback(
-    (tab: TimeTab) => {
-      onChangeTab(tab);
-      setAllData(null);
-      setDisplayData(null);
-    },
-    [onChangeTab],
-  );
+  const handleChangeTab = useCallback((tab: TimeTab) => {
+    setTimeTab(tab);
+    setAllData(null);
+    setDisplayIndex(null);
+  }, []);
 
   const chartData = useMemo<LineChartData[]>(() => {
     if (allData) {
-      return allData.map((d) => ({
-        // Can't render 0 values on a log scale
-        values: [Math.max(0.000001, d.value)],
-        timestamp: d.timestamp,
-      }));
+      // TODO(pp): handle potential desync in seasons? perhaps the useApy needs to have season as a key
+      return APY_EMA_WINDOWS.reduce((acc, w) => {
+        for (let i = 0; i < allData[w].length; i++) {
+          acc[i] ??= {
+            timestamp: allData[w][i].timestamp,
+            values: [],
+          };
+          // Can't render 0 values on a log scale
+          acc[i].values.push(Math.max(0.000001, allData[w][i].value));
+        }
+        return acc;
+      }, [] as LineChartData[]);
     }
     return [];
   }, [allData]);
@@ -70,7 +77,7 @@ const SeasonalAPYChart = ({
   const handleMouseOver = useCallback(
     (index: number) => {
       if (allData) {
-        setDisplayData(allData[index ?? allData.length - 1]);
+        setDisplayIndex(index ?? allData[allData[APYWindow.MONTHLY].length - 1]);
       }
     },
     [allData],
@@ -84,10 +91,10 @@ const SeasonalAPYChart = ({
         >
           {title}
         </div>
-        <TimeTabsSelector tab={activeTab} setTab={handleChangeTab} />
+        <TimeTabsSelector tab={timeTab} setTab={handleChangeTab} />
       </div>
 
-      {!allData && !displayData && (
+      {!allData && (
         <>
           {/* Keep sizing the same as when there is data. Allows centering spinner/error vertically */}
           <div
@@ -98,8 +105,8 @@ const SeasonalAPYChart = ({
             }}
           >
             <div className="absolute inset-0 flex items-center justify-center">
-              {useSeasonalResult.isLoading && !useSeasonalResult.isError && <FrameAnimator size={75} />}
-              {useSeasonalResult.isError && (
+              {seasonalApy.isLoading && !seasonalApy.isError && <FrameAnimator size={75} />}
+              {seasonalApy.isError && (
                 <>
                   <CloseIconAlt color={"red"} />
                   <div className="pinto-body text-pinto-green-3">An error has occurred</div>
@@ -109,9 +116,9 @@ const SeasonalAPYChart = ({
           </div>
         </>
       )}
-      {allData && displayData && (
+      {allData && (
         <>
-          <div className="h-[85px] px-4 sm:px-6">
+          {/* <div className="h-[85px] px-4 sm:px-6">
             <div
               className={`${statVariant === "explorer" ? "text-pinto-green-3 sm:text-pinto-green-3" : "text-pinto-primary sm:text-pinto-primary"} pinto-body sm:pinto-h3`}
             >
@@ -125,9 +132,9 @@ const SeasonalAPYChart = ({
                 {formatDate(displayData.timestamp)}
               </div>
             </div>
-          </div>
+          </div> */}
           <div className={size === "small" ? "aspect-3/1" : "aspect-6/1"}>
-            {!chartData.length && !useSeasonalResult.isLoading ? (
+            {!chartData.length && !seasonalApy.isLoading ? (
               <div className="w-full h-full flex items-center justify-center">
                 <div className="pinto-body-light">No data</div>
               </div>
