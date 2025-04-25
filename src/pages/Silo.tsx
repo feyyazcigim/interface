@@ -10,7 +10,7 @@ import StatPanel from "@/components/StatPanel";
 import TableRowConnector from "@/components/TableRowConnector";
 import TextSkeleton from "@/components/TextSkeleton";
 import TooltipSimple from "@/components/TooltipSimple";
-import { TimeTab, tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
+import { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Card } from "@/components/ui/Card";
 import IconImage from "@/components/ui/IconImage";
@@ -38,6 +38,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiloTable from "./silo/SiloTable";
+import { TimeTab } from "@/components/charts/TimeTabs";
 
 function Silo() {
   const farmerSilo = useFarmerSilo();

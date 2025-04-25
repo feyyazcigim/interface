@@ -1,8 +1,12 @@
-import { TimeTab } from "@/components/charts/SeasonalChart";
+export enum TimeTab {
+  Week = 0,
+  Month = 1,
+  AllTime = 2,
+}
 
 export interface TimeTabSelector {
   tab: TimeTab;
-  setTab: ((tab: TimeTab) => undefined) | React.Dispatch<React.SetStateAction<TimeTab>>;
+  setTab: ((tab: TimeTab) => void) | React.Dispatch<React.SetStateAction<TimeTab>>;
 }
 
 export const TIME_TABS = ["Week", "Month", "All"];

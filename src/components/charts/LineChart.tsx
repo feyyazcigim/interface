@@ -118,7 +118,7 @@ const LineChart = React.memo(
 
       // For logarithmic scale, ensure minTick is positive
       if (useLogarithmicScale && minTick <= 0) {
-        minTick = 0.01; // Small positive value
+        minTick = 0.000001; // Small positive value
       }
 
       // Use custom min/max if provided
@@ -152,6 +152,8 @@ const LineChart = React.memo(
 
       return [finalMin, finalMax];
     }, [data, useLogarithmicScale, yAxisMin, yAxisMax, horizontalReferenceLines]);
+
+    console.log("minmax", yTickMin, yTickMax);
 
     const chartData = useCallback(
       (ctx: CanvasRenderingContext2D | null): ChartData => {
