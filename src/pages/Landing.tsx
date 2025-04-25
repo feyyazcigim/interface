@@ -1,3 +1,4 @@
+import ImmunefiLogo from "@/assets/misc/immunefi-logo.png";
 import PintoLogo from "@/assets/protocol/PintoLogo.svg";
 import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import PintoTokenLogo from "@/assets/tokens/PINTO.png";
@@ -138,7 +139,10 @@ function BugBounty() {
           className="text-black font-thin text-[8rem]"
         />
       </div>
-      <div className="pinto-h2 font-light pt-6">Bug Bounty through Immunefi</div>
+      <div className="pinto-h2 font-light pt-6 flex flex-row gap-4 items-center">
+        <span>Bug Bounty through</span>
+        <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-12" />
+      </div>
       <div className="flex flex-row gap-4 pt-9">
         <Button rounded="full">Get Started</Button>
         <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
