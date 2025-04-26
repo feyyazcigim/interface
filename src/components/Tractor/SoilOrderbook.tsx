@@ -28,8 +28,10 @@ import React from "react";
 import { toast } from "sonner";
 import { usePublicClient } from "wagmi";
 import { useChainId } from "wagmi";
+import { Col, Row } from "../Container";
 import LoadingSpinner from "../LoadingSpinner";
 import ReviewTractorOrderDialog, { ExecutionData } from "../ReviewTractorOrderDialog";
+import Backdrop from "../ui/Backdrop";
 import { Plow } from "./Plow";
 
 const BASESCAN_URL = "https://basescan.org/address/";
@@ -407,7 +409,9 @@ export function SoilOrderbookContent({
       <TableCell className="py-3 px-0 text-pinto-green-4 border-b-0" colSpan={2}>
         Current Temperature: {formatter.pct(temperature.max)}
       </TableCell>
-      <TableCell className="py-3 border-b-0 text-pinto-green-4 justify-end text-right">Soil Orders at Current Temp:</TableCell>
+      <TableCell className="py-3 border-b-0 text-pinto-green-4 justify-end text-right">
+        Soil Orders at Current Temp:
+      </TableCell>
       <TableCell className="py-3 text-right border-b-0">
         <div className="flex items-center justify-start gap-1">
           <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
@@ -559,7 +563,7 @@ export function SoilOrderbookContent({
             renderTemperatureIndicatorRow()}
           {sortedRequisitions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={10} className="p-2 text-center text-gray-500">
+              <TableCell colSpan={10} className="p-2 text-center text-gray-500 h-72">
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <LoadingSpinner size={20} />
@@ -636,51 +640,58 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <Backdrop active={open} noBlur={true} onClick={() => onOpenChange(false)} />
       <DialogPortal>
-        <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
-        <DialogContent className="max-w-[98rem] w-[99vw] bg-gray-50 border border-gray-200 p-0">
-          <DialogHeader className="pt-2">
+        <DialogOverlay className={"fixed inset-0 backdrop-blur-[2px] bg-white/50"} />
+        <DialogContent
+          id="content-dialog"
+          className="max-w-[98rem] w-[99vw] bg-gray-50 border border-gray-200 p-0 sm:p-0 gap-2"
+        >
+          <DialogHeader className="px-6 pt-6 pb-0">
             <DialogTitle className="text-xl font-bold">Tractor Soil Orders</DialogTitle>
           </DialogHeader>
-
-          <div className="w-full">
-            <div className="border-b">
-              <div className="flex items-end justify-between">
-                <div className="flex gap-4">
+          <Col className="w-full">
+            <Col className="border-b">
+              <Row className="flex items-center justify-between">
+                <Row className="gap-4 px-6">
                   <button
                     type="button"
-                    className={`pb-2 pt-1 ${activeTab === "view" ? "border-b-2 border-pinto-green-4 font-medium -mb-[2px]" : "border-b-2 border-transparent text-pinto-gray-4 -mb-[2px]"}`}
+                    className={cn(
+                      "py-4 border-box border-b-2 border-transparent text-pinto-gray-4 -mb-0.5",
+                      activeTab === "view" && "border-pinto-green-4 font-medium",
+                    )}
                     onClick={() => setActiveTab("view")}
                   >
                     View Soil Orders
                   </button>
                   <button
                     type="button"
-                    className={`pb-2 pt-1 ${activeTab === "execute" ? "border-b-2 border-pinto-green-4 font-medium -mb-[2px]" : "border-b-2 border-transparent text-pinto-gray-4 -mb-[2px]"}`}
+                    className={cn(
+                      "py-4 border-box border-b-2 border-transparent text-pinto-gray-4 -mb-0.5",
+                      activeTab === "execute" && "border-pinto-green-4 font-medium",
+                    )}
                     onClick={() => setActiveTab("execute")}
                   >
                     Execute Soil Orders
                   </button>
-                </div>
+                </Row>
 
-                <div className="pb-2">
+                <Col className="mr-4 items-center justify-center">
                   {activeTab === "view" && (
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
-                          type="button"
                           variant="ghost"
                           size="sm"
-                          className="rounded-full h-8"
+                          rounded="full"
+                          className="h-8 p-2"
                           aria-label="Table Settings"
                         >
                           <GearIcon className="h-5 w-5 text-pinto-gray-4" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-80 p-4" align="end">
-                        <h3 className="text-xs font-medium mb-3" style={{ fontSize: "1rem", lineHeight: "1rem" }}>
-                          Table Settings
-                        </h3>
+                        <div className="pinto-sm font-medium mb-3 leading-same-sm">Table Settings</div>
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
                             <SmallLabel htmlFor="show-zero-available">Show Zero Available Pinto</SmallLabel>
@@ -736,11 +747,10 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
                       </PopoverContent>
                     </Popover>
                   )}
-                </div>
-              </div>
-            </div>
-
-            <div className="py-4">
+                </Col>
+              </Row>
+            </Col>
+            <Col className="pt-4 px-6 pb-6 w-full min-h-72">
               {activeTab === "view" ? (
                 <SoilOrderbookContent
                   showZeroAvailable={showZeroAvailable}
@@ -750,8 +760,8 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
               ) : (
                 <Plow />
               )}
-            </div>
-          </div>
+            </Col>
+          </Col>
         </DialogContent>
       </DialogPortal>
     </Dialog>

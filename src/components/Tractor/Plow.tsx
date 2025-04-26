@@ -626,7 +626,7 @@ export function Plow() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-4">
+      <div className="flex items-center justify-center gap-2 py-4 min-h-72">
         <LoadingSpinner size={20} />
         <span>Loading requisitions...</span>
       </div>
