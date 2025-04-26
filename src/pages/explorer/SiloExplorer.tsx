@@ -29,6 +29,7 @@ const SiloExplorer = () => {
 
   return (
     <>
+      {/* TODO(pp): put this back */}
       <div className="hidden">
         {/* For debugging, cant double comment out with the comment in the middle */}
         <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
