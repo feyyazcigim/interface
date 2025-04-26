@@ -26,7 +26,7 @@ export const activateDiscordLogging = () => {
   const webhookUrl =
     "https://discord.com/api/webhooks/1365024536386605210/vuTrpuicFeFYgpkPKoUcX34Whpii5crIIR9GFAwvsmy5LIvQLqiRxTam0wWH0SzQrZ7a";
   // Dont send messages with this content
-  const WEBHOOK_BLACKLIST = ["validateDOMNesting"];
+  const WEBHOOK_BLACKLIST = ["validateDOMNesting", "UserRejectedRequestError"];
 
   const originalConsoleError = console.error;
 
