@@ -51,6 +51,10 @@ export const isDev = () => {
   return isLocalhost() || isNetlifyPreview() || process.env.NODE_ENV === "development";
 };
 
+export const deployedCommitHash = () => {
+  return import.meta.env.VITE_COMMIT_HASH;
+};
+
 export function exists<T>(value: T | undefined | null): value is NonNullable<T> {
   return value !== undefined && value !== null;
 }
