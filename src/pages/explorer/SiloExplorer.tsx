@@ -92,18 +92,7 @@ const SiloExplorer = () => {
           </div>
         </div>
       </div>
-      <SeasonalAPYChart
-        season={season}
-        title="Deposited Pinto vAPY"
-        size="large"
-        tickValueFormatter={f.percent0dFormatter}
-        // yAxisRanges={{
-        //   [TimeTab.Week]: {
-        //     min: 0.000001,
-        //     max: 1,
-        //   },
-        // }}
-      />
+      <SeasonalAPYChart season={season} size="large" />
     </>
   );
 };

@@ -3,9 +3,9 @@ import { chartFormatters as f, formatDate } from "@/utils/format";
 import { cn } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
-import LineChart, { LineChartData } from "./LineChart";
+import LineChart, { CustomChartValueTransform, LineChartData } from "./LineChart";
 import { metallicGreenStrokeGradientFn } from "./chartHelpers";
-import { tabToSeasonalLookback } from "./SeasonalChart";
+import { SeasonalChartData, tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { APY_EMA_WINDOWS, APYWindow, useSeasonalAPYs } from "@/state/seasonal/queries/useSeasonalAPY";
 import { SeasonalAPYChartData } from "@/utils/types";
@@ -13,11 +13,7 @@ import { SeasonalAPYChartData } from "@/utils/types";
 // TODO(pp): Does seasonal apy chart need any props at all?
 interface SeasonalAPYChartProps {
   season: number;
-  title: string;
   size: "small" | "large";
-  valueFormatter: (value: number) => string;
-  tickValueFormatter?: (value: number) => string;
-  statVariant?: "explorer" | "non-colored";
   className?: string;
 }
 
@@ -27,14 +23,42 @@ const greenStrokeGradients = [
   metallicGreenStrokeGradientFn,
 ];
 
-const SeasonalAPYChart = ({
-  season,
-  title,
-  size,
-  tickValueFormatter,
-  statVariant = "explorer",
-  className,
-}: SeasonalAPYChartProps) => {
+// Custom transform to improve display around concentrated value ranges while still supporting outliers.
+const transformValue = (v: number, max: number): number => {
+  if (v <= 0) {
+    return 0;
+  } else if (v <= 0.01) {
+    return 0.1 * (v / 0.01);
+  } else if (v <= 0.1) {
+    return 0.1 + 0.3 * ((v - 0.01) / 0.09);
+  }
+  // Use logarithmic scaling for values above 0.1
+  const logRange = Math.log(max) - Math.log(0.1);
+  const logValue = Math.log(v) - Math.log(0.1);
+  return 0.4 + 0.6 * (logValue / logRange);
+};
+
+// Inverse of the above transform function.
+const inverseTransformValue = (t: number, max: number): number => {
+  if (t <= 0) {
+    return 0;
+  } else if (t <= 0.1) {
+    return 0.01 * (t / 0.1);
+  } else if (t <= 0.4) {
+    return 0.01 + 0.09 * ((t - 0.1) / 0.3);
+  }
+  // Invert the logarithmic scaling
+  const logRange = Math.log(max) - Math.log(0.1);
+  const logValue = ((t - 0.4) / 0.6) * logRange + Math.log(0.1);
+  return Math.exp(logValue);
+};
+
+const valueTransform = {
+  to: transformValue,
+  from: inverseTransformValue,
+};
+
+const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) => {
   const [allData, setAllData] = useState<SeasonalAPYChartData | null>(null);
   const [displayIndex, setDisplayIndex] = useState<number | null>(null);
 
@@ -45,6 +69,9 @@ const SeasonalAPYChart = ({
   useEffect(() => {
     if (apyData && !allData) {
       setAllData(apyData);
+      // TODO(pp) FIXME: len of apyData monthly is zero; messing up display index
+      // All of the apy windows are present but each has zero length.
+      console.log("alldata len", apyData[APYWindow.MONTHLY].length, apyData);
       setDisplayIndex(apyData[APYWindow.MONTHLY].length - 1);
     }
   }, [apyData, allData]);
@@ -55,23 +82,32 @@ const SeasonalAPYChart = ({
     setDisplayIndex(null);
   }, []);
 
-  const chartData = useMemo<LineChartData[]>(() => {
+  const maxValue = useMemo(() => {
     if (allData) {
+      return Object.keys(allData).reduce((acc, w) => {
+        return Math.max(0.13, acc, ...allData[w].map((d: SeasonalChartData) => d.value));
+      }, 0);
+    }
+  }, [allData]);
+
+  const chartData = useMemo<LineChartData[]>(() => {
+    if (allData && maxValue !== undefined) {
       // TODO(pp): handle potential desync in seasons? perhaps the useApy needs to have season as a key
+
       return APY_EMA_WINDOWS.reduce((acc, w) => {
         for (let i = 0; i < allData[w].length; i++) {
           acc[i] ??= {
             timestamp: allData[w][i].timestamp,
             values: [],
           };
-          // Can't render 0 values on a log scale
-          acc[i].values.push(Math.max(0.000001, allData[w][i].value));
+          // Manipulate datapoints to visually improve the display. Chart will consider these datapoints as linear.
+          acc[i].values.push(valueTransform.to(allData[w][i].value, maxValue));
         }
         return acc;
       }, [] as LineChartData[]);
     }
     return [];
-  }, [allData]);
+  }, [allData, maxValue]);
 
   const handleMouseOver = useCallback(
     (index: number) => {
@@ -82,13 +118,21 @@ const SeasonalAPYChart = ({
     [allData],
   );
 
+  const customValueTransform = useMemo<CustomChartValueTransform>(() => {
+    return {
+      to: (value: number) => valueTransform.to(value, maxValue ?? 0),
+      from: (value: number) => valueTransform.from(value, maxValue ?? 0),
+    };
+  }, [maxValue]);
+
+  // console.log("chartdata", JSON.stringify(chartData));
+  console.log("di", displayIndex);
+
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
       <div className="flex justify-between pt-4 px-4 sm:pt-6 sm:px-6">
-        <div
-          className={`${statVariant === "explorer" ? "sm:pinto-body text-pinto-light sm:text-pinto-light" : "sm:pinto-body-light text-pinto-primary sm:text-pinto-primary"} pinto-sm-light font-thin pb-0.5`}
-        >
-          {title}
+        <div className="sm:pinto-body text-pinto-light sm:text-pinto-light pinto-sm-light font-thin pb-0.5">
+          Deposited Pinto vAPY
         </div>
         <TimeTabsSelector tab={timeTab} setTab={handleChangeTab} />
       </div>
@@ -118,9 +162,7 @@ const SeasonalAPYChart = ({
       {allData && displayIndex !== null && (
         <>
           <div className="h-[85px] px-4 sm:px-6">
-            <div
-              className={`${statVariant === "explorer" ? "text-pinto-green-3 sm:text-pinto-green-3" : "text-pinto-primary sm:text-pinto-primary"} pinto-body sm:pinto-h3`}
-            >
+            <div className="text-pinto-green-3 sm:text-pinto-green-3 pinto-body sm:pinto-h3">
               30D: {f.percent2dFormatter(allData[APYWindow.MONTHLY][displayIndex].value)} | 7D:{" "}
               {f.percent2dFormatter(allData[APYWindow.WEEKLY][displayIndex].value)} | 24H:{" "}
               {f.percent2dFormatter(allData[APYWindow.DAILY][displayIndex].value)}
@@ -146,11 +188,9 @@ const SeasonalAPYChart = ({
                   xKey="timestamp"
                   size={size}
                   makeLineGradients={greenStrokeGradients}
-                  valueFormatter={tickValueFormatter}
+                  valueFormatter={f.percent0dFormatter}
                   onMouseOver={handleMouseOver}
-                  useLogarithmicScale={true}
-                  // yAxisMin={currentYAxisRange?.min}
-                  // yAxisMax={currentYAxisRange?.max}
+                  customValueTransform={customValueTransform}
                 />
               </div>
             )}
