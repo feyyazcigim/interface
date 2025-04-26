@@ -182,8 +182,8 @@ const Navbar = () => {
           styles.navGrid,
         )}
       >
-        <div className="flex flex-row gap-4">
-          <div className={`transition-all duration-100 ${panelState.openPanel === "price" && "z-[51]"}`}>
+        <div className="flex flex-row">
+          <div className={`transition-all duration-100 ${panelState.openPanel === "price" && "z-[51]"} mr-4`}>
             <PriceButton
               isOpen={panelState.openPanel === "price"}
               togglePanel={() => togglePanel("price")}
@@ -203,6 +203,7 @@ const Navbar = () => {
             panelProps={{
               className: cn("max-w-panel-price w-panel-price", "mt-14"),
             }}
+            screenReaderTitle="Chart Select Panel"
             trigger={<></>}
             toggle={() => togglePanel(panelState.openPanel)}
           >
