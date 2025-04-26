@@ -399,28 +399,28 @@ export function SoilOrderbookContent({
   const summaryData = calculateSummaryData();
 
   // Flag to enable/disable temperature indicator row - set to false to hide, true to show. We are awaiting design on this.
-  const showTemperatureIndicator = false;
+  const showTemperatureIndicator = true;
 
   // Helper function to render the temperature indicator row
   const renderTemperatureIndicatorRow = () => (
-    <TableRow className="border-b-0">
-      <TableCell className="py-1 px-0 text-pinto-green-4 border-b-0" colSpan={2}>
-        ↑ {formatter.pct(temperature.max)} - Current Temp
+    <TableRow className="border-b-0 bg-white border-t border-b border-pinto-gray-1">
+      <TableCell className="py-3 px-0 text-pinto-green-4 border-b-0" colSpan={2}>
+        Current Temperature: {formatter.pct(temperature.max)}
       </TableCell>
-      <TableCell className="py-1 border-b-0 text-pinto-green-4 justify-end text-right">Totals:</TableCell>
-      <TableCell className="py-1 text-right border-b-0">
+      <TableCell className="py-3 border-b-0 text-pinto-green-4 justify-end text-right">Soil Orders at Current Temp:</TableCell>
+      <TableCell className="py-3 text-right border-b-0">
         <div className="flex items-center justify-start gap-1">
           <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
           <span className="text-pinto-green-4 font-medium">{formatter.number(summaryData.totalAvailablePinto)}</span>
         </div>
       </TableCell>
-      <TableCell className="py-1 text-right border-b-0">
+      <TableCell className="py-3 text-right border-b-0">
         <div className="flex items-center justify-start gap-1">
           <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
           <span className="text-pinto-green-4 font-medium">{formatter.number(summaryData.totalMaxPerSeason)}</span>
         </div>
       </TableCell>
-      <TableCell className="py-1 border-b-0" colSpan={5} />
+      <TableCell className="py-3 border-b-0" colSpan={5} />
     </TableRow>
   );
 
@@ -531,6 +531,8 @@ export function SoilOrderbookContent({
             </TableHead>
             <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Available Pinto</TableHead>
             <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Max per Season</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Morning Auction</TableHead>
+            <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Operator Tip</TableHead>
             <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Blueprint Hash</TableHead>
             <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Publisher</TableHead>
             <TableHead className="py-2 font-light text-[#9C9C9C] text-base leading-[110%]">Created at</TableHead>
@@ -636,7 +638,7 @@ export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
-        <DialogContent className="max-w-[90rem] w-[98vw] bg-gray-50 border border-gray-200 p-0">
+        <DialogContent className="max-w-[98rem] w-[99vw] bg-gray-50 border border-gray-200 p-0">
           <DialogHeader className="pt-2">
             <DialogTitle className="text-xl font-bold">Tractor Soil Orders</DialogTitle>
           </DialogHeader>
