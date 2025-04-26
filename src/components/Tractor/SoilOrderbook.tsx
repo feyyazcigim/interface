@@ -397,18 +397,18 @@ export function SoilOrderbookContent({
   // Helper function to render the temperature indicator row
   const renderTemperatureIndicatorRow = () => (
     <TableRow className="bg-white [&_td]:border-t [&_td]:border-pinto-gray-2 [&_td]:border-b">
-      <TableCell className="py-3 px-6 text-pinto-green-4" colSpan={2}>
+      <TableCell className="py-3 pl-6 text-pinto-green-4" colSpan={2}>
         Current Temperature: {formatter.pct(temperature.max)}
       </TableCell>
       <TableCell className="py-3 text-pinto-green-4 justify-end text-right">Soil Orders at Current Temp:</TableCell>
       <TableCell className="py-3 text-right">
-        <div className="flex items-center justify-start gap-1">
+        <div className="flex items-center justify-end gap-1">
           <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
           <span className="text-pinto-green-4 font-medium">{formatter.number(summaryData.totalAvailablePinto)}</span>
         </div>
       </TableCell>
       <TableCell className="py-3 text-right">
-        <div className="flex items-center justify-start gap-1">
+        <div className="flex items-center justify-end gap-1">
           <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
           <span className="text-pinto-green-4 font-medium">{formatter.number(summaryData.totalMaxPerSeason)}</span>
         </div>
@@ -449,27 +449,27 @@ export function SoilOrderbookContent({
       >
         <TableCell className="py-2 px-0 pl-6 whitespace-nowrap">≥ {temperature.toFixed(0)}%</TableCell>
         <TableCell className="py-2 whitespace-nowrap">≤ {maxPodLineLength}</TableCell>
-        <TableCell className="py-2">
-          <div className="flex items-center gap-1">
+        <TableCell className="py-2 text-right">
+          <div className="flex items-center gap-1 justify-end">
             <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
             {totalSize}
           </div>
         </TableCell>
-        <TableCell className="py-2">
-          <div className="flex items-center gap-1">
+        <TableCell className="py-2 text-right">
+          <div className="flex items-center gap-1 justify-end">
             <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
             {availablePinto}
           </div>
         </TableCell>
-        <TableCell className="py-2">
-          <div className="flex items-center gap-1">
+        <TableCell className="py-2 text-right">
+          <div className="flex items-center gap-1 justify-end">
             <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
             {decodedData && decodedData.sowAmounts.maxAmountToSowPerSeasonAsString
               ? formatter.number(TokenValue.fromHuman(decodedData.sowAmounts.maxAmountToSowPerSeasonAsString, 6))
               : "Unknown"}
           </div>
         </TableCell>
-        <TableCell className="py-2">
+        <TableCell className="py-2 text-right">
           {decodedData && decodedData.runBlocksAfterSunrise !== undefined ? (
             Number(decodedData.runBlocksAfterSunrise) < 300 ? (
               <span className="text-pinto-green-4 font-medium">Yes</span>
@@ -480,8 +480,8 @@ export function SoilOrderbookContent({
             "Unknown"
           )}
         </TableCell>
-        <TableCell className="py-2">
-          <div className="flex items-center gap-1">
+        <TableCell className="py-2 text-right">
+          <div className="flex items-center gap-1 justify-end">
             <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
             {decodedData && decodedData.operatorParams.operatorTipAmount
               ? formatter.number(TokenValue.fromBlockchain(decodedData.operatorParams.operatorTipAmount, 6), {
@@ -491,10 +491,10 @@ export function SoilOrderbookContent({
               : "Unknown"}
           </div>
         </TableCell>
-        <TableCell className="py-2 text-pinto-dark">
+        <TableCell className="py-2 text-pinto-dark text-right">
           {`0x${req.requisition.blueprintHash.slice(2, 7)}...${req.requisition.blueprintHash.slice(-4)}`}
         </TableCell>
-        <TableCell className="py-2">
+        <TableCell className="py-2 text-right">
           <a
             href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
             target="_blank"
@@ -505,7 +505,7 @@ export function SoilOrderbookContent({
             {`0x${req.requisition.blueprint.publisher.slice(2, 7)}...${req.requisition.blueprint.publisher.slice(-4)}`}
           </a>
         </TableCell>
-        <TableCell className="py-2 pr-6">{formatDate(req.timestamp)}</TableCell>
+        <TableCell className="py-2 pr-6 text-right">{formatDate(req.timestamp)}</TableCell>
       </TableRow>
     );
   };
@@ -517,14 +517,14 @@ export function SoilOrderbookContent({
           <TableRow className="border-b-0">
             <TableHead className="py-2 px-0 pl-6">Temperature</TableHead>
             <TableHead className="py-2">Max Podline Length</TableHead>
-            <TableHead className="py-2">Total Soil Order Size</TableHead>
-            <TableHead className="py-2">Available Pinto</TableHead>
-            <TableHead className="py-2">Max per Season</TableHead>
-            <TableHead className="py-2">Morning Auction</TableHead>
-            <TableHead className="py-2">Operator Tip</TableHead>
-            <TableHead className="py-2">Blueprint Hash</TableHead>
-            <TableHead className="py-2">Publisher</TableHead>
-            <TableHead className="py-2 pr-6">Created at</TableHead>
+            <TableHead className="py-2 text-right">Total Soil Order Size</TableHead>
+            <TableHead className="py-2 text-right">Available Pinto</TableHead>
+            <TableHead className="py-2 text-right">Max per Season</TableHead>
+            <TableHead className="py-2 text-right">Morning Auction</TableHead>
+            <TableHead className="py-2 text-right">Operator Tip</TableHead>
+            <TableHead className="py-2 text-right">Blueprint Hash</TableHead>
+            <TableHead className="py-2 text-right">Publisher</TableHead>
+            <TableHead className="py-2 pr-6 text-right">Created at</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
