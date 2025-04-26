@@ -162,9 +162,6 @@ const LineChart = React.memo(
       return [finalMin, finalMax];
     }, [data, useLogarithmicScale, yAxisMin, yAxisMax, horizontalReferenceLines]);
 
-    // TODO(pp): remove
-    console.log("minmax", yTickMin, yTickMax);
-
     const chartData = useCallback(
       (ctx: CanvasRenderingContext2D | null): ChartData => {
         return {

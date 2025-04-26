@@ -10,7 +10,6 @@ import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { APY_EMA_WINDOWS, APYWindow, useSeasonalAPYs } from "@/state/seasonal/queries/useSeasonalAPY";
 import { SeasonalAPYChartData } from "@/utils/types";
 
-// TODO(pp): Does seasonal apy chart need any props at all?
 interface SeasonalAPYChartProps {
   season: number;
   size: "small" | "large";
@@ -121,9 +120,6 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
       from: (value: number) => valueTransform.from(value, maxValue ?? 0),
     };
   }, [maxValue]);
-
-  // console.log("chartdata", JSON.stringify(chartData));
-  // console.log("di", displayIndex);
 
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
