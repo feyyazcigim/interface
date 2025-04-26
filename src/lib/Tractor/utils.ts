@@ -428,24 +428,28 @@ export function findOperatorPlaceholderOffset(encodedData: `0x${string}`): numbe
   return index / 2; // Convert from hex characters to bytes
 }
 
-export async function fetchTractorEvents(publicClient: PublicClient, protocolAddress: `0x${string}`) {
-  // Get published requisitions
-  const publishEvents = await publicClient.getContractEvents({
-    address: protocolAddress,
-    abi: diamondABI,
-    eventName: "PublishRequisition",
-    fromBlock: TRACTOR_DEPLOYMENT_BLOCK,
-    toBlock: "latest",
-  });
-
-  // Get cancelled blueprints
-  const cancelEvents = await publicClient.getContractEvents({
-    address: protocolAddress,
-    abi: diamondABI,
-    eventName: "CancelBlueprint",
-    fromBlock: TRACTOR_DEPLOYMENT_BLOCK,
-    toBlock: "latest",
-  });
+export async function fetchTractorEvents(
+  publicClient: PublicClient,
+  protocolAddress: `0x${string}`,
+  fromBlock: bigint = TRACTOR_DEPLOYMENT_BLOCK,
+) {
+  // Get published requisitions & cancelled blueprints
+  const [publishEvents, cancelEvents] = await Promise.all([
+    publicClient.getContractEvents({
+      address: protocolAddress,
+      abi: diamondABI,
+      eventName: "PublishRequisition",
+      fromBlock,
+      toBlock: "latest",
+    }),
+    publicClient.getContractEvents({
+      address: protocolAddress,
+      abi: diamondABI,
+      eventName: "CancelBlueprint",
+      fromBlock,
+      toBlock: "latest",
+    }),
+  ]);
 
   // Create a set of cancelled blueprint hashes
   const cancelledHashes = new Set(
@@ -523,7 +527,7 @@ export async function loadPublishedRequisitions(
         let timestamp: number | undefined = undefined;
         if (latestBlock) {
           // Convert all BigInt values to Number before arithmetic operations
-          const latestTimestamp = Number(latestBlock.timestamp);
+          const latestTimestamp = Number(`latestBlock.timestamp`);
           const latestBlockNumber = Number(latestBlock.number);
           const eventBlockNumber = Number(event.blockNumber);
 
@@ -839,20 +843,12 @@ export async function loadOrderbookData(
     // First, get the current pod line from the protocol
     let currentPodLine = TokenValue.ZERO;
     try {
+      const shared = { address: protocolAddress, abi: diamondABI, args: [0n] } as const;
       // Get the current pod index and harvestable index to calculate the current pod line
-      const podIndexResult = await publicClient.readContract({
-        address: protocolAddress,
-        abi: diamondABI,
-        functionName: "podIndex",
-        args: [0n],
-      });
-
-      const harvestableIndexResult = await publicClient.readContract({
-        address: protocolAddress,
-        abi: diamondABI,
-        functionName: "harvestableIndex",
-        args: [0n],
-      });
+      const [podIndexResult, harvestableIndexResult] = await Promise.all([
+        publicClient.readContract({ ...shared, functionName: "podIndex" }),
+        publicClient.readContract({ ...shared, functionName: "harvestableIndex" }),
+      ]);
 
       if (podIndexResult && harvestableIndexResult) {
         // Pod line is podIndex - harvestableIndex

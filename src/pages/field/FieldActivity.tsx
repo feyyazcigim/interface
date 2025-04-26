@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
+import { useTractorSowCompleteEvents } from "@/state/tractor/useTractorSowOrders";
 import { useHarvestableIndex } from "@/state/useFieldData";
 import { useTemperature } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
@@ -77,6 +78,8 @@ const FieldActivity = () => {
     latestBlockNumber: null,
     latestBlockTimestamp: null,
   });
+
+  const qs = useTractorSowCompleteEvents();
 
   // Fetch tractor orders
   React.useEffect(() => {
