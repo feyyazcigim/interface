@@ -69,9 +69,6 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
   useEffect(() => {
     if (apyData && !allData) {
       setAllData(apyData);
-      // TODO(pp) FIXME: len of apyData monthly is zero; messing up display index
-      // All of the apy windows are present but each has zero length.
-      console.log("alldata len", apyData[APYWindow.MONTHLY].length, apyData);
       setDisplayIndex(apyData[APYWindow.MONTHLY].length - 1);
     }
   }, [apyData, allData]);
@@ -126,7 +123,7 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
   }, [maxValue]);
 
   // console.log("chartdata", JSON.stringify(chartData));
-  console.log("di", displayIndex);
+  // console.log("di", displayIndex);
 
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>

@@ -49,6 +49,7 @@ export function useSeasonalAPYs(fromSeason: number, toSeason: number): UseSeason
       return await Promise.all(APY_EMA_WINDOWS.map((window) => fetchApys(window, fromSeason, toSeason)));
     },
     staleTime: Infinity,
+    enabled: fromSeason >= 0 && toSeason > 0,
   });
 
   // Get mapping of season to timestamp
