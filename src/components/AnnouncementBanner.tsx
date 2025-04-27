@@ -2,7 +2,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export const renderAnnouncement = true;
 
-const ANNOUNCEMENT_URL = "https://mirror.xyz/0xEA13D1fB14934E41Ee7074198af8F089a6d956B5/hH9-i4IJrU_BBiRRh2m8tc29JsQnrEt1AeGzbH1w06k";
+const ANNOUNCEMENT_URL =
+  "https://mirror.xyz/0xEA13D1fB14934E41Ee7074198af8F089a6d956B5/hH9-i4IJrU_BBiRRh2m8tc29JsQnrEt1AeGzbH1w06k";
 
 export default function AnnouncementBanner() {
   const location = useLocation();
