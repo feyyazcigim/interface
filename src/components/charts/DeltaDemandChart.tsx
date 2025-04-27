@@ -74,12 +74,15 @@ export const DeltaDemandChart = ({ currentSeason, nextBlock, previousSeason, fil
       }
       let cumulativeSownBeans = 0;
       for (let i = 0; i < numBlocks; i++) {
-        const sowEvent = timings.events.find((timing) => BigInt(timing.blocksSinceSunrise) === BigInt(i));
+        // usually one event but w/ tractor multiple can happen in the same block
+        const sowEvents = timings.events.filter((timing) => BigInt(timing.blocksSinceSunrise) === BigInt(i));
         const timePrefix = i < 1800 ? "XX" : "XY";
         const textInterval = `${timePrefix}:${Math.trunc((Number(i) * 2) / 60)}`;
-        if (sowEvent) {
+        const cumulativeSownBeansForBlock = sowEvents.reduce((acc, sowEvent) => acc + sowEvent.sownBeans, 0);
+        // as far as available soil, label, and textInterval, all sowEvents are the same
+        if (sowEvents[0]) {
           labels.push("XX");
-          cumulativeSownBeans += sowEvent.sownBeans;
+          cumulativeSownBeans += cumulativeSownBeansForBlock;
           data[idx].push({
             values: [(cumulativeSownBeans / timings.availableSoil) * 100 || 0],
             interval: textInterval,
@@ -96,7 +99,6 @@ export const DeltaDemandChart = ({ currentSeason, nextBlock, previousSeason, fil
     });
     return data;
   }, [currentSeason.sunriseBlock, nextBlock, previousSeason.sunriseBlock]);
-  console.info('mappedData', mappedData)
 
   return (
     <div className="w-[600px] bg-white">
