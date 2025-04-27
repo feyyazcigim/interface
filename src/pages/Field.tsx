@@ -172,6 +172,16 @@ function Field() {
     return tabParam === "activity" || tabParam === "pods" || tabParam === "tractor" ? tabParam : "activity";
   });
 
+  // On mobile, if the tab is not 'pods', set it to 'pods'
+  useEffect(() => {
+    if (isMobile) {
+      const tabParams = searchParams.get("tab");
+      if (tabParams !== "pods") {
+        setActiveTab("pods");
+      }
+    }
+  }, [isMobile]);
+
   // Effect to update activeTab when URL parameters change
   useEffect(() => {
     const tabParam = searchParams.get("tab");
