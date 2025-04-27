@@ -93,24 +93,23 @@ export const SeasonsTable = ({ seasonsData, page, hiddenFields, hideColumn }: Se
     const priceDescriptiveText = caseIdToDescriptiveText(data.caseId, "price");
     const filteredSowEvents = sowEvents.data.reduce(
       (acc, event) => {
-        if (!displaySeasonsData[index - 1] || !displaySeasonsData[index + 1]) {
-          return acc;
-        }
+        //next season or current block events
         if (
           event.blockNumber >= BigInt(data.sunriseBlock) &&
-          event.blockNumber <= BigInt(displaySeasonsData[index - 1]?.sunriseBlock)
+          event.blockNumber <= BigInt(seasonsData[seasonsIndexOffset - 1]?.sunriseBlock || currentBlockNumber)
         ) {
           acc[data.season].push(event);
         }
+        //previous season
         if (
           event.blockNumber <= BigInt(data?.sunriseBlock) &&
-          event.blockNumber >= BigInt(displaySeasonsData[index + 1]?.sunriseBlock)
+          event.blockNumber >= BigInt(seasonsData[seasonsIndexOffset + 1]?.sunriseBlock)
         ) {
-          acc[displaySeasonsData[index + 1].season].push(event);
+          acc[seasonsData[seasonsIndexOffset + 1].season].push(event);
         }
         return acc;
       },
-      { [data.season]: [], [displaySeasonsData[index]?.season + - 1]: [] } as Record<number, SowEvent[]>,
+      { [data.season]: [], [seasonsData[seasonsIndexOffset + 1]?.season]: [] } as Record<number, SowEvent[]>,
     );
     return (
       <TableRow key={data.season} style={style} noHoverMute>
