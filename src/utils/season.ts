@@ -32,7 +32,6 @@ export function calculateCropScales(value: number, isRaining: boolean, season: n
 }
 
 export function convertDeltaDemandToPercentage(deltaDemand: number) {
-  console.info("🚀 ~ convertDeltaDemandToPercentage ~ deltaDemand:", deltaDemand);
   if (deltaDemand === 0) return "0%";
   if (deltaDemand === 1e18) {
     return "∞%";

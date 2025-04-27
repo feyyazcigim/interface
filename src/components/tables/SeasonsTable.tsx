@@ -1,7 +1,7 @@
 import eyeballCrossed from "@/assets/misc/eyeball-crossed.svg";
 import IconImage from "@/components/ui/IconImage";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
-import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
+import { SEASON_TABLE_PAGE_SIZE, seasonColumns } from "@/pages/explorer/SeasonsExplorer";
 import { SeasonsTableData } from "@/state/useSeasonsData";
 import useSowEventData, { SowEvent } from "@/state/useSowEventData";
 import { trulyTheBestTimeFormat } from "@/utils/format";
@@ -15,6 +15,7 @@ import { SeasonsTableCell, SeasonsTableCellType } from "./SeasonsTableCell";
 
 interface SeasonsTableProps {
   seasonsData: SeasonsTableData[];
+  page: number;
   hiddenFields: string[];
   hideColumn: (id: string) => void;
 }
@@ -22,11 +23,9 @@ interface SeasonsTableProps {
 export const nonHideableFields = ["season"];
 const paginationPadding = 50;
 
-export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsTableProps) => {
-  // We are overfetching by 2 seasons to calculate the delta demand chart
-  // but on the final page we'd like to show all the seasons, not cut off 1 and 2
-  const displaySeasonsData =
-    seasonsData[seasonsData.length - 1]?.season === 1 ? seasonsData : seasonsData.slice(1, seasonsData.length - 1);
+export const SeasonsTable = ({ seasonsData, page, hiddenFields, hideColumn }: SeasonsTableProps) => {
+  // we pass in all season data but only want to show the chunk of 100 corresponding to the current page
+  const displaySeasonsData = seasonsData.slice((page - 1) * SEASON_TABLE_PAGE_SIZE, page * SEASON_TABLE_PAGE_SIZE);
   const tableRef = useRef<HTMLTableElement>(null);
   const [height, setHeight] = useState(500);
 
@@ -63,15 +62,17 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
       refetchOnMount: true,
     },
   });
-  const [blocknum, setBlocknum] = useState<number>(Number(blockQuery.data) || 0);
+  const [currentBlockNumber, setCurrentBlockNumber] = useState<number>(Number(blockQuery.data) || 0);
 
   useEffect(() => {
     if (blockQuery.data) {
-      setBlocknum(Number(blockQuery.data));
+      setCurrentBlockNumber(Number(blockQuery.data));
     }
   }, [blockQuery.data]);
 
-  const sowEvents = useSowEventData(seasonsData[seasonsData.length - 1]?.sunriseBlock, blocknum);
+  // Go back an additional 2000 blocks to make sure we pull events for the season preceding the final index
+  // in the table. ex: seasons 1000-900 are shown, pull sow events for 899 to be able to show soil demand chart for 900
+  const sowEvents = useSowEventData(seasonsData[seasonsData.length - 1]?.sunriseBlock - 2000, currentBlockNumber);
 
   useEffect(() => {
     window.addEventListener("resize", calculateHeight);
@@ -86,6 +87,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
 
   const RenderRow = React.memo(({ index, style }: ListChildComponentProps<SeasonsTableData>) => {
     const data = displaySeasonsData[index];
+    const seasonsIndexOffset = (page - 1) * SEASON_TABLE_PAGE_SIZE + index;
     const { cropScalar, cropRatio } = calculateCropScales(data.beanToMaxLpGpPerBdvRatio, data.raining, data.season);
     const deltaCropScalar = (data.deltaBeanToMaxLpGpPerBdvRatio / 1e18).toFixed(1);
     const priceDescriptiveText = caseIdToDescriptiveText(data.caseId, "price");
@@ -108,7 +110,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
         }
         return acc;
       },
-      { [data.season]: [], [displaySeasonsData[index + 1]?.season]: [] } as Record<number, SowEvent[]>,
+      { [data.season]: [], [displaySeasonsData[index]?.season + - 1]: [] } as Record<number, SowEvent[]>,
     );
     return (
       <TableRow key={data.season} style={style} noHoverMute>
@@ -183,7 +185,8 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
             data.season > 5 && (
               <DeltaDemandChart
                 currentSeason={data}
-                surroundingSeasons={[displaySeasonsData[index - 1], displaySeasonsData[index + 1]]}
+                previousSeason={seasonsData[seasonsIndexOffset + 1]}
+                nextBlock={seasonsData[seasonsIndexOffset - 1]?.sunriseBlock || currentBlockNumber}
                 filteredSowEvents={filteredSowEvents}
               />
             )

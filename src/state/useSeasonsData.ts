@@ -148,7 +148,7 @@ export default function useSeasonsData(fromSeason: number, toSeason: number) {
     orderBy: "desc",
   });
 
-  const transformedData = useMemo(() => {
+  const transformedData: SeasonsTableData[] = useMemo(() => {
     if (!useBeanQuery.data || !useStalkQuery.data) {
       return [];
     }

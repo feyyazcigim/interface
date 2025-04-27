@@ -47,7 +47,7 @@ export interface SortColumn {
   dir: "asc" | "desc";
 }
 
-const PAGE_SIZE = 100;
+export const SEASON_TABLE_PAGE_SIZE = 100;
 
 const SeasonsExplorer = () => {
   const localStorageHiddenFields = JSON.parse(localStorage.getItem("pinto.seasonsExplorer.hiddenFields") || "[]");
@@ -57,27 +57,20 @@ const SeasonsExplorer = () => {
   const [displayPage, setDisplayPage] = useState<number | string>("1");
   const [page, setPage] = useState(1);
   const [jumpToSeason, setJumpToSeason] = useState(0);
-  const [seasons, setSeasons] = useState<any>([]);
   const [fromSeason, setFromSeason] = useState(currentSeason);
 
-  const totalPages = Math.ceil(currentSeason / PAGE_SIZE);
+  const totalPages = Math.ceil(currentSeason / SEASON_TABLE_PAGE_SIZE);
   const isMobile = useIsMobile();
   const seasonsData = useSeasonsData(fromSeason, currentSeason);
 
   const calculateSeasonPageToJump = (season: number) => {
-    return Math.min(Math.floor((currentSeason - season) / PAGE_SIZE) + 1, totalPages);
+    return Math.min(Math.floor((currentSeason - season) / SEASON_TABLE_PAGE_SIZE) + 1, totalPages);
   };
 
   useEffect(() => {
-    if (seasonsData?.data?.length && page * PAGE_SIZE > seasonsData?.data?.length) {
+    if (seasonsData?.data?.length && page * SEASON_TABLE_PAGE_SIZE > seasonsData?.data?.length) {
       setFromSeason(Math.max(0, fromSeason - 1000));
     }
-    // padded to include 2 extra seasons for calculation of delta demand chart
-    // SeasonsTable has displaySeasonData will slice the data to exclude the last 2 seasons
-    // for rendering
-    const start = Math.max(0, (page - 1) * PAGE_SIZE - 1);
-    const end = Math.min(seasonsData?.data?.length, page * PAGE_SIZE + 1);
-    setSeasons(seasonsData?.data?.slice(start, end));
   }, [seasonsData?.data?.length, page, seasonsData?.isFetching]);
 
   useEffect(() => {
@@ -158,7 +151,7 @@ const SeasonsExplorer = () => {
       {isLoading ? (
         <FrameAnimator className="flex self-center" size={250} />
       ) : (
-        <SeasonsTable seasonsData={seasons} hiddenFields={hiddenFields} hideColumn={hideColumn} />
+        <SeasonsTable seasonsData={seasonsData?.data} page={page} hiddenFields={hiddenFields} hideColumn={hideColumn} />
       )}
       <div className="self-center w-[100vw] flex justify-center flex-row gap-x-2 bg-pinto-gray-1 border border-pinto-gray-2 h-[50px] fixed bottom-0 left-0 right-0 font-medium z-[1]">
         <div className="w-full min-w-0 2xl:max-w-[1550px] 3xl:max-w-[2560px] flex items-center gap-2 sm:px-12 px-8 3xl:px-4">
