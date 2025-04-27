@@ -36,7 +36,7 @@ const AnnouncementBannerContent = () => {
           target="_blank"
           className="pinto-sm text-pinto-green-4 cursor-pointer underline inline"
         >
-          Tractor is live!
+          Tractor is Live!
         </Link>
       </div>
     </div>
