@@ -37,7 +37,7 @@ const AnnouncementBannerContent = () => {
           target="_blank"
           className="pinto-sm text-pinto-green-4 cursor-pointer underline inline"
         >
-          Tractor is Live!
+          The Soil Orderbook, powered by Tractor, is live! 🚜
         </Link>
       </div>
     </div>
