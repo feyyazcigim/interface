@@ -146,7 +146,6 @@ function Field() {
   const isMobile = useIsMobile();
   const [tractorRefreshCounter, setTractorRefreshCounter] = useState(0);
   const [showSowOrder, setShowSowOrder] = useState(false);
-  const [shouldHideShowOrders, setShouldHideShowOrders] = useState(false);
 
   const { address, isConnecting } = useAccount();
 
