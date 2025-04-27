@@ -1,23 +1,21 @@
 import { TokenValue } from "@/classes/TokenValue";
-import { SeasonalChartData } from "@/components/charts/SeasonalChart";
+import { PODS, STALK } from "@/constants/internalTokens";
 import { subgraphs } from "@/constants/subgraph";
 import {
+  AdvancedChartBeanDocument,
+  AdvancedChartBeanQuery,
+  AdvancedChartBeanStalkDocument,
+  AdvancedChartBeanStalkQuery,
   Season,
-  SeasonsTableBeanDocument,
-  SeasonsTableBeanQuery,
-  SeasonsTableBeanStalkDocument,
-  SeasonsTableBeanStalkQuery,
 } from "@/generated/gql/graphql";
 import { PaginationSettings, paginateMultiQuerySubgraph, paginateSubgraph } from "@/utils/paginateSubgraph";
 import { Duration } from "luxon";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useChainId } from "wagmi";
 import useSeasonalQueries, {
-  ConvertEntryFn,
   SeasonalQueryVars,
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
-import { useSeason } from "./useSunData";
 import useTokenData from "./useTokenData";
 
 export interface SeasonsTableData {
@@ -44,36 +42,19 @@ export interface SeasonsTableData {
   twaDeltaB: TokenValue;
   twaPrice: TokenValue;
   deltaPodDemand: TokenValue;
+  crosses: number;
+  marketCap: number;
+  supply: TokenValue;
+  supplyInPegLP: TokenValue;
+  realRateOfReturn: TokenValue;
+  unharvestablePods: TokenValue;
+  harvestedPods: TokenValue;
+  numberOfSows: number;
+  numberOfSowers: number;
+  stalk: TokenValue;
 }
 
-/* Everything in here is related to the sorting effort
-
-const orderByValues = {
-  instPrice: 'beanHourlySnapshot__instPrice',
-  l2sr: 'beanHourlySnapshot__l2sr',
-  twaPrice: 'beanHourlySnapshot__twaPrice',
-  twaDeltaB: 'beanHourlySnapshot__twaDeltaB',
-  instDeltaB: 'beanHourlySnapshot__instDeltaB',
-}
-
-const stalkFieldHourlySnapshotsImplicitFilter = {
-  field: "0xd1a0d188e861ed9d15773a2f3574a2e94134ba8f"
-}
-
-const siloHourlySnapshotsImplicitFilter = {
-  silo: "0xd1a0d188e861ed9d15773a2f3574a2e94134ba8f"
-}
-
-const whereClauseValues = Object.entries(orderByValues).reduce ((acc, [key, value]) => {
-  const [subTable, field] = value.split('__')
-  acc[key] = [subTable, field]
-  return acc
-}, {} as Record<string, [string, string]>)
-console.info('whereClauseValues', whereClauseValues)
-
-*/
-
-const stalkPaginateSettings: PaginationSettings<Season, SeasonsTableBeanStalkQuery, "seasons", SeasonalQueryVars> = {
+const stalkPaginateSettings: PaginationSettings<Season, AdvancedChartBeanStalkQuery, "seasons", SeasonalQueryVars> = {
   primaryPropertyName: "seasons",
   idField: "id",
   nextVars: (value1000: Season, prevVars: SeasonalQueryVars) => {
@@ -86,7 +67,7 @@ const stalkPaginateSettings: PaginationSettings<Season, SeasonsTableBeanStalkQue
   },
 };
 
-const beanPaginateSettings: PaginationSettings<Season, SeasonsTableBeanQuery, "seasons", SeasonalQueryVars> = {
+const beanPaginateSettings: PaginationSettings<Season, AdvancedChartBeanQuery, "seasons", SeasonalQueryVars> = {
   primaryPropertyName: "seasons",
   idField: "id",
   nextVars: (value1000: Season, prevVars: SeasonalQueryVars) => {
@@ -100,21 +81,21 @@ const beanPaginateSettings: PaginationSettings<Season, SeasonsTableBeanQuery, "s
   orderBy: "desc",
 };
 
-export default function useSeasonsData(fromSeason: number, toSeason: number) {
+export default function useSeasonsDataChart(fromSeason: number, toSeason: number) {
   const chainId = useChainId();
   const tokenData = useTokenData();
 
   const stalkQueryFnFactory = (vars: SeasonalQueryVars) => async () => {
-    return await paginateMultiQuerySubgraph(
+    return paginateMultiQuerySubgraph(
       stalkPaginateSettings,
       subgraphs[chainId].beanstalk,
-      SeasonsTableBeanStalkDocument,
+      AdvancedChartBeanStalkDocument,
       vars,
     );
   };
 
   const beanQueryFnFactory = (vars: SeasonalQueryVars) => async () => {
-    return await paginateSubgraph(beanPaginateSettings, subgraphs[chainId].bean, SeasonsTableBeanDocument, vars);
+    return paginateSubgraph(beanPaginateSettings, subgraphs[chainId].bean, AdvancedChartBeanDocument, vars);
   };
 
   const useStalkQuery = useMultiSeasonalQueries("seasonsTableStalk", {
@@ -154,7 +135,7 @@ export default function useSeasonsData(fromSeason: number, toSeason: number) {
     const stalkResults = useStalkQuery?.data;
     const beanResults = (useBeanQuery?.data as any) || [];
     const { fieldHourlySnapshots, siloHourlySnapshots, seasons: stalkSeasons } = stalkResults || ({} as any);
-    const transformedData = beanResults.reduce((acc, season, idx) => {
+    const transformedData: SeasonsTableData[] = beanResults.reduce((acc: SeasonsTableData[], season, idx) => {
       const currFieldHourlySnapshots = fieldHourlySnapshots[idx];
       const currSiloHourlySnapshots = siloHourlySnapshots[idx];
       const currStalkSeasons = stalkSeasons[idx];
@@ -164,7 +145,6 @@ export default function useSeasonsData(fromSeason: number, toSeason: number) {
       acc.push({
         ...acc[season.beanHourlySnapshot.season.season],
         season: season.beanHourlySnapshot.season.season,
-        timestamp: Number(season.timestamp),
         caseId: Number(currFieldHourlySnapshots.caseId || 0),
         instDeltaB: TokenValue.fromHuman(season.beanHourlySnapshot.instDeltaB, tokenData.mainToken.decimals),
         instPrice: TokenValue.fromHuman(season.beanHourlySnapshot.instPrice, tokenData.mainToken.decimals),
@@ -190,10 +170,21 @@ export default function useSeasonsData(fromSeason: number, toSeason: number) {
         price: TokenValue.fromHuman(currStalkSeasons.price, 4),
         raining: currStalkSeasons.raining,
         rewardBeans: TokenValue.fromHuman(currStalkSeasons.rewardBeans, 2),
+        crosses: season.beanHourlySnapshot.crosses,
+        marketCap: Number(season.beanHourlySnapshot.marketCap),
+        supply: TokenValue.fromBlockchain(season.beanHourlySnapshot.supply, tokenData.mainToken.decimals),
+        supplyInPegLP: TokenValue.fromBlockchain(season.beanHourlySnapshot.supply, tokenData.mainToken.decimals),
         deltaPodDemand: TokenValue.fromBlockchain(currFieldHourlySnapshots.deltaPodDemand, 18),
+        realRateOfReturn: TokenValue.fromHuman(currFieldHourlySnapshots.realRateOfReturn || 0n, 18).mul(100),
+        unharvestablePods: TokenValue.fromBlockchain(currFieldHourlySnapshots.unharvestablePods || 0n, PODS.decimals),
+        harvestedPods: TokenValue.fromBlockchain(currFieldHourlySnapshots.harvestedPods || 0n, PODS.decimals),
+        numberOfSowers: currFieldHourlySnapshots.numberOfSowers,
+        numberOfSows: currFieldHourlySnapshots.numberOfSows,
+        stalk: TokenValue.fromBlockchain(currSiloHourlySnapshots.stalk || 0n, STALK.decimals),
+        timestamp: Number(season.beanHourlySnapshot.season.timestamp || 0),
       });
       return acc;
-    }, [] as any);
+    }, [] as SeasonsTableData[]);
     return transformedData;
   }, [useBeanQuery.data, useStalkQuery.data]);
 

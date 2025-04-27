@@ -1014,7 +1014,7 @@ export async function loadOrderbookData(
               publisherWithdrawalPlans[publisher].push(withdrawalPlan);
             }
           } catch (error) {
-            console.error("Failed to get updated withdrawal plan:", error);
+            // console.error("Failed to get updated withdrawal plan:", error);
             // If the error is "No beans available", set the plan to empty
             if (error instanceof Error && error.message?.includes("No beans available")) {
               console.debug("No beans available for this order, setting available PINTO to 0");
