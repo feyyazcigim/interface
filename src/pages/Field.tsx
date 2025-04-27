@@ -250,7 +250,7 @@ function Field() {
                 <div className="flex space-x-1">
                   <button
                     type="button"
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "activity" ? "text-pinto-secondary" : "text-pinto-gray-4"}`}
+                    className={`hidden sm:block pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "activity" ? "text-pinto-secondary" : "text-pinto-gray-4"}`}
                     onClick={() => {
                       setActiveTab("activity");
                       const params = new URLSearchParams(window.location.search);
@@ -262,7 +262,7 @@ function Field() {
                   </button>
                   <button
                     type="button"
-                    className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "tractor" ? "text-pinto-secondary" : "text-pinto-gray-4"}`}
+                    className={`hidden sm:block pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "tractor" ? "text-pinto-secondary" : "text-pinto-gray-4"}`}
                     onClick={() => {
                       setActiveTab("tractor");
                       const params = new URLSearchParams(window.location.search);
