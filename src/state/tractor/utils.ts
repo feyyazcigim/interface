@@ -24,10 +24,11 @@ export const tractorQueryKeys = {
     args.podIndex.toNumber(),
   ],
   sowOrdersCompleteEvents: (fromBlock: bigint) => [BASE_TRACTOR_QK, "sowOrderComplete", "events", fromBlock.toString()],
-  sowOrdersV0PublishedRequisitions: (fromBlock: bigint) => [
+  sowOrdersV0PublishedRequisitions: (fromBlock: bigint, address?: string) => [
     BASE_TRACTOR_QK,
     "sowOrdersV0",
     "publishedRequisitions",
     fromBlock.toString(),
+    address,
   ],
 } as const;

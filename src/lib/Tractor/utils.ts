@@ -836,8 +836,11 @@ export async function loadOrderbookData(
   publicClient: PublicClient | null,
   latestBlock?: { number: bigint; timestamp: bigint } | null,
   maxTemperature?: number,
+  filter?: string[],
 ): Promise<OrderbookEntry[]> {
   if (!protocolAddress || !publicClient) return [];
+
+  const filterSet = new Set(filter);
 
   try {
     // First, get the current pod line from the protocol
@@ -889,7 +892,10 @@ export async function loadOrderbookData(
 
     // Filter out cancelled and completed orders
     const activeRequisitions = requisitions.filter(
-      (req) => !req.isCancelled && !completedOrders.has(req.requisition.blueprintHash),
+      (req) => {
+        const hash = req.requisition.blueprintHash;
+        return !req.isCancelled && !completedOrders.has(hash) || filterSet?.has(hash);
+      },
     );
 
     console.debug(`Total requisitions: ${requisitions.length}, Active: ${activeRequisitions.length}`);
