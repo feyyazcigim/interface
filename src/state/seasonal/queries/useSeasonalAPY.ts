@@ -1,5 +1,4 @@
 import { API_SERVICES } from "@/constants/endpoints";
-import { PINTO } from "@/constants/tokens";
 import useSeasonsData from "@/state/useSeasonsData";
 import { SeasonalAPYChartData, UseSeasonalAPYResult } from "@/utils/types";
 import { useQuery } from "@tanstack/react-query";
@@ -21,14 +20,14 @@ type PintoVapyResponse = {
   };
 };
 
-const fetchApys = async (window: number, fromSeason: number, toSeason: number) => {
+const fetchApys = async (window: number, token: string, fromSeason: number, toSeason: number) => {
   const res = await fetch(`${API_SERVICES.pinto}/silo/yield-history`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      token: PINTO.address.toLowerCase(),
+      token: token.toLowerCase(),
       emaWindow: window,
       initType: "AVERAGE",
       fromSeason,
@@ -41,15 +40,15 @@ const fetchApys = async (window: number, fromSeason: number, toSeason: number) =
   return await res.json();
 };
 
-export function useSeasonalAPYs(fromSeason: number, toSeason: number): UseSeasonalAPYResult {
+export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: number): UseSeasonalAPYResult {
   // HistoricalAPY from Pinto API
   const apyDataQuery = useQuery({
-    queryKey: ["api", "vapy", "pinto", "raw", fromSeason, toSeason],
+    queryKey: ["api", "vapy", token, "raw", fromSeason, toSeason],
     queryFn: async (): Promise<PintoVapyResponse[]> => {
-      return await Promise.all(APY_EMA_WINDOWS.map((window) => fetchApys(window, fromSeason, toSeason)));
+      return await Promise.all(APY_EMA_WINDOWS.map((window) => fetchApys(window, token, fromSeason, toSeason)));
     },
     staleTime: Infinity,
-    enabled: fromSeason >= 0 && toSeason > 0,
+    enabled: !!token && fromSeason >= 0 && toSeason > 0,
   });
 
   // Get mapping of season to timestamp
@@ -69,7 +68,7 @@ export function useSeasonalAPYs(fromSeason: number, toSeason: number): UseSeason
   // Transformation is given its own query rather than using select, so it can activate only after
   // the seasonal timestamp mapping is also availabe.
   const transformQuery = useQuery({
-    queryKey: ["api", "vapy", "pinto", "transformed", fromSeason, toSeason],
+    queryKey: ["api", "vapy", token, "transformed", fromSeason, toSeason],
     queryFn: () => {
       if (!apyDataQuery.data) {
         throw new Error("Data not available");

@@ -9,6 +9,9 @@ import { SeasonalChartData, tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { APY_EMA_WINDOWS, APYWindow, useSeasonalAPYs } from "@/state/seasonal/queries/useSeasonalAPY";
 import { SeasonalAPYChartData } from "@/utils/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import IconImage from "../ui/IconImage";
+import useTokenData from "@/state/useTokenData";
 
 interface SeasonalAPYChartProps {
   season: number;
@@ -16,6 +19,7 @@ interface SeasonalAPYChartProps {
   className?: string;
 }
 
+// TODO(pp): need different color gradients for each line, also change the text display color to match
 const greenStrokeGradients = [
   metallicGreenStrokeGradientFn,
   metallicGreenStrokeGradientFn,
@@ -60,10 +64,16 @@ const valueTransform = {
 const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) => {
   const [allData, setAllData] = useState<SeasonalAPYChartData | null>(null);
   const [displayIndex, setDisplayIndex] = useState<number | null>(null);
+  const [selectedToken, setSelectedToken] = useState<string>("");
 
   const [timeTab, setTimeTab] = useState(TimeTab.Week);
-  const seasonalApy = useSeasonalAPYs(Math.max(0, season - tabToSeasonalLookback(timeTab)), season);
+  const seasonalApy = useSeasonalAPYs(selectedToken, Math.max(0, season - tabToSeasonalLookback(timeTab)), season);
   const apyData = seasonalApy.data;
+
+  const { mainToken, lpTokens } = useTokenData();
+  const apyTokens = useMemo(() => {
+    return [mainToken, ...lpTokens];
+  }, [mainToken, lpTokens]);
 
   useEffect(() => {
     if (apyData && !allData) {
@@ -72,8 +82,20 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
     }
   }, [apyData, allData]);
 
-  const handleChangeTab = useCallback((tab: TimeTab) => {
+  useEffect(() => {
+    if (apyTokens.length > 0 && !selectedToken) {
+      setSelectedToken(apyTokens[0].address);
+    }
+  }, [apyTokens, selectedToken]);
+
+  const handleChangeTimeTab = useCallback((tab: TimeTab) => {
     setTimeTab(tab);
+    setAllData(null);
+    setDisplayIndex(null);
+  }, []);
+
+  const handleChangeToken = useCallback((token: string) => {
+    setSelectedToken(token);
     setAllData(null);
     setDisplayIndex(null);
   }, []);
@@ -125,9 +147,27 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
       <div className="flex justify-between pt-4 px-4 sm:pt-6 sm:px-6">
         <div className="sm:pinto-body text-pinto-light sm:text-pinto-light pinto-sm-light font-thin pb-0.5">
-          Deposited Pinto vAPY
+          <div className="flex items-center gap-1">
+            <span>Deposited</span>
+            <Select value={selectedToken} onValueChange={handleChangeToken}>
+              <SelectTrigger className="w-auto bg-transparent focus:ring-0 focus:ring-offset-0 px-1.5 py-0 sm:pinto-body text-pinto-light sm:text-pinto-light pinto-sm-light">
+                <SelectValue placeholder="Select Token" />
+              </SelectTrigger>
+              <SelectContent>
+                {apyTokens.map((token) => (
+                  <SelectItem className="cursor-pointer" key={token.address} value={token.address} hideCheckmark>
+                    <div className="flex items-center gap-2">
+                      <IconImage src={token.logoURI ?? ""} size={6} />
+                      <span className="flex items-center leading-none mr-1">{token.symbol}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span>vAPY</span>
+          </div>
         </div>
-        <TimeTabsSelector tab={timeTab} setTab={handleChangeTab} />
+        <TimeTabsSelector tab={timeTab} setTab={handleChangeTimeTab} />
       </div>
 
       {!allData && (
