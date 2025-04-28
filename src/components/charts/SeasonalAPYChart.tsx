@@ -4,7 +4,6 @@ import { cn } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
 import LineChart, { CustomChartValueTransform, LineChartData } from "./LineChart";
-import { metallicGreenStrokeGradientFn } from "./chartHelpers";
 import { SeasonalChartData, tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { APY_EMA_WINDOWS, APYWindow, useSeasonalAPYs } from "@/state/seasonal/queries/useSeasonalAPY";
@@ -12,6 +11,7 @@ import { SeasonalAPYChartData } from "@/utils/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import IconImage from "../ui/IconImage";
 import useTokenData from "@/state/useTokenData";
+import { gradientFunctions } from "./chartHelpers";
 
 interface SeasonalAPYChartProps {
   season: number;
@@ -19,11 +19,10 @@ interface SeasonalAPYChartProps {
   className?: string;
 }
 
-// TODO(pp): need different color gradients for each line, also change the text display color to match
 const greenStrokeGradients = [
-  metallicGreenStrokeGradientFn,
-  metallicGreenStrokeGradientFn,
-  metallicGreenStrokeGradientFn,
+  gradientFunctions.metallicRed,
+  gradientFunctions.metallicBlue,
+  gradientFunctions.metallicGreen,
 ];
 
 // Custom transform to improve display around concentrated value ranges while still supporting outliers.
@@ -195,10 +194,18 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
       {allData && displayIndex !== null && (
         <>
           <div className="h-[85px] px-4 sm:px-6">
-            <div className="text-pinto-green-3 sm:text-pinto-green-3 pinto-body sm:pinto-h3">
-              30D: {f.percent2dFormatter(allData[APYWindow.MONTHLY][displayIndex].value)} | 7D:{" "}
-              {f.percent2dFormatter(allData[APYWindow.WEEKLY][displayIndex].value)} | 24H:{" "}
-              {f.percent2dFormatter(allData[APYWindow.DAILY][displayIndex].value)}
+            <div className="pinto-body sm:pinto-h3">
+              <span className="text-green-500">
+                30D: {f.percent2dFormatter(allData[APYWindow.MONTHLY][displayIndex].value)}
+              </span>{" "}
+              |{" "}
+              <span className="text-blue-500">
+                7D: {f.percent2dFormatter(allData[APYWindow.WEEKLY][displayIndex].value)}
+              </span>{" "}
+              |{" "}
+              <span className="text-red-500">
+                24H: {f.percent2dFormatter(allData[APYWindow.DAILY][displayIndex].value)}
+              </span>
             </div>
             <div className="flex flex-col gap-0 mt-2 sm:gap-2 sm:mt-3">
               <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">

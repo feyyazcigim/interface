@@ -5,11 +5,7 @@ import { cn } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
 import LineChart, { LineChartData } from "./LineChart";
-import {
-  metallicGreenStrokeGradientFn,
-  metallicMorningAreaGradientFn,
-  metallicMorningStrokeGradientFn,
-} from "./chartHelpers";
+import { gradientFunctions, metallicMorningAreaGradientFn, metallicMorningStrokeGradientFn } from "./chartHelpers";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 
 export const tabToSeasonalLookback = (tab: TimeTab): number => {
@@ -55,7 +51,7 @@ interface SeasonalChartProps {
 }
 
 const morningStrokeGradients = [metallicMorningStrokeGradientFn];
-const greenStrokeGradients = [metallicGreenStrokeGradientFn];
+const greenStrokeGradients = [gradientFunctions.metallicGreen];
 
 const areaGradients = [metallicMorningAreaGradientFn];
 
