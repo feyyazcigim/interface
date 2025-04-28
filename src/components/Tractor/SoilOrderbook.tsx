@@ -36,7 +36,7 @@ interface SoilOrderbookContentProps {
 
 // Shared logic for loading and displaying the orderbook data
 export function SoilOrderbookContent({
-  showZeroAvailable = true,
+  showZeroAvailable = false,
   sortBy = "temperature",
   showAboveCurrentTemp = true,
 }: SoilOrderbookContentProps) {
@@ -603,7 +603,7 @@ interface SoilOrderbookDialogProps {
 
 export function SoilOrderbookDialog({ open, onOpenChange }: SoilOrderbookDialogProps) {
   const [activeTab, setActiveTab] = useState<"view" | "execute">("view");
-  const [showZeroAvailable, setShowZeroAvailable] = useState(true);
+  const [showZeroAvailable, setShowZeroAvailable] = useState(false);
   const [sortBy, setSortBy] = useState<"temperature" | "tip">("temperature");
   const [showAboveCurrentTemp, setShowAboveCurrentTemp] = useState(true);
 
