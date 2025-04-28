@@ -12,7 +12,7 @@ export enum APYWindow {
 
 export const APY_EMA_WINDOWS = Object.values(APYWindow).filter((v) => typeof v === "number");
 
-type PintoVapyResponse = {
+type TokenAPYResponse = {
   [season: number]: {
     bean: number;
     stalk: number;
@@ -41,13 +41,14 @@ const fetchApys = async (window: number, token: string, fromSeason: number, toSe
 };
 
 export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: number): UseSeasonalAPYResult {
-  // HistoricalAPY from Pinto API
+  // Historical APY from Pinto API
   const apyDataQuery = useQuery({
     queryKey: ["api", "vapy", token, "raw", fromSeason, toSeason],
-    queryFn: async (): Promise<PintoVapyResponse[]> => {
+    queryFn: async (): Promise<TokenAPYResponse[]> => {
       return await Promise.all(APY_EMA_WINDOWS.map((window) => fetchApys(window, token, fromSeason, toSeason)));
     },
     staleTime: Infinity,
+    gcTime: 20 * 60 * 1000,
     enabled: !!token && fromSeason >= 0 && toSeason > 0,
   });
 
@@ -87,8 +88,9 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
       }
       return result as SeasonalAPYChartData;
     },
-    enabled: !!apyDataQuery.data && !!seasonToTimestamp,
     staleTime: Infinity,
+    gcTime: 20 * 60 * 1000,
+    enabled: !!apyDataQuery.data && !!seasonToTimestamp,
   });
 
   return {
