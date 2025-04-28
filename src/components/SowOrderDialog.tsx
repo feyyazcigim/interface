@@ -15,8 +15,8 @@ import { useSwapMany } from "@/hooks/swap/useSwap";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useTransaction from "@/hooks/useTransaction";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
-import { Blueprint } from "@/lib/Tractor/types";
-import { TokenStrategy, createSowTractorData, getAverageTipPaid } from "@/lib/Tractor/utils";
+import { Blueprint, SowOrderTokenStrategy } from "@/lib/Tractor/types";
+import { createSowTractorData, getAverageTipPaid } from "@/lib/Tractor/utils";
 import { generateBatchSortDepositsCallData, needsCombining } from "@/lib/claim/depositUtils";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePodLine, useTemperature } from "@/state/useFieldData";
@@ -410,18 +410,18 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
     // If no token has value, default to LOWEST_SEEDS
     if (!tokenWithHighestValue) {
-      return { type: "LOWEST_SEEDS" } as TokenStrategy;
+      return { type: "LOWEST_SEEDS" } as SowOrderTokenStrategy;
     }
 
     // Return the token with highest value
     return {
       type: tokenType,
       address: tokenWithHighestValue as `0x${string}`,
-    } as TokenStrategy;
+    } as SowOrderTokenStrategy;
   }, [farmerDeposits, whitelistedTokens, priceData.price, swapResults]);
 
   // Update the default token strategy
-  const [selectedTokenStrategy, setSelectedTokenStrategy] = useState<TokenStrategy>(tokenWithHighestValue);
+  const [selectedTokenStrategy, setSelectedTokenStrategy] = useState<SowOrderTokenStrategy>(tokenWithHighestValue);
 
   // Add state for the review dialog
   const [showReview, setShowReview] = useState(false);

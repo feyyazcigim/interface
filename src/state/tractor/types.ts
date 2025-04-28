@@ -1,52 +1,3 @@
-export type TractorOrderType = "SOW_V0";
-
-export interface TractorExecutionStats {
-  executionCount: number;
-  latestExecution: string | null;
-}
-
-interface RawTractorSowOrderBlueprint {
-  blueprintHash: string;
-  pintoSownCounter: string;
-  lastExecutedSeason: number;
-  orderComplete: boolean;
-  amountFunded: string;
-  cascadeAmountFunded: string;
-  sourceTokenIndices: string[];
-  totalAmountToSow: string;
-  minAmountToSowPerSeason: string;
-  maxAmountToSowPerSeason: string;
-  minTemp: string;
-  maxPodlineLength: string;
-  maxGrownStalkPerBdv: string;
-  runBlocksAfterSunrise: string;
-  slippageRatio: string;
-}
-
-interface RawTractorAPIOrder {
-  blueprintHash: string;
-  orderType: string;
-  publisher: string;
-  data: string;
-  operatorPasteInstrs: string[];
-  maxNonce: string;
-  startTime: string;
-  endTime: string;
-  signature: string;
-  publishedTimestamp: string;
-  publishedBlock: number;
-  beanTip: string;
-  cancelled: boolean;
-  blueprintData: RawTractorSowOrderBlueprint;
-  executionStats: TractorExecutionStats;
-}
-
-interface TractorOrdersAPIResponse {
-  lastUpdated: number;
-  orders: RawTractorAPIOrder[];
-  totalRecords: number;
-}
-
 const data = {
   lastUpdated: 29388631,
   orders: [
@@ -80,7 +31,7 @@ const data = {
         maxPodlineLength: "65874614870000",
         maxGrownStalkPerBdv: "10000000000000000000000",
         runBlocksAfterSunrise: "300",
-        slippageRatio: "1000000000000000000",
+        slippageRatio: "1_00000000_0000000000",
       },
       executionStats: {
         executionCount: 10,
@@ -117,7 +68,7 @@ const data = {
         maxPodlineLength: "36352644150000",
         maxGrownStalkPerBdv: "10000000000000000000000",
         runBlocksAfterSunrise: "300",
-        slippageRatio: "1000000000000000000",
+        slippageRatio: "1_00000000_0000000000",
       },
       executionStats: {
         executionCount: 0,

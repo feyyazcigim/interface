@@ -3,7 +3,7 @@ import { SOW_BLUEPRINT_V0_ADDRESS } from "@/constants/address";
 import { API_SERVICES } from "@/constants/endpoints";
 import { defaultQuerySettingsMedium } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { loadPublishedRequisitions, TRACTOR_DEPLOYMENT_BLOCK } from "@/lib/Tractor";
+import { TRACTOR_DEPLOYMENT_BLOCK, loadPublishedRequisitions } from "@/lib/Tractor";
 import { HashString } from "@/utils/types.generic";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -76,11 +76,10 @@ export const useTractorSowCompleteEvents = (fromBlock: bigint = TRACTOR_DEPLOYME
   });
 };
 
-
 const useTractorSowV0PublishedRequisitions = (
-  fromBlock: bigint = TRACTOR_DEPLOYMENT_BLOCK, 
+  fromBlock: bigint = TRACTOR_DEPLOYMENT_BLOCK,
   address?: string,
-  disabled?: boolean
+  disabled?: boolean,
 ) => {
   const diamond = useProtocolAddress();
   const client = usePublicClient();
@@ -95,13 +94,7 @@ const useTractorSowV0PublishedRequisitions = (
       const latestBlock = await client.getBlock();
       const latestBlockInfo = { number: latestBlock.number, timestamp: latestBlock.timestamp };
 
-      return loadPublishedRequisitions(
-        address,
-        diamond,
-        client,
-        latestBlockInfo,
-        "sowBlueprintv0"
-      );
+      return loadPublishedRequisitions(address, diamond, client, latestBlockInfo, "sowBlueprintv0");
     },
     enabled: !!client && !disabled,
     ...defaultQuerySettingsMedium,

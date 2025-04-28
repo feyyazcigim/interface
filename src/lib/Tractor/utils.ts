@@ -1,24 +1,120 @@
-import { TokenValue } from "@/classes/TokenValue";
+import { TV, TokenValue } from "@/classes/TokenValue";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 import { diamondABI } from "@/constants/abi/diamondABI";
-import { SOW_BLUEPRINT_V0_ADDRESS, SOW_BLUEPRINT_V0_SELECTOR, TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
-import { PINTO } from "@/constants/tokens";
-import { beanstalkAbi } from "@/generated/contractHooks";
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { FarmFromMode } from "@/utils/types";
+import { SOW_BLUEPRINT_V0_ADDRESS, TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
+import { API_SERVICES } from "@/constants/endpoints";
+import { PODS, STALK } from "@/constants/internalTokens";
 import {
-  Address,
-  SignableMessage,
-  decodeEventLog,
-  decodeFunctionData,
-  encodeAbiParameters,
-  encodeFunctionData,
-  keccak256,
-} from "viem";
+  MAIN_TOKEN,
+  PINTO_CBBTC_TOKEN,
+  PINTO_CBETH_TOKEN,
+  PINTO_USDC_TOKEN,
+  PINTO_WETH_TOKEN,
+  PINTO_WSOL_TOKEN,
+} from "@/constants/tokens";
+import { beanstalkAbi } from "@/generated/contractHooks";
+import { getChainConstant } from "@/hooks/useChainConstant";
+import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
+import { resolveChainId } from "@/utils/chain";
+import { FarmFromMode } from "@/utils/types";
+import { ChainLookup, HashString } from "@/utils/types.generic";
+import { SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
-import { type BaseError, useContractWrite } from "wagmi";
-import { Requisition } from "./types";
+import { base } from "viem/chains";
+import { Requisition, SowOrderTokenStrategy, TractorOrderType, TractorOrdersAPIResponse } from "./types";
+
+// =================================================================
+// ========================= API Calls =============================
+// =================================================================
+
+// Chain Map to of index to SowOrderTokenStrategy
+const INDEX_TO_SOW_ORDER_TOKEN_STRATEGY: ChainLookup<Record<string, SowOrderTokenStrategy>> = {
+  [base.id]: {
+    "0": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, MAIN_TOKEN).address },
+    "1": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, PINTO_WETH_TOKEN).address },
+    "2": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, PINTO_CBETH_TOKEN).address },
+    "3": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, PINTO_CBBTC_TOKEN).address },
+    "4": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, PINTO_USDC_TOKEN).address },
+    "5": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, PINTO_WSOL_TOKEN).address },
+    "254": { type: "LOWEST_PRICE" },
+    "255": { type: "LOWEST_SEEDS" },
+  },
+};
+
+const getTokenSowStrategySource = (indicies: string[], chainId: number = base.id): SowOrderTokenStrategy => {
+  if (chainId !== base.id) {
+    throw new Error(`[Tractor/getTokenSowStrategySource]: Invalid chainId: ${chainId}`);
+  }
+
+  if (indicies.length > 1) {
+    throw new Error(`[Tractor/getTokenSowStrategySource]: Multiple indicies not supported: ${indicies}`);
+  }
+
+  const strategy = INDEX_TO_SOW_ORDER_TOKEN_STRATEGY[resolveChainId(chainId)]?.[indicies[0]];
+  if (!strategy) {
+    throw new Error(`[Tractor/getTokenSowStrategySource]: Invalid index: ${indicies[0]}`);
+  }
+
+  return strategy;
+};
+
+export async function tractorAPIFetchOrders(chainId: number = base.id) {
+  const mainToken = getChainConstant(resolveChainId(chainId), MAIN_TOKEN);
+
+  try {
+    const promise = await fetch(API_SERVICES.pinto);
+    const data = (await promise.json()) as TractorOrdersAPIResponse<string, string, number, string[]>;
+
+    const parsed: TractorOrdersAPIResponse = {
+      lastUpdated: data.lastUpdated as unknown as number, // This value is already a number but cast as number to avoid type errors
+      totalRecords: data.totalRecords,
+      orders: data.orders.map(({ blueprintData: bp, executionStats: es, ...order }) => {
+        return {
+          blueprintHash: order.blueprintHash satisfies HashString,
+          orderType: order.orderType as TractorOrderType,
+          publisher: order.publisher satisfies HashString,
+          data: order.data satisfies HashString,
+          operatorPasteInstrs: order.operatorPasteInstrs satisfies HashString[],
+          maxNonce: order.maxNonce satisfies string,
+          startTime: new Date(order.startTime),
+          endTime: new Date(order.endTime),
+          signature: order.signature satisfies HashString,
+          publishedTimestamp: new Date(order.publishedTimestamp),
+          publishedBlock: order.publishedBlock,
+          beanTip: TV.fromBlockchain(order.beanTip, mainToken.decimals),
+          cancelled: order.cancelled,
+          executionStats: {
+            executionCount: es.executionCount,
+            latestExecution: es.latestExecution ? new Date(es.latestExecution) : null,
+          },
+          blueprintData: {
+            blueprintHash: bp.blueprintHash satisfies HashString,
+            pintoSownCounter: TV.fromBlockchain(bp.pintoSownCounter, mainToken.decimals),
+            lastExecutedSeason: bp.lastExecutedSeason satisfies number,
+            orderComplete: bp.orderComplete satisfies boolean,
+            amountFunded: TV.fromBlockchain(bp.amountFunded, mainToken.decimals),
+            cascadeAmountFunded: TV.fromBlockchain(bp.cascadeAmountFunded, mainToken.decimals),
+            sourceTokenIndices: getTokenSowStrategySource(bp.sourceTokenIndices, chainId),
+            totalAmountToSow: TV.fromBlockchain(bp.totalAmountToSow, mainToken.decimals),
+            minAmountToSowPerSeason: TV.fromBlockchain(bp.minAmountToSowPerSeason, mainToken.decimals),
+            maxAmountToSowPerSeason: TV.fromBlockchain(bp.maxAmountToSowPerSeason, mainToken.decimals),
+            minTemp: TV.fromBlockchain(bp.minTemp, TEMPERATURE_DECIMALS),
+            maxPodlineLength: TV.fromBlockchain(bp.maxPodlineLength, PODS.decimals),
+            maxGrownStalkPerBdv: TV.fromBlockchain(bp.maxGrownStalkPerBdv, STALK.decimals),
+            runBlocksAfterSunrise: Number(bp.runBlocksAfterSunrise),
+            slippageRatio: TV.fromBlockchain(bp.slippageRatio, 18),
+          },
+        };
+      }),
+    };
+
+    return parsed;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
 
 // Block number at which Tractor was deployed - use this as starting point for event queries
 export const TRACTOR_DEPLOYMENT_BLOCK = 28930876n;
@@ -44,12 +140,6 @@ export const TRACTOR_DEPLOYMENT_BLOCK = 28930876n;
 
   return combined as `0x${string}`;
 }*/
-
-// Add the TokenStrategy type
-export type TokenStrategy =
-  | { type: "LOWEST_SEEDS" }
-  | { type: "LOWEST_PRICE" }
-  | { type: "SPECIFIC_TOKEN"; address: `0x${string}` };
 
 // Add this helper function outside createSowTractorData
 async function getTokenIndex(publicClient: PublicClient, tokenAddress: `0x${string}`): Promise<number> {
@@ -88,7 +178,7 @@ export async function createSowTractorData({
   runBlocksAfterSunrise: string;
   operatorTip: string;
   whitelistedOperators: `0x${string}`[];
-  tokenStrategy: TokenStrategy;
+  tokenStrategy: SowOrderTokenStrategy;
   publicClient: PublicClient;
 }): Promise<{ data: `0x${string}`; operatorPasteInstrs: `0x${string}`[]; rawCall: `0x${string}` }> {
   // Add more detailed debug logs
@@ -891,12 +981,10 @@ export async function loadOrderbookData(
     );
 
     // Filter out cancelled and completed orders
-    const activeRequisitions = requisitions.filter(
-      (req) => {
-        const hash = req.requisition.blueprintHash;
-        return !req.isCancelled && !completedOrders.has(hash) || filterSet?.has(hash);
-      },
-    );
+    const activeRequisitions = requisitions.filter((req) => {
+      const hash = req.requisition.blueprintHash;
+      return (!req.isCancelled && !completedOrders.has(hash)) || filterSet?.has(hash);
+    });
 
     console.debug(`Total requisitions: ${requisitions.length}, Active: ${activeRequisitions.length}`);
 
