@@ -374,7 +374,9 @@ export function SoilOrderbookContent({
             // Sum max per season
             if (data.sowAmounts.maxAmountToSowPerSeasonAsString) {
               const maxPerSeason = TokenValue.fromHuman(data.sowAmounts.maxAmountToSowPerSeasonAsString, 6);
-              totalMaxPerSeason = totalMaxPerSeason.add(maxPerSeason);
+              // Use the lower of maxPerSeason or available Pinto
+              const effectiveMaxPerSeason = req.currentlySowable.lt(maxPerSeason) ? req.currentlySowable : maxPerSeason;
+              totalMaxPerSeason = totalMaxPerSeason.add(effectiveMaxPerSeason);
             }
           }
         }
@@ -465,7 +467,13 @@ export function SoilOrderbookContent({
           <div className="flex items-center gap-1 justify-end">
             <IconImage src={PINTO.logoURI} alt="PINTO" size={4} />
             {decodedData && decodedData.sowAmounts.maxAmountToSowPerSeasonAsString
-              ? formatter.number(TokenValue.fromHuman(decodedData.sowAmounts.maxAmountToSowPerSeasonAsString, 6))
+              ? (() => {
+                  const maxPerSeason = TokenValue.fromHuman(decodedData.sowAmounts.maxAmountToSowPerSeasonAsString, 6);
+                  const effectiveMaxPerSeason = req.currentlySowable.lt(maxPerSeason)
+                    ? req.currentlySowable
+                    : maxPerSeason;
+                  return formatter.number(effectiveMaxPerSeason);
+                })()
               : "Unknown"}
           </div>
         </TableCell>
