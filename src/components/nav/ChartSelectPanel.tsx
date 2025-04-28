@@ -117,8 +117,8 @@ const ChartSelectPanel = memo(() => {
                 <div
                   key={`chartSelectList${data.id}`}
                   className={cn(
-                    "flex flex-row items-center gap-3 my-0.5 justify-between hover:cursor-pointer hover:bg-pinto-gray-2/50 py-2 px-6 transition-colors",
-                    isSelected && "bg-pinto-gray-1",
+                    "flex flex-row items-center gap-3 my-0.5 justify-between hover:cursor-pointer hover:bg-pinto-gray-2/20 py-2 px-6 transition-colors",
+                    isSelected && "bg-pinto-gray-2/60",
                   )}
                   onClick={() => handleSelection(data.index)}
                 >
