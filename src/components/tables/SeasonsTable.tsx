@@ -87,6 +87,7 @@ export const SeasonsTable = ({ seasonsData, page, hiddenFields, hideColumn }: Se
     calculateHeight();
   }, [displaySeasonsData]);
 
+
   const RenderRow = React.memo(({ index, style }: ListChildComponentProps<SeasonsTableData>) => {
     const data = displaySeasonsData[index];
     const seasonsIndexOffset = (page - 1) * SEASON_TABLE_PAGE_SIZE + index;

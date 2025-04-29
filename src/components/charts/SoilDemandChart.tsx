@@ -105,6 +105,11 @@ export const SoilDemandChart = ({
     return data;
   }, [currentSeason.sunriseBlock, nextBlock, previousSeason.sunriseBlock]);
 
+  const onChartMouseOver = (index: number) => {
+    const elems = Object.values(mappedData).map(elem => elem[index])
+    console.info('Season ', currentSeason.season, elems[0]?.values?.[0], 'Season ', previousSeason.season, elems[1]?.values?.[0])
+  }
+
   return (
     <div className="w-[350px] lg:w-[600px] bg-white">
       <span>Demand for Soil is {descriptiveText}</span>
@@ -146,8 +151,9 @@ export const SoilDemandChart = ({
               xKey="interval"
               makeLineGradients={makeLineGradients}
               valueFormatter={formatter.pct}
+              onMouseOver={onChartMouseOver}
             />
-            <div className="absolute bg-morning-light opacity-50 left-[16px] w-[90px] h-[220px] top-[7px] " />
+            {/* <div className="absolute bg-morning-light opacity-50 left-[16px] w-[90px] h-[220px] top-[7px] " /> */}
           </>
         )}
       </div>

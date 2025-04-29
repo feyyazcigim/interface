@@ -227,20 +227,6 @@ const SoilDemandMultiLineChart = React.memo(
             ctx.save();
             ctx.setLineDash([4, 4]);
 
-            // Draw the vertical line at morningIndex
-            if (typeof activeIndex === "number") {
-              const morningDataPoint = chart.getDatasetMeta(0).data[activeIndex];
-              if (morningDataPoint) {
-                const { x } = morningDataPoint.getProps(["x"], true);
-                ctx.beginPath();
-                ctx.moveTo(x, chart.chartArea.top);
-                ctx.lineTo(x, chart.chartArea.bottom);
-                ctx.strokeStyle = "#D9AD0F"; // Use a different color for the morning line
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-              }
-            }
-
             // Draw the vertical line for the active element (hovered point)
             const activeElements = chart.getActiveElements();
             if (activeElements.length > 0) {
@@ -254,7 +240,7 @@ const SoilDemandMultiLineChart = React.memo(
                 ctx.beginPath();
                 ctx.moveTo(x, chart.chartArea.top);
                 ctx.lineTo(x, chart.chartArea.bottom);
-                ctx.strokeStyle = fillArea ? "#D9AD0F" : "#246645";
+                ctx.strokeStyle = 'black'
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
               }
@@ -352,10 +338,10 @@ const SoilDemandMultiLineChart = React.memo(
           if (!ctx) return;
 
           // Define the function to draw the selection point
-          const drawSelectionPoint = (x: number, y: number) => {
+          const drawSelectionPoint = (x: number, y: number, color: string) => {
             ctx.save();
-            ctx.fillStyle = fillArea ? "#D9AD0F" : "#246645";
-            ctx.strokeStyle = fillArea ? "#D9AD0F" : "#246645";
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
             ctx.lineWidth = 1;
 
             const rectWidth = 6;
@@ -402,24 +388,18 @@ const SoilDemandMultiLineChart = React.memo(
           // Draw selection point for the hovered data point
           const activeElements = chart.getActiveElements();
           if (activeElements.length > 0) {
-            const activeElement = activeElements[0];
-            const datasetIndex = activeElement.datasetIndex;
-            const index = activeElement.index;
-            const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];
+            activeElements.forEach((activeElement) => {
+              const datasetIndex = activeElement.datasetIndex;
+              const index = activeElement.index;
+              const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];
+              console.info("🚀 ~ dataPoint:", dataPoint)
 
-            if (dataPoint) {
-              const { x, y } = dataPoint.getProps(["x", "y"], true);
-              drawSelectionPoint(x, y);
-            }
-          }
-
-          // Draw selection point for the morningIndex
-          if (typeof activeIndex === "number") {
-            const dataPoint = chart.getDatasetMeta(0).data[activeIndex];
-            if (dataPoint) {
-              const { x, y } = dataPoint.getProps(["x", "y"], true);
-              drawSelectionPoint(x, y);
-            }
+              if (dataPoint) {
+                const { x, y } = dataPoint.getProps(["x", "y"], true);
+                const color = datasetIndex === 0 ? '#246645' : '#D9AD0F';
+                drawSelectionPoint(x, y, color);
+              }
+            });
           }
         },
       }),
