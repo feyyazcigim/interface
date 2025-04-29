@@ -30,7 +30,7 @@ type FieldSowEventsQueryResult = {
   latestBlock: MinimumViableBlock<bigint> | undefined;
 };
 
-export default function useFieldSowEventsQuery(options?: UseFieldSowEventsOptions) {
+export default function useFieldSowEvents(options?: UseFieldSowEventsOptions) {
   // Hooks
   const diamond = useProtocolAddress();
   const client = usePublicClient();
