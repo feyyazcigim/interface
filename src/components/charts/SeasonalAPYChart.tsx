@@ -150,12 +150,12 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
 
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
-      <div className="flex justify-between pt-4 px-4 sm:pt-6 sm:px-6">
+      <div className="flex justify-between mb-1 pt-4 px-4 sm:pt-6 sm:px-6">
         <div className="sm:pinto-body text-pinto-light sm:text-pinto-light pinto-sm-light font-thin pb-0.5">
           <div className="flex items-center gap-1">
             <span>Deposited</span>
             <Select value={selectedToken} onValueChange={handleChangeToken}>
-              <SelectTrigger className="w-auto bg-transparent focus:ring-0 focus:ring-offset-0 px-1.5 py-0 sm:pinto-body text-pinto-light sm:text-pinto-light pinto-sm-light">
+              <SelectTrigger className="rounded-full w-auto bg-transparent focus:ring-0 focus:ring-offset-0 mx-1 px-1.5 py-0 sm:pinto-body text-pinto-light sm:text-pinto-light pinto-sm-light">
                 <SelectValue placeholder="Select Token" />
               </SelectTrigger>
               <SelectContent>
@@ -208,12 +208,12 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
             <div className="pinto-body sm:pinto-h3">
               <span style={{ color: chartColors[0].lineColor }}>
                 30D: {f.percent2dFormatter(allData[APYWindow.MONTHLY][displayIndex].value)}
-              </span>{" "}
-              |{" "}
+              </span>
+              <span className="mx-3 text-pinto-gray-2">|</span>
               <span style={{ color: chartColors[1].lineColor }}>
                 7D: {f.percent2dFormatter(allData[APYWindow.WEEKLY][displayIndex].value)}
-              </span>{" "}
-              |{" "}
+              </span>
+              <span className="mx-3 text-pinto-gray-2">|</span>
               <span style={{ color: chartColors[2].lineColor }}>
                 24H: {f.percent2dFormatter(allData[APYWindow.DAILY][displayIndex].value)}
               </span>
