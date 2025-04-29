@@ -95,7 +95,7 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
 
   return {
     data: transformQuery.data ?? undefined,
-    isLoading: apyDataQuery.isLoading || transformQuery.isLoading,
+    isLoading: apyDataQuery.isLoading || !seasonToTimestamp || transformQuery.isLoading,
     isError: apyDataQuery.isError || transformQuery.isError,
   };
 }

@@ -29,35 +29,33 @@ const SiloExplorer = () => {
 
   return (
     <>
-      {/* TODO(pp): put this back */}
-      <div className="hidden">
-        {/* For debugging, cant double comment out with the comment in the middle */}
-        <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
-          <div className="w-full sm:w-1/2">
-            <SeasonalChart
-              title="Total Liquidity"
-              size="small"
-              fillArea
-              activeTab={liquidityTab}
-              onChangeTab={setLiquidityTab}
-              useSeasonalResult={liquidityData}
-              valueFormatter={f.price0dFormatter}
-              tickValueFormatter={f.largePriceFormatter}
-            />
-          </div>
-          <div className="w-full sm:w-1/2">
-            <SeasonalChart
-              title="Liquidity to Supply ratio"
-              size="small"
-              activeTab={l2srTab}
-              onChangeTab={setL2srTab}
-              useSeasonalResult={l2srData}
-              valueFormatter={f.percent2dFormatter}
-              tickValueFormatter={f.percent0dFormatter}
-            />
-          </div>
+      {/* For debugging, cant double comment out with the comment in the middle */}
+      <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
+        <div className="w-full sm:w-1/2">
+          <SeasonalChart
+            title="Total Liquidity"
+            size="small"
+            fillArea
+            activeTab={liquidityTab}
+            onChangeTab={setLiquidityTab}
+            useSeasonalResult={liquidityData}
+            valueFormatter={f.price0dFormatter}
+            tickValueFormatter={f.largePriceFormatter}
+          />
         </div>
-        {/* <SeasonalChart
+        <div className="w-full sm:w-1/2">
+          <SeasonalChart
+            title="Liquidity to Supply ratio"
+            size="small"
+            activeTab={l2srTab}
+            onChangeTab={setL2srTab}
+            useSeasonalResult={l2srData}
+            valueFormatter={f.percent2dFormatter}
+            tickValueFormatter={f.percent0dFormatter}
+          />
+        </div>
+      </div>
+      {/* <SeasonalChart
         title="Average Seeds per PDV"
         size="large"
         activeTab={avgSeedsTab}
@@ -66,31 +64,30 @@ const SiloExplorer = () => {
         valueFormatter={f.number6dFormatter}
         tickValueFormatter={f.number2dFormatter}
       /> */}
-        <div className="flex flex-col sm:flex-row w-full sm:space-x-8 mt-8">
-          <div className="w-full sm:w-1/2">
-            <SeasonalChart
-              title="Stalk Supply"
-              size="small"
-              fillArea
-              activeTab={stalkTab}
-              onChangeTab={setStalkTab}
-              useSeasonalResult={stalkData}
-              valueFormatter={f.number0dFormatter}
-              tickValueFormatter={f.largeNumberFormatter}
-            />
-          </div>
-          <div className="w-full sm:w-1/2">
-            <SeasonalChart
-              title="Total Deposited PDV"
-              size="small"
-              fillArea
-              activeTab={bdvTab}
-              onChangeTab={setBdvTab}
-              useSeasonalResult={bdvData}
-              valueFormatter={f.number0dFormatter}
-              tickValueFormatter={f.largeNumberFormatter}
-            />
-          </div>
+      <div className="flex flex-col sm:flex-row w-full sm:space-x-8 mt-8">
+        <div className="w-full sm:w-1/2">
+          <SeasonalChart
+            title="Stalk Supply"
+            size="small"
+            fillArea
+            activeTab={stalkTab}
+            onChangeTab={setStalkTab}
+            useSeasonalResult={stalkData}
+            valueFormatter={f.number0dFormatter}
+            tickValueFormatter={f.largeNumberFormatter}
+          />
+        </div>
+        <div className="w-full sm:w-1/2">
+          <SeasonalChart
+            title="Total Deposited PDV"
+            size="small"
+            fillArea
+            activeTab={bdvTab}
+            onChangeTab={setBdvTab}
+            useSeasonalResult={bdvData}
+            valueFormatter={f.number0dFormatter}
+            tickValueFormatter={f.largeNumberFormatter}
+          />
         </div>
       </div>
       <SeasonalAPYChart season={season} size="large" />

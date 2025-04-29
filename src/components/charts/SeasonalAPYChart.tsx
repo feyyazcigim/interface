@@ -97,6 +97,13 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
     setSelectedToken(token);
     setAllData(null);
     setDisplayIndex(null);
+
+    // The scroll position changes as a result of the state update + modal closing.
+    // This restores the scroll position afterwards.
+    const scrollPos = document.body.scrollTop;
+    requestAnimationFrame(() => {
+      document.body.scrollTop = scrollPos;
+    });
   }, []);
 
   const maxValue = useMemo(() => {
@@ -109,8 +116,6 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
 
   const chartData = useMemo<LineChartData[]>(() => {
     if (allData && maxValue !== undefined) {
-      // TODO(pp): handle potential desync in seasons? perhaps the useApy needs to have season as a key
-
       return APY_EMA_WINDOWS.reduce((acc, w) => {
         for (let i = 0; i < allData[w].length; i++) {
           acc[i] ??= {
@@ -169,7 +174,7 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
         <TimeTabsSelector tab={timeTab} setTab={handleChangeTimeTab} />
       </div>
 
-      {!allData && (
+      {(!allData || displayIndex === null) && (
         <>
           {/* Keep sizing the same as when there is data. Allows centering spinner/error vertically */}
           <div
