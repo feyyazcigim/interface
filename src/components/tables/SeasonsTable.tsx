@@ -178,7 +178,7 @@ export const SeasonsTable = ({ seasonsData, page, hiddenFields, hideColumn }: Se
         <SeasonsTableCell
           cellType={SeasonsTableCellType.TwoColumn}
           columnKey="deltaDemand"
-          value={caseIdToDescriptiveText(seasonsData[seasonsIndexOffset + 1].caseId, "soil_demand")}
+          value={caseIdToDescriptiveText(seasonsData[seasonsIndexOffset + 1]?.caseId, "soil_demand")}
           hiddenFields={hiddenFields}
           hoverContent={
             data.season > 5 && (

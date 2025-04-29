@@ -106,7 +106,7 @@ export const DeltaDemandChart = ({
   }, [currentSeason.sunriseBlock, nextBlock, previousSeason.sunriseBlock]);
 
   return (
-    <div className="w-[600px] bg-white">
+    <div className="w-[350px] lg:w-[600px] bg-white">
       <span>Demand for Soil is {descriptiveText}</span>
       <div className="flex text-sm mt-2 gap-1 items-center">
         <div className="rounded-full w-3 h-3 bg-pinto-green-4" />
