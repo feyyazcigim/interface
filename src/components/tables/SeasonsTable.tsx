@@ -72,7 +72,9 @@ export const SeasonsTable = ({ seasonsData, page, hiddenFields, hideColumn }: Se
 
   // Go back an additional 2000 blocks to make sure we pull events for the season preceding the final index
   // in the table. ex: seasons 1000-900 are shown, pull sow events for 899 to be able to show soil demand chart for 900
-  const sowEvents = useSowEventData(seasonsData[seasonsData.length - 1]?.sunriseBlock - 2000, currentBlockNumber);
+  const minBlock = Math.max(displaySeasonsData[displaySeasonsData.length - 1]?.sunriseBlock - 2000, 0)
+  const maxBlock = Math.min(displaySeasonsData[0]?.sunriseBlock + 2000, currentBlockNumber)
+  const sowEvents = useSowEventData(minBlock, maxBlock);
 
   useEffect(() => {
     window.addEventListener("resize", calculateHeight);
@@ -182,7 +184,7 @@ export const SeasonsTable = ({ seasonsData, page, hiddenFields, hideColumn }: Se
           value={caseIdToDescriptiveText(seasonsData[seasonsIndexOffset + 1]?.caseId, "soil_demand")}
           hiddenFields={hiddenFields}
           hoverContent={
-            data.season > 5 && (
+            data.season > 3 && (
               <DeltaDemandChart
                 currentSeason={data}
                 previousSeason={seasonsData[seasonsIndexOffset + 1]}
