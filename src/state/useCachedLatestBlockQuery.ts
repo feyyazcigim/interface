@@ -4,11 +4,13 @@ import { GetBlockReturnType } from "viem";
 import { usePublicClient } from "wagmi";
 import { queryKeys } from "./queryKeys";
 
-
-type UseLatestBlockQueryParameters = Omit<QueryObserverOptions<GetBlockReturnType | undefined>, "queryFn" | "queryKey"> & {
+type UseLatestBlockQueryParameters = Omit<
+  QueryObserverOptions<GetBlockReturnType | undefined>,
+  "queryFn" | "queryKey"
+> & {
   // if provided, use this key instead of the default
-  key?: string
-}
+  key?: string;
+};
 
 const DEFAULT_QUERY_KEY = ["CHAIN", "LATEST_BLOCK"] as const;
 

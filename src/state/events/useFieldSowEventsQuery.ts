@@ -1,29 +1,29 @@
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useQuery } from "@tanstack/react-query";
-import { usePublicClient } from "wagmi";
-import { queryKeys } from "@/state/queryKeys";
-import useCachedLatestBlockQuery from "@/state/useCachedLatestBlockQuery";
-import { diamondABI } from "@/constants/abi/diamondABI";
-import { Address, GetBlockReturnType, PublicClient } from "viem";
 import { TV } from "@/classes/TokenValue";
-import { formatter } from "@/utils/format";
-import { useHarvestableIndex } from "@/state/useFieldData";
-import { useSeason } from "@/state/useSunData";
-import { useCallback } from "react";
-import { FieldSowEventItem } from "./types";
+import { diamondABI } from "@/constants/abi/diamondABI";
 import { TIME_TO_BLOCKS } from "@/constants/blocks";
 import { PODS } from "@/constants/internalTokens";
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import { queryKeys } from "@/state/queryKeys";
+import useCachedLatestBlockQuery from "@/state/useCachedLatestBlockQuery";
+import { useHarvestableIndex } from "@/state/useFieldData";
+import { useSeason } from "@/state/useSunData";
+import { formatter } from "@/utils/format";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
+import { Address, GetBlockReturnType, PublicClient } from "viem";
+import { usePublicClient } from "wagmi";
+import { FieldSowEventItem } from "./types";
 
 interface UseFieldSowEventsOptions {
   amount?: number;
-  order?: "asc" | "desc"
-};
+  order?: "asc" | "desc";
+}
 
 export default function useFieldSowEventsQuery({ amount = 100, order = "desc" }: UseFieldSowEventsOptions) {
   // Hooks
   const diamond = useProtocolAddress();
   const client = usePublicClient();
-  
+
   // State
   const harvestableIndex = useHarvestableIndex();
   const season = useSeason();
@@ -33,19 +33,16 @@ export default function useFieldSowEventsQuery({ amount = 100, order = "desc" }:
   });
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: Only rerender when object properties that are not referentially equal change
-  const handleSelectFieldSowEvents = useCallback((data: Awaited<ReturnType<typeof getSowEvents>> | undefined) => {
-    if (!data || !latestBlock || season <= 0 || harvestableIndex.lte(0)) {
-      return;
-    }
+  const handleSelectFieldSowEvents = useCallback(
+    (data: Awaited<ReturnType<typeof getSowEvents>> | undefined) => {
+      if (!data || !latestBlock || season <= 0 || harvestableIndex.lte(0)) {
+        return;
+      }
 
-    return selectFieldSowEvents(
-      data,
-      latestBlock,
-      season,
-      harvestableIndex,
-      { amount, order }
-    );
-  }, [season, harvestableIndex.blockchainString, amount, order, latestBlock?.number]);
+      return selectFieldSowEvents(data, latestBlock, season, harvestableIndex, { amount, order });
+    },
+    [season, harvestableIndex.blockchainString, amount, order, latestBlock?.number],
+  );
 
   const query = useQuery({
     queryKey: queryKeys.events.fieldSowEvents(latestBlock),
@@ -54,7 +51,7 @@ export default function useFieldSowEventsQuery({ amount = 100, order = "desc" }:
       return getSowEvents(client, diamond, latestBlock);
     },
     select: handleSelectFieldSowEvents,
-    enabled: !!latestBlock
+    enabled: !!latestBlock,
   });
 
   const isLoading = query.isLoading || isLatestBlockLoading;
@@ -65,15 +62,14 @@ export default function useFieldSowEventsQuery({ amount = 100, order = "desc" }:
   };
 }
 
-
 // ────────────────────────────────────────────────────────────────────────────────
 // HELPER FUNCTIONS
 // ────────────────────────────────────────────────────────────────────────────────
 
 const getSowEvents = async (
-  pubclient: PublicClient, 
-  diamond: Address, 
-  block: { number: bigint; timestamp: bigint; }
+  pubclient: PublicClient,
+  diamond: Address,
+  block: { number: bigint; timestamp: bigint },
 ) => {
   const fromBlock = block.number > TIME_TO_BLOCKS.month ? block.number - TIME_TO_BLOCKS.month : 0n;
 
@@ -84,14 +80,14 @@ const getSowEvents = async (
     fromBlock: fromBlock,
     toBlock: "latest",
   });
-}
+};
 
 const selectFieldSowEvents = (
-  events: Awaited<ReturnType<typeof getSowEvents>> | undefined, 
+  events: Awaited<ReturnType<typeof getSowEvents>> | undefined,
   block: GetBlockReturnType | undefined,
   currentSeason: number,
   harvestableIndex: TV,
-  options: UseFieldSowEventsOptions
+  options: UseFieldSowEventsOptions,
 ) => {
   if (!events?.length || !block || currentSeason <= 0 || harvestableIndex.lte(0)) {
     return;
@@ -101,7 +97,7 @@ const selectFieldSowEvents = (
 
   const latestBlockNumber = Number(block.number);
   const latestBlockTimestamp = Number(block.timestamp);
-  
+
   const orderedEvents = order === "desc" ? [...events].reverse() : events;
   const limitedEvents = orderedEvents.slice(0, amount);
 
@@ -124,11 +120,7 @@ const selectFieldSowEvents = (
     const timestamp = latestBlockTimestamp - blockDiff * 2;
 
     // Estimate the actual season based on block number
-    const estimatedSeason = estimateSeasonFromBlock(
-      Number(blockNumber),
-      latestBlockNumber,
-      currentSeason,
-    );
+    const estimatedSeason = estimateSeasonFromBlock(Number(blockNumber), latestBlockNumber, currentSeason);
 
     // Convert the podIndex to a TokenValue
     const podIndexTV = TV.fromBlockchain(podIndex, PODS.decimals);
@@ -167,7 +159,7 @@ const selectFieldSowEvents = (
   }
 
   return items;
-}
+};
 
 /**
  * Estimates the season number for a transaction based on its block number

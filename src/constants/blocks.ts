@@ -14,5 +14,5 @@ export const TIME_TO_BLOCKS = {
   // 1 minute
   minute: 30n,
   // seconds per block
-  seconds: 2n
+  seconds: 2n,
 } as const;

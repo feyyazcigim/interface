@@ -1,5 +1,4 @@
 import { MinimumViableBlock } from "@/utils/types";
-import { QueryKey } from "@tanstack/react-query";
 
 // ────────────────────────────────────────────────────────────────────────────────
 // BASE QueryKey
@@ -33,15 +32,12 @@ const tractorQueryKeys = {
   ],
 } as const;
 
-
 // ────────────────────────────────────────────────────────────────────────────────
 // Events Query Keys
 // ────────────────────────────────────────────────────────────────────────────────
 
 const eventsQueryKeys = {
-  fieldSowEvents: (
-    args: MinimumViableBlock<bigint> | undefined
-  ) => [
+  fieldSowEvents: (args: MinimumViableBlock<bigint> | undefined) => [
     BASE_QKS.events,
     "fieldSowEvents",
     args?.number.toString() ?? "0",
@@ -54,7 +50,7 @@ const eventsQueryKeys = {
 // ────────────────────────────────────────────────────────────────────────────────
 
 const networkQueryKeys = {
-  latestBlock: (key: string = "default") => [BASE_QKS.network, "latestBlock", key] as const
+  latestBlock: (key: string = "default") => [BASE_QKS.network, "latestBlock", key] as const,
 } as const;
 
 // ────────────────────────────────────────────────────────────────────────────────

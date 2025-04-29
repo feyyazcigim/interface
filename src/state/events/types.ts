@@ -1,7 +1,7 @@
 import { TV } from "@/classes/TokenValue";
 
 // ────────────────────────────────────────────────────────────────────────────────
-// INTERFACE 
+// INTERFACE
 // ────────────────────────────────────────────────────────────────────────────────
 
 export type FieldActivityEventType = "sow" | "harvest" | "transfer" | "other";
