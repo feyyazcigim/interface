@@ -1,3 +1,4 @@
+import { chartColors } from "@/state/useChartSetupData";
 import { Chart, ChartOptions, Plugin, ScriptableScaleContext } from "chart.js";
 import { MutableRefObject } from "react";
 
@@ -73,6 +74,9 @@ export const gradientFunctions = {
   metallicGreen: strokeGradientFnFactory(metallicGreenStrokeColors),
   metallicRed: strokeGradientFnFactory(metallicRedStrokeColors),
   metallicBlue: strokeGradientFnFactory(metallicBlueStrokeColors),
+  solidGreen: strokeGradientFnFactory(Array.from({ length: 5 }).map((_) => chartColors[0].lineColor)),
+  solidBlue: strokeGradientFnFactory(Array.from({ length: 5 }).map((_) => chartColors[1].lineColor)),
+  solidRed: strokeGradientFnFactory(Array.from({ length: 5 }).map((_) => chartColors[2].lineColor)),
 };
 
 export function getStrokeGradientFunctions(

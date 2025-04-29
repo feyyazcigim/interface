@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import IconImage from "../ui/IconImage";
 import useTokenData from "@/state/useTokenData";
 import { gradientFunctions } from "./chartHelpers";
+import { chartColors } from "@/state/useChartSetupData";
 
 interface SeasonalAPYChartProps {
   season: number;
@@ -19,11 +20,7 @@ interface SeasonalAPYChartProps {
   className?: string;
 }
 
-const greenStrokeGradients = [
-  gradientFunctions.metallicRed,
-  gradientFunctions.metallicBlue,
-  gradientFunctions.metallicGreen,
-];
+const greenStrokeGradients = [gradientFunctions.solidRed, gradientFunctions.solidBlue, gradientFunctions.solidGreen];
 
 // Custom transform to improve display around concentrated value ranges while still supporting outliers.
 const transformValue = (v: number, max: number): number => {
@@ -163,7 +160,12 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
               </SelectTrigger>
               <SelectContent>
                 {apyTokens.map((token) => (
-                  <SelectItem className="cursor-pointer" key={token.address} value={token.address} hideCheckmark>
+                  <SelectItem
+                    className="cursor-pointer focus:bg-pinto-gray-2/60"
+                    key={token.address}
+                    value={token.address}
+                    hideCheckmark
+                  >
                     <div className="flex items-center gap-2">
                       <IconImage src={token.logoURI ?? ""} size={6} />
                       <span className="flex items-center leading-none mr-1">{token.symbol}</span>
@@ -204,15 +206,15 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
         <>
           <div className="h-[85px] px-4 sm:px-6">
             <div className="pinto-body sm:pinto-h3">
-              <span className="text-green-500">
+              <span style={{ color: chartColors[0].lineColor }}>
                 30D: {f.percent2dFormatter(allData[APYWindow.MONTHLY][displayIndex].value)}
               </span>{" "}
               |{" "}
-              <span className="text-blue-500">
+              <span style={{ color: chartColors[1].lineColor }}>
                 7D: {f.percent2dFormatter(allData[APYWindow.WEEKLY][displayIndex].value)}
               </span>{" "}
               |{" "}
-              <span className="text-red-500">
+              <span style={{ color: chartColors[2].lineColor }}>
                 24H: {f.percent2dFormatter(allData[APYWindow.DAILY][displayIndex].value)}
               </span>
             </div>
