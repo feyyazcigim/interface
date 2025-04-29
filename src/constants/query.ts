@@ -13,6 +13,7 @@ export const defaultQuerySettings = {
 
 export const defaultQuerySettingsMedium = {
   staleTime: FIVE_MINS,
+  refetchInterval: FIVE_MINS,
   refetchIntervalInBackground: false,
   refetchOnWindowFocus: true,
 };

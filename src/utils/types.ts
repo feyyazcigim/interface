@@ -354,3 +354,8 @@ export type FailableUseContractsResult<T> = (
 export type TypedAdvancedFarmCalls =
   | readonly never[]
   | (readonly { callData: `0x${string}`; clipboard: `0x${string}` }[] & readonly never[]);
+
+export interface MinimumViableBlock<T extends number | bigint = number> {
+  number: T;
+  timestamp: T;
+}
