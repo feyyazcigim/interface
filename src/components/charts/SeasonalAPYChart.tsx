@@ -65,7 +65,7 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
   const [displayIndex, setDisplayIndex] = useState<number | null>(null);
   const [selectedToken, setSelectedToken] = useState<string>("");
 
-  const [timeTab, setTimeTab] = useState(TimeTab.Week);
+  const [timeTab, setTimeTab] = useState(TimeTab.AllTime);
   const seasonalApy = useSeasonalAPYs(selectedToken, Math.max(0, season - tabToSeasonalLookback(timeTab)), season);
   const apyData = seasonalApy.data;
 
@@ -76,8 +76,12 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
 
   useEffect(() => {
     if (apyData && !allData) {
-      setAllData(apyData);
-      setDisplayIndex(apyData[APYWindow.MONTHLY].length - 1);
+      const sortedData = Object.keys(apyData).reduce((acc, w) => {
+        acc[w] = apyData[w].sort((a: SeasonalChartData, b: SeasonalChartData) => a.season - b.season);
+        return acc;
+      }, {} as SeasonalAPYChartData);
+      setAllData(sortedData);
+      setDisplayIndex(sortedData[APYWindow.MONTHLY].length - 1);
     }
   }, [apyData, allData]);
 
