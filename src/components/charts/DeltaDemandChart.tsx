@@ -26,7 +26,12 @@ export interface SowEventTimings {
 
 const makeLineGradients = [metallicGreenStrokeGradientFn];
 
-export const DeltaDemandChart = ({ currentSeason, nextBlock, previousSeason, filteredSowEvents }: DeltaDemandChartProps) => {
+export const DeltaDemandChart = ({
+  currentSeason,
+  nextBlock,
+  previousSeason,
+  filteredSowEvents,
+}: DeltaDemandChartProps) => {
   if (!nextBlock || !previousSeason) {
     return null;
   }
@@ -124,14 +129,10 @@ export const DeltaDemandChart = ({ currentSeason, nextBlock, previousSeason, fil
         <span>-</span>
         <span className="text-pinto-gray-4">Amount Sown:</span>
         <span>
-          {previousSeason.deltaSownBeans.toNumber().toFixed(2)}/
-          {previousSeason.issuedSoil.toNumber().toFixed(2) || 0.0}
+          {previousSeason.deltaSownBeans.toNumber().toFixed(2)}/{previousSeason.issuedSoil.toNumber().toFixed(2) || 0.0}
         </span>
         <span className="text-pinto-gray-4">
-          (
-          {(
-            (previousSeason.deltaSownBeans.toNumber() / previousSeason.issuedSoil.toNumber()) * 100 || 0
-          ).toFixed(2)}
+          ({((previousSeason.deltaSownBeans.toNumber() / previousSeason.issuedSoil.toNumber()) * 100 || 0).toFixed(2)}
           %)
         </span>
       </div>
@@ -166,13 +167,11 @@ export const DeltaDemandChart = ({ currentSeason, nextBlock, previousSeason, fil
         )}
         {previousSeason.blocksToSoldOutSoil === "-" ? (
           <span className="text-base text-pinto-gray-4">
-            Amount of Soil Sown in {previousSeason.season}:{" "}
-            {previousSeason.deltaSownBeans.toNumber().toFixed(2)}
+            Amount of Soil Sown in {previousSeason.season}: {previousSeason.deltaSownBeans.toNumber().toFixed(2)}
           </span>
         ) : (
           <span className="text-base text-pinto-gray-4">
-            Soil - {previousSeason.issuedSoil.toNumber().toFixed(2)} Sown in Season{" "}
-            {previousSeason.season}: XX:
+            Soil - {previousSeason.issuedSoil.toNumber().toFixed(2)} Sown in Season {previousSeason.season}: XX:
             {previousSeason.blocksToSoldOutSoil}
           </span>
         )}

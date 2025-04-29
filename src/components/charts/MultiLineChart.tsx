@@ -159,16 +159,18 @@ const MultiLineChart = React.memo(
         });
         return {
           labels: labels,
-          datasets: Object.values(data).reverse().map((datum, idx: number) => {
-            return {
-              data: datum.map((d) => d.values[0]),
-              borderColor: idx === 0 ? "#387F5C" : "#FDE394",
-              borderWidth: 1.5,
-              // Hide default points, custom are implemented in afterDraw plugin
-              pointRadius: 0,
-              pointHoverRadius: 0,
-            };
-          }),
+          datasets: Object.values(data)
+            .reverse()
+            .map((datum, idx: number) => {
+              return {
+                data: datum.map((d) => d.values[0]),
+                borderColor: idx === 0 ? "#387F5C" : "#FDE394",
+                borderWidth: 1.5,
+                // Hide default points, custom are implemented in afterDraw plugin
+                pointRadius: 0,
+                pointHoverRadius: 0,
+              };
+            }),
         };
       },
       [data, makeLineGradients, makeAreaGradients, xKey],
@@ -535,7 +537,7 @@ const MultiLineChart = React.memo(
               padding: 0,
               maxTicksLimit: 2,
               callback: (value) => {
-                return `${value}%`
+                return `${value}%`;
               },
             },
           },
