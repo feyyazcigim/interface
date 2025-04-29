@@ -16,8 +16,9 @@ import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useTransaction from "@/hooks/useTransaction";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
 import { Blueprint, SowOrderTokenStrategy } from "@/lib/Tractor/types";
-import { createSowTractorData, getAverageTipPaid } from "@/lib/Tractor/utils";
+import { createSowTractorData } from "@/lib/Tractor/utils";
 import { generateBatchSortDepositsCallData, needsCombining } from "@/lib/claim/depositUtils";
+import useTractorOperatorAverageTipPaid from "@/state/tractor/useTractorOperatorAverageTipPaid";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePodLine, useTemperature } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
@@ -31,7 +32,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { PublicClient, encodeFunctionData } from "viem";
+import { encodeFunctionData } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { Col, Row } from "./Container";
 import TooltipSimple from "./TooltipSimple";
@@ -309,7 +310,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     "average",
   );
   const temperatureInputRef = useRef<HTMLInputElement>(null);
-  const [averageTipValue, setAverageTipValue] = useState<number>(1);
 
   // Add these new declarations for combine and sort functionality
   const [sortingAllTokens, setSortingAllTokens] = useState(false);
@@ -427,20 +427,18 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const [showReview, setShowReview] = useState(false);
 
   // Load average tip value on component mount
-  useEffect(() => {
-    const fetchAverageTip = async () => {
-      try {
-        const avgTip = await getAverageTipPaid(publicClient as PublicClient);
-        setAverageTipValue(avgTip);
-        // Set the initial operator tip to the average tip value
-        setOperatorTip(avgTip.toFixed(2));
-      } catch (error) {
-        console.error("Error fetching average tip value:", error);
-      }
-    };
+  const [didInitOperatorTip, setDidInitOperatorTip] = useState(false);
+  const { data: averageTipValue = 1 } = useTractorOperatorAverageTipPaid();
 
-    fetchAverageTip();
-  }, [publicClient]);
+  // Only set the initial operator tip to the average tip value
+  useEffect(() => {
+    if (!didInitOperatorTip) {
+      // Only set the initial operator tip to the average tip value
+      console.log("averageTipValue", averageTipValue);
+      setOperatorTip(averageTipValue.toFixed(2));
+      setDidInitOperatorTip(true);
+    }
+  }, [averageTipValue, didInitOperatorTip]);
 
   // Update operatorTip if averageTipValue changes and the active button is "average"
   useEffect(() => {

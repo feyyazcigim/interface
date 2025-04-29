@@ -6,15 +6,13 @@ import { SoilOrderbookDialog } from "@/components/Tractor/SoilOrderbook";
 import { Button } from "@/components/ui/Button";
 import IconImage from "@/components/ui/IconImage";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { diamondABI } from "@/constants/abi/diamondABI";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
-import { useTractorSowCompleteEvents } from "@/state/tractor/useTractorSowOrders";
-import { useHarvestableIndex } from "@/state/useFieldData";
+import useFieldSowEventsQuery from "@/state/events/useFieldSowEventsQuery";
+import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
 import { useTemperature } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
-import { formatter } from "@/utils/format";
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { usePublicClient } from "wagmi";
 
 interface FieldActivityItem {
@@ -60,26 +58,16 @@ const estimateSeasonFromBlock = (
 const FieldActivity = () => {
   const publicClient = usePublicClient();
   const protocolAddress = useProtocolAddress();
-  const [loading, setLoading] = React.useState(true);
-  const [activities, setActivities] = React.useState<FieldActivityItem[]>([]);
   const [tractorOrders, setTractorOrders] = React.useState<OrderbookEntry[]>([]);
   const [loadingTractorOrders, setLoadingTractorOrders] = React.useState(true);
   const currentSeason = useSeason();
   const currentTemperature = useTemperature();
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
-  const harvestableIndex = useHarvestableIndex();
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
 
-  // Add a ref to store initial block data that won't trigger re-renders
-  const initialBlockDataRef = useRef<{
-    latestBlockNumber: number | null;
-    latestBlockTimestamp: number | null;
-  }>({
-    latestBlockNumber: null,
-    latestBlockTimestamp: null,
-  });
+  // const qs = useTractorSowCompleteEvents();
 
-  const qs = useTractorSowCompleteEvents();
+  const d = useTractorSowOrderbook();
 
   // Fetch tractor orders
   React.useEffect(() => {
@@ -130,128 +118,10 @@ const FieldActivity = () => {
       }
     };
 
-    fetchTractorOrders();
+    // fetchTractorOrders();
   }, [publicClient, protocolAddress]);
 
-  React.useEffect(() => {
-    const fetchSowEvents = async () => {
-      if (!publicClient || !protocolAddress) return;
-
-      try {
-        setLoading(true);
-
-        // Get the current block number and timestamp
-        const latestBlock = await publicClient.getBlock();
-        const latestBlockNumber = Number(latestBlock.number);
-        const latestBlockTimestamp = Number(latestBlock.timestamp);
-
-        // Store the initial block data in the ref if not already set
-        if (initialBlockDataRef.current.latestBlockNumber === null) {
-          initialBlockDataRef.current = {
-            latestBlockNumber,
-            latestBlockTimestamp,
-          };
-        }
-
-        // Use the stored initial values for all calculations
-        const storedBlockNumber = initialBlockDataRef.current.latestBlockNumber || latestBlockNumber;
-        const storedBlockTimestamp = initialBlockDataRef.current.latestBlockTimestamp || latestBlockTimestamp;
-
-        // Calculate a fromBlock value for 30 days worth of blocks on Base
-        // Base has a 2-second block time
-        // 30 days = 30 * 24 * 60 * 60 = 2,592,000 seconds
-        // At 2 seconds per block: 2,592,000 / 2 = 1,296,000 blocks
-        const lookbackBlocks = 1_296_000n;
-        const fromBlock = latestBlock.number > lookbackBlocks ? latestBlock.number - lookbackBlocks : 0n;
-
-        // Fetch the most recent sow events
-        const sowEvents = await publicClient.getContractEvents({
-          address: protocolAddress,
-          abi: diamondABI,
-          eventName: "Sow", // Use the correct event name for sow events
-          fromBlock,
-          toBlock: "latest",
-        });
-
-        // Blockchain events typically come in chronological order (oldest first)
-        // Reverse the array to get newest first
-        const reversedEvents = [...sowEvents].reverse();
-
-        // Limit to 100 events
-        const limitedEvents = reversedEvents.slice(0, 100);
-
-        // Process events one-at-a-time to ensure order-dependent calculations
-        const activityItems: FieldActivityItem[] = [];
-
-        for (let index = 0; index < limitedEvents.length; index++) {
-          const event = limitedEvents[index];
-          const { args, blockNumber, transactionHash } = event;
-
-          // From the ABI, Sow event has: account, fieldId, index, beans, pods
-          const account = args.account || "0x0000000000000000000000000000000000000000";
-          const fieldId = args.fieldId || BigInt(0);
-          const podIndex = args.index || BigInt(0);
-          const beans = args.beans || BigInt(0); // PINTO amount in beans
-          const pods = args.pods || BigInt(0);
-
-          // Calculate timestamp using block number difference and 2-second block time
-          // Base has 2 second blocks
-          const blockDiff = storedBlockNumber - Number(blockNumber);
-          const timestamp = storedBlockTimestamp - blockDiff * 2;
-
-          // Estimate the actual season based on block number
-          const estimatedSeason = estimateSeasonFromBlock(
-            Number(blockNumber),
-            storedBlockNumber,
-            Number(currentSeason),
-          );
-
-          // Convert the podIndex to a TokenValue
-          const podIndexTV = TokenValue.fromBlockchain(podIndex, 6);
-
-          // Get the harvestable index for calculating the place in line
-          const harvestableIndexValue = harvestableIndex || TokenValue.ZERO;
-
-          // Calculate the actual place in line by subtracting the harvestable index
-          const actualPlaceInLine = podIndexTV.sub(harvestableIndexValue);
-
-          // Format the place in line for display
-          const placeInLine = formatter.number(Math.max(0, Number(actualPlaceInLine.toHuman())));
-
-          // Calculate temperature from the ratio of pods to beans
-          // This represents the bonus percentage (pods/beans - 100%)
-          const beanAmount = TokenValue.fromBlockchain(beans.toString(), 6);
-          const podAmount = TokenValue.fromBlockchain(pods.toString(), 6);
-          const rawTemperature = beanAmount.gt(0) ? Math.round(podAmount.div(beanAmount).mul(100).toNumber()) : 0;
-
-          // Subtract 100% to get the bonus percentage
-          const temperature = Math.max(0, rawTemperature - 100);
-
-          // Add to activity items in sequence
-          activityItems.push({
-            id: `${transactionHash}-${index}`,
-            timestamp,
-            season: estimatedSeason,
-            type: "sow",
-            amount: beanAmount,
-            pods: podAmount,
-            temperature, // Calculated temperature percentage
-            placeInLine,
-            address: account as string,
-            txHash: transactionHash,
-          });
-        }
-
-        setActivities(activityItems);
-      } catch (error) {
-        console.error("Error fetching sow events:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSowEvents();
-  }, [publicClient, protocolAddress, currentSeason, harvestableIndex, currentTemperature.max.blockchainString]);
+  const { data: activities = [], isLoading: isActivitiesLoading } = useFieldSowEventsQuery();
 
   const ordersWithSowableAmount = useMemo(
     () => tractorOrders.filter((order) => order.amountSowableNextSeason.gt(0)),
@@ -259,7 +129,7 @@ const FieldActivity = () => {
   );
 
   // Render a loading skeleton for the entire table
-  if (loading && loadingTractorOrders) {
+  if (isActivitiesLoading && loadingTractorOrders) {
     return <FieldActivitySkeleton />;
   }
 
