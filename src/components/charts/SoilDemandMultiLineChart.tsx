@@ -392,7 +392,6 @@ const SoilDemandMultiLineChart = React.memo(
               const datasetIndex = activeElement.datasetIndex;
               const index = activeElement.index;
               const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];
-              console.info("🚀 ~ dataPoint:", dataPoint)
 
               if (dataPoint) {
                 const { x, y } = dataPoint.getProps(["x", "y"], true);
