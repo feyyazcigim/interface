@@ -8,7 +8,7 @@ import { LineChartData } from "./LineChart";
 import { metallicGreenStrokeGradientFn } from "./chartHelpers";
 import SoilDemandMultiLineChart from "./SoilDemandMultiLineChart";
 
-interface DeltaDemandChartProps {
+interface SoilDemandChartProps {
   currentSeason: SeasonsTableData;
   previousSeason: SeasonsTableData;
   nextBlock: number;
@@ -26,12 +26,12 @@ export interface SowEventTimings {
 
 const makeLineGradients = [metallicGreenStrokeGradientFn];
 
-export const DeltaDemandChart = ({
+export const SoilDemandChart = ({
   currentSeason,
   nextBlock,
   previousSeason,
   filteredSowEvents,
-}: DeltaDemandChartProps) => {
+}: SoilDemandChartProps) => {
   if (!nextBlock || !previousSeason) {
     return null;
   }

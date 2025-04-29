@@ -10,7 +10,7 @@ import { DateTime } from "luxon";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ListChildComponentProps, VariableSizeList, areEqual } from "react-window";
 import { useBlockNumber } from "wagmi";
-import { DeltaDemandChart } from "../charts/DeltaDemandChart";
+import { SoilDemandChart } from "../charts/SoilDemandChart";
 import { SeasonsTableCell, SeasonsTableCellType } from "./SeasonsTableCell";
 
 interface SeasonsTableProps {
@@ -185,7 +185,7 @@ export const SeasonsTable = ({ seasonsData, page, hiddenFields, hideColumn }: Se
           hiddenFields={hiddenFields}
           hoverContent={
             data.season > 3 && (
-              <DeltaDemandChart
+              <SoilDemandChart
                 currentSeason={data}
                 previousSeason={seasonsData[seasonsIndexOffset + 1]}
                 nextBlock={seasonsData[seasonsIndexOffset - 1]?.sunriseBlock || currentBlockNumber}
