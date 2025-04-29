@@ -38,7 +38,7 @@ export type SowOrderTokenStrategy =
 
 export type TractorSowOrderType = "SOW_V0";
 
-export type TractorOrderType = TractorSowOrderType;
+export type TractorAPIOrderType = TractorSowOrderType;
 
 export interface TractorAPIResponseExecution<Time extends string | number | Date = Date> {
   executionCount: number;
@@ -74,7 +74,7 @@ export interface TractorAPIResponseOrder<
   TokenStrategy extends string[] | SowOrderTokenStrategy = SowOrderTokenStrategy,
 > {
   blueprintHash: HashString;
-  orderType: TractorOrderType;
+  orderType: TractorAPIOrderType;
   publisher: HashString;
   data: HashString;
   operatorPasteInstrs: HashString[];

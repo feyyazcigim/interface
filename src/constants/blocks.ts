@@ -5,6 +5,8 @@
 export const TIME_TO_BLOCKS = {
   // 30 days
   month: 1_296_000n,
+  // 14 days
+  fortnight: 604_800n,
   // 7 days
   week: 302_400n,
   // 1 day

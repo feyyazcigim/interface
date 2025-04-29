@@ -14,22 +14,37 @@ const BASE_QKS = {
 // TRACTOR Query Keys
 // ────────────────────────────────────────────────────────────────────────────────
 
+const getLatestBlockKeyFragment = (args: MinimumViableBlock<bigint> | undefined) => [
+  args?.number.toString() ?? "no-block-number",
+  args?.timestamp.toString() ?? "no-timestamp",
+];
+
 const tractorQueryKeys = {
   // Sow Orders V0 api cal
   sowOrdersV0: () => [BASE_QKS.tractor, "sowOrdersV0", "api"],
   sowOrdersV0Chain: (args: {
     lookbackBlocks: bigint | undefined;
     lastUpdated: number | undefined;
-    blockInfo: { number: bigint; timestamp: bigint };
+    blockInfo: MinimumViableBlock<bigint> | undefined;
   }) => [
     BASE_QKS.tractor,
     "sowOrdersV0",
     "chain",
     args.lastUpdated?.toString() ?? "no-last-updated",
-    args.lookbackBlocks?.toString() ?? "no-lookback",
-    args.blockInfo.number,
-    args.blockInfo.timestamp.toString(),
+    args.lookbackBlocks?.toString() ?? "0",
+    ...getLatestBlockKeyFragment(args.blockInfo),
   ],
+  operatorAverageTipPaid: (lookbackBlocks?: bigint) => [
+    BASE_QKS.tractor,
+    "operatorAverageTipPaid",
+    lookbackBlocks?.toString() ?? "0",
+  ],
+  publishedRequisitions: (latestBlock: MinimumViableBlock<bigint> | undefined) => [
+    BASE_QKS.tractor,
+    "publishedRequisitions",
+    ...getLatestBlockKeyFragment(latestBlock),
+  ],
+  tractorEvents: [BASE_QKS.tractor, "events", "requisitions-and-cancelled-blueprints"],
 } as const;
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -37,12 +52,7 @@ const tractorQueryKeys = {
 // ────────────────────────────────────────────────────────────────────────────────
 
 const eventsQueryKeys = {
-  fieldSowEvents: (args: MinimumViableBlock<bigint> | undefined) => [
-    BASE_QKS.events,
-    "fieldSowEvents",
-    args?.number.toString() ?? "0",
-    args?.timestamp.toString() ?? "0",
-  ],
+  fieldSowEvents: [BASE_QKS.events, "fieldSowEvents"] as const,
 } as const;
 
 // ────────────────────────────────────────────────────────────────────────────────
