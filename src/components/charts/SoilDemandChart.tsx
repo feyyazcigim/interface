@@ -147,7 +147,7 @@ export const SoilDemandChart = ({
               makeLineGradients={makeLineGradients}
               valueFormatter={formatter.pct}
             />
-            {/* <div className="absolute bg-morning-light opacity-50 left-[16px] w-[90px] h-[220px] top-[7px] " /> */}
+            {/* <div className="z-index-0 absolute bg-morning-light opacity-50 left-[16px] w-[90px] h-[220px] top-[7px] " /> */}
           </>
         )}
       </div>

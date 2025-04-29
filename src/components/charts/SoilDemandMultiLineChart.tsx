@@ -426,7 +426,11 @@ const SoilDemandMultiLineChart = React.memo(
               label: function (context) {
                 return `${context.formattedValue}%`
               }
-            }
+            },
+            xAlign: 'right',
+            yAlign: 'center',
+            showColors: true,
+
           },
           legend: {
             display: false,
