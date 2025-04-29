@@ -2,15 +2,16 @@ import { TV } from "@/classes/TokenValue";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { TIME_TO_BLOCKS } from "@/constants/blocks";
 import { PODS } from "@/constants/internalTokens";
+import { defaultQuerySettingsMedium } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { queryKeys } from "@/state/queryKeys";
-import useCachedLatestBlockQuery from "@/state/useCachedLatestBlockQuery";
 import { useHarvestableIndex } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
+import { MinimumViableBlock } from "@/utils/types";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { Address, GetBlockReturnType, PublicClient } from "viem";
+import { Address, PublicClient } from "viem";
 import { usePublicClient } from "wagmi";
 import { FieldSowEventItem } from "./types";
 
@@ -23,6 +24,11 @@ const DEFAULT_OPTIONS: UseFieldSowEventsOptions = {
   amount: 100,
   order: "desc",
 } as const;
+
+type FieldSowEventsQueryResult = {
+  data: Awaited<ReturnType<typeof getSowEvents>> | undefined;
+  latestBlock: MinimumViableBlock<bigint> | undefined;
+};
 
 export default function useFieldSowEventsQuery(options?: UseFieldSowEventsOptions) {
   // Hooks
@@ -37,49 +43,36 @@ export default function useFieldSowEventsQuery(options?: UseFieldSowEventsOption
   const amount = options?.amount ?? DEFAULT_OPTIONS.amount;
   const order = options?.order ?? DEFAULT_OPTIONS.order;
 
-  const { data: latestBlock, isLoading: isLatestBlockLoading } = useCachedLatestBlockQuery({
-    key: "fieldSowEvents",
-  });
-
   // biome-ignore lint/correctness/useExhaustiveDependencies: Only rerender when object properties that are not referentially equal change
   const handleSelectFieldSowEvents = useCallback(
-    (data: Awaited<ReturnType<typeof getSowEvents>> | undefined) => {
-      if (!data || !latestBlock || season <= 0 || harvestableIndex.lte(0)) {
+    (args: FieldSowEventsQueryResult | undefined) => {
+      if (!args?.data || !args?.latestBlock || season <= 0 || harvestableIndex.lte(0)) {
         return;
       }
 
-      return selectFieldSowEvents(data, latestBlock, season, harvestableIndex, { amount, order });
+      return selectFieldSowEvents(args.data, args.latestBlock, season, harvestableIndex, { amount, order });
     },
-    [season, harvestableIndex.blockchainString, amount, order, latestBlock?.number],
+    [season, harvestableIndex.blockchainString, amount, order],
   );
 
-  const query = useQuery({
-    queryKey: queryKeys.events.fieldSowEvents(latestBlock),
+  return useQuery({
+    queryKey: queryKeys.events.fieldSowEvents,
     queryFn: async () => {
-      if (!client || !latestBlock) return;
-      return getSowEvents(client, diamond, latestBlock);
+      if (!client) return;
+      const latestBlock = await client.getBlock({ blockTag: "latest" });
+      const data = await getSowEvents(client, diamond, latestBlock);
+      return { data, latestBlock };
     },
     select: handleSelectFieldSowEvents,
-    enabled: !!latestBlock,
+    ...defaultQuerySettingsMedium,
   });
-
-  const isLoading = query.isLoading || isLatestBlockLoading;
-
-  return {
-    ...query,
-    isLoading,
-  };
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
 // HELPER FUNCTIONS
 // ────────────────────────────────────────────────────────────────────────────────
 
-const getSowEvents = async (
-  pubclient: PublicClient,
-  diamond: Address,
-  block: { number: bigint; timestamp: bigint },
-) => {
+const getSowEvents = async (pubclient: PublicClient, diamond: Address, block: MinimumViableBlock<bigint>) => {
   const fromBlock = block.number > TIME_TO_BLOCKS.month ? block.number - TIME_TO_BLOCKS.month : 0n;
 
   return pubclient.getContractEvents({
@@ -93,7 +86,7 @@ const getSowEvents = async (
 
 const selectFieldSowEvents = (
   events: Awaited<ReturnType<typeof getSowEvents>> | undefined,
-  block: GetBlockReturnType | undefined,
+  block: MinimumViableBlock<bigint> | undefined,
   currentSeason: number,
   harvestableIndex: TV,
   options: UseFieldSowEventsOptions,
