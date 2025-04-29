@@ -118,12 +118,11 @@ const localStoragePersister = createSyncStoragePersister({
   storage: window.localStorage,
 });
 
-
 /**
- * 
- * Create a separate persister for The Explorer page only to prevent the persisting behavior from affecting other pages. 
+ *
+ * Create a separate persister for The Explorer page only to prevent the persisting behavior from affecting other pages.
  * Otherwise, 'meta: { persist: true }' & { gcTime: ms } will have to be applied to all queries throughout the app
- * 
+ *
  * If the cache that is found has a different buster string than what is set here, it will be discarded.
  * Should be changed whenever there's a significant change in the subgraphs.
  * Currently it is based on the date that the string is being set, in the YYYYMMDD format.
