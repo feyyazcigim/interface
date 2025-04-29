@@ -8,7 +8,7 @@ import IconImage from "@/components/ui/IconImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
-import useFieldSowEventsQuery from "@/state/events/useFieldSowEvents";
+import useFieldSowEvents from "@/state/events/useFieldSowEvents";
 import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
 import { useTemperature } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
@@ -121,7 +121,7 @@ const FieldActivity = () => {
     // fetchTractorOrders();
   }, [publicClient, protocolAddress]);
 
-  const { data: activities = [], isLoading: isActivitiesLoading } = useFieldSowEventsQuery();
+  const { data: activities = [], isLoading: isActivitiesLoading } = useFieldSowEvents();
 
   const ordersWithSowableAmount = useMemo(
     () => tractorOrders.filter((order) => order.amountSowableNextSeason.gt(0)),
