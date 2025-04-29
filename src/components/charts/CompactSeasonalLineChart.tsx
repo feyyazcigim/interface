@@ -8,8 +8,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { LineChartData, MakeGradientFunction } from "./LineChart";
 import MultiAxisLineChart, { MultiAxisYAxisConfig } from "./MultiAxisLineChart";
 import { SeasonalChartData } from "./SeasonalChart";
-import { gradientFunctions, metallicMorningStrokeGradientFn } from "./chartHelpers";
 import { TimeTab } from "./TimeTabs";
+import { gradientFunctions, metallicMorningStrokeGradientFn } from "./chartHelpers";
 
 interface CompactSeasonalChartProps {
   titles: (string | JSX.Element)[];

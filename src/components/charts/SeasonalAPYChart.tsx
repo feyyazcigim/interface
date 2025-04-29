@@ -1,18 +1,18 @@
 import FrameAnimator from "@/components/LoadingSpinner.tsx";
+import { APYWindow, APY_EMA_WINDOWS, useSeasonalAPYs } from "@/state/seasonal/queries/useSeasonalAPY";
+import { chartColors } from "@/state/useChartSetupData";
+import useTokenData from "@/state/useTokenData";
 import { chartFormatters as f, formatDate } from "@/utils/format";
+import { SeasonalAPYChartData } from "@/utils/types";
 import { cn } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
+import IconImage from "../ui/IconImage";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import LineChart, { CustomChartValueTransform, LineChartData } from "./LineChart";
 import { SeasonalChartData, tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
-import { APY_EMA_WINDOWS, APYWindow, useSeasonalAPYs } from "@/state/seasonal/queries/useSeasonalAPY";
-import { SeasonalAPYChartData } from "@/utils/types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
-import IconImage from "../ui/IconImage";
-import useTokenData from "@/state/useTokenData";
 import { gradientFunctions } from "./chartHelpers";
-import { chartColors } from "@/state/useChartSetupData";
 
 interface SeasonalAPYChartProps {
   season: number;

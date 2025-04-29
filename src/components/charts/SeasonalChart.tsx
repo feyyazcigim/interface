@@ -5,8 +5,8 @@ import { cn } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
 import LineChart, { LineChartData } from "./LineChart";
-import { gradientFunctions, metallicMorningAreaGradientFn, metallicMorningStrokeGradientFn } from "./chartHelpers";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
+import { gradientFunctions, metallicMorningAreaGradientFn, metallicMorningStrokeGradientFn } from "./chartHelpers";
 
 export const tabToSeasonalLookback = (tab: TimeTab): number => {
   if (tab === TimeTab.Week) {

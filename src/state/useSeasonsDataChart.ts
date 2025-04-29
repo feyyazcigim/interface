@@ -12,12 +12,12 @@ import { PaginationSettings, paginateMultiQuerySubgraph, paginateSubgraph } from
 import { Duration } from "luxon";
 import { useMemo } from "react";
 import { useChainId } from "wagmi";
+import { APYWindow, useSeasonalAPYs } from "./seasonal/queries/useSeasonalAPY";
 import useSeasonalQueries, {
   SeasonalQueryVars,
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
 import useTokenData from "./useTokenData";
-import { APYWindow, useSeasonalAPYs } from "./seasonal/queries/useSeasonalAPY";
 
 export interface SeasonsTableData {
   season: number;
