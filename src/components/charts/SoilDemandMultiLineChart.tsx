@@ -422,7 +422,12 @@ const SoilDemandMultiLineChart = React.memo(
         responsive: true,
         plugins: {
           tooltip: {
-            enabled: false,
+            enabled: true,
+            callbacks: {
+              label: function (context) {
+                return `${context.formattedValue}%`
+              }
+            }
           },
           legend: {
             display: false,
