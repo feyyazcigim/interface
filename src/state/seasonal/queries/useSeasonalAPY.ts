@@ -1,3 +1,4 @@
+import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 import { API_SERVICES } from "@/constants/endpoints";
 import useSeasonsData from "@/state/useSeasonsData";
 import { SeasonalAPYChartData, UseSeasonalAPYResult } from "@/utils/types";
@@ -85,6 +86,8 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
             timestamp: seasonToTimestamp[season],
           });
         }
+        // Sort descending
+        result[APY_EMA_WINDOWS[i]].sort((a: SeasonalChartData, b: SeasonalChartData) => b.season - a.season);
       }
       return result as SeasonalAPYChartData;
     },
