@@ -19,7 +19,12 @@ interface UseFieldSowEventsOptions {
   order?: "asc" | "desc";
 }
 
-export default function useFieldSowEventsQuery({ amount = 100, order = "desc" }: UseFieldSowEventsOptions) {
+const DEFAULT_OPTIONS: UseFieldSowEventsOptions = {
+  amount: 100,
+  order: "desc",
+} as const;
+
+export default function useFieldSowEventsQuery(options?: UseFieldSowEventsOptions) {
   // Hooks
   const diamond = useProtocolAddress();
   const client = usePublicClient();
@@ -27,6 +32,10 @@ export default function useFieldSowEventsQuery({ amount = 100, order = "desc" }:
   // State
   const harvestableIndex = useHarvestableIndex();
   const season = useSeason();
+
+  // Options
+  const amount = options?.amount ?? DEFAULT_OPTIONS.amount;
+  const order = options?.order ?? DEFAULT_OPTIONS.order;
 
   const { data: latestBlock, isLoading: isLatestBlockLoading } = useCachedLatestBlockQuery({
     key: "fieldSowEvents",
