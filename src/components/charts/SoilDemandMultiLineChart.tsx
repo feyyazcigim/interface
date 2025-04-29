@@ -30,7 +30,7 @@ export type LineChartReferenceDotProps = {
   y: any;
 };
 
-export interface MultiLineChartProps {
+export interface SoilDemandMultiLineChartProps {
   data: Record<number, LineChartData[]>;
   size: "small" | "large";
   xKey: keyof LineChartData;
@@ -53,7 +53,7 @@ export interface MultiLineChartProps {
   yAxisMax?: number;
 }
 
-const MultiLineChart = React.memo(
+const SoilDemandMultiLineChart = React.memo(
   ({
     data,
     size,
@@ -67,7 +67,7 @@ const MultiLineChart = React.memo(
     horizontalReferenceLines = [],
     yAxisMin,
     yAxisMax,
-  }: MultiLineChartProps) => {
+  }: SoilDemandMultiLineChartProps) => {
     const chartRef = useRef<Chart | null>(null);
     const activeIndexRef = useRef<number | undefined>(activeIndex);
 
@@ -589,4 +589,4 @@ const MultiLineChart = React.memo(
     );
   },
 );
-export default MultiLineChart;
+export default SoilDemandMultiLineChart;

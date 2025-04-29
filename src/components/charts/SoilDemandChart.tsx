@@ -5,8 +5,8 @@ import { caseIdToDescriptiveText } from "@/utils/season";
 import { Separator } from "@radix-ui/react-separator";
 import { useMemo } from "react";
 import { LineChartData } from "./LineChart";
-import MultiLineChart from "./MultiLineChart";
 import { metallicGreenStrokeGradientFn } from "./chartHelpers";
+import SoilDemandMultiLineChart from "./SoilDemandMultiLineChart";
 
 interface DeltaDemandChartProps {
   currentSeason: SeasonsTableData;
@@ -140,7 +140,7 @@ export const DeltaDemandChart = ({
       <div className="w-full h-[250px] rounded-md mt-2 flex justify-center items-center relative">
         {isChartReady && (
           <>
-            <MultiLineChart
+            <SoilDemandMultiLineChart
               data={mappedData}
               size="large"
               xKey="interval"
