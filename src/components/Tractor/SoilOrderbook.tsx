@@ -15,7 +15,7 @@ import { formatter } from "@/utils/format";
 import { cn } from "@/utils/utils";
 import { GearIcon } from "@radix-ui/react-icons";
 import { Separator } from "@radix-ui/react-separator";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import React from "react";
 import { toast } from "sonner";
 import { usePublicClient } from "wagmi";
@@ -24,6 +24,7 @@ import { Col, Row } from "../Container";
 import LoadingSpinner from "../LoadingSpinner";
 import ReviewTractorOrderDialog from "../ReviewTractorOrderDialog";
 import { Plow } from "./Plow";
+import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
@@ -40,35 +41,26 @@ export function SoilOrderbookContent({
   sortBy = "temperature",
   showAboveCurrentTemp = true,
 }: SoilOrderbookContentProps) {
-  const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
+  // const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
   const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderbookEntry | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
   const chainId = useChainId();
-  const isMounted = useRef(true);
-  const loadAttempted = useRef(false);
+  // const isMounted = useRef(true);
+  // const loadAttempted = useRef(false);
   const temperature = useTemperature();
 
-  console.log("SoilOrderbook render - Dependencies:", {
-    protocolAddress,
-    publicClient: !!publicClient,
-    latestBlockInfo,
-    isLoading,
-    requisitionsCount: requisitions.length,
-    loadAttempted: loadAttempted.current,
-  });
-
   // Cleanup function to prevent state updates after unmount
-  useEffect(() => {
-    console.log("Setting up cleanup");
-    return () => {
-      console.log("Component unmounting, setting isMounted to false");
-      isMounted.current = false;
-    };
-  }, []);
+  // useEffect(() => {
+  //   console.log("Setting up cleanup");
+  //   return () => {
+  //     console.log("Component unmounting, setting isMounted to false");
+  //     // isMounted.current = false;
+  //   };
+  // }, []);
 
   // Get latest block info once when component loads
   useEffect(() => {
@@ -119,98 +111,15 @@ export function SoilOrderbookContent({
     [latestBlockInfo],
   );
 
-  const loadAllRequisitions = useCallback(async () => {
-    console.log("loadAllRequisitions called with state:", {
-      isLoading,
-      hasPublicClient: !!publicClient,
-      hasProtocolAddress: !!protocolAddress,
-      isMounted: isMounted.current,
-      loadAttempted: loadAttempted.current,
-    });
+  const { data: orderbookData, ...orderbookQuery } = useTractorSowOrderbook();
 
-    if (isLoading || !publicClient || !protocolAddress) {
-      console.log("Skipping load - conditions not met:", {
-        isLoading,
-        hasPublicClient: !!publicClient,
-        hasProtocolAddress: !!protocolAddress,
-      });
-      return;
-    }
+  const requisitions = useMemo(() => {
+    if (!orderbookData) return [];
+    const dataWithTimestamps = getApproximateTimestamps(orderbookData);
+    return dataWithTimestamps.sort((a, b) => a.minTemp.sub(b.minTemp).toNumber());
+  }, [orderbookData]);
 
-    setIsLoading(true);
-    try {
-      console.log("Starting to load orderbook data...");
-      // Use the new loadOrderbookData function
-      const orderbookData = await loadOrderbookData(
-        undefined,
-        protocolAddress,
-        publicClient,
-        latestBlockInfo
-          ? {
-              number: BigInt(latestBlockInfo.number),
-              timestamp: BigInt(latestBlockInfo.timestamp / 1000),
-            }
-          : undefined,
-        temperature?.max ? temperature.max.toNumber() : undefined,
-      );
-
-      console.log("Got orderbook data:", {
-        dataCount: orderbookData.length,
-        isMounted: isMounted.current,
-      });
-
-      // Get approximate timestamps
-      const dataWithTimestamps = getApproximateTimestamps(orderbookData);
-      console.log("Added timestamps to data");
-
-      // Sort data by temperature by default
-      const sortedData = dataWithTimestamps.sort((a, b) => {
-        try {
-          const dataA = decodeSowTractorData(a.requisition.blueprint.data);
-          const dataB = decodeSowTractorData(b.requisition.blueprint.data);
-          if (!dataA || !dataB) return 0;
-          return parseFloat(dataA.minTempAsString) - parseFloat(dataB.minTempAsString);
-        } catch (error) {
-          console.error("Failed to decode data for requisition:", error);
-          return 0;
-        }
-      });
-
-      console.log("Setting requisitions state with sorted data");
-      setRequisitions(sortedData);
-      loadAttempted.current = true;
-    } catch (error) {
-      console.error("Failed to load soil orderbook:", error);
-      toast.error("Failed to load soil orderbook");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [protocolAddress, publicClient, latestBlockInfo, getApproximateTimestamps, temperature]);
-
-  // Load requisitions once when component mounts and dependencies are ready
-  useEffect(() => {
-    console.log("Main effect running with state:", {
-      protocolAddress,
-      hasPublicClient: !!publicClient,
-      latestBlockInfo,
-      isLoading,
-      isMounted: isMounted.current,
-      loadAttempted: loadAttempted.current,
-    });
-
-    if (protocolAddress && publicClient && latestBlockInfo && !isLoading && !loadAttempted.current) {
-      console.log("All dependencies ready, calling loadAllRequisitions");
-      loadAllRequisitions();
-    } else {
-      console.log("Dependencies not ready or already attempted:", {
-        hasProtocolAddress: !!protocolAddress,
-        hasPublicClient: !!publicClient,
-        hasLatestBlockInfo: !!latestBlockInfo,
-        isLoading,
-        loadAttempted: loadAttempted.current,
-      });
-    }
-  }, [protocolAddress, publicClient, latestBlockInfo, loadAllRequisitions, isLoading]);
+  const isLoading = orderbookQuery.isLoading || !orderbookData?.length;
 
   const formatDate = (timestamp: number | undefined) => {
     if (!timestamp) return "Unknown";

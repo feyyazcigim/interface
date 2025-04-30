@@ -58,8 +58,8 @@ const estimateSeasonFromBlock = (
 const FieldActivity = () => {
   const publicClient = usePublicClient();
   const protocolAddress = useProtocolAddress();
-  const [tractorOrders, setTractorOrders] = React.useState<OrderbookEntry[]>([]);
-  const [loadingTractorOrders, setLoadingTractorOrders] = React.useState(true);
+  // const [tractorOrders, setTractorOrders] = React.useState<OrderbookEntry[]>([]);
+  // const [loadingTractorOrders, setLoadingTractorOrders] = React.useState(true);
   const currentSeason = useSeason();
   const currentTemperature = useTemperature();
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
@@ -70,58 +70,83 @@ const FieldActivity = () => {
   // const d = useTractorSowOrderbook();
 
   // Fetch tractor orders
-  React.useEffect(() => {
-    const fetchTractorOrders = async () => {
-      if (!publicClient || !protocolAddress) return;
+  // React.useEffect(() => {
+  //   const fetchTractorOrders = async () => {
+  //     if (!publicClient || !protocolAddress) return;
 
-      try {
-        setLoadingTractorOrders(true);
+  //     try {
+  //       setLoadingTractorOrders(true);
 
-        // Get the current block
-        const latestBlock = await publicClient.getBlock();
-        const latestBlockInfo = {
-          number: latestBlock.number,
-          timestamp: latestBlock.timestamp,
-        };
+  //       // Get the current block
+  //       const latestBlock = await publicClient.getBlock();
+  //       const latestBlockInfo = {
+  //         number: latestBlock.number,
+  //         timestamp: latestBlock.timestamp,
+  //       };
 
-        // Fetch orderbook data
-        const orderbook = await loadOrderbookData(
-          undefined, // No specific address filter
-          protocolAddress,
-          publicClient,
-          latestBlockInfo,
-          currentTemperature?.max ? currentTemperature.max.toNumber() : undefined,
-        );
+  //       // Fetch orderbook data
+  //       const orderbook = await loadOrderbookData(
+  //         undefined, // No specific address filter
+  //         protocolAddress,
+  //         publicClient,
+  //         latestBlockInfo,
+  //         currentTemperature?.max ? currentTemperature.max.toNumber() : undefined,
+  //       );
 
-        // Filter out orders with predicted temperatures greater than current temperature + 1%
-        const currentTemp = currentTemperature.max?.toNumber() || 0;
+  //       // Filter out orders with predicted temperatures greater than current temperature + 1%
+  //       const currentTemp = currentTemperature.max?.toNumber() || 0;
 
-        const filteredOrders = orderbook.filter((order) => {
-          const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
+  //       const filteredOrders = orderbook.filter((order) => {
+  //         const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
 
-          // Only include orders with temperature requirements that could reasonably execute soon
-          // Use the predicted temperature, which is now guaranteed to be at least the minimum
-          return predictedTemp <= currentTemp + 1;
-        });
+  //         // Only include orders with temperature requirements that could reasonably execute soon
+  //         // Use the predicted temperature, which is now guaranteed to be at least the minimum
+  //         return predictedTemp <= currentTemp + 1;
+  //       });
 
-        // Sort by predicted temperature (lowest to highest)
-        const sortedOrders = [...filteredOrders].sort((a, b) => {
-          // We want to sort by lowest predicted temperature first
-          return getPredictedSowTemperature(a, currentTemperature) - getPredictedSowTemperature(b, currentTemperature);
-        });
+  //       // Sort by predicted temperature (lowest to highest)
+  //       const sortedOrders = [...filteredOrders].sort((a, b) => {
+  //         // We want to sort by lowest predicted temperature first
+  //         return getPredictedSowTemperature(a, currentTemperature) - getPredictedSowTemperature(b, currentTemperature);
+  //       });
 
-        setTractorOrders(sortedOrders);
-      } catch (error) {
-        console.error("Error fetching tractor orders:", error);
-      } finally {
-        setLoadingTractorOrders(false);
-      }
-    };
+  //       setTractorOrders(sortedOrders);
+  //     } catch (error) {
+  //       console.error("Error fetching tractor orders:", error);
+  //     } finally {
+  //       setLoadingTractorOrders(false);
+  //     }
+  //   };
 
-    // fetchTractorOrders();
-  }, [publicClient, protocolAddress]);
+  //   // fetchTractorOrders();
+  // }, [publicClient, protocolAddress]);
+
+  const { data: tractorOrdersResult, ...tractorSowOrderbookQuery } = useTractorSowOrderbook();
+
+  const tractorOrders = useMemo(() => {
+    const orderbook = tractorOrdersResult ?? [];
+    const currentTemp = currentTemperature.max?.toNumber() || 0;
+
+    const filteredOrders = orderbook.filter((order) => {
+      const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
+
+      // Only include orders with temperature requirements that could reasonably execute soon
+      // Use the predicted temperature, which is now guaranteed to be at least the minimum
+      return predictedTemp <= currentTemp + 1;
+    });
+
+    // Sort by predicted temperature (lowest to highest)
+    const sortedOrders = [...filteredOrders].sort((a, b) => {
+      // We want to sort by lowest predicted temperature first
+      return getPredictedSowTemperature(a, currentTemperature) - getPredictedSowTemperature(b, currentTemperature);
+    });
+
+    return sortedOrders;
+  }, [tractorOrdersResult, currentTemperature]);
 
   const { data: activities = [], isLoading: isActivitiesLoading } = useFieldSowEvents();
+
+  const loadingTractorOrders = tractorSowOrderbookQuery.isLoading || !tractorOrders.length;
 
   const ordersWithSowableAmount = useMemo(
     () => tractorOrders.filter((order) => order.amountSowableNextSeason.gt(0)),

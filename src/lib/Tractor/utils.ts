@@ -4,6 +4,7 @@ import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { SOW_BLUEPRINT_V0_ADDRESS, TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
 import { beanstalkAbi } from "@/generated/contractHooks";
+import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { FarmFromMode, MinimumViableBlock } from "@/utils/types";
 import { MayArray } from "@/utils/types.generic";
 import { SignableMessage, decodeFunctionData, encodeFunctionData } from "viem";
@@ -713,7 +714,12 @@ export interface OrderbookEntry extends Omit<RequisitionEvent, "decodedData"> {
   amountSowableNextSeason: TokenValue;
   amountSowableNextSeasonConsideringAvailableSoil: TokenValue;
   estimatedPlaceInLine: TokenValue;
+  minTemp: TokenValue;
   withdrawalPlan?: WithdrawalPlan;
+}
+
+interface ExtendedOrderbookEntry extends OrderbookEntry {
+  isAPIEntry?: boolean;
 }
 
 // Add this type definition after the OrderbookEntryWithProcessingData interface
@@ -751,13 +757,13 @@ export async function loadOrderbookData(
   publicClient: PublicClient | null,
   latestBlock?: { number: bigint; timestamp: bigint } | null,
   maxTemperature?: number,
-  apiEntries?: OrderbookEntry[],
+  activeApiEntries?: OrderbookEntry[],
   lookbackBlocks?: bigint,
 ): Promise<OrderbookEntry[]> {
   if (!protocolAddress || !publicClient) return [];
 
   const knownBlueprintHashes = new Set<string>(
-    apiEntries?.map((order) => order.requisition.blueprintHash.toLowerCase()) ?? [],
+    activeApiEntries?.map((order) => order.requisition.blueprintHash.toLowerCase()) ?? [],
   );
 
   console.debug("[TRACTOR/loadOrderbookData] knownBlueprintHashes:", knownBlueprintHashes);
@@ -814,19 +820,10 @@ export async function loadOrderbookData(
     // Filter out cancelled and completed orders
     const activeRequisitions = requisitions.filter((req) => {
       const hash = req.requisition.blueprintHash;
-      return (!req.isCancelled && !completedOrders.has(hash)) || !knownBlueprintHashes.has(hash.toLowerCase());
-    });
-
-    console.debug("[TRACTOR/loadOrderbookData] initial fetch results: ", {
-      raw: {
-        podIndexResult,
-        harvestableIndexResult,
-        completedOrders,
-        activeRequisitions,
-      },
-      currentPodLine: currentPodLine.toHuman(),
-      activeRequisitions: activeRequisitions.length,
-      completedOrders: completedOrders.size,
+      if (knownBlueprintHashes.has(hash.toLowerCase())) {
+        return false;
+      }
+      return !req.isCancelled && !completedOrders.has(req.requisition.blueprintHash);
     });
 
     // Decode data and sort requisitions by temperature (lowest first)
@@ -842,16 +839,26 @@ export async function loadOrderbookData(
     // Sort requisitions by temperature
     requisitionsWithTemperature.sort((a, b) => Number(a.temperature - b.temperature));
 
+    console.debug("[TRACTOR/loadOrderbookData] initial fetch results: ", {
+      raw: {
+        podIndexResult,
+        harvestableIndexResult,
+        completedOrders,
+        activeRequisitions,
+        requisitionsWithTemperature,
+      },
+      currentPodLine: currentPodLine.toHuman(),
+      activeRequisitions: activeRequisitions.length,
+      completedOrders: completedOrders.size,
+    });
+
     // Track used withdrawal plans per publisher for allocation priority
     const publisherWithdrawalPlans: { [publisher: string]: any[] } = {};
 
     // Process requisitions in a single loop (already sorted by temperature)
-    const orderbookData: OrderbookEntry[] = [];
+    const orderbookData: ExtendedOrderbookEntry[] = [...(activeApiEntries ?? [])];
 
     console.debug("\nProcessing orderbook data:");
-
-    // Running total of place in line, starting with current pod line
-    let runningPlaceInLine = currentPodLine;
 
     for (let i = 0; i < requisitionsWithTemperature.length; i++) {
       const { requisition, decodedData } = requisitionsWithTemperature[i];
@@ -980,23 +987,8 @@ export async function loadOrderbookData(
         }
 
         // Calculate the place in line for this order
-        const estimatedPlaceInLine = TokenValue.fromBlockchain(runningPlaceInLine.toBigInt(), 6);
-        console.debug(`Estimated place in line: ${estimatedPlaceInLine.toHuman()}`);
-
-        // If this order will have some pods sown next season, update the running place in line
-        // for future orders by adding this order's pod amount
-        if (amountSowableNextSeason.gt(0)) {
-          // Get the temperature for this order
-          const temp = decodedData ? parseFloat(decodedData.minTempAsString) : 0;
-
-          // Calculate the pods that will be minted (PINTO amount * (1 + temperature/100))
-          const podsToMint = amountSowableNextSeason.mul(1 + temp / 100);
-          console.debug(`Estimated pods to mint: ${podsToMint.toHuman()} (temp: ${temp}%)`);
-
-          // Update the running place in line for the next order
-          runningPlaceInLine = runningPlaceInLine.add(podsToMint);
-          console.debug(`Updated running place in line: ${runningPlaceInLine.toHuman()}`);
-        }
+        // const estimatedPlaceInLine = TokenValue.fromBlockchain(runningPlaceInLine.toBigInt(), 6);
+        // console.debug(`Estimated place in line: ${estimatedPlaceInLine.toHuman()}`);
 
         if (!withdrawalPlan) {
           throw new Error("Failed to get withdrawal plan");
@@ -1009,7 +1001,8 @@ export async function loadOrderbookData(
           currentlySowable,
           amountSowableNextSeason,
           amountSowableNextSeasonConsideringAvailableSoil: TokenValue.ZERO, // Initialize to zero, will be set in second pass
-          estimatedPlaceInLine,
+          estimatedPlaceInLine: TokenValue.ZERO, // Initialize to zero, will be set in second pass
+          minTemp: TokenValue.fromBigInt(decodedData?.minTemp || 0n, TEMPERATURE_DECIMALS),
           withdrawalPlan,
         });
       } catch (error) {
@@ -1021,16 +1014,53 @@ export async function loadOrderbookData(
           currentlySowable: TokenValue.ZERO,
           amountSowableNextSeason: TokenValue.ZERO,
           amountSowableNextSeasonConsideringAvailableSoil: TokenValue.ZERO,
-          estimatedPlaceInLine: TokenValue.fromBlockchain(runningPlaceInLine.toBigInt(), 6),
+          estimatedPlaceInLine: TokenValue.fromBlockchain(0n, 6),
+          minTemp: TokenValue.ZERO,
           withdrawalPlan: undefined,
         });
       }
     }
 
+    // Running total of place in line, starting with current pod line
+    let runningPlaceInLine = currentPodLine;
+
+    orderbookData.sort((a, b) => a.minTemp.sub(b.minTemp).toNumber());
+
+    for (let i = 0; i < orderbookData.length; i++) {
+      const entry = orderbookData[i];
+      // If this order will have some pods sown next season, update the running place in line
+      // for future orders by adding this order's pod amount
+      if (entry.amountSowableNextSeason.gt(0)) {
+        entry.estimatedPlaceInLine = TokenValue.fromBlockchain(runningPlaceInLine.toBigInt(), 6);
+        const podsToMint = entry.amountSowableNextSeason.mul(1 + entry.minTemp.toNumber() / 100);
+        runningPlaceInLine = runningPlaceInLine.add(podsToMint);
+      }
+    }
+
+    let availableSoil = TokenValue.ZERO;
     // Get the total amount of soil available from the protocol
-    let availableSoil = TokenValue.fromBigInt(totalSoil, 6);
     try {
-      availableSoil = await getAvailableSoil(publicClient, protocolAddress);
+      // Query for the most recent Soil event
+      const soilEvents = await publicClient.getContractEvents({
+        address: protocolAddress,
+        abi: diamondABI,
+        eventName: "Soil",
+        fromBlock: TRACTOR_DEPLOYMENT_BLOCK,
+        toBlock: "latest",
+      });
+
+      // Get the most recent event (should be the last one)
+      if (soilEvents.length > 0) {
+        const latestSoilEvent = soilEvents[soilEvents.length - 1];
+        const soilAmount = latestSoilEvent.args?.soil;
+
+        if (soilAmount) {
+          availableSoil = TokenValue.fromBlockchain(soilAmount, 6);
+          console.debug(`\nCurrent soil from latest Soil event: ${availableSoil.toHuman()}`);
+        }
+      } else {
+        console.debug(`No Soil events found, falling back to estimation`);
+      }
 
       // If we couldn't get soil from events, fall back to estimate
       if (availableSoil.eq(0)) {
@@ -1038,7 +1068,7 @@ export async function loadOrderbookData(
         console.debug(`\nEstimated soil from orderbook data: ${availableSoil.toHuman()}`);
       }
     } catch (error) {
-      console.error("Failed to get soil from events:", error);
+      console.error("Failed to get soil from on chain:", error);
       // Fall back to estimating soil as the sum of all currentlySowable values
       availableSoil = orderbookData.reduce((total, entry) => total.add(entry.currentlySowable), TokenValue.ZERO);
       console.debug(`\nFalling back to estimated soil: ${availableSoil.toHuman()}`);
@@ -1049,6 +1079,7 @@ export async function loadOrderbookData(
       const decodedData = decodeSowTractorData(entry.requisition.blueprint.data);
       const tipAmount = decodedData?.operatorParams.operatorTipAmount || 0n;
       return {
+        decodedData,
         entry,
         tipAmount,
       };
@@ -1064,9 +1095,8 @@ export async function loadOrderbookData(
 
     // Second pass: allocate soil based on tip priority
     for (let i = 0; i < orderbookDataWithTips.length; i++) {
-      const { entry, tipAmount } = orderbookDataWithTips[i];
+      const { entry, tipAmount, decodedData } = orderbookDataWithTips[i];
       const tipAmountFormatted = TokenValue.fromBlockchain(tipAmount, 6).toHuman();
-      const decodedData = decodeSowTractorData(entry.requisition.blueprint.data);
       const orderTemp = decodedData ? parseFloat(decodedData.minTempAsString) : 0;
 
       console.debug(

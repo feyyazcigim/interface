@@ -9,6 +9,7 @@ import { getChainConstant } from "@/hooks/useChainConstant";
 import { TractorAPIExecutionSowOrderItem, TractorAPIResponseExecution } from "@/lib/Tractor/api";
 import TractorAPI from "@/lib/Tractor/api";
 import { TRACTOR_DEPLOYMENT_BLOCK } from "@/lib/Tractor/utils";
+import { queryKeys } from "@/state/queryKeys";
 import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";
 import { isDev } from "@/utils/utils";
@@ -16,7 +17,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { PublicClient, decodeEventLog } from "viem";
 import { useChainId, usePublicClient } from "wagmi";
-import { queryKeys } from "../queryKeys";
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Fetch ALL EXECUTIONS QUERY
@@ -234,21 +234,55 @@ export async function fetchTractorExecutions(
       // Add block number to the set for batch fetching
       blockNumbers.add(receipt.blockNumber);
 
-      // Find the Sow event in the transaction logs
-      const sowEvent = receipt.logs.find((log) => {
+      // Get the blueprint hash from the Tractor event
+      const blueprintHash = event.args?.blueprintHash as `0x${string}`;
+
+      // First, find the TractorExecutionBegan event with matching blueprint hash
+      let tractorExecutionBeganIndex = -1;
+      let tractorExecutionBeganEvent: any = null;
+
+      const mainToken = getChainConstant(resolveChainId(chainId), MAIN_TOKEN);
+
+      for (let i = 0; i < receipt.logs.length; i++) {
+        const log = receipt.logs[i];
         try {
           const decoded = decodeEventLog({
             abi: diamondABI,
             data: log.data,
             topics: log.topics,
           });
-          return decoded.eventName === "Sow";
-        } catch {
-          return false;
-        }
-      });
 
-      const mainToken = getChainConstant(resolveChainId(chainId), MAIN_TOKEN);
+          if (decoded.eventName === "TractorExecutionBegan" && decoded.args?.blueprintHash === blueprintHash) {
+            tractorExecutionBeganIndex = i;
+            tractorExecutionBeganEvent = decoded;
+            break;
+          }
+        } catch {
+          // Skip logs that can't be decoded
+        }
+      }
+
+      // If we found the TractorExecutionBegan event, look for the first Sow event after it
+      let sowEvent: any = null;
+      if (tractorExecutionBeganIndex >= 0) {
+        for (let i = tractorExecutionBeganIndex + 1; i < receipt.logs.length; i++) {
+          const log = receipt.logs[i];
+          try {
+            const decoded = decodeEventLog({
+              abi: diamondABI,
+              data: log.data,
+              topics: log.topics,
+            });
+
+            if (decoded.eventName === "Sow") {
+              sowEvent = log;
+              break;
+            }
+          } catch {
+            // Skip logs that can't be decoded
+          }
+        }
+      }
 
       // Decode the Sow event if found
       let sowData: SowEventArgs | undefined;
@@ -272,11 +306,23 @@ export async function fetchTractorExecutions(
         }
       }
 
+      // Create the tractorExecutionBeganData object conditionally
+      const tractorExecutionBeganData = tractorExecutionBeganEvent
+        ? {
+            operator: tractorExecutionBeganEvent.args?.operator as `0x${string}`,
+            publisher: tractorExecutionBeganEvent.args?.publisher as `0x${string}`,
+            blueprintHash: tractorExecutionBeganEvent.args?.blueprintHash as `0x${string}`,
+            nonce: tractorExecutionBeganEvent.args?.nonce as bigint,
+            gasleft: tractorExecutionBeganEvent.args?.gasleft as bigint,
+          }
+        : undefined;
+
       return {
         blockNumber: receipt.blockNumber,
         event,
         receipt,
         sowData,
+        tractorExecutionBeganEvent: tractorExecutionBeganData,
       };
     }),
   );
@@ -293,7 +339,7 @@ export async function fetchTractorExecutions(
   });
 
   // Assemble the final result
-  const processed = processingResults.map((result): PublisherTractorExecution => {
+  const processed = processingResults.map((result) => {
     return {
       blockNumber: Number(result.blockNumber),
       operator: result.event.args?.operator as `0x${string}`,
@@ -302,10 +348,10 @@ export async function fetchTractorExecutions(
       transactionHash: result.event.transactionHash,
       timestamp: blockTimestamps.get(result.blockNumber.toString()),
       sowEvent: result.sowData,
-    } as PublisherTractorExecution;
+      tractorExecutionBeganEvent: result.tractorExecutionBeganEvent,
+    };
   });
 
   console.debug("[Tractor/fetchTractorExecutions] RESPONSE", processed);
-
   return processed;
 }
