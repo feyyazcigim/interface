@@ -143,7 +143,7 @@ export const SoilDemandChart = ({
         </span>
       </div>
 
-      <div className="w-full h-[250px] rounded-md mt-2 flex justify-center items-center relative">
+      <div className="w-full h-[250px] rounded-md mt-2 flex justify-center items-center relative bg-transparent">
         {isChartReady && (
           <>
             <SoilDemandMultiLineChart
@@ -153,7 +153,7 @@ export const SoilDemandChart = ({
               makeLineGradients={makeLineGradients}
               valueFormatter={formatter.pct}
             />
-            {/* <div className="z-index-0 absolute bg-morning-light opacity-50 left-[16px] w-[90px] h-[220px] top-[7px] " /> */}
+            <div className="z-index-0 absolute bg-morning-light opacity-50 left-[16px] w-[50px] md:w-[90px] h-[220px] top-[7px] pointer-events-none" />
           </>
         )}
       </div>
