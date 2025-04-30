@@ -16,6 +16,7 @@ import { RequisitionEvent } from "@/lib/Tractor/utils";
 import usePublisherTractorExecutions from "@/state/tractor/useTractorExecutions";
 import useTractorPublishedRequisitions from "@/state/tractor/useTractorPublishedRequisitions";
 import { formatter } from "@/utils/format";
+import { stringEq } from "@/utils/string";
 import { getTokenNameByIndex } from "@/utils/token";
 import { CalendarIcon, ClockIcon, CornerBottomLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
@@ -45,12 +46,13 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const loading = executionsQuery.isLoading || requisitionsQuery.isLoading || !dataHasLoaded;
   const error = executionsQuery.error || requisitionsQuery.error;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only refresh when refresh data counter changes
   useEffect(() => {
-    if (dataHasLoaded) {
+    if (refreshData && dataHasLoaded) {
       executionsQuery.refetch();
       requisitionsQuery.refetch();
     }
-  }, [refreshData && dataHasLoaded, executionsQuery.refetch, requisitionsQuery.refetch]);
+  }, [refreshData && dataHasLoaded]);
 
   // Add transaction handling for cancel order
   const { writeWithEstimateGas, submitting } = useTransaction({
@@ -137,6 +139,15 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     setShowDialog(true);
   };
 
+  useEffect(() => {
+    if (executions.length && requisitions.length) {
+      console.log("Tractor Orders Panel", {
+        executions,
+        requisitions,
+      });
+    }
+  }, [executions, requisitions]);
+
   // Convert the blueprint to match the expected Blueprint type (fixing readonly issue)
   const adaptBlueprintForDialog = (blueprint: RequisitionEvent["requisition"]["blueprint"]): Blueprint => {
     return {
@@ -176,7 +187,9 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
         const minTemp = TokenValue.fromBlockchain(data.minTemp, 6);
 
         // Get executions for this blueprint
-        const blueprintExecutions = executions.filter((exec) => exec.blueprintHash === req.requisition.blueprintHash);
+        const blueprintExecutions = executions.filter((exec) =>
+          stringEq(exec.blueprintHash, req.requisition.blueprintHash),
+        );
 
         // Count how many times this blueprint has been executed
         const executionCount = blueprintExecutions.length;
@@ -213,6 +226,14 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
         } else {
           strategyText = "Specific Token";
         }
+
+        // console.log("[tractor] blueprintExecutions", {
+        //   requisition: req.requisition,
+        //   blueprint: req.requisition.blueprint,
+        //   blueprintExecutions,
+        //   executionCount,
+        //   totalSown
+        // });
 
         return (
           <Col key={`requisition-${index}`} className="gap-2">

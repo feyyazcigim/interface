@@ -1,7 +1,7 @@
 import { defaultQuerySettingsMedium } from "@/constants/query";
 import { BASE_RPC_URL, baseNetwork } from "@/utils/wagmi/chains";
 import { useQuery } from "@tanstack/react-query";
-import { createPublicClient, http } from "viem";
+import { http, createPublicClient } from "viem";
 
 // Create a client specifically for fetching Base network gas price
 const baseGasClient = createPublicClient({
@@ -17,7 +17,7 @@ export const useGasPrice = (refetchInterval: number = 30_000) => {
         // Use the baseGasClient to fetch gas price from Base network
         const price = await baseGasClient.getGasPrice();
         console.debug("[useGasPrice] Current Base network gas price:", {
-          wei: `${price.toString() } wei`,
+          wei: `${price.toString()} wei`,
           gwei: `${Number(price) / 1e9} gwei`,
         });
         return price;
@@ -31,4 +31,4 @@ export const useGasPrice = (refetchInterval: number = 30_000) => {
     staleTime: refetchInterval,
     retryOnMount: true,
   });
-}
+};

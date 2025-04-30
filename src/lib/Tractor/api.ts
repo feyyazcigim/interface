@@ -13,6 +13,7 @@ import { getChainConstant } from "@/hooks/useChainConstant";
 import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { resolveChainId } from "@/utils/chain";
 import { ChainLookup, HashString, Prettify } from "@/utils/types.generic";
+import { isDev, safeJSONStringify } from "@/utils/utils";
 import { base } from "viem/chains";
 import { SowOrderTokenStrategy, TractorAPIOrderType, TractorAPIOrdersResponse } from "./types";
 
@@ -26,13 +27,22 @@ export interface TractorAPIOrderOptions {
   orderType?: TractorAPIOrderType;
   cancelled?: boolean;
 }
-async function getOrders(chainId: number = base.id, options?: TractorAPIOrderOptions) {
+const getOrders = async (chainId: number = base.id, options?: TractorAPIOrderOptions) => {
   console.debug("[Tractor/tractorAPIFetchOrders] Fetching orders...");
 
+  const bodyObj: any = {
+    limit: 10000,
+    ...options,
+  };
+
+  const body = safeJSONStringify(bodyObj, undefined);
+
   try {
-    const response = await fetch(`${API_SERVICES.pinto}/tractor/orders`, { method: "POST", ...options }).then(
-      (res) => res.json() as Promise<TractorAPIOrdersResponse<string, string, number, string[]>>,
-    );
+    const response = await fetch(`${API_SERVICES.pinto}/tractor/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    }).then((res) => res.json() as Promise<TractorAPIOrdersResponse<string, string, number, string[]>>);
 
     console.debug("[Tractor/tractorAPIFetchOrders] RESPONSE", {
       response,
@@ -94,7 +104,7 @@ async function getOrders(chainId: number = base.id, options?: TractorAPIOrderOpt
       orders: [],
     };
   }
-}
+};
 
 // ================================================================================
 // ────────────────────────────────────────────────────────────────────────────────
@@ -105,16 +115,43 @@ async function getOrders(chainId: number = base.id, options?: TractorAPIOrderOpt
 export interface TractorAPIExecutionsOptions {
   publisher?: `0x${string}`;
 }
-async function tractorAPIFetchExecutions(options?: TractorAPIExecutionsOptions) {
+const tractorAPIFetchExecutions = async (options?: TractorAPIExecutionsOptions) => {
   console.debug("[Tractor/tractorAPIFetchExecutions] Fetching executions...");
 
+  const bodyObj: any = { limit: 10000, orderType: "KNOWN", ...options };
+
+  const body = safeJSONStringify(bodyObj, undefined);
+
   try {
-    const response = await fetch(`${API_SERVICES.pinto}/tractor/executions`, { method: "POST", ...options }).then(
-      (res) => res.json() as Promise<TractorAPIExecutionResponse<unknown>>,
-    );
+    const response = await fetch(`${API_SERVICES.pinto}/tractor/executions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body,
+    }).then((res) => res.json() as Promise<TractorAPIExecutionResponse<unknown>>);
+
+    let byBlueprintHash = {};
+
+    if (isDev()) {
+      byBlueprintHash = response.executions.reduce<Record<HashString, TractorAPIResponseExecution<unknown>[]>>(
+        (acc, curr) => {
+          const blueprintHash = curr.blueprintHash.toLowerCase();
+          if (!acc[blueprintHash]) {
+            acc[blueprintHash] = [curr];
+          } else {
+            acc[blueprintHash] = [...acc[blueprintHash], curr];
+          }
+
+          return acc;
+        },
+        {},
+      );
+    }
 
     console.debug("[Tractor/tractorAPIFetchExecutions] RESPONSE", {
       response,
+      byBlueprintHash,
     });
 
     return response;
@@ -126,7 +163,7 @@ async function tractorAPIFetchExecutions(options?: TractorAPIExecutionsOptions) 
       executions: [],
     };
   }
-}
+};
 
 // ────────────────────────────────────────────────────────────────────────────────
 // INTERFACE

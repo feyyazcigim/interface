@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import { useGasPrice } from "@/hooks/useGasPrice";
 import useTransaction from "@/hooks/useTransaction";
-import { RequisitionEvent,  } from "@/lib/Tractor/utils";
+import { RequisitionEvent } from "@/lib/Tractor/utils";
 import useTractorPublishedRequisitions from "@/state/tractor/useTractorPublishedRequisitions";
 import { useTemperature } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
@@ -19,7 +20,6 @@ import { encodeFunctionData } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
 import LoadingSpinner from "../LoadingSpinner";
 import { PlowDetails } from "./PlowDetails";
-import { useGasPrice } from "@/hooks/useGasPrice";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 

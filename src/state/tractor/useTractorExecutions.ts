@@ -71,15 +71,15 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
 
       // Create a Set of existing transaction hashes for O(1) lookup
       const existingTxHashes = new Set([
-        ...executionData.executions.sowBlueprintv0.map((exec) => exec.transactionHash),
-        ...executionData.executions.unknown.map((exec) => exec.executedTxn),
+        ...executionData.executions.sowBlueprintv0.map((exec) => exec.transactionHash.toLowerCase()),
+        ...executionData.executions.unknown.map((exec) => exec.executedTxn.toLowerCase()),
       ]);
 
       const allExecutions = [...executionData.executions.sowBlueprintv0];
 
       // Filter out any on-chain executions that already exist in the API data & add the SOW_V0 executions if sowEvent is present
       onChainExecutions.forEach((exec) => {
-        if (!existingTxHashes.has(exec.transactionHash)) {
+        if (!existingTxHashes.has(exec.transactionHash.toLowerCase())) {
           allExecutions.push(exec);
         }
       });
