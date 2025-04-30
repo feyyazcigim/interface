@@ -2,7 +2,7 @@ import { TokenValue } from "@/classes/TokenValue";
 import { DepositGroup } from "@/components/CombineSelect";
 import { siloHelpersABI } from "@/constants/abi/SiloHelpersABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
-import { TRACTOR_HELPERS_ADDRESS, SILO_HELPERS_ADDRESS } from "@/constants/address";
+import { SILO_HELPERS_ADDRESS, TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
 import convert from "@/encoders/silo/convert";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { calculateConvertData } from "@/utils/convert";
