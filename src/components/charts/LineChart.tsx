@@ -17,7 +17,7 @@ import { ReactChart } from "../ReactChart";
 Chart.register(LineController, LineElement, LinearScale, LogarithmicScale, CategoryScale, PointElement, Filler);
 
 export type LineChartData = {
-  values: number[];
+  values: number[] | null[]; // null allows you to not draw a dot at a point
 } & Record<string, any>;
 
 export type MakeGradientFunction = (

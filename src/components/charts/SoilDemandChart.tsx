@@ -73,16 +73,18 @@ export const SoilDemandChart = ({
     const labels: string[] = [];
     const data: Record<number, LineChartData[]> = {};
     const indexesWithSowEvents: number[] = [];
-    // number of blocks is not necessarily 1,800, depends when gm was called
-    const numBlocks = Math.max(
-      nextBlock - currentSeason.sunriseBlock,
-      currentSeason.sunriseBlock - previousSeason.sunriseBlock,
-    );
+    const numBlocksPerSeasons = {
+      [currentSeason.season]: nextBlock - currentSeason.sunriseBlock,
+      [previousSeason.season]: currentSeason.sunriseBlock - previousSeason.sunriseBlock,
+    };
 
     Object.entries(sowEventTimings).forEach(([key, timings], idx) => {
       if (!data[idx]) {
         data[idx] = [];
       }
+      // number of blocks is not necessarily 1,800, depends when gm was called
+      const numBlocks = Math.max(...Object.values(numBlocksPerSeasons));
+      const numBlocksForSeason = numBlocksPerSeasons[key];
       let cumulativeSownBeans = 0;
       for (let i = 0; i < numBlocks; i++) {
         // usually one event but w/ tractor multiple can happen in the same block
@@ -94,15 +96,17 @@ export const SoilDemandChart = ({
         if (sowEvents[0]) {
           labels.push("XX");
           cumulativeSownBeans += cumulativeSownBeansForBlock;
+          // This is really only for the current season, if only 20min have elapsed, only draw 20min worth of chart data for that line
           data[idx].push({
-            values: [(cumulativeSownBeans / timings.availableSoil) * 100 || 0],
+            values: i > numBlocksForSeason ? [null] : [(cumulativeSownBeans / timings.availableSoil) * 100 || 0],
             interval: textInterval,
           });
           indexesWithSowEvents.push(i);
         } else {
           labels.push(textInterval);
+          // This is really only for the current season, if only 20min have elapsed, only draw 20min worth of chart data for that line
           data[idx].push({
-            values: [(cumulativeSownBeans / timings.availableSoil) * 100 || 0],
+            values: i > numBlocksForSeason ? [null] : [(cumulativeSownBeans / timings.availableSoil) * 100 || 0],
             interval: textInterval,
           });
         }
