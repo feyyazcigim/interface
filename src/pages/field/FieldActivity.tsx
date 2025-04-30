@@ -67,7 +67,7 @@ const FieldActivity = () => {
 
   // const qs = useTractorSowCompleteEvents();
 
-  const d = useTractorSowOrderbook();
+  // const d = useTractorSowOrderbook();
 
   // Fetch tractor orders
   React.useEffect(() => {

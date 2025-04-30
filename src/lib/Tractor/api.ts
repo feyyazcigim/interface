@@ -17,6 +17,44 @@ import { isDev, safeJSONStringify } from "@/utils/utils";
 import { base } from "viem/chains";
 import { SowOrderTokenStrategy, TractorAPIOrderType, TractorAPIOrdersResponse } from "./types";
 
+// ────────────────────────────────────────────────────────────────────────────────
+// Shared Interfaces
+// ────────────────────────────────────────────────────────────────────────────────
+
+export type BaseTractorAPIResponse<T = unknown> = {
+  lastUpdated: number;
+  totalRecords: number;
+} & T;
+
+const MAX_LIMIT = 5_000;
+
+async function paginateTractorApiRequest<T extends BaseTractorAPIResponse>(
+  asyncCallback: (body?: Record<string, unknown>) => Promise<T>,
+  getReturnLength: (res: T) => number,
+  requestBody: any,
+) {
+  const body = { ...requestBody, limit: MAX_LIMIT };
+
+  try {
+    const res = await asyncCallback(body);
+
+    if (getReturnLength(res) < body.limit) {
+      return [res];
+    }
+
+    const amountLeft = Math.ceil((res.totalRecords - body.limit) / body.limit);
+
+    return Promise.all(
+      Array.from({ length: amountLeft }, (_, i) => i + 1).map((skipAmount) =>
+        asyncCallback({ ...body, skip: skipAmount }),
+      ),
+    );
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+}
+
 // ================================================================================
 // ────────────────────────────────────────────────────────────────────────────────
 // TRACTOR API ORDER ENDPOINT
@@ -30,10 +68,7 @@ export interface TractorAPIOrderOptions {
 const getOrders = async (chainId: number = base.id, options?: TractorAPIOrderOptions) => {
   console.debug("[Tractor/tractorAPIFetchOrders] Fetching orders...");
 
-  const bodyObj: any = {
-    limit: 10000,
-    ...options,
-  };
+  const bodyObj = { ...options };
 
   const body = safeJSONStringify(bodyObj, undefined);
 
@@ -118,45 +153,43 @@ export interface TractorAPIExecutionsOptions {
 const tractorAPIFetchExecutions = async (options?: TractorAPIExecutionsOptions) => {
   console.debug("[Tractor/tractorAPIFetchExecutions] Fetching executions...");
 
-  const bodyObj: any = { limit: 10000, orderType: "KNOWN", ...options };
-
-  const body = safeJSONStringify(bodyObj, undefined);
+  const bodyObj = { orderType: "KNOWN", skip: 0, ...options };
 
   try {
-    const response = await fetch(`${API_SERVICES.pinto}/tractor/executions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const results = await paginateTractorApiRequest(
+      (requestBody: any) => {
+        return fetch(`${API_SERVICES.pinto}/tractor/executions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: safeJSONStringify(requestBody, undefined),
+        }).then((res) => res.json() as Promise<TractorAPIExecutionResponse<unknown>>);
       },
-      body,
-    }).then((res) => res.json() as Promise<TractorAPIExecutionResponse<unknown>>);
+      (res) => res.executions.length,
+      bodyObj,
+    );
 
-    let byBlueprintHash = {};
+    const data = results.reduce<TractorAPIExecutionResponse<unknown>>(
+      (prev, curr) => {
+        if (!prev.lastUpdated) {
+          prev.lastUpdated = curr.lastUpdated;
+        }
+        if (!prev.totalRecords) {
+          prev.totalRecords = curr.totalRecords;
+        }
+        prev.executions.push(...curr.executions);
 
-    if (isDev()) {
-      byBlueprintHash = response.executions.reduce<Record<HashString, TractorAPIResponseExecution<unknown>[]>>(
-        (acc, curr) => {
-          const blueprintHash = curr.blueprintHash.toLowerCase();
-          if (!acc[blueprintHash]) {
-            acc[blueprintHash] = [curr];
-          } else {
-            acc[blueprintHash] = [...acc[blueprintHash], curr];
-          }
+        return prev;
+      },
+      { lastUpdated: 0, totalRecords: 0, executions: [] },
+    );
 
-          return acc;
-        },
-        {},
-      );
-    }
+    console.debug("[Tractor/tractorAPIFetchExecutions] RESPONSE", data);
 
-    console.debug("[Tractor/tractorAPIFetchExecutions] RESPONSE", {
-      response,
-      byBlueprintHash,
-    });
-
-    return response;
+    return data;
   } catch (e) {
-    console.error(e);
+    console.error("[Tractor/tractorAPIFetchExecutions] ERROR", e);
     return {
       lastUpdated: 0,
       totalRecords: 0,

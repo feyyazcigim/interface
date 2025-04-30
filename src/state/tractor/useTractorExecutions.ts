@@ -64,11 +64,6 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
     (onChainExecutions: Awaited<ReturnType<typeof fetchTractorExecutions>> | undefined) => {
       if (!executionData?.executions || !onChainExecutions?.length) return undefined;
 
-      console.debug("[Tractor/usePublisherTractorExecutions/mergeExecutions] merging executions", {
-        onChainExecutions,
-        executionData,
-      });
-
       // Create a Set of existing transaction hashes for O(1) lookup
       const existingTxHashes = new Set([
         ...executionData.executions.sowBlueprintv0.map((exec) => exec.transactionHash.toLowerCase()),
@@ -198,6 +193,7 @@ export async function fetchTractorExecutions(
   const chainId = publicClient.chain?.id;
   if (!chainId) throw new Error("[Tractor/fetchTractorExecutions] No chain ID found");
 
+  console.debug("[Tractor/fetchTractorExecutions] FETCHING(executions for publisher):", publisher);
   const latestBlock = await publicClient.getBlock();
 
   let fromBlock = TRACTOR_DEPLOYMENT_BLOCK;
@@ -218,6 +214,8 @@ export async function fetchTractorExecutions(
     fromBlock: fromBlock ?? TRACTOR_DEPLOYMENT_BLOCK,
     toBlock: "latest",
   });
+
+  console.debug("[Tractor/fetchTractorExecutions] RESPONSE(Tractor events):", tractorEvents);
 
   // Process transaction receipts and collect block numbers
   const blockNumbers = new Set<bigint>();
@@ -301,9 +299,7 @@ export async function fetchTractorExecutions(
     } as PublisherTractorExecution;
   });
 
-  console.debug("[Tractor/fetchTractorExecutions] processed executions", {
-    processed,
-  });
+  console.debug("[Tractor/fetchTractorExecutions] RESPONSE", processed);
 
   return processed;
 }

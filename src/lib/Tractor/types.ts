@@ -1,7 +1,7 @@
 import { TV } from "@/classes/TokenValue";
-import { Token } from "@/utils/types";
 import { HashString, Prettify } from "@/utils/types.generic";
 import { Address } from "viem";
+import { BaseTractorAPIResponse } from "./api";
 
 export interface Blueprint {
   publisher: Address;
@@ -41,11 +41,6 @@ export type SowOrderTokenStrategy =
 export type TractorSowOrderType = "SOW_V0";
 
 export type TractorAPIOrderType = TractorSowOrderType;
-
-export type BaseTractorAPIResponse<T extends object> = {
-  lastUpdated: number;
-  totalRecords: number;
-} & T;
 
 export type TractorAPIOrdersResponse<
   Value extends string | TV = TV,

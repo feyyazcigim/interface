@@ -37,6 +37,8 @@ export async function getOperatorAverageTipPaid(
   currentBlock: MinimumViableBlock<bigint>,
   lookbackBlocks: bigint = TIME_TO_BLOCKS.fortnight,
 ): Promise<number> {
+  console.debug("[Tractor/getOperatorAverageTipPaid] FETCHING", { currentBlock, lookbackBlocks });
+
   try {
     // Calculate starting block (use max of deployment block or lookback. Default is 14 days)
     const lookback = currentBlock.number > lookbackBlocks ? currentBlock.number - lookbackBlocks : 0n;
@@ -91,9 +93,17 @@ export async function getOperatorAverageTipPaid(
 
     // Calculate average in human-readable form
     const avgTipAmount = Number(totalTipAmount) / (validEventCount * 1e6);
+    const result = avgTipAmount > 0 ? avgTipAmount : 1;
+
+    console.debug("[Tractor/getOperatorAverageTipPaid] RESPONSE", {
+      totalTipAmount,
+      validEventCount,
+      avgTipAmount,
+      result,
+    });
 
     // If we somehow got a non-positive number, return the default
-    return avgTipAmount > 0 ? avgTipAmount : 1;
+    return result;
   } catch (error) {
     console.error("Error getting average tip amount:", error);
     // Return default value in case of error

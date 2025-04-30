@@ -20,7 +20,7 @@ import { stringEq } from "@/utils/string";
 import { getTokenNameByIndex } from "@/utils/token";
 import { CalendarIcon, ClockIcon, CornerBottomLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { decodeFunctionData } from "viem";
 import { useAccount } from "wagmi";
 
@@ -46,9 +46,12 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const loading = executionsQuery.isLoading || requisitionsQuery.isLoading || !dataHasLoaded;
   const error = executionsQuery.error || requisitionsQuery.error;
 
+  const [lastRefetchedCounter, setLastRefetchedCounter] = useState<number>(0);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: only refresh when refresh data counter changes
   useEffect(() => {
-    if (refreshData && dataHasLoaded) {
+    if (refreshData && dataHasLoaded && lastRefetchedCounter !== refreshData) {
+      setLastRefetchedCounter((prev) => prev + 1);
       executionsQuery.refetch();
       requisitionsQuery.refetch();
     }
@@ -58,10 +61,10 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const { writeWithEstimateGas, submitting } = useTransaction({
     successMessage: "Order cancelled successfully",
     errorMessage: "Failed to cancel order",
-    successCallback: () => {
-      // Refresh data after cancellation
-      // fetchData();
-    },
+    successCallback: useCallback(() => {
+      executionsQuery.refetch();
+      requisitionsQuery.refetch();
+    }, [executionsQuery.refetch, requisitionsQuery.refetch]),
   });
 
   const handleCancelBlueprint = async (req: RequisitionEvent, e: React.MouseEvent) => {
@@ -138,15 +141,6 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
 
     setShowDialog(true);
   };
-
-  useEffect(() => {
-    if (executions.length && requisitions.length) {
-      console.log("Tractor Orders Panel", {
-        executions,
-        requisitions,
-      });
-    }
-  }, [executions, requisitions]);
 
   // Convert the blueprint to match the expected Blueprint type (fixing readonly issue)
   const adaptBlueprintForDialog = (blueprint: RequisitionEvent["requisition"]["blueprint"]): Blueprint => {
