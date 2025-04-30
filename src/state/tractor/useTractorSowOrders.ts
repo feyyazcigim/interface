@@ -1,15 +1,19 @@
+import { TV } from "@/classes/TokenValue";
 import { TIME_TO_BLOCKS } from "@/constants/blocks";
 import { defaultQuerySettingsMedium } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { OrderbookEntry, TractorAPIOrdersResponse, loadOrderbookData } from "@/lib/Tractor";
-import TractorAPI, { TractorAPIOrderOptions } from "@/lib/Tractor/api";
+import { OrderbookEntry, loadOrderbookData } from "@/lib/Tractor";
+import TractorAPI, { TractorAPIOrderOptions, TractorAPIOrdersResponse } from "@/lib/Tractor/api";
 import { queryKeys } from "@/state/queryKeys";
+import { HashString } from "@/utils/types.generic";
 import { isDev } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useChainId, usePublicClient } from "wagmi";
 import { useTemperature } from "../useFieldData";
-import { HashString } from "@/utils/types.generic";
+import { MAIN_TOKEN } from "@/constants/tokens";
+import { getChainConstant } from "@/hooks/useChainConstant";
+import { resolveChainId } from "@/utils/chain";
 
 const getLookbackBlocks = (chainOnly: boolean, error: boolean) => {
   if (chainOnly || error) return undefined;
@@ -19,21 +23,67 @@ const getLookbackBlocks = (chainOnly: boolean, error: boolean) => {
 const useTractorAPISowOrders = (address?: HashString, args?: TractorAPIOrderOptions) => {
   const chainId = useChainId();
 
+  const selectOrderbookData = useMemo(() => transformAPIOrderbookData(chainId), [chainId]);
+
   return useQuery({
-    queryKey: queryKeys.tractor.sowOrdersV0(),
+    queryKey: queryKeys.tractor.sowOrdersV0(args),
     queryFn: async () => {
       if (!chainId) return;
-      const options = { orderType: "SOW_V0",  cancelled: false, ...args } satisfies TractorAPIOrderOptions;
+      const options = { orderType: "SOW_V0", cancelled: false, ...args } satisfies TractorAPIOrderOptions;
       if (address) options.publisher = address;
 
       return TractorAPI.getOrders(options);
     },
     enabled: !!chainId,
+    select: selectOrderbookData,
     ...defaultQuerySettingsMedium,
   });
-}
+};
 
-export function useTractorSowOrderbook(address?: HashString, args?: TractorAPIOrderOptions, chainOnly: boolean = false) {
+const transformAPIOrderbookData = (chainId: number) => (response: TractorAPIOrdersResponse | undefined) => {
+  if (!response) return [];
+
+  const mainToken = getChainConstant(resolveChainId(chainId), MAIN_TOKEN);
+
+  return response.orders.map((order): OrderbookEntry => {
+    const totalAmountToSow = TV.fromBlockchain(order.blueprintData.totalAmountToSow, mainToken.decimals);
+    const pintoSownCounter = TV.fromBlockchain(order.blueprintData.pintoSownCounter, mainToken.decimals);
+    const cascadeAmountFunded = TV.fromBlockchain(order.blueprintData.cascadeAmountFunded, mainToken.decimals);
+    const maxAmountToSowPerSeason = TV.fromBlockchain(order.blueprintData.maxAmountToSowPerSeason, mainToken.decimals);
+
+    return {
+      requisition: {
+        blueprint: {
+          publisher: order.publisher,
+          data: order.data,
+          operatorPasteInstrs: order.operatorPasteInstrs,
+          maxNonce: BigInt(order.maxNonce),
+          startTime: BigInt(order.startTime),
+          endTime: BigInt(order.endTime),
+        },
+        blueprintHash: order.blueprintHash,
+        signature: order.signature,
+      },
+      withdrawalPlan: undefined,
+      blockNumber: order.publishedBlock,
+      timestamp: Number(order.publishedTimestamp),
+      isCancelled: order.cancelled,
+      requisitionType: order.orderType === "SOW_V0" ? "sowBlueprintv0" : "unknown",
+      pintosLeftToSow: totalAmountToSow.sub(pintoSownCounter),
+      totalAvailablePinto: cascadeAmountFunded,
+      currentlySowable: cascadeAmountFunded,
+      amountSowableNextSeason: TV.min(cascadeAmountFunded, maxAmountToSowPerSeason),
+      amountSowableNextSeasonConsideringAvailableSoil: TV.ZERO,
+      estimatedPlaceInLine: TV.ZERO,
+    };
+  });
+};
+
+export function useTractorSowOrderbook(
+  address?: HashString,
+  args?: TractorAPIOrderOptions,
+  chainOnly: boolean = false,
+) {
   const chainId = useChainId();
   const client = usePublicClient({ chainId });
   const diamond = useProtocolAddress();
@@ -43,9 +93,7 @@ export function useTractorSowOrderbook(address?: HashString, args?: TractorAPIOr
   const ordersQuery = useTractorAPISowOrders(address, args);
 
   // check if the API data exists, is not loading, and is not an error
-  const ordersAPIDataExists = Boolean(
-    ordersQuery.data?.orders.length && !ordersQuery.isLoading && !ordersQuery.isError,
-  );
+  const ordersAPIDataExists = Boolean(ordersQuery.data?.length && !ordersQuery.isLoading && !ordersQuery.isError);
 
   // only run the chain query if we have a client, a max temperature, the API data exists, and we have a latest block reference.
   const orderChainQueryEnabled = chainOnly || Boolean(client && temperature.max.gt(0) && ordersAPIDataExists);
@@ -95,12 +143,12 @@ export function useTractorSowOrderbook(address?: HashString, args?: TractorAPIOr
       string,
       {
         chain?: OrderbookEntry;
-        api?: TractorAPIOrdersResponse["orders"][number];
+        api?: OrderbookEntry;
       }
     >();
 
-    ordersQuery.data.orders.forEach((order) => {
-      map.set(order.blueprintHash.toLowerCase(), {
+    ordersQuery.data.forEach((order) => {
+      map.set(order.requisition.blueprintHash.toLowerCase(), {
         chain: undefined,
         api: order,
       });

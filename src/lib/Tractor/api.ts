@@ -1,28 +1,20 @@
 import { TV } from "@/classes/TokenValue";
 import { API_SERVICES } from "@/constants/endpoints";
-import {
-  MAIN_TOKEN,
-  PINTO_CBBTC_TOKEN,
-  PINTO_CBETH_TOKEN,
-  PINTO_USDC_TOKEN,
-  PINTO_WETH_TOKEN,
-  PINTO_WSOL_TOKEN,
-} from "@/constants/tokens";
-import { getChainConstant } from "@/hooks/useChainConstant";
-import { resolveChainId } from "@/utils/chain";
-import { ChainLookup, HashString, Prettify } from "@/utils/types.generic";
+import { HashString, Prettify } from "@/utils/types.generic";
 import { safeJSONStringify } from "@/utils/utils";
-import { base } from "viem/chains";
-import { SowOrderTokenStrategy, TractorAPIOrderType, TractorAPIOrdersResponse } from "./types";
 
 // ────────────────────────────────────────────────────────────────────────────────
-// Shared Interfaces
+// Shared Interfaces & Functions
 // ────────────────────────────────────────────────────────────────────────────────
 
 export type BaseTractorAPIResponse<T = unknown> = {
   lastUpdated: number;
   totalRecords: number;
 } & T;
+
+export type TractorSowOrderType = "SOW_V0";
+
+export type TractorAPIOrderType = TractorSowOrderType;
 
 const MAX_LIMIT = 5_000;
 
@@ -54,9 +46,7 @@ async function paginateTractorApiRequest<T extends BaseTractorAPIResponse>(
 }
 
 // ================================================================================
-// ────────────────────────────────────────────────────────────────────────────────
 // TRACTOR API ORDER ENDPOINT
-// ────────────────────────────────────────────────────────────────────────────────
 // ================================================================================
 
 export interface TractorAPIOrderOptions {
@@ -69,11 +59,12 @@ const getOrders = async (options?: TractorAPIOrderOptions) => {
 
   try {
     const result = await paginateTractorApiRequest(
-      (reqBody) => fetch(`${API_SERVICES.pinto}/tractor/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: safeJSONStringify(reqBody, undefined),
-      }).then((res) => res.json() as Promise<TractorAPIOrdersResponse>),
+      (reqBody) =>
+        fetch(`${API_SERVICES.pinto}/tractor/orders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: safeJSONStringify(reqBody, undefined),
+        }).then((res) => res.json() as Promise<TractorAPIOrdersResponse>),
       (res) => res.orders.length,
       { ...options, limit: MAX_LIMIT, skip: 0 },
     );
@@ -101,10 +92,53 @@ const getOrders = async (options?: TractorAPIOrderOptions) => {
   }
 };
 
+export type TractorAPIOrdersResponse = BaseTractorAPIResponse<{
+  orders: TractorAPIOrder[];
+}>;
+
+export interface TractorAPIOrdersExecutionInfo {
+  executionCount: number;
+  latestExecution: string | null;
+}
+
+export interface TractorAPISowOrderBlueprint {
+  blueprintHash: HashString;
+  pintoSownCounter: string;
+  lastExecutedSeason: number;
+  orderComplete: boolean;
+  amountFunded: string;
+  cascadeAmountFunded: string;
+  sourceTokenIndices: string[];
+  totalAmountToSow: string;
+  minAmountToSowPerSeason: string;
+  maxAmountToSowPerSeason: string;
+  minTemp: string;
+  maxPodlineLength: string;
+  maxGrownStalkPerBdv: string;
+  runBlocksAfterSunrise: string;
+  slippageRatio: string;
+}
+
+export interface TractorAPIOrder {
+  blueprintHash: HashString;
+  orderType: TractorAPIOrderType;
+  publisher: HashString;
+  data: HashString;
+  operatorPasteInstrs: HashString[];
+  maxNonce: string;
+  startTime: string;
+  endTime: string;
+  signature: HashString;
+  publishedTimestamp: string;
+  publishedBlock: number;
+  beanTip: string;
+  cancelled: boolean;
+  blueprintData: TractorAPISowOrderBlueprint;
+  executionStats: TractorAPIOrdersExecutionInfo;
+}
+
 // ================================================================================
-// ────────────────────────────────────────────────────────────────────────────────
 // TRACTOR API EXECUTION ENDPOINT
-// ────────────────────────────────────────────────────────────────────────────────
 // ================================================================================
 
 export interface TractorAPIExecutionsOptions {
@@ -150,10 +184,6 @@ const tractorAPIFetchExecutions = async (options?: TractorAPIExecutionsOptions) 
     };
   }
 };
-
-// ────────────────────────────────────────────────────────────────────────────────
-// INTERFACE
-// ────────────────────────────────────────────────────────────────────────────────
 
 export interface TractorAPIResponseExecution<Blueprint> {
   id: number;
@@ -205,39 +235,3 @@ const TractorAPI = {
 } as const;
 
 export default TractorAPI;
-
-// ────────────────────────────────────────────────────────────────────────────────
-// ORDER ENDPOINT HELPER FUNCTIONS
-// ────────────────────────────────────────────────────────────────────────────────
-
-// Chain Map to of index to SowOrderTokenStrategy
-const INDEX_TO_SOW_ORDER_TOKEN_STRATEGY: ChainLookup<Record<string, SowOrderTokenStrategy>> = {
-  [base.id]: {
-    "0": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, MAIN_TOKEN).address },
-    "1": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, PINTO_WETH_TOKEN).address },
-    "2": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, PINTO_CBETH_TOKEN).address },
-    "3": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, PINTO_CBBTC_TOKEN).address },
-    "4": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, PINTO_USDC_TOKEN).address },
-    "5": { type: "SPECIFIC_TOKEN", address: getChainConstant(base.id, PINTO_WSOL_TOKEN).address },
-    "254": { type: "LOWEST_PRICE" },
-    "255": { type: "LOWEST_SEEDS" },
-  },
-};
-
-const getTokenSowStrategySource = (indicies: string[], chainId: number = base.id): SowOrderTokenStrategy => {
-  const resolvedChainId = resolveChainId(chainId);
-  if (!(resolvedChainId in INDEX_TO_SOW_ORDER_TOKEN_STRATEGY)) {
-    throw new Error(`[Tractor/getTokenSowStrategySource]: Invalid chainId: ${chainId}`);
-  }
-
-  if (indicies.length > 1) {
-    throw new Error(`[Tractor/getTokenSowStrategySource]: Multiple indicies not supported: ${indicies}`);
-  }
-
-  const strategy = INDEX_TO_SOW_ORDER_TOKEN_STRATEGY[resolvedChainId]?.[indicies[0]];
-  if (!strategy) {
-    throw new Error(`[Tractor/getTokenSowStrategySource]: Invalid index: ${indicies[0]}`);
-  }
-
-  return strategy;
-};

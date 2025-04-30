@@ -8,7 +8,7 @@ import { FarmFromMode, MinimumViableBlock } from "@/utils/types";
 import { MayArray } from "@/utils/types.generic";
 import { SignableMessage, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
-import { Requisition, SowOrderTokenStrategy, TractorAPIOrdersResponse } from "./types";
+import { Requisition, SowOrderTokenStrategy } from "./types";
 
 // Block number at which Tractor was deployed - use this as starting point for event queries
 export const TRACTOR_DEPLOYMENT_BLOCK = 28930876n;
@@ -751,13 +751,13 @@ export async function loadOrderbookData(
   publicClient: PublicClient | null,
   latestBlock?: { number: bigint; timestamp: bigint } | null,
   maxTemperature?: number,
-  apiResponse?: TractorAPIOrdersResponse,
+  apiEntries?: OrderbookEntry[],
   lookbackBlocks?: bigint,
 ): Promise<OrderbookEntry[]> {
   if (!protocolAddress || !publicClient) return [];
 
   const knownBlueprintHashes = new Set<string>(
-    apiResponse?.orders?.map((order) => order.blueprintHash.toLowerCase()) ?? [],
+    apiEntries?.map((order) => order.requisition.blueprintHash.toLowerCase()) ?? [],
   );
 
   console.debug("[TRACTOR/loadOrderbookData] knownBlueprintHashes:", knownBlueprintHashes);
@@ -1096,40 +1096,6 @@ export async function loadOrderbookData(
 
       console.debug(`  Allocated: ${allocatedAmount.toHuman()}, Remaining soil: ${remainingSoil.toHuman()}`);
     }
-
-    const toOrderbookData: OrderbookEntry[] =
-      apiResponse?.orders.map((order) => {
-        return {
-          requisition: {
-            blueprint: {
-              publisher: order.publisher,
-              data: order.data,
-              operatorPasteInstrs: order.operatorPasteInstrs,
-              maxNonce: BigInt(order.maxNonce),
-              startTime: BigInt(order.startTime.getTime()),
-              endTime: BigInt(order.endTime.getTime()),
-            },
-            blueprintHash: order.blueprintHash,
-            signature: order.signature,
-          },
-          withdrawalPlan: undefined,
-          blockNumber: order.publishedBlock,
-          timestamp: order.publishedTimestamp.getTime(),
-          isCancelled: order.cancelled,
-          requisitionType: order.orderType === "SOW_V0" ? "sowBlueprintv0" : "unknown",
-          pintosLeftToSow: order.blueprintData.totalAmountToSow.sub(order.blueprintData.pintoSownCounter),
-          totalAvailablePinto: order.blueprintData.cascadeAmountFunded,
-          // min (pintos left to sow, total available pinto)
-          // where pintos left to sow:
-          currentlySowable: order.blueprintData.cascadeAmountFunded,
-          amountSowableNextSeason: TokenValue.min(
-            order.blueprintData.cascadeAmountFunded,
-            order.blueprintData.maxAmountToSowPerSeason,
-          ),
-          amountSowableNextSeasonConsideringAvailableSoil: TokenValue.ZERO,
-          estimatedPlaceInLine: TokenValue.ZERO,
-        };
-      }) ?? [];
 
     return orderbookData;
   } catch (error) {

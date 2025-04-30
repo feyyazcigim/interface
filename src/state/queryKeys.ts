@@ -1,3 +1,4 @@
+import { TractorAPIOrderOptions } from "@/lib/Tractor/api";
 import { MinimumViableBlock } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 
@@ -20,15 +21,17 @@ const getLatestBlockKeyFragment = (args: MinimumViableBlock<bigint> | undefined)
 
 const tractorQueryKeys = {
   // Sow Orders V0 api cal
-  sowOrdersV0: () => [BASE_QKS.tractor, "sowOrdersV0", "api"],
-  sowOrdersV0Chain: (args: {
-    lookbackBlocks: bigint | undefined;
-  }) => [
+  sowOrdersV0: (args?: TractorAPIOrderOptions) => [
     BASE_QKS.tractor,
     "sowOrdersV0",
-    "chain",
-    args.lookbackBlocks?.toString() ?? "0",
+    "api",
+    args?.publisher,
+    args?.orderType,
+    args?.cancelled ?? false,
   ],
+  sowOrdersV0Chain: (args: {
+    lookbackBlocks: bigint | undefined;
+  }) => [BASE_QKS.tractor, "sowOrdersV0", "chain", args.lookbackBlocks?.toString() ?? "0"],
   operatorAverageTipPaid: (lookbackBlocks?: bigint) => [
     BASE_QKS.tractor,
     "operatorAverageTipPaid",
