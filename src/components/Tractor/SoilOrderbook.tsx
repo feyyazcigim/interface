@@ -7,7 +7,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover
 import { Switch } from "@/components/ui/Switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { PINTO } from "@/constants/tokens";
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { Blueprint } from "@/lib/Tractor/types";
 import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
 import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
@@ -16,11 +15,9 @@ import { formatter } from "@/utils/format";
 import { cn } from "@/utils/utils";
 import { GearIcon } from "@radix-ui/react-icons";
 import { Separator } from "@radix-ui/react-separator";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import React from "react";
-import { toast } from "sonner";
 import { usePublicClient } from "wagmi";
-import { useChainId } from "wagmi";
 import { Col, Row } from "../Container";
 import LoadingSpinner from "../LoadingSpinner";
 import ReviewTractorOrderDialog from "../ReviewTractorOrderDialog";
@@ -41,26 +38,11 @@ export function SoilOrderbookContent({
   sortBy = "temperature",
   showAboveCurrentTemp = true,
 }: SoilOrderbookContentProps) {
-  // const [requisitions, setRequisitions] = useState<OrderbookEntry[]>([]);
   const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
-  // const [isLoading, setIsLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderbookEntry | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const protocolAddress = useProtocolAddress();
   const publicClient = usePublicClient();
-  const chainId = useChainId();
-  // const isMounted = useRef(true);
-  // const loadAttempted = useRef(false);
   const temperature = useTemperature();
-
-  // Cleanup function to prevent state updates after unmount
-  // useEffect(() => {
-  //   console.log("Setting up cleanup");
-  //   return () => {
-  //     console.log("Component unmounting, setting isMounted to false");
-  //     // isMounted.current = false;
-  //   };
-  // }, []);
 
   // Get latest block info once when component loads
   useEffect(() => {
@@ -174,17 +156,7 @@ export function SoilOrderbookContent({
   const getSortedRequisitions = () => {
     let sorted: OrderbookEntry[];
     if (sortBy === "temperature") {
-      sorted = [...requisitions].sort((a, b) => {
-        try {
-          const dataA = decodeSowTractorData(a.requisition.blueprint.data);
-          const dataB = decodeSowTractorData(b.requisition.blueprint.data);
-          if (!dataA || !dataB) return 0;
-          return parseFloat(dataA.minTempAsString) - parseFloat(dataB.minTempAsString);
-        } catch (error) {
-          console.error("Failed to decode data for requisition:", error);
-          return 0;
-        }
-      });
+      sorted = [...requisitions].sort((a, b) => a.minTemp.sub(b.minTemp).toNumber());
     } else if (sortBy === "tip") {
       sorted = [...requisitions].sort((a, b) => {
         try {
