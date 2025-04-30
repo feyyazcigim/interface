@@ -733,15 +733,13 @@ export async function fetchTractorExecutions(
             topics: log.topics,
           });
 
-          if (decoded.eventName === "TractorExecutionBegan" &&
-            decoded.args?.blueprintHash === blueprintHash) {
+          if (decoded.eventName === "TractorExecutionBegan" && decoded.args?.blueprintHash === blueprintHash) {
             tractorExecutionBeganIndex = i;
             tractorExecutionBeganEvent = decoded;
             break;
           }
         } catch {
           // Skip logs that can't be decoded
-          continue;
         }
       }
 
@@ -763,7 +761,6 @@ export async function fetchTractorExecutions(
             }
           } catch {
             // Skip logs that can't be decoded
-            continue;
           }
         }
       }
@@ -791,20 +788,22 @@ export async function fetchTractorExecutions(
       }
 
       // Create the tractorExecutionBeganData object conditionally
-      const tractorExecutionBeganData = tractorExecutionBeganEvent ? {
-        operator: tractorExecutionBeganEvent.args?.operator as `0x${string}`,
-        publisher: tractorExecutionBeganEvent.args?.publisher as `0x${string}`,
-        blueprintHash: tractorExecutionBeganEvent.args?.blueprintHash as `0x${string}`,
-        nonce: tractorExecutionBeganEvent.args?.nonce as bigint,
-        gasleft: tractorExecutionBeganEvent.args?.gasleft as bigint
-      } : undefined;
+      const tractorExecutionBeganData = tractorExecutionBeganEvent
+        ? {
+            operator: tractorExecutionBeganEvent.args?.operator as `0x${string}`,
+            publisher: tractorExecutionBeganEvent.args?.publisher as `0x${string}`,
+            blueprintHash: tractorExecutionBeganEvent.args?.blueprintHash as `0x${string}`,
+            nonce: tractorExecutionBeganEvent.args?.nonce as bigint,
+            gasleft: tractorExecutionBeganEvent.args?.gasleft as bigint,
+          }
+        : undefined;
 
       return {
         blockNumber: receipt.blockNumber,
         event,
         receipt,
         sowData,
-        tractorExecutionBeganEvent: tractorExecutionBeganData
+        tractorExecutionBeganEvent: tractorExecutionBeganData,
       };
     }),
   );
@@ -830,7 +829,7 @@ export async function fetchTractorExecutions(
       transactionHash: result.event.transactionHash,
       timestamp: blockTimestamps.get(result.blockNumber.toString()),
       sowEvent: result.sowData,
-      tractorExecutionBeganEvent: result.tractorExecutionBeganEvent
+      tractorExecutionBeganEvent: result.tractorExecutionBeganEvent,
     };
   });
 }
