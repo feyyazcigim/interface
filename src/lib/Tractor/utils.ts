@@ -717,7 +717,10 @@ export async function fetchTractorExecutions(
       // Add block number to the set for batch fetching
       blockNumbers.add(receipt.blockNumber);
 
-      // First, find the TractorExecutionBegan event with matching publisher
+      // Get the blueprint hash from the Tractor event
+      const blueprintHash = event.args?.blueprintHash as `0x${string}`;
+
+      // First, find the TractorExecutionBegan event with matching blueprint hash
       let tractorExecutionBeganIndex = -1;
       let tractorExecutionBeganEvent: any = null;
 
@@ -731,7 +734,7 @@ export async function fetchTractorExecutions(
           });
 
           if (decoded.eventName === "TractorExecutionBegan" &&
-            decoded.args?.publisher?.toLowerCase() === publisher.toLowerCase()) {
+            decoded.args?.blueprintHash === blueprintHash) {
             tractorExecutionBeganIndex = i;
             tractorExecutionBeganEvent = decoded;
             break;
