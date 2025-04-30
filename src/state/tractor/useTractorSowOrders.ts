@@ -1,8 +1,8 @@
-import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
-import { SOW_BLUEPRINT_V0_ADDRESS } from "@/constants/address";
+import { TIME_TO_BLOCKS } from "@/constants/blocks";
 import { defaultQuerySettingsMedium } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { OrderbookEntry, TractorAPIOrdersResponse, loadOrderbookData, tractorAPIFetchOrders } from "@/lib/Tractor";
+import { OrderbookEntry, TractorAPIOrderType, TractorAPIOrdersResponse, loadOrderbookData } from "@/lib/Tractor";
+import TractorAPI, { TractorAPIOrderOptions } from "@/lib/Tractor/api";
 import { queryKeys } from "@/state/queryKeys";
 import useCachedLatestBlockQuery from "@/state/useCachedLatestBlockQuery";
 import { isDev } from "@/utils/utils";
@@ -11,12 +11,7 @@ import { useEffect } from "react";
 import { useChainId, usePublicClient } from "wagmi";
 import { useTemperature } from "../useFieldData";
 
-// 1 day / 24 seasons of blocks on Base. 2 seconds per block.
-// 24 hours * 60 mins * 60 secs = 86400 seconds
-// At 2 seconds per block: 86400 / 2 = 43200 blocks
-const TRACTOR_MAX_LOOKBACK_BLOCKS = 43200n;
-
-export function useTractorSowOrderbook(address?: string) {
+export function useTractorSowOrderbook(address?: string, args?: TractorAPIOrderOptions) {
   const chainId = useChainId();
   const client = usePublicClient({ chainId });
   const diamond = useProtocolAddress();
@@ -29,7 +24,8 @@ export function useTractorSowOrderbook(address?: string) {
     queryKey: queryKeys.tractor.sowOrdersV0(),
     queryFn: async () => {
       if (!chainId) return;
-      const data = await tractorAPIFetchOrders(chainId, { orderType: "SOW_V0", cancelled: false });
+      const options = { orderType: "SOW_V0", cancelled: false, ...args } satisfies TractorAPIOrderOptions;
+      const data = await TractorAPI.getOrders(chainId, options);
 
       console.log("[TRACTOR/useTractorSowOrderbook/ordersQuery] DATA", {
         data,
@@ -51,18 +47,16 @@ export function useTractorSowOrderbook(address?: string) {
     client && temperature.max.gt(0) && ordersAPIDataExists && latestBlockQuery.data && ordersQuery.data?.lastUpdated,
   );
 
-  // only use the max lookback if we're not in dev mode or if the API request failed
-  const lookbackBlocks = isDev() || !ordersQuery.isError ? TRACTOR_MAX_LOOKBACK_BLOCKS : undefined;
+  /**
+   * If the orders API request failed, fetch since the TRACTOR_DEPLOYMENT_BLOCK
+   * otherwise,
+   * - DEV, use a 24 hour lookback to allow for forwarding seasons locally
+   * - PROD, use a 1 hour lookback
+   */
+  const lookbackBlocks = !ordersQuery.error ? (isDev() ? TIME_TO_BLOCKS.day : TIME_TO_BLOCKS.hour) : undefined;
 
   const ordersChainQuery = useQuery({
-    queryKey: queryKeys.tractor.sowOrdersV0Chain({
-      lookbackBlocks,
-      lastUpdated: ordersQuery.data?.lastUpdated,
-      blockInfo: {
-        number: latestBlockQuery.data?.number ?? 0n,
-        timestamp: latestBlockQuery.data?.timestamp ?? 0n,
-      },
-    }),
+    queryKey: queryKeys.tractor.sowOrdersV0Chain({ lookbackBlocks, blockInfo: latestBlockQuery.data }),
     queryFn: async () => {
       // if (!latestBlockQuery.data || temperature.max.lte(0) || !client) {
       if (temperature.max.lte(0) || !client) {

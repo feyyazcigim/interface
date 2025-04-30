@@ -23,13 +23,11 @@ const tractorQueryKeys = {
   sowOrdersV0: () => [BASE_QKS.tractor, "sowOrdersV0", "api"],
   sowOrdersV0Chain: (args: {
     lookbackBlocks: bigint | undefined;
-    lastUpdated: number | undefined;
     blockInfo: MinimumViableBlock<bigint> | undefined;
   }) => [
     BASE_QKS.tractor,
     "sowOrdersV0",
     "chain",
-    args.lastUpdated?.toString() ?? "no-last-updated",
     args.lookbackBlocks?.toString() ?? "0",
     getLatestBlockKeyFragment(args.blockInfo),
   ],

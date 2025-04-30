@@ -51,11 +51,11 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   // biome-ignore lint/correctness/useExhaustiveDependencies: only refresh when refresh data counter changes
   useEffect(() => {
     if (refreshData && dataHasLoaded && lastRefetchedCounter !== refreshData) {
-      setLastRefetchedCounter((prev) => prev + 1);
+      setLastRefetchedCounter(refreshData);
       executionsQuery.refetch();
       requisitionsQuery.refetch();
     }
-  }, [refreshData && dataHasLoaded]);
+  }, [refreshData, dataHasLoaded]);
 
   // Add transaction handling for cancel order
   const { writeWithEstimateGas, submitting } = useTransaction({

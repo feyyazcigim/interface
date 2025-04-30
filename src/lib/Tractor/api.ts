@@ -64,11 +64,12 @@ async function paginateTractorApiRequest<T extends BaseTractorAPIResponse>(
 export interface TractorAPIOrderOptions {
   orderType?: TractorAPIOrderType;
   cancelled?: boolean;
+  publisher?: `0x${string}`;
 }
 const getOrders = async (chainId: number = base.id, options?: TractorAPIOrderOptions) => {
   console.debug("[Tractor/tractorAPIFetchOrders] Fetching orders...");
 
-  const bodyObj = { ...options };
+  const bodyObj = { ...options, limit: MAX_LIMIT, skip: 0 };
 
   const body = safeJSONStringify(bodyObj, undefined);
 

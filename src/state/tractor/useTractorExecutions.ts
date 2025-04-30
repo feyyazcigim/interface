@@ -28,7 +28,7 @@ export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined) 
   const selectTractorExecutions = useMemo(() => getSelectTractorExecutions(resolveChainId(chainId)), [chainId]);
 
   return useQuery({
-    queryKey: [["TRACTOR", "EXECUTIONS"], publisher],
+    queryKey: queryKeys.tractor.tractorExecutions(publisher),
     queryFn: async () => {
       if (!publisher) return undefined;
       return TractorAPI.getExecutions({ publisher });
@@ -39,7 +39,7 @@ export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined) 
   });
 };
 
-export default function usePublisherTractorExecutions(publisher: HashString | undefined) {
+export default function usePublisherTractorExecutions(publisher: HashString | undefined, onlyEvents?: boolean) {
   const client = usePublicClient();
   const diamond = useProtocolAddress();
 
@@ -54,7 +54,7 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
   /**
    * If the exeuction API request failed, fetch since the TRACTOR_DEPLOYMENT_BLOCK
    * otherwise,
-   * - DEV, use a 24 hour lookback
+   * - DEV, use a 24 hour lookback to allow for forwarding seasons locally
    * - PROD, use a 1 hour lookback
    */
   const lookbackBlocks = !executionsQuery.error ? (isDev() ? TIME_TO_BLOCKS.day : TIME_TO_BLOCKS.hour) : undefined;
