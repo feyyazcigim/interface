@@ -10,6 +10,7 @@ import { PINTO } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { Blueprint } from "@/lib/Tractor/types";
 import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
+import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
 import { useTemperature } from "@/state/useFieldData";
 import { formatter } from "@/utils/format";
 import { cn } from "@/utils/utils";
@@ -24,7 +25,6 @@ import { Col, Row } from "../Container";
 import LoadingSpinner from "../LoadingSpinner";
 import ReviewTractorOrderDialog from "../ReviewTractorOrderDialog";
 import { Plow } from "./Plow";
-import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
 
 const BASESCAN_URL = "https://basescan.org/address/";
 
