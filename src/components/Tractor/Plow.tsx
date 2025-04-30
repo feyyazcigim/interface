@@ -168,8 +168,8 @@ export function Plow() {
       try {
         // Use the baseGasClient to fetch gas price from Base network
         const price = await baseGasClient.getGasPrice();
-        console.log("Current Base network gas price:", price.toString(), "wei");
-        console.log("Current Base network gas price:", (Number(price) / 1e9).toFixed(2), "gwei");
+        console.debug("Current Base network gas price:", price.toString(), "wei");
+        console.debug("Current Base network gas price:", (Number(price) / 1e9).toFixed(2), "gwei");
         setGasPrice(price);
       } catch (error) {
         console.error("Failed to fetch gas price:", error);
@@ -185,7 +185,7 @@ export function Plow() {
   const { data: requisitions = [], isLoading } = useQuery({
     queryKey: ["requisitions", protocolAddress, latestBlock?.number, temperatures.scaled?.toString()],
     queryFn: async () => {
-      console.log("Loading requisitions...");
+      console.debug("Loading requisitions...");
       if (!publicClient || !protocolAddress) return [];
 
       const events = await loadPublishedRequisitions(
@@ -195,11 +195,14 @@ export function Plow() {
         latestBlock,
         "sowBlueprintv0",
       );
-      console.log("Loaded requisitions:", events);
+      console.debug("Loaded requisitions:", events);
 
       // Get current temperature
       const currentTemperature = temperatures.scaled;
-      console.log("Current temperature:", currentTemperature?.toHuman ? `${currentTemperature.toHuman()}%` : "Unknown");
+      console.debug(
+        "Current temperature:",
+        currentTemperature?.toHuman ? `${currentTemperature.toHuman()}%` : "Unknown",
+      );
 
       // Filter out requisitions with zero or negative tip, cancelled requisitions,
       // and those with minTemp higher than current temperature
@@ -215,7 +218,7 @@ export function Plow() {
         if (currentTemperature && req.decodedData.minTemp) {
           const reqMinTemp = TokenValue.fromBlockchain(req.decodedData.minTemp, 6);
           if (reqMinTemp.gt(currentTemperature)) {
-            console.log(
+            console.debug(
               `Filtered out requisition with minTemp ${reqMinTemp.toHuman()}% > current temp ${currentTemperature.toHuman()}%`,
             );
             return false;
@@ -224,7 +227,7 @@ export function Plow() {
 
         return tipAmount > 0n;
       });
-      console.log("Filtered requisitions (executable with positive tips):", filteredEvents.length);
+      console.debug("Filtered requisitions (executable with positive tips):", filteredEvents.length);
 
       return filteredEvents;
     },
@@ -289,7 +292,7 @@ export function Plow() {
       return;
     }
 
-    console.log("Sorting requisitions by profit");
+    console.debug("Sorting requisitions by profit");
 
     // Use a stable sort to avoid unnecessary reordering
     const sorted = [...requisitions].sort((a, b) => {
@@ -297,14 +300,18 @@ export function Plow() {
       const aHash = a.requisition.blueprintHash;
       const bHash = b.requisition.blueprintHash;
 
+      // If one simulation failed, put it at the bottom
+      if (failedSimulations.has(aHash) && !failedSimulations.has(bHash)) return 1;
+      if (!failedSimulations.has(aHash) && failedSimulations.has(bHash)) return -1;
+
       // If both requisitions are successful, sort by profit
       if (successfulSimulations.has(aHash) && successfulSimulations.has(bHash)) {
         return calculateReqProfit(b) - calculateReqProfit(a); // Higher profit first
       }
 
       // If only one is successful, prioritize it
-      if (successfulSimulations.has(aHash)) return 1;
-      if (successfulSimulations.has(bHash)) return -1;
+      if (successfulSimulations.has(aHash)) return -1;
+      if (successfulSimulations.has(bHash)) return 1;
 
       // Otherwise, keep original order
       return 0;
@@ -315,6 +322,7 @@ export function Plow() {
     requisitions,
     // Only re-sort when these specific values change
     successfulSimulations.size,
+    failedSimulations.size,
     sortingEnabled,
     // calculateReqProfit is a derived value, don't include it in deps
     // Instead, include its dependencies explicitly
@@ -380,7 +388,7 @@ export function Plow() {
           });
 
           // Debug log
-          console.log(`Gas estimate for ${req.requisition.blueprintHash}:`, gasEstimate.toString());
+          console.debug(`Gas estimate for ${req.requisition.blueprintHash}:`, gasEstimate.toString());
 
           // Store gas estimate
           setGasEstimates((prev) => {
@@ -389,16 +397,16 @@ export function Plow() {
             return next;
           });
 
-          console.log(`Simulation successful for ${req.requisition.blueprintHash}`);
+          console.debug(`Simulation successful for ${req.requisition.blueprintHash}`);
           setSuccessfulSimulations((prev) => new Set(prev).add(req.requisition.blueprintHash));
         } catch (error) {
-          console.error(`Simulation failed for ${req.requisition.blueprintHash}:`, error);
+          // console.error(`Simulation failed for ${req.requisition.blueprintHash}:`, error);
 
           // Log additional details for debugging
-          console.log("Simulation details:");
-          console.log("Blueprint Hash:", req.requisition.blueprintHash);
-          console.log("To Address:", protocolAddress);
-          console.log("From Address:", address || "Unknown");
+          console.debug("Simulation details:");
+          console.debug("Blueprint Hash:", req.requisition.blueprintHash);
+          console.debug("To Address:", protocolAddress);
+          console.debug("From Address:", address || "Unknown");
 
           // Try to log call args
           try {
@@ -415,9 +423,9 @@ export function Plow() {
                 "0x",
               ],
             });
-            console.log("Encoded Call Data:", encodedCallData);
-            console.log("Simulator Ready Format:");
-            console.log(
+            console.debug("Encoded Call Data:", encodedCallData);
+            console.debug("Simulator Ready Format:");
+            console.debug(
               JSON.stringify(
                 {
                   to: protocolAddress,
@@ -515,7 +523,7 @@ export function Plow() {
         });
 
         // Debug log
-        console.log("Gas estimate:", gasEstimate.toString());
+        console.debug("Gas estimate:", gasEstimate.toString());
 
         // Store gas estimate
         setGasEstimates((prev) => {
@@ -527,13 +535,13 @@ export function Plow() {
         toast.success("Simulation successful");
         setSuccessfulSimulations((prev) => new Set(prev).add(req.requisition.blueprintHash));
       } catch (error) {
-        console.error("Simulation failed:", error);
+        // console.error("Simulation failed:", error);
 
         // Log additional details for debugging
-        console.log("Simulation details:");
-        console.log("Blueprint Hash:", req.requisition.blueprintHash);
-        console.log("To Address:", protocolAddress);
-        console.log("From Address:", address || "Unknown");
+        console.debug("Simulation details:");
+        console.debug("Blueprint Hash:", req.requisition.blueprintHash);
+        console.debug("To Address:", protocolAddress);
+        console.debug("From Address:", address || "Unknown");
 
         // Try to encode and log call data for simulator use
         try {
@@ -549,9 +557,9 @@ export function Plow() {
               "0x",
             ],
           });
-          console.log("Encoded Call Data:", encodedCallData);
-          console.log("Simulator Ready Format:");
-          console.log(
+          console.debug("Encoded Call Data:", encodedCallData);
+          console.debug("Simulator Ready Format:");
+          console.debug(
             JSON.stringify(
               {
                 to: protocolAddress,
@@ -618,7 +626,7 @@ export function Plow() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-4">
+      <div className="flex items-center justify-center gap-2 py-4 min-h-72">
         <LoadingSpinner size={20} />
         <span>Loading requisitions...</span>
       </div>
@@ -631,22 +639,14 @@ export function Plow() {
       <Table>
         <TableHeader>
           <TableRow className="border-b border-pinto-gray-3/20">
-            <TableHead className="px-0 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-              Created At
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-              Publisher
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-              Blueprint Hash
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-              Temperature
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[220px]">
+            <TableHead className="px-0 text-left text-xs font-light text-pinto-gray-4">Created At</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Publisher</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Blueprint Hash</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Temperature</TableHead>
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4 min-w-[220px]">
               Operator Tip
             </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4 min-w-[200px]">
+            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4 min-w-[200px]">
               <div className="flex flex-row justify-between items-start">
                 <span>Simulate</span>
                 <div className="text-xs text-pinto-gray-4 text-right">
@@ -658,9 +658,7 @@ export function Plow() {
               </div>
             </TableHead>
             {successfulSimulations.size > 0 && (
-              <TableHead className="px-1.5 text-left text-xs font-antarctica font-light text-pinto-gray-4">
-                Estimated Profit
-              </TableHead>
+              <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Estimated Profit</TableHead>
             )}
           </TableRow>
         </TableHeader>
@@ -682,10 +680,10 @@ export function Plow() {
                 noHoverMute
                 onClick={() => handlePlow(req)}
               >
-                <TableCell className="px-0" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
+                <TableCell className="px-0 py-1.5">
                   {req.timestamp ? new Date(req.timestamp).toLocaleString(undefined, dateOptions) : "Unknown"}
                 </TableCell>
-                <TableCell className="px-1.5 text-sm" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
+                <TableCell className="px-1.5 py-1.5 text-sm">
                   <a
                     href={`${BASESCAN_URL}${req.requisition.blueprint.publisher}`}
                     target="_blank"
@@ -696,18 +694,20 @@ export function Plow() {
                     {`${req.requisition.blueprint.publisher.slice(0, 6)}...${req.requisition.blueprint.publisher.slice(-4)}`}
                   </a>
                 </TableCell>
-                <TableCell className="px-1.5 text-sm" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
-                  {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
+                <TableCell className="px-1.5 py-1.5 text-sm">
+                  <span className="text-pinto-green-4">
+                    {`${req.requisition.blueprintHash.slice(0, 6)}...${req.requisition.blueprintHash.slice(-4)}`}
+                  </span>
                 </TableCell>
-                <TableCell className="px-1.5 text-sm" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
+                <TableCell className="px-1.5 py-1.5 text-sm">
                   {req.decodedData ? `${(Number(req.decodedData.minTemp) / 1e6).toFixed(2)}%` : "Unknown"}
                 </TableCell>
-                <TableCell className="px-1.5 text-sm" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
+                <TableCell className="px-1.5 py-1.5 text-sm">
                   {req.decodedData
                     ? formatOperatorTip(req.decodedData.operatorParams.operatorTipAmount, mainToken, tokenPrices)
                     : "Failed to decode"}
                 </TableCell>
-                <TableCell className="px-1.5" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
+                <TableCell className="px-1.5 py-1.5">
                   <div className="flex items-center gap-1">
                     <Button
                       variant="outline"
@@ -775,9 +775,9 @@ export function Plow() {
                             const currentGasPrice = gasPrice || BigInt(1_000_000_000);
 
                             // Debug log the values
-                            console.log("Gas estimate:", gas.toString());
-                            console.log("Gas price:", currentGasPrice.toString());
-                            console.log("ETH price:", ethPrice.toString());
+                            console.debug("Gas estimate:", gas.toString());
+                            console.debug("Gas price:", currentGasPrice.toString());
+                            console.debug("ETH price:", ethPrice.toString());
 
                             // Calculate gas cost in wei, then convert to USD
                             const gasCostInWei = gas * currentGasPrice;
@@ -788,10 +788,10 @@ export function Plow() {
                             // Calculate USD directly from ETH amount
                             const gasCostInUsd = gasCostInEth * ethPriceInUsd;
 
-                            console.log("Gas cost in Wei:", gasCostInWei.toString());
-                            console.log("Gas cost in ETH:", gasCostInEth.toFixed(18));
-                            console.log("ETH price in USD:", ethPriceInUsd.toFixed(2));
-                            console.log("Gas cost in USD:", gasCostInUsd.toFixed(6));
+                            console.debug("Gas cost in Wei:", gasCostInWei.toString());
+                            console.debug("Gas cost in ETH:", gasCostInEth.toFixed(18));
+                            console.debug("ETH price in USD:", ethPriceInUsd.toFixed(2));
+                            console.debug("Gas cost in USD:", gasCostInUsd.toFixed(6));
 
                             return `${formatter.number(gas.toString())} ($${gasCostInUsd.toFixed(6)})`;
                           })()}
@@ -822,7 +822,10 @@ export function Plow() {
                   </div>
                 </TableCell>
                 {successfulSimulations.size > 0 && (
-                  <TableCell className="px-1.5 text-sm" style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}>
+                  <TableCell
+                    className="px-1.5 text-sm text-right"
+                    style={{ paddingTop: "0.375rem", paddingBottom: "0.375rem" }}
+                  >
                     {(() => {
                       // Skip if this simulation hasn't been run yet
                       if (!successfulSimulations.has(req.requisition.blueprintHash) || !req.decodedData) {
@@ -864,7 +867,7 @@ export function Plow() {
       />
 
       <div className="mt-6 flex justify-between items-center">
-        <div className="font-antarctica pinto-sm-light text-pinto-light">
+        <div className="pinto-sm-light text-pinto-light">
           <div>Select Soil Orders to Simulate and Execute for a tip.</div>
           <div className="mt-1">
             Note that executing an order will likely affect the ability to execute another order.
@@ -874,7 +877,9 @@ export function Plow() {
           <Button
             rounded="full"
             className={`flex-1 ${
-              simulatingAll || requisitions.length === 0 ? "bg-[#D9D9D9] text-[#9C9C9C]" : "bg-[#2F8957] text-white"
+              simulatingAll || requisitions.length === 0
+                ? "bg-pinto-gray-2 text-pinto-gray-4"
+                : "bg-pinto-green-4 text-white"
             }`}
             disabled={simulatingAll || requisitions.length === 0}
             onClick={handleSimulateAll}

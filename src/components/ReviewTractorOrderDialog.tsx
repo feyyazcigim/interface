@@ -19,7 +19,15 @@ import { useAccount } from "wagmi";
 import { Col, Row } from "./Container";
 import { HighlightedCallData } from "./Tractor/HighlightedCallData";
 import { Button } from "./ui/Button";
-import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "./ui/Dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+} from "./ui/Dialog";
 import { Switch } from "./ui/Switch";
 
 // Define the execution data type
@@ -201,40 +209,53 @@ export default function ReviewTractorOrderDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
-        <DialogOverlay className="fixed inset-0 backdrop-blur-sm bg-black/30" />
-        <DialogContent
-          className="sm:max-w-[1400px]"
-          style={{
-            padding: 0, // no  other way to set padding as 0
-          }}
-        >
+        <DialogOverlay className="fixed inset-0 backdrop-blur-[2px] bg-white/50" />
+        <DialogContent className="max-w-[98rem] w-[95vw] sm:max-w-[1400px] p-0 sm:p-0">
           <Col className="gap-3 pb-3">
-            <div className="px-6 pt-6 pinto-body">
-              {isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}
-            </div>
-            <DialogDescription className="px-6 pinto-sm-light text-pinto-light">
-              {isViewOnly ? (
-                <div className="flex items-center">
-                  <span>
-                    This is your active Tractor Order. It allows an Operator to execute a transaction for you on the{" "}
-                  </span>
-                  <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
-                  <span>Base network when the conditions are met.</span>
-                </div>
-              ) : (
-                <Col className="gap-3">
-                  <p className="flex items-center">
-                    A Tractor Order allows you to pay an Operator to execute a transaction for you on the
-                    <IconImage src={baseLogo} size={6} className="mx-1 rounded-full" />
-                    Base network.
-                  </p>
+            <DialogHeader>
+              <DialogTitle className="font-normal text-[1.25rem] tracking-normal px-6 pt-6">
+                {isViewOnly ? "View Tractor Order" : "Review and Publish Tractor Order"}
+              </DialogTitle>
+              <DialogDescription className="px-6 pinto-sm-light text-pinto-light">
+                {isViewOnly ? (
                   <p>
-                    This allows you to interact with the Pinto protocol autonomously when the conditions of your Order
-                    are met.
+                    This is your active Tractor Order. It allows an Operator to execute a transaction for you on the{" "}
+                    <span className="whitespace-nowrap">
+                      <IconImage
+                        src={baseLogo}
+                        nudge={-6}
+                        mobileSize={4}
+                        size={6}
+                        className="inline align-baseline mx-[0.5px] rounded-full"
+                      />{" "}
+                      Base&nbsp;
+                    </span>
+                    network when the conditions are met.
                   </p>
-                </Col>
-              )}
-            </DialogDescription>
+                ) : (
+                  <Col className="gap-3">
+                    <p>
+                      A Tractor Order allows you to pay an Operator to execute a transaction for you on the{" "}
+                      <span className="whitespace-nowrap">
+                        <IconImage
+                          src={baseLogo}
+                          nudge={-6}
+                          mobileSize={4}
+                          size={6}
+                          className="inline align-baseline mx-[0.5px] rounded-full"
+                        />{" "}
+                        Base&nbsp;
+                      </span>
+                      network.
+                    </p>
+                    <p>
+                      This allows you to interact with the Pinto protocol autonomously when the conditions of your Order
+                      are met.
+                    </p>
+                  </Col>
+                )}
+              </DialogDescription>
+            </DialogHeader>
           </Col>
           <div className="flex flex-col">
             {/* Tabs */}
@@ -303,7 +324,7 @@ export default function ReviewTractorOrderDialog({
                       <div className="text-gray-500 text-sm">
                         <div className="flex items-center gap-1">
                           <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                          <span className="font-antarctica font-light text-[#9C9C9C]">
+                          <span className="font-light text-[#9C9C9C]">
                             Withdraw Deposited Tokens from the Silo with the{" "}
                             {orderData.tokenStrategy === "LOWEST_SEEDS"
                               ? "Lowest Seeds"
@@ -335,7 +356,7 @@ export default function ReviewTractorOrderDialog({
                         <ul className="list-none space-y-1">
                           <li className="flex items-center gap-2">
                             <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                            <span className="font-antarctica font-light text-[#9C9C9C]">
+                            <span className="font-light text-[#9C9C9C]">
                               Execute when Temperature is at least{" "}
                               <span className="text-pinto-green-4">{orderData.temperature}</span>
                               <span className="text-pinto-green-4">%</span>
@@ -343,7 +364,7 @@ export default function ReviewTractorOrderDialog({
                           </li>
                           <li className="flex items-center gap-2">
                             <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                            <span className="font-antarctica font-light text-[#9C9C9C]">
+                            <span className="font-light text-[#9C9C9C]">
                               AND when Pod Line Length is at most{" "}
                               <span className="text-pinto-green-4">
                                 {typeof orderData.podLineLength === "string" && orderData.podLineLength.includes(".")
@@ -356,14 +377,14 @@ export default function ReviewTractorOrderDialog({
                           </li>
                           <li className="flex items-center gap-2">
                             <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                            <span className="font-antarctica font-light text-[#9C9C9C]">
+                            <span className="font-light text-[#9C9C9C]">
                               AND when Available Soil is at least{" "}
                               <span className="text-pinto-green-4">{orderData.minSoil}</span>
                             </span>
                           </li>
                           <li className="flex items-center gap-2">
                             <CornerBottomLeftIcon className="text-gray-300 ml-4" />
-                            <span className="font-antarctica font-light text-[#9C9C9C]">
+                            <span className="font-light text-[#9C9C9C]">
                               AND {orderData.morningAuction ? "during" : "after"} the Morning Auction
                             </span>
                           </li>
