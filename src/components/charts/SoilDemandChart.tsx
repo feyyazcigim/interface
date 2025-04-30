@@ -26,6 +26,12 @@ export interface SowEventTimings {
 
 const makeLineGradients = [metallicGreenStrokeGradientFn];
 
+const calculateTimestampTitle = (num: number) => {
+  const min = Math.trunc((Number(num) * 2) / 60);
+  const sec = Math.trunc((Number(num) * 2) % 60).toString().padStart(2, "0");
+  return `${min}:${sec}`;
+};
+
 export const SoilDemandChart = ({
   currentSeason,
   nextBlock,
@@ -82,7 +88,7 @@ export const SoilDemandChart = ({
         // usually one event but w/ tractor multiple can happen in the same block
         const sowEvents = timings.events.filter((timing) => BigInt(timing.blocksSinceSunrise) === BigInt(i));
         const timePrefix = i < 1800 ? "XX" : "XY";
-        const textInterval = `${timePrefix}:${Math.trunc((Number(i) * 2) / 60)}`;
+        const textInterval = `${timePrefix}:${calculateTimestampTitle(i)}`;
         const cumulativeSownBeansForBlock = sowEvents.reduce((acc, sowEvent) => acc + sowEvent.sownBeans, 0);
         // as far as available soil, label, and textInterval, all sowEvents are the same
         if (sowEvents[0]) {
