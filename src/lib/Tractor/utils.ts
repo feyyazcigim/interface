@@ -718,10 +718,6 @@ export interface OrderbookEntry extends Omit<RequisitionEvent, "decodedData"> {
   withdrawalPlan?: WithdrawalPlan;
 }
 
-interface ExtendedOrderbookEntry extends OrderbookEntry {
-  isAPIEntry?: boolean;
-}
-
 // Add this type definition after the OrderbookEntryWithProcessingData interface
 export interface WithdrawalPlan {
   sourceTokens: readonly `0x${string}`[];
@@ -730,22 +726,6 @@ export interface WithdrawalPlan {
   availableBeans: readonly bigint[];
   totalAvailableBeans: bigint;
 }
-
-const getAvailableSoil = async (client: PublicClient, diamond: `0x${string}`) => {
-  try {
-    const soil = await client.readContract({
-      address: diamond,
-      abi: diamondABI,
-      functionName: "totalSoil",
-    });
-
-    return TokenValue.fromBlockchain(soil, 6);
-  } catch (e) {
-    console.error("[TRACTOR/getAvailableSoil] Error fetching soil:", e);
-  }
-
-  return TokenValue.ZERO;
-};
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Load Orderbook Data
@@ -856,7 +836,9 @@ export async function loadOrderbookData(
     const publisherWithdrawalPlans: { [publisher: string]: any[] } = {};
 
     // Process requisitions in a single loop (already sorted by temperature)
-    const orderbookData: ExtendedOrderbookEntry[] = [...(activeApiEntries ?? [])];
+    const orderbookData: OrderbookEntry[] = [
+      ...(activeApiEntries?.filter((entry) => !completedOrders.has(entry.requisition.blueprintHash)) ?? []),
+    ];
 
     console.debug("\nProcessing orderbook data:");
 
