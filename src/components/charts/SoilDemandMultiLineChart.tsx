@@ -16,6 +16,9 @@ import { ReactChart } from "../ReactChart";
 
 Chart.register(LineController, LineElement, LinearScale, LogarithmicScale, CategoryScale, PointElement, Filler);
 
+const greenLineColor = '#246645'
+const yellowLineColor = '#D9AD0F';
+
 export type LineChartData = {
   values: number[];
 } & Record<string, any>;
@@ -164,7 +167,7 @@ const SoilDemandMultiLineChart = React.memo(
             .map((datum, idx: number) => {
               return {
                 data: datum.map((d) => d.values[0]),
-                borderColor: idx === 0 ? "#387F5C" : "#FDE394",
+                borderColor: idx === 0 ? greenLineColor : yellowLineColor,
                 borderWidth: 1.5,
                 // Hide default points, custom are implemented in afterDraw plugin
                 pointRadius: 0,
@@ -175,43 +178,6 @@ const SoilDemandMultiLineChart = React.memo(
       },
       [data, makeLineGradients, makeAreaGradients, xKey],
     );
-
-    const gradientPlugin = useMemo(() => {
-      return {
-        id: "customGradientShift",
-        beforeUpdate: (chart) => {
-          const ctx = chart.ctx;
-          const activeIndex = activeIndexRef.current;
-          if (ctx && typeof activeIndex === "number") {
-            const grayColor = "rgba(128, 128, 128, 0.1)"; // Define your gray color here
-
-            for (let i = 0; i < chart.data.datasets.length; ++i) {
-              const dataset = chart.data.datasets[i];
-              const lineGradient = makeLineGradients[i](ctx, 1);
-              const areaGradient = makeAreaGradients ? makeAreaGradients[i](ctx, 1) : null;
-
-              // Apply gradients to the entire dataset
-              dataset.borderColor = lineGradient;
-              dataset.backgroundColor = areaGradient;
-
-              // Use segment configuration for conditional coloring
-              dataset.segment = {
-                borderColor: (ctx) => {
-                  const dataIndex = ctx.p0DataIndex;
-                  const isAfterActiveIndex = dataIndex >= activeIndex;
-                  return isAfterActiveIndex ? grayColor : undefined;
-                },
-                backgroundColor: (ctx) => {
-                  const dataIndex = ctx.p0DataIndex;
-                  const isAfterActiveIndex = dataIndex >= activeIndex;
-                  return isAfterActiveIndex ? grayColor : undefined;
-                },
-              };
-            }
-          }
-        },
-      };
-    }, [makeLineGradients, makeAreaGradients]); // Removed morningIndex from dependencies
 
     const fillArea = !!makeAreaGradients && !!makeAreaGradients.length;
 
@@ -357,7 +323,7 @@ const SoilDemandMultiLineChart = React.memo(
 
               if (dataPoint) {
                 const { x, y } = dataPoint.getProps(["x", "y"], true);
-                const color = datasetIndex === 0 ? '#246645' : '#D9AD0F';
+                const color = datasetIndex === 0 ? greenLineColor : yellowLineColor;
                 drawSelectionPoint(x, y, color);
               }
             });
@@ -390,7 +356,14 @@ const SoilDemandMultiLineChart = React.memo(
               }
             },
             backgroundColor: 'black',
-            opacity: 1
+            usePointStyle: true,
+            // sort hacky, make the circle small but stroke really big so it looks
+            // like a filled in circle
+            boxHeight: 4,
+            boxWidth: 4,
+            borderWidth: 8,
+            padding: 12,
+            boxPadding: 8,
 
           },
           legend: {
@@ -443,8 +416,6 @@ const SoilDemandMultiLineChart = React.memo(
                   return "";
                 }
 
-                const tickLabel = xValue instanceof Date ? `${xValue.getMonth() + 1}/${xValue.getDate()}` : xValue;
-
                 const indicesToShowTicks = [0, 300, 600, 900, 1200, 1500, 1799];
                 const tickMap = {
                   0: "XX:00",
@@ -496,13 +467,11 @@ const SoilDemandMultiLineChart = React.memo(
 
     const allPlugins = useMemo<Plugin[]>(
       () => [
-        gradientPlugin,
         horizontalReferenceLinePlugin,
         selectionPointPlugin,
         selectionCallbackPlugin,
       ],
       [
-        gradientPlugin,
         horizontalReferenceLinePlugin,
         selectionPointPlugin,
         selectionCallbackPlugin,
