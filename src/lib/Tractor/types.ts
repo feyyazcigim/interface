@@ -42,70 +42,47 @@ export type TractorSowOrderType = "SOW_V0";
 
 export type TractorAPIOrderType = TractorSowOrderType;
 
-export type TractorAPIOrdersResponse<
-  Value extends string | TV = TV,
-  BlockTimeOrBlockDiff extends string | number = number,
-  Time extends string | number | Date = Date,
-  TokenStrategy extends string[] | SowOrderTokenStrategy = SowOrderTokenStrategy,
-> = Prettify<
-  BaseTractorAPIResponse<{
-    orders: TractorAPIOrder<
-      TractorAPISowOrderBlueprint<Value, BlockTimeOrBlockDiff, TokenStrategy>,
-      Value,
-      BlockTimeOrBlockDiff,
-      Time,
-      TokenStrategy
-    >[];
-  }>
->;
+export type TractorAPIOrdersResponse = BaseTractorAPIResponse<{
+  orders: TractorAPIOrder[];
+}>;
 
-export interface TractorAPIOrdersExecutionInfo<Time extends string | number | Date = Date> {
+export interface TractorAPIOrdersExecutionInfo {
   executionCount: number;
-  latestExecution: Time | null;
+  latestExecution: string | null;
 }
 
-export interface TractorAPISowOrderBlueprint<
-  Value extends string | TV = TV,
-  BlockTimeDiff extends string | number = number,
-  TokenStrategy extends string[] | SowOrderTokenStrategy = SowOrderTokenStrategy,
-> {
+export interface TractorAPISowOrderBlueprint {
   blueprintHash: HashString;
-  pintoSownCounter: Value;
+  pintoSownCounter: string;
   lastExecutedSeason: number;
   orderComplete: boolean;
-  amountFunded: Value;
-  cascadeAmountFunded: Value;
-  sourceTokenIndices: TokenStrategy;
-  totalAmountToSow: Value;
-  minAmountToSowPerSeason: Value;
-  maxAmountToSowPerSeason: Value;
-  minTemp: Value;
-  maxPodlineLength: Value;
-  maxGrownStalkPerBdv: Value;
-  runBlocksAfterSunrise: BlockTimeDiff;
-  slippageRatio: Value;
+  amountFunded: string;
+  cascadeAmountFunded: string;
+  sourceTokenIndices: string[];
+  totalAmountToSow: string;
+  minAmountToSowPerSeason: string;
+  maxAmountToSowPerSeason: string;
+  minTemp: string;
+  maxPodlineLength: string;
+  maxGrownStalkPerBdv: string;
+  runBlocksAfterSunrise: string;
+  slippageRatio: string;
 }
 
-export interface TractorAPIOrder<
-  Blueprint,
-  Value extends string | TV = TV,
-  BlockTime extends string | number = number,
-  Time extends string | number | Date = Date,
-  TokenStrategy extends string[] | SowOrderTokenStrategy = SowOrderTokenStrategy,
-> {
+export interface TractorAPIOrder {
   blueprintHash: HashString;
   orderType: TractorAPIOrderType;
   publisher: HashString;
   data: HashString;
   operatorPasteInstrs: HashString[];
   maxNonce: string;
-  startTime: Time;
-  endTime: Time;
+  startTime: string;
+  endTime: string;
   signature: HashString;
-  publishedTimestamp: Time;
+  publishedTimestamp: string;
   publishedBlock: number;
-  beanTip: Value;
+  beanTip: string;
   cancelled: boolean;
   blueprintData: Blueprint;
-  executionStats: TractorAPIOrdersExecutionInfo<Time>;
+  executionStats: TractorAPIOrdersExecutionInfo;
 }

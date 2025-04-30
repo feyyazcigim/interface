@@ -1,41 +1,46 @@
 import { TIME_TO_BLOCKS } from "@/constants/blocks";
 import { defaultQuerySettingsMedium } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { OrderbookEntry, TractorAPIOrderType, TractorAPIOrdersResponse, loadOrderbookData } from "@/lib/Tractor";
+import { OrderbookEntry, TractorAPIOrdersResponse, loadOrderbookData } from "@/lib/Tractor";
 import TractorAPI, { TractorAPIOrderOptions } from "@/lib/Tractor/api";
 import { queryKeys } from "@/state/queryKeys";
-import useCachedLatestBlockQuery from "@/state/useCachedLatestBlockQuery";
 import { isDev } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useChainId, usePublicClient } from "wagmi";
 import { useTemperature } from "../useFieldData";
+import { HashString } from "@/utils/types.generic";
 
-export function useTractorSowOrderbook(address?: string, args?: TractorAPIOrderOptions) {
+const getLookbackBlocks = (chainOnly: boolean, error: boolean) => {
+  if (chainOnly || error) return undefined;
+  return isDev() ? TIME_TO_BLOCKS.day : TIME_TO_BLOCKS.hour;
+};
+
+const useTractorAPISowOrders = (address?: HashString, args?: TractorAPIOrderOptions) => {
   const chainId = useChainId();
-  const client = usePublicClient({ chainId });
-  const diamond = useProtocolAddress();
 
-  const temperature = useTemperature();
-
-  const latestBlockQuery = useCachedLatestBlockQuery({ key: "sowOrdersV0" });
-
-  const ordersQuery = useQuery({
+  return useQuery({
     queryKey: queryKeys.tractor.sowOrdersV0(),
     queryFn: async () => {
       if (!chainId) return;
-      const options = { orderType: "SOW_V0", cancelled: false, ...args } satisfies TractorAPIOrderOptions;
-      const data = await TractorAPI.getOrders(chainId, options);
+      const options = { orderType: "SOW_V0",  cancelled: false, ...args } satisfies TractorAPIOrderOptions;
+      if (address) options.publisher = address;
 
-      console.log("[TRACTOR/useTractorSowOrderbook/ordersQuery] DATA", {
-        data,
-      });
-
-      return data;
+      return TractorAPI.getOrders(options);
     },
     enabled: !!chainId,
     ...defaultQuerySettingsMedium,
   });
+}
+
+export function useTractorSowOrderbook(address?: HashString, args?: TractorAPIOrderOptions, chainOnly: boolean = false) {
+  const chainId = useChainId();
+  const client = usePublicClient({ chainId });
+  const diamond = useProtocolAddress();
+  const temperature = useTemperature();
+
+  //
+  const ordersQuery = useTractorAPISowOrders(address, args);
 
   // check if the API data exists, is not loading, and is not an error
   const ordersAPIDataExists = Boolean(
@@ -43,9 +48,7 @@ export function useTractorSowOrderbook(address?: string, args?: TractorAPIOrderO
   );
 
   // only run the chain query if we have a client, a max temperature, the API data exists, and we have a latest block reference.
-  const orderChainQueryEnabled = Boolean(
-    client && temperature.max.gt(0) && ordersAPIDataExists && latestBlockQuery.data && ordersQuery.data?.lastUpdated,
-  );
+  const orderChainQueryEnabled = chainOnly || Boolean(client && temperature.max.gt(0) && ordersAPIDataExists);
 
   /**
    * If the orders API request failed, fetch since the TRACTOR_DEPLOYMENT_BLOCK
@@ -53,21 +56,20 @@ export function useTractorSowOrderbook(address?: string, args?: TractorAPIOrderO
    * - DEV, use a 24 hour lookback to allow for forwarding seasons locally
    * - PROD, use a 1 hour lookback
    */
-  const lookbackBlocks = !ordersQuery.error ? (isDev() ? TIME_TO_BLOCKS.day : TIME_TO_BLOCKS.hour) : undefined;
+  const lookbackBlocks = getLookbackBlocks(chainOnly, !!ordersQuery.error);
 
   const ordersChainQuery = useQuery({
-    queryKey: queryKeys.tractor.sowOrdersV0Chain({ lookbackBlocks, blockInfo: latestBlockQuery.data }),
+    queryKey: queryKeys.tractor.sowOrdersV0Chain({ lookbackBlocks }),
     queryFn: async () => {
-      // if (!latestBlockQuery.data || temperature.max.lte(0) || !client) {
       if (temperature.max.lte(0) || !client) {
         return;
       }
-
+      const latestBlock = await client.getBlock({ blockTag: "latest" });
       const data = await loadOrderbookData(
         address,
         diamond,
         client,
-        latestBlockQuery.data,
+        latestBlock,
         temperature.max.toNumber(),
         ordersQuery.data,
         lookbackBlocks,
@@ -80,8 +82,7 @@ export function useTractorSowOrderbook(address?: string, args?: TractorAPIOrderO
 
       return data;
     },
-    // enabled: orderChainQueryEnabled,
-    enabled: !!client && temperature.max.gt(0),
+    enabled: orderChainQueryEnabled,
     ...defaultQuerySettingsMedium,
   });
 
@@ -119,7 +120,5 @@ export function useTractorSowOrderbook(address?: string, args?: TractorAPIOrderO
     console.log("[TRACTOR/useTractorSowOrdersMAP] MAP", map);
   }, [ordersChainQuery.data, ordersQuery.data]);
 
-  return {
-    latestBlockQuery,
-  };
+  return 1;
 }

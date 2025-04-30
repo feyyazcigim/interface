@@ -22,7 +22,7 @@ import { queryKeys } from "../queryKeys";
 // Fetch ALL EXECUTIONS QUERY
 // ────────────────────────────────────────────────────────────────────────────────
 
-export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined) => {
+export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined, enabled: boolean = true) => {
   const chainId = useChainId();
 
   const selectTractorExecutions = useMemo(() => getSelectTractorExecutions(resolveChainId(chainId)), [chainId]);
@@ -34,22 +34,28 @@ export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined) 
       return TractorAPI.getExecutions({ publisher });
     },
     select: selectTractorExecutions,
-    enabled: !!publisher,
+    enabled: !!publisher && enabled,
     ...defaultQuerySettingsMedium,
   });
 };
 
-export default function usePublisherTractorExecutions(publisher: HashString | undefined, onlyEvents?: boolean) {
+const getLookbackBlocks = (chainOnly: boolean, error: boolean) => {
+  if (chainOnly || error) return undefined;
+  return isDev() ? TIME_TO_BLOCKS.day : TIME_TO_BLOCKS.hour;
+};
+
+export default function usePublisherTractorExecutions(publisher: HashString | undefined, chainOnly: boolean = false) {
   const client = usePublicClient();
   const diamond = useProtocolAddress();
 
-  const { data: executionData, ...executionsQuery } = useTractorAPIExecutionsQuery(publisher);
+  const { data: executionData, ...executionsQuery } = useTractorAPIExecutionsQuery(publisher, !chainOnly);
 
   // Check if the API data exists and has any executions
   const executionsExist = executionData && Object.values(executionData.executions).some((d) => !!d.length);
 
   // Only run the on-chain event query if we have a client, a publisher AND (the API data exists OR the API request failed)
-  const executionsChainQueryEnabled = Boolean(client && publisher && Boolean(executionsExist || executionsQuery.error));
+  const executionsChainQueryEnabled =
+    chainOnly || Boolean(client && publisher && Boolean(executionsExist || executionsQuery.error));
 
   /**
    * If the exeuction API request failed, fetch since the TRACTOR_DEPLOYMENT_BLOCK
@@ -57,7 +63,7 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
    * - DEV, use a 24 hour lookback to allow for forwarding seasons locally
    * - PROD, use a 1 hour lookback
    */
-  const lookbackBlocks = !executionsQuery.error ? (isDev() ? TIME_TO_BLOCKS.day : TIME_TO_BLOCKS.hour) : undefined;
+  const lookbackBlocks = getLookbackBlocks(chainOnly, !!executionsQuery.error);
 
   // Merge the on-chain executions with the API data. Use useCallback to create a stable reference to the function
   const mergeExecutions = useCallback(

@@ -1,6 +1,5 @@
 import { TV } from "@/classes/TokenValue";
 import { API_SERVICES } from "@/constants/endpoints";
-import { PODS, STALK } from "@/constants/internalTokens";
 import {
   MAIN_TOKEN,
   PINTO_CBBTC_TOKEN,
@@ -10,10 +9,9 @@ import {
   PINTO_WSOL_TOKEN,
 } from "@/constants/tokens";
 import { getChainConstant } from "@/hooks/useChainConstant";
-import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { resolveChainId } from "@/utils/chain";
 import { ChainLookup, HashString, Prettify } from "@/utils/types.generic";
-import { isDev, safeJSONStringify } from "@/utils/utils";
+import { safeJSONStringify } from "@/utils/utils";
 import { base } from "viem/chains";
 import { SowOrderTokenStrategy, TractorAPIOrderType, TractorAPIOrdersResponse } from "./types";
 
@@ -66,72 +64,33 @@ export interface TractorAPIOrderOptions {
   cancelled?: boolean;
   publisher?: `0x${string}`;
 }
-const getOrders = async (chainId: number = base.id, options?: TractorAPIOrderOptions) => {
+const getOrders = async (options?: TractorAPIOrderOptions) => {
   console.debug("[Tractor/tractorAPIFetchOrders] Fetching orders...");
 
-  const bodyObj = { ...options, limit: MAX_LIMIT, skip: 0 };
-
-  const body = safeJSONStringify(bodyObj, undefined);
-
   try {
-    const response = await fetch(`${API_SERVICES.pinto}/tractor/orders`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    }).then((res) => res.json() as Promise<TractorAPIOrdersResponse<string, string, number, string[]>>);
+    const result = await paginateTractorApiRequest(
+      (reqBody) => fetch(`${API_SERVICES.pinto}/tractor/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: safeJSONStringify(reqBody, undefined),
+      }).then((res) => res.json() as Promise<TractorAPIOrdersResponse>),
+      (res) => res.orders.length,
+      { ...options, limit: MAX_LIMIT, skip: 0 },
+    );
 
-    console.debug("[Tractor/tractorAPIFetchOrders] RESPONSE", {
-      response,
-    });
+    const data = result.reduce<TractorAPIOrdersResponse>(
+      (prev, curr) => {
+        if (!prev.lastUpdated) prev.lastUpdated = curr.lastUpdated;
+        if (!prev.totalRecords) prev.totalRecords = curr.totalRecords;
+        prev.orders.push(...curr.orders);
+        return prev;
+      },
+      { lastUpdated: 0, totalRecords: 0, orders: [] },
+    );
 
-    const mainToken = getChainConstant(resolveChainId(chainId), MAIN_TOKEN);
+    console.debug("[Tractor/tractorAPIFetchOrders] RESPONSE", data);
 
-    const parsed: TractorAPIOrdersResponse = {
-      lastUpdated: response.lastUpdated as unknown as number, // This value is already a number but cast as number to avoid type errors
-      totalRecords: response.totalRecords,
-      orders: response.orders.map(({ blueprintData: bp, executionStats: es, ...order }) => {
-        return {
-          blueprintHash: order.blueprintHash satisfies HashString,
-          orderType: order.orderType as TractorAPIOrderType,
-          publisher: order.publisher satisfies HashString,
-          data: order.data satisfies HashString,
-          operatorPasteInstrs: order.operatorPasteInstrs satisfies HashString[],
-          maxNonce: order.maxNonce satisfies string,
-          startTime: new Date(order.startTime),
-          endTime: new Date(order.endTime),
-          signature: order.signature satisfies HashString,
-          publishedTimestamp: new Date(order.publishedTimestamp),
-          publishedBlock: order.publishedBlock,
-          beanTip: TV.fromBlockchain(order.beanTip, mainToken.decimals),
-          cancelled: order.cancelled,
-          executionStats: {
-            executionCount: es.executionCount,
-            latestExecution: es.latestExecution ? new Date(es.latestExecution) : null,
-          },
-          blueprintData: {
-            blueprintHash: bp.blueprintHash satisfies HashString,
-            pintoSownCounter: TV.fromBlockchain(bp.pintoSownCounter, mainToken.decimals),
-            lastExecutedSeason: bp.lastExecutedSeason satisfies number,
-            orderComplete: bp.orderComplete satisfies boolean,
-            amountFunded: TV.fromBlockchain(bp.amountFunded, mainToken.decimals),
-            cascadeAmountFunded: TV.fromBlockchain(bp.cascadeAmountFunded, mainToken.decimals),
-            sourceTokenIndices: getTokenSowStrategySource(bp.sourceTokenIndices, chainId),
-            totalAmountToSow: TV.fromBlockchain(bp.totalAmountToSow, mainToken.decimals),
-            minAmountToSowPerSeason: TV.fromBlockchain(bp.minAmountToSowPerSeason, mainToken.decimals),
-            maxAmountToSowPerSeason: TV.fromBlockchain(bp.maxAmountToSowPerSeason, mainToken.decimals),
-            minTemp: TV.fromBlockchain(bp.minTemp, TEMPERATURE_DECIMALS),
-            maxPodlineLength: TV.fromBlockchain(bp.maxPodlineLength, PODS.decimals),
-            maxGrownStalkPerBdv: TV.fromBlockchain(bp.maxGrownStalkPerBdv, STALK.decimals),
-            runBlocksAfterSunrise: Number(bp.runBlocksAfterSunrise),
-            slippageRatio: TV.fromBlockchain(bp.slippageRatio, 18),
-          },
-        };
-      }),
-    };
-
-    console.debug("[Tractor/tractorAPIFetchOrders] Parsed orders:", parsed);
-
-    return parsed;
+    return data;
   } catch (e) {
     console.error(e);
     return {
@@ -154,8 +113,6 @@ export interface TractorAPIExecutionsOptions {
 const tractorAPIFetchExecutions = async (options?: TractorAPIExecutionsOptions) => {
   console.debug("[Tractor/tractorAPIFetchExecutions] Fetching executions...");
 
-  const bodyObj = { orderType: "KNOWN", skip: 0, ...options };
-
   try {
     const results = await paginateTractorApiRequest(
       (requestBody: any) => {
@@ -168,19 +125,14 @@ const tractorAPIFetchExecutions = async (options?: TractorAPIExecutionsOptions) 
         }).then((res) => res.json() as Promise<TractorAPIExecutionResponse<unknown>>);
       },
       (res) => res.executions.length,
-      bodyObj,
+      { orderType: "KNOWN", ...options },
     );
 
     const data = results.reduce<TractorAPIExecutionResponse<unknown>>(
       (prev, curr) => {
-        if (!prev.lastUpdated) {
-          prev.lastUpdated = curr.lastUpdated;
-        }
-        if (!prev.totalRecords) {
-          prev.totalRecords = curr.totalRecords;
-        }
+        if (!prev.lastUpdated) prev.lastUpdated = curr.lastUpdated;
+        if (!prev.totalRecords) prev.totalRecords = curr.totalRecords;
         prev.executions.push(...curr.executions);
-
         return prev;
       },
       { lastUpdated: 0, totalRecords: 0, executions: [] },
