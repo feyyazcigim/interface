@@ -85,7 +85,7 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
       });
 
       // Combine and sort all executions
-      allExecutions.sort((a, b) => a.blockNumber - b.blockNumber);
+      allExecutions.sort((a, b) => b.blockNumber - a.blockNumber);
 
       return allExecutions;
     },
@@ -179,7 +179,6 @@ const getSelectTractorExecutions = (chainId: number) => {
             pods: TV.fromBlockchain(e.blueprintData.pods, PODS.decimals),
           },
         });
-        continue;
       }
     }
     return {

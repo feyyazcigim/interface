@@ -9,6 +9,7 @@ import useTransaction from "@/hooks/useTransaction";
 import { createRequisition, useSignRequisition } from "@/lib/Tractor";
 import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { Blueprint } from "@/lib/Tractor/types";
+import { PublisherTractorExecution } from "@/state/tractor/useTractorExecutions";
 import { formatter } from "@/utils/format";
 import { CheckIcon, CornerBottomLeftIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
@@ -28,7 +29,6 @@ import {
   DialogPortal,
   DialogTitle,
 } from "./ui/Dialog";
-import { Switch } from "./ui/Switch";
 
 // Define the execution data type
 export interface ExecutionData {
@@ -66,7 +66,7 @@ interface ReviewTractorOrderProps {
   operatorPasteInstrs: `0x${string}`[];
   blueprint: Blueprint;
   isViewOnly?: boolean;
-  executionHistory?: ExecutionData[];
+  executionHistory?: PublisherTractorExecution[];
 }
 
 export default function ReviewTractorOrderDialog({
@@ -166,14 +166,14 @@ export default function ReviewTractorOrderDialog({
   // Calculate total results from execution history
   const totalBeansSpent = executionHistory.reduce((acc, exec) => {
     if (exec.sowEvent) {
-      return acc.add(TokenValue.fromBlockchain(exec.sowEvent.beans, 6));
+      return acc.add(exec.sowEvent.beans);
     }
     return acc;
   }, TokenValue.ZERO);
 
   const totalPodsReceived = executionHistory.reduce((acc, exec) => {
     if (exec.sowEvent) {
-      return acc.add(TokenValue.fromBlockchain(exec.sowEvent.pods, 6));
+      return acc.add(exec.sowEvent.pods);
     }
     return acc;
   }, TokenValue.ZERO);
@@ -581,9 +581,9 @@ export default function ReviewTractorOrderDialog({
                             .map((execution, index) => {
                               // Calculate temperature for this execution
                               const temperature =
-                                execution.sowEvent && execution.sowEvent.beans > 0n
-                                  ? TokenValue.fromBlockchain(execution.sowEvent.pods, 6)
-                                      .div(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
+                                execution.sowEvent && execution.sowEvent.beans.gt(0)
+                                  ? execution.sowEvent.pods
+                                      .div(execution.sowEvent.beans)
                                       .mul(100) // Convert to percentage
                                   : TokenValue.ZERO;
 
@@ -591,17 +591,13 @@ export default function ReviewTractorOrderDialog({
                                 <tr key={index} className="hover:bg-gray-50 border-b">
                                   <td className="px-4 py-3 font-medium">#{executionHistory.length - index}</td>
                                   <td className="px-4 py-3 text-right">
-                                    {execution.sowEvent
-                                      ? formatter.number(TokenValue.fromBlockchain(execution.sowEvent.beans, 6))
-                                      : "-"}
+                                    {execution.sowEvent ? formatter.number(execution.sowEvent.beans) : "-"}
                                   </td>
                                   <td className="px-4 py-3 text-right">
-                                    {execution.sowEvent
-                                      ? formatter.number(TokenValue.fromBlockchain(execution.sowEvent.pods, 6))
-                                      : "-"}
+                                    {execution.sowEvent ? formatter.number(execution.sowEvent.pods) : "-"}
                                   </td>
                                   <td className="px-4 py-3 text-right">
-                                    {execution.sowEvent && execution.sowEvent.beans > 0n
+                                    {execution.sowEvent && execution.sowEvent.beans.gt(0)
                                       ? `${formatter.number(temperature)}%`
                                       : "-"}
                                   </td>

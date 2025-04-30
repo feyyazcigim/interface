@@ -14,12 +14,7 @@ import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { resolveChainId } from "@/utils/chain";
 import { ChainLookup, HashString, Prettify } from "@/utils/types.generic";
 import { base } from "viem/chains";
-import {
-  SowOrderTokenStrategy,
-  TractorAPIOrderType,
-  TractorAPIOrdersResponse,
-} from "./types";
-
+import { SowOrderTokenStrategy, TractorAPIOrderType, TractorAPIOrdersResponse } from "./types";
 
 // ================================================================================
 // ────────────────────────────────────────────────────────────────────────────────
@@ -30,7 +25,7 @@ import {
 export interface TractorAPIOrderOptions {
   orderType?: TractorAPIOrderType;
   cancelled?: boolean;
-};
+}
 async function getOrders(chainId: number = base.id, options?: TractorAPIOrderOptions) {
   console.debug("[Tractor/tractorAPIFetchOrders] Fetching orders...");
 
@@ -101,7 +96,6 @@ async function getOrders(chainId: number = base.id, options?: TractorAPIOrderOpt
   }
 }
 
-
 // ================================================================================
 // ────────────────────────────────────────────────────────────────────────────────
 // TRACTOR API EXECUTION ENDPOINT
@@ -132,7 +126,7 @@ async function tractorAPIFetchExecutions(options?: TractorAPIExecutionsOptions) 
       executions: [],
     };
   }
-};
+}
 
 // ────────────────────────────────────────────────────────────────────────────────
 // INTERFACE
