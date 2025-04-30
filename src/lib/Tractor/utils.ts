@@ -23,7 +23,7 @@ import { ChainLookup, HashString } from "@/utils/types.generic";
 import { SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
 import { base } from "viem/chains";
-import { Requisition, SowOrderTokenStrategy, TractorAPIOrderType, TractorOrdersAPIResponse } from "./types";
+import { Requisition, SowOrderTokenStrategy, TractorAPIOrderType, TractorAPIOrdersResponse } from "./types";
 
 // ────────────────────────────────────────────────────────────────────────────────
 // API Calls
@@ -71,7 +71,7 @@ export const tractorAPIFetchOrders = async (chainId: number = base.id, options?:
 
   try {
     const response = await fetch(`${API_SERVICES.pinto}/tractor/orders`, { method: "POST", ...options }).then(
-      (res) => res.json() as Promise<TractorOrdersAPIResponse<string, string, number, string[]>>,
+      (res) => res.json() as Promise<TractorAPIOrdersResponse<string, string, number, string[]>>,
     );
 
     console.debug("[Tractor/tractorAPIFetchOrders] RESPONSE", {
@@ -80,7 +80,7 @@ export const tractorAPIFetchOrders = async (chainId: number = base.id, options?:
 
     const mainToken = getChainConstant(resolveChainId(chainId), MAIN_TOKEN);
 
-    const parsed: TractorOrdersAPIResponse = {
+    const parsed: TractorAPIOrdersResponse = {
       lastUpdated: response.lastUpdated as unknown as number, // This value is already a number but cast as number to avoid type errors
       totalRecords: response.totalRecords,
       orders: response.orders.map(({ blueprintData: bp, executionStats: es, ...order }) => {
@@ -990,7 +990,7 @@ export async function loadOrderbookData(
   publicClient: PublicClient | null,
   latestBlock?: { number: bigint; timestamp: bigint } | null,
   maxTemperature?: number,
-  apiResponse?: TractorOrdersAPIResponse,
+  apiResponse?: TractorAPIOrdersResponse,
   lookbackBlocks?: bigint,
 ): Promise<OrderbookEntry[]> {
   if (!protocolAddress || !publicClient) return [];

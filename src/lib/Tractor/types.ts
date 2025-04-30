@@ -1,6 +1,6 @@
 import { TV } from "@/classes/TokenValue";
 import { Token } from "@/utils/types";
-import { HashString } from "@/utils/types.generic";
+import { HashString, Prettify } from "@/utils/types.generic";
 import { Address } from "viem";
 
 export interface Blueprint {
@@ -34,18 +34,42 @@ export type SowOrderTokenStrategy =
   | { type: "LOWEST_PRICE" }
   | { type: "SPECIFIC_TOKEN"; address: `0x${string}` };
 
+// ────────────────────────────────────────────────────────────────────────────────
 // TRACTOR API RESPONSE TYPES
+// ────────────────────────────────────────────────────────────────────────────────
 
 export type TractorSowOrderType = "SOW_V0";
 
 export type TractorAPIOrderType = TractorSowOrderType;
 
-export interface TractorAPIResponseExecution<Time extends string | number | Date = Date> {
+export type BaseTractorAPIResponse<T extends object> = {
+  lastUpdated: number;
+  totalRecords: number;
+} & T;
+
+export type TractorAPIOrdersResponse<
+  Value extends string | TV = TV,
+  BlockTimeOrBlockDiff extends string | number = number,
+  Time extends string | number | Date = Date,
+  TokenStrategy extends string[] | SowOrderTokenStrategy = SowOrderTokenStrategy,
+> = Prettify<
+  BaseTractorAPIResponse<{
+    orders: TractorAPIOrder<
+      TractorAPISowOrderBlueprint<Value, BlockTimeOrBlockDiff, TokenStrategy>,
+      Value,
+      BlockTimeOrBlockDiff,
+      Time,
+      TokenStrategy
+    >[];
+  }>
+>;
+
+export interface TractorAPIOrdersExecutionInfo<Time extends string | number | Date = Date> {
   executionCount: number;
   latestExecution: Time | null;
 }
 
-export interface TractorAPIResponseSowOrderBlueprint<
+export interface TractorAPISowOrderBlueprint<
   Value extends string | TV = TV,
   BlockTimeDiff extends string | number = number,
   TokenStrategy extends string[] | SowOrderTokenStrategy = SowOrderTokenStrategy,
@@ -67,7 +91,8 @@ export interface TractorAPIResponseSowOrderBlueprint<
   slippageRatio: Value;
 }
 
-export interface TractorAPIResponseOrder<
+export interface TractorAPIOrder<
+  Blueprint,
   Value extends string | TV = TV,
   BlockTime extends string | number = number,
   Time extends string | number | Date = Date,
@@ -86,17 +111,6 @@ export interface TractorAPIResponseOrder<
   publishedBlock: number;
   beanTip: Value;
   cancelled: boolean;
-  blueprintData: TractorAPIResponseSowOrderBlueprint<Value, BlockTime, TokenStrategy>;
-  executionStats: TractorAPIResponseExecution<Time>;
-}
-
-export interface TractorOrdersAPIResponse<
-  Value extends string | TV = TV,
-  BlockTimeOrBlockDiff extends string | number = number,
-  Time extends string | number | Date = Date,
-  TokenStrategy extends string[] | SowOrderTokenStrategy = SowOrderTokenStrategy,
-> {
-  lastUpdated: BlockTimeOrBlockDiff;
-  orders: TractorAPIResponseOrder<Value, BlockTimeOrBlockDiff, Time, TokenStrategy>[];
-  totalRecords: number;
+  blueprintData: Blueprint;
+  executionStats: TractorAPIOrdersExecutionInfo<Time>;
 }

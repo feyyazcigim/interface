@@ -1,4 +1,5 @@
 import { MinimumViableBlock } from "@/utils/types";
+import { HashString } from "@/utils/types.generic";
 
 // ────────────────────────────────────────────────────────────────────────────────
 // BASE QueryKey
@@ -14,10 +15,8 @@ const BASE_QKS = {
 // TRACTOR Query Keys
 // ────────────────────────────────────────────────────────────────────────────────
 
-const getLatestBlockKeyFragment = (args: MinimumViableBlock<bigint> | undefined) => [
-  args?.number.toString() ?? "no-block-number",
-  args?.timestamp.toString() ?? "no-timestamp",
-];
+const getLatestBlockKeyFragment = (args: MinimumViableBlock<bigint> | undefined) =>
+  args?.number.toString() ?? "no-block-number";
 
 const tractorQueryKeys = {
   // Sow Orders V0 api cal
@@ -32,7 +31,7 @@ const tractorQueryKeys = {
     "chain",
     args.lastUpdated?.toString() ?? "no-last-updated",
     args.lookbackBlocks?.toString() ?? "0",
-    ...getLatestBlockKeyFragment(args.blockInfo),
+    getLatestBlockKeyFragment(args.blockInfo),
   ],
   operatorAverageTipPaid: (lookbackBlocks?: bigint) => [
     BASE_QKS.tractor,
@@ -42,9 +41,20 @@ const tractorQueryKeys = {
   publishedRequisitions: (latestBlock: MinimumViableBlock<bigint> | undefined) => [
     BASE_QKS.tractor,
     "publishedRequisitions",
-    ...getLatestBlockKeyFragment(latestBlock),
+    getLatestBlockKeyFragment(latestBlock),
   ],
   tractorEvents: [BASE_QKS.tractor, "events", "requisitions-and-cancelled-blueprints"],
+  tractorExecutions: (publisher: HashString | undefined) => [
+    BASE_QKS.tractor,
+    "executions",
+    publisher ?? "no-publisher",
+  ],
+  tractorExecutionsChain: (publisher: HashString | undefined, lookbackBlocks: bigint | undefined) => [
+    BASE_QKS.tractor,
+    "executions",
+    publisher ?? "no-publisher",
+    lookbackBlocks?.toString() ?? "0",
+  ],
 } as const;
 
 // ────────────────────────────────────────────────────────────────────────────────
