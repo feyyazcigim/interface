@@ -46,7 +46,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const error = executionsQuery.error || requisitionsQuery.error;
 
   useEffect(() => {
-    if (refreshData && dataHasLoaded) {
+    if (dataHasLoaded) {
       executionsQuery.refetch();
       requisitionsQuery.refetch();
     }
