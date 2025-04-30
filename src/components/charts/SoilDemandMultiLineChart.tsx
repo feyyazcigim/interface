@@ -215,44 +215,6 @@ const SoilDemandMultiLineChart = React.memo(
 
     const fillArea = !!makeAreaGradients && !!makeAreaGradients.length;
 
-    // const referenceDotPlugin: Plugin = useMemo<Plugin>(() => {}, []);
-
-    const verticalLinePlugin: Plugin = useMemo<Plugin>(
-      () => ({
-        id: "customVerticalLine",
-        afterDraw: (chart: Chart) => {
-          const ctx = chart.ctx;
-          const activeIndex = activeIndexRef.current;
-          if (ctx) {
-            ctx.save();
-            ctx.setLineDash([4, 4]);
-
-            // Draw the vertical line for the active element (hovered point)
-            const activeElements = chart.getActiveElements();
-            if (activeElements.length > 0) {
-              const activeElement = activeElements[0];
-              const datasetIndex = activeElement.datasetIndex;
-              const index = activeElement.index;
-              const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];
-
-              if (dataPoint) {
-                const { x } = dataPoint.getProps(["x"], true);
-                ctx.beginPath();
-                ctx.moveTo(x, chart.chartArea.top);
-                ctx.lineTo(x, chart.chartArea.bottom);
-                ctx.strokeStyle = 'black'
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-              }
-            }
-
-            ctx.restore();
-          }
-        },
-      }),
-      [fillArea], // Removed morningIndex from dependencies
-    );
-
     const horizontalReferenceLinePlugin: Plugin = useMemo<Plugin>(
       () => ({
         id: "horizontalReferenceLine",
@@ -535,14 +497,12 @@ const SoilDemandMultiLineChart = React.memo(
     const allPlugins = useMemo<Plugin[]>(
       () => [
         gradientPlugin,
-        verticalLinePlugin,
         horizontalReferenceLinePlugin,
         selectionPointPlugin,
         selectionCallbackPlugin,
       ],
       [
         gradientPlugin,
-        verticalLinePlugin,
         horizontalReferenceLinePlugin,
         selectionPointPlugin,
         selectionCallbackPlugin,
