@@ -1,4 +1,4 @@
-import { isDev, isObject } from "./utils";
+import { deployedCommitHash, isDev, isObject } from "./utils";
 
 interface ErrorWithShortMessage {
   shortMessage: string;
@@ -26,7 +26,12 @@ export const activateDiscordLogging = () => {
   const webhookUrl =
     "https://discord.com/api/webhooks/1365024536386605210/vuTrpuicFeFYgpkPKoUcX34Whpii5crIIR9GFAwvsmy5LIvQLqiRxTam0wWH0SzQrZ7a";
   // Dont send messages with this content
-  const WEBHOOK_BLACKLIST = ["validateDOMNesting"];
+  const WEBHOOK_BLACKLIST = [
+    "validateDOMNesting",
+    "UserRejectedRequestError",
+    `"level":50,"context":`,
+    "User rejected the request",
+  ];
 
   const originalConsoleError = console.error;
 
@@ -36,7 +41,12 @@ export const activateDiscordLogging = () => {
     originalConsoleError.apply(console, args);
 
     if (!isDev()) {
-      const content = `🚨 Console error on ${window.location.href}:\n${args.map((arg) => (typeof arg === "object" ? JSON.stringify(arg) : String(arg))).join(" ")}`;
+      const content =
+        `🚨 ${(deployedCommitHash() ?? "").slice(0, 7)} Console error on ${window.location.href}:\n${args.map((arg) => (typeof arg === "object" ? JSON.stringify(arg) : String(arg))).join(" ")}`
+          // Prevent discord link previews
+          .replace(/(https?:\/\/[^\s]+)/g, "<$1>")
+          // Hide wallet addresses
+          .replace(/0x[a-fA-F0-9]{40}(?=[^a-fA-F0-9]|$)/g, "ADDR");
 
       if (WEBHOOK_BLACKLIST.some((blacklist) => content.includes(blacklist))) {
         return;
