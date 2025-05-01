@@ -12,10 +12,10 @@ import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { resolveChainId } from "@/utils/chain";
 import { FarmFromMode, MinimumViableBlock } from "@/utils/types";
 import { MayArray } from "@/utils/types.generic";
+import { arrayify } from "@/utils/utils";
 import { SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
 import { Requisition, SowOrderTokenStrategy } from "./types";
-import { arrayify } from "@/utils/utils";
 
 // Block number at which Tractor was deployed - use this as starting point for event queries
 export const TRACTOR_DEPLOYMENT_BLOCK = 28930876n;
@@ -429,7 +429,11 @@ export function findOperatorPlaceholderOffset(encodedData: `0x${string}`): numbe
 // Fetch Tractor Events
 // ────────────────────────────────────────────────────────────────────────────────
 
-export async function fetchTractorEvents(publicClient: PublicClient, protocolAddress: `0x${string}`, blockFrom?: bigint) {
+export async function fetchTractorEvents(
+  publicClient: PublicClient,
+  protocolAddress: `0x${string}`,
+  blockFrom?: bigint,
+) {
   const fromBlock = blockFrom ?? TRACTOR_DEPLOYMENT_BLOCK;
   const sharedArgs = {
     address: protocolAddress,
@@ -453,6 +457,11 @@ export async function fetchTractorEvents(publicClient: PublicClient, protocolAdd
 
   return { publishEvents, cancelledHashes };
 }
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Requisitions
+// ────────────────────────────────────────────────────────────────────────────────
+
 export interface RequisitionData {
   blueprint: {
     publisher: `0x${string}`;
@@ -465,6 +474,7 @@ export interface RequisitionData {
   blueprintHash: `0x${string}`;
   signature: `0x${string}`;
 }
+
 export interface RequisitionEvent {
   requisition: RequisitionData;
   blockNumber: number;
@@ -473,6 +483,9 @@ export interface RequisitionEvent {
   requisitionType: "sowBlueprintv0" | "unknown";
   decodedData: SowBlueprintData | null;
 }
+
+// First, export the requisition type as a standalone type for reuse
+export type RequisitionType = "sowBlueprintv0" | "unknown";
 
 type SelectRequisitionTypeArgs = {
   latestBlock: MinimumViableBlock<bigint>;
@@ -539,9 +552,6 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
     return filteredEvents;
   };
 };
-
-// First, export the requisition type as a standalone type for reuse
-export type RequisitionType = "sowBlueprintv0" | "unknown";
 
 export async function loadPublishedRequisitions(
   address: string | undefined,
@@ -895,6 +905,7 @@ export interface OrderbookEntry extends Omit<RequisitionEvent, "decodedData"> {
   estimatedPlaceInLine: TokenValue;
   minTemp: TokenValue;
   withdrawalPlan?: WithdrawalPlan;
+  isComplete?: boolean;
 }
 
 // Add this type definition after the OrderbookEntryWithProcessingData interface
@@ -937,29 +948,23 @@ export async function loadOrderbookData(
     // Fetch SowOrderComplete events to identify completed orders
     console.debug("[TRACTOR/loadOrderbookData] Fetching...");
 
-    const [podIndexResult, harvestableIndexResult, totalSoil, sowOrderCompleteEvents, requisitions = []] =
-      await Promise.all([
-        publicClient.readContract({ address: protocolAddress, abi: diamondABI, args: [0n], functionName: "podIndex" }),
-        publicClient.readContract({
-          address: protocolAddress,
-          abi: diamondABI,
-          args: [0n],
-          functionName: "harvestableIndex",
-        }),
-        publicClient.readContract({
-          address: protocolAddress,
-          abi: diamondABI,
-          functionName: "totalSoil",
-        }),
-        publicClient.getContractEvents({
-          address: SOW_BLUEPRINT_V0_ADDRESS,
-          abi: sowBlueprintv0ABI,
-          eventName: "SowOrderComplete",
-          fromBlock: fromBlock,
-          toBlock: "latest",
-        }),
-        loadPublishedRequisitions(address, protocolAddress, publicClient, latestBlock, "sowBlueprintv0", fromBlock),
-      ]);
+    const [podIndexResult, harvestableIndexResult, sowOrderCompleteEvents, requisitions = []] = await Promise.all([
+      publicClient.readContract({ address: protocolAddress, abi: diamondABI, args: [0n], functionName: "podIndex" }),
+      publicClient.readContract({
+        address: protocolAddress,
+        abi: diamondABI,
+        args: [0n],
+        functionName: "harvestableIndex",
+      }),
+      publicClient.getContractEvents({
+        address: SOW_BLUEPRINT_V0_ADDRESS,
+        abi: sowBlueprintv0ABI,
+        eventName: "SowOrderComplete",
+        fromBlock: fromBlock,
+        toBlock: "latest",
+      }),
+      loadPublishedRequisitions(address, protocolAddress, publicClient, latestBlock, "sowBlueprintv0", fromBlock),
+    ]);
 
     if (podIndexResult && harvestableIndexResult) {
       // Pod line is podIndex - harvestableIndex
@@ -1015,9 +1020,7 @@ export async function loadOrderbookData(
     const publisherWithdrawalPlans: { [publisher: string]: any[] } = {};
 
     // Process requisitions in a single loop (already sorted by temperature)
-    const orderbookData: OrderbookEntry[] = [
-      ...(activeApiEntries?.filter((entry) => !completedOrders.has(entry.requisition.blueprintHash)) ?? []),
-    ];
+    const orderbookData: OrderbookEntry[] = [...(activeApiEntries ?? []).filter((entry) => !entry.isComplete)];
 
     console.debug("\nProcessing orderbook data:");
 
@@ -1147,10 +1150,6 @@ export async function loadOrderbookData(
           console.debug(`Amount sowable next season: ${amountSowableNextSeason.toHuman()}`);
         }
 
-        // Calculate the place in line for this order
-        // const estimatedPlaceInLine = TokenValue.fromBlockchain(runningPlaceInLine.toBigInt(), 6);
-        // console.debug(`Estimated place in line: ${estimatedPlaceInLine.toHuman()}`);
-
         if (!withdrawalPlan) {
           throw new Error("Failed to get withdrawal plan");
         }
@@ -1192,8 +1191,8 @@ export async function loadOrderbookData(
       // If this order will have some pods sown next season, update the running place in line
       // for future orders by adding this order's pod amount
       if (entry.amountSowableNextSeason.gt(0)) {
-        entry.estimatedPlaceInLine = TokenValue.fromBlockchain(runningPlaceInLine.toBigInt(), 6);
-        const podsToMint = entry.amountSowableNextSeason.mul(1 + entry.minTemp.toNumber() / 100);
+        entry.estimatedPlaceInLine = TokenValue.fromBlockchain(runningPlaceInLine.toBigInt(), PODS.decimals);
+        const podsToMint = entry.amountSowableNextSeason.mul(entry.minTemp.add(1).div(100)).reDecimal(PODS.decimals);
         runningPlaceInLine = runningPlaceInLine.add(podsToMint);
       }
     }
@@ -1206,7 +1205,7 @@ export async function loadOrderbookData(
         address: protocolAddress,
         abi: diamondABI,
         eventName: "Soil",
-        fromBlock: TRACTOR_DEPLOYMENT_BLOCK,
+        fromBlock: TIME_TO_BLOCKS.month,
         toBlock: "latest",
       });
 
@@ -1287,6 +1286,14 @@ export async function loadOrderbookData(
 
       console.debug(`  Allocated: ${allocatedAmount.toHuman()}, Remaining soil: ${remainingSoil.toHuman()}`);
     }
+
+    orderbookData.forEach((entry) => {
+      const publisher = entry.requisition.blueprint.publisher;
+
+      if (publisher.toLowerCase() === "0xA5B0461cc01637D1A700b4E42085F0E7616B7796".toLowerCase()) {
+        console.log("----- this pub: ", entry);
+      }
+    });
 
     return orderbookData;
   } catch (error) {
