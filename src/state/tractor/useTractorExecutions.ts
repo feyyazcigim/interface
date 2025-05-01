@@ -1,5 +1,4 @@
 import { TV } from "@/classes/TokenValue";
-import { diamondABI } from "@/constants/abi/diamondABI";
 import { TIME_TO_BLOCKS } from "@/constants/blocks";
 import { PODS } from "@/constants/internalTokens";
 import { defaultQuerySettingsMedium } from "@/constants/query";
@@ -8,14 +7,13 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { getChainConstant } from "@/hooks/useChainConstant";
 import { TractorAPIExecutionSowOrderItem, TractorAPIResponseExecution } from "@/lib/Tractor/api";
 import TractorAPI from "@/lib/Tractor/api";
-import { TRACTOR_DEPLOYMENT_BLOCK } from "@/lib/Tractor/utils";
+import { fetchTractorExecutions, PublisherTractorExecution } from "@/lib/Tractor/utils";
 import { queryKeys } from "@/state/queryKeys";
 import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";
 import { isDev } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import { PublicClient, decodeEventLog } from "viem";
 import { useChainId, usePublicClient } from "wagmi";
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -125,24 +123,6 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
 // Helper Functions & Interfaces
 // ────────────────────────────────────────────────────────────────────────────────
 
-export interface PublisherTractorExecution {
-  blockNumber: number;
-  operator: `0x${string}`;
-  publisher: `0x${string}`;
-  blueprintHash: `0x${string}`;
-  transactionHash: `0x${string}`;
-  timestamp: number | undefined;
-  sowEvent: SowEventArgs | undefined;
-}
-
-interface SowEventArgs<T extends bigint | TV = TV> {
-  account: `0x${string}`;
-  fieldId: bigint;
-  index: T;
-  beans: T;
-  pods: T;
-}
-
 const getSelectTractorExecutions = (chainId: number) => {
   return (args: Awaited<ReturnType<typeof TractorAPI.getExecutions>> | undefined) => {
     if (!args) return undefined;
@@ -189,169 +169,3 @@ const getSelectTractorExecutions = (chainId: number) => {
     };
   };
 };
-
-export async function fetchTractorExecutions(
-  publicClient: PublicClient,
-  protocolAddress: `0x${string}`,
-  publisher: `0x${string}`,
-  lookbackBlocks?: bigint,
-) {
-  const chainId = publicClient.chain?.id;
-  if (!chainId) throw new Error("[Tractor/fetchTractorExecutions] No chain ID found");
-
-  console.debug("[Tractor/fetchTractorExecutions] FETCHING(executions for publisher):", publisher);
-  const latestBlock = await publicClient.getBlock();
-
-  let fromBlock = TRACTOR_DEPLOYMENT_BLOCK;
-
-  if (lookbackBlocks && latestBlock.number > TRACTOR_DEPLOYMENT_BLOCK) {
-    const newFromBlock = latestBlock.number - BigInt(lookbackBlocks);
-    fromBlock = newFromBlock > TRACTOR_DEPLOYMENT_BLOCK ? newFromBlock : TRACTOR_DEPLOYMENT_BLOCK;
-  }
-
-  // Get Tractor events
-  const tractorEvents = await publicClient.getContractEvents({
-    address: protocolAddress,
-    abi: diamondABI,
-    eventName: "Tractor",
-    args: {
-      publisher: publisher,
-    },
-    fromBlock: fromBlock ?? TRACTOR_DEPLOYMENT_BLOCK,
-    toBlock: "latest",
-  });
-
-  console.debug("[Tractor/fetchTractorExecutions] RESPONSE(Tractor events):", tractorEvents);
-
-  // Process transaction receipts and collect block numbers
-  const blockNumbers = new Set<bigint>();
-  const processingResults = await Promise.all(
-    tractorEvents.map(async (event) => {
-      const receipt = await publicClient.getTransactionReceipt({
-        hash: event.transactionHash,
-      });
-
-      // Add block number to the set for batch fetching
-      blockNumbers.add(receipt.blockNumber);
-
-      // Get the blueprint hash from the Tractor event
-      const blueprintHash = event.args?.blueprintHash as `0x${string}`;
-
-      // First, find the TractorExecutionBegan event with matching blueprint hash
-      let tractorExecutionBeganIndex = -1;
-      let tractorExecutionBeganEvent: any = null;
-
-      const mainToken = getChainConstant(resolveChainId(chainId), MAIN_TOKEN);
-
-      for (let i = 0; i < receipt.logs.length; i++) {
-        const log = receipt.logs[i];
-        try {
-          const decoded = decodeEventLog({
-            abi: diamondABI,
-            data: log.data,
-            topics: log.topics,
-          });
-
-          if (decoded.eventName === "TractorExecutionBegan" && decoded.args?.blueprintHash === blueprintHash) {
-            tractorExecutionBeganIndex = i;
-            tractorExecutionBeganEvent = decoded;
-            break;
-          }
-        } catch {
-          // Skip logs that can't be decoded
-        }
-      }
-
-      // If we found the TractorExecutionBegan event, look for the first Sow event after it
-      let sowEvent: any = null;
-      if (tractorExecutionBeganIndex >= 0) {
-        for (let i = tractorExecutionBeganIndex + 1; i < receipt.logs.length; i++) {
-          const log = receipt.logs[i];
-          try {
-            const decoded = decodeEventLog({
-              abi: diamondABI,
-              data: log.data,
-              topics: log.topics,
-            });
-
-            if (decoded.eventName === "Sow") {
-              sowEvent = log;
-              break;
-            }
-          } catch {
-            // Skip logs that can't be decoded
-          }
-        }
-      }
-
-      // Decode the Sow event if found
-      let sowData: SowEventArgs | undefined;
-      if (sowEvent) {
-        try {
-          const decoded = decodeEventLog({
-            abi: diamondABI,
-            data: sowEvent.data,
-            topics: sowEvent.topics,
-          }) as { args: SowEventArgs<bigint> };
-
-          sowData = {
-            account: decoded.args.account,
-            fieldId: decoded.args.fieldId,
-            index: TV.fromBigInt(decoded.args.index, PODS.decimals),
-            beans: TV.fromBigInt(decoded.args.beans, mainToken.decimals),
-            pods: TV.fromBigInt(decoded.args.pods, PODS.decimals),
-          };
-        } catch (error) {
-          console.error("Failed to decode Sow event:", error);
-        }
-      }
-
-      // Create the tractorExecutionBeganData object conditionally
-      const tractorExecutionBeganData = tractorExecutionBeganEvent
-        ? {
-            operator: tractorExecutionBeganEvent.args?.operator as `0x${string}`,
-            publisher: tractorExecutionBeganEvent.args?.publisher as `0x${string}`,
-            blueprintHash: tractorExecutionBeganEvent.args?.blueprintHash as `0x${string}`,
-            nonce: tractorExecutionBeganEvent.args?.nonce as bigint,
-            gasleft: tractorExecutionBeganEvent.args?.gasleft as bigint,
-          }
-        : undefined;
-
-      return {
-        blockNumber: receipt.blockNumber,
-        event,
-        receipt,
-        sowData,
-        tractorExecutionBeganEvent: tractorExecutionBeganData,
-      };
-    }),
-  );
-
-  // Fetch all required blocks in a batch
-  const blocks = await Promise.all(
-    Array.from(blockNumbers).map((blockNumber) => publicClient.getBlock({ blockNumber })),
-  );
-
-  // Build a map of block numbers to timestamps
-  const blockTimestamps = new Map<string, number>();
-  blocks.forEach((block) => {
-    blockTimestamps.set(block.number.toString(), Number(block.timestamp) * 1000);
-  });
-
-  // Assemble the final result
-  const processed = processingResults.map((result) => {
-    return {
-      blockNumber: Number(result.blockNumber),
-      operator: result.event.args?.operator as `0x${string}`,
-      publisher: result.event.args?.publisher as `0x${string}`,
-      blueprintHash: result.event.args?.blueprintHash as `0x${string}`,
-      transactionHash: result.event.transactionHash,
-      timestamp: blockTimestamps.get(result.blockNumber.toString()),
-      sowEvent: result.sowData,
-      tractorExecutionBeganEvent: result.tractorExecutionBeganEvent,
-    };
-  });
-
-  console.debug("[Tractor/fetchTractorExecutions] RESPONSE", processed);
-  return processed;
-}

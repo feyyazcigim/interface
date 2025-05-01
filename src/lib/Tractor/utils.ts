@@ -1,4 +1,4 @@
-import { TokenValue } from "@/classes/TokenValue";
+import { TokenValue, TV } from "@/classes/TokenValue";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 import { diamondABI } from "@/constants/abi/diamondABI";
@@ -7,9 +7,14 @@ import { beanstalkAbi } from "@/generated/contractHooks";
 import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { FarmFromMode, MinimumViableBlock } from "@/utils/types";
 import { MayArray } from "@/utils/types.generic";
-import { SignableMessage, decodeFunctionData, encodeFunctionData } from "viem";
+import { SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
 import { Requisition, SowOrderTokenStrategy } from "./types";
+import { getChainConstant } from "@/hooks/useChainConstant";
+import { resolveChainId } from "@/utils/chain";
+import { MAIN_TOKEN } from "@/constants/tokens";
+import { PODS } from "@/constants/internalTokens";
+import { TIME_TO_BLOCKS } from "@/constants/blocks";
 
 // Block number at which Tractor was deployed - use this as starting point for event queries
 export const TRACTOR_DEPLOYMENT_BLOCK = 28930876n;
@@ -701,6 +706,190 @@ export function getSowBlueprintDisplayData(data: SowBlueprintData): SowBlueprint
     tipAddress: data.operatorParams.tipAddress,
   };
 }
+export interface PublisherTractorExecution {
+  blockNumber: number;
+  operator: `0x${string}`;
+  publisher: `0x${string}`;
+  blueprintHash: `0x${string}`;
+  transactionHash: `0x${string}`;
+  timestamp: number | undefined;
+  sowEvent: SowEventArgs | undefined;
+}
+
+interface SowEventArgs<T extends bigint | TokenValue = TokenValue> {
+  account: `0x${string}`;
+  fieldId: bigint;
+  index: T;
+  beans: T;
+  pods: T;
+}
+
+export async function fetchTractorExecutions(
+  publicClient: PublicClient,
+  protocolAddress: `0x${string}`,
+  publisher: `0x${string}`,
+  lookbackBlocks?: bigint,
+) {
+  const chainId = publicClient.chain?.id;
+  if (!chainId) throw new Error("[Tractor/fetchTractorExecutions] No chain ID found");
+
+  console.debug("[Tractor/fetchTractorExecutions] FETCHING(executions for publisher):", publisher);
+  const latestBlock = await publicClient.getBlock();
+
+  let fromBlock = TRACTOR_DEPLOYMENT_BLOCK;
+
+  if (lookbackBlocks && latestBlock.number > TRACTOR_DEPLOYMENT_BLOCK) {
+    const newFromBlock = latestBlock.number - BigInt(lookbackBlocks);
+    fromBlock = newFromBlock > TRACTOR_DEPLOYMENT_BLOCK ? newFromBlock : TRACTOR_DEPLOYMENT_BLOCK;
+  }
+
+  // Get Tractor events
+  const tractorEvents = await publicClient.getContractEvents({
+    address: protocolAddress,
+    abi: diamondABI,
+    eventName: "Tractor",
+    args: {
+      publisher: publisher,
+    },
+    fromBlock: fromBlock ?? TRACTOR_DEPLOYMENT_BLOCK,
+    toBlock: "latest",
+  });
+
+  console.debug("[Tractor/fetchTractorExecutions] RESPONSE(Tractor events):", tractorEvents);
+
+  // Process transaction receipts and collect block numbers
+  const blockNumbers = new Set<bigint>();
+  const processingResults = await Promise.all(
+    tractorEvents.map(async (event) => {
+      const receipt = await publicClient.getTransactionReceipt({
+        hash: event.transactionHash,
+      });
+
+      // Add block number to the set for batch fetching
+      blockNumbers.add(receipt.blockNumber);
+
+      // Get the blueprint hash from the Tractor event
+      const blueprintHash = event.args?.blueprintHash as `0x${string}`;
+
+      // First, find the TractorExecutionBegan event with matching blueprint hash
+      let tractorExecutionBeganIndex = -1;
+      let tractorExecutionBeganEvent: any = null;
+
+      const mainToken = getChainConstant(resolveChainId(chainId), MAIN_TOKEN);
+
+      for (let i = 0; i < receipt.logs.length; i++) {
+        const log = receipt.logs[i];
+        try {
+          const decoded = decodeEventLog({
+            abi: diamondABI,
+            data: log.data,
+            topics: log.topics,
+          });
+
+          if (decoded.eventName === "TractorExecutionBegan" && decoded.args?.blueprintHash === blueprintHash) {
+            tractorExecutionBeganIndex = i;
+            tractorExecutionBeganEvent = decoded;
+            break;
+          }
+        } catch {
+          // Skip logs that can't be decoded
+        }
+      }
+
+      // If we found the TractorExecutionBegan event, look for the first Sow event after it
+      let sowEvent: any = null;
+      if (tractorExecutionBeganIndex >= 0) {
+        for (let i = tractorExecutionBeganIndex + 1; i < receipt.logs.length; i++) {
+          const log = receipt.logs[i];
+          try {
+            const decoded = decodeEventLog({
+              abi: diamondABI,
+              data: log.data,
+              topics: log.topics,
+            });
+
+            if (decoded.eventName === "Sow") {
+              sowEvent = log;
+              break;
+            }
+          } catch {
+            // Skip logs that can't be decoded
+          }
+        }
+      }
+
+      // Decode the Sow event if found
+      let sowData: SowEventArgs | undefined;
+      if (sowEvent) {
+        try {
+          const decoded = decodeEventLog({
+            abi: diamondABI,
+            data: sowEvent.data,
+            topics: sowEvent.topics,
+          }) as { args: SowEventArgs<bigint> };
+
+          sowData = {
+            account: decoded.args.account,
+            fieldId: decoded.args.fieldId,
+            index: TV.fromBigInt(decoded.args.index, PODS.decimals),
+            beans: TV.fromBigInt(decoded.args.beans, mainToken.decimals),
+            pods: TV.fromBigInt(decoded.args.pods, PODS.decimals),
+          };
+        } catch (error) {
+          console.error("Failed to decode Sow event:", error);
+        }
+      }
+
+      // Create the tractorExecutionBeganData object conditionally
+      const tractorExecutionBeganData = tractorExecutionBeganEvent
+        ? {
+            operator: tractorExecutionBeganEvent.args?.operator as `0x${string}`,
+            publisher: tractorExecutionBeganEvent.args?.publisher as `0x${string}`,
+            blueprintHash: tractorExecutionBeganEvent.args?.blueprintHash as `0x${string}`,
+            nonce: tractorExecutionBeganEvent.args?.nonce as bigint,
+            gasleft: tractorExecutionBeganEvent.args?.gasleft as bigint,
+          }
+        : undefined;
+
+      return {
+        blockNumber: receipt.blockNumber,
+        event,
+        receipt,
+        sowData,
+        tractorExecutionBeganEvent: tractorExecutionBeganData,
+      };
+    }),
+  );
+
+  // Fetch all required blocks in a batch
+  const blocks = await Promise.all(
+    Array.from(blockNumbers).map((blockNumber) => publicClient.getBlock({ blockNumber })),
+  );
+
+  // Build a map of block numbers to timestamps
+  const blockTimestamps = new Map<string, number>();
+  blocks.forEach((block) => {
+    blockTimestamps.set(block.number.toString(), Number(block.timestamp) * 1000);
+  });
+
+  // Assemble the final result
+  const processed = processingResults.map((result) => {
+    return {
+      blockNumber: Number(result.blockNumber),
+      operator: result.event.args?.operator as `0x${string}`,
+      publisher: result.event.args?.publisher as `0x${string}`,
+      blueprintHash: result.event.args?.blueprintHash as `0x${string}`,
+      transactionHash: result.event.transactionHash,
+      timestamp: blockTimestamps.get(result.blockNumber.toString()),
+      sowEvent: result.sowData,
+      tractorExecutionBeganEvent: result.tractorExecutionBeganEvent,
+    };
+  });
+
+  console.debug("[Tractor/fetchTractorExecutions] RESPONSE", processed);
+  return processed;
+}
+
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Orderbook Entry
@@ -1113,5 +1302,92 @@ export async function loadOrderbookData(
   } catch (error) {
     console.error("Error loading orderbook data:", error);
     throw new Error("Failed to load orderbook data");
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// OPERATOR AVERAGE TIP PAID
+// ────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Calculates the average tip paid from OperatorReward events in the last 14 days.
+ * Returns 1 if no events are found.
+ */
+export async function getAverageTipPaid(
+  publicClient: PublicClient,
+  currentBlock: MinimumViableBlock<bigint>,
+  lookbackBlocks: bigint = TIME_TO_BLOCKS.fortnight,
+): Promise<number> {
+  console.debug("[Tractor/getAverageTipPaid] FETCHING", { currentBlock, lookbackBlocks });
+
+  try {
+    // Calculate starting block (use max of deployment block or lookback. Default is 14 days)
+    const lookback = currentBlock.number > lookbackBlocks ? currentBlock.number - lookbackBlocks : 0n;
+    const fromBlock = lookback > TRACTOR_DEPLOYMENT_BLOCK ? lookback : TRACTOR_DEPLOYMENT_BLOCK;
+
+    // Query for OperatorReward events
+    const events = await publicClient.getContractEvents({
+      address: TRACTOR_HELPERS_ADDRESS,
+      abi: tractorHelpersABI,
+      eventName: "OperatorReward",
+      fromBlock,
+      toBlock: "latest",
+    });
+
+    // If no events found, return default value of 1
+    if (events.length === 0) {
+      return 1;
+    }
+
+    // Calculate average tip amount
+    let totalTipAmount = 0n;
+    let validEventCount = 0;
+
+    for (const event of events) {
+      try {
+        // Get the event data
+        const decodedEvent = decodeEventLog({
+          abi: tractorHelpersABI,
+          data: event.data,
+          topics: event.topics,
+        });
+
+        // Extract and use the amount parameter
+        if (decodedEvent.args && "amount" in decodedEvent.args) {
+          const amount = decodedEvent.args.amount;
+
+          // Make sure it's a bigint and positive
+          if (typeof amount === "bigint" && amount > 0n) {
+            totalTipAmount += amount;
+            validEventCount++;
+          }
+        }
+      } catch (error) {
+        // Silently continue on error
+      }
+    }
+
+    // If no valid events found, return default value
+    if (validEventCount === 0) {
+      return 1;
+    }
+
+    // Calculate average in human-readable form
+    const avgTipAmount = Number(totalTipAmount) / (validEventCount * 1e6);
+    const result = avgTipAmount > 0 ? avgTipAmount : 1;
+
+    console.debug("[Tractor/getAverageTipPaid] RESPONSE", {
+      totalTipAmount,
+      validEventCount,
+      avgTipAmount,
+      result,
+    });
+
+    // If we somehow got a non-positive number, return the default
+    return result;
+  } catch (error) {
+    console.error("Error getting average tip amount:", error);
+    // Return default value in case of error
+    return 1;
   }
 }
