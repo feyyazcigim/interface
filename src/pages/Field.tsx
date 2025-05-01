@@ -43,6 +43,7 @@ import FieldStats from "./field/FieldStats";
 import MorningPanel from "./field/MorningPanel";
 import TemperatureChart from "./field/Temperature";
 import TractorOrdersPanel from "./field/TractorOrdersPanel";
+import BarChart from "@/components/charts/BarChart";
 
 // Add a custom hook to track the current sow amount
 function useTotalSowAmount() {
@@ -233,6 +234,7 @@ function Field() {
           <MorningPanel />
           <FieldStats />
           {(!isMobile || (!currentAction && isMobile)) && <DynamicTemperatureChart />}
+          <BarChart />
           {(!isMobile || (!currentAction && isMobile)) && (
             <div className="flex flex-row items-center justify-between rounded-[1rem] p-4 sm:p-6 bg-pinto-off-white border-pinto-gray-2 border w-full">
               <div className="flex flex-col gap-2">
