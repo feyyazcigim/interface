@@ -54,7 +54,6 @@ export function SoilOrderbookContent({
 
   const { data: latestBlockInfo } = useCachedLatestBlockQuery<MinimumViableBlock<number>>({
     key: "soil-orderbook-latest-block",
-    staleTime: Infinity,
     refetchInterval: 30_000,
     select: selectLatestBlockInfo,
     refetchOnMount: true,
@@ -82,14 +81,11 @@ export function SoilOrderbookContent({
   );
 
   const { data: requisitions = [], ...orderbookQuery } = useTractorSowOrderbook({
-    select: useCallback(
-      (data) => {
-        if (!data) return [];
-        const dataWithTimestamps = getApproximateTimestamps(data);
-        return dataWithTimestamps.sort((a, b) => a.minTemp.sub(b.minTemp).toNumber());
-      },
-      [getApproximateTimestamps],
-    ),
+    select: useCallback((data: OrderbookEntry[] | undefined) => {
+      if (!data || data?.length === 0) return [] satisfies OrderbookEntry[];
+      const dataWithTimestamps = getApproximateTimestamps(data);
+      return dataWithTimestamps.sort((a, b) => a.minTemp.sub(b.minTemp).toNumber());
+    }, [getApproximateTimestamps]),
   });
 
   const isLoading = orderbookQuery.isLoading || !requisitions?.length;

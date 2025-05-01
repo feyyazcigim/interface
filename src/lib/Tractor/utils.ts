@@ -1287,14 +1287,6 @@ export async function loadOrderbookData(
       console.debug(`  Allocated: ${allocatedAmount.toHuman()}, Remaining soil: ${remainingSoil.toHuman()}`);
     }
 
-    orderbookData.forEach((entry) => {
-      const publisher = entry.requisition.blueprint.publisher;
-
-      if (publisher.toLowerCase() === "0xA5B0461cc01637D1A700b4E42085F0E7616B7796".toLowerCase()) {
-        console.log("----- this pub: ", entry);
-      }
-    });
-
     return orderbookData;
   } catch (error) {
     console.error("Error loading orderbook data:", error);

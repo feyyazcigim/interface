@@ -28,6 +28,7 @@ export default function useCachedLatestBlockQuery<T>({
     queryKey: queryKey,
     queryFn: async () => client?.getBlock(),
     enabled: !!client && enabled,
+    select,
     // We only use this block number as a reference, so no need to refetch this aggresively. If we need more aggressive updates, props will override this.
     ...defaultQuerySettingsMedium,
     ...props,

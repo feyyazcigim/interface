@@ -6,7 +6,7 @@ import { http, createPublicClient } from "viem";
 // Create a client specifically for fetching Base network gas price
 const baseGasClient = createPublicClient({
   chain: baseNetwork,
-  transport: http(baseNetwork.rpcUrls?.[0] ?? BASE_RPC_URL),
+  transport: http(BASE_RPC_URL),
 });
 
 export const useGasPrice = (refetchInterval: number = 30_000) => {
@@ -23,7 +23,7 @@ export const useGasPrice = (refetchInterval: number = 30_000) => {
         return price;
       } catch (error) {
         console.error("[useGasPrice] Failed to fetch gas price:", error);
-        return undefined;
+        return 0n;
       }
     },
     ...defaultQuerySettingsMedium,
