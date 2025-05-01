@@ -5,9 +5,13 @@ import { defaultQuerySettingsMedium } from "@/constants/query";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { getChainConstant } from "@/hooks/useChainConstant";
-import { TractorAPIExecutionSowOrderItem, TractorAPIResponseExecution } from "@/lib/Tractor/api";
-import TractorAPI from "@/lib/Tractor/api";
-import { PublisherTractorExecution, fetchTractorExecutions } from "@/lib/Tractor/utils";
+import {
+  PublisherTractorExecution,
+  TractorAPI,
+  TractorAPIExecutionSowOrderItem,
+  TractorAPIResponseExecution,
+  fetchTractorExecutions,
+} from "@/lib/Tractor";
 import { queryKeys } from "@/state/queryKeys";
 import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";

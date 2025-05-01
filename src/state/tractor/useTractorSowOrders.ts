@@ -4,17 +4,22 @@ import { defaultQuerySettingsMedium } from "@/constants/query";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { getChainConstant } from "@/hooks/useChainConstant";
-import { OrderbookEntry, loadOrderbookData } from "@/lib/Tractor";
-import TractorAPI, { TractorAPIOrderOptions, TractorAPIOrdersResponse } from "@/lib/Tractor/api";
+import {
+  OrderbookEntry,
+  TractorAPI,
+  TractorAPIOrderOptions,
+  TractorAPIOrdersResponse,
+  loadOrderbookData,
+} from "@/lib/Tractor";
 import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { queryKeys } from "@/state/queryKeys";
+import { useTemperature } from "@/state/useFieldData";
 import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";
 import { isDev } from "@/utils/utils";
-import { DefaultError, QueryObserverOptions, UseQueryOptions, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { DefaultError, QueryObserverOptions, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { useChainId, usePublicClient } from "wagmi";
-import { useTemperature } from "../useFieldData";
 
 const getLookbackBlocks = (chainOnly: boolean, error: boolean) => {
   if (chainOnly || error) return undefined;
