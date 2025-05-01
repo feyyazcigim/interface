@@ -36,7 +36,7 @@ const getLookbackBlocks = (
   return diff > 0n ? diff : undefined;
 };
 
-const useTractorAPISowOrders = (address?: HashString, args?: TractorAPIOrderOptions) => {
+const useTractorAPISowOrders = (address?: HashString, args?: TractorAPIOrderOptions, chainOnly: boolean = false) => {
   const chainId = useChainId();
 
   const selectAndTransformOrders = useMemo(() => transformAPIOrderbookData(chainId), [chainId]);
@@ -50,7 +50,7 @@ const useTractorAPISowOrders = (address?: HashString, args?: TractorAPIOrderOpti
 
       return TractorAPI.getOrders(options);
     },
-    enabled: !!chainId,
+    enabled: !!chainId && !chainOnly,
     select: selectAndTransformOrders,
     ...defaultQuerySettingsMedium,
   });
@@ -123,13 +123,13 @@ export function useTractorSowOrderbook<T = OrderbookEntry[]>({
   const temperature = useTemperature();
 
   //
-  const { data: orders, ...ordersQuery } = useTractorAPISowOrders(address, args);
+  const { data: orders, ...ordersQuery } = useTractorAPISowOrders(address, args, chainOnly);
 
   // check if the API data exists, is not loading, and is not an error
   const ordersAPIDataExists = Boolean(orders?.orders?.length && !ordersQuery.isLoading && !ordersQuery.isError);
 
   // only run the chain query if we have a client, a max temperature, the API data exists, and we have a latest block reference.
-  const orderChainQueryEnabled = chainOnly || Boolean(client && temperature.max.gt(0) && ordersAPIDataExists);
+  const orderChainQueryEnabled = chainOnly || Boolean(temperature.max.gt(0) && ordersAPIDataExists);
 
   /**
    * If the orders API request failed, fetch since the TRACTOR_DEPLOYMENT_BLOCK
@@ -139,13 +139,18 @@ export function useTractorSowOrderbook<T = OrderbookEntry[]>({
    */
 
   const ordersChainQuery = useQuery<OrderbookEntry[] | undefined, DefaultError, T>({
-    queryKey: queryKeys.tractor.sowOrdersV0Chain(orders?.lastUpdated ?? Number(TRACTOR_DEPLOYMENT_BLOCK)),
+    queryKey: queryKeys.tractor.sowOrdersV0Chain(orders?.lastUpdated ?? chainOnly ? 1 : 0, temperature.max),
     queryFn: async () => {
       if (temperature.max.lte(0) || !client) {
-        return;
+        return [];
       }
       const latestBlock = await client.getBlock({ blockTag: "latest" });
       const lookbackBlocks = getLookbackBlocks(chainOnly, !!ordersQuery.error, latestBlock.number, orders?.lastUpdated);
+
+      console.debug("[TRACTOR/useTractorSowOrderbook/ordersChainQuery] LOOKBACK BLOCKS", {
+        lookbackBlocks,
+        orders,
+      });
 
       const data = await loadOrderbookData(
         address,
@@ -164,15 +169,18 @@ export function useTractorSowOrderbook<T = OrderbookEntry[]>({
 
       return data;
     },
-    enabled: orderChainQueryEnabled,
+    enabled: client && orderChainQueryEnabled,
     select: select,
     ...defaultQuerySettingsMedium,
   });
 
   const refetch = useCallback(async () => {
-    await ordersQuery.refetch();
+    if (chainOnly) {
+      return ordersChainQuery.refetch();
+    }
+    return ordersQuery.refetch();
     // no need to refetch the chain query, it will refetch automatically when the orders refetch
-  }, [ordersChainQuery, ordersQuery]);
+  }, [ordersChainQuery, ordersQuery, chainOnly]);
 
   return { ...ordersChainQuery, refetch };
 }

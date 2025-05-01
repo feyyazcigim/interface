@@ -11,7 +11,7 @@ import useFieldSowEvents from "@/state/events/useFieldSowEvents";
 import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
 import { useTemperature } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 
 interface FieldActivityItem {
   id: string;
@@ -59,28 +59,29 @@ const FieldActivity = () => {
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
 
-  const { data: tractorOrdersResult, ...tractorSowOrderbookQuery } = useTractorSowOrderbook();
+  const { data: tractorOrders = [], ...tractorSowOrderbookQuery } = useTractorSowOrderbook({
+    chainOnly: true,
+    select: useCallback(
+      (data) => {
+        const orderbook = data ?? [];
+        const currentTemp = currentTemperature.max?.toNumber() || 0;
 
-  const tractorOrders = useMemo(() => {
-    const orderbook = tractorOrdersResult ?? [];
-    const currentTemp = currentTemperature.max?.toNumber() || 0;
+        const filteredOrders: OrderbookEntry[] = orderbook.filter((order) => {
+          const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
+          // Only include orders with temperature requirements that could reasonably execute soon
+          // Use the predicted temperature, which is now guaranteed to be at least the minimum
+          return predictedTemp <= currentTemp + 1;
+        });
 
-    const filteredOrders = orderbook.filter((order) => {
-      const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
-
-      // Only include orders with temperature requirements that could reasonably execute soon
-      // Use the predicted temperature, which is now guaranteed to be at least the minimum
-      return predictedTemp <= currentTemp + 1;
-    });
-
-    // Sort by predicted temperature (lowest to highest)
-    const sortedOrders = [...filteredOrders].sort((a, b) => {
-      // We want to sort by lowest predicted temperature first
-      return getPredictedSowTemperature(a, currentTemperature) - getPredictedSowTemperature(b, currentTemperature);
-    });
-
-    return sortedOrders;
-  }, [tractorOrdersResult, currentTemperature]);
+        // Sort by predicted temperature (lowest to highest)
+        return [...filteredOrders].sort((a, b) => {
+          // We want to sort by lowest predicted temperature first
+          return getPredictedSowTemperature(a, currentTemperature) - getPredictedSowTemperature(b, currentTemperature);
+        });
+      },
+      [currentTemperature.max],
+    ),
+  });
 
   const { data: activities = [], isLoading: isActivitiesLoading } = useFieldSowEvents();
 

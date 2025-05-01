@@ -1,3 +1,4 @@
+import { TV } from "@/classes/TokenValue";
 import { TractorAPIOrderOptions } from "@/lib/Tractor/api";
 import { MinimumViableBlock } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
@@ -29,11 +30,12 @@ const tractorQueryKeys = {
     args?.orderType,
     args?.cancelled ?? false,
   ],
-  sowOrdersV0Chain: (lastUpdatedBlock: number) => [
+  sowOrdersV0Chain: (lastUpdatedBlock: number, maxTemp: TV | undefined) => [
     BASE_QKS.tractor,
     "sowOrdersV0",
     "chain",
     lastUpdatedBlock?.toString() ?? "0",
+    maxTemp?.blockchainString ?? "0",
   ],
   operatorAverageTipPaid: (lookbackBlocks?: bigint) => [
     BASE_QKS.tractor,
