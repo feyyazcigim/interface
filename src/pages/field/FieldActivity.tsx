@@ -61,11 +61,11 @@ const FieldActivity = () => {
 
   const { data: tractorOrders = [], ...tractorSowOrderbookQuery } = useTractorSowOrderbook({
     select: useCallback(
-      (data) => {
+      (data: OrderbookEntry[] | undefined) => {
         const orderbook = data ?? [];
         const currentTemp = currentTemperature.max?.toNumber() || 0;
 
-        const filteredOrders: OrderbookEntry[] = orderbook.filter((order) => {
+        const filteredOrders = orderbook.filter((order) => {
           const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
           // Only include orders with temperature requirements that could reasonably execute soon
           // Use the predicted temperature, which is now guaranteed to be at least the minimum
