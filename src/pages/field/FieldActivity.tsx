@@ -60,7 +60,6 @@ const FieldActivity = () => {
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
 
   const { data: tractorOrders = [], ...tractorSowOrderbookQuery } = useTractorSowOrderbook({
-    chainOnly: true,
     select: useCallback(
       (data) => {
         const orderbook = data ?? [];
