@@ -145,12 +145,7 @@ export const SoilDemandChart = ({
       <div className="w-full h-[250px] rounded-md mt-2 flex justify-center items-center relative bg-transparent">
         {isChartReady && (
           <>
-            <SoilDemandMultiLineChart
-              data={mappedData}
-              size="large"
-              xKey="interval"
-              valueFormatter={formatter.pct}
-            />
+            <SoilDemandMultiLineChart data={mappedData} size="large" xKey="interval" valueFormatter={formatter.pct} />
             <div className="z-index-0 absolute bg-morning-light opacity-50 left-[16px] w-[50px] md:w-[90px] h-[220px] top-[7px] pointer-events-none" />
           </>
         )}
