@@ -6,7 +6,6 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { getChainConstant } from "@/hooks/useChainConstant";
 import {
   OrderbookEntry,
-  TRACTOR_DEPLOYMENT_BLOCK,
   TractorAPI,
   TractorAPIOrderOptions,
   TractorAPIOrdersResponse,
