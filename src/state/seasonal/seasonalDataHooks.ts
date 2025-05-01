@@ -18,6 +18,7 @@ import useSeasonalBeanstalkWrappedDepositsSG from "./queries/useSeasonalBeanstal
 import useSeasonalFarmerSG from "./queries/useSeasonalFarmerSG";
 import useSeasonalFarmerSiloAssetTokenSG from "./queries/useSeasonalFarmerSiloAssetTokenSG";
 import { mergeUseSeasonalQueriesResults } from "./utils";
+import useSeasonalTractorSnapshots from "./queries/useSeasonalTractorSnapshots";
 
 /** ==================== Bean BeanHourlySnapshot ==================== **/
 
@@ -310,5 +311,23 @@ export function useSeasonalWrappedDepositTotalSupply(fromSeason: number, toSeaso
     season: Number(data.season),
     value: TV.fromBlockchain(data.supply, token.decimals).toNumber(),
     timestamp,
+  }));
+}
+
+/** ==================== Tractor API Hourly Snapshots ==================== **/
+
+export function useSeasonalTractorSownPinto(fromSeason: number, toSeason: number): UseSeasonalResult {
+  return useSeasonalTractorSnapshots("SOW_V0", fromSeason, toSeason, (data) => ({
+    season: data.season,
+    value: TV.fromBlockchain(data.totalPintoSown, PODS.decimals).toNumber(),
+    timestamp: new Date(data.snapshotTimestamp),
+  }));
+}
+
+export function useSeasonalTractorPodsIssued(fromSeason: number, toSeason: number): UseSeasonalResult {
+  return useSeasonalTractorSnapshots("SOW_V0", fromSeason, toSeason, (data) => ({
+    season: data.season,
+    value: TV.fromBlockchain(data.totalPodsMinted, PODS.decimals).toNumber(),
+    timestamp: new Date(data.snapshotTimestamp),
   }));
 }
