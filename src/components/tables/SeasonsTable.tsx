@@ -72,8 +72,8 @@ export const SeasonsTable = ({ seasonsData, page, hiddenFields, hideColumn }: Se
 
   // Go back an additional 2000 blocks to make sure we pull events for the season preceding the final index
   // in the table. ex: seasons 1000-900 are shown, pull sow events for 899 to be able to show soil demand chart for 900
-  const minBlock = Math.max(displaySeasonsData[displaySeasonsData.length - 1]?.sunriseBlock - 2000, 0)
-  const maxBlock = Math.min(displaySeasonsData[0]?.sunriseBlock + 2000, currentBlockNumber)
+  const minBlock = Math.max(displaySeasonsData[displaySeasonsData.length - 1]?.sunriseBlock - 2000, 0);
+  const maxBlock = Math.min(displaySeasonsData[0]?.sunriseBlock + 2000, currentBlockNumber);
   const sowEvents = useSowEventData(minBlock, maxBlock);
 
   useEffect(() => {
@@ -86,7 +86,6 @@ export const SeasonsTable = ({ seasonsData, page, hiddenFields, hideColumn }: Se
   useEffect(() => {
     calculateHeight();
   }, [displaySeasonsData]);
-
 
   const RenderRow = React.memo(({ index, style }: ListChildComponentProps<SeasonsTableData>) => {
     const data = displaySeasonsData[index];

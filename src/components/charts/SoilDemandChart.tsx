@@ -4,9 +4,8 @@ import { formatter } from "@/utils/format";
 import { caseIdToDescriptiveText } from "@/utils/season";
 import { Separator } from "@radix-ui/react-separator";
 import { useMemo } from "react";
-import { LineChartData } from "./LineChart";
+import SoilDemandMultiLineChart, { SoilDemandMultiLineChartData } from "./SoilDemandMultiLineChart";
 import { metallicGreenStrokeGradientFn } from "./chartHelpers";
-import SoilDemandMultiLineChart from "./SoilDemandMultiLineChart";
 
 interface SoilDemandChartProps {
   currentSeason: SeasonsTableData;
@@ -28,7 +27,9 @@ const makeLineGradients = [metallicGreenStrokeGradientFn];
 
 const calculateTimestampTitle = (num: number) => {
   const min = Math.trunc((Number(num) * 2) / 60);
-  const sec = Math.trunc((Number(num) * 2) % 60).toString().padStart(2, "0");
+  const sec = Math.trunc((Number(num) * 2) % 60)
+    .toString()
+    .padStart(2, "0");
   return `${min}:${sec}`;
 };
 
@@ -38,9 +39,6 @@ export const SoilDemandChart = ({
   previousSeason,
   filteredSowEvents,
 }: SoilDemandChartProps) => {
-  if (!nextBlock || !previousSeason) {
-    return null;
-  }
   const descriptiveText = caseIdToDescriptiveText(currentSeason.caseId, "soil_demand");
 
   const sowEventTimings = {
@@ -71,7 +69,7 @@ export const SoilDemandChart = ({
 
   const mappedData = useMemo(() => {
     const labels: string[] = [];
-    const data: Record<number, LineChartData[]> = {};
+    const data: Record<number, SoilDemandMultiLineChartData[]> = {};
     const indexesWithSowEvents: number[] = [];
     const numBlocksPerSeasons = {
       [currentSeason.season]: nextBlock - currentSeason.sunriseBlock,

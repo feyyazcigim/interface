@@ -16,11 +16,11 @@ import { ReactChart } from "../ReactChart";
 
 Chart.register(LineController, LineElement, LinearScale, LogarithmicScale, CategoryScale, PointElement, Filler);
 
-const greenLineColor = '#246645'
-const yellowLineColor = '#D9AD0F';
+const greenLineColor = "#246645";
+const yellowLineColor = "#D9AD0F";
 
-export type LineChartData = {
-  values: number[];
+export type SoilDemandMultiLineChartData = {
+  values: number[] | null[];
 } & Record<string, any>;
 
 export type MakeGradientFunction = (
@@ -34,9 +34,9 @@ export type LineChartReferenceDotProps = {
 };
 
 export interface SoilDemandMultiLineChartProps {
-  data: Record<number, LineChartData[]>;
+  data: Record<number, SoilDemandMultiLineChartData[]>;
   size: "small" | "large";
-  xKey: keyof LineChartData;
+  xKey: keyof SoilDemandMultiLineChartData;
   makeLineGradients: MakeGradientFunction[];
   // If not provided, do not fill area
   makeAreaGradients?: MakeGradientFunction[];
@@ -351,11 +351,9 @@ const SoilDemandMultiLineChart = React.memo(
           tooltip: {
             enabled: true,
             callbacks: {
-              label: function (context) {
-                return `${context.formattedValue}%`
-              }
+              label: (context) => `${context.formattedValue}%`,
             },
-            backgroundColor: 'black',
+            backgroundColor: "black",
             usePointStyle: true,
             // sort hacky, make the circle small but stroke really big so it looks
             // like a filled in circle
@@ -364,7 +362,6 @@ const SoilDemandMultiLineChart = React.memo(
             borderWidth: 8,
             padding: 12,
             boxPadding: 8,
-
           },
           legend: {
             display: false,
@@ -466,16 +463,8 @@ const SoilDemandMultiLineChart = React.memo(
     }, [data, xKey, yTickMin, yTickMax, valueFormatter, useLogarithmicScale]);
 
     const allPlugins = useMemo<Plugin[]>(
-      () => [
-        horizontalReferenceLinePlugin,
-        selectionPointPlugin,
-        selectionCallbackPlugin,
-      ],
-      [
-        horizontalReferenceLinePlugin,
-        selectionPointPlugin,
-        selectionCallbackPlugin,
-      ],
+      () => [horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
+      [horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
     );
 
     const chartDimensions = useMemo(() => {
