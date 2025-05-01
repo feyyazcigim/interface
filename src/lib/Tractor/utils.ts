@@ -15,6 +15,7 @@ import { MayArray } from "@/utils/types.generic";
 import { SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
 import { Requisition, SowOrderTokenStrategy } from "./types";
+import { arrayify } from "@/utils/utils";
 
 // Block number at which Tractor was deployed - use this as starting point for event queries
 export const TRACTOR_DEPLOYMENT_BLOCK = 28930876n;
@@ -428,11 +429,8 @@ export function findOperatorPlaceholderOffset(encodedData: `0x${string}`): numbe
 // Fetch Tractor Events
 // ────────────────────────────────────────────────────────────────────────────────
 
-export async function fetchTractorEvents(
-  publicClient: PublicClient,
-  protocolAddress: `0x${string}`,
-  fromBlock: bigint = TRACTOR_DEPLOYMENT_BLOCK,
-) {
+export async function fetchTractorEvents(publicClient: PublicClient, protocolAddress: `0x${string}`, blockFrom?: bigint) {
+  const fromBlock = blockFrom ?? TRACTOR_DEPLOYMENT_BLOCK;
   const sharedArgs = {
     address: protocolAddress,
     abi: diamondABI,
@@ -455,6 +453,26 @@ export async function fetchTractorEvents(
 
   return { publishEvents, cancelledHashes };
 }
+export interface RequisitionData {
+  blueprint: {
+    publisher: `0x${string}`;
+    data: `0x${string}`;
+    operatorPasteInstrs: readonly `0x${string}`[];
+    maxNonce: bigint;
+    startTime: bigint;
+    endTime: bigint;
+  };
+  blueprintHash: `0x${string}`;
+  signature: `0x${string}`;
+}
+export interface RequisitionEvent {
+  requisition: RequisitionData;
+  blockNumber: number;
+  timestamp?: number;
+  isCancelled?: boolean;
+  requisitionType: "sowBlueprintv0" | "unknown";
+  decodedData: SowBlueprintData | null;
+}
 
 type SelectRequisitionTypeArgs = {
   latestBlock: MinimumViableBlock<bigint>;
@@ -465,12 +483,7 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
   return (args: SelectRequisitionTypeArgs | undefined) => {
     if (!args) return undefined;
 
-    const getRequisitionTypes = (rType?: MayArray<RequisitionType>) => {
-      if (!rType) return new Set<RequisitionType>();
-      return new Set(Array.isArray(rType) ? rType : [rType]);
-    };
-
-    const requisitionsTypes = getRequisitionTypes(requisitionsType);
+    const requisitionsSet = requisitionsType && new Set<RequisitionType>(arrayify(requisitionsType));
 
     const {
       data: { publishEvents, cancelledHashes },
@@ -498,8 +511,8 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
         }
 
         // Filter by requisition type if provided
-        if (!!requisitionsTypes.size) {
-          if (!requisitionsTypes.has(eventRequisitionType)) return null;
+        if (!!requisitionsSet?.size) {
+          if (!requisitionsSet.has(eventRequisitionType)) return null;
         }
 
         // Calculate timestamp if we have the latest block info
@@ -526,28 +539,6 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
     return filteredEvents;
   };
 };
-
-export interface RequisitionData {
-  blueprint: {
-    publisher: `0x${string}`;
-    data: `0x${string}`;
-    operatorPasteInstrs: readonly `0x${string}`[];
-    maxNonce: bigint;
-    startTime: bigint;
-    endTime: bigint;
-  };
-  blueprintHash: `0x${string}`;
-  signature: `0x${string}`;
-}
-
-export interface RequisitionEvent {
-  requisition: RequisitionData;
-  blockNumber: number;
-  timestamp?: number;
-  isCancelled?: boolean;
-  requisitionType: "sowBlueprintv0" | "unknown";
-  decodedData: SowBlueprintData | null;
-}
 
 // First, export the requisition type as a standalone type for reuse
 export type RequisitionType = "sowBlueprintv0" | "unknown";
