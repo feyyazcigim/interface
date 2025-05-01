@@ -1,5 +1,7 @@
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { ConnectKitProvider } from "connectkit";
 import { atom, useAtom } from "jotai";
 import { ReactNode, useEffect, useMemo } from "react";
@@ -21,14 +23,29 @@ import config from "./utils/wagmi/config";
   return this.toString();
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    dehydrate: {
+      shouldDehydrateQuery: (query) => {
+        return query.meta?.persist === true;
+      },
+    },
+  },
+});
+
+const localStoragePersister = createSyncStoragePersister({
+  storage: window.localStorage,
+});
 
 export const Web3Provider = ({ children }: { children: ReactNode }) => {
   const config = useEnvConfig();
 
   return (
     <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister: localStoragePersister, buster: "20250501" }}
+      >
         <MockConnectorManager />
         <ConnectKitProvider
           mode="light"
@@ -63,7 +80,7 @@ export const Web3Provider = ({ children }: { children: ReactNode }) => {
           {children}
         </ConnectKitProvider>
         <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </WagmiProvider>
   );
 };
