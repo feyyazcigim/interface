@@ -1,7 +1,6 @@
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
 import useRouterTabs, { UseRouterTabsOptions } from "@/hooks/useRouterTabs";
-import PersistReactQueryClientProvider from "@/state/PersistQueryClientProvider";
 import { useCallback } from "react";
 import AllExplorer from "./explorer/AllExplorer";
 import FarmerExplorer from "./explorer/FarmerExplorer";
