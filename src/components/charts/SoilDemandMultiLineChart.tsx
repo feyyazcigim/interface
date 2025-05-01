@@ -37,7 +37,6 @@ export interface SoilDemandMultiLineChartProps {
   data: Record<number, SoilDemandMultiLineChartData[]>;
   size: "small" | "large";
   xKey: keyof SoilDemandMultiLineChartData;
-  makeLineGradients: MakeGradientFunction[];
   // If not provided, do not fill area
   makeAreaGradients?: MakeGradientFunction[];
   referenceDot?: LineChartReferenceDotProps;
@@ -61,7 +60,6 @@ const SoilDemandMultiLineChart = React.memo(
     data,
     size,
     xKey,
-    makeLineGradients,
     makeAreaGradients,
     valueFormatter,
     onMouseOver,
@@ -176,7 +174,7 @@ const SoilDemandMultiLineChart = React.memo(
             }),
         };
       },
-      [data, makeLineGradients, makeAreaGradients, xKey],
+      [data, makeAreaGradients, xKey],
     );
 
     const fillArea = !!makeAreaGradients && !!makeAreaGradients.length;

@@ -5,7 +5,6 @@ import { caseIdToDescriptiveText } from "@/utils/season";
 import { Separator } from "@radix-ui/react-separator";
 import { useMemo } from "react";
 import SoilDemandMultiLineChart, { SoilDemandMultiLineChartData } from "./SoilDemandMultiLineChart";
-import { metallicGreenStrokeGradientFn } from "./chartHelpers";
 
 interface SoilDemandChartProps {
   currentSeason: SeasonsTableData;
@@ -22,8 +21,6 @@ export interface SowEventTimings {
   }[];
   availableSoil: number;
 }
-
-const makeLineGradients = [metallicGreenStrokeGradientFn];
 
 const calculateTimestampTitle = (num: number) => {
   const min = Math.trunc((Number(num) * 2) / 60);
@@ -152,7 +149,6 @@ export const SoilDemandChart = ({
               data={mappedData}
               size="large"
               xKey="interval"
-              makeLineGradients={makeLineGradients}
               valueFormatter={formatter.pct}
             />
             <div className="z-index-0 absolute bg-morning-light opacity-50 left-[16px] w-[50px] md:w-[90px] h-[220px] top-[7px] pointer-events-none" />
