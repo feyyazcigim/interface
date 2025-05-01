@@ -24,7 +24,7 @@ import { useChainId, usePublicClient } from "wagmi";
 // Fetch ALL EXECUTIONS QUERY
 // ────────────────────────────────────────────────────────────────────────────────
 
-export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined, enabled: boolean = true) => {
+export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined, chainOnly: boolean = false) => {
   const chainId = useChainId();
 
   const selectTractorExecutions = useMemo(() => getSelectTractorExecutions(resolveChainId(chainId)), [chainId]);
@@ -36,14 +36,23 @@ export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined, 
       return TractorAPI.getExecutions({ publisher });
     },
     select: selectTractorExecutions,
-    enabled: !!publisher && enabled,
+    enabled: !!publisher && !chainOnly,
     ...defaultQuerySettingsMedium,
   });
 };
 
-const getLookbackBlocks = (chainOnly: boolean, error: boolean) => {
-  if (chainOnly || error) return undefined;
-  return isDev() ? TIME_TO_BLOCKS.day : TIME_TO_BLOCKS.hour;
+const getLookbackBlocks = (
+  chainOnly: boolean,
+  error: boolean,
+  currentBlock: bigint,
+  lastUpdatedBlock: number | undefined,
+) => {
+  if (chainOnly || error || !lastUpdatedBlock) return undefined;
+  if (isDev()) {
+    return TIME_TO_BLOCKS.day;
+  }
+  const diff = currentBlock - BigInt(lastUpdatedBlock);
+  return diff > 0n ? diff : undefined;
 };
 
 export default function usePublisherTractorExecutions(publisher: HashString | undefined, chainOnly: boolean = false) {
@@ -58,14 +67,6 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
   // Only run the on-chain event query if we have a client, a publisher AND (the API data exists OR the API request failed)
   const executionsChainQueryEnabled =
     chainOnly || Boolean(client && publisher && Boolean(executionsExist || executionsQuery.error));
-
-  /**
-   * If the exeuction API request failed, fetch since the TRACTOR_DEPLOYMENT_BLOCK
-   * otherwise,
-   * - DEV, use a 24 hour lookback to allow for forwarding seasons locally
-   * - PROD, use a 1 hour lookback
-   */
-  const lookbackBlocks = getLookbackBlocks(chainOnly, !!executionsQuery.error);
 
   // Merge the on-chain executions with the API data. Use useCallback to create a stable reference to the function
   const mergeExecutions = useCallback(
@@ -96,10 +97,18 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
   );
 
   const executionsChainQuery = useQuery({
-    queryKey: queryKeys.tractor.tractorExecutionsChain(publisher, lookbackBlocks),
+    queryKey: queryKeys.tractor.tractorExecutionsChain(publisher, executionData?.lastUpdated),
     queryFn: async () => {
       if (!publisher || !client) return undefined;
-      return fetchTractorExecutions(client, diamond, publisher, lookbackBlocks);
+      const latestBlock = await client.getBlock({ blockTag: "latest" });
+      const lookbackBlocks = getLookbackBlocks(
+        chainOnly,
+        !!executionsQuery.error,
+        latestBlock.number,
+        executionData?.lastUpdated,
+      );
+
+      return fetchTractorExecutions(client, diamond, publisher, latestBlock, lookbackBlocks);
     },
     enabled: executionsChainQueryEnabled,
     select: mergeExecutions,

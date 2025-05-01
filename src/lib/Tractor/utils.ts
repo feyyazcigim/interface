@@ -729,17 +729,17 @@ export async function fetchTractorExecutions(
   publicClient: PublicClient,
   protocolAddress: `0x${string}`,
   publisher: `0x${string}`,
+  latestBlock: MinimumViableBlock<bigint>,
   lookbackBlocks?: bigint,
 ) {
   const chainId = publicClient.chain?.id;
   if (!chainId) throw new Error("[Tractor/fetchTractorExecutions] No chain ID found");
 
   console.debug("[Tractor/fetchTractorExecutions] FETCHING(executions for publisher):", publisher);
-  const latestBlock = await publicClient.getBlock();
 
   let fromBlock = TRACTOR_DEPLOYMENT_BLOCK;
 
-  if (lookbackBlocks && latestBlock.number > TRACTOR_DEPLOYMENT_BLOCK) {
+  if (lookbackBlocks !== undefined) {
     const newFromBlock = latestBlock.number - BigInt(lookbackBlocks);
     fromBlock = newFromBlock > TRACTOR_DEPLOYMENT_BLOCK ? newFromBlock : TRACTOR_DEPLOYMENT_BLOCK;
   }

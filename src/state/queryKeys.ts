@@ -29,18 +29,16 @@ const tractorQueryKeys = {
     args?.orderType,
     args?.cancelled ?? false,
   ],
-  sowOrdersV0Chain: (args: {
-    lookbackBlocks: bigint | undefined;
-  }) => [BASE_QKS.tractor, "sowOrdersV0", "chain", args.lookbackBlocks?.toString() ?? "0"],
+  sowOrdersV0Chain: (lastUpdatedBlock: number) => [
+    BASE_QKS.tractor,
+    "sowOrdersV0",
+    "chain",
+    lastUpdatedBlock?.toString() ?? "0",
+  ],
   operatorAverageTipPaid: (lookbackBlocks?: bigint) => [
     BASE_QKS.tractor,
     "operatorAverageTipPaid",
     lookbackBlocks?.toString() ?? "0",
-  ],
-  publishedRequisitions: (latestBlock: MinimumViableBlock<bigint> | undefined) => [
-    BASE_QKS.tractor,
-    "publishedRequisitions",
-    getLatestBlockKeyFragment(latestBlock),
   ],
   tractorEvents: [BASE_QKS.tractor, "events", "requisitions-and-cancelled-blueprints"],
   tractorExecutions: (publisher: HashString | undefined) => [
@@ -48,11 +46,11 @@ const tractorQueryKeys = {
     "executions",
     publisher ?? "no-publisher",
   ],
-  tractorExecutionsChain: (publisher: HashString | undefined, lookbackBlocks: bigint | undefined) => [
+  tractorExecutionsChain: (publisher: HashString | undefined, lastUpdatedBlock: number | undefined) => [
     BASE_QKS.tractor,
     "executions",
     publisher ?? "no-publisher",
-    lookbackBlocks?.toString() ?? "0",
+    lastUpdatedBlock?.toString() ?? "0",
   ],
 } as const;
 
