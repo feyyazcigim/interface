@@ -17,6 +17,16 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "biome format --write"
+    ]
+  },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@netlify/functions": "^2.8.1",
@@ -96,6 +106,8 @@
     "@vitejs/plugin-react": "^4.2.1",
     "@wagmi/cli": "2.1.16",
     "autoprefixer": "10.4.19",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1",
     "postcss": "8.4.39",
     "tailwindcss": "3.4.6",
     "ts-node": "^10.9.2",
