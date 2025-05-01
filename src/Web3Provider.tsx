@@ -42,6 +42,12 @@ export const Web3Provider = ({ children }: { children: ReactNode }) => {
 
   return (
     <WagmiProvider config={config}>
+      {/**
+       * If the cache that is found has a different buster string than what is set here, it will be discarded.
+       * Should be changed whenever there's a significant change in the subgraphs.
+       * Currently it is based on the date that the string is being set, in the YYYYMMDD format.
+       * But really it can be anything, as long as it's different than what's expected to be stored.
+       */}
       <PersistQueryClientProvider
         client={queryClient}
         persistOptions={{ persister: localStoragePersister, buster: "20250501" }}
