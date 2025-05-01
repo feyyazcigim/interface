@@ -132,7 +132,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     try {
       // Use the existing function to extract the sowBlueprintv0 call from the advancedFarm call
       const sowCall = extractSowBlueprintCall(req.requisition.blueprint.data);
-      console.log("Extracted sowCall:", sowCall);
+      console.debug("[TractorOrdersPanel] Extracted sowCall:", sowCall);
       setRawSowBlueprintCall(sowCall);
     } catch (error) {
       console.error("Failed to extract sowBlueprintv0 call data:", error);
@@ -220,14 +220,6 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
         } else {
           strategyText = "Specific Token";
         }
-
-        // console.log("[tractor] blueprintExecutions", {
-        //   requisition: req.requisition,
-        //   blueprint: req.requisition.blueprint,
-        //   blueprintExecutions,
-        //   executionCount,
-        //   totalSown
-        // });
 
         return (
           <Col key={`requisition-${index}`} className="gap-2">

@@ -1,20 +1,20 @@
-import { TokenValue, TV } from "@/classes/TokenValue";
+import { TV, TokenValue } from "@/classes/TokenValue";
 import { sowBlueprintv0ABI } from "@/constants/abi/SowBlueprintv0ABI";
 import { tractorHelpersABI } from "@/constants/abi/TractorHelpersABI";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { SOW_BLUEPRINT_V0_ADDRESS, TRACTOR_HELPERS_ADDRESS } from "@/constants/address";
+import { TIME_TO_BLOCKS } from "@/constants/blocks";
+import { PODS } from "@/constants/internalTokens";
+import { MAIN_TOKEN } from "@/constants/tokens";
 import { beanstalkAbi } from "@/generated/contractHooks";
+import { getChainConstant } from "@/hooks/useChainConstant";
 import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
+import { resolveChainId } from "@/utils/chain";
 import { FarmFromMode, MinimumViableBlock } from "@/utils/types";
 import { MayArray } from "@/utils/types.generic";
 import { SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
 import { Requisition, SowOrderTokenStrategy } from "./types";
-import { getChainConstant } from "@/hooks/useChainConstant";
-import { resolveChainId } from "@/utils/chain";
-import { MAIN_TOKEN } from "@/constants/tokens";
-import { PODS } from "@/constants/internalTokens";
-import { TIME_TO_BLOCKS } from "@/constants/blocks";
 
 // Block number at which Tractor was deployed - use this as starting point for event queries
 export const TRACTOR_DEPLOYMENT_BLOCK = 28930876n;
@@ -889,7 +889,6 @@ export async function fetchTractorExecutions(
   console.debug("[Tractor/fetchTractorExecutions] RESPONSE", processed);
   return processed;
 }
-
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Orderbook Entry

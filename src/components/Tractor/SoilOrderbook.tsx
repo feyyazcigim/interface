@@ -10,14 +10,16 @@ import { PINTO } from "@/constants/tokens";
 import { Blueprint } from "@/lib/Tractor/types";
 import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
 import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
+import useCachedLatestBlockQuery from "@/state/useCachedLatestBlockQuery";
 import { useTemperature } from "@/state/useFieldData";
 import { formatter } from "@/utils/format";
+import { MinimumViableBlock } from "@/utils/types";
 import { cn } from "@/utils/utils";
 import { GearIcon } from "@radix-ui/react-icons";
 import { Separator } from "@radix-ui/react-separator";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import React from "react";
-import { usePublicClient } from "wagmi";
+import { GetBlockReturnType } from "viem";
 import { Col, Row } from "../Container";
 import LoadingSpinner from "../LoadingSpinner";
 import ReviewTractorOrderDialog from "../ReviewTractorOrderDialog";
@@ -32,49 +34,35 @@ interface SoilOrderbookContentProps {
   showAboveCurrentTemp?: boolean;
 }
 
+const selectLatestBlockInfo = (data: GetBlockReturnType | undefined): MinimumViableBlock<number> | undefined => {
+  if (!data) return undefined;
+  return {
+    number: Number(data.number),
+    timestamp: Number(data.timestamp) * 1000,
+  };
+};
+
 // Shared logic for loading and displaying the orderbook data
 export function SoilOrderbookContent({
   showZeroAvailable = false,
   sortBy = "temperature",
   showAboveCurrentTemp = true,
 }: SoilOrderbookContentProps) {
-  const [latestBlockInfo, setLatestBlockInfo] = useState<{ number: number; timestamp: number } | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderbookEntry | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const publicClient = usePublicClient();
   const temperature = useTemperature();
 
-  // Get latest block info once when component loads
-  useEffect(() => {
-    const fetchLatestBlock = async () => {
-      console.log("Fetching latest block...");
-      if (!publicClient) {
-        console.log("No publicClient available");
-        return;
-      }
-      try {
-        const latestBlock = await publicClient.getBlock();
-        console.log("Got latest block:", {
-          number: latestBlock.number,
-          timestamp: latestBlock.timestamp,
-        });
-
-        const blockInfo = {
-          number: Number(latestBlock.number),
-          timestamp: Number(latestBlock.timestamp) * 1000,
-        };
-        setLatestBlockInfo(blockInfo);
-        console.log("Updated latestBlockInfo:", blockInfo);
-      } catch (error) {
-        console.error("Failed to fetch latest block:", error);
-      }
-    };
-    fetchLatestBlock();
-  }, [publicClient]);
+  const { data: latestBlockInfo } = useCachedLatestBlockQuery<MinimumViableBlock<number>>({
+    key: "soil-orderbook-latest-block",
+    staleTime: Infinity,
+    refetchInterval: 30_000,
+    select: selectLatestBlockInfo,
+    refetchOnMount: true,
+  });
 
   const getApproximateTimestamps = useCallback(
     (events: OrderbookEntry[]) => {
-      console.log("Calculating timestamps for events:", {
+      console.debug("[SoilOrderbookContent] Calculating timestamps for events:", {
         eventCount: events.length,
         latestBlockInfo,
       });
@@ -93,15 +81,18 @@ export function SoilOrderbookContent({
     [latestBlockInfo],
   );
 
-  const { data: orderbookData, ...orderbookQuery } = useTractorSowOrderbook();
+  const { data: requisitions = [], ...orderbookQuery } = useTractorSowOrderbook({
+    select: useCallback(
+      (data) => {
+        if (!data) return [];
+        const dataWithTimestamps = getApproximateTimestamps(data);
+        return dataWithTimestamps.sort((a, b) => a.minTemp.sub(b.minTemp).toNumber());
+      },
+      [getApproximateTimestamps],
+    ),
+  });
 
-  const requisitions = useMemo(() => {
-    if (!orderbookData) return [];
-    const dataWithTimestamps = getApproximateTimestamps(orderbookData);
-    return dataWithTimestamps.sort((a, b) => a.minTemp.sub(b.minTemp).toNumber());
-  }, [orderbookData]);
-
-  const isLoading = orderbookQuery.isLoading || !orderbookData?.length;
+  const isLoading = orderbookQuery.isLoading || !requisitions?.length;
 
   const formatDate = (timestamp: number | undefined) => {
     if (!timestamp) return "Unknown";
@@ -214,7 +205,7 @@ export function SoilOrderbookContent({
           if (data) {
             // Parse the percentage string to just get the number
             const tempValue = parseFloat(data.minTempAsString);
-            console.log(`  ${idx}: Temperature ${tempValue}% (${data.minTempAsString})`);
+            console.debug(`[SoilOrderbookContent]  ${idx}: Temperature ${tempValue}% (${data.minTempAsString})`);
           }
         } catch (error) {
           console.error(`Failed to decode data for requisition ${idx}:`, error);

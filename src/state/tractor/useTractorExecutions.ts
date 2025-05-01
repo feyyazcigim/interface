@@ -7,7 +7,7 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { getChainConstant } from "@/hooks/useChainConstant";
 import { TractorAPIExecutionSowOrderItem, TractorAPIResponseExecution } from "@/lib/Tractor/api";
 import TractorAPI from "@/lib/Tractor/api";
-import { fetchTractorExecutions, PublisherTractorExecution } from "@/lib/Tractor/utils";
+import { PublisherTractorExecution, fetchTractorExecutions } from "@/lib/Tractor/utils";
 import { queryKeys } from "@/state/queryKeys";
 import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";

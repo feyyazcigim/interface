@@ -434,7 +434,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   useEffect(() => {
     if (!didInitOperatorTip) {
       // Only set the initial operator tip to the average tip value
-      console.log("averageTipValue", averageTipValue);
       setOperatorTip(averageTipValue.toFixed(2));
       setDidInitOperatorTip(true);
     }

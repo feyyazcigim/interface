@@ -1,8 +1,8 @@
 import { defaultQuerySettingsMedium } from "@/constants/query";
 import { getAverageTipPaid } from "@/lib/Tractor";
+import { queryKeys } from "@/state/queryKeys";
 import { useQuery } from "@tanstack/react-query";
 import { usePublicClient } from "wagmi";
-import { queryKeys } from "@/state/queryKeys";
 
 interface UseTractorOperatorAverageTipPaidOptions {
   lookbackBlocks?: bigint;

@@ -11,7 +11,7 @@ import { queryKeys } from "@/state/queryKeys";
 import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";
 import { isDev } from "@/utils/utils";
-import { useQuery } from "@tanstack/react-query";
+import { DefaultError, QueryObserverOptions, UseQueryOptions, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { useChainId, usePublicClient } from "wagmi";
 import { useTemperature } from "../useFieldData";
@@ -21,12 +21,16 @@ const getLookbackBlocks = (chainOnly: boolean, error: boolean) => {
   return isDev() ? TIME_TO_BLOCKS.day : TIME_TO_BLOCKS.hour;
 };
 
-const useTractorAPISowOrders = (address?: HashString, args?: TractorAPIOrderOptions) => {
+const useTractorAPISowOrders = <TData extends OrderbookEntry[] = OrderbookEntry[]>(
+  address?: HashString,
+  args?: TractorAPIOrderOptions,
+  select?: (data: TractorAPIOrdersResponse | undefined) => TData,
+) => {
   const chainId = useChainId();
 
-  const selectOrderbookData = useMemo(() => transformAPIOrderbookData(chainId), [chainId]);
+  const defaultSelect = useMemo(() => transformAPIOrderbookData(chainId), [chainId]);
 
-  return useQuery({
+  return useQuery<TractorAPIOrdersResponse | undefined, Error, TData>({
     queryKey: queryKeys.tractor.sowOrdersV0(args),
     queryFn: async () => {
       if (!chainId) return;
@@ -36,7 +40,7 @@ const useTractorAPISowOrders = (address?: HashString, args?: TractorAPIOrderOpti
       return TractorAPI.getOrders(options);
     },
     enabled: !!chainId,
-    select: selectOrderbookData,
+    select: select ?? (defaultSelect as (data: TractorAPIOrdersResponse | undefined) => TData),
     ...defaultQuerySettingsMedium,
   });
 };
@@ -80,16 +84,23 @@ const transformAPIOrderbookData = (chainId: number) => (response: TractorAPIOrde
     };
   });
 
-  console.log("[TRACTOR/useTractorAPISowOrders/transformAPIOrderbookData] RES", res);
+  console.debug("[TRACTOR/useTractorAPISowOrders/transformAPIOrderbookData] RES", res);
 
   return res;
 };
 
-export function useTractorSowOrderbook(
-  address?: HashString,
-  args?: TractorAPIOrderOptions,
-  chainOnly: boolean = false,
-) {
+type UseTractorSowOrderbookOptions<T> = {
+  address?: HashString;
+  args?: TractorAPIOrderOptions;
+  chainOnly?: boolean;
+} & Pick<QueryObserverOptions<OrderbookEntry[] | undefined, DefaultError, T>, "select">;
+
+export function useTractorSowOrderbook<T = OrderbookEntry[]>({
+  address,
+  args,
+  chainOnly = false,
+  select,
+}: UseTractorSowOrderbookOptions<T> = {}) {
   const chainId = useChainId();
   const client = usePublicClient({ chainId });
   const diamond = useProtocolAddress();
@@ -112,7 +123,7 @@ export function useTractorSowOrderbook(
    */
   const lookbackBlocks = getLookbackBlocks(chainOnly, !!ordersQuery.error);
 
-  const ordersChainQuery = useQuery({
+  const ordersChainQuery = useQuery<OrderbookEntry[] | undefined, DefaultError, T>({
     queryKey: queryKeys.tractor.sowOrdersV0Chain({ lookbackBlocks }),
     queryFn: async () => {
       if (temperature.max.lte(0) || !client) {
@@ -129,7 +140,7 @@ export function useTractorSowOrderbook(
         lookbackBlocks,
       );
 
-      console.log("[TRACTOR/useTractorSowOrderbook/ordersChainQuery] DATA", {
+      console.debug("[TRACTOR/useTractorSowOrderbook/ordersChainQuery] DATA", {
         lookbackBlocks,
         data,
       });
@@ -137,50 +148,43 @@ export function useTractorSowOrderbook(
       return data;
     },
     enabled: orderChainQueryEnabled,
+    select: select,
     ...defaultQuerySettingsMedium,
   });
 
-  useEffect(() => {
-    console.log("[TRACTOR/useTractorSowOrders] ORDER CHAIN QUERY", ordersChainQuery);
-  }, [ordersChainQuery]);
+  // useEffect(() => {
+  //   if (!ordersChainQuery.data || !ordersQuery.data) {
+  //     return;
+  //   }
 
-  useEffect(() => {
-    console.log("[TRACTOR/useTractorSowOrders] ORDERS QUERY", ordersQuery);
-  }, [ordersQuery]);
+  //   const map = new Map<
+  //     string,
+  //     {
+  //       chain?: OrderbookEntry;
+  //       api?: OrderbookEntry;
+  //     }
+  //   >();
 
-  useEffect(() => {
-    if (!ordersChainQuery.data || !ordersQuery.data) {
-      return;
-    }
+  //   ordersQuery.data.forEach((order) => {
+  //     map.set(order.requisition.blueprintHash.toLowerCase(), {
+  //       chain: undefined,
+  //       api: order,
+  //     });
+  //   });
 
-    const map = new Map<
-      string,
-      {
-        chain?: OrderbookEntry;
-        api?: OrderbookEntry;
-      }
-    >();
+  //   ordersChainQuery.data.forEach((order) => {
+  //     const existing = map.get(order.requisition.blueprintHash.toLowerCase());
 
-    ordersQuery.data.forEach((order) => {
-      map.set(order.requisition.blueprintHash.toLowerCase(), {
-        chain: undefined,
-        api: order,
-      });
-    });
+  //     if (existing) {
+  //       map.set(order.requisition.blueprintHash.toLowerCase(), {
+  //         ...existing,
+  //         chain: order,
+  //       });
+  //     }
+  //   });
 
-    ordersChainQuery.data.forEach((order) => {
-      const existing = map.get(order.requisition.blueprintHash.toLowerCase());
-
-      if (existing) {
-        map.set(order.requisition.blueprintHash.toLowerCase(), {
-          ...existing,
-          chain: order,
-        });
-      }
-    });
-
-    console.log("[TRACTOR/useTractorSowOrdersMAP] MAP", map);
-  }, [ordersChainQuery.data, ordersQuery.data]);
+  //   console.log("[TRACTOR/useTractorSowOrdersMAP] MAP", map);
+  // }, [ordersChainQuery.data, ordersQuery.data]);
 
   return ordersChainQuery;
 }

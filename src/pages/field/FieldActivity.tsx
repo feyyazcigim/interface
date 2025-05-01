@@ -6,14 +6,12 @@ import { SoilOrderbookDialog } from "@/components/Tractor/SoilOrderbook";
 import { Button } from "@/components/ui/Button";
 import IconImage from "@/components/ui/IconImage";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { OrderbookEntry, SowBlueprintData, decodeSowTractorData, loadOrderbookData } from "@/lib/Tractor/utils";
+import { OrderbookEntry, SowBlueprintData, decodeSowTractorData } from "@/lib/Tractor/utils";
 import useFieldSowEvents from "@/state/events/useFieldSowEvents";
 import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
 import { useTemperature } from "@/state/useFieldData";
 import { useSeason } from "@/state/useSunData";
 import React, { useState, useMemo } from "react";
-import { usePublicClient } from "wagmi";
 
 interface FieldActivityItem {
   id: string;
@@ -56,70 +54,10 @@ const estimateSeasonFromBlock = (
 };
 
 const FieldActivity = () => {
-  const publicClient = usePublicClient();
-  const protocolAddress = useProtocolAddress();
-  // const [tractorOrders, setTractorOrders] = React.useState<OrderbookEntry[]>([]);
-  // const [loadingTractorOrders, setLoadingTractorOrders] = React.useState(true);
   const currentSeason = useSeason();
   const currentTemperature = useTemperature();
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
-
-  // const qs = useTractorSowCompleteEvents();
-
-  // const d = useTractorSowOrderbook();
-
-  // Fetch tractor orders
-  // React.useEffect(() => {
-  //   const fetchTractorOrders = async () => {
-  //     if (!publicClient || !protocolAddress) return;
-
-  //     try {
-  //       setLoadingTractorOrders(true);
-
-  //       // Get the current block
-  //       const latestBlock = await publicClient.getBlock();
-  //       const latestBlockInfo = {
-  //         number: latestBlock.number,
-  //         timestamp: latestBlock.timestamp,
-  //       };
-
-  //       // Fetch orderbook data
-  //       const orderbook = await loadOrderbookData(
-  //         undefined, // No specific address filter
-  //         protocolAddress,
-  //         publicClient,
-  //         latestBlockInfo,
-  //         currentTemperature?.max ? currentTemperature.max.toNumber() : undefined,
-  //       );
-
-  //       // Filter out orders with predicted temperatures greater than current temperature + 1%
-  //       const currentTemp = currentTemperature.max?.toNumber() || 0;
-
-  //       const filteredOrders = orderbook.filter((order) => {
-  //         const predictedTemp = getPredictedSowTemperature(order, currentTemperature);
-
-  //         // Only include orders with temperature requirements that could reasonably execute soon
-  //         // Use the predicted temperature, which is now guaranteed to be at least the minimum
-  //         return predictedTemp <= currentTemp + 1;
-  //       });
-
-  //       // Sort by predicted temperature (lowest to highest)
-  //       const sortedOrders = [...filteredOrders].sort((a, b) => {
-  //         // We want to sort by lowest predicted temperature first
-  //         return getPredictedSowTemperature(a, currentTemperature) - getPredictedSowTemperature(b, currentTemperature);
-  //       });
-
-  //       setTractorOrders(sortedOrders);
-  //     } catch (error) {
-  //       console.error("Error fetching tractor orders:", error);
-  //     } finally {
-  //       setLoadingTractorOrders(false);
-  //     }
-  //   };
-
-  //   // fetchTractorOrders();
-  // }, [publicClient, protocolAddress]);
 
   const { data: tractorOrdersResult, ...tractorSowOrderbookQuery } = useTractorSowOrderbook();
 
