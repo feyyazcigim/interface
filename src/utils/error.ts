@@ -41,7 +41,7 @@ export const activateDiscordLogging = () => {
 
     if (!isDev()) {
       const content =
-        `🚨 ${(deployedCommitHash() ?? "").slice(0, 7)} Console error on ${window.location.href}:\n${args.map((arg) => (typeof arg === "object" ? JSON.stringify(arg) : String(arg))).join(" ")}`
+        `🚨 ${(deployedCommitHash() ?? "").slice(0, 7)} Console error on ${window.location.href}:\n${args.map((arg) => (arg instanceof Error ? arg.message : typeof arg === "object" ? JSON.stringify(arg) : String(arg))).join(" ")}`
           // Prevent discord link previews
           .replace(/(https?:\/\/[^\s]+)/g, "<$1>")
           // Hide wallet addresses
