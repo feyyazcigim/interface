@@ -83,7 +83,7 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
           result[APY_EMA_WINDOWS[i]].push({
             season: Number(season),
             value: apyDataQuery.data[i][season].bean,
-            timestamp: seasonToTimestamp[season],
+            timestamp: seasonToTimestamp?.[season],
           });
         }
         // Sort descending
