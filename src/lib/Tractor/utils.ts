@@ -13,7 +13,7 @@ import { resolveChainId } from "@/utils/chain";
 import { FarmFromMode, MinimumViableBlock } from "@/utils/types";
 import { MayArray } from "@/utils/types.generic";
 import { arrayify } from "@/utils/utils";
-import { SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
+import { BlockTag, SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
 import { Requisition, SowOrderTokenStrategy } from "./types";
 
@@ -424,6 +424,21 @@ export function findOperatorPlaceholderOffset(encodedData: `0x${string}`): numbe
   }
   return index / 2; // Convert from hex characters to bytes
 }
+
+// async function paginateGetContractEvents<T>(
+//   publicClient: PublicClient,
+//   request: (args: { fromBlock: BlockTag | bigint; toBlock: BlockTag | bigint }) => Promise<T[]>,
+//   latestBlock: MinimumViableBlock<bigint>,
+// ) {
+//   const events: T[] = [];
+//   let fromBlock: BlockTag | bigint = TRACTOR_DEPLOYMENT_BLOCK;
+//   let toBlock: BlockTag | bigint = "latest";
+
+//   while (true) {
+//     const results = await request({ fromBlock, toBlock });
+//     events.push(...results);
+//   }
+// }
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Fetch Tractor Events

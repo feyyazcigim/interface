@@ -59,7 +59,7 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
   const client = usePublicClient();
   const diamond = useProtocolAddress();
 
-  const { data: executionData, ...executionsQuery } = useTractorAPIExecutionsQuery(publisher, !chainOnly);
+  const { data: executionData, ...executionsQuery } = useTractorAPIExecutionsQuery(publisher, chainOnly);
 
   // Check if the API data exists and has any executions
   const executionsExist = executionData && Object.values(executionData.executions).some((d) => !!d.length);
@@ -175,6 +175,8 @@ const getSelectTractorExecutions = (chainId: number) => {
         });
       }
     }
+
+    console.log("executionsByType", executionsByType);
     return {
       lastUpdated: args.lastUpdated,
       totalRecords: args.totalRecords,
