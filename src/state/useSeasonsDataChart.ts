@@ -37,7 +37,6 @@ export interface SeasonsTableData {
   price: TokenValue;
   raining: boolean;
   rewardBeans: TokenValue;
-  deltaDemand: TokenValue;
   deltaSownBeans: TokenValue;
   sownBeans: TokenValue;
   temperature: number;
@@ -170,8 +169,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
       const timeSown = currFieldHourlySnapshots.blocksToSoldOutSoil
         ? Duration.fromMillis(currFieldHourlySnapshots.blocksToSoldOutSoil * 2 * 1000).toFormat("mm:ss")
         : "-";
-      const allData = {
-        ...acc[season.beanHourlySnapshot.season.season],
+      const allData: Partial<SeasonsTableData> = {
         season: season.beanHourlySnapshot.season.season,
         caseId: Number(currFieldHourlySnapshots.caseId || 0),
         instDeltaB: TokenValue.fromHuman(season.beanHourlySnapshot.instDeltaB, tokenData.mainToken.decimals),
@@ -239,7 +237,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
         );
         allData.tractorExecutions = tractorSnapshots[idx]?.totalExecutions || 0;
       }
-      acc.push(allData);
+      acc.push(allData as SeasonsTableData);
       return acc;
     }, [] as SeasonsTableData[]);
     return transformedData;
