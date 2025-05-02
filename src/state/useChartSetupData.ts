@@ -14,7 +14,7 @@ interface ChartSetupBase {
   /**
    * Chart type, used to categorize charts in the Select panel
    */
-  type: "Pinto" | "Field" | "Silo";
+  type: "Pinto" | "Field" | "Silo" | "Tractor";
   /**
    * Name of variable to be used to fill the time scale. Usually "timestamp"
    */
@@ -421,6 +421,39 @@ const createAPYCharts = (mainToken: Token): ChartSetupBase[] => [
   },
 ];
 
+const createTractorCharts = (mainToken: Token): ChartSetupBase[] => [
+  {
+    id: "tractorSownPinto",
+    type: "Tractor",
+    name: "Tractor: Sown Pinto",
+    tooltipTitle: "Pinto Sown using Tractor",
+    tooltipHoverText: "Cumulative Pinto Sown using Tractor.",
+    shortDescription: "Cumulative Pinto Sown using Tractor.",
+    icon: mainToken.logoURI,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "tractorSownPinto",
+    valueAxisType: "sownBeans",
+    valueFormatter: (v: TokenValue) => v.toNumber(),
+    tickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
+    shortTickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
+  },
+  {
+    id: "tractorPodsMinted",
+    type: "Tractor",
+    name: "Tractor: Pods Minted",
+    tooltipTitle: "Pods Minted using Tractor",
+    tooltipHoverText: "Cumulative Pods Minted using Tractor.",
+    shortDescription: "Cumulative Pods Minted using Tractor.",
+    icon: podIcon,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "tractorPodsMinted",
+    valueAxisType: "sownBeans",
+    valueFormatter: (v: TokenValue) => v.toNumber(),
+    tickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
+    shortTickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
+  },
+];
+
 export function useChartSetupData() {
   const { mainToken, lpTokens, whitelistedTokens } = useTokenData();
 
@@ -444,10 +477,14 @@ export function useChartSetupData() {
 
     const apyCharts = createAPYCharts(mainToken);
 
-    const output: ChartSetup[] = [...pintoCharts, ...fieldCharts, ...apyCharts].map((setupData, index) => ({
-      ...setupData,
-      index: index,
-    }));
+    const tractorCharts = createTractorCharts(mainToken);
+
+    const output: ChartSetup[] = [...pintoCharts, ...fieldCharts, ...apyCharts, ...tractorCharts].map(
+      (setupData, index) => ({
+        ...setupData,
+        index: index,
+      }),
+    );
 
     return output;
   }, [mainToken, lpTokens, whitelistedTokens]); // Include all dependencies

@@ -18,6 +18,7 @@ import useSeasonalQueries, {
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
 import useTokenData from "./useTokenData";
+import useSeasonalTractorSnapshots from "./seasonal/queries/useSeasonalTractorSnapshots";
 
 export interface SeasonsTableData {
   season: number;
@@ -56,6 +57,8 @@ export interface SeasonsTableData {
   pinto30d: number;
   pinto7d: number;
   pinto24h: number;
+  tractorSownPinto: TokenValue;
+  tractorPodsMinted: TokenValue;
 }
 
 const stalkPaginateSettings: PaginationSettings<Season, AdvancedChartBeanStalkQuery, "seasons", SeasonalQueryVars> = {
@@ -134,11 +137,14 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
 
   const useAPYQuery = useSeasonalAPYs(tokenData.mainToken.address, fromSeason, toSeason);
 
+  const useTractorQuery = useSeasonalTractorSnapshots("SOW_V0", fromSeason, toSeason, (e: any) => e, "desc");
+
   const transformedData = useMemo(() => {
     if (
       Object.keys(useStalkQuery.data || {}).length === 0 ||
       Object.keys(useBeanQuery.data || {}).length === 0 ||
-      Object.keys(useAPYQuery.data || {}).length === 0
+      Object.keys(useAPYQuery.data || {}).length === 0 ||
+      Object.keys(useTractorQuery.data || {}).length === 0
     ) {
       return [];
     }
@@ -150,6 +156,8 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
       [APYWindow.WEEKLY]: apy7d,
       [APYWindow.DAILY]: apy24h,
     } = useAPYQuery?.data || {};
+    const tractorSnapshots = useTractorQuery?.data || ([] as any);
+
     const transformedData: SeasonsTableData[] = beanResults.reduce((acc: SeasonsTableData[], season, idx) => {
       const currFieldHourlySnapshots = fieldHourlySnapshots[idx];
       const currSiloHourlySnapshots = siloHourlySnapshots[idx];
@@ -157,7 +165,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
       const timeSown = currFieldHourlySnapshots.blocksToSoldOutSoil
         ? Duration.fromMillis(currFieldHourlySnapshots.blocksToSoldOutSoil * 2 * 1000).toFormat("mm:ss")
         : "-";
-      acc.push({
+      const allData = {
         ...acc[season.beanHourlySnapshot.season.season],
         season: season.beanHourlySnapshot.season.season,
         caseId: Number(currFieldHourlySnapshots.caseId || 0),
@@ -200,11 +208,23 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
         pinto7d: apy7d?.[idx]?.value || 0,
         pinto24h: apy24h?.[idx]?.value || 0,
         timestamp: Number(season.beanHourlySnapshot.season.timestamp || 0),
-      });
+      };
+      // Ensure tractor api response is fully caught up/in sync
+      if (tractorSnapshots[idx]?.season === allData.season) {
+        allData.tractorSownPinto = TokenValue.fromBlockchain(
+          tractorSnapshots[idx]?.totalPintoSown || 0n,
+          PODS.decimals,
+        );
+        allData.tractorPodsMinted = TokenValue.fromBlockchain(
+          tractorSnapshots[idx]?.totalPodsMinted || 0n,
+          PODS.decimals,
+        );
+      }
+      acc.push(allData);
       return acc;
     }, [] as SeasonsTableData[]);
     return transformedData;
-  }, [useBeanQuery.data, useStalkQuery.data]);
+  }, [useBeanQuery.data, useStalkQuery.data, useAPYQuery.data, useTractorQuery.data, tokenData.mainToken.decimals]);
 
   return {
     isFetching: useBeanQuery.isLoading || useStalkQuery.isLoading,

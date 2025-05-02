@@ -58,7 +58,7 @@ const TractorExplorer = () => {
         </div>
         <div className="w-full sm:w-1/2">
           <SeasonalChart
-            title="Pods Issued"
+            title="Pods Minted"
             size="small"
             fillArea
             activeTab={podsTab}
