@@ -31,6 +31,7 @@ export interface SeasonsTableData {
   instDeltaB: TokenValue;
   instPrice: TokenValue;
   issuedSoil: TokenValue;
+  cultivationFactor: TokenValue;
   l2sr: TokenValue;
   podRate: TokenValue;
   price: TokenValue;
@@ -180,6 +181,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
         twaPrice: TokenValue.fromHuman(season.beanHourlySnapshot.twaPrice, 4),
         blocksToSoldOutSoil: timeSown ?? "0",
         issuedSoil: TokenValue.fromBlockchain(currFieldHourlySnapshots.issuedSoil, tokenData.mainToken.decimals),
+        cultivationFactor: TokenValue.fromHuman(currFieldHourlySnapshots.cultivationFactor || 0, 2),
         podRate: TokenValue.fromHuman(currFieldHourlySnapshots.podRate || 0n, 18).mul(100),
         sownBeans: TokenValue.fromBlockchain(currFieldHourlySnapshots.sownBeans, tokenData.mainToken.decimals),
         deltaSownBeans: TokenValue.fromBlockchain(
