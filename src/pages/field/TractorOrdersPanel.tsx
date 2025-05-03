@@ -42,7 +42,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const { data: requisitions = [], ...requisitionsQuery } = useTractorPublishedRequisitions(address);
 
   // derived
-  const dataHasLoaded = Boolean(executions?.length && requisitions?.length);
+  const dataHasLoaded = address && Boolean(executions?.length && requisitions?.length);
   const loading = executionsQuery.isLoading || requisitionsQuery.isLoading || !dataHasLoaded;
   const error = executionsQuery.error || requisitionsQuery.error;
 

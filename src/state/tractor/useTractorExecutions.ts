@@ -17,7 +17,7 @@ import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";
 import { isDev } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useChainId, usePublicClient } from "wagmi";
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -68,21 +68,30 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
   const executionsChainQueryEnabled =
     chainOnly || Boolean(client && publisher && Boolean(executionsExist || executionsQuery.error));
 
+  useEffect(() => {
+    // if (executionsExist) {
+    console.log("----- executionsExist", executionsExist);
+    // }
+    if (executionsChainQueryEnabled) {
+      console.log("----- executionsChainQueryEnabled", executionsChainQueryEnabled);
+    }
+  }, [executionsExist, executionsChainQueryEnabled]);
+
   // Merge the on-chain executions with the API data. Use useCallback to create a stable reference to the function
   const mergeExecutions = useCallback(
     (onChainExecutions: Awaited<ReturnType<typeof fetchTractorExecutions>> | undefined) => {
-      if (!executionData?.executions || !onChainExecutions?.length) return undefined;
+      const sowBlueprintv0 = executionData?.executions.sowBlueprintv0 ?? [];
 
       // Create a Set of existing transaction hashes for O(1) lookup
       const existingTxHashes = new Set([
-        ...executionData.executions.sowBlueprintv0.map((exec) => exec.transactionHash.toLowerCase()),
-        ...executionData.executions.unknown.map((exec) => exec.executedTxn.toLowerCase()),
+        ...sowBlueprintv0.map((exec) => exec.transactionHash.toLowerCase()),
+        ...(executionData?.executions.unknown ?? []).map((exec) => exec.executedTxn.toLowerCase()),
       ]);
 
-      const allExecutions = [...executionData.executions.sowBlueprintv0];
+      const allExecutions = [...sowBlueprintv0];
 
       // Filter out any on-chain executions that already exist in the API data & add the SOW_V0 executions if sowEvent is present
-      onChainExecutions.forEach((exec) => {
+      onChainExecutions?.forEach((exec) => {
         if (!existingTxHashes.has(exec.transactionHash.toLowerCase())) {
           allExecutions.push(exec);
         }
@@ -108,7 +117,9 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
         executionData?.lastUpdated,
       );
 
-      return fetchTractorExecutions(client, diamond, publisher, latestBlock, lookbackBlocks);
+      const executions = await fetchTractorExecutions(client, diamond, publisher, latestBlock, lookbackBlocks);
+      console.log("----- ALL executions", executions);
+      return executions;
     },
     enabled: executionsChainQueryEnabled,
     select: mergeExecutions,
