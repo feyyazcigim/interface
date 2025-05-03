@@ -5,8 +5,8 @@ import { defaultQuerySettings } from "@/constants/query";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { getChainConstant } from "@/utils/chain";
 import { Prettify } from "@/utils/types.generic";
-import { safeJSONStringify } from "@/utils/utils";
 import { DefaultError, QueryObserverOptions, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { useChainId } from "wagmi";
 
 export type FieldPlotSummaryParams<T extends string | number = number> = {
@@ -45,13 +45,7 @@ export type FieldPlotBucketSummary = Prettify<
 >;
 
 const endpoint = API_SERVICES.pinto;
-const DEFAULT_BUCKET_SIZE = 50_000;
-
-const defaultArgs: FieldPlotSummaryParams<string> = {
-  bucketSize: DEFAULT_BUCKET_SIZE.toString(),
-  onlyHarvested: false,
-  onlyUnharvested: false,
-} as const;
+const DEFAULT_BUCKET_SIZE = 1000000;
 
 const requestArgs = {
   method: "GET",
@@ -61,18 +55,26 @@ const requestArgs = {
   }),
 } as const;
 
-const combineURLParams = (params?: FieldPlotSummaryParams) => ({ ...defaultArgs, ...params });
+const combineURLParams = (params: FieldPlotSummaryParams = {}) => {
+  const urlParams = new URLSearchParams({
+    bucketSize: params?.bucketSize?.toString() ?? DEFAULT_BUCKET_SIZE?.toString(),
+    onlyHarvested: params?.onlyHarvested?.toString() ?? "false",
+    onlyUnharvested: params?.onlyUnharvested?.toString() ?? "true",
+  });
 
-const makeRequest = async (params: string, signal: AbortSignal, chainId: number, bucketSize: number | undefined) => {
+  return urlParams;
+};
+
+const makeRequest = async (args: URLSearchParams, chainId: number, bucketSize: number | undefined) => {
   const mainToken = getChainConstant(chainId, MAIN_TOKEN);
+  const url = `${endpoint}/field/plots-summary?${args.toString()}`;
 
-  const url = `${endpoint}/field-plot-summary?${params}`;
-  const data: RawFieldPlotBucketSummary[] = await fetch(url, { signal, ...requestArgs }).then((r) => r.json());
+  const data: RawFieldPlotBucketSummary[] = await fetch(url, { ...requestArgs }).then((r) => r.json());
 
   return data.map((r, i): FieldPlotBucketSummary => {
     const startIndex = TV.fromBlockchain(r.startIndex, PODS.decimals);
     const endIndex = TV.fromBlockchain(r.endIndex, PODS.decimals);
-    const avgSownBeansPerPod = TV.fromBlockchain(r.avgSownBeansPerPod, mainToken.decimals);
+    const avgSownBeansPerPod = TV.fromHuman(r.avgSownBeansPerPod, mainToken.decimals);
     const avgTemperature = TV.fromHuman(1, avgSownBeansPerPod.decimals).div(avgSownBeansPerPod).sub(1).mul(100);
 
     return {
@@ -89,23 +91,24 @@ const makeRequest = async (params: string, signal: AbortSignal, chainId: number,
   });
 };
 
-export type UseBucketedFieldPlotSummaryOptions<T> = {
-  args?: FieldPlotSummaryParams;
-} & Pick<QueryObserverOptions<FieldPlotBucketSummary[] | undefined, DefaultError, T>, "select">;
+export type UseBucketedFieldPlotSummaryOptions<T> = FieldPlotSummaryParams &
+  Pick<QueryObserverOptions<FieldPlotBucketSummary[] | undefined, DefaultError, T>, "select">;
 
 export default function useBucketedFieldPlotSummary<Data>({
-  args,
   select,
+  ...args
 }: UseBucketedFieldPlotSummaryOptions<Data> = {}) {
   // Hooks
   const chainId = useChainId();
 
   // Query
-  const params = safeJSONStringify(combineURLParams(args), undefined);
+  const params = combineURLParams(args);
 
-  return useQuery<FieldPlotBucketSummary[], DefaultError, Data | undefined>({
-    queryKey: ["fieldPlotSummary"],
-    queryFn: async ({ signal }) => makeRequest(params, signal, chainId, args?.bucketSize),
+  const queryKey = useMemo(() => ["fieldPlotSummary", params.toString()], [params.toString()]);
+
+  return useQuery<FieldPlotBucketSummary[], DefaultError, Data>({
+    queryKey,
+    queryFn: () => makeRequest(params, chainId, args?.bucketSize ?? DEFAULT_BUCKET_SIZE),
     select,
     ...defaultQuerySettings,
   });
