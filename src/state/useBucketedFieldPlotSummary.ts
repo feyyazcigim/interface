@@ -3,11 +3,11 @@ import { API_SERVICES } from "@/constants/endpoints";
 import { PODS } from "@/constants/internalTokens";
 import { defaultQuerySettings } from "@/constants/query";
 import { MAIN_TOKEN } from "@/constants/tokens";
-import { useChainConstant } from "@/utils/chain";
+import { getChainConstant } from "@/utils/chain";
 import { Prettify } from "@/utils/types.generic";
 import { safeJSONStringify } from "@/utils/utils";
-import { useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { DefaultError, QueryObserverOptions, useQuery } from "@tanstack/react-query";
+import { useChainId } from "wagmi";
 
 export type FieldPlotSummaryParams<T extends string | number = number> = {
   bucketSize?: T;
@@ -63,47 +63,47 @@ const requestArgs = {
 
 const combineURLParams = (params?: FieldPlotSummaryParams) => ({ ...defaultArgs, ...params });
 
-const makeRequest = async (params: string, signal: AbortSignal): Promise<RawFieldPlotBucketSummary[]> => {
+const makeRequest = async (params: string, signal: AbortSignal, chainId: number, bucketSize: number | undefined) => {
+  const mainToken = getChainConstant(chainId, MAIN_TOKEN);
+
   const url = `${endpoint}/field-plot-summary?${params}`;
-  return fetch(url, { signal, ...requestArgs }).then((r) => r.json());
+  const data: RawFieldPlotBucketSummary[] = await fetch(url, { signal, ...requestArgs }).then((r) => r.json());
+
+  return data.map((r, i): FieldPlotBucketSummary => {
+    const startIndex = TV.fromBlockchain(r.startIndex, PODS.decimals);
+    const endIndex = TV.fromBlockchain(r.endIndex, PODS.decimals);
+    const avgSownBeansPerPod = TV.fromBlockchain(r.avgSownBeansPerPod, mainToken.decimals);
+    const avgTemperature = TV.fromHuman(1, avgSownBeansPerPod.decimals).div(avgSownBeansPerPod).sub(1).mul(100);
+
+    return {
+      ...r,
+      bucketIndex: i,
+      bucketSize: bucketSize ?? DEFAULT_BUCKET_SIZE,
+      startTimestamp: new Date(r.startTimestamp).getTime(),
+      endTimestamp: new Date(r.endTimestamp).getTime(),
+      startIndex,
+      endIndex,
+      avgSownBeansPerPod,
+      avgTemperature,
+    };
+  });
 };
 
-export default function useBucketedFieldPlotSummary(args: FieldPlotSummaryParams = {}) {
+export type UseBucketedFieldPlotSummaryOptions<T> = {
+  args?: FieldPlotSummaryParams;
+} & Pick<QueryObserverOptions<FieldPlotBucketSummary[] | undefined, DefaultError, T>, "select">;
+
+export default function useBucketedFieldPlotSummary<Data>({ args, select }: UseBucketedFieldPlotSummaryOptions<Data> = {}) {
   // Hooks
-  const mainToken = useChainConstant(MAIN_TOKEN);
-
-  // Transform
-  const transform = useCallback(
-    (data: RawFieldPlotBucketSummary[]) => {
-      return data.map((r, i) => {
-        const startIndex = TV.fromBlockchain(r.startIndex, PODS.decimals);
-        const endIndex = TV.fromBlockchain(r.endIndex, PODS.decimals);
-        const avgSownBeansPerPod = TV.fromBlockchain(r.avgSownBeansPerPod, mainToken.decimals);
-        const avgTemperature = TV.fromHuman(1, avgSownBeansPerPod.decimals).div(avgSownBeansPerPod).sub(1).mul(100);
-
-        return {
-          ...r,
-          bucketIndex: i,
-          bucketSize: args.bucketSize ?? DEFAULT_BUCKET_SIZE,
-          startTimestamp: new Date(r.startTimestamp).getTime(),
-          endTimestamp: new Date(r.endTimestamp).getTime(),
-          startIndex,
-          endIndex,
-          avgSownBeansPerPod,
-          avgTemperature,
-        };
-      });
-    },
-    [args.bucketSize, mainToken],
-  );
+  const chainId = useChainId();
 
   // Query
   const params = safeJSONStringify(combineURLParams(args), undefined);
 
-  return useQuery({
+  return useQuery<FieldPlotBucketSummary[], DefaultError, Data | undefined>({
     queryKey: ["fieldPlotSummary"],
-    queryFn: async ({ signal }) => makeRequest(params, signal),
-    select: transform,
+    queryFn: async ({ signal }) => makeRequest(params, signal, chainId, args?.bucketSize),
+    select,
     ...defaultQuerySettings,
   });
 }

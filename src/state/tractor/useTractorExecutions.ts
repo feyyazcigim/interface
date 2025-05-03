@@ -4,7 +4,6 @@ import { PODS } from "@/constants/internalTokens";
 import { defaultQuerySettingsMedium } from "@/constants/query";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { getChainConstant } from "@/hooks/useChainConstant";
 import {
   PublisherTractorExecution,
   TractorAPI,
@@ -13,6 +12,7 @@ import {
   fetchTractorExecutions,
 } from "@/lib/Tractor";
 import { queryKeys } from "@/state/queryKeys";
+import { getChainConstant } from "@/utils/chain";
 import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";
 import { isDev } from "@/utils/utils";

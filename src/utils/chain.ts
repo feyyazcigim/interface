@@ -1,15 +1,21 @@
 import { addressAllowanceSlotMap } from "@/constants/slots";
 import { beanstalkAddress } from "@/generated/contractHooks";
+import { useMemo } from "react";
 import { Address, StateOverride, encodePacked, keccak256, maxUint256, numberToHex } from "viem";
 import { base } from "viem/chains";
 import { useChainId } from "wagmi";
 import { getTokenIndex } from "./token";
 import { Token } from "./types";
+import { ChainLookup } from "./types.generic";
 import { exists } from "./utils";
 
+export function getChainConstant<T>(chainId: number, item: ChainLookup<T>) {
+  return item[resolveChainId(chainId)];
+}
+
 export function useChainConstant<T>(lookup: { [key: number]: T }) {
-  const chainId = useResolvedChainId();
-  return lookup[chainId as keyof typeof lookup];
+  const chainId = useChainId();
+  return useMemo(() => getChainConstant(chainId, lookup), [chainId, lookup]);
 }
 
 export const useChainAddress = useChainConstant<Address>;
