@@ -55,33 +55,22 @@ const data = {
 
 const options: ChartOptions<"bar"> = {
   responsive: true,
-          maintainAspectRatio: false,
-            scales: {
-              y: {
-                beginAtZero: true,
-              },
-              x: {
-                stacked: false,
-              }
-            }
+  maintainAspectRatio: false,
+  scales: {
+    y: {
+      beginAtZero: true,
+    },
+    x: {
+      stacked: false,
+    }
+  }
 };
 
 const BarChart = React.memo(() => {
   return (
     <div>
       <div className="h-[16rem]">
-        <ReactChart type="bar" data={data} options={{
-          responsive: true,
-          maintainAspectRatio: false,
-            scales: {
-              y: {
-                beginAtZero: true,
-              },
-              x: {
-                stacked: false,
-              }
-            }
-        }} />
+        <ReactChart type="bar" data={data} options={options} />
       </div>
     </div>
   )
