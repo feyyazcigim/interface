@@ -11,9 +11,11 @@ type SowV0Snapshot = {
   totalPodsMinted: string;
   totalCascadeFundedBelowTemp: string;
   totalCascadeFundedAnyTemp: string;
+  maxSowThisSeason: string;
   totalTipsPaid: string;
   currentMaxTip: string;
   totalExecutions: number;
+  uniquePublishers: number;
 };
 
 type TractorSnapshotResponse = {

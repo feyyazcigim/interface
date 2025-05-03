@@ -348,6 +348,14 @@ export function useSeasonalTractorCumulativeTips(fromSeason: number, toSeason: n
   }));
 }
 
+export function useSeasonalTractorMaxSow(fromSeason: number, toSeason: number): UseSeasonalResult {
+  return useSeasonalTractorSnapshots("SOW_V0", fromSeason, toSeason, (data) => ({
+    season: data.season,
+    value: TV.fromBlockchain(data.maxSowThisSeason, PINTO.decimals).toNumber(),
+    timestamp: new Date(data.snapshotTimestamp),
+  }));
+}
+
 export function useSeasonalTractorMaxActiveTip(fromSeason: number, toSeason: number): UseSeasonalResult {
   return useSeasonalTractorSnapshots("SOW_V0", fromSeason, toSeason, (data) => ({
     season: data.season,
@@ -360,6 +368,14 @@ export function useSeasonalTractorExecutionsCount(fromSeason: number, toSeason: 
   return useSeasonalTractorSnapshots("SOW_V0", fromSeason, toSeason, (data) => ({
     season: data.season,
     value: data.totalExecutions,
+    timestamp: new Date(data.snapshotTimestamp),
+  }));
+}
+
+export function useSeasonalTractorUniquePublishers(fromSeason: number, toSeason: number): UseSeasonalResult {
+  return useSeasonalTractorSnapshots("SOW_V0", fromSeason, toSeason, (data) => ({
+    season: data.season,
+    value: data.uniquePublishers,
     timestamp: new Date(data.snapshotTimestamp),
   }));
 }

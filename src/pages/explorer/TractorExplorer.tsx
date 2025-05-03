@@ -5,8 +5,10 @@ import {
   useSeasonalTractorExecutionsCount,
   useSeasonalTractorFundedAmount,
   useSeasonalTractorMaxActiveTip,
+  useSeasonalTractorMaxSow,
   useSeasonalTractorPodsIssued,
   useSeasonalTractorSownPinto,
+  useSeasonalTractorUniquePublishers,
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
@@ -16,9 +18,11 @@ const TractorExplorer = () => {
   const [sownTab, setSownTab] = useState(TimeTab.Week);
   const [podsTab, setPodsTab] = useState(TimeTab.Week);
   const [fundedTab, setFundedTab] = useState(TimeTab.Week);
+  const [maxSowTab, setMaxSowTab] = useState(TimeTab.Week);
   const [tipsTab, setTipsTab] = useState(TimeTab.Week);
   const [maxTipTab, setMaxTipTab] = useState(TimeTab.Week);
   const [executionsTab, setExecutionsTab] = useState(TimeTab.Week);
+  const [publishersTab, setPublishersTab] = useState(TimeTab.Week);
 
   const season = useSunData().current;
 
@@ -28,6 +32,7 @@ const TractorExplorer = () => {
     Math.max(0, season - tabToSeasonalLookback(fundedTab)),
     season,
   );
+  const maxSowData = useSeasonalTractorMaxSow(Math.max(0, season - tabToSeasonalLookback(maxSowTab)), season);
   const cumulativeTipsData = useSeasonalTractorCumulativeTips(
     Math.max(0, season - tabToSeasonalLookback(tipsTab)),
     season,
@@ -38,6 +43,10 @@ const TractorExplorer = () => {
   );
   const executionsCountData = useSeasonalTractorExecutionsCount(
     Math.max(0, season - tabToSeasonalLookback(executionsTab)),
+    season,
+  );
+  const uniquePublishersData = useSeasonalTractorUniquePublishers(
+    Math.max(0, season - tabToSeasonalLookback(publishersTab)),
     season,
   );
 
@@ -83,14 +92,13 @@ const TractorExplorer = () => {
         </div>
         <div className="w-full sm:w-1/2">
           <SeasonalChart
-            title="Cumulative Operator Tipped Pinto"
+            title="Queued Maximum Sow Each Season"
             size="small"
-            fillArea
-            activeTab={tipsTab}
-            onChangeTab={setTipsTab}
-            useSeasonalResult={cumulativeTipsData}
-            valueFormatter={f.number2dFormatter}
-            tickValueFormatter={f.number2dFormatter}
+            activeTab={maxSowTab}
+            onChangeTab={setMaxSowTab}
+            useSeasonalResult={maxSowData}
+            valueFormatter={f.number0dFormatter}
+            tickValueFormatter={f.largeNumberFormatter}
           />
         </div>
       </div>
@@ -108,12 +116,38 @@ const TractorExplorer = () => {
         </div>
         <div className="w-full sm:w-1/2">
           <SeasonalChart
+            title="Cumulative Operator Tipped Pinto"
+            size="small"
+            fillArea
+            activeTab={tipsTab}
+            onChangeTab={setTipsTab}
+            useSeasonalResult={cumulativeTipsData}
+            valueFormatter={f.number2dFormatter}
+            tickValueFormatter={f.number2dFormatter}
+          />
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
+        <div className="w-full sm:w-1/2">
+          <SeasonalChart
             title="Tractor Executions"
             size="small"
             fillArea
             activeTab={executionsTab}
             onChangeTab={setExecutionsTab}
             useSeasonalResult={executionsCountData}
+            valueFormatter={f.number0dFormatter}
+            tickValueFormatter={f.largeNumberFormatter}
+          />
+        </div>
+        <div className="w-full sm:w-1/2">
+          <SeasonalChart
+            title="Unique Publishers"
+            size="small"
+            fillArea
+            activeTab={publishersTab}
+            onChangeTab={setPublishersTab}
+            useSeasonalResult={uniquePublishersData}
             valueFormatter={f.number0dFormatter}
             tickValueFormatter={f.largeNumberFormatter}
           />
