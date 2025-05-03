@@ -8,7 +8,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { usePublicClient } from "wagmi";
 
-export default function useTractorPublishedRequisitions(address?: string, requisitionType?: MayArray<RequisitionType>, enabled: boolean = true) {
+export default function useTractorPublishedRequisitions(
+  address?: string,
+  requisitionType?: MayArray<RequisitionType>,
+  enabled: boolean = true,
+) {
   const publicClient = usePublicClient();
   const diamond = useProtocolAddress();
 

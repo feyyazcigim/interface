@@ -24,7 +24,11 @@ import { useChainId, usePublicClient } from "wagmi";
 // Fetch ALL EXECUTIONS QUERY
 // ────────────────────────────────────────────────────────────────────────────────
 
-export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined, enabled: boolean = true, chainOnly: boolean = false) => {
+export const useTractorAPIExecutionsQuery = (
+  publisher: HashString | undefined,
+  enabled: boolean = true,
+  chainOnly: boolean = false,
+) => {
   const chainId = useChainId();
 
   const selectTractorExecutions = useMemo(() => getSelectTractorExecutions(resolveChainId(chainId)), [chainId]);
@@ -58,7 +62,7 @@ const getLookbackBlocks = (
 export default function usePublisherTractorExecutions(
   publisher: HashString | undefined,
   enabled: boolean = true,
-  chainOnly: boolean = false
+  chainOnly: boolean = false,
 ) {
   const client = usePublicClient();
   const diamond = useProtocolAddress();
