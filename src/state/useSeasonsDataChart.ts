@@ -60,9 +60,11 @@ export interface SeasonsTableData {
   tractorSownPinto: TokenValue;
   tractorPodsMinted: TokenValue;
   tractorSowingQueue: TokenValue;
+  tractorMaxSeasonalSow: TokenValue;
   tractorCumulativeTips: TokenValue;
   tractorMaxActiveTip: TokenValue;
   tractorExecutions: number;
+  tractorPublishers: number;
 }
 
 const stalkPaginateSettings: PaginationSettings<Season, AdvancedChartBeanStalkQuery, "seasons", SeasonalQueryVars> = {
@@ -229,6 +231,10 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
           tractorSnapshots[idx]?.totalCascadeFundedBelowTemp || 0n,
           PODS.decimals,
         );
+        allData.tractorMaxSeasonalSow = TokenValue.fromBlockchain(
+          tractorSnapshots[idx]?.maxSowThisSeason || 0n,
+          PODS.decimals,
+        );
         allData.tractorCumulativeTips = TokenValue.fromBlockchain(
           tractorSnapshots[idx]?.totalTipsPaid || 0n,
           PODS.decimals,
@@ -238,6 +244,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
           PODS.decimals,
         );
         allData.tractorExecutions = tractorSnapshots[idx]?.totalExecutions || 0;
+        allData.tractorPublishers = tractorSnapshots[idx]?.uniquePublishers || 0;
       }
       acc.push(allData as SeasonsTableData);
       return acc;
