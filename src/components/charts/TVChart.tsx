@@ -92,26 +92,39 @@ function getTimezoneCorrectedTime(utcTime: Date, tickMarkType: TickMarkType) {
 }
 
 function setTimePeriod(chart: MutableRefObject<IChartApi | undefined>, timePeriod: IRange<Time> | undefined) {
-  if (!chart.current) return;
+  const chartTimescale = chart.current?.timeScale();
+  if (!chartTimescale) return;
+
   const from = timePeriod?.from;
   const to = timePeriod?.to;
 
-  if (!from) {
-    chart.current.timeScale().fitContent();
-  } else if (from && to) {
-    const newFrom = new Date(from.valueOf() as number);
-    const newTo = new Date(to.valueOf() as number);
-    chart.current.timeScale().setVisibleRange({
-      from: Math.floor(newFrom.valueOf() / 1000) as Time,
-      to: Math.floor(newTo.valueOf() / 1000) as Time,
-    });
-  } else if (from) {
-    const newFrom = new Date(from.valueOf() as number);
-    const newTo = new Date(from.valueOf() as number);
-    chart.current.timeScale().setVisibleRange({
-      from: Math.floor(newFrom.valueOf() / 1000) as Time,
-      to: Math.floor(newTo.valueOf() / 1000) as Time,
-    });
+  const setVisibleRange = () => {
+    if (!from) {
+      chartTimescale.fitContent();
+    } else if (from && to) {
+      const newFrom = new Date(from.valueOf() as number);
+      const newTo = new Date(to.valueOf() as number);
+      chartTimescale.setVisibleRange({
+        from: Math.floor(newFrom.valueOf() / 1000) as Time,
+        to: Math.floor(newTo.valueOf() / 1000) as Time,
+      });
+    } else if (from) {
+      const newFrom = new Date(from.valueOf() as number);
+      const newTo = new Date(from.valueOf() as number);
+      chartTimescale.setVisibleRange({
+        from: Math.floor(newFrom.valueOf() / 1000) as Time,
+        to: Math.floor(newTo.valueOf() / 1000) as Time,
+      });
+    }
+  };
+
+  // Solution to errors on local dev when reloading
+  try {
+    setVisibleRange();
+  } catch {
+    setTimeout(() => {
+      setVisibleRange();
+    }, 0);
   }
 }
 
@@ -330,7 +343,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
         const seriesValueBefore = series.dataByIndex(param.logical?.valueOf() as number, -1);
         const seriesValueAfter = series.dataByIndex(param.logical?.valueOf() as number, 1);
         //@ts-ignore
-        hoveredValues.push(seriesValueBefore && seriesValueAfter ? seriesValueBefore?.value : 0);
+        hoveredValues.push(seriesValueBefore && seriesValueAfter ? seriesValueBefore?.value : undefined);
         hoveredSeason = Math.max(hoveredSeason, (seriesValueBefore?.customValues?.season as number) || 0);
       });
 
