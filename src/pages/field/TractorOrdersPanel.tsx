@@ -38,8 +38,8 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const [showDialog, setShowDialog] = useState(false);
   const [rawSowBlueprintCall, setRawSowBlueprintCall] = useState<`0x${string}` | null>(null);
 
-  const { data: executions = [], ...executionsQuery } = usePublisherTractorExecutions(address);
-  const { data: requisitions = [], ...requisitionsQuery } = useTractorPublishedRequisitions(address);
+  const { data: executions = [], ...executionsQuery } = usePublisherTractorExecutions(address, !!address);
+  const { data: requisitions = [], ...requisitionsQuery } = useTractorPublishedRequisitions(address, "sowBlueprintv0", !!address);
 
   // derived
   const dataHasLoaded = address && Boolean(executions?.length && requisitions?.length);

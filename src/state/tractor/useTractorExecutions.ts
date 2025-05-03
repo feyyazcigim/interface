@@ -17,14 +17,14 @@ import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";
 import { isDev } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useChainId, usePublicClient } from "wagmi";
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Fetch ALL EXECUTIONS QUERY
 // ────────────────────────────────────────────────────────────────────────────────
 
-export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined, chainOnly: boolean = false) => {
+export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined, enabled: boolean = true, chainOnly: boolean = false) => {
   const chainId = useChainId();
 
   const selectTractorExecutions = useMemo(() => getSelectTractorExecutions(resolveChainId(chainId)), [chainId]);
@@ -36,7 +36,7 @@ export const useTractorAPIExecutionsQuery = (publisher: HashString | undefined, 
       return TractorAPI.getExecutions({ publisher });
     },
     select: selectTractorExecutions,
-    enabled: !!publisher && !chainOnly,
+    enabled: !!publisher && !chainOnly && enabled,
     ...defaultQuerySettingsMedium,
   });
 };
@@ -55,7 +55,11 @@ const getLookbackBlocks = (
   return diff > 0n ? diff : undefined;
 };
 
-export default function usePublisherTractorExecutions(publisher: HashString | undefined, chainOnly: boolean = false) {
+export default function usePublisherTractorExecutions(
+  publisher: HashString | undefined,
+  enabled: boolean = true,
+  chainOnly: boolean = false
+) {
   const client = usePublicClient();
   const diamond = useProtocolAddress();
 
@@ -111,7 +115,7 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
 
       return fetchTractorExecutions(client, diamond, publisher, latestBlock, lookbackBlocks);
     },
-    enabled: executionsChainQueryEnabled,
+    enabled: executionsChainQueryEnabled && enabled,
     select: mergeExecutions,
     ...defaultQuerySettingsMedium,
   });
