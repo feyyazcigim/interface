@@ -69,7 +69,7 @@ const options: ChartOptions<"bar"> = {
 const BarChart = React.memo(() => {
   return (
     <div>
-      <div style={{ height: "250px" }}>
+      <div className="h-[16rem]">
         <ReactChart type="bar" data={data} options={{
           responsive: true,
           maintainAspectRatio: false,
