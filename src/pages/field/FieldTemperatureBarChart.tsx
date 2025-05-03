@@ -41,8 +41,8 @@ const FieldTemperatureBarChart = React.memo(() => {
 
   const indexes = data.labels?.[selectIndex]?.split("-");
 
-  const startIndex = indexes?.[0] ?? "0";
-  const endIndex = indexes?.[1] ?? "0";
+  const startIndex = Number(indexes?.[0] ?? "0");
+  const endIndex = Number(indexes?.[1] ?? "0");
 
   const activeData = data.datasets[0]?.data?.[selectIndex];
 
@@ -53,7 +53,7 @@ const FieldTemperatureBarChart = React.memo(() => {
           <div className="pinto-body">Avg Temperature per 1M Soil</div>
           <div className="pinto-h3">{formatter.pct(activeData)}</div>
           <div className="pinto-body-sm text-pinto-light">
-            {numberAbbr(Number(startIndex), 2)} - {numberAbbr(Number(endIndex), 2)}
+            {numberAbbr(startIndex, 2)} - {numberAbbr(endIndex, 2)}
           </div>
         </Col>
         <Col className="h-[250px] w-full px-4 pb-4">
