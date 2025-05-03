@@ -17,8 +17,8 @@ import useSeasonalBeanstalkSiloSG, {
 import useSeasonalBeanstalkWrappedDepositsSG from "./queries/useSeasonalBeanstalkWrappedDepositsSG";
 import useSeasonalFarmerSG from "./queries/useSeasonalFarmerSG";
 import useSeasonalFarmerSiloAssetTokenSG from "./queries/useSeasonalFarmerSiloAssetTokenSG";
-import { mergeUseSeasonalQueriesResults } from "./utils";
 import useSeasonalTractorSnapshots from "./queries/useSeasonalTractorSnapshots";
+import { mergeUseSeasonalQueriesResults } from "./utils";
 
 /** ==================== Bean BeanHourlySnapshot ==================== **/
 

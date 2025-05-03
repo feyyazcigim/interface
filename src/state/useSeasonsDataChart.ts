@@ -17,8 +17,8 @@ import useSeasonalQueries, {
   SeasonalQueryVars,
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
-import useTokenData from "./useTokenData";
 import useSeasonalTractorSnapshots from "./seasonal/queries/useSeasonalTractorSnapshots";
+import useTokenData from "./useTokenData";
 
 export interface SeasonsTableData {
   season: number;

@@ -1,7 +1,7 @@
+import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 import { API_SERVICES } from "@/constants/endpoints";
 import { UseSeasonalResult } from "@/utils/types";
 import { useQuery } from "@tanstack/react-query";
-import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 
 type SowV0Snapshot = {
   snapshotTimestamp: string;
