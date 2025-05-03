@@ -1,1 +1,1 @@
-yarn run format && yarn run lint:fix-all
+yarn format && yarn lint:fix-all
