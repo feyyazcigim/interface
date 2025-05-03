@@ -6,10 +6,10 @@ import AllExplorer from "./explorer/AllExplorer";
 import FarmerExplorer from "./explorer/FarmerExplorer";
 import FieldExplorer from "./explorer/FieldExplorer";
 import PintoExplorer from "./explorer/PintoExplorer";
-
 import SeasonsExplorer from "./explorer/SeasonsExplorer";
 import SiloExplorer from "./explorer/SiloExplorer";
 import TractorExplorer from "./explorer/TractorExplorer";
+
 const TABS = [
   {
     urlSlug: "pinto",

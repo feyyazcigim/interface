@@ -87,7 +87,7 @@ export default function useSeasonalQueries<T>(
     },
     enabled: !!historicalVars.to && !disabled,
     staleTime: Infinity,
-    gcTime: 20 * 60 * 1000,
+    gcTime: 24 * 24 * 60 * 60 * 1000,
     retry: 1,
     retryDelay: 2000,
     meta: {
@@ -217,6 +217,7 @@ export function useMultiSeasonalQueries<T>(
       );
     },
     enabled: !!historicalVars.to,
+    gcTime: 24 * 24 * 60 * 60 * 1000,
     staleTime: Infinity,
     retry: 1,
     retryDelay: 2000,
