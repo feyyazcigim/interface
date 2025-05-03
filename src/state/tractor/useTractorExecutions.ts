@@ -68,24 +68,16 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
   const executionsChainQueryEnabled =
     chainOnly || Boolean(client && publisher && Boolean(executionsExist || executionsQuery.error));
 
-  useEffect(() => {
-    // if (executionsExist) {
-    console.log("----- executionsExist", executionsExist);
-    // }
-    if (executionsChainQueryEnabled) {
-      console.log("----- executionsChainQueryEnabled", executionsChainQueryEnabled);
-    }
-  }, [executionsExist, executionsChainQueryEnabled]);
-
   // Merge the on-chain executions with the API data. Use useCallback to create a stable reference to the function
   const mergeExecutions = useCallback(
     (onChainExecutions: Awaited<ReturnType<typeof fetchTractorExecutions>> | undefined) => {
       const sowBlueprintv0 = executionData?.executions.sowBlueprintv0 ?? [];
+      const unknown = executionData?.executions.unknown ?? [];
 
       // Create a Set of existing transaction hashes for O(1) lookup
       const existingTxHashes = new Set([
         ...sowBlueprintv0.map((exec) => exec.transactionHash.toLowerCase()),
-        ...(executionData?.executions.unknown ?? []).map((exec) => exec.executedTxn.toLowerCase()),
+        ...unknown.map((exec) => exec.executedTxn.toLowerCase()),
       ]);
 
       const allExecutions = [...sowBlueprintv0];
@@ -117,9 +109,7 @@ export default function usePublisherTractorExecutions(publisher: HashString | un
         executionData?.lastUpdated,
       );
 
-      const executions = await fetchTractorExecutions(client, diamond, publisher, latestBlock, lookbackBlocks);
-      console.log("----- ALL executions", executions);
-      return executions;
+      return fetchTractorExecutions(client, diamond, publisher, latestBlock, lookbackBlocks);
     },
     enabled: executionsChainQueryEnabled,
     select: mergeExecutions,
