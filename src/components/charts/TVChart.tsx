@@ -17,6 +17,7 @@ import {
 } from "lightweight-charts";
 import { MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
 import { GearIcon } from "../Icons";
+import TooltipSimple from "../TooltipSimple";
 import { ResponsivePopover } from "../ui/ResponsivePopover";
 
 export type TVChartFormattedData = {
@@ -502,20 +503,9 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                       style={{ borderColor: chartColors[index].lineColor }}
                     >
                       <div className="flex flex-row">
-                        <div className="flex">
+                        <div className="flex items-center gap-1">
                           <div className="pinto-body-light text-pinto-gray-4">{tooltipTitle}</div>
-                          {/*
-                          {tooltipHoverText && (
-                            <div
-                              className="tooltip"
-                              data-tip={tooltipHoverText}
-                              data-placement={isMobile ? "top" : "right"}
-                            >
-                              <div className="text-secondary inline mb-2 text-[11px]">HELP</div>
-                            </div>
-                            
-                          )}
-                            */}
+                          {tooltipHoverText && <TooltipSimple variant={"gray"} content={tooltipHoverText} />}
                         </div>
                       </div>
                       <div className="pinto-h3 text-black">
