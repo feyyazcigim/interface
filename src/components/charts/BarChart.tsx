@@ -8,33 +8,6 @@ import { plugins } from "./chartHelpers";
 
 ChartJS.register(BarController, BarElement, PointElement);
 
-const data = {
-  labels: ["Jan", "Feb", "Mar", "Apr", "May"],
-  datasets: [
-    {
-      label: "Revenue",
-      data: [12000, 19000, 3000, 5000, 22000],
-      backgroundColor: "rgba(54, 162, 235, 0.6)",
-      borderColor: "rgba(54, 162, 235, 1)",
-      borderWidth: 1,
-    },
-  ],
-};
-
-const options: ChartOptions<"bar"> = {
-  responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    y: {
-      beginAtZero: true,
-    },
-    x: {
-      stacked: false,
-      display: false,
-    },
-  },
-};
-
 type BarChartProps = {
   data: ChartData<"bar">;
   isLoading?: boolean;
