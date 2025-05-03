@@ -93,7 +93,10 @@ export type UseBucketedFieldPlotSummaryOptions<T> = {
   args?: FieldPlotSummaryParams;
 } & Pick<QueryObserverOptions<FieldPlotBucketSummary[] | undefined, DefaultError, T>, "select">;
 
-export default function useBucketedFieldPlotSummary<Data>({ args, select }: UseBucketedFieldPlotSummaryOptions<Data> = {}) {
+export default function useBucketedFieldPlotSummary<Data>({
+  args,
+  select,
+}: UseBucketedFieldPlotSummaryOptions<Data> = {}) {
   // Hooks
   const chainId = useChainId();
 

@@ -64,8 +64,8 @@ const options: ChartOptions<"bar"> = {
 };
 
 type BarChartProps = {
-  data: ChartData<"bar">
-  // options: ChartOptions<"bar">  
+  data: ChartData<"bar">;
+  // options: ChartOptions<"bar">
 };
 
 const BarChart = React.memo(({ data }: BarChartProps) => {
