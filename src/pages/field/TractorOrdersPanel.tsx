@@ -42,8 +42,9 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const { data: requisitions = [], ...requisitionsQuery } = useTractorPublishedRequisitions(address, "sowBlueprintv0", !!address);
 
   // derived
-  const dataHasLoaded = address && Boolean(executions?.length && requisitions?.length);
+  const dataHasLoaded = address ? Boolean(executions?.length && requisitions?.length) : true;
   const loading = executionsQuery.isLoading || requisitionsQuery.isLoading || !dataHasLoaded;
+
   const error = executionsQuery.error || requisitionsQuery.error;
 
   const [lastRefetchedCounter, setLastRefetchedCounter] = useState<number>(0);
