@@ -177,7 +177,6 @@ const getSelectTractorExecutions = (chainId: number) => {
       }
     }
 
-    console.log("executionsByType", executionsByType);
     return {
       lastUpdated: args.lastUpdated,
       totalRecords: args.totalRecords,
