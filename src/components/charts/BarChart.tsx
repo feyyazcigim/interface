@@ -20,13 +20,13 @@ type BarChartProps = {
 };
 
 const BarChart = React.memo(
-  ({ 
-    data, 
-    isLoading, 
-    onMouseOver, 
-    yLabelFormatter, 
-    xLabelFormatter, 
-    defaultHoverIndex, 
+  ({
+    data,
+    isLoading,
+    onMouseOver,
+    yLabelFormatter,
+    xLabelFormatter,
+    defaultHoverIndex,
     yScaleType = "logarithmic",
     enableTooltips = false,
   }: BarChartProps) => {
