@@ -62,8 +62,10 @@ const FieldTemperatureBarChart = React.memo(() => {
               data={data}
               isLoading={isLoading}
               showYLabels
+              showXLabels
               onMouseOver={setActiveIndex}
               yLabelFormatter={formatY}
+              xLabelFormatter={formatX}
               defaultHoverIndex={lastIndex}
             />
           </div>
@@ -78,6 +80,11 @@ export default FieldTemperatureBarChart;
 const formatY = (value: number | string) => {
   const asNum = typeof value === "number" ? value : Number(value);
   return formatter.pct(asNum, { minDecimals: 0, maxDecimals: 0 });
+};
+
+const formatX = (value: number | string) => {
+  const asNum = typeof value === "number" ? value : Number(value);
+  return numberAbbr(asNum * 1_000_000, 0);
 };
 
 const getTransform = (harvestableIndex: TV) => {

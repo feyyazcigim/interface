@@ -15,6 +15,7 @@ type BarChartProps = {
   showYLabels?: boolean;
   onMouseOver?: (index: number | undefined) => void;
   yLabelFormatter?: (value: number | string) => string;
+  xLabelFormatter?: (value: number | string) => string;
   defaultHoverIndex?: number;
 };
 
@@ -26,6 +27,7 @@ const BarChart = React.memo(
     showYLabels = false,
     onMouseOver,
     yLabelFormatter,
+    xLabelFormatter,
     defaultHoverIndex,
   }: BarChartProps) => {
     const options: ChartOptions<"bar"> = useMemo(
@@ -36,7 +38,7 @@ const BarChart = React.memo(
             ...baseOptions.scales?.y,
             display: showYLabels,
             ticks: {
-              display: showYLabels,
+              display: !!yLabelFormatter,
               callback: showYLabels ? yLabelFormatter : undefined,
             },
           },
@@ -44,13 +46,11 @@ const BarChart = React.memo(
             ...baseOptions.scales?.x,
             display: showXLabels,
             ticks: {
-              display: showXLabels,
+              display: !!xLabelFormatter,
+              callback: xLabelFormatter,
+              autoSkip: true,
+              maxTicksLimit: 5,
             },
-          },
-        },
-        plugins: {
-          tooltip: {
-            enabled: false,
           },
         },
         onHover: (_, elements) => {
@@ -64,11 +64,17 @@ const BarChart = React.memo(
           bar: {
             ...baseOptions.elements?.bar,
             backgroundColor: (ctx) => {
+              const base = baseOptions.elements?.bar;
               const index = ctx.dataIndex;
               const isHovered = ctx.active || (!ctx.chart.getActiveElements().length && index === defaultHoverIndex);
+              const hoverBG = ctx.dataset.hoverBackgroundColor;
+              const bg = ctx.dataset.backgroundColor;
+
+              // const t = typeof hoverBG === "string" ? hoverBG : hoverBG;
+
               return isHovered
-                ? (baseOptions.elements?.bar?.hoverBackgroundColor as string)
-                : (baseOptions.elements?.bar?.backgroundColor as string);
+                ? (hoverBG as string | undefined ?? base?.hoverBackgroundColor as string)
+                : (bg as string | undefined ?? base?.backgroundColor as string);
             },
             borderColor: (ctx) => {
               const index = ctx.dataIndex;
@@ -129,6 +135,15 @@ const baseOptions: ChartOptions<"bar"> = {
     },
     x: {
       stacked: false,
+      ticks: {
+        maxTicksLimit: 5,
+        autoSkip: true,
+      },
+    },
+  },
+  plugins: {
+    tooltip: {
+      enabled: false,
     },
   },
   elements: {
