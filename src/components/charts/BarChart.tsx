@@ -11,8 +11,6 @@ ChartJS.register(BarController, BarElement, PointElement);
 type BarChartProps = {
   data: ChartData<"bar">;
   isLoading?: boolean;
-  showXLabels?: boolean;
-  showYLabels?: boolean;
   onMouseOver?: (index: number | undefined) => void;
   yLabelFormatter?: (value: number | string) => string;
   xLabelFormatter?: (value: number | string) => string;
@@ -23,8 +21,6 @@ const BarChart = React.memo(
   ({
     data,
     isLoading,
-    showXLabels = false,
-    showYLabels = false,
     onMouseOver,
     yLabelFormatter,
     xLabelFormatter,
@@ -36,15 +32,13 @@ const BarChart = React.memo(
         scales: {
           y: {
             ...baseOptions.scales?.y,
-            display: showYLabels,
             ticks: {
               display: !!yLabelFormatter,
-              callback: showYLabels ? yLabelFormatter : undefined,
+              callback: yLabelFormatter,
             },
           },
           x: {
             ...baseOptions.scales?.x,
-            display: showXLabels,
             ticks: {
               display: !!xLabelFormatter,
               callback: xLabelFormatter,
@@ -70,8 +64,6 @@ const BarChart = React.memo(
               const hoverBG = ctx.dataset.hoverBackgroundColor;
               const bg = ctx.dataset.backgroundColor;
 
-              // const t = typeof hoverBG === "string" ? hoverBG : hoverBG;
-
               return isHovered
                 ? (hoverBG as string | undefined) ?? (base?.hoverBackgroundColor as string)
                 : (bg as string | undefined) ?? (base?.backgroundColor as string);
@@ -86,7 +78,7 @@ const BarChart = React.memo(
           },
         },
       }),
-      [showXLabels, showYLabels, onMouseOver, yLabelFormatter, defaultHoverIndex],
+      [onMouseOver, yLabelFormatter, defaultHoverIndex],
     );
 
     const hasMouseOver = exists(onMouseOver);
