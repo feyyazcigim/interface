@@ -50,8 +50,15 @@ const FieldTemperatureBarChart = React.memo(() => {
     <Card className="overflow-hidden">
       <Col className="gap-0">
         <Col className="gap-1 p-6">
-          <div className="pinto-body">Avg Sown Temperature between {numberAbbr(startIndex, 0)} and {numberAbbr(endIndex, 0)}</div>
-          <div className="pinto-h3">{formatter.pct(activeData)}</div>
+          <div className="pinto-body">
+            Avg Sown Temperature{" "}
+            {!isLoading && (
+              <>
+                between {numberAbbr(startIndex, 0)} and {numberAbbr(endIndex, 0)}
+              </>
+            )}
+          </div>
+          <div className="pinto-h3">{activeData ? formatter.pct(activeData) : "-%"}</div>
         </Col>
         <Col className="h-[250px] w-full px-4 pb-4">
           <div className="mx-2 h-full">

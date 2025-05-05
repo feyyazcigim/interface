@@ -18,14 +18,7 @@ type BarChartProps = {
 };
 
 const BarChart = React.memo(
-  ({
-    data,
-    isLoading,
-    onMouseOver,
-    yLabelFormatter,
-    xLabelFormatter,
-    defaultHoverIndex,
-  }: BarChartProps) => {
+  ({ data, isLoading, onMouseOver, yLabelFormatter, xLabelFormatter, defaultHoverIndex }: BarChartProps) => {
     const options: ChartOptions<"bar"> = useMemo(
       () => ({
         ...baseOptions,
