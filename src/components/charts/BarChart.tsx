@@ -15,23 +15,37 @@ type BarChartProps = {
   yLabelFormatter?: (value: number | string) => string;
   xLabelFormatter?: (value: number | string) => string;
   defaultHoverIndex?: number;
+  yScaleType?: "linear" | "logarithmic";
+  enableTooltips?: boolean;
 };
 
 const BarChart = React.memo(
-  ({ data, isLoading, onMouseOver, yLabelFormatter, xLabelFormatter, defaultHoverIndex }: BarChartProps) => {
+  ({ 
+    data, 
+    isLoading, 
+    onMouseOver, 
+    yLabelFormatter, 
+    xLabelFormatter, 
+    defaultHoverIndex, 
+    yScaleType = "logarithmic",
+    enableTooltips = false,
+  }: BarChartProps) => {
     const options: ChartOptions<"bar"> = useMemo(
       () => ({
         ...baseOptions,
         scales: {
           y: {
-            ...baseOptions.scales?.y,
+            type: yScaleType,
             ticks: {
               display: !!yLabelFormatter,
               callback: yLabelFormatter,
+              beginAtZero: yScaleType === "linear", // only linear scale can begin at zero
+              autoSkip: true,
+              maxTicksLimit: 5,
             },
           },
           x: {
-            ...baseOptions.scales?.x,
+            stacked: false, //
             ticks: {
               display: !!xLabelFormatter,
               callback: xLabelFormatter,
@@ -70,8 +84,13 @@ const BarChart = React.memo(
             },
           },
         },
+        plugins: {
+          tooltip: {
+            enabled: enableTooltips,
+          },
+        },
       }),
-      [onMouseOver, yLabelFormatter, defaultHoverIndex],
+      [onMouseOver, yLabelFormatter, xLabelFormatter, defaultHoverIndex, enableTooltips, yScaleType],
     );
 
     const hasMouseOver = exists(onMouseOver);
@@ -113,18 +132,6 @@ const baseOptions: ChartOptions<"bar"> = {
     mode: "index",
     intersect: false,
     axis: "x",
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-    },
-    x: {
-      stacked: false,
-      ticks: {
-        maxTicksLimit: 5,
-        autoSkip: true,
-      },
-    },
   },
   plugins: {
     tooltip: {
