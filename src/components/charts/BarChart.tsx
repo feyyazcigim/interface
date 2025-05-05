@@ -73,8 +73,8 @@ const BarChart = React.memo(
               // const t = typeof hoverBG === "string" ? hoverBG : hoverBG;
 
               return isHovered
-                ? (hoverBG as string | undefined ?? base?.hoverBackgroundColor as string)
-                : (bg as string | undefined ?? base?.backgroundColor as string);
+                ? (hoverBG as string | undefined) ?? (base?.hoverBackgroundColor as string)
+                : (bg as string | undefined) ?? (base?.backgroundColor as string);
             },
             borderColor: (ctx) => {
               const index = ctx.dataIndex;
