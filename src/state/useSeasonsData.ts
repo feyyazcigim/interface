@@ -1,5 +1,11 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { subgraphs } from "@/constants/subgraph";
+import { Season as BeanSeason, BeanSeasonsTableDocument, BeanSeasonsTableQuery } from "@/generated/gql/pinto/graphql";
+import {
+  Season as BeanstalkSeason,
+  BeanstalkSeasonsTableDocument,
+  BeanstalkSeasonsTableQuery,
+} from "@/generated/gql/pintostalk/graphql";
 import { PaginationSettings, paginateMultiQuerySubgraph, paginateSubgraph } from "@/utils/paginateSubgraph";
 import { Duration } from "luxon";
 import { useMemo } from "react";
@@ -9,12 +15,6 @@ import useSeasonalQueries, {
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
 import useTokenData from "./useTokenData";
-import {
-  Season as BeanstalkSeason,
-  BeanstalkSeasonsTableDocument,
-  BeanstalkSeasonsTableQuery,
-} from "@/generated/gql/pintostalk/graphql";
-import { Season as BeanSeason, BeanSeasonsTableDocument, BeanSeasonsTableQuery } from "@/generated/gql/pinto/graphql";
 
 export interface SeasonsTableData {
   season: number;
