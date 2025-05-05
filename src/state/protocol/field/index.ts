@@ -7,6 +7,11 @@ export interface TotalSoil {
   isLoading: boolean;
 }
 
+export interface InitialSoil {
+  initialSoil: TV;
+  isLoading: boolean;
+}
+
 export interface FieldTemperature {
   max: TV;
   scaled: TV;

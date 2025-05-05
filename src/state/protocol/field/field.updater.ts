@@ -12,6 +12,7 @@ import { useReadContract, useReadContracts } from "wagmi";
 import { getMorningTemperature } from ".";
 import { morningAtom } from "../sun/sun.atoms";
 import {
+  fieldInitialSoilAtom,
   fieldPodlineAtom,
   fieldQueryKeysAtom,
   fieldTemperatureAtom,
@@ -98,12 +99,45 @@ const useUpdateTotalSoil = () => {
     console.debug("[protocol/field/useUpdateTotalSoil]: data", query.data);
 
     setTotalSoil((prev) => {
-      const newSoil = TV.fromBlockchain(query.data, SOIL_DECIMALS);
+      const newSoil = TV.fromBlockchain(query.data as bigint, SOIL_DECIMALS);
       // return old value if it hasn't changed. Prevents new object reference of TokenValue.
       if (prev.totalSoil.eq(newSoil)) return prev;
       // otherwise, return the new value
       return {
         totalSoil: newSoil,
+        isLoading: false,
+      };
+    });
+  }, [query.data]);
+};
+
+const useUpdateInitialSoil = () => {
+  const diamond = useProtocolAddress();
+  const setTotalSoil = useSetAtom(fieldInitialSoilAtom);
+
+  const query = useReadContract({
+    address: diamond,
+    abi: soilABI,
+    functionName: "initialSoil",
+    scopeKey: "field",
+    query: settings.query,
+  });
+
+  useUpdateQueryKeys(fieldQueryKeysAtom, query.queryKey, "soil");
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies:
+  useEffect(() => {
+    if (!exists(query?.data)) return;
+
+    console.debug("[protocol/field/useUpdateInitialSoil]: data", query.data);
+
+    setTotalSoil((prev) => {
+      const newSoil = TV.fromBlockchain(query.data as bigint, SOIL_DECIMALS);
+      // return old value if it hasn't changed. Prevents new object reference of TokenValue.
+      if (prev.initialSoil.eq(newSoil)) return prev;
+      // otherwise, return the new value
+      return {
+        initialSoil: newSoil,
         isLoading: false,
       };
     });
@@ -194,6 +228,7 @@ export const useUpdateField = () => {
   useUpdatePodline();
   useUpdateWeather();
   useUpdateTotalSoil();
+  useUpdateInitialSoil();
 };
 
 // ---------------------------------------- ABI ----------------------------------------
@@ -204,6 +239,12 @@ const soilABI = [
     name: "totalSoil",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "initialSoil",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     type: "function",
   },
 ] as const;

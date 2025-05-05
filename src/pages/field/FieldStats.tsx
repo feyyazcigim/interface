@@ -1,5 +1,5 @@
 import TextSkeleton from "@/components/TextSkeleton";
-import { usePodLine, usePodLoading, useTemperature, useTotalSoil } from "@/state/useFieldData";
+import { useInitialSoil, usePodLine, usePodLoading, useTemperature, useTotalSoil } from "@/state/useFieldData";
 import { useMorning, useSunData } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
 import { normalizeTV } from "@/utils/number";
@@ -9,8 +9,15 @@ const FieldStats = () => {
   const abovePeg = useSunData().abovePeg;
   const temperatures = useTemperature();
   const { isMorning } = useMorning();
-  const totalSoil = useTotalSoil().totalSoil;
-  const soilIsLoading = useTotalSoil();
+
+  const totalSoilAtom = useTotalSoil();
+  const totalSoil = totalSoilAtom.totalSoil;
+  const soilIsLoading = totalSoilAtom.isLoading;
+
+  const initialSoilAtom = useInitialSoil();
+  const initialSoil = normalizeTV(initialSoilAtom.initialSoil);
+  const initialSoilIsLoading = initialSoilAtom.isLoading;
+
   const podLine = usePodLine();
   const podLoading = usePodLoading();
 
@@ -19,10 +26,10 @@ const FieldStats = () => {
   const pLine = normalizeTV(podLine);
   const maxTemperature = normalizeTV(temperatures.max);
 
-  const isLoading = temperatures.isLoading || soilIsLoading.isLoading || podLoading;
+  const isLoading = temperatures.isLoading || soilIsLoading || initialSoilIsLoading || podLoading;
 
   return (
-    <div className="flex flex-row gap-x-12 gap-y-4 flex-wrap w-full">
+    <div className="flex flex-row gap-x-12 gap-y-4 w-full">
       <div className="flex flex-col flex-grow gap-1 sm:gap-2">
         <div className="flex flex-col gap-1">
           <div className="pinto-sm-light sm:pinto-body-light">
@@ -51,6 +58,24 @@ const FieldStats = () => {
         <div className="flex flex-col gap-1">
           <TextSkeleton desktopHeight="same-h3" height="body" className="w-14" loading={isLoading}>
             <div className="pinto-body sm:pinto-h3">{formatter.number(soil, { minValue: 0.01 })}</div>
+          </TextSkeleton>
+          {isMorning && abovePeg && (
+            <div className="pinto-xs sm:pinto-sm-light text-pinto-morning sm:text-pinto-morning inline-block tabular-nums">
+              <MorningIntervalCountdown prefix={"Decreasing in"} />
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-col flex-grow gap-1 sm:gap-2">
+        <div className="flex flex-col gap-1">
+          <div className="pinto-sm-light sm:pinto-body-light font-thin">Soil Sown This Season</div>
+          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">
+            Amount of Pinto Sown this Season
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <TextSkeleton desktopHeight="same-h3" height="body" className="w-14" loading={isLoading}>
+            <div className="pinto-body sm:pinto-h3">{formatter.number(soil.sub(initialSoil), { minValue: 0.01 })}</div>
           </TextSkeleton>
           {isMorning && abovePeg && (
             <div className="pinto-xs sm:pinto-sm-light text-pinto-morning sm:text-pinto-morning inline-block tabular-nums">
