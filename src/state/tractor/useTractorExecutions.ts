@@ -67,7 +67,7 @@ export default function usePublisherTractorExecutions(
   const client = usePublicClient();
   const diamond = useProtocolAddress();
 
-  const { data: executionData, ...executionsQuery } = useTractorAPIExecutionsQuery(publisher, chainOnly);
+  const { data: executionData, ...executionsQuery } = useTractorAPIExecutionsQuery(publisher, enabled, chainOnly);
 
   // Check if the API data exists and has any executions
   const executionsExist = executionData && Object.values(executionData.executions).some((d) => !!d.length);
