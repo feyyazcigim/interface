@@ -1,5 +1,13 @@
 import { exists } from "@/utils/utils";
-import { BarController, BarElement, ChartData, Chart as ChartJS, ChartOptions, PointElement } from "chart.js";
+import {
+  BarController,
+  BarElement,
+  CartesianScaleTypeRegistry,
+  ChartData,
+  Chart as ChartJS,
+  ChartOptions,
+  PointElement,
+} from "chart.js";
 import React, { useMemo } from "react";
 import { Col } from "../Container";
 import LoadingSpinner from "../LoadingSpinner";
@@ -15,7 +23,7 @@ type BarChartProps = {
   yLabelFormatter?: (value: number | string) => string;
   xLabelFormatter?: (value: number | string) => string;
   defaultHoverIndex?: number;
-  yScaleType?: "linear" | "logarithmic";
+  yScaleType?: keyof CartesianScaleTypeRegistry;
   enableTooltips?: boolean;
 };
 
@@ -55,8 +63,7 @@ const BarChart = React.memo(
           },
         },
         onHover: (_, elements) => {
-          const index = elements[0]?.index;
-          onMouseOver?.(index);
+          onMouseOver?.(elements[0]?.index ?? undefined);
         },
         onLeave: () => {
           onMouseOver?.(defaultHoverIndex);
@@ -65,22 +72,21 @@ const BarChart = React.memo(
           bar: {
             ...baseOptions.elements?.bar,
             backgroundColor: (ctx) => {
-              const base = baseOptions.elements?.bar;
-              const index = ctx.dataIndex;
-              const isHovered = ctx.active || (!ctx.chart.getActiveElements().length && index === defaultHoverIndex);
-              const hoverBG = ctx.dataset.hoverBackgroundColor;
-              const bg = ctx.dataset.backgroundColor;
-
-              return isHovered
-                ? (hoverBG as string | undefined) ?? (base?.hoverBackgroundColor as string)
-                : (bg as string | undefined) ?? (base?.backgroundColor as string);
+              const hoverColor = ctx.dataset.hoverBackgroundColor ?? baseOptions.elements?.bar?.hoverBackgroundColor;
+              const color = ctx.dataset.backgroundColor ?? baseOptions.elements?.bar?.backgroundColor;
+              // Don't handle the case where the background color is a scriptable function yet.
+              if (typeof hoverColor !== "string" || typeof color !== "string") return undefined;
+              const isHovered = ctx.active || (!ctx.chart.getActiveElements().length && ctx.dataIndex === defaultHoverIndex);
+              return isHovered ? hoverColor : color;
             },
             borderColor: (ctx) => {
-              const index = ctx.dataIndex;
-              const isHovered = ctx.active || (!ctx.chart.getActiveElements().length && index === defaultHoverIndex);
-              return isHovered
-                ? (baseOptions.elements?.bar?.hoverBorderColor as string)
-                : (baseOptions.elements?.bar?.borderColor as string);
+              const hoverColor = ctx.dataset.hoverBorderColor ?? baseOptions.elements?.bar?.hoverBorderColor;
+              const color = ctx.dataset.borderColor ?? baseOptions.elements?.bar?.borderColor;
+
+              // Don't handle the case where the border color is a scriptable function yet.
+              if (typeof hoverColor !== "string" || typeof color !== "string") return undefined;
+              const isHovered = ctx.active || (!ctx.chart.getActiveElements().length && ctx.dataIndex === defaultHoverIndex);
+              return isHovered ? hoverColor : color;
             },
           },
         },
