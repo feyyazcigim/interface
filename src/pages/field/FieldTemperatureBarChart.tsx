@@ -6,6 +6,7 @@ import useBucketedFieldPlotSummary, { FieldPlotBucketSummary } from "@/state/use
 import { useHarvestableIndex } from "@/state/useFieldData";
 import { formatter, numberAbbr } from "@/utils/format";
 import { useDebounceValue } from "@/utils/useDebounce";
+import { cn } from "@/utils/utils";
 import React, { useMemo, useState } from "react";
 
 const noData = {
@@ -13,7 +14,11 @@ const noData = {
   datasets: [],
 };
 
-const FieldTemperatureBarChart = React.memo(() => {
+type FieldTemperatureBarChartProps = {
+  className?: string;
+};
+
+const FieldTemperatureBarChart = React.memo(({ className }: FieldTemperatureBarChartProps) => {
   // hooks
   const harvestableIndex = useHarvestableIndex();
 
@@ -60,7 +65,7 @@ const FieldTemperatureBarChart = React.memo(() => {
           </div>
           <div className="pinto-h3">{activeData ? formatter.pct(activeData) : "-%"}</div>
         </Col>
-        <Col className="h-[250px] w-full px-4 pb-4">
+        <Col className={cn("sm:h-[435px] h-[432px] w-full px-4 pb-4", className)}>
           <div className="mx-2 h-full">
             <BarChart
               data={data}

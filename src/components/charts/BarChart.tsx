@@ -35,7 +35,7 @@ const BarChart = React.memo(
     yLabelFormatter,
     xLabelFormatter,
     defaultHoverIndex,
-    yScaleType = "logarithmic",
+    yScaleType = "linear",
     enableTooltips = false,
   }: BarChartProps) => {
     const options: ChartOptions<"bar"> = useMemo(
@@ -150,10 +150,11 @@ const baseOptions: ChartOptions<"bar"> = {
     // default colors. Can be overriden
     bar: {
       backgroundColor: "rgba(56, 127, 92, 0.5)",
-      borderColor: "rgba(56, 127, 92, 1)",
+      borderColor: "rgba(56, 127, 92, 0.6)",
       hoverBackgroundColor: "rgba(56, 127, 92, 0.8)",
       hoverBorderColor: "rgba(56, 127, 92, 1)",
       hoverBorderWidth: 1,
+      borderWidth: 1,
     },
   },
 };
