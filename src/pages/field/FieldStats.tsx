@@ -29,17 +29,16 @@ const FieldStats = () => {
   const isLoading = temperatures.isLoading || soilIsLoading || initialSoilIsLoading || podLoading;
 
   return (
-    <div className="flex flex-row gap-x-12 gap-y-4 w-full">
+    <div className="grid grid-flow-row grid-cols-1 gap-x-12 gap-y-4 sm:grid-cols-4 lg:gap-x-8 2xl:gap-x-12 w-full">
       <div className="flex flex-col flex-grow gap-1 sm:gap-2">
         <div className="flex flex-col gap-1">
-          <div className="pinto-sm-light sm:pinto-body-light">
+          <div className="pinto-sm-light sm:pinto-body-light text-nowrap">
             {isMorning ? "Max Temperature" : "Current Temperature"}
           </div>
-          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">
+          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light lg:w-48">
             {isMorning ? "Temperature after the Morning Auction" : "Interest rate for Sowing Pinto"}
           </div>
         </div>
-
         <TextSkeleton desktopHeight="same-h3" height="body" className="w-14" loading={isLoading}>
           <div
             className={`pinto-body sm:pinto-h3 ${isMorning ? "text-pinto-light sm:text-pinto-light" : "text-pinto-primary sm:text-pinto-primary"}`}
@@ -50,8 +49,8 @@ const FieldStats = () => {
       </div>
       <div className="flex flex-col flex-grow gap-1 sm:gap-2">
         <div className="flex flex-col gap-1">
-          <div className="pinto-sm-light sm:pinto-body-light font-thin">Available Soil</div>
-          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">
+          <div className="pinto-sm-light sm:pinto-body-light font-thin text-nowrap">Available Soil</div>
+          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light lg:w-48">
             Amount of Pinto that can be Sown
           </div>
         </div>
@@ -68,8 +67,8 @@ const FieldStats = () => {
       </div>
       <div className="flex flex-col flex-grow gap-1 sm:gap-2">
         <div className="flex flex-col gap-1">
-          <div className="pinto-sm-light sm:pinto-body-light font-thin">Soil Sown This Season</div>
-          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">
+          <div className="pinto-sm-light sm:pinto-body-light font-thin text-nowrap">Soil Sown This Season</div>
+          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light lg:w-48">
             Amount of Pinto Sown this Season
           </div>
         </div>
@@ -86,8 +85,8 @@ const FieldStats = () => {
       </div>
       <div className="flex flex-col flex-grow gap-1 sm:gap-2">
         <div className="flex flex-col gap-1">
-          <div className="pinto-sm-light sm:pinto-body-light font-thin">Pod Line</div>
-          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">
+          <div className="pinto-sm-light sm:pinto-body-light font-thin text-nowrap">Pod Line</div>
+          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light lg:w-48">
             FIFO queue of Pods that are not yet redeemable
           </div>
         </div>
