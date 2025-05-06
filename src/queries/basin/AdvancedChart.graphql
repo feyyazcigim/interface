@@ -8,7 +8,7 @@ query BasinAdvancedChart($from: Int, $to: Int) {
     id
     createdTimestamp
     season {
-      id
+      season
     }
     deltaBuyVolumeUSD
     deltaSellVolumeUSD
