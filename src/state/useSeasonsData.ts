@@ -149,7 +149,7 @@ export default function useSeasonsData(fromSeason: number, toSeason: number) {
   });
 
   const transformedData = useMemo(() => {
-    if (!useBeanQuery.data || !useStalkQuery.data) {
+    if (Object.keys(useStalkQuery.data || {}).length === 0 || Object.keys(useBeanQuery.data || {}).length === 0) {
       return [];
     }
     const stalkResults = useStalkQuery?.data;

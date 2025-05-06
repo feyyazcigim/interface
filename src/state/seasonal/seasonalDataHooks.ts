@@ -19,6 +19,7 @@ import useSeasonalFarmerSG from "./queries/useSeasonalFarmerSG";
 import useSeasonalFarmerSiloAssetTokenSG from "./queries/useSeasonalFarmerSiloAssetTokenSG";
 import useSeasonalTractorSnapshots from "./queries/useSeasonalTractorSnapshots";
 import { mergeUseSeasonalQueriesResults } from "./utils";
+import useSeasonalBasinSummarySG from "./queries/useSeasonalBasinSummarySG";
 
 /** ==================== Bean BeanHourlySnapshot ==================== **/
 
@@ -52,6 +53,7 @@ export function useSeasonalL2SR(fromSeason: number, toSeason: number): UseSeason
     let value = Number(beanHourly.l2sr);
     // For seasons 1-3, the twa liquidity isnt computable onchain, thus the protocl l2sr is not computable.
     // Use a manual calculation from the instantaneous liquidity instead.
+    // This is the only acceptable usage of liquidityUSD in the bean subgraph (use basin instead).
     if (season <= 3) {
       value = Number(beanHourly.liquidityUSD) / TV.fromBlockchain(beanHourly.supply, PINTO.decimals).toNumber();
     }
@@ -67,11 +69,9 @@ export function useSeasonalL2SR(fromSeason: number, toSeason: number): UseSeason
 /** ==================== Bean Season ==================== **/
 
 export function useSeasonalTotalLiquidity(fromSeason: number, toSeason: number): UseSeasonalResult {
-  return useSeasonalBeanSeasonSG(fromSeason, toSeason, (beanSeason, timestamp) => ({
-    season: Number(beanSeason.season),
-    value: beanSeason.poolHourlySnapshots.reduce((acc, next) => {
-      return acc + Number(next.liquidityUSD);
-    }, 0),
+  return useSeasonalBasinSummarySG(fromSeason, toSeason, (basinHourly, timestamp) => ({
+    season: Number(basinHourly.season.season),
+    value: Number(basinHourly.totalLiquidityUSD),
     timestamp,
   }));
 }

@@ -53,6 +53,7 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
     enabled: !!token && fromSeason >= 0 && toSeason > 0,
   });
 
+  // TODO(pp): this should be sourced elsewhere to improve performance
   // Get mapping of season to timestamp
   const seasonTimestampQuery = useSeasonsData(fromSeason, toSeason);
   const seasonToTimestamp = useMemo(() => {
