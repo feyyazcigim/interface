@@ -29,13 +29,13 @@ const FieldStats = () => {
   const isLoading = temperatures.isLoading || soilIsLoading || initialSoilIsLoading || podLoading;
 
   return (
-    <div className="grid grid-flow-row grid-cols-1 gap-x-12 gap-y-4 sm:grid-cols-4 lg:gap-x-8 2xl:gap-x-12 w-full">
+    <div className="flex flex-col sm:flex-row gap-x-12 gap-y-4 w-full">
       <div className="flex flex-col flex-grow gap-1 sm:gap-2">
         <div className="flex flex-col gap-1">
           <div className="pinto-sm-light sm:pinto-body-light text-nowrap">
             {isMorning ? "Max Temperature" : "Current Temperature"}
           </div>
-          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light lg:w-48">
+          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">
             {isMorning ? "Temperature after the Morning Auction" : "Interest rate for Sowing Pinto"}
           </div>
         </div>
@@ -50,31 +50,15 @@ const FieldStats = () => {
       <div className="flex flex-col flex-grow gap-1 sm:gap-2">
         <div className="flex flex-col gap-1">
           <div className="pinto-sm-light sm:pinto-body-light font-thin text-nowrap">Available Soil</div>
-          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light lg:w-48">
+          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">
             Amount of Pinto that can be Sown
           </div>
         </div>
         <div className="flex flex-col gap-1">
           <TextSkeleton desktopHeight="same-h3" height="body" className="w-14" loading={isLoading}>
-            <div className="pinto-body sm:pinto-h3">{formatter.number(soil, { minValue: 0.01 })}</div>
-          </TextSkeleton>
-          {isMorning && abovePeg && (
-            <div className="pinto-xs sm:pinto-sm-light text-pinto-morning sm:text-pinto-morning inline-block tabular-nums">
-              <MorningIntervalCountdown prefix={"Decreasing in"} />
+            <div className="pinto-body sm:pinto-h3">
+              {formatter.number(soil, { minValue: 0.01 })} / {formatter.number(initialSoil, { minValue: 0.01 })}
             </div>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col flex-grow gap-1 sm:gap-2">
-        <div className="flex flex-col gap-1">
-          <div className="pinto-sm-light sm:pinto-body-light font-thin text-nowrap">Soil Sown This Season</div>
-          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light lg:w-48">
-            Amount of Pinto Sown this Season
-          </div>
-        </div>
-        <div className="flex flex-col gap-1">
-          <TextSkeleton desktopHeight="same-h3" height="body" className="w-14" loading={isLoading}>
-            <div className="pinto-body sm:pinto-h3">{formatter.number(initialSoil.sub(soil), { minValue: 0.01 })}</div>
           </TextSkeleton>
           {isMorning && abovePeg && (
             <div className="pinto-xs sm:pinto-sm-light text-pinto-morning sm:text-pinto-morning inline-block tabular-nums">
@@ -86,7 +70,7 @@ const FieldStats = () => {
       <div className="flex flex-col flex-grow gap-1 sm:gap-2">
         <div className="flex flex-col gap-1">
           <div className="pinto-sm-light sm:pinto-body-light font-thin text-nowrap">Pod Line</div>
-          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light lg:w-48">
+          <div className="pinto-xs sm:pinto-sm text-pinto-light sm:text-pinto-light">
             FIFO queue of Pods that are not yet redeemable
           </div>
         </div>
