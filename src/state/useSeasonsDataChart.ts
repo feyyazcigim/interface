@@ -1,13 +1,12 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { PODS, STALK } from "@/constants/internalTokens";
 import { subgraphs } from "@/constants/subgraph";
+import { BeanAdvancedChartDocument, BeanAdvancedChartQuery, Season as BeanSeason } from "@/generated/gql/pinto/graphql";
 import {
-  AdvancedChartBeanDocument,
-  AdvancedChartBeanQuery,
-  AdvancedChartBeanStalkDocument,
-  AdvancedChartBeanStalkQuery,
-  Season,
-} from "@/generated/gql/graphql";
+  BeanstalkAdvancedChartDocument,
+  BeanstalkAdvancedChartQuery,
+  Season as BeanstalkSeason,
+} from "@/generated/gql/pintostalk/graphql";
 import { PaginationSettings, paginateMultiQuerySubgraph, paginateSubgraph } from "@/utils/paginateSubgraph";
 import { Duration } from "luxon";
 import { useMemo } from "react";
@@ -67,10 +66,15 @@ export interface SeasonsTableData {
   tractorPublishers: number;
 }
 
-const stalkPaginateSettings: PaginationSettings<Season, AdvancedChartBeanStalkQuery, "seasons", SeasonalQueryVars> = {
+const stalkPaginateSettings: PaginationSettings<
+  BeanstalkSeason,
+  BeanstalkAdvancedChartQuery,
+  "seasons",
+  SeasonalQueryVars
+> = {
   primaryPropertyName: "seasons",
   idField: "id",
-  nextVars: (value1000: Season, prevVars: SeasonalQueryVars) => {
+  nextVars: (value1000: BeanstalkSeason, prevVars: SeasonalQueryVars) => {
     if (value1000) {
       return {
         ...prevVars,
@@ -80,10 +84,10 @@ const stalkPaginateSettings: PaginationSettings<Season, AdvancedChartBeanStalkQu
   },
 };
 
-const beanPaginateSettings: PaginationSettings<Season, AdvancedChartBeanQuery, "seasons", SeasonalQueryVars> = {
+const beanPaginateSettings: PaginationSettings<BeanSeason, BeanAdvancedChartQuery, "seasons", SeasonalQueryVars> = {
   primaryPropertyName: "seasons",
   idField: "id",
-  nextVars: (value1000: Season, prevVars: SeasonalQueryVars) => {
+  nextVars: (value1000: BeanSeason, prevVars: SeasonalQueryVars) => {
     if (value1000) {
       return {
         ...prevVars,
@@ -102,13 +106,13 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
     return paginateMultiQuerySubgraph(
       stalkPaginateSettings,
       subgraphs[chainId].beanstalk,
-      AdvancedChartBeanStalkDocument,
+      BeanstalkAdvancedChartDocument,
       vars,
     );
   };
 
   const beanQueryFnFactory = (vars: SeasonalQueryVars) => async () => {
-    return paginateSubgraph(beanPaginateSettings, subgraphs[chainId].bean, AdvancedChartBeanDocument, vars);
+    return paginateSubgraph(beanPaginateSettings, subgraphs[chainId].bean, BeanAdvancedChartDocument, vars);
   };
 
   const useStalkQuery = useMultiSeasonalQueries("all_seasonsTableStalk", {

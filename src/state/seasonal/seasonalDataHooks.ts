@@ -1,7 +1,7 @@
 import { TV } from "@/classes/TokenValue";
 import { PODS, STALK } from "@/constants/internalTokens";
 import { MAIN_TOKEN, PINTO, S_MAIN_TOKEN } from "@/constants/tokens";
-import { SiloHourlySnapshot } from "@/generated/gql/graphql";
+import { SiloHourlySnapshot } from "@/generated/gql/pintostalk/graphql";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useChainConstant } from "@/utils/chain";
 import { Token, UseSeasonalResult } from "@/utils/types";
