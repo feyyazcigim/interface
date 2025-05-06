@@ -76,7 +76,8 @@ const BarChart = React.memo(
               const color = ctx.dataset.backgroundColor ?? baseOptions.elements?.bar?.backgroundColor;
               // Don't handle the case where the background color is a scriptable function yet.
               if (typeof hoverColor !== "string" || typeof color !== "string") return undefined;
-              const isHovered = ctx.active || (!ctx.chart.getActiveElements().length && ctx.dataIndex === defaultHoverIndex);
+              const isHovered =
+                ctx.active || (!ctx.chart.getActiveElements().length && ctx.dataIndex === defaultHoverIndex);
               return isHovered ? hoverColor : color;
             },
             borderColor: (ctx) => {
@@ -85,7 +86,8 @@ const BarChart = React.memo(
 
               // Don't handle the case where the border color is a scriptable function yet.
               if (typeof hoverColor !== "string" || typeof color !== "string") return undefined;
-              const isHovered = ctx.active || (!ctx.chart.getActiveElements().length && ctx.dataIndex === defaultHoverIndex);
+              const isHovered =
+                ctx.active || (!ctx.chart.getActiveElements().length && ctx.dataIndex === defaultHoverIndex);
               return isHovered ? hoverColor : color;
             },
           },
