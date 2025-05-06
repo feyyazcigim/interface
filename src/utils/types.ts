@@ -1,6 +1,6 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { SeasonalChartData } from "@/components/charts/SeasonalChart";
-import { PlotSource } from "@/generated/gql/graphql";
+import { PlotSource } from "@/generated/gql/pintostalk/graphql";
 import { ProtocolIntegration } from "@/state/integrations/types";
 import { APYWindow } from "@/state/seasonal/queries/useSeasonalAPY";
 import { QueryKey, UseQueryOptions } from "@tanstack/react-query";
