@@ -90,9 +90,10 @@ export default function useSeasonalQueries<T>(
     gcTime: 24 * 24 * 60 * 60 * 1000,
     retry: 1,
     retryDelay: 2000,
-    meta: {
-      persist: true,
-    },
+    // Disabled temporarily due to large data size appearing to break it
+    // meta: {
+    //   persist: true,
+    // },
   });
 
   let historicalData: SeasonalChartData[] | undefined = historical.data;
@@ -221,9 +222,10 @@ export function useMultiSeasonalQueries<T>(
     staleTime: Infinity,
     retry: 1,
     retryDelay: 2000,
-    meta: {
-      persist: true,
-    },
+    // Disabled temporarily due to large data size appearing to break it
+    // meta: {
+    //   persist: true,
+    // },
   });
 
   const historicalData: { [key: string]: SeasonalChartData[] } | undefined = historical.data;
