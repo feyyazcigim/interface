@@ -56,6 +56,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Sown Pinto"
+            tooltip="Total Pinto Sown using Tractor."
             size="small"
             fillArea
             activeTab={sownTab}
@@ -68,6 +69,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Pods Minted"
+            tooltip="Total Pods Minted using Tractor."
             size="small"
             fillArea
             activeTab={podsTab}
@@ -82,6 +84,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Tractor Sowing Queue"
+            tooltip="Size of Tractor Sowing Queue."
             size="small"
             activeTab={fundedTab}
             onChangeTab={setFundedTab}
@@ -93,6 +96,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Queued Maximum Sow Each Season"
+            tooltip="Maximum Sow through Tractor in each Season."
             size="small"
             activeTab={maxSowTab}
             onChangeTab={setMaxSowTab}
@@ -106,6 +110,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Maximum Offered Tip"
+            tooltip="Maximum tip offered to Tractor operators in each Season."
             size="small"
             activeTab={maxTipTab}
             onChangeTab={setMaxTipTab}
@@ -117,6 +122,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Cumulative Operator Tipped Pinto"
+            tooltip="Cumulative Pinto tips earned by Tractor operators."
             size="small"
             fillArea
             activeTab={tipsTab}
@@ -131,6 +137,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Tractor Executions"
+            tooltip="Total amount of Tractor executions."
             size="small"
             fillArea
             activeTab={executionsTab}
@@ -143,6 +150,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Unique Publishers"
+            tooltip="Number of unique Tractor blueprint publishers."
             size="small"
             fillArea
             activeTab={publishersTab}
