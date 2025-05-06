@@ -16,9 +16,6 @@ query BeanAdvancedChart($from: Int, $to: Int) {
       marketCap
       supply
       supplyInPegLP
-      twaBeanLiquidityUSD
-      twaLiquidityUSD
-      twaNonBeanLiquidityUSD
     }
   }
 }
