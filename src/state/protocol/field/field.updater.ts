@@ -3,7 +3,7 @@ import { diamondABI } from "@/constants/abi/diamondABI";
 import { PODS } from "@/constants/internalTokens";
 import { defaultQuerySettings } from "@/constants/query";
 import { subgraphs } from "@/constants/subgraph";
-import { FieldIssuedSoilDocument } from "@/generated/gql/graphql";
+import { FieldIssuedSoilDocument } from "@/generated/gql/pintostalk/graphql";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useUpdateQueryKeys from "@/state/query/useUpdateQueryKeys";
 import { useInvalidateField } from "@/state/useFieldData";
