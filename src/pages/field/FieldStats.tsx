@@ -75,7 +75,7 @@ const FieldStats = () => {
         </div>
         <div className="flex flex-col gap-1">
           <TextSkeleton desktopHeight="same-h3" height="body" className="w-14" loading={isLoading}>
-            <div className="pinto-body sm:pinto-h3">{formatter.number(soil.sub(initialSoil), { minValue: 0.01 })}</div>
+            <div className="pinto-body sm:pinto-h3">{formatter.number(initialSoil.sub(soil), { minValue: 0.01 })}</div>
           </TextSkeleton>
           {isMorning && abovePeg && (
             <div className="pinto-xs sm:pinto-sm-light text-pinto-morning sm:text-pinto-morning inline-block tabular-nums">

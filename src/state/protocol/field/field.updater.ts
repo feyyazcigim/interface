@@ -2,13 +2,18 @@ import { TV } from "@/classes/TokenValue";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { PODS } from "@/constants/internalTokens";
 import { defaultQuerySettings } from "@/constants/query";
+import { subgraphs } from "@/constants/subgraph";
+import { FieldIssuedSoilDocument } from "@/generated/gql/graphql";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useUpdateQueryKeys from "@/state/query/useUpdateQueryKeys";
 import { useInvalidateField } from "@/state/useFieldData";
+import { useSeason } from "@/state/useSunData";
 import { exists, isDev } from "@/utils/utils";
+import { useQuery } from "@tanstack/react-query";
+import request from "graphql-request";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef } from "react";
-import { useReadContract, useReadContracts } from "wagmi";
+import { useChainId, useReadContract, useReadContracts } from "wagmi";
 import { getMorningTemperature } from ".";
 import { morningAtom } from "../sun/sun.atoms";
 import {
@@ -112,18 +117,24 @@ const useUpdateTotalSoil = () => {
 };
 
 const useUpdateInitialSoil = () => {
-  const diamond = useProtocolAddress();
-  const setTotalSoil = useSetAtom(fieldInitialSoilAtom);
+  const chainId = useChainId();
+  const season = useSeason();
+  const setInitialSoil = useSetAtom(fieldInitialSoilAtom);
 
-  const query = useReadContract({
-    address: diamond,
-    abi: soilABI,
-    functionName: "initialSoil",
-    scopeKey: "field",
-    query: settings.query,
+  const _queryKey = ["initialSoil", season, { chainId: chainId }];
+
+  const query = useQuery({
+    queryKey: _queryKey,
+    queryFn: async () => {
+      return request(subgraphs[chainId].beanstalk, FieldIssuedSoilDocument, {
+        season: season,
+      });
+    },
+    enabled: !!season && season > 0,
+    staleTime: Infinity,
   });
 
-  useUpdateQueryKeys(fieldQueryKeysAtom, query.queryKey, "soil");
+  useUpdateQueryKeys(fieldQueryKeysAtom, _queryKey, "initialSoil");
 
   // biome-ignore lint/correctness/useExhaustiveDependencies:
   useEffect(() => {
@@ -131,8 +142,8 @@ const useUpdateInitialSoil = () => {
 
     console.debug("[protocol/field/useUpdateInitialSoil]: data", query.data);
 
-    setTotalSoil((prev) => {
-      const newSoil = TV.fromBlockchain(query.data as bigint, SOIL_DECIMALS);
+    setInitialSoil((prev) => {
+      const newSoil = TV.fromBlockchain(query.data.fieldHourlySnapshots[0]?.issuedSoil || 0, SOIL_DECIMALS);
       // return old value if it hasn't changed. Prevents new object reference of TokenValue.
       if (prev.initialSoil.eq(newSoil)) return prev;
       // otherwise, return the new value

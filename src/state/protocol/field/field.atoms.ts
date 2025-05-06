@@ -54,6 +54,7 @@ export const fieldAtom = atom<Field>((get) => {
 export const fieldQueryKeysAtom = atomWithImmer<FieldQueryKeys>({
   temperature: [],
   soil: [],
+  initialSoil: [],
   weather: [],
   podLine: [],
 });
