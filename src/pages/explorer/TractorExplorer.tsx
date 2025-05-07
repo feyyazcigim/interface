@@ -96,7 +96,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Queued Maximum Sow"
-            tooltip="The maximum Pintos sown each season through tractor."
+            tooltip="The maximum Pintos sown each season through Tractor."
             size="small"
             activeTab={maxSowTab}
             onChangeTab={setMaxSowTab}
