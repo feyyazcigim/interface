@@ -8,6 +8,7 @@ import { Token, UseSeasonalResult } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { useMemo } from "react";
 import { useAccount } from "wagmi";
+import useSeasonalBasinSummarySG from "./queries/useSeasonalBasinSummarySG";
 import useSeasonalBeanBeanSG from "./queries/useSeasonalBeanBeanSG";
 import useSeasonalBeanSeasonSG from "./queries/useSeasonalBeanSeasonSG";
 import useSeasonalBeanstalkFieldSG from "./queries/useSeasonalBeanstalkFieldSG";
@@ -19,7 +20,6 @@ import useSeasonalFarmerSG from "./queries/useSeasonalFarmerSG";
 import useSeasonalFarmerSiloAssetTokenSG from "./queries/useSeasonalFarmerSiloAssetTokenSG";
 import useSeasonalTractorSnapshots from "./queries/useSeasonalTractorSnapshots";
 import { mergeUseSeasonalQueriesResults } from "./utils";
-import useSeasonalBasinSummarySG from "./queries/useSeasonalBasinSummarySG";
 
 /** ==================== Bean BeanHourlySnapshot ==================== **/
 

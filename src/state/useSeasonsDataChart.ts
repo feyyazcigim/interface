@@ -1,6 +1,11 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { PODS, STALK } from "@/constants/internalTokens";
 import { subgraphs } from "@/constants/subgraph";
+import {
+  BasinAdvancedChartDocument,
+  BasinAdvancedChartQuery,
+  BeanstalkHourlySnapshot,
+} from "@/generated/gql/exchange/graphql";
 import { BeanAdvancedChartDocument, BeanAdvancedChartQuery, Season as BeanSeason } from "@/generated/gql/pinto/graphql";
 import {
   BeanstalkAdvancedChartDocument,
@@ -18,11 +23,6 @@ import useSeasonalQueries, {
 } from "./seasonal/queries/useSeasonalInternalQueries";
 import useSeasonalTractorSnapshots from "./seasonal/queries/useSeasonalTractorSnapshots";
 import useTokenData from "./useTokenData";
-import {
-  BasinAdvancedChartDocument,
-  BasinAdvancedChartQuery,
-  BeanstalkHourlySnapshot,
-} from "@/generated/gql/exchange/graphql";
 
 export interface SeasonsTableData {
   season: number;

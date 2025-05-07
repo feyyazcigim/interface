@@ -1,14 +1,14 @@
 import { subgraphs } from "@/constants/subgraph";
 import { beanstalkAddress } from "@/generated/contractHooks";
-import { PaginationSettings, paginateSubgraph } from "@/utils/paginateSubgraph";
-import { UseSeasonalResult } from "@/utils/types";
-import { useChainId } from "wagmi";
-import useSeasonalQueries, { ConvertEntryFn, SeasonalQueryVars } from "./useSeasonalInternalQueries";
 import {
   BasinSeasonalSummaryDocument,
   BasinSeasonalSummaryQuery,
   BeanstalkHourlySnapshot,
 } from "@/generated/gql/exchange/graphql";
+import { PaginationSettings, paginateSubgraph } from "@/utils/paginateSubgraph";
+import { UseSeasonalResult } from "@/utils/types";
+import { useChainId } from "wagmi";
+import useSeasonalQueries, { ConvertEntryFn, SeasonalQueryVars } from "./useSeasonalInternalQueries";
 
 const paginateSettings: PaginationSettings<
   BeanstalkHourlySnapshot,

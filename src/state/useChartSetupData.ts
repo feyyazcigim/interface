@@ -1,6 +1,6 @@
+import pintoExchangeLogo from "@/assets/misc/pinto-exchange-logo.svg";
 import podIcon from "@/assets/protocol/Pod.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
-import pintoExchangeLogo from "@/assets/misc/pinto-exchange-logo.svg";
 import { TokenValue } from "@/classes/TokenValue";
 import { formatNum, formatPct, formatUSD } from "@/utils/format";
 import { Token } from "@/utils/types";

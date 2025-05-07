@@ -1,5 +1,6 @@
 import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 import { API_SERVICES } from "@/constants/endpoints";
+import { useSeasonTimestamps } from "@/state/useSeasonTimestamps";
 import useSeasonsData from "@/state/useSeasonsData";
 import { SeasonalAPYChartData, UseSeasonalAPYResult } from "@/utils/types";
 import { useQuery } from "@tanstack/react-query";
@@ -53,27 +54,15 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
     enabled: !!token && fromSeason >= 0 && toSeason > 0,
   });
 
-  // TODO(pp): this should be sourced elsewhere to improve performance
   // Get mapping of season to timestamp
-  const seasonTimestampQuery = useSeasonsData(fromSeason, toSeason);
-  const seasonToTimestamp = useMemo(() => {
-    if (!seasonTimestampQuery.isFetching) {
-      return seasonTimestampQuery.data?.reduce(
-        (acc: { [season: number]: Date }, next: { season: number; timestamp: number }) => {
-          acc[next.season] = new Date(next.timestamp * 1000);
-          return acc;
-        },
-        {} as Record<number, Date>,
-      );
-    }
-  }, [seasonTimestampQuery.isFetching, seasonTimestampQuery.data]);
+  const seasonTimestampsQuery = useSeasonTimestamps();
 
   // Transformation is given its own query rather than using select, so it can activate only after
   // the seasonal timestamp mapping is also availabe.
   const transformQuery = useQuery({
     queryKey: ["api", "vapy", token, "transformed", fromSeason, toSeason],
     queryFn: () => {
-      if (!apyDataQuery.data) {
+      if (!apyDataQuery.data || !seasonTimestampsQuery.data) {
         throw new Error("Data not available");
       }
 
@@ -84,7 +73,7 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
           result[APY_EMA_WINDOWS[i]].push({
             season: Number(season),
             value: apyDataQuery.data[i][season].bean,
-            timestamp: seasonToTimestamp[season],
+            timestamp: seasonTimestampsQuery.data[season],
           });
         }
         // Sort descending
@@ -94,12 +83,12 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
     },
     staleTime: Infinity,
     gcTime: 20 * 60 * 1000,
-    enabled: !!apyDataQuery.data && !!seasonToTimestamp,
+    enabled: !!apyDataQuery.data && !!seasonTimestampsQuery.data,
   });
 
   return {
     data: transformQuery.data ?? undefined,
-    isLoading: apyDataQuery.isLoading || !seasonToTimestamp || transformQuery.isLoading,
-    isError: apyDataQuery.isError || transformQuery.isError,
+    isLoading: apyDataQuery.isLoading || seasonTimestampsQuery.isLoading || transformQuery.isLoading,
+    isError: apyDataQuery.isError || seasonTimestampsQuery.isError || transformQuery.isError,
   };
 }
