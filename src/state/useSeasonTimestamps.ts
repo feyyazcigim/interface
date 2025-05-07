@@ -11,7 +11,7 @@ export type SeasonTimestamps = {
   [season: number]: Date;
 };
 
-export function useSeasonTimestamps(): UseQueryResult<SeasonTimestamps> {
+export function useSeasonTimestamps({ enabled = true } = {}): UseQueryResult<SeasonTimestamps> {
   const query = useQuery({
     queryKey: ["api", "seasons", "timestamp"],
     queryFn: async (): Promise<SeasonsTimestampAPIResponse> => {
@@ -30,6 +30,7 @@ export function useSeasonTimestamps(): UseQueryResult<SeasonTimestamps> {
     },
     staleTime: Infinity,
     gcTime: 20 * 60 * 1000,
+    enabled,
   });
 
   return query;

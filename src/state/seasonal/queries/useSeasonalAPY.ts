@@ -42,7 +42,12 @@ const fetchApys = async (window: number, token: string, fromSeason: number, toSe
   return await res.json();
 };
 
-export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: number): UseSeasonalAPYResult {
+export function useSeasonalAPYs(
+  token: string,
+  fromSeason: number,
+  toSeason: number,
+  { enabled = true } = {},
+): UseSeasonalAPYResult {
   // Historical APY from Pinto API
   const apyDataQuery = useQuery({
     queryKey: ["api", "vapy", token, "raw", fromSeason, toSeason],
@@ -51,11 +56,11 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
     },
     staleTime: Infinity,
     gcTime: 20 * 60 * 1000,
-    enabled: !!token && fromSeason >= 0 && toSeason > 0,
+    enabled: enabled && !!token && fromSeason >= 0 && toSeason > 0,
   });
 
   // Get mapping of season to timestamp
-  const seasonTimestampsQuery = useSeasonTimestamps();
+  const seasonTimestampsQuery = useSeasonTimestamps({ enabled });
 
   // Transformation is given its own query rather than using select, so it can activate only after
   // the seasonal timestamp mapping is also availabe.

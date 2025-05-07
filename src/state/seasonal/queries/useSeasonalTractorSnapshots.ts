@@ -29,7 +29,7 @@ export default function useSeasonalTractorSnapshots(
   fromSeason: number,
   toSeason: number,
   selectFn: (entry: SowV0Snapshot) => SeasonalChartData,
-  orderBy: "asc" | "desc" = "asc",
+  { orderBy = "asc", enabled = true } = {},
 ): UseSeasonalResult {
   const dataQuery = useQuery({
     queryKey: ["tractor", "snapshots", orderType, fromSeason, toSeason],
@@ -56,7 +56,7 @@ export default function useSeasonalTractorSnapshots(
         .map((d) => selectFn(d)),
     staleTime: Infinity,
     gcTime: 20 * 60 * 1000,
-    enabled: orderType && fromSeason >= 0 && toSeason > 0,
+    enabled: enabled && orderType && fromSeason >= 0 && toSeason > 0,
   });
 
   return {

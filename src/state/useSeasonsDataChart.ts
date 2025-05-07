@@ -14,7 +14,7 @@ import {
 } from "@/generated/gql/pintostalk/graphql";
 import { PaginationSettings, paginateMultiQuerySubgraph, paginateSubgraph } from "@/utils/paginateSubgraph";
 import { Duration } from "luxon";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useChainId } from "wagmi";
 import { APYWindow, useSeasonalAPYs } from "./seasonal/queries/useSeasonalAPY";
 import useSeasonalQueries, {
@@ -127,26 +127,39 @@ const basinPaginateSettings: PaginationSettings<
   orderBy: "desc",
 };
 
-export default function useSeasonsDataChart(fromSeason: number, toSeason: number) {
+export default function useSeasonsDataChart(
+  fromSeason: number,
+  toSeason: number,
+  { beanstalkData = true, beanData = true, basinData = true, apyData = true, tractorData = true } = {},
+) {
   const chainId = useChainId();
   const tokenData = useTokenData();
 
-  const stalkQueryFnFactory = (vars: SeasonalQueryVars) => async () => {
-    return paginateMultiQuerySubgraph(
-      stalkPaginateSettings,
-      subgraphs[chainId].beanstalk,
-      BeanstalkAdvancedChartDocument,
-      vars,
-    );
-  };
+  const stalkQueryFnFactory = useCallback(
+    (vars: SeasonalQueryVars) => async () => {
+      return paginateMultiQuerySubgraph(
+        stalkPaginateSettings,
+        subgraphs[chainId].beanstalk,
+        BeanstalkAdvancedChartDocument,
+        vars,
+      );
+    },
+    [chainId],
+  );
 
-  const beanQueryFnFactory = (vars: SeasonalQueryVars) => async () => {
-    return paginateSubgraph(beanPaginateSettings, subgraphs[chainId].bean, BeanAdvancedChartDocument, vars);
-  };
+  const beanQueryFnFactory = useCallback(
+    (vars: SeasonalQueryVars) => async () => {
+      return paginateSubgraph(beanPaginateSettings, subgraphs[chainId].bean, BeanAdvancedChartDocument, vars);
+    },
+    [chainId],
+  );
 
-  const basinQueryFnFactory = (vars: SeasonalQueryVars) => async () => {
-    return paginateSubgraph(basinPaginateSettings, subgraphs[chainId].basin, BasinAdvancedChartDocument, vars);
-  };
+  const basinQueryFnFactory = useCallback(
+    (vars: SeasonalQueryVars) => async () => {
+      return paginateSubgraph(basinPaginateSettings, subgraphs[chainId].basin, BasinAdvancedChartDocument, vars);
+    },
+    [chainId],
+  );
 
   const useStalkQuery = useMultiSeasonalQueries("all_seasonsTableStalk", {
     fromSeason,
@@ -161,6 +174,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
       return entry;
     },
     orderBy: "desc",
+    enabled: beanstalkData,
   }) as any;
 
   const useBeanQuery = useSeasonalQueries("all_seasonsTableBean", {
@@ -176,6 +190,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
       return entry;
     },
     orderBy: "desc",
+    enabled: beanData,
   });
 
   const useBasinQuery = useSeasonalQueries("all_seasonsTableBasin", {
@@ -191,11 +206,15 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
       return entry;
     },
     orderBy: "desc",
+    enabled: basinData,
   });
 
-  const useAPYQuery = useSeasonalAPYs(tokenData.mainToken.address, fromSeason, toSeason);
+  const useAPYQuery = useSeasonalAPYs(tokenData.mainToken.address, fromSeason, toSeason, { enabled: apyData });
 
-  const useTractorQuery = useSeasonalTractorSnapshots("SOW_V0", fromSeason, toSeason, (e: any) => e, "desc");
+  const useTractorQuery = useSeasonalTractorSnapshots("SOW_V0", fromSeason, toSeason, (e: any) => e, {
+    orderBy: "desc",
+    enabled: apyData,
+  });
 
   const transformedData = useMemo(() => {
     if (
@@ -218,22 +237,35 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
     } = useAPYQuery?.data || {};
     const tractorSnapshots = useTractorQuery?.data || ([] as any);
 
-    const transformedData: SeasonsTableData[] = beanResults.reduce((acc: SeasonsTableData[], season, idx) => {
+    const transformedData: SeasonsTableData[] = [];
+    const maxLength = Math.max(
+      beanResults.length,
+      fieldHourlySnapshots.length,
+      basinResults.length,
+      tractorSnapshots.length,
+      apy24h?.length || 0,
+    );
+
+    // TODO(pp): handle when not all data is enabled
+    for (let idx = 0; idx < maxLength; ++idx) {
       const currFieldHourlySnapshots = fieldHourlySnapshots[idx];
       const currSiloHourlySnapshots = siloHourlySnapshots[idx];
       const currStalkSeasons = stalkSeasons[idx];
+      const currBeanSeasons = beanResults[idx];
       const currBasinSeason = basinResults[idx];
       const timeSown = currFieldHourlySnapshots.blocksToSoldOutSoil
         ? Duration.fromMillis(currFieldHourlySnapshots.blocksToSoldOutSoil * 2 * 1000).toFormat("mm:ss")
         : "-";
+
+      const { beanHourlySnapshot: beanHourly } = currBeanSeasons;
       const allData: Partial<SeasonsTableData> = {
-        season: season.beanHourlySnapshot.season.season,
+        season: beanHourly.season.season,
         caseId: Number(currFieldHourlySnapshots.caseId || 0),
-        instDeltaB: TokenValue.fromHuman(season.beanHourlySnapshot.instDeltaB, tokenData.mainToken.decimals),
-        instPrice: TokenValue.fromHuman(season.beanHourlySnapshot.instPrice, tokenData.mainToken.decimals),
-        l2sr: TokenValue.fromHuman(season.beanHourlySnapshot.l2sr * 100, 2),
-        twaDeltaB: TokenValue.fromHuman(season.beanHourlySnapshot.twaDeltaB, 2),
-        twaPrice: TokenValue.fromHuman(season.beanHourlySnapshot.twaPrice, 4),
+        instDeltaB: TokenValue.fromHuman(beanHourly.instDeltaB, tokenData.mainToken.decimals),
+        instPrice: TokenValue.fromHuman(beanHourly.instPrice, tokenData.mainToken.decimals),
+        l2sr: TokenValue.fromHuman(beanHourly.l2sr * 100, 2),
+        twaDeltaB: TokenValue.fromHuman(beanHourly.twaDeltaB, 2),
+        twaPrice: TokenValue.fromHuman(beanHourly.twaPrice, 4),
         blocksToSoldOutSoil: timeSown ?? "0",
         issuedSoil: TokenValue.fromBlockchain(currFieldHourlySnapshots.issuedSoil, tokenData.mainToken.decimals),
         podRate: TokenValue.fromHuman(currFieldHourlySnapshots.podRate || 0n, 18).mul(100),
@@ -253,10 +285,10 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
         price: TokenValue.fromHuman(currStalkSeasons.price, 4),
         raining: currStalkSeasons.raining,
         rewardBeans: TokenValue.fromHuman(currStalkSeasons.rewardBeans, 2),
-        crosses: season.beanHourlySnapshot.crosses,
-        marketCap: Number(season.beanHourlySnapshot.marketCap),
-        supply: TokenValue.fromBlockchain(season.beanHourlySnapshot.supply, tokenData.mainToken.decimals),
-        supplyInPegLP: TokenValue.fromBlockchain(season.beanHourlySnapshot.supply, tokenData.mainToken.decimals),
+        crosses: beanHourly.crosses,
+        marketCap: Number(beanHourly.marketCap),
+        supply: TokenValue.fromBlockchain(beanHourly.supply, tokenData.mainToken.decimals),
+        supplyInPegLP: TokenValue.fromBlockchain(beanHourly.supply, tokenData.mainToken.decimals),
         deltaPodDemand: TokenValue.fromBlockchain(currFieldHourlySnapshots.deltaPodDemand, 18),
         realRateOfReturn: TokenValue.fromHuman(currFieldHourlySnapshots.realRateOfReturn || 0n, 18).mul(100),
         unharvestablePods: TokenValue.fromBlockchain(currFieldHourlySnapshots.unharvestablePods || 0n, PODS.decimals),
@@ -273,7 +305,7 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
         pinto30d: apy30d?.[idx]?.value || 0,
         pinto7d: apy7d?.[idx]?.value || 0,
         pinto24h: apy24h?.[idx]?.value || 0,
-        timestamp: Number(season.beanHourlySnapshot.season.timestamp || 0),
+        timestamp: Number(beanHourly.season.timestamp || 0),
       };
       if (currFieldHourlySnapshots.cultivationFactor !== null) {
         allData.cultivationFactor = TokenValue.fromHuman(currFieldHourlySnapshots.cultivationFactor, 2);
@@ -307,9 +339,8 @@ export default function useSeasonsDataChart(fromSeason: number, toSeason: number
         allData.tractorExecutions = tractorSnapshots[idx]?.totalExecutions || 0;
         allData.tractorPublishers = tractorSnapshots[idx]?.uniquePublishers || 0;
       }
-      acc.push(allData as SeasonsTableData);
-      return acc;
-    }, [] as SeasonsTableData[]);
+      transformedData.push(allData as SeasonsTableData);
+    }
     return transformedData;
   }, [
     useBeanQuery.data,
