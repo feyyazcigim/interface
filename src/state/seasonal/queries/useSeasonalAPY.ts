@@ -1,10 +1,8 @@
 import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 import { API_SERVICES } from "@/constants/endpoints";
 import { useSeasonTimestamps } from "@/state/useSeasonTimestamps";
-import useSeasonsData from "@/state/useSeasonsData";
 import { SeasonalAPYChartData, UseSeasonalAPYResult } from "@/utils/types";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 
 export enum APYWindow {
   DAILY = 24, // 24 hours

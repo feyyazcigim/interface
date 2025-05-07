@@ -10,7 +10,6 @@ import { useMemo } from "react";
 import { useAccount } from "wagmi";
 import useSeasonalBasinSummarySG from "./queries/useSeasonalBasinSummarySG";
 import useSeasonalBeanBeanSG from "./queries/useSeasonalBeanBeanSG";
-import useSeasonalBeanSeasonSG from "./queries/useSeasonalBeanSeasonSG";
 import useSeasonalBeanstalkFieldSG from "./queries/useSeasonalBeanstalkFieldSG";
 import useSeasonalBeanstalkSiloSG, {
   useSeasonalBeanstalkSiloActiveFarmersSG,
