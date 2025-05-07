@@ -121,7 +121,7 @@ const useUpdateInitialSoil = () => {
   const season = useSeason();
   const setInitialSoil = useSetAtom(fieldInitialSoilAtom);
 
-  const _queryKey = ["initialSoil", season, { chainId: chainId }];
+  const _queryKey = ["initialSoil", season, chainId];
 
   const query = useQuery({
     queryKey: _queryKey,
