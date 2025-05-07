@@ -1,0 +1,12 @@
+query fieldIssuedSoil($season: Int) {
+  fieldHourlySnapshots(
+    first: 1
+    orderBy: season
+    orderDirection: desc
+    where: {season: $season}
+  ) {
+    issuedSoil
+    season
+    soil
+  }
+}
