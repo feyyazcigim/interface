@@ -1,3 +1,4 @@
+import pintoExchangeLogo from "@/assets/misc/pinto-exchange-logo.svg";
 import podIcon from "@/assets/protocol/Pod.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
 import { TokenValue } from "@/classes/TokenValue";
@@ -14,7 +15,7 @@ interface ChartSetupBase {
   /**
    * Chart type, used to categorize charts in the Select panel
    */
-  type: "Pinto" | "Field" | "Silo" | "Tractor";
+  type: "Pinto" | "Field" | "Silo" | "Tractor" | "Exchange";
   /**
    * Name of variable to be used to fill the time scale. Usually "timestamp"
    */
@@ -419,6 +420,84 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
   },
 ];
 
+const createExchangeCharts = (_mainToken: Token): ChartSetupBase[] => [
+  {
+    id: "cumulativeVolume",
+    type: "Exchange",
+    name: "Cumulative Volume (USD)",
+    tooltipTitle: "Exchange Volume (Cumulative)",
+    tooltipHoverText: "Cumulative exchange volume since deployment.",
+    shortDescription: "Cumulative exchange volume.",
+    icon: pintoExchangeLogo,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "cumulativeVolume",
+    valueAxisType: "cumulativeVolume",
+    valueFormatter: (v: number) => v,
+    tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+  },
+  {
+    id: "cumulativeConverts",
+    type: "Exchange",
+    name: "Cumulative Convert Volume (USD)",
+    tooltipTitle: "Convert Volume (Cumulative)",
+    tooltipHoverText: "Cumulative convert volume since deployment.",
+    shortDescription: "Cumulative convert volume.",
+    icon: pintoExchangeLogo,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "cumulativeConverts",
+    valueAxisType: "cumulativeConverts",
+    valueFormatter: (v: number) => v,
+    tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+  },
+  {
+    id: "deltaBuysNet",
+    type: "Exchange",
+    name: "Net Pinto Buys (USD)",
+    tooltipTitle: "Net Pinto Buys (USD)",
+    tooltipHoverText: "Net Pinto Buys and Sells during the Season.",
+    shortDescription: "Net Pinto Buys/Sells during the Season.",
+    icon: pintoExchangeLogo,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "deltaBuysNet",
+    valueAxisType: "deltaBuysNet",
+    valueFormatter: (v: number) => v,
+    tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+  },
+  {
+    id: "deltaConvertsUpNet",
+    type: "Exchange",
+    name: "Net Converts (USD)",
+    tooltipTitle: "Net Converts (USD)",
+    tooltipHoverText: "Net Converts during the Season.",
+    shortDescription: "Net Converts during the Season.",
+    icon: pintoExchangeLogo,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "deltaConvertsUpNet",
+    valueAxisType: "deltaConvertsUpNet",
+    valueFormatter: (v: number) => v,
+    tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+  },
+  {
+    id: "liquidity",
+    type: "Exchange",
+    name: "Total Liquidity (USD)",
+    tooltipTitle: "Total Liquidity (USD)",
+    tooltipHoverText: "Total liquidity across all pools.",
+    shortDescription: "Total liquidity across all pools.",
+    icon: pintoExchangeLogo,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "liquidity",
+    valueAxisType: "liquidity",
+    valueFormatter: (v: number) => v,
+    tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+  },
+];
+
 const createAPYCharts = (mainToken: Token): ChartSetupBase[] => [
   {
     id: "pinto30d",
@@ -595,32 +674,30 @@ export function useChartSetupData() {
 
   // Memoize data separately with proper dependencies
   const data = useMemo(() => {
-    // Get Pinto charts
     const pintoCharts = createPintoCharts(mainToken);
-
-    // Get Field charts
     const fieldCharts = createFieldCharts(mainToken);
+    const exchangeCharts = createExchangeCharts(mainToken);
+    const apyCharts = createAPYCharts(mainToken);
+    const tractorCharts = createTractorCharts(mainToken);
 
-    // LP charts
     if (lpTokens.length > 0) {
       // Add LP charts here
     }
 
-    // Deposit & APY charts
     if (whitelistedTokens.length > 0) {
       // Add deposit & APY charts here
     }
 
-    const apyCharts = createAPYCharts(mainToken);
-
-    const tractorCharts = createTractorCharts(mainToken);
-
-    const output: ChartSetup[] = [...pintoCharts, ...fieldCharts, ...apyCharts, ...tractorCharts].map(
-      (setupData, index) => ({
-        ...setupData,
-        index: index,
-      }),
-    );
+    const output: ChartSetup[] = [
+      ...pintoCharts,
+      ...fieldCharts,
+      ...exchangeCharts,
+      ...apyCharts,
+      ...tractorCharts,
+    ].map((setupData, index) => ({
+      ...setupData,
+      index: index,
+    }));
 
     return output;
   }, [mainToken, lpTokens, whitelistedTokens]); // Include all dependencies
