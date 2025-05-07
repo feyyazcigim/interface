@@ -218,18 +218,17 @@ export default function useSeasonsDataChart(
 
   const transformedData = useMemo(() => {
     if (
-      Object.keys(useStalkQuery.data || {}).length === 0 ||
-      Object.keys(useBeanQuery.data || {}).length === 0 ||
-      Object.keys(useBasinQuery.data || {}).length === 0 ||
-      Object.keys(useAPYQuery.data || {}).length === 0 ||
-      Object.keys(useTractorQuery.data || {}).length === 0
+      (beanstalkData && Object.keys(useStalkQuery.data || {}).length === 0) ||
+      (beanData && Object.keys(useBeanQuery.data || {}).length === 0) ||
+      (basinData && Object.keys(useBasinQuery.data || {}).length === 0) ||
+      (apyData && Object.keys(useAPYQuery.data || {}).length === 0) ||
+      (tractorData && Object.keys(useTractorQuery.data || {}).length === 0)
     ) {
       return [];
     }
-    const stalkResults = useStalkQuery.data;
+    const stalkResults = useStalkQuery?.data || { fieldHourlySnapshots: [], siloHourlySnapshots: [], stalkSeasons: [] };
     const beanResults = useBeanQuery?.data || ([] as any);
     const basinResults = useBasinQuery?.data || ([] as any);
-    const { fieldHourlySnapshots, siloHourlySnapshots, seasons: stalkSeasons } = stalkResults;
     const {
       [APYWindow.MONTHLY]: apy30d,
       [APYWindow.WEEKLY]: apy7d,
@@ -237,107 +236,149 @@ export default function useSeasonsDataChart(
     } = useAPYQuery?.data || {};
     const tractorSnapshots = useTractorQuery?.data || ([] as any);
 
-    const transformedData: SeasonsTableData[] = [];
     const maxLength = Math.max(
       beanResults.length,
-      fieldHourlySnapshots.length,
+      stalkResults.fieldHourlySnapshots.length,
       basinResults.length,
       tractorSnapshots.length,
       apy24h?.length || 0,
     );
 
-    // TODO(pp): handle when not all data is enabled
+    const transformedData: SeasonsTableData[] = [];
     for (let idx = 0; idx < maxLength; ++idx) {
-      const currFieldHourlySnapshots = fieldHourlySnapshots[idx];
-      const currSiloHourlySnapshots = siloHourlySnapshots[idx];
-      const currStalkSeasons = stalkSeasons[idx];
-      const currBeanSeasons = beanResults[idx];
-      const currBasinSeason = basinResults[idx];
-      const timeSown = currFieldHourlySnapshots.blocksToSoldOutSoil
-        ? Duration.fromMillis(currFieldHourlySnapshots.blocksToSoldOutSoil * 2 * 1000).toFormat("mm:ss")
-        : "-";
+      const allData: Partial<SeasonsTableData> = {};
 
-      const { beanHourlySnapshot: beanHourly } = currBeanSeasons;
-      const allData: Partial<SeasonsTableData> = {
-        season: beanHourly.season.season,
-        caseId: Number(currFieldHourlySnapshots.caseId || 0),
-        instDeltaB: TokenValue.fromHuman(beanHourly.instDeltaB, tokenData.mainToken.decimals),
-        instPrice: TokenValue.fromHuman(beanHourly.instPrice, tokenData.mainToken.decimals),
-        l2sr: TokenValue.fromHuman(beanHourly.l2sr * 100, 2),
-        twaDeltaB: TokenValue.fromHuman(beanHourly.twaDeltaB, 2),
-        twaPrice: TokenValue.fromHuman(beanHourly.twaPrice, 4),
-        blocksToSoldOutSoil: timeSown ?? "0",
-        issuedSoil: TokenValue.fromBlockchain(currFieldHourlySnapshots.issuedSoil, tokenData.mainToken.decimals),
-        podRate: TokenValue.fromHuman(currFieldHourlySnapshots.podRate || 0n, 18).mul(100),
-        sownBeans: TokenValue.fromBlockchain(currFieldHourlySnapshots.sownBeans, tokenData.mainToken.decimals),
-        deltaSownBeans: TokenValue.fromBlockchain(
+      if (beanstalkData) {
+        const currFieldHourlySnapshots = stalkResults.fieldHourlySnapshots[idx];
+        const currSiloHourlySnapshots = stalkResults.siloHourlySnapshots[idx];
+        const currStalkSeasons = stalkResults.seasons[idx];
+        const timeSown = currFieldHourlySnapshots.blocksToSoldOutSoil
+          ? Duration.fromMillis(currFieldHourlySnapshots.blocksToSoldOutSoil * 2 * 1000).toFormat("mm:ss")
+          : "-";
+
+        allData.caseId = Number(currFieldHourlySnapshots.caseId || 0);
+        allData.blocksToSoldOutSoil = timeSown ?? "0";
+        allData.issuedSoil = TokenValue.fromBlockchain(
+          currFieldHourlySnapshots.issuedSoil,
+          tokenData.mainToken.decimals,
+        );
+        allData.podRate = TokenValue.fromHuman(currFieldHourlySnapshots.podRate || 0n, 18).mul(100);
+        allData.sownBeans = TokenValue.fromBlockchain(currFieldHourlySnapshots.sownBeans, tokenData.mainToken.decimals);
+        allData.deltaSownBeans = TokenValue.fromBlockchain(
           currFieldHourlySnapshots.deltaSownBeans,
           tokenData.mainToken.decimals,
-        ),
-        temperature: TokenValue.fromHuman(currFieldHourlySnapshots.temperature, 1).toNumber(),
-        deltaTemperature: TokenValue.fromHuman(currFieldHourlySnapshots.deltaTemperature, 1).toNumber(),
-        beanToMaxLpGpPerBdvRatio: currSiloHourlySnapshots.beanToMaxLpGpPerBdvRatio,
-        deltaBeanToMaxLpGpPerBdvRatio: TokenValue.fromHuman(
+        );
+        allData.temperature = TokenValue.fromHuman(currFieldHourlySnapshots.temperature, 1).toNumber();
+        allData.deltaTemperature = TokenValue.fromHuman(currFieldHourlySnapshots.deltaTemperature, 1).toNumber();
+        allData.beanToMaxLpGpPerBdvRatio = currSiloHourlySnapshots.beanToMaxLpGpPerBdvRatio;
+        allData.deltaBeanToMaxLpGpPerBdvRatio = TokenValue.fromHuman(
           currSiloHourlySnapshots.deltaBeanToMaxLpGpPerBdvRatio,
           18,
-        ).toNumber(),
-        deltaBeans: TokenValue.fromBlockchain(currStalkSeasons.deltaBeans, tokenData.mainToken.decimals),
-        price: TokenValue.fromHuman(currStalkSeasons.price, 4),
-        raining: currStalkSeasons.raining,
-        rewardBeans: TokenValue.fromHuman(currStalkSeasons.rewardBeans, 2),
-        crosses: beanHourly.crosses,
-        marketCap: Number(beanHourly.marketCap),
-        supply: TokenValue.fromBlockchain(beanHourly.supply, tokenData.mainToken.decimals),
-        supplyInPegLP: TokenValue.fromBlockchain(beanHourly.supply, tokenData.mainToken.decimals),
-        deltaPodDemand: TokenValue.fromBlockchain(currFieldHourlySnapshots.deltaPodDemand, 18),
-        realRateOfReturn: TokenValue.fromHuman(currFieldHourlySnapshots.realRateOfReturn || 0n, 18).mul(100),
-        unharvestablePods: TokenValue.fromBlockchain(currFieldHourlySnapshots.unharvestablePods || 0n, PODS.decimals),
-        harvestedPods: TokenValue.fromBlockchain(currFieldHourlySnapshots.harvestedPods || 0n, PODS.decimals),
-        numberOfSowers: currFieldHourlySnapshots.numberOfSowers,
-        numberOfSows: currFieldHourlySnapshots.numberOfSows,
-        stalk: TokenValue.fromBlockchain(currSiloHourlySnapshots.stalk || 0n, STALK.decimals),
-        cumulativeVolume: Number(currBasinSeason.cumulativeTradeVolumeUSD),
-        cumulativeConverts: Number(currBasinSeason.cumulativeConvertVolumeUSD),
-        deltaBuysNet: Number(currBasinSeason.deltaBuyVolumeUSD) - Number(currBasinSeason.deltaSellVolumeUSD),
-        deltaConvertsUpNet:
-          Number(currBasinSeason.deltaConvertUpVolumeUSD) - Number(currBasinSeason.deltaConvertDownVolumeUSD),
-        liquidity: Number(currBasinSeason.totalLiquidityUSD),
-        pinto30d: apy30d?.[idx]?.value || 0,
-        pinto7d: apy7d?.[idx]?.value || 0,
-        pinto24h: apy24h?.[idx]?.value || 0,
-        timestamp: Number(beanHourly.season.timestamp || 0),
-      };
-      if (currFieldHourlySnapshots.cultivationFactor !== null) {
-        allData.cultivationFactor = TokenValue.fromHuman(currFieldHourlySnapshots.cultivationFactor, 2);
+        ).toNumber();
+        allData.deltaBeans = TokenValue.fromBlockchain(currStalkSeasons.deltaBeans, tokenData.mainToken.decimals);
+        allData.price = TokenValue.fromHuman(currStalkSeasons.price, 4);
+        allData.raining = currStalkSeasons.raining;
+        allData.rewardBeans = TokenValue.fromHuman(currStalkSeasons.rewardBeans, 2);
+        allData.deltaPodDemand = TokenValue.fromBlockchain(currFieldHourlySnapshots.deltaPodDemand, 18);
+        allData.realRateOfReturn = TokenValue.fromHuman(currFieldHourlySnapshots.realRateOfReturn || 0n, 18).mul(100);
+        allData.unharvestablePods = TokenValue.fromBlockchain(
+          currFieldHourlySnapshots.unharvestablePods || 0n,
+          PODS.decimals,
+        );
+        allData.harvestedPods = TokenValue.fromBlockchain(currFieldHourlySnapshots.harvestedPods || 0n, PODS.decimals);
+        allData.numberOfSowers = currFieldHourlySnapshots.numberOfSowers;
+        allData.numberOfSows = currFieldHourlySnapshots.numberOfSows;
+        allData.stalk = TokenValue.fromBlockchain(currSiloHourlySnapshots.stalk || 0n, STALK.decimals);
+
+        if (currFieldHourlySnapshots.cultivationFactor !== null) {
+          allData.cultivationFactor = TokenValue.fromHuman(currFieldHourlySnapshots.cultivationFactor, 2);
+        }
+
+        if (!allData.season) {
+          allData.season = currStalkSeasons.season;
+          allData.timestamp = Number(currStalkSeasons.createdAt || 0);
+        }
       }
-      // Ensure tractor api response is fully caught up/in sync
-      if (tractorSnapshots[idx]?.season === allData.season) {
-        allData.tractorSownPinto = TokenValue.fromBlockchain(
-          tractorSnapshots[idx]?.totalPintoSown || 0n,
-          PODS.decimals,
-        );
-        allData.tractorPodsMinted = TokenValue.fromBlockchain(
-          tractorSnapshots[idx]?.totalPodsMinted || 0n,
-          PODS.decimals,
-        );
-        allData.tractorSowingQueue = TokenValue.fromBlockchain(
-          tractorSnapshots[idx]?.totalCascadeFundedBelowTemp || 0n,
-          PODS.decimals,
-        );
-        allData.tractorMaxSeasonalSow = TokenValue.fromBlockchain(
-          tractorSnapshots[idx]?.maxSowThisSeason || 0n,
-          PODS.decimals,
-        );
-        allData.tractorCumulativeTips = TokenValue.fromBlockchain(
-          tractorSnapshots[idx]?.totalTipsPaid || 0n,
-          PODS.decimals,
-        );
-        allData.tractorMaxActiveTip = TokenValue.fromBlockchain(
-          tractorSnapshots[idx]?.currentMaxTip || 0n,
-          PODS.decimals,
-        );
-        allData.tractorExecutions = tractorSnapshots[idx]?.totalExecutions || 0;
-        allData.tractorPublishers = tractorSnapshots[idx]?.uniquePublishers || 0;
+
+      if (beanData) {
+        const beanHourly = beanResults[idx].beanHourlySnapshot;
+        allData.crosses = beanHourly.crosses;
+        allData.marketCap = Number(beanHourly.marketCap);
+        allData.supply = TokenValue.fromBlockchain(beanHourly.supply, tokenData.mainToken.decimals);
+        allData.supplyInPegLP = TokenValue.fromBlockchain(beanHourly.supply, tokenData.mainToken.decimals);
+        allData.instDeltaB = TokenValue.fromHuman(beanHourly.instDeltaB, tokenData.mainToken.decimals);
+        allData.instPrice = TokenValue.fromHuman(beanHourly.instPrice, tokenData.mainToken.decimals);
+        allData.l2sr = TokenValue.fromHuman(beanHourly.l2sr * 100, 2);
+        allData.twaDeltaB = TokenValue.fromHuman(beanHourly.twaDeltaB, 2);
+        allData.twaPrice = TokenValue.fromHuman(beanHourly.twaPrice, 4);
+
+        if (!allData.season) {
+          allData.season = beanHourly.season.season;
+          allData.timestamp = Number(beanHourly.season.timestamp || 0);
+        }
+      }
+
+      if (basinData) {
+        const currBasinSeason = basinResults[idx];
+        allData.cumulativeVolume = Number(currBasinSeason.cumulativeTradeVolumeUSD);
+        allData.cumulativeConverts = Number(currBasinSeason.cumulativeConvertVolumeUSD);
+        allData.deltaBuysNet = Number(currBasinSeason.deltaBuyVolumeUSD) - Number(currBasinSeason.deltaSellVolumeUSD);
+        allData.deltaConvertsUpNet =
+          Number(currBasinSeason.deltaConvertUpVolumeUSD) - Number(currBasinSeason.deltaConvertDownVolumeUSD);
+        allData.liquidity = Number(currBasinSeason.totalLiquidityUSD);
+
+        if (!allData.season) {
+          allData.season = currBasinSeason.season.season;
+          allData.timestamp = Number(currBasinSeason.createdTimestamp);
+        }
+      }
+
+      if (apyData) {
+        allData.pinto30d = apy30d?.[idx]?.value || 0;
+        allData.pinto7d = apy7d?.[idx]?.value || 0;
+        allData.pinto24h = apy24h?.[idx]?.value || 0;
+
+        if (!allData.season) {
+          allData.season = apy24h?.[idx]?.season;
+          allData.timestamp = apy24h?.[idx]?.timestamp ? apy24h[idx].timestamp.getTime() / 1000 : undefined;
+        }
+      }
+
+      if (tractorData) {
+        // Ensure tractor api response is fully caught up/in sync
+        if (tractorSnapshots[idx]?.season === allData.season) {
+          allData.tractorSownPinto = TokenValue.fromBlockchain(
+            tractorSnapshots[idx]?.totalPintoSown || 0n,
+            PODS.decimals,
+          );
+          allData.tractorPodsMinted = TokenValue.fromBlockchain(
+            tractorSnapshots[idx]?.totalPodsMinted || 0n,
+            PODS.decimals,
+          );
+          allData.tractorSowingQueue = TokenValue.fromBlockchain(
+            tractorSnapshots[idx]?.totalCascadeFundedBelowTemp || 0n,
+            PODS.decimals,
+          );
+          allData.tractorMaxSeasonalSow = TokenValue.fromBlockchain(
+            tractorSnapshots[idx]?.maxSowThisSeason || 0n,
+            PODS.decimals,
+          );
+          allData.tractorCumulativeTips = TokenValue.fromBlockchain(
+            tractorSnapshots[idx]?.totalTipsPaid || 0n,
+            PODS.decimals,
+          );
+          allData.tractorMaxActiveTip = TokenValue.fromBlockchain(
+            tractorSnapshots[idx]?.currentMaxTip || 0n,
+            PODS.decimals,
+          );
+          allData.tractorExecutions = tractorSnapshots[idx]?.totalExecutions || 0;
+          allData.tractorPublishers = tractorSnapshots[idx]?.uniquePublishers || 0;
+        }
+
+        if (!allData.season) {
+          allData.season = tractorSnapshots[idx]?.season;
+          allData.timestamp = new Date(tractorSnapshots[idx]?.snapshotTimestamp).getTime() / 1000;
+        }
       }
       transformedData.push(allData as SeasonsTableData);
     }
@@ -349,6 +390,11 @@ export default function useSeasonsDataChart(
     useAPYQuery.data,
     useTractorQuery.data,
     tokenData.mainToken.decimals,
+    beanstalkData,
+    beanData,
+    basinData,
+    apyData,
+    tractorData,
   ]);
 
   return {
