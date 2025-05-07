@@ -117,6 +117,7 @@ const useUpdateTotalSoil = () => {
 };
 
 const useUpdateInitialSoil = () => {
+  const diamond = useProtocolAddress();
   const chainId = useChainId();
   const season = useSeason();
   const setInitialSoil = useSetAtom(fieldInitialSoilAtom);
@@ -128,6 +129,7 @@ const useUpdateInitialSoil = () => {
     queryFn: async () => {
       return request(subgraphs[chainId].beanstalk, FieldIssuedSoilDocument, {
         season: season,
+        field_contains_nocase: diamond,
       });
     },
     enabled: !!season && season > 0,
