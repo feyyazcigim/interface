@@ -34,7 +34,7 @@ const SiloExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Total Liquidity"
-            tooltip="The total USD value of tokens in liquidity pools on the Minting Whitelist at the beginning of every Season."
+            tooltip="The total USD value of tokens in liquidity pools on the Minting Whitelist."
             size="small"
             fillArea
             activeTab={liquidityTab}
@@ -47,7 +47,7 @@ const SiloExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Liquidity to Supply ratio"
-            tooltip="The ratio of Pinto in Liquidity Pools on the Minting Whitelist per outstanding Pinto, displayed as a percentage."
+            tooltip="The ratio of Pinto in Liquidity Pools on the Minting Whitelist per outstanding Pinto."
             size="small"
             activeTab={l2srTab}
             onChangeTab={setL2srTab}
@@ -83,7 +83,7 @@ const SiloExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Total Deposited PDV"
-            tooltip="The total PDV of tokens in liquidity pools on the Minting Whitelist at the beginning of every Season."
+            tooltip="The total PDV of tokens in liquidity pools on the Minting Whitelist."
             size="small"
             fillArea
             activeTab={bdvTab}

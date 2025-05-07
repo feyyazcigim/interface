@@ -84,7 +84,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Tractor Sowing Queue"
-            tooltip="Size of Tractor Sowing Queue."
+            tooltip="The amount of Pintos waiting to be sown via Tractor."
             size="small"
             activeTab={fundedTab}
             onChangeTab={setFundedTab}
@@ -95,8 +95,8 @@ const TractorExplorer = () => {
         </div>
         <div className="w-full sm:w-1/2">
           <SeasonalChart
-            title="Queued Maximum Sow Each Season"
-            tooltip="Maximum Sow through Tractor in each Season."
+            title="Queued Maximum Sow"
+            tooltip="The maximum Pintos sown each season through tractor."
             size="small"
             activeTab={maxSowTab}
             onChangeTab={setMaxSowTab}
@@ -110,7 +110,7 @@ const TractorExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Maximum Offered Tip"
-            tooltip="Maximum tip offered to Tractor operators in each Season."
+            tooltip="Maximum tip offered to Tractor operators."
             size="small"
             activeTab={maxTipTab}
             onChangeTab={setMaxTipTab}
