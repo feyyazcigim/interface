@@ -127,7 +127,7 @@ const basinPaginateSettings: PaginationSettings<
   orderBy: "desc",
 };
 
-export default function useSeasonsDataChart(
+export default function useSeasonsData(
   fromSeason: number,
   toSeason: number,
   { beanstalkData = true, beanData = true, basinData = true, apyData = true, tractorData = true } = {},
