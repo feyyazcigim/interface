@@ -3,7 +3,7 @@ import FrameAnimator from "@/components/LoadingSpinner";
 import { SeasonsTable } from "@/components/tables/SeasonsTable";
 import { Button } from "@/components/ui/Button";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import useSeasonsData from "@/state/useSeasonsData";
+import useSeasonsDataChart from "@/state/useSeasonsDataChart";
 import { useSunData } from "@/state/useSunData";
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import { useEffect, useState } from "react";
@@ -61,7 +61,11 @@ const SeasonsExplorer = () => {
 
   const totalPages = Math.ceil(currentSeason / PAGE_SIZE);
   const isMobile = useIsMobile();
-  const seasonsData = useSeasonsData(fromSeason, currentSeason);
+  const seasonsData = useSeasonsDataChart(fromSeason, currentSeason, {
+    basinData: false,
+    apyData: false,
+    tractorData: false,
+  });
 
   const calculateSeasonPageToJump = (season: number) => {
     return Math.min(Math.floor((currentSeason - season) / PAGE_SIZE) + 1, totalPages);
