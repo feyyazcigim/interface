@@ -168,12 +168,18 @@ const useTransformBucketedFieldPlotSummary = (data: FieldPlotBucketSummary[] | u
       const labels: string[] = [];
       const datasetData: number[] = [];
 
+      let min = Infinity;
+      let max = -Infinity;
+
       for (const d of data) {
         const startIndex = d.startIndex.toNumber();
         const endIndex = d.endIndex.toNumber();
 
         labels.push(`${startIndex}-${endIndex}`);
-        datasetData.push(d.avgTemperature.toNumber());
+        const temp = d.avgTemperature.toNumber();
+        datasetData.push(temp);
+        min = Math.min(min, temp);
+        max = Math.max(max, temp);
       }
 
       const first = datasetData[0];
