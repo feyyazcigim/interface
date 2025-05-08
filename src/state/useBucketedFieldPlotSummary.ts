@@ -114,13 +114,52 @@ export default function useBucketedFieldPlotSummary<Data>({
   });
 }
 
+const tiers = [1_000_000, 500_000, 250_000, 100_000, 50_000] as const;
+const REASONABLE_BUCKET_SIZE_RANGE = [10, 60] as const;
+
+const MAX_PER_BUCKET = tiers[0];
+const MIN_PER_BUCKET = tiers[tiers.length - 1];
+
+type AggregateFieldPlotBucketSummaryOptions = {
+  // the minimum plot indexes per aggregated bucket
+  min?: number;
+  // the maximum plot indexes per aggregated bucket
+  max?: number;
+};
+
+// opt for the tier that is the closest to the number of buckets we want
+const getBucketSize = (pods: number, options?: AggregateFieldPlotBucketSummaryOptions) => {
+  const min = options?.min ?? REASONABLE_BUCKET_SIZE_RANGE[0];
+  const max = options?.max ?? REASONABLE_BUCKET_SIZE_RANGE[1];
+
+  const reversedTiers = [...tiers].reverse();
+
+  const bucketSize = reversedTiers.find((tier) => {
+    const buckets = Math.ceil(pods / tier);
+    return buckets >= min && buckets <= max;
+  });
+
+  return bucketSize ?? MAX_PER_BUCKET;
+};
+
 // In the case where we have too many bars, we want to combine them into a single bar
-export const aggregateFieldPlotBucketSummary = (data: FieldPlotBucketSummary[] | undefined, maxLength: number = 75) => {
+export const aggregateFieldPlotBucketSummary = (
+  data: FieldPlotBucketSummary[] | undefined,
+  options?: AggregateFieldPlotBucketSummaryOptions,
+) => {
   // If there is no data, return an empty array
   if (!data?.length) return [];
 
+  const podsCount = data[data.length - 1].endIndex.toNumber() - data[0].startIndex.toNumber();
+
+  const aggregatedBucketSize = getBucketSize(podsCount, options);
+
+  const currBucketSize = data[0].bucketSize;
+
+  const combineCount = Math.ceil(aggregatedBucketSize / currBucketSize);
+  // console.log({ currBucketSize, aggregatedBucketSize, combineCount, podsCount });
+
   // We want to combine x data points into a single bar
-  const combineCount = Math.ceil(data.length / maxLength);
   if (combineCount <= 1) return data;
 
   const aggregated: FieldPlotBucketSummary[] = [];
