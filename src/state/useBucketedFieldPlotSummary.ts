@@ -115,15 +115,12 @@ export default function useBucketedFieldPlotSummary<Data>({
 }
 
 const tiers = [1_000_000, 500_000, 250_000, 100_000, 50_000] as const;
-const REASONABLE_BUCKET_SIZE_RANGE = [10, 60] as const;
-
-const MAX_PER_BUCKET = tiers[0];
-const MIN_PER_BUCKET = tiers[tiers.length - 1];
+const REASONABLE_BUCKET_SIZE_RANGE = [10, 50] as const;
 
 type AggregateFieldPlotBucketSummaryOptions = {
-  // the minimum plot indexes per aggregated bucket
+  // the minimum aggregated buckets
   min?: number;
-  // the maximum plot indexes per aggregated bucket
+  // the maximum aggregated buckets
   max?: number;
 };
 
@@ -139,7 +136,7 @@ const getBucketSize = (pods: number, options?: AggregateFieldPlotBucketSummaryOp
     return buckets >= min && buckets <= max;
   });
 
-  return bucketSize ?? MAX_PER_BUCKET;
+  return bucketSize ?? min;
 };
 
 // In the case where we have too many bars, we want to combine them into a single bar
@@ -150,14 +147,14 @@ export const aggregateFieldPlotBucketSummary = (
   // If there is no data, return an empty array
   if (!data?.length) return [];
 
-  const podsCount = data[data.length - 1].endIndex.toNumber() - data[0].startIndex.toNumber();
+  const first = data[0];
+  const last = data[data.length - 1];
+  const currBucketSize = first.bucketSize;
 
-  const aggregatedBucketSize = getBucketSize(podsCount, options);
-
-  const currBucketSize = data[0].bucketSize;
+  const podsCount = last.endIndex.sub(first.startIndex);
+  const aggregatedBucketSize = getBucketSize(podsCount.toNumber(), options);
 
   const combineCount = Math.ceil(aggregatedBucketSize / currBucketSize);
-  // console.log({ currBucketSize, aggregatedBucketSize, combineCount, podsCount });
 
   // We want to combine x data points into a single bar
   if (combineCount <= 1) return data;
