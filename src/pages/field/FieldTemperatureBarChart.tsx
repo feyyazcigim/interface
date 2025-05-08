@@ -1,4 +1,3 @@
-import { TV } from "@/classes/TokenValue";
 import { Col, Row } from "@/components/Container";
 import BarChart from "@/components/charts/BarChart";
 import TimeTabsSelector, { TimeTab } from "@/components/charts/TimeTabs";
@@ -12,14 +11,11 @@ import { formatter, numberAbbr } from "@/utils/format";
 import { useDebounceValue } from "@/utils/useDebounce";
 import { cn } from "@/utils/utils";
 import { ChartData } from "chart.js";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 type FieldTemperatureBarChartProps = {
   className?: string;
 };
-
-// We don't want to show too many bars, so we limit the number of bars to 50
-const MAX_REASONABLE_BARS = 60;
 
 // 50k is the default
 const BUCKET_SIZE = 50_000;
@@ -30,7 +26,7 @@ const FieldTemperatureBarChart = React.memo(({ className }: FieldTemperatureBarC
 
   // local State
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
-  const [tab, setTab] = useState<TimeTab>(TimeTab.Month);
+  const [tab, setTab] = useState<TimeTab>(TimeTab.AllTime);
 
   const select = useCallback(
     (data: FieldPlotBucketSummary[] | undefined) => {
