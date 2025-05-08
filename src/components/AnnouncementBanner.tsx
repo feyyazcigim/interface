@@ -37,7 +37,7 @@ const AnnouncementBannerContent = () => {
           target="_blank"
           className="pinto-sm text-pinto-green-4 cursor-pointer underline inline"
         >
-          Come take a tour on the Farm, and read more on the field!
+          Come take a tour on the Farm, and read more on the Field!
         </Link>
       </div>
     </div>
