@@ -2,7 +2,7 @@ query BasinSeasonalSummary($from: Int, $to: Int) {
   beanstalkHourlySnapshots(
     first: 1000
     orderBy: season__season
-    orderDirection: desc
+    orderDirection: asc
     where: { season_: { season_gte: $from, season_lte: $to }}
   ) {
     id
