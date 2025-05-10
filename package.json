@@ -15,7 +15,8 @@
     "format": "biome format --write",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -97,6 +98,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "@wagmi/cli": "2.1.16",
     "autoprefixer": "10.4.19",
+    "husky": "^9.1.7",
     "postcss": "8.4.39",
     "tailwindcss": "3.4.6",
     "ts-node": "^10.9.2",

@@ -1,0 +1,17 @@
+query BasinSeasonalSummary($from: Int, $to: Int) {
+  beanstalkHourlySnapshots(
+    first: 1000
+    orderBy: season__season
+    orderDirection: asc
+    where: { season_: { season_gte: $from, season_lte: $to }}
+  ) {
+    id
+    createdTimestamp
+    season {
+      season
+    }
+    cumulativeTradeVolumeUSD
+    cumulativeConvertVolumeUSD
+    totalLiquidityUSD
+  }
+}
