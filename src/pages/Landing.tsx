@@ -171,7 +171,7 @@ function SecondaryCTA() {
     <div className="grid grid-flow-row grid-rows-[64%_1fr] w-full h-full">
       <div className="grid grid-flow-col grid-cols-[43%_1fr] border-y border-pinto-gray-2">
         <div className="flex flex-col items-start self-stretch my-auto px-12 border-r border-pinto-gray-2 bg-pinto-off-white">
-          <h2 className="pinto-h2 text-5xl leading-[1.1] text-black">Not A Stablecoin</h2>
+          <h2 className="pinto-h2 text-5xl leading-[1.1] text-black">Not a Stablecoin</h2>
           <span className="pinto-body-light text-[2rem] leading-[1.1] text-pinto-gray-4 mt-2 mb-5">
             Stablecoins are not good enough.
           </span>
