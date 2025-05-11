@@ -178,7 +178,7 @@ const Navbar = () => {
       <AnnouncementBanner />
       <div
         className={cn(
-          `grid px-4 pt-4 pb-2 sm:px-6 sm:pt-6 w-full z-[2] bg-gradient-light action-container transition-colors`,
+          `grid px-4 pt-4 pb-2 sm:px-6 sm:pt-6 w-full z-[2] action-container transition-colors`,
           styles.navGrid,
         )}
       >
