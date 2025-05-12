@@ -215,14 +215,14 @@ export default function Navi() {
               Home
             </Link>
           </NavigationMenuItem>
-          <NavigationMenuItem onMouseEnter={() => setNaviTab("data")}>
-            <Link active={naviTab === "data"} href={navLinks.explorer} topMenu>
-              Data
-            </Link>
-          </NavigationMenuItem>
           <NavigationMenuItem onMouseEnter={() => setNaviTab("learn")}>
             <Link active={naviTab === "learn"} topMenu>
               Learn
+            </Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem onMouseEnter={() => setNaviTab("data")}>
+            <Link active={naviTab === "data"} href={navLinks.explorer} topMenu>
+              Data
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem onMouseEnter={() => setNaviTab("more")}>
