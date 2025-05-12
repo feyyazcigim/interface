@@ -1,15 +1,17 @@
 import { Col, Row } from "@/components/Container";
+import TextSkeleton from "@/components/TextSkeleton";
 import BarChart from "@/components/charts/BarChart";
 import TimeTabsSelector, { TimeTab } from "@/components/charts/TimeTabs";
 import { Card } from "@/components/ui/Card";
 import useBucketedFieldPlotSummary, {
+  AggregatedFieldPlotsSummary,
   aggregateFieldPlotBucketSummary,
   FieldPlotBucketSummary,
 } from "@/state/useBucketedFieldPlotSummary";
 import { useHarvestableIndex } from "@/state/useFieldData";
 import { formatter, numberAbbr } from "@/utils/format";
 import { useDebounceValue } from "@/utils/useDebounce";
-import { cn } from "@/utils/utils";
+import { cn, exists } from "@/utils/utils";
 import { ChartData } from "chart.js";
 import React, { useCallback, useEffect, useState } from "react";
 
@@ -28,66 +30,68 @@ const FieldTemperatureBarChart = React.memo(({ className }: FieldTemperatureBarC
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
   const [tab, setTab] = useState<TimeTab>(TimeTab.AllTime);
 
-  const select = useCallback(
+  const handleSelect = useCallback(
     (data: FieldPlotBucketSummary[] | undefined) => {
-      if (!data || harvestableIndex.lte(0)) return [];
-      const mapped = data.map((d) => ({
-        ...d,
-        startIndex: d.startIndex.sub(harvestableIndex),
-        endIndex: d.endIndex.sub(harvestableIndex),
-      }));
+      let datas: FieldPlotBucketSummary[] = [];
 
-      const maxLookback = getTimestampLookback(tab);
-      const filtered = mapped.filter((data) => data.startTimestamp > maxLookback);
+      if (data && harvestableIndex.gt(0)) {
+        const maxLookback = getTimestampLookback(tab);
+        const filtered = data.filter((d) => d.startTimestamp > maxLookback);
 
-      const transformed = aggregateFieldPlotBucketSummary(filtered);
+        datas = filtered.map((d) => ({
+          ...d,
+          startIndex: d.startIndex.sub(harvestableIndex),
+          endIndex: d.endIndex.sub(harvestableIndex),
+        }));
+      }
 
-      return transformed;
+      return aggregateFieldPlotBucketSummary(datas);
     },
     [harvestableIndex, tab],
   );
 
   // queries
-  const query = useBucketedFieldPlotSummary<FieldPlotBucketSummary[]>({
+  const { data: summaryData, ...query } = useBucketedFieldPlotSummary<AggregatedFieldPlotsSummary>({
     bucketSize: BUCKET_SIZE,
-    select,
+    select: handleSelect,
   });
 
+  useEffect(() => {
+    console.log(summaryData);
+  }, [summaryData]);
+
   // Transform the data to be used in the chart
-  const { data, yScaleType } = useTransformBucketedFieldPlotSummary(query.data);
+  const { chartData, yScaleType } = useTransformBucketedFieldPlotSummary(summaryData?.data);
 
   // derived state
   const isLoading = query.isLoading || harvestableIndex.lte(0);
-  const lastIndex = data.datasets[0]?.data.length - 1;
 
   // Debounce the active index to prevent too many re-renders
   const debouncedActiveIndex = useDebounceValue(activeIndex, 10);
 
-  const selectIndex = (debouncedActiveIndex === undefined ? lastIndex : debouncedActiveIndex) ?? 0;
+  const summary = exists(debouncedActiveIndex) ? summaryData?.data[debouncedActiveIndex] : summaryData;
 
-  const indexes = (data.labels?.[selectIndex] as string)?.split("-");
+  const startIndex = summary?.startIndex.toNumber() ?? 0;
+  const endIndex = summary?.endIndex.toNumber() ?? 0;
 
-  const startIndex = Number(indexes?.[0] ?? "0");
-  const endIndex = Number(indexes?.[1] ?? "0");
+  const activeData = summary?.avgTemperature?.toNumber();
 
-  const decimals = getDiffDecimals(startIndex, endIndex);
-
-  const activeData = data.datasets[0]?.data?.[selectIndex] as number | undefined;
+  const decimals = getDiffDecimals(startIndex, endIndex, exists(debouncedActiveIndex));
 
   return (
     <Card className="overflow-hidden">
       <Col className="gap-0">
         <Row className="w-full justify-between p-4 sm:p-6 gap-2">
           <Col className="gap-1">
-            <div className="pinto-sm sm:pinto-body">
-              Avg Sown Temperature{" "}
-              {!isLoading && (
-                <>
-                  between {numberAbbr(startIndex, decimals)} and {numberAbbr(endIndex, decimals)}
-                </>
-              )}
-            </div>
-            <div className="pinto-body sm:pinto-h3">{activeData ? formatter.pct(activeData) : "-%"}</div>
+            <div className="pinto-sm sm:pinto-body">Avg Sown Temperature</div>
+            <TextSkeleton loading={isLoading || !exists(activeData)} height="body" desktopHeight="h3" className="w-24">
+              <div className="pinto-body sm:pinto-h3">{formatter.pct(activeData)}</div>
+            </TextSkeleton>
+            <TextSkeleton loading={isLoading} height="sm" className="w-56">
+              <div className="pinto-sm">
+                between {numberAbbr(startIndex, decimals)} and {numberAbbr(endIndex, decimals)}
+              </div>
+            </TextSkeleton>
           </Col>
           <div className="self-start sm:pt-1 shrink-0">
             <TimeTabsSelector tab={tab} setTab={setTab} />
@@ -97,12 +101,11 @@ const FieldTemperatureBarChart = React.memo(({ className }: FieldTemperatureBarC
           <div className="mx-2 h-full">
             <BarChart
               yScaleType={yScaleType}
-              data={data}
+              data={chartData}
               isLoading={isLoading}
               onMouseOver={setActiveIndex}
               yLabelFormatter={formatY}
               xLabelFormatter={formatX}
-              defaultHoverIndex={lastIndex}
             />
           </div>
         </Col>
@@ -140,8 +143,9 @@ const getTimestampLookback = (timeTab: TimeTab) => {
   }
 };
 
-const getDiffDecimals = (startIndex: number, endIndex: number) => {
-  if (startIndex === endIndex) return 0;
+const getDiffDecimals = (startIndex: number | undefined, endIndex: number | undefined, anySelected: boolean) => {
+  if (!anySelected) return 2;
+  if (!exists(startIndex) || !exists(endIndex) || startIndex === endIndex) return 0;
   const diff = endIndex - startIndex;
   switch (true) {
     case diff >= 1_000_000:
@@ -164,6 +168,7 @@ const useTransformBucketedFieldPlotSummary = (data: FieldPlotBucketSummary[] | u
   useEffect(() => {
     if (!data?.length) {
       setTransformedData(noData);
+      setYScaleType("logarithmic");
     } else {
       const labels: string[] = [];
       const datasetData: number[] = [];
@@ -174,26 +179,19 @@ const useTransformBucketedFieldPlotSummary = (data: FieldPlotBucketSummary[] | u
       for (const d of data) {
         const startIndex = d.startIndex.toNumber();
         const endIndex = d.endIndex.toNumber();
+        const temp = d.avgTemperature.toNumber();
 
         labels.push(`${startIndex}-${endIndex}`);
-        const temp = d.avgTemperature.toNumber();
+
         datasetData.push(temp);
         min = Math.min(min, temp);
         max = Math.max(max, temp);
       }
 
-      const first = datasetData[0];
-      const last = datasetData[datasetData.length - 1];
-
-      const sum = first + last;
-      const diff = Math.abs(first - last);
+      const sum = max + min;
+      const scale = Math.abs(max - min) / sum;
       // If the difference is greater than 50% of the sum, use a linear scale
-      if (diff / sum > 0.5) {
-        setYScaleType("linear");
-      } else {
-        setYScaleType("logarithmic");
-      }
-
+      setYScaleType(scale > 0.5 ? "linear" : "logarithmic");
       setTransformedData({
         labels,
         datasets: [{ data: datasetData }],
@@ -201,5 +199,5 @@ const useTransformBucketedFieldPlotSummary = (data: FieldPlotBucketSummary[] | u
     }
   }, [data]);
 
-  return { data: transformedData, yScaleType };
+  return { chartData: transformedData, yScaleType };
 };

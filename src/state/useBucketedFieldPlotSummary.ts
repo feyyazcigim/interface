@@ -8,6 +8,7 @@ import { Prettify } from "@/utils/types.generic";
 import { DefaultError, QueryObserverOptions, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useChainId } from "wagmi";
+import { TEMPERATURE_DECIMALS } from "./protocol/field";
 
 export type FieldPlotSummaryParams<T extends string | number = number> = {
   bucketSize?: T;
@@ -44,8 +45,12 @@ export type FieldPlotBucketSummary = Prettify<
   } & BaseFieldPlotSummaryResponse
 >;
 
+export interface AggregatedFieldPlotsSummary extends Omit<FieldPlotBucketSummary, "bucketIndex"> {
+  data: FieldPlotBucketSummary[];
+}
+
 const endpoint = API_SERVICES.pinto;
-const DEFAULT_BUCKET_SIZE = 1000000;
+const DEFAULT_BUCKET_SIZE = 50_000;
 
 const requestArgs = {
   method: "GET",
@@ -104,7 +109,9 @@ export default function useBucketedFieldPlotSummary<Data>({
   // Query
   const params = combineURLParams(args);
 
-  const queryKey = useMemo(() => ["fieldPlotSummary", params.toString()], [params.toString()]);
+  const paramsStr = params.toString();
+
+  const queryKey = useMemo(() => ["fieldPlotSummary", paramsStr], [paramsStr]);
 
   return useQuery<FieldPlotBucketSummary[], DefaultError, Data>({
     queryKey,
@@ -139,75 +146,106 @@ const getBucketSize = (pods: number, options?: AggregateFieldPlotBucketSummaryOp
   return bucketSize ?? min;
 };
 
+const emptySummary: AggregatedFieldPlotsSummary = {
+  startSeason: 0,
+  endSeason: 0,
+  numPlots: 0,
+  startTimestamp: 0,
+  endTimestamp: 0,
+  startIndex: TV.ZERO,
+  endIndex: TV.ZERO,
+  avgSownBeansPerPod: TV.ZERO,
+  avgTemperature: TV.ZERO,
+  bucketSize: 0,
+  data: [],
+} as const;
+
 // In the case where we have too many bars, we want to combine them into a single bar
 export const aggregateFieldPlotBucketSummary = (
   data: FieldPlotBucketSummary[] | undefined,
   options?: AggregateFieldPlotBucketSummaryOptions,
 ) => {
   // If there is no data, return an empty array
-  if (!data?.length) return [];
+  if (!data?.length) return { ...emptySummary };
+
+  const toAggregatedFieldPlotsSummary = (data: FieldPlotBucketSummary[]): AggregatedFieldPlotsSummary => {
+    const firstData = data[0];
+    const lastData = data[data.length - 1];
+
+    const datum = {
+      ...emptySummary,
+      startSeason: firstData.startSeason,
+      endSeason: lastData.endSeason,
+      startTimestamp: firstData.startTimestamp,
+      endTimestamp: lastData.endTimestamp,
+      startIndex: firstData.startIndex,
+      endIndex: lastData.endIndex,
+      data,
+      ...getWeightedAverages(data),
+    };
+
+    return datum;
+  };
 
   const first = data[0];
   const last = data[data.length - 1];
-  const currBucketSize = first.bucketSize;
 
-  const podsCount = last.endIndex.sub(first.startIndex);
-  const aggregatedBucketSize = getBucketSize(podsCount.toNumber(), options);
+  const currBucketSize = first.bucketSize;
+  const totalCount = last.endIndex.sub(first.startIndex);
+  const aggregatedBucketSize = getBucketSize(totalCount.toNumber(), options);
 
   const combineCount = Math.ceil(aggregatedBucketSize / currBucketSize);
 
   // We want to combine x data points into a single bar
-  if (combineCount <= 1) return data;
+  if (combineCount <= 1) return toAggregatedFieldPlotsSummary(data);
 
   const aggregated: FieldPlotBucketSummary[] = [];
 
-  let bucket: FieldPlotBucketSummary[] = [];
+  let buckets: FieldPlotBucketSummary[] = [];
   let idx = 0;
   let curr: FieldPlotBucketSummary = data[0];
 
   while (idx < data.length) {
-    while (bucket.length < combineCount && idx < data.length) {
+    while (buckets.length < combineCount && idx < data.length) {
       curr = data[idx];
-      bucket.push(curr);
+      buckets.push(curr);
       idx += 1;
     }
 
-    let totalWeight = TV.fromHuman(0, curr.avgSownBeansPerPod.decimals);
-    let weightedSum = TV.fromHuman(0, curr.avgSownBeansPerPod.decimals);
+    const start = buckets[0];
+    const end = buckets[buckets.length - 1];
 
-    const start = bucket[0];
-    const end = bucket[bucket.length - 1];
-    const totalSize = end.endIndex.sub(start.startIndex);
-
-    const copy: FieldPlotBucketSummary = {
+    aggregated.push({
       startSeason: start.startSeason,
       endSeason: end.endSeason,
-      numPlots: 0,
       startTimestamp: start.startTimestamp,
       endTimestamp: end.endTimestamp,
       startIndex: start.startIndex,
       endIndex: end.endIndex,
-      bucketSize: totalSize.toNumber(),
-      avgSownBeansPerPod: TV.ZERO,
-      avgTemperature: TV.ZERO,
+      bucketSize: end.endIndex.sub(start.startIndex).toNumber(),
       bucketIndex: aggregated.length,
-    };
+      ...getWeightedAverages(buckets),
+    });
 
-    for (const item of bucket) {
-      copy.numPlots += item.numPlots;
-      weightedSum = weightedSum.add(item.avgSownBeansPerPod.mul(item.bucketSize));
-      totalWeight = totalWeight.add(item.bucketSize);
-    }
-
-    const avgSownBeansPerPod = totalWeight.gt(0) ? weightedSum.div(totalWeight) : TV.ZERO;
-    const avgTemperature = TV.fromHuman(1, 6).div(avgSownBeansPerPod).sub(1).mul(100);
-
-    aggregated.push({ ...copy, avgSownBeansPerPod, avgTemperature });
-
-    bucket = [];
-    weightedSum = TV.ZERO;
-    totalWeight = TV.ZERO;
+    buckets = [];
   }
 
-  return aggregated;
+  return toAggregatedFieldPlotsSummary(aggregated);
+};
+
+const getWeightedAverages = (data: FieldPlotBucketSummary[]) => {
+  let weightedSum = TV.fromHuman(0, PODS.decimals);
+  let totalWeight = TV.fromHuman(0, PODS.decimals);
+  let numPlots = 0;
+
+  for (const item of data) {
+    numPlots += item.numPlots;
+    weightedSum = weightedSum.add(item.avgSownBeansPerPod.mul(item.bucketSize));
+    totalWeight = totalWeight.add(item.bucketSize);
+  }
+
+  const avgSownBeansPerPod = totalWeight.gt(0) ? weightedSum.div(totalWeight) : TV.ZERO;
+  const avgTemperature = TV.fromHuman(1, TEMPERATURE_DECIMALS).div(avgSownBeansPerPod).sub(1).mul(100);
+
+  return { avgSownBeansPerPod, avgTemperature, numPlots };
 };
