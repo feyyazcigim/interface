@@ -230,6 +230,21 @@ function SecondaryCTA() {
   );
 }
 
+function FarmToTable() {
+  return (
+    <div className="flex flex-col items-center self-stretch gap-4 my-auto mx-auto ">
+      <h2 className="pinto-h2 text-5xl leading-[1.1] text-black">Farm to Table</h2>
+      <span className="pinto-body-light font-thin text-pinto-gray-4">No investors. Community first.</span>
+      <div className="flex flex-row gap-4">
+        <Button rounded="full">Get Started</Button>
+        <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
+          Read Docs
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function Landing() {
   const [initialHeight, setInitialHeight] = useState(1600);
   const [navBarHeight, setNavBarHeight] = useState(50);
@@ -263,6 +278,9 @@ export default function Landing() {
       </div>
       <div className="flex flex-col gap-12" style={{ height: initialHeight }}>
         <SecondaryCTA />
+      </div>
+      <div className="flex flex-col gap-12" style={{ height: initialHeight }}>
+        <FarmToTable />
       </div>
       <div className="flex flex-col gap-12" style={{ height: initialHeight }}>
         <AuditMarquee />
