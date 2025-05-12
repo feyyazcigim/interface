@@ -22,6 +22,7 @@ export type SeasonalQueryConfig<T> = {
   resultTimestamp: ResultTimestampFn<T>;
   convertResult: ConvertEntryFn<T>;
   orderBy?: "asc" | "desc";
+  enabled?: boolean;
 };
 
 export type QueryFnFactory<T> = (vars: SeasonalQueryVars) => () => Promise<T[]>;
@@ -38,6 +39,7 @@ export default function useSeasonalQueries<T>(
   const currentSeason = useSunData().current;
   const chainId = useChainId();
   const orderBy = queryConfig?.orderBy || "asc";
+  const enabled = queryConfig?.enabled ?? true;
 
   // Current season should be discarded from historical in the select step
   const historicalVars = {
@@ -85,7 +87,7 @@ export default function useSeasonalQueries<T>(
         })
         .filter((v) => v !== undefined);
     },
-    enabled: !!historicalVars.to && !disabled,
+    enabled: enabled && !!historicalVars.to && !disabled,
     staleTime: Infinity,
     gcTime: 24 * 24 * 60 * 60 * 1000,
     retry: 1,
@@ -141,7 +143,7 @@ export default function useSeasonalQueries<T>(
         return queryConfig.convertResult(v, lastFetchedTimestamp ? new Date(lastFetchedTimestamp) : new Date());
       });
     },
-    enabled: !!currentVars.to && !disabled,
+    enabled: enabled && !!currentVars.to && !disabled,
     // Requery result up to once per minute
     gcTime: 60 * 1000,
     retry: 1,
@@ -164,6 +166,7 @@ export function useMultiSeasonalQueries<T>(
   const currentSeason = useSunData().current;
   const chainId = useChainId();
   const orderBy = queryConfig?.orderBy || "asc";
+  const enabled = queryConfig?.enabled ?? true;
 
   // Current season should be discarded from historical in the select step
   const historicalVars = {
@@ -217,7 +220,7 @@ export function useMultiSeasonalQueries<T>(
         {} as { [key: string]: SeasonalChartData[] },
       );
     },
-    enabled: !!historicalVars.to,
+    enabled: enabled && !!historicalVars.to,
     gcTime: 24 * 24 * 60 * 60 * 1000,
     staleTime: Infinity,
     retry: 1,
@@ -271,7 +274,7 @@ export function useMultiSeasonalQueries<T>(
         {} as { [key: string]: SeasonalChartData[] },
       );
     },
-    enabled: !!currentVars.to,
+    enabled: enabled && !!currentVars.to,
     // Requery result up to once per minute
     gcTime: 60 * 1000,
     retry: 1,

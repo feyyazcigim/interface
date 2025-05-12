@@ -1,6 +1,6 @@
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { ChartSetup, useChartSetupData } from "@/state/useChartSetupData";
-import useSeasonsDataChart from "@/state/useSeasonsDataChart";
+import useSeasonsData from "@/state/useSeasonsData";
 import { useSeason } from "@/state/useSunData";
 import { cn, safeJSONParse, safeJSONStringify } from "@/utils/utils";
 import { atom, useAtom } from "jotai";
@@ -94,7 +94,7 @@ export const AdvancedChart = () => {
 
   // By adjusting fromSeason here, we can avoid fetching data
   // that might break the chart
-  const seasonsData = useSeasonsDataChart(7, currentSeason);
+  const seasonsData = useSeasonsData(7, currentSeason);
 
   const filtered = useMemo(() => {
     const output: TVChartFormattedData[][] = [];

@@ -4,6 +4,7 @@ import { UseSeasonalResult } from "@/utils/types";
 import { cn } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
+import TooltipSimple from "../TooltipSimple";
 import LineChart, { LineChartData } from "./LineChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { gradientFunctions, metallicMorningAreaGradientFn, metallicMorningStrokeGradientFn } from "./chartHelpers";
@@ -49,6 +50,7 @@ interface SeasonalChartProps {
     [TimeTab.AllTime]?: YAxisRangeConfig;
   };
   chartWrapperClassName?: string;
+  tooltip?: string;
 }
 
 const morningStrokeGradients = [metallicMorningStrokeGradientFn];
@@ -58,6 +60,7 @@ const areaGradients = [metallicMorningAreaGradientFn];
 
 const SeasonalChart = ({
   title,
+  tooltip,
   size,
   activeTab,
   onChangeTab,
@@ -135,10 +138,13 @@ const SeasonalChart = ({
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
       <div className="flex justify-between pt-4 px-4 sm:pt-6 sm:px-6">
-        <div
-          className={`${statVariant === "explorer" ? "sm:pinto-body text-pinto-light sm:text-pinto-light" : "sm:pinto-body-light text-pinto-primary sm:text-pinto-primary"} pinto-sm-light font-thin pb-0.5`}
-        >
-          {title}
+        <div className="flex flex-row gap-1 items-center">
+          <div
+            className={`${statVariant === "explorer" ? "sm:pinto-body text-pinto-light sm:text-pinto-light" : "sm:pinto-body-light text-pinto-primary sm:text-pinto-primary"} pinto-sm-light font-thin pb-0.5`}
+          >
+            {title}
+          </div>
+          {tooltip && <TooltipSimple content={tooltip} variant="gray" />}
         </div>
         <TimeTabsSelector tab={activeTab} setTab={handleChangeTab} />
       </div>
