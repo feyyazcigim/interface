@@ -24,7 +24,6 @@ import ReadMoreAccordion from "@/components/ReadMoreAccordion";
 import SowOrderDialog, { AnimateSowOrderDialog } from "@/components/SowOrderDialog";
 import TextSkeleton from "@/components/TextSkeleton";
 import TooltipSimple from "@/components/TooltipSimple";
-import BarChart from "@/components/charts/BarChart";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import useLocalStorage from "@/hooks/useLocalStorage";
