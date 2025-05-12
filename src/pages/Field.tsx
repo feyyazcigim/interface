@@ -234,8 +234,7 @@ function Field() {
           {(!isMobile || (!currentAction && isMobile)) && <Separator />}
           <MorningPanel />
           <FieldStats />
-          {(!isMobile || (!currentAction && isMobile)) && <FieldTemperatureBarChart />}
-          {(!isMobile || (!currentAction && isMobile)) && <DynamicTemperatureChart />}
+          <FieldCharts show={!isMobile || (!currentAction && isMobile)} />
           {(!isMobile || (!currentAction && isMobile)) && (
             <div className="flex flex-row items-center justify-between rounded-[1rem] p-4 sm:p-6 bg-pinto-off-white border-pinto-gray-2 border w-full">
               <div className="flex flex-col gap-2">
@@ -405,19 +404,23 @@ function Field() {
 
 export default Field;
 
-const chartSharedProps = {
-  chartWrapperClassName: "h-[200px] sm:h-[200px] lg:h-[200px]",
-  className: "h-[325px] sm:h-[325px] lg:h-[325px]",
-} as const;
-
-export const DynamicTemperatureChart = () => {
+const FieldCharts = ({ show }: { show: boolean }) => {
   const { isMorning } = useMorning();
 
-  if (isMorning) {
-    return <MorningTemperatureChart {...chartSharedProps} />;
-  } else {
-    return <TemperatureChart {...chartSharedProps} />;
-  }
+  if (!show) return null;
+
+  return (
+    <>
+      {isMorning && <MorningTemperatureChart />}
+      <FieldTemperatureBarChart />
+      {!isMorning && (
+        <TemperatureChart
+          chartWrapperClassName="h-[200px] sm:h-[200px] lg:h-[200px]"
+          className="h-[325px] sm:h-[325px] lg:h-[325px]"
+        />
+      )}
+    </>
+  );
 };
 
 const initialValue = { field: false };
