@@ -143,6 +143,11 @@ const LearnNavi = ({ setNaviTab }) => {
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
+            <Link href={navLinks.blog} rel="noopener noreferrer" target="_blank">
+              Blog
+            </Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
             <Link href={navLinks.whitepaper} rel="noopener noreferrer" target="_blank">
               Whitepaper
             </Link>
@@ -166,11 +171,6 @@ const MoreNavi = ({ setNaviTab }) => {
         <NavigationMenuList>
           <NavigationMenuItem>
             <Link href={navLinks.about}>About</Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.blog} rel="noopener noreferrer" target="_blank">
-              Blog
-            </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link href={navLinks.discord} rel="noopener noreferrer" target="_blank">
@@ -215,14 +215,14 @@ export default function Navi() {
               Home
             </Link>
           </NavigationMenuItem>
-          <NavigationMenuItem onMouseEnter={() => setNaviTab("data")}>
-            <Link active={naviTab === "data"} href={navLinks.explorer} topMenu>
-              Data
-            </Link>
-          </NavigationMenuItem>
           <NavigationMenuItem onMouseEnter={() => setNaviTab("learn")}>
             <Link active={naviTab === "learn"} topMenu>
               Learn
+            </Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem onMouseEnter={() => setNaviTab("data")}>
+            <Link active={naviTab === "data"} href={navLinks.explorer} topMenu>
+              Data
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem onMouseEnter={() => setNaviTab("more")}>
