@@ -61,7 +61,11 @@ const SeasonsExplorer = () => {
 
   const totalPages = Math.ceil(currentSeason / SEASON_TABLE_PAGE_SIZE);
   const isMobile = useIsMobile();
-  const seasonsData = useSeasonsData(fromSeason, currentSeason);
+  const seasonsData = useSeasonsData(fromSeason, currentSeason, {
+    basinData: false,
+    apyData: false,
+    tractorData: false,
+  });
 
   const calculateSeasonPageToJump = (season: number) => {
     return Math.min(Math.floor((currentSeason - season) / SEASON_TABLE_PAGE_SIZE) + 1, totalPages);

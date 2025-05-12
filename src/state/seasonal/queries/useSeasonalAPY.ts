@@ -1,9 +1,8 @@
 import { SeasonalChartData } from "@/components/charts/SeasonalChart";
 import { API_SERVICES } from "@/constants/endpoints";
-import useSeasonsData from "@/state/useSeasonsData";
+import { useSeasonTimestamps } from "@/state/useSeasonTimestamps";
 import { SeasonalAPYChartData, UseSeasonalAPYResult } from "@/utils/types";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 
 export enum APYWindow {
   DAILY = 24, // 24 hours
@@ -41,7 +40,12 @@ const fetchApys = async (window: number, token: string, fromSeason: number, toSe
   return await res.json();
 };
 
-export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: number): UseSeasonalAPYResult {
+export function useSeasonalAPYs(
+  token: string,
+  fromSeason: number,
+  toSeason: number,
+  { enabled = true } = {},
+): UseSeasonalAPYResult {
   // Historical APY from Pinto API
   const apyDataQuery = useQuery({
     queryKey: ["api", "vapy", token, "raw", fromSeason, toSeason],
@@ -50,29 +54,18 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
     },
     staleTime: Infinity,
     gcTime: 20 * 60 * 1000,
-    enabled: !!token && fromSeason >= 0 && toSeason > 0,
+    enabled: enabled && !!token && fromSeason >= 0 && toSeason > 0,
   });
 
   // Get mapping of season to timestamp
-  const seasonTimestampQuery = useSeasonsData(fromSeason, toSeason);
-  const seasonToTimestamp = useMemo(() => {
-    if (!seasonTimestampQuery.isFetching) {
-      return seasonTimestampQuery.data?.reduce(
-        (acc: { [season: number]: Date }, next: { season: number; timestamp: number }) => {
-          acc[next.season] = new Date(next.timestamp * 1000);
-          return acc;
-        },
-        {} as Record<number, Date>,
-      );
-    }
-  }, [seasonTimestampQuery.isFetching, seasonTimestampQuery.data]);
+  const seasonTimestampsQuery = useSeasonTimestamps({ enabled });
 
   // Transformation is given its own query rather than using select, so it can activate only after
   // the seasonal timestamp mapping is also availabe.
   const transformQuery = useQuery({
     queryKey: ["api", "vapy", token, "transformed", fromSeason, toSeason],
     queryFn: () => {
-      if (!apyDataQuery.data) {
+      if (!apyDataQuery.data || !seasonTimestampsQuery.data) {
         throw new Error("Data not available");
       }
 
@@ -83,7 +76,7 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
           result[APY_EMA_WINDOWS[i]].push({
             season: Number(season),
             value: apyDataQuery.data[i][season].bean,
-            timestamp: seasonToTimestamp?.[season],
+            timestamp: seasonTimestampsQuery.data[season],
           });
         }
         // Sort descending
@@ -93,12 +86,12 @@ export function useSeasonalAPYs(token: string, fromSeason: number, toSeason: num
     },
     staleTime: Infinity,
     gcTime: 20 * 60 * 1000,
-    enabled: !!apyDataQuery.data && !!seasonToTimestamp,
+    enabled: !!apyDataQuery.data && !!seasonTimestampsQuery.data,
   });
 
   return {
     data: transformQuery.data ?? undefined,
-    isLoading: apyDataQuery.isLoading || !seasonToTimestamp || transformQuery.isLoading,
-    isError: apyDataQuery.isError || transformQuery.isError,
+    isLoading: apyDataQuery.isLoading || seasonTimestampsQuery.isLoading || transformQuery.isLoading,
+    isError: apyDataQuery.isError || seasonTimestampsQuery.isError || transformQuery.isError,
   };
 }
