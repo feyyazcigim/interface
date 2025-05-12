@@ -7,6 +7,7 @@ import { formatPct } from "@/utils/format";
 import NumberFlow, { continuous } from "@number-flow/react";
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { div } from "three/webgpu";
 import { Button } from "../components/ui/Button";
 
@@ -15,20 +16,18 @@ function MainCTA() {
     <div className="flex flex-col gap-8 max-w-[32rem]">
       <div className="flex flex-col items-start gap-4 self-stretch">
         <div className="flex flex-row gap-6">
-          <img src={PintoLogo} alt={"Pinto Logo"} className="drop-shadow-sm" />
-          <img src={PintoLogoText} alt={"Pinto Logo"} className="drop-shadow-sm" />
+          <img src={PintoLogo} alt={"Pinto Logo"} />
+          <img src={PintoLogoText} alt={"Pinto Logo"} />
         </div>
-        <h2 className="pinto-h2 text-black drop-shadow-sm">A Low Volatility Money Protocol</h2>
-        <span className="pinto-body-light text-pinto-gray-4 drop-shadow-sm">
+        <h2 className="pinto-h2 text-black">A Low Volatility Money Protocol</h2>
+        <span className="pinto-body-light text-pinto-gray-4">
           Pinto has a $1 price target, but tolerates volatility <br /> for capital efficiency, trustlessness, and
           scalability.
         </span>
       </div>
       <div className="flex flex-row gap-4">
-        <Button rounded="full" className="drop-shadow-sm">
-          Get Started
-        </Button>
-        <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4 drop-shadow-sm">
+        <Button rounded="full">Get Started</Button>
+        <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
           Read Docs
         </Button>
       </div>
@@ -179,10 +178,8 @@ function SecondaryCTA() {
             Trustlessness and capital efficiency at scale are requisite to build the onchain economy.
           </span>
           <div className="flex flex-row gap-4 mt-8">
-            <Button rounded="full" className="drop-shadow-sm">
-              Get Started
-            </Button>
-            <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4 drop-shadow-sm">
+            <Button rounded="full">Get Started</Button>
+            <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
               Read Docs
             </Button>
           </div>
@@ -203,14 +200,18 @@ function SecondaryCTA() {
             <span className="pinto-lg text-pinto-gray-4">
               Pinto is credit based, allowing it to scale without limits
             </span>
-            <span className="pinto-body-light text-pinto-green-4">Learn More</span>
+            <Link to="/explorer/silo" className="pinto-body-light text-pinto-green-4 hover:underline transition-all">
+              Learn More →
+            </Link>
           </div>
         </div>
         <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white">
           <span className="pinto-body-light text-[2rem] leading-[1.1] text-black">Trustless</span>
           <div className="flex flex-row gap-4">
             <span className="pinto-lg text-pinto-gray-4">Censorship resistant and decentralized governance</span>
-            <span className="pinto-body-light text-pinto-green-4">Learn More</span>
+            <Link to="/explorer/silo" className="pinto-body-light text-pinto-green-4 hover:underline transition-all">
+              Learn More →
+            </Link>
           </div>
         </div>
         <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white">
@@ -219,7 +220,9 @@ function SecondaryCTA() {
             <span className="pinto-lg text-pinto-gray-4">
               No collateral, no interest paid by depositors, no value lockups, and no liquidations
             </span>
-            <span className="pinto-body-light text-pinto-green-4">Learn More</span>
+            <Link to="/explorer/silo" className="pinto-body-light text-pinto-green-4 hover:underline transition-all">
+              Learn More →
+            </Link>
           </div>
         </div>
       </div>
@@ -252,10 +255,6 @@ export default function Landing() {
 
   return (
     <div className="flex flex-col">
-      <div className="w-screen h-screen absolute -z-[1]" style={{ top: navBarHeight * -1 }}>
-        <div className="bg-gradient-light w-screen h-screen absolute" />
-        <img src={"BG4.png"} className="w-screen h-screen absolute mix-blend-multiply" />
-      </div>
       <div className="flex flex-col" style={{ height: initialHeight }}>
         <div className="my-auto ml-[4.5rem]">
           <MainCTA />
