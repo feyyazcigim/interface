@@ -208,12 +208,14 @@ function Field() {
 
   const morning = useMorning();
 
+  const showInfos = !isMobile || (!currentAction && isMobile);
+
   return (
     <PageContainer variant="xlAltField">
       {/* <div className="flex flex-col w-full items-center"> */}
       <div className="flex flex-col lg:flex-row justify-between gap-14 mt-0 sm:mt-0">
         <div className="flex flex-col w-full gap-4 sm:gap-8">
-          {(!isMobile || (!currentAction && isMobile)) && (
+          {showInfos && (
             <Col className="gap-2">
               <div className="flex flex-col gap-4">
                 <div className="pinto-h2 sm:pinto-h1">Field</div>
@@ -231,11 +233,11 @@ function Field() {
               </Link>
             </Button>
           )}
-          {(!isMobile || (!currentAction && isMobile)) && <Separator />}
+          {showInfos && <Separator />}
           <MorningPanel />
           <FieldStats />
-          <FieldCharts show={!isMobile || (!currentAction && isMobile)} />
-          {(!isMobile || (!currentAction && isMobile)) && (
+          <FieldCharts show={showInfos} />
+          {showInfos && (
             <div className="flex flex-row items-center justify-between rounded-[1rem] p-4 sm:p-6 bg-pinto-off-white border-pinto-gray-2 border w-full">
               <div className="flex flex-col gap-2">
                 <div className="pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light flex flex-row gap-1 items-center">
@@ -255,7 +257,7 @@ function Field() {
             </div>
           )}
 
-          {(!isMobile || (!currentAction && isMobile)) && (
+          {showInfos && (
             <>
               <div className="flex flex-row justify-between items-center overflow-x-auto scrollbar-none">
                 <div className="flex space-x-1">
