@@ -245,6 +245,97 @@ function FarmToTable() {
   );
 }
 
+function Resources() {
+  return (
+    <div className="flex flex-col items-center self-stretch gap-12 mx-auto">
+      <h2 className="text-4xl leading-same-h2 font-light text-black">Resources</h2>
+      <div className="flex flex-row gap-8">
+        <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[36rem] flex flex-col gap-8 overflow-clip bg-white">
+          <div className="overflow-hidden relative">
+            <img
+              src="documentation.png"
+              className="w-full h-full object-cover object-top relative z-0"
+              alt="landing 2"
+            />
+            {/* Horizontal gradient overlay */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-white/50 via-transparent to-white/50 z-10 pointer-events-none" />
+
+            {/* Vertical gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-white/100 z-10 pointer-events-none" />
+          </div>
+          <div className="flex flex-col gap-4 mx-6">
+            <span className="text-[2rem] font-light text-black">Documentation</span>
+            <span className="text-[1.5rem] font-light text-pinto-gray-4">
+              Learn more about protocol economics, mechanisms, and implementation of the protocol smart contracts.
+            </span>
+            <Button variant="outline-white" className="w-full flex p-4 justify-center items-center gap-2.5 flex-1 mb-6">
+              <img src="gitbook.png" className="w-8 h-8" alt="documentation" />
+              <span className="w-full text-start">Read Documentation</span>
+              <span>→</span>
+            </Button>
+          </div>
+        </div>
+        <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[36rem] flex flex-col gap-8 overflow-clip bg-white">
+          <div className="overflow-hidden relative">
+            <img src="blog.png" className="w-full h-full object-cover object-top relative z-0" alt="landing 2" />
+            {/* Horizontal gradient overlay */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-white/50 via-transparent to-white/50 z-10 pointer-events-none" />
+
+            {/* Vertical gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-white/100 z-10 pointer-events-none" />
+          </div>
+          <div className="flex flex-col gap-4 mx-6">
+            <span className="text-[2rem] font-light text-black">Blog</span>
+            <span className="text-[1.5rem] font-light text-pinto-gray-4">
+              Find guides on protocol usage, detail about protocol upgrades, and more from core contributors.
+            </span>
+            <Button variant="outline-white" className="w-full flex p-4 justify-center items-center gap-2.5 flex-1 mb-6">
+              <img src="mirror.png" className="w-8 h-8 min-w-8 min-h-8" alt="documentation" />
+              <span className="w-full text-start">Pinto Community Blog</span>
+              <span>→</span>
+            </Button>
+          </div>
+        </div>
+        <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[36rem] flex flex-col gap-8 overflow-clip bg-white">
+          <div className="overflow-hidden relative">
+            <img src="community.png" className="w-full h-full object-cover object-top relative z-0" alt="landing 2" />
+            {/* Horizontal gradient overlay */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-white/50 via-transparent to-white/50 z-10 pointer-events-none" />
+
+            {/* Vertical gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-white/100 z-10 pointer-events-none" />
+          </div>
+          <div className="flex flex-col gap-4 mx-6">
+            <span className="text-[2rem] font-light text-black">Community</span>
+            <span className="text-[1.5rem] font-light text-pinto-gray-4">
+              Ask questions about the protocol, participate in discussion about improvements and connect with other
+              Pinto enjoyers.
+            </span>
+            <div className="flex flex-row gap-4">
+              <Button
+                variant="outline-white"
+                className="w-full flex p-4 justify-center items-center gap-2.5 flex-1 h-[3.125rem]"
+              >
+                <img src="discord.png" className="w-8 h-6 min-w-8 min-h-6" alt="documentation" />
+                <span className="w-full text-start">Discord</span>
+                <span>→</span>
+              </Button>
+              <Button
+                variant="outline-white"
+                className="w-full flex p-4 justify-center items-center gap-2.5 flex-1 h-[3.125rem]"
+              >
+                <img src="twitter.png" className="w-8 h-8 min-w-8 min-h-8" alt="documentation" />
+                <span className="w-full text-start">@pintodotmoney</span>
+                <span>→</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Landing() {
   const [initialHeight, setInitialHeight] = useState(1600);
   const [navBarHeight, setNavBarHeight] = useState(50);
@@ -285,6 +376,9 @@ export default function Landing() {
       <div className="flex flex-col gap-12" style={{ height: initialHeight }}>
         <AuditMarquee />
         <BugBounty />
+      </div>
+      <div className="flex flex-col gap-12" style={{ height: initialHeight + navBarHeight / 3 }}>
+        <Resources />
       </div>
     </div>
   );
