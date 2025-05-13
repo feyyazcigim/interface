@@ -28,6 +28,7 @@ export interface SeasonsTableData {
   season: number;
   timestamp: number;
   caseId: number;
+  sunriseBlock: number;
   beanToMaxLpGpPerBdvRatio: number;
   deltaBeanToMaxLpGpPerBdvRatio: number;
   blocksToSoldOutSoil: string;
@@ -297,6 +298,7 @@ export default function useSeasonsData(
         if (!allData.season) {
           allData.season = currStalkSeasons.season;
           allData.timestamp = Number(currStalkSeasons.createdAt || 0);
+          allData.sunriseBlock = Number(currStalkSeasons.sunriseBlock || 0);
         }
       }
 
