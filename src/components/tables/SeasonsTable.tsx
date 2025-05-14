@@ -1,17 +1,21 @@
 import eyeballCrossed from "@/assets/misc/eyeball-crossed.svg";
 import IconImage from "@/components/ui/IconImage";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
-import { seasonColumns } from "@/pages/explorer/SeasonsExplorer";
+import { SEASON_TABLE_PAGE_SIZE, seasonColumns } from "@/pages/explorer/SeasonsExplorer";
 import { SeasonsTableData } from "@/state/useSeasonsData";
+import useSowEventData, { SowEvent } from "@/state/useSowEventData";
 import { trulyTheBestTimeFormat } from "@/utils/format";
 import { calculateCropScales, caseIdToDescriptiveText, convertDeltaDemandToPercentage } from "@/utils/season";
 import { DateTime } from "luxon";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ListChildComponentProps, VariableSizeList, areEqual } from "react-window";
+import { useBlockNumber } from "wagmi";
+import { SoilDemandChart } from "../charts/SoilDemandChart";
 import { SeasonsTableCell, SeasonsTableCellType } from "./SeasonsTableCell";
 
 interface SeasonsTableProps {
   seasonsData: SeasonsTableData[];
+  page: number;
   hiddenFields: string[];
   hideColumn: (id: string) => void;
 }
@@ -19,7 +23,9 @@ interface SeasonsTableProps {
 export const nonHideableFields = ["season"];
 const paginationPadding = 50;
 
-export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsTableProps) => {
+export const SeasonsTable = ({ seasonsData, page, hiddenFields, hideColumn }: SeasonsTableProps) => {
+  // we pass in all season data but only want to show the chunk of 100 corresponding to the current page
+  const displaySeasonsData = seasonsData.slice((page - 1) * SEASON_TABLE_PAGE_SIZE, page * SEASON_TABLE_PAGE_SIZE);
   const tableRef = useRef<HTMLTableElement>(null);
   const [height, setHeight] = useState(500);
 
@@ -49,6 +55,27 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
     setHeight(newHeight);
   };
 
+  const blockQuery = useBlockNumber({
+    query: {
+      refetchInterval: 20_000,
+      refetchIntervalInBackground: false,
+      refetchOnMount: true,
+    },
+  });
+  const [currentBlockNumber, setCurrentBlockNumber] = useState<number>(Number(blockQuery.data) || 0);
+
+  useEffect(() => {
+    if (blockQuery.data) {
+      setCurrentBlockNumber(Number(blockQuery.data));
+    }
+  }, [blockQuery.data]);
+
+  // Go back an additional 2000 blocks to make sure we pull events for the season preceding the final index
+  // in the table. ex: seasons 1000-900 are shown, pull sow events for 899 to be able to show soil demand chart for 900
+  const minBlock = Math.max(displaySeasonsData[displaySeasonsData.length - 1]?.sunriseBlock - 2000, 0);
+  const maxBlock = Math.min(displaySeasonsData[0]?.sunriseBlock + 2000, currentBlockNumber);
+  const sowEvents = useSowEventData(minBlock, maxBlock);
+
   useEffect(() => {
     window.addEventListener("resize", calculateHeight);
     return () => {
@@ -58,13 +85,34 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
 
   useEffect(() => {
     calculateHeight();
-  }, [seasonsData]);
+  }, [displaySeasonsData]);
 
   const RenderRow = React.memo(({ index, style }: ListChildComponentProps<SeasonsTableData>) => {
-    const data = seasonsData[index];
+    const data = displaySeasonsData[index];
+    const seasonsIndexOffset = (page - 1) * SEASON_TABLE_PAGE_SIZE + index;
     const { cropScalar, cropRatio } = calculateCropScales(data.beanToMaxLpGpPerBdvRatio, data.raining, data.season);
     const deltaCropScalar = (data.deltaBeanToMaxLpGpPerBdvRatio / 1e18).toFixed(1);
     const priceDescriptiveText = caseIdToDescriptiveText(data.caseId, "price");
+    const filteredSowEvents = sowEvents.data.reduce(
+      (acc, event) => {
+        //next season or current block events
+        if (
+          event.blockNumber >= BigInt(data.sunriseBlock) &&
+          event.blockNumber <= BigInt(seasonsData[seasonsIndexOffset - 1]?.sunriseBlock || currentBlockNumber)
+        ) {
+          acc[data.season].push(event);
+        }
+        //previous season
+        if (
+          event.blockNumber <= BigInt(data?.sunriseBlock) &&
+          event.blockNumber >= BigInt(seasonsData[seasonsIndexOffset + 1]?.sunriseBlock)
+        ) {
+          acc[seasonsData[seasonsIndexOffset + 1].season].push(event);
+        }
+        return acc;
+      },
+      { [data.season]: [], [seasonsData[seasonsIndexOffset + 1]?.season]: [] } as Record<number, SowEvent[]>,
+    );
     return (
       <TableRow key={data.season} style={style} noHoverMute>
         <SeasonsTableCell
@@ -132,12 +180,26 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
         <SeasonsTableCell
           cellType={SeasonsTableCellType.TwoColumn}
           columnKey="deltaDemand"
+          notApplicable={data.season <= 3}
+          value={caseIdToDescriptiveText(seasonsData[seasonsIndexOffset + 1]?.caseId, "soil_demand")}
+          hiddenFields={hiddenFields}
+          hoverContent={
+            data.season > 3 && (
+              <SoilDemandChart
+                currentSeason={data}
+                previousSeason={seasonsData[seasonsIndexOffset + 1]}
+                nextBlock={seasonsData[seasonsIndexOffset - 1]?.sunriseBlock || currentBlockNumber}
+                filteredSowEvents={filteredSowEvents}
+              />
+            )
+          }
+        />
+        <SeasonsTableCell
+          cellType={SeasonsTableCellType.Default}
+          columnKey="deltaSoilSown"
           value={convertDeltaDemandToPercentage(data.deltaPodDemand.toNumber())}
           subValue={caseIdToDescriptiveText(data.caseId, "soil_demand")}
           hiddenFields={hiddenFields}
-          // hoverContent={
-          //   <DeltaDemandChart />
-          // }
         />
         <SeasonsTableCell
           columnKey="cropScalar"
@@ -209,7 +271,7 @@ export const SeasonsTable = ({ seasonsData, hiddenFields, hideColumn }: SeasonsT
         <VariableSizeList
           className="overscroll-auto mb-[50px] scrollbar-none"
           height={height}
-          itemCount={seasonsData.length}
+          itemCount={displaySeasonsData.length}
           itemSize={() => 50}
           width={calculatedWidth}
           overscanCount={4}

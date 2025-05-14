@@ -1,5 +1,6 @@
 import { TableCell } from "@/components/ui/Table";
 import { cn } from "@/utils/utils";
+import TooltipSimple from "../TooltipSimple";
 
 interface TwoColumnCellProps {
   className: string;
@@ -27,10 +28,9 @@ export const TwoColumnCell = ({
 
   return hoverContent ? (
     <TableCell className={cn(className, "group")}>
-      <div className="flex items-center justify-end gap-2">
-        <div className="opacity-0 group-hover:opacity-100">{hoverContent}</div>
+      <TooltipSimple content={hoverContent} side="left">
         {cellContent}
-      </div>
+      </TooltipSimple>
     </TableCell>
   ) : (
     <TableCell className={className}>{cellContent}</TableCell>

@@ -36,6 +36,7 @@ export const seasonColumns: SeasonColumn[] = [
   { id: "l2sr", name: "L2SR", classes: "text-right  w-[150px]", width: 150 },
   { id: "podRate", name: "Pod Rate", classes: "text-right  w-[150px]", width: 150 },
   { id: "deltaDemand", name: "Delta Demand", classes: "text-right  w-[150px]", width: 150 },
+  { id: "deltaSoilSown", name: "∆ Soil Sown", classes: "text-right  w-[150px]", width: 150 },
   { id: "cropScalar", name: "Crop Scalar", classes: "text-right  w-[150px]", width: 150 },
   { id: "cropRatio", name: "Crop Ratio", classes: "text-right  w-[125px]", width: 125 },
   { id: "temperature", name: "Max Temperature", classes: "text-right w-[175px]", width: 175 },
@@ -46,7 +47,7 @@ export interface SortColumn {
   dir: "asc" | "desc";
 }
 
-const PAGE_SIZE = 100;
+export const SEASON_TABLE_PAGE_SIZE = 100;
 
 const SeasonsExplorer = () => {
   const localStorageHiddenFields = JSON.parse(localStorage.getItem("pinto.seasonsExplorer.hiddenFields") || "[]");
@@ -56,10 +57,9 @@ const SeasonsExplorer = () => {
   const [displayPage, setDisplayPage] = useState<number | string>("1");
   const [page, setPage] = useState(1);
   const [jumpToSeason, setJumpToSeason] = useState(0);
-  const [seasons, setSeasons] = useState<any>([]);
   const [fromSeason, setFromSeason] = useState(currentSeason);
 
-  const totalPages = Math.ceil(currentSeason / PAGE_SIZE);
+  const totalPages = Math.ceil(currentSeason / SEASON_TABLE_PAGE_SIZE);
   const isMobile = useIsMobile();
   const seasonsData = useSeasonsData(fromSeason, currentSeason, {
     basinData: false,
@@ -68,14 +68,13 @@ const SeasonsExplorer = () => {
   });
 
   const calculateSeasonPageToJump = (season: number) => {
-    return Math.min(Math.floor((currentSeason - season) / PAGE_SIZE) + 1, totalPages);
+    return Math.min(Math.floor((currentSeason - season) / SEASON_TABLE_PAGE_SIZE) + 1, totalPages);
   };
 
   useEffect(() => {
-    if (seasonsData?.data?.length && page * PAGE_SIZE > seasonsData?.data?.length) {
+    if (seasonsData?.data?.length && page * SEASON_TABLE_PAGE_SIZE > seasonsData?.data?.length) {
       setFromSeason(Math.max(0, fromSeason - 1000));
     }
-    setSeasons(seasonsData?.data?.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE));
   }, [seasonsData?.data?.length, page, seasonsData?.isFetching]);
 
   useEffect(() => {
@@ -156,7 +155,7 @@ const SeasonsExplorer = () => {
       {isLoading ? (
         <FrameAnimator className="flex self-center" size={250} />
       ) : (
-        <SeasonsTable seasonsData={seasons} hiddenFields={hiddenFields} hideColumn={hideColumn} />
+        <SeasonsTable seasonsData={seasonsData?.data} page={page} hiddenFields={hiddenFields} hideColumn={hideColumn} />
       )}
       <div className="self-center w-[100vw] flex justify-center flex-row gap-x-2 bg-pinto-gray-1 border border-pinto-gray-2 h-[50px] fixed bottom-0 left-0 right-0 font-medium z-[1]">
         <div className="w-full min-w-0 2xl:max-w-[1550px] 3xl:max-w-[2560px] flex items-center gap-2 sm:px-12 px-8 3xl:px-4">
