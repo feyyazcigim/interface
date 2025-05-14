@@ -4,11 +4,9 @@ import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import PintoTokenLogo from "@/assets/tokens/PINTO.png";
 import { useAverageBDVWeightedSiloAPYs } from "@/state/useSiloAPYs";
 import { formatPct } from "@/utils/format";
-import NumberFlow, { continuous } from "@number-flow/react";
-import clsx from "clsx";
+import NumberFlow from "@number-flow/react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { div } from "three/webgpu";
 import { Button } from "../components/ui/Button";
 
 function MainCTA() {
@@ -19,10 +17,9 @@ function MainCTA() {
           <img src={PintoLogo} alt={"Pinto Logo"} />
           <img src={PintoLogoText} alt={"Pinto Logo"} />
         </div>
-        <h2 className="pinto-h2 text-black">A Low Volatility Money Protocol</h2>
+        <h2 className="pinto-h2 text-black">Fair Fiat Money</h2>
         <span className="pinto-body-light text-pinto-gray-4">
-          Pinto has a $1 price target, but tolerates volatility <br /> for capital efficiency, trustlessness, and
-          scalability.
+          Prints for the people. Founded on decentralized credit.
         </span>
       </div>
       <div className="flex flex-row gap-4">
@@ -69,37 +66,29 @@ function APYBar() {
 }
 
 function AuditMarquee() {
+  function MarqueeLogos({ hideFromScreenReaders = false }: { hideFromScreenReaders?: boolean }) {
+    return (
+      <div
+        className="flex flex-row pl-20 gap-20 min-w-fit max-w-fit animate-marquee opacity-40"
+        aria-hidden={hideFromScreenReaders}
+      >
+        <img src="cantina.svg" className="h-10" alt="cantina" />
+        <img src="codehawks.svg" className="h-10" alt="codehawks" />
+        <img src="cyfrin.svg" className="h-10" alt="cyfrin" />
+        <img src="trail-of-bits.png" className="h-10" alt="trail of bits" />
+        <img src="egis.png" className="h-10" alt="egis security" />
+        <img src="halborn.png" className="h-10" alt="halborn" />
+        <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-10" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-9">
-      <div className="mx-auto mt-[4.5rem] text-black pinto-h2 font-light">27 audits to date by</div>
-      <div className="flex flex-row gap-20 min-w-fit max-w-fit animate-marquee">
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
-        <div>auditooor</div>
+      <div className="mx-auto mt-[4.5rem] text-pinto-gray-4 text-[1.5rem] font-light">25 audits to date by</div>
+      <div className="flex flex-row">
+        <MarqueeLogos />
+        <MarqueeLogos hideFromScreenReaders />
       </div>
     </div>
   );
