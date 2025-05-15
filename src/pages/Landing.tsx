@@ -74,16 +74,16 @@ function AuditMarquee() {
   function MarqueeLogos({ hideFromScreenReaders = false }: { hideFromScreenReaders?: boolean }) {
     return (
       <div
-        className="flex flex-row pl-20 gap-20 min-w-fit max-w-fit animate-marquee opacity-40"
+        className="flex flex-row pl-20 gap-20 animate-marquee opacity-40 flex-shrink-0"
         aria-hidden={hideFromScreenReaders}
       >
-        <img src="cantina.svg" className="h-10" alt="cantina" />
-        <img src="codehawks.svg" className="h-10" alt="codehawks" />
-        <img src="cyfrin.svg" className="h-10" alt="cyfrin" />
-        <img src="trail-of-bits.png" className="h-10" alt="trail of bits" />
-        <img src="egis.png" className="h-10" alt="egis security" />
-        <img src="halborn.png" className="h-10" alt="halborn" />
-        <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-10" />
+        <img src="cantina.svg" className="h-10 flex-shrink-0" alt="cantina" />
+        <img src="codehawks.svg" className="h-10 flex-shrink-0" alt="codehawks" />
+        <img src="cyfrin.svg" className="h-10 flex-shrink-0" alt="cyfrin" />
+        <img src="trail-of-bits.png" className="h-10 flex-shrink-0" alt="trail of bits" />
+        <img src="egis.png" className="h-10 flex-shrink-0" alt="egis security" />
+        <img src="halborn.png" className="h-10 flex-shrink-0" alt="halborn" />
+        <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-10 flex-shrink-0" />
       </div>
     );
   }
