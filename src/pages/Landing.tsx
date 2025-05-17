@@ -161,9 +161,9 @@ function BugBounty() {
 
 function SecondaryCTA() {
   return (
-    <div className="grid grid-flow-row grid-rows-[64%_1fr] w-full h-full">
-      <div className="grid grid-flow-col grid-cols-[43%_1fr] border-y border-pinto-gray-2">
-        <div className="flex flex-col items-start self-stretch my-auto px-12 border-r border-pinto-gray-2 bg-pinto-off-white">
+    <div className="flex flex-col w-full h-full">
+      <div className="flex flex-row border-y border-pinto-gray-2 basis-[40rem]">
+        <div className="flex flex-col items-start place-content-center px-12 border-r border-pinto-gray-2 bg-pinto-off-white basis-5/12">
           <h2 className="pinto-h2 text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center">
             <span>Not a Stablecoin</span>
             <div className="flex flex-row gap-2 items-center">
@@ -187,17 +187,16 @@ function SecondaryCTA() {
             </Button>
           </div>
         </div>
-        <div className="overflow-hidden w-full h-full relative">
-          <img src="landing-2.png" className="w-full h-full object-cover object-top relative z-0" alt="landing 2" />
-          {/* Horizontal gradient overlay */}
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-white/50 via-transparent to-white/50 z-10 pointer-events-none" />
-
-          {/* Vertical gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-white/50 z-10 pointer-events-none" />
+        <div className="overflow-hidden shrink-0 relative basis-7/12 bg-double-fade">
+          <img
+            src="landing-2.png"
+            className="absolute inset-0 w-full h-full object-cover object-center mix-blend-overlay"
+            alt="landing 2"
+          />
         </div>
       </div>
-      <div className="grid grid-flow-row grid-rows-3">
-        <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white">
+      <div className="flex flex-col basis-[27rem]">
+        <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white basis-1/3">
           <span className="pinto-body-light text-[2rem] leading-[1.1] text-black">Scalable</span>
           <div className="flex flex-row gap-4">
             <span className="pinto-lg text-pinto-gray-4">
@@ -208,7 +207,7 @@ function SecondaryCTA() {
             </Link>
           </div>
         </div>
-        <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white">
+        <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white basis-1/3">
           <span className="pinto-body-light text-[2rem] leading-[1.1] text-black">Trustless</span>
           <div className="flex flex-row gap-4">
             <span className="pinto-lg text-pinto-gray-4">Censorship resistant and decentralized governance</span>
@@ -217,7 +216,7 @@ function SecondaryCTA() {
             </Link>
           </div>
         </div>
-        <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white">
+        <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white basis-1/3">
           <span className="pinto-body-light text-[2rem] leading-[1.1] text-black">Capital efficient</span>
           <div className="flex flex-row gap-4">
             <span className="pinto-lg text-pinto-gray-4">
@@ -340,18 +339,24 @@ function Resources() {
 }
 
 export default function Landing() {
-  const [initialHeight, setInitialHeight] = useState(1600);
-  const [navBarHeight, setNavBarHeight] = useState(50);
+  const [initialHeightRem, setInitialHeightRem] = useState(100);
+  const [navBarHeightRem, setNavBarHeightRem] = useState(3.125);
 
   useEffect(() => {
     const calculateHeight = () => {
+      // Get the current rem value based on root font size
+      const remSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+
       const elem = document.getElementById("pinto-navbar");
       if (!elem) return;
-      const windowHeight = window.innerHeight;
+
+      const windowHeight = window.screen.availHeight - (window.outerHeight - window.innerHeight);
       const headerOffset = elem.getBoundingClientRect().height;
       const newHeight = windowHeight - headerOffset;
-      setInitialHeight(newHeight);
-      setNavBarHeight(headerOffset);
+
+      // Convert pixel values to rem
+      setInitialHeightRem(newHeight / remSize);
+      setNavBarHeightRem(headerOffset / remSize);
     };
 
     calculateHeight();
@@ -364,23 +369,23 @@ export default function Landing() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col" style={{ height: initialHeight }}>
+      <div className="flex flex-col" style={{ height: `${initialHeightRem}rem` }}>
         <div className="my-auto ml-[4.5rem]">
           <MainCTA />
         </div>
         <APYBar />
       </div>
-      <div className="flex flex-col gap-12" style={{ height: initialHeight }}>
+      <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem}rem` }}>
         <SecondaryCTA />
       </div>
-      <div className="flex flex-col gap-12" style={{ height: initialHeight }}>
+      <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem}rem` }}>
         <FarmToTable />
       </div>
-      <div className="flex flex-col gap-12" style={{ height: initialHeight }}>
+      <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem}rem` }}>
         <AuditMarquee />
         <BugBounty />
       </div>
-      <div className="flex flex-col gap-12" style={{ height: initialHeight + navBarHeight / 3 }}>
+      <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem + navBarHeightRem / 3}rem` }}>
         <Resources />
       </div>
     </div>

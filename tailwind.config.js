@@ -156,6 +156,7 @@ module.exports = {
         "gradient-lighter-2":
           "linear-gradient(90deg, #E9E7E0 0%, #FEE18C 52.5%, #F1F88C 100%)",
         "dot-grid": "radial-gradient(#D9D9D9 2px, transparent 2px)",
+        'double-fade': 'linear-gradient(270deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0.00) 50%, rgba(255, 255, 255, 0.50) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0.00) 50%, rgba(255, 255, 255, 0.50) 100%)',
       },
       borderRadius: {
         xl: "calc(var(--radius) + 8px)", // 20px
