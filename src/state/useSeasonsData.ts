@@ -15,16 +15,16 @@ import {
 import { PaginationSettings, paginateMultiQuerySubgraph, paginateSubgraph } from "@/utils/paginateSubgraph";
 import { Duration } from "luxon";
 import { useCallback, useMemo } from "react";
+import { L } from "vitest/dist/chunks/reporters.66aFHiyX.js";
 import { useChainId } from "wagmi";
 import { APYWindow, useSeasonalAPYs } from "./seasonal/queries/useSeasonalAPY";
+import useSeasonalInflowSnapshots from "./seasonal/queries/useSeasonalInflowSnapshots";
 import useSeasonalQueries, {
   SeasonalQueryVars,
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
 import useSeasonalTractorSnapshots from "./seasonal/queries/useSeasonalTractorSnapshots";
 import useTokenData from "./useTokenData";
-import useSeasonalInflowSnapshots from "./seasonal/queries/useSeasonalInflowSnapshots";
-import { L } from "vitest/dist/chunks/reporters.66aFHiyX.js";
 
 export interface SeasonsTableData {
   season: number;
