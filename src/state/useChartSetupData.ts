@@ -7,6 +7,7 @@ import { Token } from "@/utils/types";
 import { useMemo } from "react";
 import useTokenData from "./useTokenData";
 
+type ChartType = "Pinto" | "Field" | "Silo" | "Tractor" | "Exchange" | "Inflow";
 interface ChartSetupBase {
   /**
    * Chart ID
@@ -15,7 +16,7 @@ interface ChartSetupBase {
   /**
    * Chart type, used to categorize charts in the Select panel
    */
-  type: "Pinto" | "Field" | "Silo" | "Tractor" | "Exchange";
+  type: ChartType;
   /**
    * Name of variable to be used to fill the time scale. Usually "timestamp"
    */
@@ -669,6 +670,68 @@ const createTractorCharts = (mainToken: Token): ChartSetupBase[] => [
   },
 ];
 
+const createInflowCharts = (mainToken: Token): ChartSetupBase[] => {
+  const inflowEntry = ({
+    id,
+    name,
+    tooltipTitle,
+    tooltipHoverText,
+    shortDescription,
+  }: {
+    id: string;
+    name: string;
+    tooltipTitle: string;
+    tooltipHoverText: string;
+    shortDescription: string;
+  }) => {
+    return {
+      id,
+      type: "Inflow" as ChartType,
+      name,
+      tooltipTitle,
+      tooltipHoverText,
+      shortDescription,
+      icon: mainToken.logoURI,
+      timeScaleKey: "timestamp",
+      priceScaleKey: id,
+      valueAxisType: id,
+      valueFormatter: (v: number) => v,
+      tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+      shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+    };
+  };
+  return [
+    inflowEntry({
+      id: "inflowAllCumulativeNet",
+      name: "Protocol Cumulative Net (USD)",
+      tooltipTitle: "Inflow: Protocol Cumulative Net (USD)",
+      tooltipHoverText: "Cumulative Net of Protocol Inflows/Outflows",
+      shortDescription: "Cumulative Net of Protocol Inflows/Outflows",
+    }),
+    inflowEntry({
+      id: "inflowAllCumulativeIn",
+      name: "Protocol Cumulative Inflows (USD)",
+      tooltipTitle: "Inflow: Protocol Cumulative Inflows (USD)",
+      tooltipHoverText: "Cumulative Sum of Protocol Inflows",
+      shortDescription: "Cumulative Sum of Protocol Inflows",
+    }),
+    inflowEntry({
+      id: "inflowAllCumulativeOut",
+      name: "Protocol Cumulative Outflows (USD)",
+      tooltipTitle: "Inflow: Protocol Cumulative Outflows (USD)",
+      tooltipHoverText: "Cumulative Sum of Protocol Outflows",
+      shortDescription: "Cumulative Sum of Protocol Outflows",
+    }),
+    inflowEntry({
+      id: "inflowAllCumulativeVolume",
+      name: "Protocol Cumulative Volume (USD)",
+      tooltipTitle: "Inflow: Protocol Cumulative Volume (USD)",
+      tooltipHoverText: "Cumulative Sum of Protocol Inflows/Outflows",
+      shortDescription: "Cumulative Sum of Protocol Inflows/Outflows",
+    }),
+  ];
+};
+
 export function useChartSetupData() {
   const { mainToken, lpTokens, whitelistedTokens } = useTokenData();
 
@@ -679,6 +742,7 @@ export function useChartSetupData() {
     const exchangeCharts = createExchangeCharts(mainToken);
     const apyCharts = createAPYCharts(mainToken);
     const tractorCharts = createTractorCharts(mainToken);
+    const inflowCharts = createInflowCharts(mainToken);
 
     if (lpTokens.length > 0) {
       // Add LP charts here
@@ -694,6 +758,7 @@ export function useChartSetupData() {
       ...exchangeCharts,
       ...apyCharts,
       ...tractorCharts,
+      ...inflowCharts,
     ].map((setupData, index) => ({
       ...setupData,
       index: index,
