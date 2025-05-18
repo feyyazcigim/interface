@@ -10,8 +10,8 @@ const MinimalistConcentricCircles: React.FC<MinimalistConcentricCirclesProps> = 
   canvasHeight = 1600,
   beginAnimation = false,
 }) => {
-  const mountRef = useRef(null);
-  const animationRef = useRef(null);
+  const mountRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
   const animationStartTimeRef = useRef<number | null>(null);
   const sceneInitializedRef = useRef(false);
 
@@ -297,7 +297,7 @@ const MinimalistConcentricCircles: React.FC<MinimalistConcentricCirclesProps> = 
         }
 
         // Ease-in-out function for smoother fade
-        const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+        const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
         const fadeValue = easeInOut(normalizedTime);
 
         // Apply the same opacity to all circles in this ring
