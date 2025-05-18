@@ -7,6 +7,7 @@ import Usd0Logo from "@/assets/tokens/USD0.png";
 import UsdcLogo from "@/assets/tokens/USDC.png";
 import UsdeLogo from "@/assets/tokens/USDE.png";
 import UsdtLogo from "@/assets/tokens/USDT.png";
+import MinimalistConcentricCircles from "@/components/MinimalistConcentricCircles";
 import { useAverageBDVWeightedSiloAPYs } from "@/state/useSiloAPYs";
 import { formatPct } from "@/utils/format";
 import NumberFlow from "@number-flow/react";
@@ -232,16 +233,51 @@ function SecondaryCTA() {
   );
 }
 
-function FarmToTable() {
+function FarmToTable({ height = 1600 }: { height: number }) {
+  const [beginAnimation, setBeginAnimation] = useState(false);
+  const sloganRef = useRef(null);
+
+  useEffect(() => {
+    if (!sloganRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          setBeginAnimation(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+
+    observer.observe(sloganRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col items-center self-stretch gap-4 my-auto mx-auto ">
-      <h2 className="pinto-h2 text-5xl leading-[1.1] text-black">Farm to Table</h2>
-      <span className="pinto-body-light font-thin text-pinto-gray-4">No investors. Community first.</span>
-      <div className="flex flex-row gap-4">
-        <Button rounded="full">Get Started</Button>
-        <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
-          Read Docs
-        </Button>
+    <div className="flex flex-col items-center justify-center relative w-full h-screen overflow-hidden">
+      {/* Background expanding rings centered properly */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-full h-auto opacity-10">
+          <MinimalistConcentricCircles canvasHeight={height} beginAnimation={beginAnimation} />
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-4 z-10">
+        <h2 className="pinto-h2 text-5xl leading-[1.1] text-black">Farm to Table</h2>
+        <span ref={sloganRef} className="pinto-body-light font-thin text-pinto-gray-4">
+          No investors. Community first.
+        </span>
+        <div className="flex flex-row gap-4">
+          <Button rounded="full">Get Started</Button>
+          <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
+            Read Docs
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -340,6 +376,7 @@ function Resources() {
 
 export default function Landing() {
   const [initialHeightRem, setInitialHeightRem] = useState(100);
+  const [initialHeightPx, setInitialHeightPx] = useState(1600);
   const [navBarHeightRem, setNavBarHeightRem] = useState(3.125);
 
   useEffect(() => {
@@ -356,6 +393,7 @@ export default function Landing() {
 
       // Convert pixel values to rem
       setInitialHeightRem(newHeight / remSize);
+      setInitialHeightPx(newHeight);
       setNavBarHeightRem(headerOffset / remSize);
     };
 
@@ -378,8 +416,8 @@ export default function Landing() {
       <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem}rem` }}>
         <SecondaryCTA />
       </div>
-      <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem}rem` }}>
-        <FarmToTable />
+      <div className="flex flex-col gap-12 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
+        <FarmToTable height={initialHeightPx} />
       </div>
       <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem}rem` }}>
         <AuditMarquee />
