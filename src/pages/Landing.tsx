@@ -95,6 +95,9 @@ function AuditMarquee() {
       <div className="flex flex-row">
         <MarqueeLogos />
         <MarqueeLogos hideFromScreenReaders />
+        <MarqueeLogos hideFromScreenReaders />
+        <MarqueeLogos hideFromScreenReaders />
+        <MarqueeLogos hideFromScreenReaders />
       </div>
     </div>
   );
