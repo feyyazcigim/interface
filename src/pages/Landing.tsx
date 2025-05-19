@@ -74,17 +74,56 @@ function APYBar() {
 function AuditMarquee() {
   function MarqueeLogos({ hideFromScreenReaders = false }: { hideFromScreenReaders?: boolean }) {
     return (
-      <div
-        className="flex flex-row pl-20 gap-20 animate-marquee opacity-40 flex-shrink-0"
-        aria-hidden={hideFromScreenReaders}
-      >
-        <img src="cantina.svg" className="h-10 flex-shrink-0" alt="cantina" />
-        <img src="codehawks.svg" className="h-10 flex-shrink-0" alt="codehawks" />
-        <img src="cyfrin.svg" className="h-10 flex-shrink-0" alt="cyfrin" />
-        <img src="trail-of-bits.png" className="h-10 flex-shrink-0" alt="trail of bits" />
-        <img src="egis.png" className="h-10 flex-shrink-0" alt="egis security" />
-        <img src="halborn.png" className="h-10 flex-shrink-0" alt="halborn" />
-        <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-10 flex-shrink-0" />
+      <div className="flex flex-row pl-20 gap-20 flex-shrink-0" aria-hidden={hideFromScreenReaders}>
+        <Link to={"https://cantina.xyz/"} target="_blank" rel="noopener noreferrer">
+          <img
+            src="cantina.svg"
+            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
+            alt="cantina"
+          />
+        </Link>
+        <Link to={"https://codehawks.cyfrin.io/"} target="_blank" rel="noopener noreferrer">
+          <img
+            src="codehawks.svg"
+            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
+            alt="codehawks"
+          />
+        </Link>
+        <Link to={"https://www.cyfrin.io/"} target="_blank" rel="noopener noreferrer">
+          <img
+            src="cyfrin.svg"
+            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
+            alt="cyfrin"
+          />
+        </Link>
+        <Link to={"https://www.trailofbits.com/"} target="_blank" rel="noopener noreferrer">
+          <img
+            src="trail-of-bits.png"
+            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
+            alt="trail of bits"
+          />
+        </Link>
+        <Link to={"https://www.egissec.com/"} target="_blank" rel="noopener noreferrer">
+          <img
+            src="egis.png"
+            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
+            alt="egis security"
+          />
+        </Link>
+        <Link to={"https://www.halborn.com/"} target="_blank" rel="noopener noreferrer">
+          <img
+            src="halborn.png"
+            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
+            alt="halborn"
+          />
+        </Link>
+        <Link to={"https://immunefi.com/"} target="_blank" rel="noopener noreferrer">
+          <img
+            src={ImmunefiLogo}
+            alt={"ImmuneFi"}
+            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
+          />
+        </Link>
       </div>
     );
   }
@@ -92,7 +131,7 @@ function AuditMarquee() {
   return (
     <div className="flex flex-col gap-9">
       <div className="mx-auto mt-[4.5rem] text-pinto-gray-4 text-[1.5rem] font-light">25 audits to date by</div>
-      <div className="flex flex-row">
+      <div className="flex flex-row animate-marquee hover:[animation-play-state:paused]">
         <MarqueeLogos />
         <MarqueeLogos hideFromScreenReaders />
         <MarqueeLogos hideFromScreenReaders />
