@@ -8,6 +8,7 @@ import UsdcLogo from "@/assets/tokens/USDC.png";
 import UsdeLogo from "@/assets/tokens/USDE.png";
 import UsdtLogo from "@/assets/tokens/USDT.png";
 import MinimalistConcentricCircles from "@/components/MinimalistConcentricCircles";
+import { navLinks } from "@/components/nav/nav/Navbar";
 import { useAverageBDVWeightedSiloAPYs } from "@/state/useSiloAPYs";
 import { formatPct } from "@/utils/format";
 import NumberFlow from "@number-flow/react";
@@ -29,10 +30,14 @@ function MainCTA() {
         </span>
       </div>
       <div className="flex flex-row gap-4">
-        <Button rounded="full">Get Started</Button>
-        <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
-          Read Docs
-        </Button>
+        <Link to={navLinks.overview}>
+          <Button rounded="full">Get Started</Button>
+        </Link>
+        <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">
+          <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
+            Read Docs
+          </Button>
+        </Link>
       </div>
     </div>
   );
@@ -193,10 +198,14 @@ function BugBounty() {
         <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-12" />
       </div>
       <div className="flex flex-row gap-4 pt-9">
-        <Button rounded="full">Get Started</Button>
-        <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
-          Read about the Bug Bounty Program
-        </Button>
+        <Link to={navLinks.overview}>
+          <Button rounded="full">Get Started</Button>
+        </Link>
+        <Link to={"https://immunefi.com/bug-bounty/pinto/information/"} target="_blank" rel="noopener noreferrer">
+          <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
+            Read about the Bug Bounty Program
+          </Button>
+        </Link>
       </div>
     </div>
   );
@@ -224,10 +233,14 @@ function SecondaryCTA() {
             Trustlessness and capital efficiency at scale are requisite to build the onchain economy.
           </span>
           <div className="flex flex-row gap-4 mt-8">
-            <Button rounded="full">Get Started</Button>
-            <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
-              Read Docs
-            </Button>
+            <Link to={"/overview"}>
+              <Button rounded="full">Get Started</Button>
+            </Link>
+            <Link to={`${navLinks.docs}/advanced/stablecoin-overview`} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
+                Read Docs
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="overflow-hidden shrink-0 relative basis-7/12 bg-double-fade">
@@ -245,7 +258,12 @@ function SecondaryCTA() {
             <span className="pinto-lg text-pinto-gray-4">
               Pinto is credit based, allowing it to scale without limits
             </span>
-            <Link to="/explorer/silo" className="pinto-body-light text-pinto-green-4 hover:underline transition-all">
+            <Link
+              to={`${navLinks.docs}/advanced/economics`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pinto-body-light text-pinto-green-4 hover:underline transition-all"
+            >
               Learn More →
             </Link>
           </div>
@@ -254,7 +272,12 @@ function SecondaryCTA() {
           <span className="pinto-body-light text-[2rem] leading-[1.1] text-black">Trustless</span>
           <div className="flex flex-row gap-4">
             <span className="pinto-lg text-pinto-gray-4">Censorship resistant and decentralized governance</span>
-            <Link to="/explorer/silo" className="pinto-body-light text-pinto-green-4 hover:underline transition-all">
+            <Link
+              to={`${navLinks.docs}/advanced/economics`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pinto-body-light text-pinto-green-4 hover:underline transition-all"
+            >
               Learn More →
             </Link>
           </div>
@@ -265,7 +288,12 @@ function SecondaryCTA() {
             <span className="pinto-lg text-pinto-gray-4">
               No collateral, no interest paid by depositors, no value lockups, and no liquidations
             </span>
-            <Link to="/explorer/silo" className="pinto-body-light text-pinto-green-4 hover:underline transition-all">
+            <Link
+              to={`${navLinks.docs}/advanced/economics`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pinto-body-light text-pinto-green-4 hover:underline transition-all"
+            >
               Learn More →
             </Link>
           </div>
@@ -315,10 +343,14 @@ function FarmToTable({ height = 1600 }: { height: number }) {
           No investors. Community first.
         </span>
         <div className="flex flex-row gap-4">
-          <Button rounded="full">Get Started</Button>
-          <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
-            Read Docs
-          </Button>
+          <Link to={"/overview"}>
+            <Button rounded="full">Get Started</Button>
+          </Link>
+          <Link to={`${navLinks.docs}/advanced/economics`} target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
+              Read Docs
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
@@ -348,11 +380,16 @@ function Resources() {
             <span className="text-[1.5rem] font-light text-pinto-gray-4">
               Learn more about protocol economics, mechanisms, and implementation of the protocol smart contracts.
             </span>
-            <Button variant="outline-white" className="w-full flex p-4 justify-center items-center gap-2.5 flex-1 mb-6">
-              <img src="gitbook.png" className="w-8 h-8" alt="documentation" />
-              <span className="w-full text-start">Read Documentation</span>
-              <span>→</span>
-            </Button>
+            <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline-white"
+                className="w-full flex p-4 justify-center h-auto items-center gap-2.5 flex-1 mb-6"
+              >
+                <img src="gitbook.png" className="w-8 h-8" alt="documentation" />
+                <span className="w-full text-start">Read Documentation</span>
+                <span>→</span>
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[36rem] flex flex-col gap-8 overflow-clip bg-white">
@@ -369,11 +406,16 @@ function Resources() {
             <span className="text-[1.5rem] font-light text-pinto-gray-4">
               Find guides on protocol usage, detail about protocol upgrades, and more from core contributors.
             </span>
-            <Button variant="outline-white" className="w-full flex p-4 justify-center items-center gap-2.5 flex-1 mb-6">
-              <img src="mirror.png" className="w-8 h-8 min-w-8 min-h-8" alt="documentation" />
-              <span className="w-full text-start">Pinto Community Blog</span>
-              <span>→</span>
-            </Button>
+            <Link to={navLinks.blog} target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline-white"
+                className="w-full flex p-4 h-auto justify-center items-center gap-2.5 flex-1 mb-6"
+              >
+                <img src="mirror.png" className="w-8 h-8 min-w-8 min-h-8" alt="documentation" />
+                <span className="w-full text-start">Pinto Community Blog</span>
+                <span>→</span>
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[36rem] flex flex-col gap-8 overflow-clip bg-white">
@@ -392,22 +434,26 @@ function Resources() {
               Pinto enjoyers.
             </span>
             <div className="flex flex-row gap-4">
-              <Button
-                variant="outline-white"
-                className="w-full flex p-4 justify-center items-center gap-2.5 flex-1 h-[3.125rem]"
-              >
-                <img src="discord.png" className="w-8 h-6 min-w-8 min-h-6" alt="documentation" />
-                <span className="w-full text-start">Discord</span>
-                <span>→</span>
-              </Button>
-              <Button
-                variant="outline-white"
-                className="w-full flex p-4 justify-center items-center gap-2.5 flex-1 h-[3.125rem]"
-              >
-                <img src="twitter.png" className="w-8 h-8 min-w-8 min-h-8" alt="documentation" />
-                <span className="w-full text-start">@pintodotmoney</span>
-                <span>→</span>
-              </Button>
+              <Link to={navLinks.discord} target="_blank" rel="noopener noreferrer" className="flex-1">
+                <Button
+                  variant="outline-white"
+                  className="w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem]"
+                >
+                  <img src="discord.png" className="w-8 h-6 min-w-8 min-h-6" alt="documentation" />
+                  <span className="w-full text-start">Discord</span>
+                  <span>→</span>
+                </Button>
+              </Link>
+              <Link to={navLinks.twitter} target="_blank" rel="noopener noreferrer" className="flex-1">
+                <Button
+                  variant="outline-white"
+                  className="w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem]"
+                >
+                  <img src="twitter.png" className="w-8 h-8 min-w-8 min-h-8" alt="documentation" />
+                  <span className="w-full text-start">@pintodotmoney</span>
+                  <span>→</span>
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
