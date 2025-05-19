@@ -236,7 +236,7 @@ function SecondaryCTA() {
             <Link to={"/overview"}>
               <Button rounded="full">Get Started</Button>
             </Link>
-            <Link to={`${navLinks.docs}/advanced/stablecoin-overview`} target="_blank" rel="noopener noreferrer">
+            <Link to={`${navLinks.docs}advanced/stablecoin-overview`} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
                 Read Docs
               </Button>
@@ -259,7 +259,7 @@ function SecondaryCTA() {
               Pinto is credit based, allowing it to scale without limits
             </span>
             <Link
-              to={`${navLinks.docs}/advanced/economics`}
+              to={`${navLinks.docs}advanced/economics`}
               target="_blank"
               rel="noopener noreferrer"
               className="pinto-body-light text-pinto-green-4 hover:underline transition-all"
@@ -273,7 +273,7 @@ function SecondaryCTA() {
           <div className="flex flex-row gap-4">
             <span className="pinto-lg text-pinto-gray-4">Censorship resistant and decentralized governance</span>
             <Link
-              to={`${navLinks.docs}/advanced/economics`}
+              to={`${navLinks.docs}advanced/economics`}
               target="_blank"
               rel="noopener noreferrer"
               className="pinto-body-light text-pinto-green-4 hover:underline transition-all"
@@ -289,7 +289,7 @@ function SecondaryCTA() {
               No collateral, no interest paid by depositors, no value lockups, and no liquidations
             </span>
             <Link
-              to={`${navLinks.docs}/advanced/economics`}
+              to={`${navLinks.docs}advanced/economics`}
               target="_blank"
               rel="noopener noreferrer"
               className="pinto-body-light text-pinto-green-4 hover:underline transition-all"
@@ -346,7 +346,7 @@ function FarmToTable({ height = 1600 }: { height: number }) {
           <Link to={"/overview"}>
             <Button rounded="full">Get Started</Button>
           </Link>
-          <Link to={`${navLinks.docs}/advanced/economics`} target="_blank" rel="noopener noreferrer">
+          <Link to={`${navLinks.docs}advanced/economics`} target="_blank" rel="noopener noreferrer">
             <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
               Read Docs
             </Button>
