@@ -24,6 +24,9 @@ const MinimalistConcentricCircles: React.FC<MinimalistConcentricCirclesProps> = 
   // CONFIGURATION - All settings hardcoded here
   // ==========================================
 
+  // Surface curvature settings
+  const surfaceCurvature = 0.002; // Controls how much the overall surface curves
+
   // Circle arrangement settings
   const rings = 50; // Number of concentric rings
   const baseRadius = 3; // Radius of innermost ring
@@ -39,8 +42,8 @@ const MinimalistConcentricCircles: React.FC<MinimalistConcentricCirclesProps> = 
   const anisotropyLevel = 16; // Level of anisotropic filtering (typical values: 1-16)
 
   // Circle appearance
-  const circleWidth = 2; // Width of each circle
-  const circleHeight = 2.4; // Height of each circle (creates elliptical shapes when different from width)
+  const circleWidth = 2.4; // Width of each circle
+  const circleHeight = 2; // Height of each circle (creates elliptical shapes when different from width)
 
   // Animation settings
   const fadeInDuration = 1.2; // Time in seconds for each ring to fade in
@@ -140,32 +143,59 @@ const MinimalistConcentricCircles: React.FC<MinimalistConcentricCirclesProps> = 
           const x = radius * Math.cos(angle);
           const z = radius * Math.sin(angle);
 
+          // Apply curvature to the position - this creates a curved surface arrangement
+          // Calculate distance from center for curvature
+          const distanceFromCenter = Math.sqrt(x * x + z * z);
+          // Apply quadratic curve: y = -curvature * distance²
+          const y = -surfaceCurvature * distanceFromCenter * distanceFromCenter;
+
           // Get color for this circle
           const circleColor = new THREE.Color().setHex(0x387f5c); // pinto-green-4
 
           // Create a flat circle/ellipse as a plane with texture
           const planeGeometry = new THREE.PlaneGeometry(circleWidth, circleHeight);
 
-          // Create material with flat shading and no lighting effects
+          // Create material with flat shading and no lighting effects - now single-sided
           const circleMaterial = new THREE.MeshBasicMaterial({
             color: circleColor,
             map: circleTexture,
             transparent: true,
             opacity: 0, // Start invisible
             depthWrite: false,
-            side: THREE.DoubleSide,
+            side: THREE.FrontSide, // Only visible from the front side
             alphaTest: 0.1, // Slightly improved edge quality
           });
 
           const circle = new THREE.Mesh(planeGeometry, circleMaterial);
-          circle.position.set(x, 0, z);
+          circle.position.set(x, y, z);
 
-          // First, rotate the plane to face upward (along Y-axis)
-          circle.rotation.x = -Math.PI / 2;
+          // Calculate the surface normal at this point based on curvature
+          const normalX = 2 * surfaceCurvature * x;
+          const normalZ = 2 * surfaceCurvature * z;
+          const normalY = 1;
+          const surfaceNormal = new THREE.Vector3(normalX, normalY, normalZ).normalize();
 
-          // Then rotate around the Y axis to face the center
-          const angleToCenter = Math.atan2(z, x) + Math.PI / 2;
-          circle.rotation.z = angleToCenter;
+          // Direction vector from circle position to center (0,0,0)
+          // This will be our X-axis direction (pointing to center)
+          const dirToCenter = new THREE.Vector3(0, 0, 0).sub(new THREE.Vector3(x, y, z)).normalize();
+
+          // The right vector (our Y-axis) should be perpendicular to both the
+          // direction to center and the surface normal
+          const rightVector = new THREE.Vector3().crossVectors(surfaceNormal, dirToCenter).normalize();
+
+          // Re-calculate an up vector to ensure it's perfectly aligned with the surface normal
+          // This ensures the circles follow the surface curvature correctly
+          const upVector = new THREE.Vector3().crossVectors(dirToCenter, rightVector).normalize();
+
+          // Create rotation matrix from these vectors, following the curvature of the surface
+          const rotationMatrix = new THREE.Matrix4().makeBasis(
+            dirToCenter, // X-axis points to center
+            rightVector, // Y-axis points to the right along surface
+            upVector, // Z-axis follows the surface normal
+          );
+
+          // Apply this rotation to the circle
+          circle.setRotationFromMatrix(rotationMatrix);
 
           circlesGroup.add(circle);
 
