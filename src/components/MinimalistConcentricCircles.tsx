@@ -25,7 +25,7 @@ const MinimalistConcentricCircles: React.FC<MinimalistConcentricCirclesProps> = 
   // ==========================================
 
   // Surface curvature settings
-  const surfaceCurvature = 0.002; // Controls how much the overall surface curves
+  const surfaceCurvature = 0.001; // Controls how much the overall surface curves
 
   // Circle arrangement settings
   const rings = 50; // Number of concentric rings
@@ -175,21 +175,27 @@ const MinimalistConcentricCircles: React.FC<MinimalistConcentricCirclesProps> = 
           const normalY = 1;
           const surfaceNormal = new THREE.Vector3(normalX, normalY, normalZ).normalize();
 
-          // Direction vector from circle position to center (0,0,0)
-          // This will be our X-axis direction (pointing to center)
-          const dirToCenter = new THREE.Vector3(0, 0, 0).sub(new THREE.Vector3(x, y, z)).normalize();
+          // Circle position vector
+          const circlePosition = new THREE.Vector3(x, y, z);
+
+          const t = y + (surfaceNormal.x * x + surfaceNormal.z * z) / surfaceNormal.y;
+          const intersectionPoint = new THREE.Vector3(0, t, 0);
+
+          // Direction vector from circle position to intersection point
+          // This will be our X-axis direction (new forward direction)
+          const dirToIntersection = new THREE.Vector3().subVectors(intersectionPoint, circlePosition).normalize();
 
           // The right vector (our Y-axis) should be perpendicular to both the
-          // direction to center and the surface normal
-          const rightVector = new THREE.Vector3().crossVectors(surfaceNormal, dirToCenter).normalize();
+          // direction to intersection and the surface normal
+          const rightVector = new THREE.Vector3().crossVectors(surfaceNormal, dirToIntersection).normalize();
 
           // Re-calculate an up vector to ensure it's perfectly aligned with the surface normal
           // This ensures the circles follow the surface curvature correctly
-          const upVector = new THREE.Vector3().crossVectors(dirToCenter, rightVector).normalize();
+          const upVector = new THREE.Vector3().crossVectors(dirToIntersection, rightVector).normalize();
 
           // Create rotation matrix from these vectors, following the curvature of the surface
           const rotationMatrix = new THREE.Matrix4().makeBasis(
-            dirToCenter, // X-axis points to center
+            dirToIntersection, // X-axis points to intersection point (new forward direction)
             rightVector, // Y-axis points to the right along surface
             upVector, // Z-axis follows the surface normal
           );
