@@ -272,7 +272,7 @@ export default function DepositsTable({
           <TableBody>
             {!tokenData || tokenData.deposits.length === 0 ? (
               <TableRow className="bg-white hover:bg-white">
-                <TableCell colSpan={4}>
+                <TableCell colSpan={5}>
                   <div className="flex flex-row h-48 w-full items-center justify-center text-pinto-gray-4 font-[400] text-[1rem]">
                     {`Your Deposits will appear here`}
                   </div>

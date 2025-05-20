@@ -35,11 +35,13 @@ export function calculateCropScales(value: number, isRaining: boolean, season: n
 
 export function convertDeltaDemandToPercentage(deltaDemand: number) {
   if (deltaDemand === 0) return "0%";
-  if (deltaDemand === 1e18) return "100%";
-  if (deltaDemand === 1e36) return "∞%";
+  if (deltaDemand === 1e18) {
+    return "∞%";
+  }
+  if (deltaDemand === 1) return "100%";
 
   // Scale the value between 0-100%
-  const scaledValue = (deltaDemand / 1e18) * 100;
+  const scaledValue = deltaDemand * 100;
   return `${TokenValue.fromHuman(scaledValue, 0).toHuman("short")}%`;
 }
 

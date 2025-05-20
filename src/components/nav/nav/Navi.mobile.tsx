@@ -187,7 +187,7 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
                 return !prev;
               })
             }
-            className="pinto-h3 flex flex-row gap-2 items-center w-full"
+            className="pinto-h3 flex flex-row gap-2 items-center w-full cursor-pointer"
           >
             Learn
             <div className="mt-[4px]">
@@ -206,6 +206,9 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
                 <MobileNavLink variant="h4" nested external href={navLinks.docs} onClick={unmountAndClose}>
                   Docs
                 </MobileNavLink>
+                <MobileNavLink variant="h4" nested href={navLinks.blog} onClick={unmountAndClose}>
+                  Blog
+                </MobileNavLink>
                 <MobileNavLink variant="h4" nested external href={navLinks.whitepaper} onClick={unmountAndClose}>
                   Whitepaper
                 </MobileNavLink>
@@ -219,7 +222,7 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
                 return !prev;
               })
             }
-            className="pinto-h3 flex flex-row gap-2 items-center w-full"
+            className="pinto-h3 flex flex-row gap-2 items-center w-full cursor-pointer"
           >
             More
             <div className="mt-[4px]">
@@ -237,9 +240,6 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
               >
                 <MobileNavLink variant="h4" nested href="/?fromNav=true" onClick={close}>
                   About
-                </MobileNavLink>
-                <MobileNavLink variant="h4" nested href={navLinks.blog} onClick={unmountAndClose}>
-                  Blog
                 </MobileNavLink>
                 <MobileNavLink variant="h4" nested href={navLinks.discord} onClick={unmountAndClose}>
                   Discord
