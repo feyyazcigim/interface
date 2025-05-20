@@ -8,7 +8,7 @@ import {
   ChartOptions,
   PointElement,
 } from "chart.js";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Col } from "../Container";
 import LoadingSpinner from "../LoadingSpinner";
 import { ReactChart } from "../ReactChart";
@@ -23,9 +23,19 @@ type BarChartProps = {
   yLabelFormatter?: (value: number | string) => string;
   xLabelFormatter?: (value: number | string) => string;
   defaultHoverIndex?: number;
-  yScaleType?: keyof CartesianScaleTypeRegistry;
+  logThreshold?: number;
   enableTooltips?: boolean;
+  yMinScalar?: number;
+  yMaxScalar?: number;
 };
+interface IYScale {
+  type: keyof CartesianScaleTypeRegistry;
+  min?: number;
+  max?: number;
+}
+
+const MIN_VALUES = 3;
+const defaultIYScale: IYScale = { type: "linear" };
 
 const BarChart = React.memo(
   ({
@@ -35,19 +45,49 @@ const BarChart = React.memo(
     yLabelFormatter,
     xLabelFormatter,
     defaultHoverIndex,
-    yScaleType = "linear",
+    logThreshold = 5,
     enableTooltips = false,
+    yMinScalar = 0.99,
+    yMaxScalar = 1.01,
   }: BarChartProps) => {
+    const [iYScale, setIYScale] = useState<IYScale | undefined>(undefined);
+
+    useEffect(() => {
+      const yScaleObj: IYScale = { ...defaultIYScale };
+
+      if (data.datasets.length) {
+        const flattened = data.datasets.flatMap((d) => d.data.filter((d) => exists(d)).flat());
+        const min = Math.min(...flattened);
+        const max = Math.max(...flattened);
+
+        const ratio = max / min;
+
+        const hasMinLengths = data.datasets.every((dataset) => dataset.data.length >= MIN_VALUES);
+        const useLog = hasMinLengths && ratio <= logThreshold; // tweak threshold as needed
+
+        yScaleObj.type = useLog ? "logarithmic" : "linear";
+
+        if (useLog && min > 0 && max > 0) {
+          yScaleObj.min = min * yMinScalar;
+          yScaleObj.max = max * yMaxScalar;
+        }
+      }
+
+      setIYScale(yScaleObj);
+    }, [data, logThreshold, yMinScalar, yMaxScalar]);
+
     const options: ChartOptions<"bar"> = useMemo(
       () => ({
         ...baseOptions,
         scales: {
           y: {
-            type: yScaleType,
+            type: iYScale?.type,
+            min: iYScale?.min,
+            max: iYScale?.max,
             ticks: {
               display: !!yLabelFormatter,
               callback: yLabelFormatter,
-              beginAtZero: yScaleType === "linear", // only linear scale can begin at zero
+              beginAtZero: iYScale && iYScale.type === "linear", // only linear scale can begin at zero
               autoSkip: true,
               maxTicksLimit: 5,
             },
@@ -98,19 +138,23 @@ const BarChart = React.memo(
           },
         },
       }),
-      [onMouseOver, yLabelFormatter, xLabelFormatter, defaultHoverIndex, enableTooltips, yScaleType],
+      [onMouseOver, yLabelFormatter, xLabelFormatter, defaultHoverIndex, enableTooltips, iYScale],
     );
 
     const hasMouseOver = exists(onMouseOver);
 
+    // Memoize the plugins.
     const chartPlugins = useMemo(() => {
       if (onMouseOver) {
         return [plugins.selectionCallback(onMouseOver)];
       }
       return [];
-    }, [hasMouseOver]);
+    }, [
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      hasMouseOver, // only redefine if hasMouseOver changes
+    ]);
 
-    if (isLoading) {
+    if (isLoading || !data.datasets.length || !iYScale) {
       return (
         <Col className="flex items-center justify-center h-full">
           <LoadingSpinner size={50} />

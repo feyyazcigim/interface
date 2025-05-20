@@ -56,12 +56,8 @@ const FieldTemperatureBarChart = React.memo(({ className }: FieldTemperatureBarC
     select: handleSelect,
   });
 
-  useEffect(() => {
-    console.log(summaryData);
-  }, [summaryData]);
-
   // Transform the data to be used in the chart
-  const { chartData, yScaleType } = useTransformBucketedFieldPlotSummary(summaryData?.data);
+  const chartData = useTransformBucketedFieldPlotSummary(summaryData?.data);
 
   // derived state
   const isLoading = query.isLoading || harvestableIndex.lte(0);
@@ -99,8 +95,10 @@ const FieldTemperatureBarChart = React.memo(({ className }: FieldTemperatureBarC
         </Row>
         <Col className={cn("h-[250px] sm:h-[435px] w-full px-2 sm:px-4 pb-2 sm:pb-4", className)}>
           <div className="mx-2 h-full">
+            {/*
+             * Bar Chart is memoized, so no need to separate this from the stats section
+             */}
             <BarChart
-              yScaleType={yScaleType}
               data={chartData}
               isLoading={isLoading}
               onMouseOver={setActiveIndex}
@@ -157,41 +155,39 @@ const getDiffDecimals = (startIndex: number | undefined, endIndex: number | unde
   }
 };
 
+const LOG_THRESHOLD = 5;
+const MIN_VALUES = 3;
+
+interface MinMax {
+  min: number;
+  max: number;
+}
+
 const noData: { labels: string[]; datasets: ChartData<"bar">["datasets"] } = {
   labels: [],
   datasets: [],
 };
 const useTransformBucketedFieldPlotSummary = (data: FieldPlotBucketSummary[] | undefined) => {
   const [transformedData, setTransformedData] = useState<ChartData<"bar">>(noData);
-  const [yScaleType, setYScaleType] = useState<"linear" | "logarithmic">("logarithmic");
 
   useEffect(() => {
     if (!data?.length) {
       setTransformedData(noData);
-      setYScaleType("logarithmic");
     } else {
       const labels: string[] = [];
       const datasetData: number[] = [];
-
-      let min = Infinity;
-      let max = -Infinity;
 
       for (const d of data) {
         const startIndex = d.startIndex.toNumber();
         const endIndex = d.endIndex.toNumber();
         const temp = d.avgTemperature.toNumber();
 
-        labels.push(`${startIndex}-${endIndex}`);
-
-        datasetData.push(temp);
-        min = Math.min(min, temp);
-        max = Math.max(max, temp);
+        if (temp > 0 && Number.isFinite(temp)) {
+          labels.push(`${startIndex}-${endIndex}`);
+          datasetData.push(temp);
+        }
       }
 
-      const sum = max + min;
-      const scale = Math.abs(max - min) / sum;
-      // If the difference is greater than 50% of the sum, use a linear scale
-      setYScaleType(scale > 0.5 ? "linear" : "logarithmic");
       setTransformedData({
         labels,
         datasets: [{ data: datasetData }],
@@ -199,5 +195,5 @@ const useTransformBucketedFieldPlotSummary = (data: FieldPlotBucketSummary[] | u
     }
   }, [data]);
 
-  return { chartData: transformedData, yScaleType };
+  return transformedData;
 };
