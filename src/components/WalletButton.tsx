@@ -3,8 +3,8 @@ import useIsTablet from "@/hooks/display/useIsTablet";
 import { truncateAddress } from "@/utils/string";
 import { useModal } from "connectkit";
 import { Avatar } from "connectkit";
-import { ComponentPropsWithoutRef, Dispatch, SetStateAction, forwardRef } from "react";
-import { useAccount, useEnsAvatar, useEnsName } from "wagmi";
+import { ComponentPropsWithoutRef, forwardRef, useEffect } from "react";
+import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
 import WalletButtonPanel from "./WalletButtonPanel";
 import { Button } from "./ui/Button";
 import IconImage from "./ui/IconImage";
@@ -18,12 +18,16 @@ interface WalletButtonProps extends ComponentPropsWithoutRef<"div"> {
 
 const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
   ({ isOpen = false, togglePanel, className }, ref) => {
-    const { address } = useAccount();
+    const account = useAccount();
     const modal = useModal();
     const isTablet = useIsTablet();
 
+    const { address } = account;
+
     const { data: ensName } = useEnsName({ address });
     const { data: ensAvatar } = useEnsAvatar({ name: ensName as string });
+
+    useSyncAccountConnecting(modal.open, account);
 
     return (
       <Panel
@@ -62,3 +66,27 @@ const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
 );
 
 export default WalletButton;
+
+const useSyncAccountConnecting = (modalOpen: boolean, account: ReturnType<typeof useAccount>) => {
+  const { disconnect } = useDisconnect();
+
+  /**
+   * If the modal opens, wagmi sets status to 'connecting' but doesn't set it to 'disconnected' when the modal is closed w/o connecting an account.
+   */
+  useEffect(() => {
+    // if the modal is open or the account is connected, do nothing.
+    if (modalOpen || !!account.address) return;
+
+    // If the modal is closed w/o connecting an account, reset the wagmi status to 'disconnected'.
+    if (account.status === "connecting") {
+      disconnect();
+    }
+  }, [modalOpen, account.status, account.address, disconnect]);
+
+  useEffect(() => {
+    console.log({
+      status: account.status,
+      modal: modalOpen,
+    });
+  }, [account.status, modalOpen]);
+};
