@@ -27,7 +27,7 @@ import useTokenData from "@/state/useTokenData";
 import { pickCratesAsCrates, sortCratesByStem } from "@/utils/convert";
 import { tryExtractErrorMessage } from "@/utils/error";
 import { formatter } from "@/utils/format";
-import { isValidAddress, stringToNumber, stringToStringNum } from "@/utils/string";
+import { stringToNumber, stringToStringNum } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { exists, getBalanceFromMode, noop } from "@/utils/utils";
@@ -61,7 +61,9 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
   const [balanceSource, setBalanceSource] = useState<FarmFromMode>(getPreferredBalanceSource(farmerBalance));
 
   const [toSilo, setToSilo] = useState<boolean>(true);
-  const [didInitBalanceSource, setDidInitBalanceSource] = useState(!!farmerBalances.isFetched);
+  const [didInitBalanceSource, setDidInitBalanceSource] = useState(
+    account ? !!farmerBalances.isFetched : !isConnecting,
+  );
   const [inputError, setInputError] = useState<boolean>(false);
   const [tokenOut, setTokenOut] = useState<Token | undefined>(undefined);
   const [toMode, setToMode] = useState<FarmToMode | undefined>(undefined);
@@ -213,6 +215,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
     if (didInitBalanceSource || !farmerBalance || farmerBalances.isLoading || isConnecting) {
       return;
     }
+
     setBalanceSource(getPreferredBalanceSource(farmerBalance));
     setDidInitBalanceSource(true);
   }, [didInitBalanceSource, farmerBalances.isLoading, farmerBalance, isConnecting]);
