@@ -189,7 +189,7 @@ const MoreNavi = ({ setNaviTab }) => {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link href={navLinks.disclosures} rel="noopener noreferrer" target="_blank">
-              Disclosures
+              Terms of Service
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>

@@ -251,7 +251,7 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
                   GitHub
                 </MobileNavLink>
                 <MobileNavLink variant="h4" nested href={navLinks.disclosures} onClick={unmountAndClose}>
-                  Disclosures
+                  Terms of Service
                 </MobileNavLink>
                 <MobileNavLink variant="h4" nested href={navLinks.exchange} onClick={unmountAndClose}>
                   Pinto Exchange
