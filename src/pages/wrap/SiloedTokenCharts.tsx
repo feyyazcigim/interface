@@ -103,7 +103,8 @@ const TotalDepositedPintoChart = React.memo(({ tab, season, setTab }: ISiloedTok
     mainToken,
     sMainToken.address,
   );
-  const totalSupplyQuery = useSeasonalWrappedDepositTotalSupply(fromSeason, toSeason);
+
+  const totalSupplyQuery = useInterpolatedSeasonalWrappedDepositTotalSupply(season, tab);
 
   const results = useMemo(() => [totalSupplyQuery, totalDepositedQuery], [totalSupplyQuery, totalDepositedQuery]);
 
@@ -119,6 +120,18 @@ const TotalDepositedPintoChart = React.memo(({ tab, season, setTab }: ISiloedTok
     />
   );
 });
+
+// SG only creates a datapoint if there is an unwrap/wrap event. To protect against no datapoints being returned,
+// we fetch 1000 seasons to increase the likelihood of a single event.
+// The chart handles clipping of the data, so we can just return the full 1000 season for Week & Month tabs.
+const useInterpolatedSeasonalWrappedDepositTotalSupply = (season: number, tab: TimeTab) => {
+  const { fromSeason, toSeason } = truncateBeanstalkWrappedDespositsSeasons(
+    Math.max(0, season - (tab === TimeTab.AllTime ? Number.MAX_SAFE_INTEGER : 999)),
+    season,
+  );
+
+  return useSeasonalWrappedDepositTotalSupply(fromSeason, toSeason);
+};
 
 // ---------- Exchange Rate ----------
 

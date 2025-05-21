@@ -174,8 +174,8 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
           {/* <MobileNavLink href={navLinks.podmarket} onClick={unmountAndClose}>
             Pod Market
           </MobileNavLink> */}
-          <MobileNavLink href={navLinks.wrap} onClick={unmountAndClose}>
-            Wrap
+          <MobileNavLink href={navLinks.sPinto} onClick={unmountAndClose}>
+            sPinto
           </MobileNavLink>
         </div>
         <hr className=" border-pinto-gray-2" />
@@ -251,7 +251,7 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
                   GitHub
                 </MobileNavLink>
                 <MobileNavLink variant="h4" nested href={navLinks.disclosures} onClick={unmountAndClose}>
-                  Disclosures
+                  Terms of Service
                 </MobileNavLink>
                 <MobileNavLink variant="h4" nested href={navLinks.exchange} onClick={unmountAndClose}>
                   Pinto Exchange

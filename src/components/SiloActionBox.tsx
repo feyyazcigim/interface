@@ -8,6 +8,7 @@ import { getClaimText } from "@/utils/string";
 import { Token, TokenDepositData } from "@/utils/types";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { navLinks } from "./nav/nav/Navbar";
 import IconImage from "./ui/IconImage";
 
 interface SiloActionBoxProps {
@@ -50,7 +51,7 @@ export default function SiloActionBox({ farmerDeposits, token }: SiloActionBoxPr
         />
       )}
       {token.isMain && (
-        <Button variant="silo-action" className="w-full" onClick={() => navigate("/wrap")}>
+        <Button variant="silo-action" className="w-full" onClick={() => navigate(navLinks.sPinto)}>
           <div className="flex flex-row gap-2 items-center">
             <IconImage src={token.logoURI} size={6} alt={token.symbol} />
             Wrap {token.symbol} Deposits

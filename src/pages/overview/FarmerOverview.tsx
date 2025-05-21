@@ -458,7 +458,7 @@ const Overview = () => {
                         <IconImage src={siloWrappedToken.logoURI} size={6} /> <span>Wrap Deposited Pinto</span>
                       </span>
                     }
-                    onClick={() => navigate(`/wrap`)}
+                    onClick={() => navigate(navLinks.sPinto)}
                   />
                 )} */}
               </div>

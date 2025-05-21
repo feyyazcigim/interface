@@ -174,9 +174,9 @@ export default function SiloToken() {
   const wrappedMain = useChainConstant(S_MAIN_TOKEN);
 
   const location = window.location.pathname;
-  const isWrap = location === "/wrap";
+  const isSiloedPinto = location === "/sPinto";
 
-  const siloToken = tokens[getTokenIndex(isWrap ? wrappedMain : tokenAddress ?? "")];
+  const siloToken = tokens[getTokenIndex(isSiloedPinto ? wrappedMain : tokenAddress ?? "")];
 
   useEffect(() => {
     if (!siloToken || siloToken.is3PSiloWrapped) {
@@ -189,7 +189,7 @@ export default function SiloToken() {
   }
 
   return (
-    <PageMetaWrapper metaKey={siloToken.isSiloWrapped ? "wrap" : (siloToken.symbol as MetaSlug)}>
+    <PageMetaWrapper metaKey={siloToken.isSiloWrapped ? "sPinto" : (siloToken.symbol as MetaSlug)}>
       {siloToken.isSiloWrapped ? <SiloWrappedSiloToken token={siloToken} /> : <SiloTokenInner siloToken={siloToken} />}
     </PageMetaWrapper>
   );
