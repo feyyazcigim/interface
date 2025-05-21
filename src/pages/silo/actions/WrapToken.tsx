@@ -81,7 +81,12 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     queryKey: allowanceQueryKey,
     loading: allowanceLoading,
     confirming: allowanceConfirming,
-  } = useFarmerDepositAllowance(Boolean(usingDeposits && tokenIsSiloWrappedToken));
+  } = useFarmerDepositAllowance(
+    sMainToken.address,
+    // Only wrapping via PINTO is currently supported
+    mainToken,
+    Boolean(usingDeposits && tokenIsSiloWrappedToken),
+  );
 
   const needsDepositAllowanceIncrease = usingDeposits && !allowanceLoading && amountInTV.gt(allowance ?? 0n);
 
@@ -101,7 +106,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
   const amountOutUSD = useSiloWrappedTokenToUSD(amountOut);
 
   // Transaction hooks
-  const onSuccess = () => {
+  const onSuccess = useCallback(() => {
     setAmountIn("0");
     swap.resetSwap();
     const keys = [
@@ -111,7 +116,14 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
       ...contractSilo.queryKeys,
     ];
     keys.forEach((key) => qc.invalidateQueries({ queryKey: key }));
-  };
+  }, [
+    qc,
+    swap.resetSwap,
+    allowanceQueryKey,
+    farmerDeposits.queryKeys,
+    farmerBalances.queryKeys,
+    contractSilo.queryKeys,
+  ]);
 
   const { isConfirming, writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
     successMessage: "Wrap successful",
@@ -344,7 +356,8 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
           submitButtonText={buttonText}
           spender={!usingDeposits ? siloToken.address : undefined}
           amount={!usingDeposits ? amountIn : undefined}
-          token={!usingDeposits ? mainToken : token}
+          // If using deposits, we handle the allowance increase in the button submit function
+          token={!usingDeposits ? token : undefined}
           balanceFrom={balanceFrom}
           variant="gradient"
           size="xxl"
@@ -357,7 +370,8 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
           submitButtonText={buttonText}
           spender={!usingDeposits ? siloToken.address : undefined}
           amount={!usingDeposits ? amountIn : undefined}
-          token={!usingDeposits ? mainToken : token}
+          // If using deposits, we handle the allowance increase in the button submit function
+          token={!usingDeposits ? token : undefined}
           balanceFrom={balanceFrom}
           variant="gradient"
           className="h-full"
