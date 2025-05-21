@@ -115,22 +115,15 @@ export function mergeUseSeasonalQueriesResults(
   return combined;
 }
 
-export function alignChartData(datasets: SeasonalChartData[][]): SeasonalChartData[][] | undefined {
+function alignChartData(datasets: SeasonalChartData[][]): SeasonalChartData[][] | undefined {
+  if (!datasets.length) return undefined;
+  const seasonsByDataset = datasets.map((datas) => datas.map((a) => a.season));
+
   // Step 1: Determine global min and max season
-  let minSeason = Infinity;
-  let maxSeason = -Infinity;
+  const minSeason = Math.max(...seasonsByDataset.flatMap((seasons) => Math.min(...seasons)), Infinity);
+  const maxSeason = Math.min(...seasonsByDataset.flatMap((seasons) => Math.max(...seasons)), -Infinity);
 
-  for (const dataset of datasets) {
-    // If any dataset is empty, return undefined for that dataset
-    if (dataset.length === 0) {
-      return undefined;
-    }
-    // dataset is sorted, so:
-    minSeason = Math.min(minSeason, dataset[0].season);
-    maxSeason = Math.max(maxSeason, dataset[dataset.length - 1].season);
-  }
-
-  if (minSeason === Infinity || maxSeason === -Infinity) {
+  if (minSeason === Infinity || maxSeason === -Infinity || minSeason > maxSeason) {
     return undefined;
   }
 
@@ -139,7 +132,8 @@ export function alignChartData(datasets: SeasonalChartData[][]): SeasonalChartDa
     const filtered: SeasonalChartData[] = [];
     const seen = new Set<number>();
 
-    for (const point of dataset) {
+    // reverse to get the most recent data first in case of duplicate seasons
+    for (const point of [...dataset.reverse()]) {
       if (point.season < minSeason) continue;
       if (point.season > maxSeason) break;
       if (!seen.has(point.season)) {
