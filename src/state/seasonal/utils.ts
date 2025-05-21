@@ -117,11 +117,12 @@ export function mergeUseSeasonalQueriesResults(
 
 function alignChartData(datasets: SeasonalChartData[][]): SeasonalChartData[][] | undefined {
   if (!datasets.length) return undefined;
+
   const seasonsByDataset = datasets.map((datas) => datas.map((a) => a.season));
 
   // Step 1: Determine global min and max season
-  const minSeason = Math.max(...seasonsByDataset.flatMap((seasons) => Math.min(...seasons)), Infinity);
-  const maxSeason = Math.min(...seasonsByDataset.flatMap((seasons) => Math.max(...seasons)), -Infinity);
+  const minSeason = Math.max(...seasonsByDataset.flatMap((seasons) => Math.min(...seasons)), -Infinity);
+  const maxSeason = Math.min(...seasonsByDataset.flatMap((seasons) => Math.max(...seasons)), Infinity);
 
   if (minSeason === Infinity || maxSeason === -Infinity || minSeason > maxSeason) {
     return undefined;
