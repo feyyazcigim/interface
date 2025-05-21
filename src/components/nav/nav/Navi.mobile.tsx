@@ -174,8 +174,8 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
           {/* <MobileNavLink href={navLinks.podmarket} onClick={unmountAndClose}>
             Pod Market
           </MobileNavLink> */}
-          <MobileNavLink href={navLinks.wrap} onClick={unmountAndClose}>
-            Wrap
+          <MobileNavLink href={navLinks.sPinto} onClick={unmountAndClose}>
+            sPinto
           </MobileNavLink>
         </div>
         <hr className=" border-pinto-gray-2" />

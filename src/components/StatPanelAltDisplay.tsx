@@ -7,6 +7,7 @@ import { Dispatch, SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
 import TooltipSimple from "./TooltipSimple";
 import { Separator } from "./ui/Separator";
+import { navLinks } from "./nav/nav/Navbar";
 
 interface StatPanelAltDisplayProps {
   depositedValue: TokenValue;
@@ -94,7 +95,7 @@ export default function StatPanelAltDisplay({
         <Separator orientation="vertical" className="h-[0.875rem] hidden sm:block" />
         <span
           className="flex flex-col relative group sm:hover:cursor-pointer sm:hover:text-pinto-green-4 transition-colors"
-          onClick={() => navigate(`/wrap`)}
+          onClick={() => navigate(navLinks.sPinto)}
         >
           <span className="inline-flex items-center gap-1">
             <span>sPINTO: {siloWrappedValue.lte(0) ? "-" : formatter.usd(siloWrappedValue)}</span>
