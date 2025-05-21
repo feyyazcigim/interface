@@ -6,8 +6,8 @@ import { useAtom } from "jotai";
 import { Dispatch, SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
 import TooltipSimple from "./TooltipSimple";
-import { Separator } from "./ui/Separator";
 import { navLinks } from "./nav/nav/Navbar";
+import { Separator } from "./ui/Separator";
 
 interface StatPanelAltDisplayProps {
   depositedValue: TokenValue;

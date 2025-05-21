@@ -8,8 +8,8 @@ import { getClaimText } from "@/utils/string";
 import { Token, TokenDepositData } from "@/utils/types";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import IconImage from "./ui/IconImage";
 import { navLinks } from "./nav/nav/Navbar";
+import IconImage from "./ui/IconImage";
 
 interface SiloActionBoxProps {
   farmerDeposits: TokenDepositData | undefined;

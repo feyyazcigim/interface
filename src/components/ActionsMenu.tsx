@@ -15,11 +15,11 @@ import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { getSiloConvertUrl } from "@/utils/url";
 import { useAtom } from "jotai";
 import MobileActionBar from "./MobileActionBar";
+import { navLinks } from "./nav/nav/Navbar";
 // Components
 import { Button } from "./ui/Button";
 import IconImage from "./ui/IconImage";
 import { TabletPanel } from "./ui/Panel";
-import { navLinks } from "./nav/nav/Navbar";
 interface Action {
   id: string;
   label: string;

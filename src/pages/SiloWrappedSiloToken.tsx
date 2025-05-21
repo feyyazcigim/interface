@@ -4,6 +4,7 @@ import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGro
 import LabelValue from "@/components/LabelValue";
 import MobileActionBar from "@/components/MobileActionBar";
 import TextSkeleton from "@/components/TextSkeleton";
+import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import IconImage from "@/components/ui/IconImage";
 import PageContainer from "@/components/ui/PageContainer";
@@ -33,7 +34,6 @@ import { useAccount } from "wagmi";
 import SiloActions from "./silo/SiloActions";
 import SiloTokenPageHeader, { SiloTokenPageSubHeader } from "./siloToken/SiloTokenPageHeader";
 import SiloedTokenCharts from "./wrap/SiloedTokenCharts";
-import { navLinks } from "@/components/nav/nav/Navbar";
 
 export default function SiloWrappedSiloToken({ token }: { token: Token }) {
   // URL Params
