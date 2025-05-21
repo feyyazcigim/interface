@@ -56,10 +56,10 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
   const [amountIn, setAmountIn] = useState<string>("0");
   const [inputError, setInputError] = useState<boolean>(false);
   const [balanceFrom, setBalanceFrom] = useState<FarmFromMode>(FarmFromMode.INTERNAL_EXTERNAL);
-  const [mode, setMode] = useState<FarmToMode | undefined>(undefined);
+  const [mode, setMode] = useState<FarmToMode | undefined>(FarmToMode.EXTERNAL);
   const [token, setToken] = useState<Token>(mainToken);
   const [source, setSource] = useState<AssetOrigin>(depositedAmount ? "deposits" : "balances");
-  const [didInitSource, setDidInitSource] = useState(isConnecting ? false : depositedAmount !== undefined);
+  const [didInitSource, setDidInitSource] = useState(account ? depositedAmount !== undefined : !isConnecting);
 
   const filterTokens = useFilterTokens();
 
@@ -202,7 +202,12 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
 
   // Effects
   useEffect(() => {
-    if (didInitSource || !farmerTokenBalance || !deposits || isConnecting) {
+    if (didInitSource) return;
+    if (!isConnecting && !account) {
+      setDidInitSource(true);
+    }
+
+    if (!farmerTokenBalance || !deposits || isConnecting) {
       return;
     }
 
@@ -211,7 +216,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     }
 
     setDidInitSource(true);
-  }, [farmerTokenBalance, deposits, didInitSource, isConnecting]);
+  }, [farmerTokenBalance, deposits, didInitSource, isConnecting, account]);
 
   // Tokens other than main token are not supported
   if (!tokenIsSiloWrappedToken) {
