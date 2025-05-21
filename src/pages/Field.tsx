@@ -377,7 +377,13 @@ function Field() {
               </Button>
             </div>
           )}
-          <AccordionGroup groupTitle="Frequently Asked Questions" items={FieldFAQ} allExpanded={false} size="small" />
+          <AccordionGroup
+            groupTitle="Frequently Asked Questions"
+            items={FieldFAQ}
+            allExpanded={false}
+            size="small"
+            variant="text"
+          />
           {!currentAction && (
             <MobileActionBar>
               <Button

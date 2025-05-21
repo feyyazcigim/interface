@@ -125,7 +125,7 @@ export default function SiloWrappedSiloToken({ token }: { token: Token }) {
             !showContents ? "hidden" : "",
           )}
         >
-          <AccordionGroup items={FAQ_ITEMS} groupTitle="Frequently Asked Questions" />
+          <AccordionGroup items={FAQ_ITEMS} groupTitle="Frequently Asked Questions" variant="text" />
         </div>
         {!currentAction && (
           <MobileActionBar>
