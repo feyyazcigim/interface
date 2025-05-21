@@ -10,14 +10,21 @@ query BasinAdvancedChart($from: Int, $to: Int) {
     season {
       season
     }
+    cumulativeBuyVolumeUSD
+    cumulativeSellVolumeUSD
+    cumulativeTradeVolumeUSD
     deltaBuyVolumeUSD
     deltaSellVolumeUSD
     deltaTradeVolumeUSD
-    cumulativeTradeVolumeUSD
+    cumulativeConvertUpVolumeUSD
+    cumulativeConvertDownVolumeUSD
+    cumulativeConvertVolumeUSD
+    cumulativeConvertNeutralTransferVolumeUSD
     deltaConvertDownVolumeUSD
     deltaConvertUpVolumeUSD
     deltaConvertVolumeUSD
-    cumulativeConvertVolumeUSD
+    deltaConvertNeutralTransferVolumeUSD
     totalLiquidityUSD
+    deltaLiquidityUSD
   }
 }

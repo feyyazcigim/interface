@@ -61,11 +61,26 @@ export interface SeasonsTableData {
   numberOfSows: number;
   numberOfSowers: number;
   stalk: TokenValue;
-  cumulativeVolume: number;
-  cumulativeConverts: number;
-  deltaBuysNet: number;
-  deltaConvertsUpNet: number;
-  liquidity: number;
+  cumulativeVolumeNet: number;
+  cumulativeBuyVolumeUSD: number;
+  cumulativeSellVolumeUSD: number;
+  cumulativeVolumeUSD: number;
+  deltaVolumeNet: number;
+  deltaBuyVolumeUSD: number;
+  deltaSellVolumeUSD: number;
+  deltaVolumeUSD: number;
+  cumulativeConvertVolumeNet: number;
+  cumulativeConvertUpVolumeUSD: number;
+  cumulativeConvertDownVolumeUSD: number;
+  cumulativeConvertVolumeUSD: number;
+  cumulativeConvertNeutralTransferVolumeUSD: number;
+  deltaConvertVolumeNet: number;
+  deltaConvertUpVolumeUSD: number;
+  deltaConvertDownVolumeUSD: number;
+  deltaConvertVolumeUSD: number;
+  deltaConvertNeutralTransferVolumeUSD: number;
+  liquidityUSD: number;
+  deltaLiquidityUSD: number;
   pinto30d: number;
   pinto7d: number;
   pinto24h: number;
@@ -363,12 +378,31 @@ export default function useSeasonsData(
 
       if (basinData) {
         const currBasinSeason = basinResults[idx];
-        allData.cumulativeVolume = Number(currBasinSeason.cumulativeTradeVolumeUSD);
-        allData.cumulativeConverts = Number(currBasinSeason.cumulativeConvertVolumeUSD);
-        allData.deltaBuysNet = Number(currBasinSeason.deltaBuyVolumeUSD) - Number(currBasinSeason.deltaSellVolumeUSD);
-        allData.deltaConvertsUpNet =
+        allData.cumulativeVolumeNet =
+          Number(currBasinSeason.cumulativeBuyVolumeUSD) - Number(currBasinSeason.cumulativeSellVolumeUSD);
+        allData.cumulativeBuyVolumeUSD = Number(currBasinSeason.cumulativeBuyVolumeUSD);
+        allData.cumulativeSellVolumeUSD = Number(currBasinSeason.cumulativeSellVolumeUSD);
+        allData.cumulativeVolumeUSD = Number(currBasinSeason.cumulativeTradeVolumeUSD);
+        allData.deltaVolumeNet = Number(currBasinSeason.deltaBuyVolumeUSD) - Number(currBasinSeason.deltaSellVolumeUSD);
+        allData.deltaBuyVolumeUSD = Number(currBasinSeason.deltaBuyVolumeUSD);
+        allData.deltaSellVolumeUSD = Number(currBasinSeason.deltaSellVolumeUSD);
+        allData.deltaVolumeUSD = Number(currBasinSeason.deltaTradeVolumeUSD);
+        allData.cumulativeConvertVolumeNet =
+          Number(currBasinSeason.cumulativeConvertUpVolumeUSD) - Number(currBasinSeason.cumulativeConvertDownVolumeUSD);
+        allData.cumulativeConvertUpVolumeUSD = Number(currBasinSeason.cumulativeConvertUpVolumeUSD);
+        allData.cumulativeConvertDownVolumeUSD = Number(currBasinSeason.cumulativeConvertDownVolumeUSD);
+        allData.cumulativeConvertVolumeUSD = Number(currBasinSeason.cumulativeConvertVolumeUSD);
+        allData.cumulativeConvertNeutralTransferVolumeUSD = Number(
+          currBasinSeason.cumulativeConvertNeutralTransferVolumeUSD,
+        );
+        allData.deltaConvertVolumeNet =
           Number(currBasinSeason.deltaConvertUpVolumeUSD) - Number(currBasinSeason.deltaConvertDownVolumeUSD);
-        allData.liquidity = Number(currBasinSeason.totalLiquidityUSD);
+        allData.deltaConvertUpVolumeUSD = Number(currBasinSeason.deltaConvertUpVolumeUSD);
+        allData.deltaConvertDownVolumeUSD = Number(currBasinSeason.deltaConvertDownVolumeUSD);
+        allData.deltaConvertVolumeUSD = Number(currBasinSeason.deltaConvertVolumeUSD);
+        allData.deltaConvertNeutralTransferVolumeUSD = Number(currBasinSeason.deltaConvertNeutralTransferVolumeUSD);
+        allData.liquidityUSD = Number(currBasinSeason.totalLiquidityUSD);
+        allData.deltaLiquidityUSD = Number(currBasinSeason.deltaLiquidityUSD);
 
         if (!allData.season) {
           allData.season = currBasinSeason.season.season;
