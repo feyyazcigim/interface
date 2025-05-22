@@ -15,7 +15,6 @@ import {
 import { PaginationSettings, paginateMultiQuerySubgraph, paginateSubgraph } from "@/utils/paginateSubgraph";
 import { Duration } from "luxon";
 import { useCallback, useMemo } from "react";
-import { L } from "vitest/dist/chunks/reporters.66aFHiyX.js";
 import { useChainId } from "wagmi";
 import { APYWindow, useSeasonalAPYs } from "./seasonal/queries/useSeasonalAPY";
 import useSeasonalInflowSnapshots from "./seasonal/queries/useSeasonalInflowSnapshots";
