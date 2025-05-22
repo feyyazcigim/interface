@@ -230,22 +230,6 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     tickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
     shortTickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
   },
-  {
-    id: "stalk",
-    type: "Pinto",
-    name: "Stalk Supply",
-    tooltipTitle: "Stalk Supply",
-    tooltipHoverText: "The total number of Stalk.",
-    shortDescription: "The total number of Stalk.",
-    icon: stalkIcon,
-    timeScaleKey: "timestamp",
-    priceScaleKey: "stalk",
-    valueAxisType: "stalk",
-    valueFormatter: (v: TokenValue) => v.toNumber(),
-    tickFormatter: (v: number) =>
-      formatNum(v, { allowZero: true, minDecimals: 2, maxDecimals: 2, showPositiveSign: false }),
-    shortTickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
-  },
 ];
 
 // Function to generate Field charts
@@ -346,8 +330,8 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
   {
     id: "pintoSown",
     type: "Field",
-    name: "Pinto Sown (Cumulative)",
-    tooltipTitle: "Pinto Sown (Cumulative)",
+    name: "Cumulative Pinto Sown",
+    tooltipTitle: "Cumulative Pinto Sown",
     tooltipHoverText: "The total number of Pinto Sown as of the beginning of every Season.",
     shortDescription: "The total number of Pinto Sown.",
     icon: mainToken.logoURI,
@@ -361,8 +345,8 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
   {
     id: "pintoSownSeasonally",
     type: "Field",
-    name: "Pinto Sown (Seasonal)",
-    tooltipTitle: "Pinto Sown (Seasonal)",
+    name: "Seasonal Pinto Sown",
+    tooltipTitle: "Seasonal Pinto Sown",
     tooltipHoverText: "The total number of Pinto Sown during the Season.",
     shortDescription: "The total number of Pinto Sown during the Season.",
     icon: mainToken.logoURI,
@@ -595,7 +579,23 @@ const createExchangeCharts = (_mainToken: Token): ChartSetupBase[] => {
   ];
 };
 
-const createAPYCharts = (mainToken: Token): ChartSetupBase[] => [
+const createSiloCharts = (mainToken: Token): ChartSetupBase[] => [
+  {
+    id: "stalk",
+    type: "Silo",
+    name: "Stalk Supply",
+    tooltipTitle: "Stalk Supply",
+    tooltipHoverText: "The total number of Stalk.",
+    shortDescription: "The total number of Stalk.",
+    icon: stalkIcon,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "stalk",
+    valueAxisType: "stalk",
+    valueFormatter: (v: TokenValue) => v.toNumber(),
+    tickFormatter: (v: number) =>
+      formatNum(v, { allowZero: true, minDecimals: 2, maxDecimals: 2, showPositiveSign: false }),
+    shortTickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
+  },
   {
     id: "pinto30d",
     type: "Silo",
@@ -969,30 +969,22 @@ const createInflowCharts = (mainToken: Token): ChartSetupBase[] => {
 };
 
 export function useChartSetupData() {
-  const { mainToken, lpTokens, whitelistedTokens } = useTokenData();
+  const { mainToken } = useTokenData();
 
   // Memoize data separately with proper dependencies
   const data = useMemo(() => {
     const pintoCharts = createPintoCharts(mainToken);
+    const siloCharts = createSiloCharts(mainToken);
     const fieldCharts = createFieldCharts(mainToken);
     const exchangeCharts = createExchangeCharts(mainToken);
-    const apyCharts = createAPYCharts(mainToken);
     const tractorCharts = createTractorCharts(mainToken);
     const inflowCharts = createInflowCharts(mainToken);
 
-    if (lpTokens.length > 0) {
-      // Add LP charts here
-    }
-
-    if (whitelistedTokens.length > 0) {
-      // Add deposit & APY charts here
-    }
-
     const output: ChartSetup[] = [
       ...pintoCharts,
+      ...siloCharts,
       ...fieldCharts,
       ...exchangeCharts,
-      ...apyCharts,
       ...tractorCharts,
       ...inflowCharts,
     ].map((setupData, index) => ({
@@ -1001,7 +993,7 @@ export function useChartSetupData() {
     }));
 
     return output;
-  }, [mainToken, lpTokens, whitelistedTokens]); // Include all dependencies
+  }, [mainToken]); // Include all dependencies
 
   // Return a stable reference when dependencies don't change
   return { data, chartColors };
