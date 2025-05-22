@@ -101,6 +101,16 @@ export const chartColors: ChartColors = [
   },
 ];
 
+const usdFormatter = (v: number) => {
+  const formatted = TokenValue.fromHuman(v, 2).toHuman("short");
+  // Ensure 2 decimal places
+  if (formatted.match(/[KMBT]$/)) {
+    const [num, suffix] = formatted.split(/([KMBT])/);
+    return `$${Number(num).toFixed(2)}${suffix}`;
+  }
+  return `$${formatted}`;
+};
+
 // Function to generate Pinto charts
 const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
   {
@@ -145,8 +155,8 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     priceScaleKey: "marketCap",
     valueAxisType: "marketCap",
     valueFormatter: (v: number) => v,
-    tickFormatter: (v: number) => formatUSD(v, { decimals: 2 }),
-    shortTickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
+    tickFormatter: usdFormatter,
+    shortTickFormatter: usdFormatter,
   },
   {
     id: "priceTargetCrosses",
@@ -431,8 +441,8 @@ const createExchangeCharts = (_mainToken: Token): ChartSetupBase[] => {
       priceScaleKey: id,
       valueAxisType: id,
       valueFormatter: (v: number) => v,
-      tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-      shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+      tickFormatter: usdFormatter,
+      shortTickFormatter: usdFormatter,
     };
   };
   return [
@@ -792,8 +802,8 @@ const createInflowCharts = (mainToken: Token): ChartSetupBase[] => {
       priceScaleKey: id,
       valueAxisType: id,
       valueFormatter: (v: number) => v,
-      tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-      shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
+      tickFormatter: usdFormatter,
+      shortTickFormatter: usdFormatter,
     };
   };
   return [
