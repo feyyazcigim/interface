@@ -4,7 +4,7 @@ import { useChartSetupData } from "@/state/useChartSetupData";
 import { cn } from "@/utils/utils";
 import { useAtom } from "jotai";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { SearchIcon, ChevronDownIcon } from "../Icons";
+import { ChevronDownIcon, SearchIcon } from "../Icons";
 import { selectedChartsAtom } from "../charts/AdvancedChart";
 import { Input } from "../ui/Input";
 import { ScrollArea } from "../ui/ScrollArea";
@@ -53,9 +53,9 @@ const ChartSelectPanel = memo(() => {
   }, [searchInput, groupedData]);
 
   const updateSearchInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchInput(e.target.value);
-      if (e.target.value === "") {
+    (searchText: string) => {
+      setSearchInput(searchText);
+      if (searchText === "") {
         setExpandedTypes(new Set());
       } else {
         const allTypes = new Set(Object.keys(groupedData));
@@ -65,23 +65,20 @@ const ChartSelectPanel = memo(() => {
     [groupedData],
   );
 
-  const toggleTypeFactory = useCallback(
-    (type: string) => () => {
-      setExpandedTypes((prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(type)) {
-          newSet.delete(type);
-        } else {
-          newSet.add(type);
-        }
-        return newSet;
-      });
-    },
-    [],
-  );
+  const toggleType = (type: string) => {
+    setExpandedTypes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(type)) {
+        newSet.delete(type);
+      } else {
+        newSet.add(type);
+      }
+      return newSet;
+    });
+  };
 
-  const handleSelectionFactory = useCallback(
-    (selection: number) => () => {
+  const handleSelection = useCallback(
+    (selection: number) => {
       const selectedItems = [...internalSelected];
       const indexInSelection = selectedItems.findIndex((selectionIndex) => selection === selectionIndex);
       const isSelected = indexInSelection > -1;
@@ -120,7 +117,7 @@ const ChartSelectPanel = memo(() => {
             type="text"
             className="bg-pinto-gray-1 placeholder:text-pinto-gray-4 border-pinto-gray-2"
             placeholder="Search"
-            onChange={updateSearchInput}
+            onChange={(e) => updateSearchInput(e.target.value)}
             startIcon={<SearchIcon className="ml-2" />}
           />
         </div>
@@ -131,7 +128,7 @@ const ChartSelectPanel = memo(() => {
               <div key={type} className="flex flex-col">
                 <div
                   className="flex flex-row items-center gap-3 justify-between hover:cursor-pointer hover:bg-pinto-gray-2/20 py-3 pl-3 pr-4 transition-colors"
-                  onClick={toggleTypeFactory(type)}
+                  onClick={() => toggleType(type)}
                 >
                   <div className="flex items-center gap-2">
                     <ChevronDownIcon
@@ -155,7 +152,7 @@ const ChartSelectPanel = memo(() => {
                             "flex flex-row items-center gap-3 my-0.5 justify-between hover:cursor-pointer hover:bg-pinto-gray-2/20 py-2 px-6 transition-colors",
                             isSelected && "bg-pinto-gray-2/70 hover:bg-pinto-gray-2/50",
                           )}
-                          onClick={handleSelectionFactory(data.index)}
+                          onClick={() => handleSelection(data.index)}
                         >
                           <IconImage src={data.icon} size={9} />
                           <div className="flex flex-col basis-full gap-1">
