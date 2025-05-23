@@ -144,7 +144,8 @@ function alignChartData(datasets: SeasonalChartData[][]): SeasonalChartData[][] 
       // If we've already seen the season, skip duplicates
     }
 
-    return filtered;
+    // ensure sorted in ascending order
+    return filtered.sort((a, b) => a.season - b.season);
   });
 
   return alignedDatasets;

@@ -48,6 +48,7 @@ const CompactSeasonalLineChart = ({
 
   const { isLoading, isError, data: inputData } = useNormalizeMayMultipleSeasonalData(useSeasonalResult);
 
+  // Prevent chart from thinking there is insufficient data in pre-fetch state
   useEffect(() => {
     if (isLoading && !didLoad && useSeasonalResult.every((r) => !!r.data)) {
       setDidLoad(true);
@@ -146,20 +147,20 @@ const CompactSeasonalLineChart = ({
           <span>{displayData?.[0]?.timestamp ? formatDate(displayData[0].timestamp) : "--"}</span>
         </div>
       </div>
-      {!allData && !displayData && (
+      {(isLoading || isError || !allData) && (
         <>
           {/* Keep sizing the same as when there is data. Allows centering spinner/error vertically */}
           <div className={`${size === "small" ? "aspect-3/1" : "aspect-6/1"} pt-4`}>
             <div className="relative w-full flex items-center justify-center">
               <div className="flex flex-col items-center justify-center h-40 sm:h-52 box-border">
-                {!didLoad || (isLoading && !isError) ? (
+                {(isLoading && !isError) || !didLoad ? (
                   <FrameAnimator size={75} />
                 ) : isError ? (
                   <>
                     <CloseIconAlt color={"red"} />
                     <div className="pinto-body text-pinto-green-3">An error has occurred</div>
                   </>
-                ) : !isError && !isLoading && didLoad ? (
+                ) : !isError && !isLoading && !allData ? (
                   <div className="pinto-body-light text-pinto-light">Insufficient data</div>
                 ) : null}
               </div>
@@ -167,7 +168,7 @@ const CompactSeasonalLineChart = ({
           </div>
         </>
       )}
-      {allData && displayData && (
+      {!isLoading && allData && displayData && (
         <>
           <div className={size === "small" ? "aspect-3/1" : "aspect-6/1"}>
             {!chartData?.every((d) => d.length > 1) && !isLoading ? (
