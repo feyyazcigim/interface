@@ -133,25 +133,29 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
 
   // Callbacks
   const handleWrap = useCallback(async () => {
+    const nofityIsWrapping = () => {
+      setSubmitting(true);
+      toast.loading("Wrapping...");
+    }
+
     try {
       if (!isValidAddress(account)) {
         throw new Error("Signer required");
+      }
+      if (exceedsBalance) {
+        throw new Error("Insufficient deposits");
       }
       if (source === "deposits") {
         const amount = TV.fromHuman(amountIn, mainToken.decimals);
         if (!deposits || !deposits.deposits.length) {
           throw new Error("No deposits found");
         }
-        if (exceedsBalance) {
-          throw new Error("Insufficient deposits");
-        }
         if (amount.lte(0)) {
           throw new Error("Invalid amount");
         }
-        setSubmitting(true);
+        nofityIsWrapping();
         const picked = sortAndPickCrates("wrap", amount, deposits.deposits);
         const extracted = extractStemsAndAmountsFromCrates(picked.crates);
-        toast.loading("Wrapping...");
 
         return writeWithEstimateGas({
           address: siloToken.address,
@@ -161,27 +165,35 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
         });
       }
 
+      const tokenAmount = TV.fromHuman(amountIn, token.decimals);
+      if (tokenAmount.lte(0)) {
+        throw new Error("Invalid amount");
+      }
+      if (source === "balances" && token.isMain) {
+        nofityIsWrapping();
+        return writeWithEstimateGas({
+          address: siloToken.address,
+          abi: siloedPintoABI,
+          functionName: "depositAdvanced",
+          args: [tokenAmount.toBigInt(), account, Number(balanceFrom), Number(mode)],
+        });
+      }
+
       if (!swap.data || !buildSwap) {
         throw new Error("Invalid swap quote");
       }
-      if (exceedsBalance) {
-        throw new Error("Insufficient funds");
-      }
-
-      setSubmitting(true);
       const swapBuild = await buildSwap();
       if (!swapBuild) {
         throw new Error("Failed to build swap");
       }
-
-      const value = token.isNative ? TV.fromHuman(amountIn, token.decimals) : undefined;
-
+      
+      nofityIsWrapping();
       return writeWithEstimateGas({
         address: diamond,
         abi: diamondABI,
         functionName: "advancedFarm",
         args: [swapBuild.advancedFarm],
-        value: value?.toBigInt(),
+        value: token.isNative ? tokenAmount.toBigInt() : undefined,
       });
     } catch (e: any) {
       console.error(e);
@@ -249,9 +261,13 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     exceedsBalance ||
     inputError ||
     disabledFromLoading ||
-    !toModeSelected;
+    !toModeSelected || 
+    submitting; 
 
   const buttonText = exceedsBalance ? "Insufficient funds" : needsDepositAllowanceIncrease ? "Approve" : "Wrap";
+
+  // only set the spender to sPinto contract if not using deposits & token being used is PINTO
+  const spender = !usingDeposits && token.isMain ? siloToken.address : undefined;
 
   return (
     <div className="flex flex-col gap-6">
@@ -354,7 +370,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
           submitFunction={handleButtonSubmit}
           disabled={buttonDisabled}
           submitButtonText={buttonText}
-          spender={!usingDeposits ? siloToken.address : undefined}
+          spender={spender}
           amount={!usingDeposits ? amountIn : undefined}
           // If using deposits, we handle the allowance increase in the button submit function
           token={!usingDeposits ? token : undefined}
@@ -368,7 +384,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
           submitFunction={handleButtonSubmit}
           disabled={buttonDisabled}
           submitButtonText={buttonText}
-          spender={!usingDeposits ? siloToken.address : undefined}
+          spender={spender}
           amount={!usingDeposits ? amountIn : undefined}
           // If using deposits, we handle the allowance increase in the button submit function
           token={!usingDeposits ? token : undefined}
