@@ -311,4 +311,4 @@ export function useMultiSeasonalQueries<T>(
     isError: historical.isError || current.isError,
   };
 }
-``
+``;
