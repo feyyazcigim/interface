@@ -145,7 +145,7 @@ const CompactSeasonalLineChart = ({
           <div className={`${size === "small" ? "aspect-3/1" : "aspect-6/1"} pt-4`}>
             <div className="relative w-full flex items-center justify-center">
               <div className="flex flex-col items-center justify-center h-40 sm:h-52 box-border">
-                {(isLoading && !isError) ? (
+                {isLoading && !isError ? (
                   <FrameAnimator size={75} />
                 ) : isError ? (
                   <>
