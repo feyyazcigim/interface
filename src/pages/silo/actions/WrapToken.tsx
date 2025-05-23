@@ -136,7 +136,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     const nofityIsWrapping = () => {
       setSubmitting(true);
       toast.loading("Wrapping...");
-    }
+    };
 
     try {
       if (!isValidAddress(account)) {
@@ -186,7 +186,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
       if (!swapBuild) {
         throw new Error("Failed to build swap");
       }
-      
+
       nofityIsWrapping();
       return writeWithEstimateGas({
         address: diamond,
@@ -261,8 +261,8 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     exceedsBalance ||
     inputError ||
     disabledFromLoading ||
-    !toModeSelected || 
-    submitting; 
+    !toModeSelected ||
+    submitting;
 
   const buttonText = exceedsBalance ? "Insufficient funds" : needsDepositAllowanceIncrease ? "Approve" : "Wrap";
 

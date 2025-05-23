@@ -44,8 +44,16 @@ const CompactSeasonalLineChart = ({
 }: CompactSeasonalChartProps) => {
   const [allData, setAllData] = useState<SeasonalChartData[][] | null>(null);
   const [displayData, setDisplayData] = useState<SeasonalChartData[] | null>(null);
-
+  const [didLoad, setDidLoad] = useState(false);
+  
   const { isLoading, isError, data: inputData } = useNormalizeMayMultipleSeasonalData(useSeasonalResult);
+  
+  // Prevent chart from thinking there is insufficient data in pre-fetch state
+  useEffect(() => {
+    if (isLoading && !didLoad && useSeasonalResult.every((r) => !!r.data)) {
+      setDidLoad(true);
+    }
+  }, [isLoading, didLoad, useSeasonalResult]);
 
   useEffect(() => {
     if (!inputData) return;
@@ -145,7 +153,7 @@ const CompactSeasonalLineChart = ({
           <div className={`${size === "small" ? "aspect-3/1" : "aspect-6/1"} pt-4`}>
             <div className="relative w-full flex items-center justify-center">
               <div className="flex flex-col items-center justify-center h-40 sm:h-52 box-border">
-                {isLoading && !isError ? (
+                {((isLoading && !isError) || !didLoad) ? (
                   <FrameAnimator size={75} />
                 ) : isError ? (
                   <>
