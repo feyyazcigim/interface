@@ -169,15 +169,6 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
       if (tokenAmount.lte(0)) {
         throw new Error("Invalid amount");
       }
-      if (source === "balances" && token.isMain) {
-        nofityIsWrapping();
-        return writeWithEstimateGas({
-          address: siloToken.address,
-          abi: siloedPintoABI,
-          functionName: "depositAdvanced",
-          args: [tokenAmount.toBigInt(), account, Number(balanceFrom), Number(mode)],
-        });
-      }
 
       if (!swap.data || !buildSwap) {
         throw new Error("Invalid swap quote");
@@ -265,9 +256,6 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     submitting;
 
   const buttonText = exceedsBalance ? "Insufficient funds" : needsDepositAllowanceIncrease ? "Approve" : "Wrap";
-
-  // only set the spender to sPinto contract if not using deposits & token being used is PINTO
-  const spender = !usingDeposits && token.isMain ? siloToken.address : undefined;
 
   return (
     <div className="flex flex-col gap-6">
@@ -370,7 +358,6 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
           submitFunction={handleButtonSubmit}
           disabled={buttonDisabled}
           submitButtonText={buttonText}
-          spender={spender}
           amount={!usingDeposits ? amountIn : undefined}
           // If using deposits, we handle the allowance increase in the button submit function
           token={!usingDeposits ? token : undefined}
@@ -384,7 +371,6 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
           submitFunction={handleButtonSubmit}
           disabled={buttonDisabled}
           submitButtonText={buttonText}
-          spender={spender}
           amount={!usingDeposits ? amountIn : undefined}
           // If using deposits, we handle the allowance increase in the button submit function
           token={!usingDeposits ? token : undefined}
