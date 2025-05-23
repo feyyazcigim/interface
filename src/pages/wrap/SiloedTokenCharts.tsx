@@ -125,12 +125,8 @@ const TotalDepositedPintoChart = React.memo(({ tab, season, setTab }: ISiloedTok
 // we fetch 1000 seasons to increase the likelihood of a single event.
 // The chart handles clipping of the data, so we can just return the full 1000 season for Week & Month tabs.
 const useInterpolatedSeasonalWrappedDepositTotalSupply = (season: number, tab: TimeTab) => {
-  const { fromSeason, toSeason } = truncateBeanstalkWrappedDespositsSeasons(
-    Math.max(0, season - (tab === TimeTab.AllTime ? Number.MAX_SAFE_INTEGER : 999)),
-    season,
-  );
-
-  return useSeasonalWrappedDepositTotalSupply(fromSeason, toSeason);
+  const seasons = useFullQuerySizeFromToSeasons(season, tab);
+  return useSeasonalWrappedDepositTotalSupply(seasons.fromSeason, seasons.toSeason);
 };
 
 // ---------- Exchange Rate ----------
@@ -226,12 +222,9 @@ const grownStalkPerBDVAreaFunction = getAreaGradientFunctions(["fadeGreen"]);
 const GrownStalkPerDepositedBDVChart = React.memo(({ tab, season, setTab }: ISiloedTokenChart) => {
   const { mainToken, sMainToken } = useContextTokens();
 
-  const { fromSeason, toSeason } = truncateBeanstalkWrappedDespositsSeasons(
-    Math.max(0, season - tabToSeasonalLookback(tab)),
-    season,
-  );
+  const seasons = useFullQuerySizeFromToSeasons(season, tab);
 
-  const query = useFarmerSeasonalGrownStalkPerDepositedBDV(fromSeason, toSeason, sMainToken.address);
+  const query = useFarmerSeasonalGrownStalkPerDepositedBDV(seasons.fromSeason, seasons.toSeason, sMainToken.address);
 
   const titles = useMemo(() => [`Grown Stalk Per Deposited ${mainToken.symbol}`], [mainToken]);
   const results = useMemo(() => [query], [query]);
@@ -250,3 +243,16 @@ const GrownStalkPerDepositedBDVChart = React.memo(({ tab, season, setTab }: ISil
     />
   );
 });
+
+// ──────────────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────────────────────────────
+
+const useFullQuerySizeFromToSeasons = (season: number, tab: TimeTab) => {
+  const { fromSeason, toSeason } = truncateBeanstalkWrappedDespositsSeasons(
+    Math.max(0, season - tabToSeasonalLookback(tab)),
+    season,
+  );
+
+  return { fromSeason, toSeason };
+}
