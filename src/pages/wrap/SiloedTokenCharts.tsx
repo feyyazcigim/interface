@@ -222,9 +222,11 @@ const grownStalkPerBDVAreaFunction = getAreaGradientFunctions(["fadeGreen"]);
 const GrownStalkPerDepositedBDVChart = React.memo(({ tab, season, setTab }: ISiloedTokenChart) => {
   const { mainToken, sMainToken } = useContextTokens();
 
-  const seasons = useFullQuerySizeFromToSeasons(season, tab);
+  const range = useFullQuerySizeFromToSeasons(season, tab);
 
-  const query = useFarmerSeasonalGrownStalkPerDepositedBDV(seasons.fromSeason, seasons.toSeason, sMainToken.address);
+  const query = useFarmerSeasonalGrownStalkPerDepositedBDV(range.fromSeason, range.toSeason, sMainToken.address);
+
+  console.log({ query, range });
 
   const titles = useMemo(() => [`Grown Stalk Per Deposited ${mainToken.symbol}`], [mainToken]);
   const results = useMemo(() => [query], [query]);
@@ -255,4 +257,4 @@ const useFullQuerySizeFromToSeasons = (season: number, tab: TimeTab) => {
   );
 
   return { fromSeason, toSeason };
-}
+};
