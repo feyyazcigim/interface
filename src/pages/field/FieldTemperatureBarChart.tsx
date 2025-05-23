@@ -124,7 +124,7 @@ const FieldTemperatureBarChart = React.memo(({ className, variant = "default" }:
         <Col
           className={cn(
             "h-[250px] sm:h-[435px] w-full px-2 sm:px-4 pb-2 sm:pb-4",
-            variant === "explorer" && "h-[300px] sm:h-[300px]",
+            variant === "explorer" && "h-[300px] sm:h-[300px] mt-1",
             className,
           )}
         >
