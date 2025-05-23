@@ -69,23 +69,27 @@ export default function useSeasonalQueries<T>(
     queryKey: historicalQueryKey,
     queryFn: queryConfig.historicalQueryFnFactory(historicalVars),
     select: (data: T[]) => {
-      return data
-        .map((v, idx) => {
-          // Data is presented at the time of season completion.
-          // The final season is part of this result, but extraneous and reselected as the current season.
-          let seasonEnd: Date;
-          if (idx < data.length - 1) {
-            seasonEnd = queryConfig.resultTimestamp(data[idx + 1]);
-            return queryConfig.convertResult(v, seasonEnd);
-          }
-          // With sparse data, the final result may need to be included.
-          if (sparseData && idx === data.length - 1) {
-            seasonEnd = queryConfig.resultTimestamp(data[idx]);
-            seasonEnd.setHours(seasonEnd.getHours() + 1);
-            return queryConfig.convertResult(v, seasonEnd);
-          }
-        })
-        .filter((v) => v !== undefined);
+      return (
+        data
+          .map((v, idx) => {
+            // Data is presented at the time of season completion.
+            // The final season is part of this result, but extraneous and reselected as the current season.
+            let seasonEnd: Date;
+            if (idx < data.length - 1) {
+              seasonEnd = queryConfig.resultTimestamp(data[idx + 1]);
+              return queryConfig.convertResult(v, seasonEnd);
+            }
+            // With sparse data, the final result may need to be included.
+            if (sparseData && idx === data.length - 1) {
+              seasonEnd = queryConfig.resultTimestamp(data[idx]);
+              seasonEnd.setHours(seasonEnd.getHours() + 1);
+              return queryConfig.convertResult(v, seasonEnd);
+            }
+          })
+          .filter((v) => v !== undefined)
+          // ensure sorted in ascending order
+          .sort((a, b) => a.season - b.season)
+      );
     },
     enabled: enabled && !!historicalVars.to && !disabled,
     staleTime: Infinity,
@@ -137,11 +141,16 @@ export default function useSeasonalQueries<T>(
     queryKey: currentQueryKey,
     queryFn: queryConfig.currentQueryFnFactory(currentVars),
     select: (data: T[]) => {
-      return data.map((v) => {
-        const queryInfo = queryClient.getQueryCache().find({ queryKey: currentQueryKey });
-        const lastFetchedTimestamp = queryInfo?.state?.dataUpdatedAt;
-        return queryConfig.convertResult(v, lastFetchedTimestamp ? new Date(lastFetchedTimestamp) : new Date());
-      });
+      return (
+        data
+          .map((v) => {
+            const queryInfo = queryClient.getQueryCache().find({ queryKey: currentQueryKey });
+            const lastFetchedTimestamp = queryInfo?.state?.dataUpdatedAt;
+            return queryConfig.convertResult(v, lastFetchedTimestamp ? new Date(lastFetchedTimestamp) : new Date());
+          })
+          // ensure sorted in ascending order
+          .sort((a, b) => a.season - b.season)
+      );
     },
     enabled: enabled && !!currentVars.to && !disabled,
     // Requery result up to once per minute
@@ -214,7 +223,9 @@ export function useMultiSeasonalQueries<T>(
                 return queryConfig.convertResult(v, seasonEnd);
               }
             })
-            .filter((v) => v !== undefined);
+            .filter((v) => v !== undefined)
+            // ensure sorted in ascending order
+            .sort((a, b) => a.season - b.season);
           return acc;
         },
         {} as { [key: string]: SeasonalChartData[] },
@@ -264,11 +275,14 @@ export function useMultiSeasonalQueries<T>(
     select: (data: T[]) => {
       return Object.entries(data).reduce(
         (acc, [key, queryResult]: [string, any]) => {
-          acc[key] = queryResult.map((v) => {
-            const queryInfo = queryClient.getQueryCache().find({ queryKey: currentQueryKey });
-            const lastFetchedTimestamp = queryInfo?.state?.dataUpdatedAt;
-            return queryConfig.convertResult(v, lastFetchedTimestamp ? new Date(lastFetchedTimestamp) : new Date());
-          });
+          acc[key] = queryResult
+            .map((v) => {
+              const queryInfo = queryClient.getQueryCache().find({ queryKey: currentQueryKey });
+              const lastFetchedTimestamp = queryInfo?.state?.dataUpdatedAt;
+              return queryConfig.convertResult(v, lastFetchedTimestamp ? new Date(lastFetchedTimestamp) : new Date());
+            })
+            // ensure sorted in ascending order
+            .sort((a, b) => a.season - b.season);
           return acc;
         },
         {} as { [key: string]: SeasonalChartData[] },
@@ -297,3 +311,4 @@ export function useMultiSeasonalQueries<T>(
     isError: historical.isError || current.isError,
   };
 }
+``
