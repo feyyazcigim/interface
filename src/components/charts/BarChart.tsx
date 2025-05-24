@@ -157,7 +157,7 @@ const BarChart = React.memo(
     if (isLoading || !data.datasets.length || !iYScale) {
       return (
         <Col className="flex items-center justify-center h-full">
-          <LoadingSpinner size={50} />
+          <LoadingSpinner size={75} />
         </Col>
       );
     }
