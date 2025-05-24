@@ -36,7 +36,7 @@ const GradientBox = ({
   children,
   timeRange = defaultTimeRange,
   rotationRange = defaultRotationRange,
-  rounded = {},
+  rounded,
   innerClassName = "",
   outerClassName = "",
   animate = true,
