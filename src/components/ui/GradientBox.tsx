@@ -2,7 +2,7 @@ import { Col } from "@/components/Container";
 import { cn, isObject } from "@/utils/utils";
 import clsx from "clsx";
 import { motion, useTime, useTransform } from "framer-motion";
-import { ReactNode, memo, useState } from "react";
+import { ReactNode, useState } from "react";
 
 type CornerRadius = {
   tl?: boolean;
