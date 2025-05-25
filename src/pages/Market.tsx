@@ -13,6 +13,8 @@ import CreateListing from "./market/actions/CreateListing";
 import CreateOrder from "./market/actions/CreateOrder";
 import FillListing from "./market/actions/FillListing";
 import FillOrder from "./market/actions/FillOrder";
+import { useAllMarket } from "@/state/market/useAllMarket";
+import { useHarvestableIndex } from "@/state/useFieldData";
 
 const TABLE_SLUGS = ["activity", "listings", "orders", "my-activity"];
 const TABLE_LABELS = ["Activity", "Listings", "Orders", "My Activity"];
@@ -21,6 +23,52 @@ export function Market() {
   const { mode, id } = useParams();
   const [tab, handleChangeTab] = useState(TABLE_SLUGS[0]);
   const navigate = useNavigate();
+  const marketData = useAllMarket()
+  const harvestableIndex = useHarvestableIndex();
+
+  const chartData = marketData?.data?.reduce((acc, event) => {
+    // Skip Fill Orders
+    if ("toFarmer" in event) {
+      return acc;
+    }
+    let placeInLine: number | null = null;
+    let amount: number | null = null;
+    let status = "";
+    const price = event.pricePerPod.toNumber();
+    const eventId = event.id;
+    const eventType = event.type;
+    let eventIndex: number | null = null;
+
+    if ("originalAmount" in event) {
+      amount = event.originalAmount.toNumber();
+      const fillPct = event.filled.div(event.originalAmount).mul(100).toNumber();
+      status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
+      placeInLine = status === "ACTIVE" ? event.index.sub(harvestableIndex).toNumber() / 1_000_000 : null;
+      eventIndex = event.index.toNumber();
+    } else if ("beanAmount" in event) {
+      amount = event.beanAmount.div(event.pricePerPod).toNumber();
+      const fillPct = event.beanAmountFilled.div(event.beanAmount).mul(100).toNumber();
+      status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
+      placeInLine = event.maxPlaceInLine.toNumber() / 1_000_000;
+    }
+
+    if (placeInLine !== null && price !== null) {
+      acc.push({
+        x: placeInLine,
+        y: price,
+        r: Math.min(5, 3 + Math.log10(amount || 1) / 10),
+        amount,
+        status,
+        event,
+        id: eventId,
+        type: eventType,
+        index: eventIndex,
+        interactable: status === "ACTIVE",
+      });
+    }
+
+    return acc;
+  }, [] as any)
 
   // Upon initial page load only, navigate to a page other than Activity if the url is granular.
   // In general it is allowed to be on Activity tab with these granular urls, hence the empty dependency array.
@@ -69,6 +117,7 @@ export function Market() {
         <div className={`flex flex-col`}>
           <div className="flex flex-row gap-4 border-t border-pinto-gray-2 mt-4 h-[calc(100vh-7.75rem)] lg:h-[calc(100vh-11rem)] overflow-hidden">
             <div className="flex flex-col flex-grow ml-4">
+              <h1>Hi, gonna put the chart here</h1>
               <div className="flex gap-10 ml-2.5 mt-8 mb-[1.625rem]">
                 {TABLE_SLUGS.map((s, idx) => (
                   <p
