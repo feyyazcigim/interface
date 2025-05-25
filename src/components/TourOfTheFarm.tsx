@@ -136,14 +136,14 @@ export default function TourOfTheFarm() {
                       if (key === "silo") return null;
                       return <TourOfTheFarmCard key={`tour-of-the-farm-${key}-${i}`} {...post} />;
                     })}
-                  <Link
-                    to={navLinks.blog}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full pinto-sm text-pinto-secondary text-right hover:underline hover:text-pinto-green-4 pr-2"
-                  >
-                    Visit Blog
-                  </Link>
+                    <Link
+                      to={navLinks.blog}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full pinto-sm text-pinto-secondary text-right hover:underline hover:text-pinto-green-4 pr-2"
+                    >
+                      Visit Blog
+                    </Link>
                   </Col>
                 </GradientBox>
               </div>
