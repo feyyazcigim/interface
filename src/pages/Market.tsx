@@ -1,6 +1,9 @@
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
+import { ScatterChart } from "@/components/charts/ScatterChart";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Separator } from "@/components/ui/Separator";
+import { useAllMarket } from "@/state/market/useAllMarket";
+import { useHarvestableIndex, usePodLine } from "@/state/useFieldData";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -13,9 +16,6 @@ import CreateListing from "./market/actions/CreateListing";
 import CreateOrder from "./market/actions/CreateOrder";
 import FillListing from "./market/actions/FillListing";
 import FillOrder from "./market/actions/FillOrder";
-import { useAllMarket } from "@/state/market/useAllMarket";
-import { useHarvestableIndex, usePodLine } from "@/state/useFieldData";
-import { ScatterChart } from "@/components/charts/ScatterChart";
 
 const TABLE_SLUGS = ["activity", "listings", "orders", "my-activity"];
 const TABLE_LABELS = ["Activity", "Listings", "Orders", "My Activity"];
@@ -24,7 +24,7 @@ export function Market() {
   const { mode, id } = useParams();
   const [tab, handleChangeTab] = useState(TABLE_SLUGS[0]);
   const navigate = useNavigate();
-  const { data, isLoaded, isFetching } = useAllMarket()
+  const { data, isLoaded, isFetching } = useAllMarket();
   const podLine = usePodLine();
   const podLineAsNumber = podLine.toNumber() / 1000000;
   const harvestableIndex = useHarvestableIndex();
@@ -71,7 +71,7 @@ export function Market() {
     }
 
     return acc;
-  }, [] as any)
+  }, [] as any);
 
   // Upon initial page load only, navigate to a page other than Activity if the url is granular.
   // In general it is allowed to be on Activity tab with these granular urls, hence the empty dependency array.
@@ -120,7 +120,12 @@ export function Market() {
         <div className={`flex flex-col`}>
           <div className="flex flex-row gap-4 border-t border-pinto-gray-2 mt-4 h-[calc(100vh-7.75rem)] lg:h-[calc(100vh-11rem)] overflow-hidden">
             <div className="flex flex-col flex-grow ml-4">
-              <ScatterChart title="Pod Market Activity" data={chartData} isLoading={isFetching} xYMinMax={{ x: { max: podLineAsNumber } }} />
+              <ScatterChart
+                title="All pod listings and orders"
+                data={chartData}
+                isLoading={isFetching}
+                xYMinMax={{ x: { max: podLineAsNumber } }}
+              />
               <div className="flex gap-10 ml-2.5 mt-8 mb-[1.625rem]">
                 {TABLE_SLUGS.map((s, idx) => (
                   <p
@@ -160,7 +165,7 @@ export function Market() {
             </div>
           </div>
         </div>
-      </div >
+      </div>
     </>
   );
 }

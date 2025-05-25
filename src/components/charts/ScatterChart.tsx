@@ -363,7 +363,7 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
           const { min: xMin, max: xMax } = newChartInstance.scales.x;
           const { min: yMin, max: yMax } = newChartInstance.scales.y;
           sessionStorage.setItem("chartZoomState", JSON.stringify({ xMin, xMax, yMin, yMax }));
-        } catch { }
+        } catch {}
         newChartInstance.destroy();
         hasInitializedRef.current = false;
       }
