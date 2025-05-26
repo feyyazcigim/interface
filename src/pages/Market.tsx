@@ -105,6 +105,14 @@ export function Market() {
     [mode],
   );
 
+  const onPointClick = (event: any) => {
+    if (event.type === "LISTING") {
+      navigate(`/market/pods/buy/${event.index.toString().replace(".", "")}`);
+    } else {
+      navigate(`/market/pods/sell/${event.id.replace(".", "")}`);
+    }
+  };
+
   const viewMode = !mode || mode === "buy" ? "buy" : "sell";
   const fillView = !!id;
 
@@ -124,6 +132,7 @@ export function Market() {
                 title="All pod listings and orders"
                 data={chartData}
                 isLoading={isFetching}
+                onPointClick={onPointClick}
                 xYMinMax={{ x: { max: podLineAsNumber } }}
               />
               <div className="flex gap-10 ml-2.5 mt-8 mb-[1.625rem]">

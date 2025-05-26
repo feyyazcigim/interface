@@ -9,8 +9,8 @@ import zoomPlugin from "chartjs-plugin-zoom";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-Chart.register(ScatterController, PointElement, LinearScale, Title, Tooltip, Legend);
-// Chart.register(ScatterController, PointElement, LinearScale, Title, Tooltip, Legend, zoomPlugin);
+// Chart.register(ScatterController, PointElement, LinearScale, Title, Tooltip, Legend);
+Chart.register(ScatterController, PointElement, LinearScale, Title, Tooltip, Legend, zoomPlugin);
 
 interface ScatterPlotData {
   x: number;
@@ -43,9 +43,7 @@ export interface ScatterChartProps {
 }
 
 export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }: Readonly<ScatterChartProps>) {
-  const [chartInstance, setChartInstance] = useState<Chart | null>(null);
   const hasInitializedRef = useRef(false);
-  const navigate = useNavigate();
 
   const selectedPointRef = useRef<any>(null);
   const isPointSelectedRef = useRef(false);
@@ -53,22 +51,6 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
   const initialMaxY = useRef<number>(xYMinMax?.y?.max || 1);
   const isZoomedRef = useRef(false);
   const isPanningRef = useRef(false);
-
-  const navigateTo = useCallback(
-    (event) => {
-      if (event.status === "ACTIVE") {
-        if (onPointClick) onPointClick(event);
-        setTimeout(() => {
-          if (event.type === "LISTING") {
-            navigate(`/market/pods/buy/${event.index}`);
-          } else {
-            navigate(`/market/pods/sell/${event.id}`);
-          }
-        }, 10);
-      }
-    },
-    [navigate, onPointClick],
-  );
 
   useEffect(() => {
     if (isLoading || !data || !data.length || hasInitializedRef.current) return;
@@ -210,8 +192,9 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
             data: data.filter((d) => d !== null && d.status === "ACTIVE" && d.type === "ORDER"),
             backgroundColor: "#D3B567",
             borderColor: "#D3B567",
-            pointRadius: 3,
-            pointHoverRadius: 4,
+            pointRadius: 4,
+            pointHoverRadius: 5,
+            pointStyle: "rect",
           },
         ],
       },
@@ -247,21 +230,21 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
             },
           },
           legend: { display: false },
-          // zoom: {
-          //   zoom: {
-          //     wheel: { enabled: !isPointSelectedRef.current },
-          //     pinch: { enabled: !isPointSelectedRef.current },
-          //     mode: "xy",
-          //   },
-          //   pan: {
-          //     enabled: true,
-          //     mode: "xy",
-          //   },
-          //   limits: {
-          //     x: { min: 0, max: initialMaxX.current, minRange: 1 },
-          //     y: { min: 0, max: initialMaxY.current, minRange: 0.1 },
-          //   },
-          // },
+          zoom: {
+            zoom: {
+              wheel: { enabled: !isPointSelectedRef.current },
+              pinch: { enabled: !isPointSelectedRef.current },
+              mode: "xy",
+            },
+            pan: {
+              enabled: true,
+              mode: "xy",
+            },
+            limits: {
+              x: { min: 0, max: initialMaxX.current, minRange: 1 },
+              y: { min: 0, max: initialMaxY.current, minRange: 0.1 },
+            },
+          },
         },
         onClick(event, elements) {
           if (elements.length > 0) {
@@ -277,7 +260,7 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
               // }
               newChartInstance.update();
 
-              setTimeout(() => navigateTo(dataPoint), 0);
+              onPointClick?.(dataPoint);
             }
           } else {
             selectedPointRef.current = null;
@@ -351,8 +334,6 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
       }
     });
 
-    setChartInstance(newChartInstance);
-
     return () => {
       if (selectedPointRef.current) {
         sessionStorage.setItem("selectedChartPoint", JSON.stringify(selectedPointRef.current));
@@ -368,7 +349,7 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
         hasInitializedRef.current = false;
       }
     };
-  }, [isLoading, data, navigate, navigateTo]);
+  }, [isLoading, data, onPointClick]);
 
   return (
     <Card className="h-full w-full mt-4">
