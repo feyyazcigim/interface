@@ -1,15 +1,11 @@
 import pintoTokenVanilla from "@/assets/tokens/PINTO_VANILLA.png";
 import FrameAnimator from "@/components/LoadingSpinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { useAllMarket } from "@/state/market/useAllMarket";
-import { useHarvestableIndex } from "@/state/useFieldData";
 import { formatter } from "@/utils/format";
-import { Chart, Legend, LinearScale, PointElement, ScatterController, Title, Tooltip } from "chart.js";
+import { Chart, Legend, LinearScale, Plugin, PointElement, ScatterController, Title, Tooltip } from "chart.js";
 import zoomPlugin from "chartjs-plugin-zoom";
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef } from "react";
 
-// Chart.register(ScatterController, PointElement, LinearScale, Title, Tooltip, Legend);
 Chart.register(ScatterController, PointElement, LinearScale, Title, Tooltip, Legend, zoomPlugin);
 
 interface ScatterPlotData {
@@ -52,28 +48,12 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
   const isZoomedRef = useRef(false);
   const isPanningRef = useRef(false);
 
-  useEffect(() => {
-    if (isLoading || !data || !data.length || hasInitializedRef.current) return;
-    hasInitializedRef.current = true;
-
-    const maxXValue = data.reduce((max, point) => Math.max(max, point?.x || 0), 10);
-    initialMaxX.current = xYMinMax?.x?.max || Math.ceil(maxXValue || 10);
-
-    const canvas = document.getElementById("marketScatterChart") as HTMLCanvasElement;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const img = new Image();
-    img.src = pintoTokenVanilla;
-
-    const customTooltipPlugin = {
-      id: "customTooltip",
-    };
-
-    const crosshairPlugin = {
+  const crosshairPlugin: Plugin = useMemo<Plugin>(
+    () => ({
       id: "crosshairPlugin",
       afterDraw(chart: Chart) {
+        const ctx = chart.ctx;
+        if (!ctx) return;
         if (!selectedPointRef.current) return;
         const point = selectedPointRef.current;
         const x = chart.scales.x.getPixelForValue(point.x);
@@ -100,11 +80,16 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
         ctx.fillText(formatter.twoDec(point.y), chartArea.left + 25, y);
         ctx.restore();
       },
-    };
+    }),
+    [selectedPointRef],
+  );
 
-    const pulsingEffectPlugin = {
+  const pulsingEffectPlugin: Plugin = useMemo<Plugin>(
+    () => ({
       id: "pulsingEffect",
       afterDraw(chart: Chart) {
+        const ctx = chart.ctx;
+        if (!ctx) return;
         if (selectedPointRef.current && isPointSelectedRef.current) {
           const point = selectedPointRef.current;
           const pulse = Math.abs(Math.sin(Date.now() / 500)) * 3;
@@ -120,11 +105,16 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
           requestAnimationFrame(() => chart.draw());
         }
       },
-    };
+    }),
+    [selectedPointRef],
+  );
 
-    const zoomInfoPlugin = {
+  const zoomInfoPlugin: Plugin = useMemo<Plugin>(
+    () => ({
       id: "zoomInfo",
       afterDraw(chart: Chart) {
+        const ctx = chart.ctx;
+        if (!ctx) return;
         const isZoomed =
           chart.scales.x.min !== 0 ||
           chart.scales.x.max !== initialMaxX.current ||
@@ -173,7 +163,28 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
           canvasEl.onclick = null;
         }
       },
-    };
+    }),
+    [initialMaxX, initialMaxY],
+  );
+
+  useEffect(() => {
+    if (isLoading || !data || !data.length || hasInitializedRef.current) {
+      console.info("early returning");
+      return;
+    }
+    console.info("not early returning, running the use effect");
+    hasInitializedRef.current = true;
+
+    const maxXValue = data.reduce((max, point) => Math.max(max, point?.x || 0), 10);
+    initialMaxX.current = xYMinMax?.x?.max || Math.ceil(maxXValue || 10);
+
+    const canvas = document.getElementById("marketScatterChart") as HTMLCanvasElement;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const img = new Image();
+    img.src = pintoTokenVanilla;
 
     const newChartInstance = new Chart(ctx, {
       type: "scatter",
@@ -296,7 +307,7 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
           newChartInstance.update();
         },
       },
-      plugins: [customTooltipPlugin, crosshairPlugin, pulsingEffectPlugin, zoomInfoPlugin],
+      plugins: [crosshairPlugin, pulsingEffectPlugin, zoomInfoPlugin],
     });
 
     // Restore zoom function
