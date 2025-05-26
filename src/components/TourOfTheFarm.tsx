@@ -4,17 +4,15 @@ import { cn } from "@/utils/utils";
 import { ExternalLinkIcon } from "@radix-ui/react-icons";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAtomValue } from "jotai";
-import { useState } from "react";
+import {  useEffect, useLayoutEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Col, Row } from "./Container";
 import { navLinks } from "./nav/nav/Navbar";
 
-const slugsWithContent = new Set(["silo", "field"]);
-
 const TourOfTheFarmTab = ({ onClick }: { onClick: () => void }) => {
   const isPanelOpen = usePanelOpenState();
 
-  // if the panel is open, don't render the component to prevent unexpected z-index clashes
+  // If the panel is open, don't render the component to prevent unexpected z-index clashes
   if (isPanelOpen) {
     return null;
   }
@@ -31,11 +29,18 @@ const TourOfTheFarmTab = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
+// make stable reference to rounded prop
+const cornerRadius = { tl: "sm", tr: "sm" } as const;
+
+const slugsWithContent = new Set(["silo", "field"]);
+
+// ────────────────────────────────────────────────────────────────────────────────
+
 export const TourOfTheFarmCard = ({ url, img, title }: IPost) => {
   return (
     <div
       className={cn(
-        "w-[25rem] max-w-[25rem] border-[0.5px] border-pinto-light rounded-sm overflow-hidden group",
+        "w-[25rem] max-w-[25rem] border-[0.5px] border-pinto-lighter rounded-sm overflow-hidden group",
         "transition-all duration-200 group hover:border-pinto-green-4 hover:shadow-gray-200 hover:shadow-md box-border",
       )}
     >
@@ -57,18 +62,6 @@ export const TourOfTheFarmCard = ({ url, img, title }: IPost) => {
   );
 };
 
-const useContentWithSlug = (): keyof typeof POSTS | undefined => {
-  const { pathname } = useLocation();
-  const split = pathname.split("/");
-
-  const slug = split.length === 1 ? undefined : split[1];
-
-  if (slug && slug in slugsWithContent) {
-    return slug as keyof typeof POSTS;
-  }
-
-  return undefined;
-};
 
 const TourOfTheFarmSuggestionCard = ({ title, img, url }: IPost) => {
   return (
@@ -77,7 +70,7 @@ const TourOfTheFarmSuggestionCard = ({ title, img, url }: IPost) => {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "flex flex-col w-[25rem] max-w-[25rem] rounded-sm border-[1px] border-pinto-light group overflow-hidden",
+        "flex flex-col w-[25rem] max-w-[25rem] rounded-sm border-[0.5px] border-pinto-lighter group overflow-hidden",
         "transition-all duration-200 group hover:border-pinto-green-4 hover:shadow-gray-200 hover:shadow-md box-border",
       )}
     >
@@ -102,14 +95,70 @@ const motionSettings = {
   transition: { stiffness: 70, duration: 0.3, ease: "easeInOut" },
 } as const;
 
+const useWindowHeight = () => {
+  const [vwHeight, setVwHeight] = useState(window.innerHeight);
+
+  useLayoutEffect(() => {
+    const updateHeight = () => {
+      const vh = window.innerHeight;
+      setVwHeight(vh);
+    };
+
+    // Set initial height
+    updateHeight();
+
+    // Add resize listener
+    window.addEventListener('resize', updateHeight);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, []);
+
+  return vwHeight;
+}
+
+const totalHeight = 458.6171875;
+const scaledHeight = totalHeight * 0.75;
+
 export default function TourOfTheFarm() {
   const [active, setActive] = useState(false);
+  const vwHeight = useWindowHeight();
+
+  const [translateY, setTranslateY] = useState(() => {
+    const element = document.querySelector('.tour-of-farm-container');
+    if (!element) return (vwHeight - totalHeight) / 2;
+    
+    const elementHeight = element.getBoundingClientRect().height;
+    // Calculate the translation needed to center the element
+    const translateY = (vwHeight - elementHeight) / 2;
+    return translateY;
+  });
+
+  
+
+  useLayoutEffect(() => {
+    // Get the element's height
+    const element = document.querySelector('.tour-of-farm-container');
+    if (!element) return setTranslateY((vwHeight - totalHeight) / 2);
+    
+    const elementHeight = element.getBoundingClientRect().height;
+    console.log("elementHeight", elementHeight);
+    // Calculate the translation needed to center the element
+    const translateY = (vwHeight - elementHeight) / 2;
+    setTranslateY(translateY);
+  }, [vwHeight]);
 
   return (
     <>
-      <Row
+      <motion.div
+        animate={{ y: translateY }}
+        initial={{ y: translateY }}
+        {...motionSettings}
         className={cn(
-          "hidden sm:block fixed top-[10rem] -right-[27.25rem] translate-y-1/2 w-max origin-bottom-right z-[3] max-h-screen",
+          "tour-of-farm-container", 
+          "hidden sm:flex fixed -top-0 -right-[27.25rem] w-max origin-top-right z-[3] max-h-screen",
         )}
       >
         <AnimatePresence mode="wait">
@@ -145,7 +194,7 @@ export default function TourOfTheFarm() {
             </Row>
           </motion.div>
         </AnimatePresence>
-      </Row>
+      </motion.div>
     </>
   );
 }
@@ -157,8 +206,21 @@ export default function TourOfTheFarm() {
 // Make stable boolean reference to the panel open state
 const usePanelOpenState = () => useAtomValue(navbarPanelAtom).openPanel;
 
+const useContentWithSlug = (): keyof typeof POSTS | undefined => {
+  const { pathname } = useLocation();
+  const split = pathname.split("/");
+
+  const slug = split.length === 1 ? undefined : split[1];
+
+  if (slug && slug in slugsWithContent) {
+    return slug as keyof typeof POSTS;
+  }
+
+  return undefined;
+};
+
+
 // make stable reference to rounded prop
-const cornerRadius = { tl: "sm", tr: "sm" } as const;
 const contentCornerRadius = { tl: "sm", bl: "sm" } as const;
 
 // ────────────────────────────────────────────────────────────────────────────────
