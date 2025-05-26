@@ -4,7 +4,6 @@ import clsx from "clsx";
 import { motion, useTime, useTransform } from "framer-motion";
 import { ReactNode, useRef, useState } from "react";
 
-
 export interface IGradientBox {
   children: ReactNode;
   rounded?: CornerRadius | RadiusKey;
@@ -16,8 +15,6 @@ export interface IGradientBox {
   defaultGradientRotation?: number;
   rotateGradient?: (r: number) => string;
 }
-
-
 
 const GradientBox = ({
   children,
@@ -92,11 +89,9 @@ const useCornerRadiusClassNames = (rounded: IGradientBox["rounded"] = {}) => {
 
 const getDefaultConicGradient = (r: number) => `conic-gradient(from ${r}deg, #6FBF6F, #E9E7E0, #FEE18C, #F1F88C)`;
 
-
 // ────────────────────────────────────────────────────────────────────────────────
 // Constants
 // ────────────────────────────────────────────────────────────────────────────────
-
 
 const DEFAULT_TIME_RANGE: Range = [0, 1500] as const;
 const DEFAULT_ROTATION_RANGE: Range = [0, 360] as const;
