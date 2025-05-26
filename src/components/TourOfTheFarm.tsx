@@ -1,27 +1,15 @@
 import GradientBox from "@/components/ui/GradientBox";
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { cn } from "@/utils/utils";
-import { ChevronDownIcon, ExternalLinkIcon } from "@radix-ui/react-icons";
+import { ExternalLinkIcon } from "@radix-ui/react-icons";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAtomValue } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Col, Row } from "./Container";
 import { navLinks } from "./nav/nav/Navbar";
-import { Accordion } from "./ui/Accordion";
 
 const slugsWithContent = new Set(["silo", "field"]);
-
-/**
- * Dimensions = 192.8px x 38px (width x height)
- *
- * Because this component is rotated -90 deg, we need to calculate the amount of negative margin to offset the secondary component
- *
- * We calculate this by (width - height) / 2
- *
- * = (192.8px - 38px) / 2 = 77.4px
- * => to REM = 4.8375rem
- */
 
 const TourOfTheFarmTab = ({ onClick }: { onClick: () => void }) => {
   const isPanelOpen = usePanelOpenState();
@@ -32,10 +20,13 @@ const TourOfTheFarmTab = ({ onClick }: { onClick: () => void }) => {
   }
 
   return (
-    <div className="rotate-[-90deg] z-[3]" onClick={onClick}>
-      <GradientBox rounded={cornerRadius} animate>
-        <div className="pinto-body-bold whitespace-nowrap px-4 py-2">Tour of the Farm</div>
-      </GradientBox>
+    <div className="relative overflow-visible z-[3]" onClick={onClick}>
+      {/* Rotate Wrapper. Position absolute otherwise DOM will think the layout is not rotated. */}
+      <div className="absolute rotate-[-90deg] origin-top-left -left-[3rem] top-[4.785rem]">
+        <GradientBox rounded={cornerRadius} animate>
+          <div className="pinto-body-bold whitespace-nowrap px-4 py-2">Tour of the Farm</div>
+        </GradientBox>
+      </div>
     </div>
   );
 };
@@ -50,10 +41,10 @@ export const TourOfTheFarmCard = ({ url, img, title }: IPost) => {
     >
       <Link to={url} target="_blank" rel="noopener noreferrer" className="w-full h-full">
         <Row className="items-center">
-          <div className="aspect-[3/2]">
+          <div className="">
             <img src={img} alt={title} className="min-w-[5rem] w-[5rem] max-w-[5rem] h-auto object-contain" />
           </div>
-          <Row className="items-center justify-between w-full px-4 group-hover:bg-pinto-green-1 rounded-b-sm transition-colors duration-200 self-stretch">
+          <Row className="items-center justify-between w-full px-4 group-hover:bg-pinto-green-1 rounded-b-sm transition-colors duration-200 self-stretch box-border">
             <div className="pinto-sm font-medium box-border text-left flex-wrap p-2">{title}</div>
             <ExternalLinkIcon
               color="currentColor"
@@ -91,7 +82,7 @@ const TourOfTheFarmSuggestionCard = ({ title, img, url }: IPost) => {
       )}
     >
       <img src={img} alt={title} className="w-[25rem] h-[12.5rem] object-cover" />
-      <Row className="box-border gap-2 px-3 py-4 justify-between items-start group-hover:bg-pinto-green-1 rounded-b-sm transition-colors duration-200">
+      <Row className="box-border gap-2 p-4 justify-between items-start group-hover:bg-pinto-green-1 rounded-b-sm transition-colors duration-200">
         <div className="pinto-body font-medium box-border text-left group-hover:text-pinto-green-4 transition-colors duration-200 ">
           {title}
         </div>
@@ -104,8 +95,8 @@ const TourOfTheFarmSuggestionCard = ({ title, img, url }: IPost) => {
   );
 };
 
-const start = "3.75rem";
-const end = "31.25rem";
+const tourOfTheFarmOpenX = "-27.5rem";
+const tourOfTheFarmClosedX = "0rem";
 
 const motionSettings = {
   transition: { stiffness: 70, duration: 0.3, ease: "easeInOut" },
@@ -118,17 +109,21 @@ export default function TourOfTheFarm() {
     <>
       <Row
         className={cn(
-          "hidden sm:block fixed right-0 top-[10rem] translate-y-1/2 w-max origin-bottom-right z-[3] max-h-screen",
+          "hidden sm:block fixed top-[10rem] -right-[27.25rem] translate-y-1/2 w-max origin-bottom-right z-[3] max-h-screen",
         )}
       >
         <AnimatePresence mode="wait">
-          <motion.div animate={{ x: !active ? end : start }} initial={{ x: end }} {...motionSettings}>
+          <motion.div
+            animate={{ x: active ? tourOfTheFarmOpenX : tourOfTheFarmClosedX }}
+            initial={{ x: tourOfTheFarmClosedX }}
+            {...motionSettings}
+          >
             <Row className="relative gap-0">
               <div className="cursor-pointer">
                 <TourOfTheFarmTab onClick={() => setActive((ac) => !ac)} />
               </div>
-              <div className="relative -left-[4rem]">
-                <GradientBox animate={false} rounded={{ tl: true, bl: true }}>
+              <div className="relative">
+                <GradientBox animate={false} rounded={contentCornerRadius}>
                   <Col className="gap-3 p-4">
                     <div className="pinto-body-bold cursor-default">Looking For More Material?</div>
                     <TourOfTheFarmSuggestionCard {...POSTS.silo} />
@@ -140,7 +135,7 @@ export default function TourOfTheFarm() {
                       to={navLinks.blog}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full pinto-sm text-pinto-secondary text-right hover:underline hover:text-pinto-green-4 pr-2"
+                      className="pinto-sm w-fit text-pinto-secondary text-right hover:underline hover:text-pinto-green-4 pr-2 self-end"
                     >
                       Visit Blog
                     </Link>
@@ -163,10 +158,8 @@ export default function TourOfTheFarm() {
 const usePanelOpenState = () => useAtomValue(navbarPanelAtom).openPanel;
 
 // make stable reference to rounded prop
-const cornerRadius = {
-  tl: true,
-  tr: true,
-} as const;
+const cornerRadius = { tl: "sm", tr: "sm" } as const;
+const contentCornerRadius = { tl: "sm", bl: "sm" } as const;
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Interface
