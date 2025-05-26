@@ -134,6 +134,8 @@ export function Market() {
                 isLoading={isFetching}
                 onPointClick={onPointClick}
                 xYMinMax={{ x: { max: podLineAsNumber } }}
+                xLabel="Place in line"
+                yLabel="Price per pod"
               />
               <div className="flex gap-10 ml-2.5 mt-8 mb-[1.625rem]">
                 {TABLE_SLUGS.map((s, idx) => (

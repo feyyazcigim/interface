@@ -35,10 +35,12 @@ export interface ScatterChartProps {
       max?: number;
     };
   };
+  xLabel?: string;
+  yLabel?: string;
   onPointClick?: (point: any) => void;
 }
 
-export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }: Readonly<ScatterChartProps>) {
+export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick, xLabel, yLabel }: Readonly<ScatterChartProps>) {
   const hasInitializedRef = useRef(false);
 
   const selectedPointRef = useRef<any>(null);
@@ -214,6 +216,10 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
         maintainAspectRatio: false,
         scales: {
           x: {
+            title: {
+              display: !!xLabel,
+              text: xLabel
+            },
             type: "linear",
             position: "bottom",
             min: xYMinMax?.x?.min || 0,
@@ -224,6 +230,10 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick }:
             },
           },
           y: {
+            title: {
+              display: !!yLabel,
+              text: yLabel
+            },
             min: xYMinMax?.y?.min || 0,
             max: xYMinMax?.y?.max || initialMaxY.current,
             ticks: {
