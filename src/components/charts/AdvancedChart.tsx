@@ -50,6 +50,14 @@ export const AdvancedChart = () => {
   const [panelState, setPanelState] = useAtom(navbarPanelAtom);
 
   useEffect(() => {
+    saveChartsToStorage(selectedCharts, chartSetupData);
+  }, [selectedCharts, chartSetupData]);
+
+  // By adjusting fromSeason here, we can avoid fetching data
+  // that might break the chart
+  const seasonsData = useSeasonsData(7, currentSeason);
+
+  useEffect(() => {
     if (storedSelectedCharts && storedSelectedCharts.length > 0) {
       setSelectedCharts(storedSelectedCharts);
     }
@@ -77,7 +85,7 @@ export const AdvancedChart = () => {
     return () => {
       observer.disconnect();
     };
-  }, [selectedCharts, collapseChartButtons]);
+  }, [selectedCharts, collapseChartButtons, seasonsData.isFetching]);
 
   function handleDeselectChart(selectionIndex: number) {
     const newSelection = [...selectedCharts];
@@ -111,14 +119,6 @@ export const AdvancedChart = () => {
       });
     }
   };
-
-  useEffect(() => {
-    saveChartsToStorage(selectedCharts, chartSetupData);
-  }, [selectedCharts, chartSetupData]);
-
-  // By adjusting fromSeason here, we can avoid fetching data
-  // that might break the chart
-  const seasonsData = useSeasonsData(7, currentSeason);
 
   const filtered = useMemo(() => {
     const output: TVChartFormattedData[][] = [];
