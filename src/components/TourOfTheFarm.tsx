@@ -1,5 +1,5 @@
 import { Col, Row } from "@/components/Container";
-import { navLinks } from "@/components/nav/nav/Navbar";
+import Navbar, { navLinks } from "@/components/nav/nav/Navbar";
 import GradientBox from "@/components/ui/GradientBox";
 import { getIsWindowScaledDown, useWindowDimensions } from "@/hooks/display/useDimensions";
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
@@ -11,14 +11,7 @@ import { useAtomValue } from "jotai";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-const TourOfTheFarmTab = React.forwardRef<HTMLDivElement, { onClick: () => void }>(({ onClick }, ref) => {
-  const isPanelOpen = usePanelOpenState();
-
-  // Hide if panel is open to prevent unexpected z-index clashes
-  if (isPanelOpen) {
-    return null;
-  }
-
+const TourOfTheFarmTab = ({ onClick }: { onClick: () => void }) => {
   return (
     // overflow-visible to allow rotated content to overflow perpendicularly
     <div className="relative overflow-visible z-[4]" onClick={onClick}>
@@ -27,14 +20,14 @@ const TourOfTheFarmTab = React.forwardRef<HTMLDivElement, { onClick: () => void 
        * top 5.65rem to offset rotation and center
        * left -2.75rem to offset the tab's width
        */}
-      <div className={cn("absolute rotate-[-90deg] origin-top-left -left-[2.5rem]", "top-[5.65rem]")} ref={ref}>
+      <div className={cn("absolute rotate-[-90deg] origin-top-left -left-[2.5rem]", "top-[5.65rem]")}>
         <GradientBox rounded={cornerRadius} animate>
           <div className="pinto-body-bold whitespace-nowrap px-4 py-2">Tour of the Farm</div>
         </GradientBox>
       </div>
     </div>
   );
-});
+};
 
 // make stable reference to rounded prop
 const cornerRadius = { tl: "sm", tr: "sm" } as const;
@@ -111,7 +104,7 @@ const getDisplayCard = () => {
   return window.innerHeight >= CONDENSED_OFFSET * scalar;
 };
 
-const useWindowDimensionProps = () => {
+const useShowSuggestion = () => {
   // tab is flipped 90 deg so use width instead of height
   const windowDimensions = useWindowDimensions();
 
@@ -129,11 +122,21 @@ function useClickAway(active: boolean, ref: React.RefObject<HTMLDivElement>, cal
   useEffect(() => {
     if (!active) return;
     function handleClick(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      // prevent click away if clicking on navbar
+      const navBar = document.getElementById("pinto-navbar");
+      if (!navBar) return;
+
+      const navBarRect = navBar.getBoundingClientRect();
+      const clickY = event.clientY;
+
+      // Only trigger if click is below navbar and not in the ref element
+      if (clickY > navBarRect.bottom && ref.current && !ref.current.contains(event.target as Node)) {
         callback();
       }
     }
+
     document.addEventListener("mousedown", handleClick);
+
     return () => document.removeEventListener("mousedown", handleClick);
   }, [callback, ref, active]);
 }
@@ -142,13 +145,27 @@ export default function TourOfTheFarm() {
   const tourOfTheFarmRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
   const [activeFinished, setActiveFinished] = useState(false);
+  const isPanelOpen = usePanelOpenState();
 
-  const display = useWindowDimensionProps();
+  const showSuggestion = useShowSuggestion();
 
   const suggested = useSuggestedContentWithSlug();
 
   const handleClickAway = useCallback(() => setActive(false), []);
+
   useClickAway(active, tourOfTheFarmRef, handleClickAway);
+
+  const handleToggle = () => setActive((ac) => !ac);
+
+  const handleOnAnimationComplete = () => {
+    if (active) return;
+    setActiveFinished(true);
+  };
+
+  const handleOnAnimationStart = () => {
+    if (!active) return;
+    setActiveFinished(false);
+  };
 
   return (
     <div className="">
@@ -157,20 +174,18 @@ export default function TourOfTheFarm() {
           x: active ? tourOfTheFarmOpenX : tourOfTheFarmClosedX,
         }}
         {...motionSettings}
-        onAnimationComplete={() => {
-          if (active) return;
-          setActiveFinished(true);
-        }}
-        onAnimationStart={() => {
-          if (!active) return;
-          setActiveFinished(false);
-        }}
+        onAnimationComplete={handleOnAnimationComplete}
+        onAnimationStart={handleOnAnimationStart}
         ref={tourOfTheFarmRef}
-        className="hidden sm:flex fixed -bottom-0 -right-[25.875rem] w-max origin-bottom-right z-[3]"
+        className={cn(
+          "hidden sm:flex fixed -bottom-0 -right-[25.875rem] w-max origin-bottom-right z-[3]",
+          // hide if panel is open to prevent unexpected z-index clashes
+          isPanelOpen && "sm:hidden",
+        )}
       >
         <Row className="relative gap-0">
           <div className="cursor-pointer z-[4]">
-            <TourOfTheFarmTab onClick={() => setActive((ac) => !ac)} />
+            <TourOfTheFarmTab onClick={handleToggle} />
           </div>
           <div className="relative">
             <GradientBox animate={false} rounded={contentCornerRadius}>
@@ -186,9 +201,13 @@ export default function TourOfTheFarm() {
                     Visit Blog
                   </Link>
                 </Row>
-                {display && <TourOfTheFarmSuggestionCard {...suggested} />}
-                {Object.entries(POSTS).map(([key, post], i) => {
-                  if (display && stringEq(post.title, suggested.title)) return null;
+                {showSuggestion && <TourOfTheFarmSuggestionCard {...suggested} />}
+                {getSortedPosts(suggested).map(([key, post], i) => {
+                  // if display is false, we don't want to show the suggested card
+                  if (showSuggestion && stringEq(post.title, suggested.title)) {
+                    return null;
+                  }
+
                   return <TourOfTheFarmCard key={`tour-of-the-farm-${key}-${i.toString()}`} {...post} />;
                 })}
               </Col>
@@ -206,6 +225,16 @@ export default function TourOfTheFarm() {
     </div>
   );
 }
+
+const getSortedPosts = (suggested: IPost) => {
+  // bubble up the suggested post to the top
+  return [...Object.entries(POSTS)].sort(([keyA], [keyB]) => {
+    if (!suggested) return 0;
+    if (suggested && stringEq(keyA, suggested.title)) return -1;
+    if (suggested && stringEq(keyB, suggested.title)) return 1;
+    return 0;
+  });
+};
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Helper Functions & Constants
