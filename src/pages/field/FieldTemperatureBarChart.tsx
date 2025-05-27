@@ -17,12 +17,14 @@ import React, { useCallback, useEffect, useState } from "react";
 
 type FieldTemperatureBarChartProps = {
   className?: string;
+  // borderless?: boolean;
+  variant?: "default" | "explorer";
 };
 
 // 50k is the default
 const BUCKET_SIZE = 50_000;
 
-const FieldTemperatureBarChart = React.memo(({ className }: FieldTemperatureBarChartProps) => {
+const FieldTemperatureBarChart = React.memo(({ className, variant = "default" }: FieldTemperatureBarChartProps) => {
   // global state
   const harvestableIndex = useHarvestableIndex();
 
@@ -75,25 +77,57 @@ const FieldTemperatureBarChart = React.memo(({ className }: FieldTemperatureBarC
   const decimals = getDiffDecimals(startIndex, endIndex, exists(debouncedActiveIndex));
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={cn("overflow-hidden", variant === "explorer" && "border-none bg-transparent")}>
       <Col className="gap-0">
-        <Row className="w-full justify-between p-4 sm:p-6 gap-2">
+        <Row className="w-full justify-between pt-4 px-4 sm:pt-6 sm:px-6 gap-2">
           <Col className="gap-1">
-            <div className="pinto-sm sm:pinto-body">Avg Sown Temperature</div>
-            <TextSkeleton loading={isLoading || !exists(activeData)} height="body" desktopHeight="h3" className="w-24">
-              <div className="pinto-body sm:pinto-h3">{formatter.pct(activeData)}</div>
-            </TextSkeleton>
-            <TextSkeleton loading={isLoading} height="sm" className="w-56">
-              <div className="pinto-sm">
-                between {numberAbbr(startIndex, decimals)} and {numberAbbr(endIndex, decimals)}
-              </div>
-            </TextSkeleton>
+            <div
+              className={cn(
+                "pinto-sm sm:pinto-body",
+                variant === "explorer" && "sm:pinto-body text-pinto-light sm:text-pinto-light",
+              )}
+            >
+              Avg Sown Temperature
+            </div>
+            <Col className={cn("gap-1 pb-4 sm:pb-4", variant === "explorer" && "h-[85px]")}>
+              <TextSkeleton
+                loading={isLoading || !exists(activeData)}
+                height="body"
+                desktopHeight="h3"
+                className="w-24"
+              >
+                <div
+                  className={cn(
+                    "pinto-body sm:pinto-h3",
+                    variant === "explorer" && "text-pinto-green-3 sm:text-pinto-green-3",
+                  )}
+                >
+                  {formatter.pct(activeData)}
+                </div>
+              </TextSkeleton>
+              <TextSkeleton loading={isLoading} height="sm" className="w-56">
+                <div
+                  className={cn(
+                    "pinto-sm",
+                    variant === "explorer" && "pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light",
+                  )}
+                >
+                  between {numberAbbr(startIndex, decimals)} and {numberAbbr(endIndex, decimals)}
+                </div>
+              </TextSkeleton>
+            </Col>
           </Col>
           <div className="self-start sm:pt-1 shrink-0">
             <TimeTabsSelector tab={tab} setTab={setTab} />
           </div>
         </Row>
-        <Col className={cn("h-[250px] sm:h-[435px] w-full px-2 sm:px-4 pb-2 sm:pb-4", className)}>
+        <Col
+          className={cn(
+            "h-[250px] sm:h-[435px] w-full px-2 sm:px-4 pb-2 sm:pb-4",
+            variant === "explorer" && "h-[300px] sm:h-[300px] mt-1",
+            className,
+          )}
+        >
           <div className="mx-2 h-full">
             {/*
              * Bar Chart is memoized, so no need to separate this from the stats section
