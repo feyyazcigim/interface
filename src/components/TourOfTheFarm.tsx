@@ -1,38 +1,43 @@
+import { Col, Row } from "@/components/Container";
+import { navLinks } from "@/components/nav/nav/Navbar";
 import GradientBox from "@/components/ui/GradientBox";
+import { getIsWindowScaledDown, useWindowDimensions } from "@/hooks/display/useDimensions";
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
+import { stringEq } from "@/utils/string";
 import { cn } from "@/utils/utils";
 import { ExternalLinkIcon } from "@radix-ui/react-icons";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useAtomValue } from "jotai";
-import {  useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Col, Row } from "./Container";
-import { navLinks } from "./nav/nav/Navbar";
 
-const TourOfTheFarmTab = ({ onClick }: { onClick: () => void }) => {
+const TourOfTheFarmTab = React.forwardRef<HTMLDivElement, { onClick: () => void }>(({ onClick }, ref) => {
   const isPanelOpen = usePanelOpenState();
 
-  // If the panel is open, don't render the component to prevent unexpected z-index clashes
+  // Hide if panel is open to prevent unexpected z-index clashes
   if (isPanelOpen) {
     return null;
   }
 
   return (
-    <div className="relative overflow-visible z-[3]" onClick={onClick}>
-      {/* Rotate Wrapper. Position absolute otherwise DOM will think the layout is not rotated. */}
-      <div className="absolute rotate-[-90deg] origin-top-left -left-[3rem] top-[4.785rem]">
+    // overflow-visible to allow rotated content to overflow perpendicularly
+    <div className="relative overflow-visible z-[4]" onClick={onClick}>
+      {/**
+       * Rotate Wrapper. Position absolute otherwise DOM will think the layout is not rotated.
+       * top 5.65rem to offset rotation and center
+       * left -2.75rem to offset the tab's width
+       */}
+      <div className={cn("absolute rotate-[-90deg] origin-top-left -left-[2.5rem]", "top-[5.65rem]")} ref={ref}>
         <GradientBox rounded={cornerRadius} animate>
           <div className="pinto-body-bold whitespace-nowrap px-4 py-2">Tour of the Farm</div>
         </GradientBox>
       </div>
     </div>
   );
-};
+});
 
 // make stable reference to rounded prop
 const cornerRadius = { tl: "sm", tr: "sm" } as const;
-
-const slugsWithContent = new Set(["silo", "field"]);
 
 // ────────────────────────────────────────────────────────────────────────────────
 
@@ -40,20 +45,18 @@ export const TourOfTheFarmCard = ({ url, img, title }: IPost) => {
   return (
     <div
       className={cn(
-        "w-[25rem] max-w-[25rem] border-[0.5px] border-pinto-lighter rounded-sm overflow-hidden group",
+        "w-96 max-w-96 border-[0.5px] max-h-10 h-10 border-pinto-lighter rounded-sm overflow-hidden group",
         "transition-all duration-200 group hover:border-pinto-green-4 hover:shadow-gray-200 hover:shadow-md box-border",
       )}
     >
       <Link to={url} target="_blank" rel="noopener noreferrer" className="w-full h-full">
         <Row className="items-center">
-          <div className="">
-            <img src={img} alt={title} className="min-w-[5rem] w-[5rem] max-w-[5rem] h-auto object-contain" />
-          </div>
-          <Row className="items-center justify-between w-full px-4 group-hover:bg-pinto-green-1 rounded-b-sm transition-colors duration-200 self-stretch box-border">
-            <div className="pinto-sm font-medium box-border text-left flex-wrap p-2">{title}</div>
+          <img src={img} alt={title} className="max-h-10 h-10 object-cover" />
+          <Row className="items-center justify-between w-full px-2 group-hover:bg-pinto-green-1 rounded-b-sm transition-colors duration-200 self-stretch box-border">
+            <div className="pinto-sm box-border text-left flex-wrap p-2">{title}</div>
             <ExternalLinkIcon
               color="currentColor"
-              className="w-5 h-5 group-hover:text-pinto-green-4 transition-colors duration-200"
+              className="w-4 h-4 group-hover:text-pinto-green-4 transition-colors duration-200"
             />
           </Row>
         </Row>
@@ -62,6 +65,10 @@ export const TourOfTheFarmCard = ({ url, img, title }: IPost) => {
   );
 };
 
+// make stable reference to rounded prop
+const contentCornerRadius = { tl: "sm", bl: "sm" } as const;
+
+// ────────────────────────────────────────────────────────────────────────────────
 
 const TourOfTheFarmSuggestionCard = ({ title, img, url }: IPost) => {
   return (
@@ -70,132 +77,117 @@ const TourOfTheFarmSuggestionCard = ({ title, img, url }: IPost) => {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "flex flex-col w-[25rem] max-w-[25rem] rounded-sm border-[0.5px] border-pinto-lighter group overflow-hidden",
+        "flex flex-col w-96 max-w-96 rounded-sm border-[0.5px] border-pinto-lighter group overflow-hidden",
         "transition-all duration-200 group hover:border-pinto-green-4 hover:shadow-gray-200 hover:shadow-md box-border",
       )}
     >
-      <img src={img} alt={title} className="w-[25rem] h-[12.5rem] object-cover" />
-      <Row className="box-border gap-2 p-4 justify-between items-start group-hover:bg-pinto-green-1 rounded-b-sm transition-colors duration-200">
-        <div className="pinto-body font-medium box-border text-left group-hover:text-pinto-green-4 transition-colors duration-200 ">
+      <img src={img} alt={title} className="h-[12.5rem] object-cover" />
+      <Row className="box-border gap-2 p-3 justify-between items-start group-hover:bg-pinto-green-1 rounded-b-sm transition-colors duration-200">
+        <div className="pinto-sm box-border text-left group-hover:text-pinto-green-4 transition-colors duration-200 ">
           {title}
         </div>
         <ExternalLinkIcon
           color="currentColor"
-          className="w-6 h-6 self-start group-hover:text-pinto-green-4 transition-colors duration-200 "
+          className="w-4 h-4 self-start group-hover:text-pinto-green-4 transition-colors duration-200 "
         />
       </Row>
     </Link>
   );
 };
 
-const tourOfTheFarmOpenX = "-27.5rem";
+const tourOfTheFarmOpenX = "-26rem";
 const tourOfTheFarmClosedX = "0rem";
 
 const motionSettings = {
+  initial: { x: tourOfTheFarmClosedX },
   transition: { stiffness: 70, duration: 0.3, ease: "easeInOut" },
 } as const;
 
-const useWindowHeight = () => {
-  const [vwHeight, setVwHeight] = useState(window.innerHeight);
+const VW_SCALAR = 0.75;
+const CONDENSED_OFFSET = 700;
 
-  useLayoutEffect(() => {
-    const updateHeight = () => {
-      const vh = window.innerHeight;
-      setVwHeight(vh);
-    };
+const getDisplayCard = () => {
+  const scalar = getIsWindowScaledDown(window.innerWidth) ? VW_SCALAR : 1;
+  return window.innerHeight >= CONDENSED_OFFSET * scalar;
+};
 
-    // Set initial height
-    updateHeight();
+const useWindowDimensionProps = () => {
+  // tab is flipped 90 deg so use width instead of height
+  const windowDimensions = useWindowDimensions();
 
-    // Add resize listener
-    window.addEventListener('resize', updateHeight);
+  const [display, setDisplay] = useState(getDisplayCard());
 
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', updateHeight);
-    };
-  }, []);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: update display on window resize
+  useEffect(() => {
+    setDisplay(getDisplayCard());
+  }, [windowDimensions]);
 
-  return vwHeight;
-}
-
-const totalHeight = 458.6171875;
-const scaledHeight = totalHeight * 0.75;
+  return display;
+};
 
 export default function TourOfTheFarm() {
+  const tourOfTheFarmRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
-  const vwHeight = useWindowHeight();
+  const [activeFinished, setActiveFinished] = useState(false);
 
-  const [translateY, setTranslateY] = useState(() => {
-    const element = document.querySelector('.tour-of-farm-container');
-    if (!element) return (vwHeight - totalHeight) / 2;
-    
-    const elementHeight = element.getBoundingClientRect().height;
-    // Calculate the translation needed to center the element
-    const translateY = (vwHeight - elementHeight) / 2;
-    return translateY;
-  });
+  const display = useWindowDimensionProps();
 
-  
-
-  useLayoutEffect(() => {
-    // Get the element's height
-    const element = document.querySelector('.tour-of-farm-container');
-    if (!element) return setTranslateY((vwHeight - totalHeight) / 2);
-    
-    const elementHeight = element.getBoundingClientRect().height;
-    console.log("elementHeight", elementHeight);
-    // Calculate the translation needed to center the element
-    const translateY = (vwHeight - elementHeight) / 2;
-    setTranslateY(translateY);
-  }, [vwHeight]);
+  const suggested = useSuggestedContentWithSlug();
 
   return (
-    <>
+    <div className="h-full">
       <motion.div
-        animate={{ y: translateY }}
-        initial={{ y: translateY }}
+        animate={{
+          x: active ? tourOfTheFarmOpenX : tourOfTheFarmClosedX,
+        }}
         {...motionSettings}
-        className={cn(
-          "tour-of-farm-container", 
-          "hidden sm:flex fixed -top-0 -right-[27.25rem] w-max origin-top-right z-[3] max-h-screen",
-        )}
+        onAnimationComplete={() => {
+          if (active) return;
+          setActiveFinished(true);
+        }}
+        onAnimationStart={() => {
+          if (!active) return;
+          setActiveFinished(false);
+        }}
+        ref={tourOfTheFarmRef}
+        className="hidden h-full sm:flex fixed -bottom-[19%] -right-[25.875rem] w-max origin-bottom-right z-[3]"
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            animate={{ x: active ? tourOfTheFarmOpenX : tourOfTheFarmClosedX }}
-            initial={{ x: tourOfTheFarmClosedX }}
-            {...motionSettings}
-          >
-            <Row className="relative gap-0">
-              <div className="cursor-pointer">
-                <TourOfTheFarmTab onClick={() => setActive((ac) => !ac)} />
-              </div>
-              <div className="relative">
-                <GradientBox animate={false} rounded={contentCornerRadius}>
-                  <Col className="gap-3 p-4">
-                    <div className="pinto-body-bold cursor-default">Looking For More Material?</div>
-                    <TourOfTheFarmSuggestionCard {...POSTS.silo} />
-                    {Object.entries(POSTS).map(([key, post], i) => {
-                      if (key === "silo") return null;
-                      return <TourOfTheFarmCard key={`tour-of-the-farm-${key}-${i}`} {...post} />;
-                    })}
-                    <Link
-                      to={navLinks.blog}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="pinto-sm w-fit text-pinto-secondary text-right hover:underline hover:text-pinto-green-4 pr-2 self-end"
-                    >
-                      Visit Blog
-                    </Link>
-                  </Col>
-                </GradientBox>
-              </div>
-            </Row>
-          </motion.div>
-        </AnimatePresence>
+        <Row className="relative gap-0">
+          <div className="cursor-pointer">
+            <TourOfTheFarmTab onClick={() => setActive((ac) => !ac)} />
+          </div>
+          <div className="relative">
+            <GradientBox animate={false} rounded={contentCornerRadius}>
+              <Col className="gap-3 p-4">
+                <Row className="justify-between items-center">
+                  <div className="pinto-body-bold cursor-default">Looking For More Material?</div>
+                  <Link
+                    to={navLinks.blog}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="pinto-sm w-fit text-pinto-green-4 text-right hover:underline pr-2"
+                  >
+                    Visit Blog
+                  </Link>
+                </Row>
+                {display && <TourOfTheFarmSuggestionCard {...suggested} />}
+                {Object.entries(POSTS).map(([key, post], i) => {
+                  if (display && stringEq(post.title, suggested.title)) return null;
+                  return <TourOfTheFarmCard key={`tour-of-the-farm-${key}-${i.toString()}`} {...post} />;
+                })}
+              </Col>
+            </GradientBox>
+            {/*
+             * Overlay the Gradient Box w/ bg color when not active & the animation has finished.
+             * This is to prevent the content box from being visible on fast window width resizes.
+             */}
+            {!active && activeFinished && (
+              <div className="absolute bg-gradient-light -inset-[0.125rem] rounded-sm h-[calc(100%+0.25rem)] w-[calc(100%+0.25rem)] z-[10]" />
+            )}
+          </div>
+        </Row>
       </motion.div>
-    </>
+    </div>
   );
 }
 
@@ -206,22 +198,22 @@ export default function TourOfTheFarm() {
 // Make stable boolean reference to the panel open state
 const usePanelOpenState = () => useAtomValue(navbarPanelAtom).openPanel;
 
-const useContentWithSlug = (): keyof typeof POSTS | undefined => {
+const getSuggestedWithSlug = (slug: string | undefined) => POSTS[slug === "field" ? "field" : "silo"];
+
+const useSuggestedContentWithSlug = () => {
   const { pathname } = useLocation();
   const split = pathname.split("/");
 
   const slug = split.length === 1 ? undefined : split[1];
 
-  if (slug && slug in slugsWithContent) {
-    return slug as keyof typeof POSTS;
-  }
+  const [suggested, setSuggested] = useState<IPost>(getSuggestedWithSlug(slug));
 
-  return undefined;
+  useEffect(() => {
+    setSuggested(getSuggestedWithSlug(slug));
+  }, [slug]);
+
+  return suggested;
 };
-
-
-// make stable reference to rounded prop
-const contentCornerRadius = { tl: "sm", bl: "sm" } as const;
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Interface
