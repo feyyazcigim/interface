@@ -1,5 +1,5 @@
 import { Col, Row } from "@/components/Container";
-import Navbar, { navLinks } from "@/components/nav/nav/Navbar";
+import { navLinks } from "@/components/nav/nav/Navbar";
 import GradientBox from "@/components/ui/GradientBox";
 import { getIsWindowScaledDown, useWindowDimensions } from "@/hooks/display/useDimensions";
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
@@ -11,6 +11,8 @@ import { useAtomValue } from "jotai";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
+const ANIMATE_TIME_RANGE: [number, number] = [0, 3000] as const;
+
 const TourOfTheFarmTab = ({ onClick }: { onClick: () => void }) => {
   return (
     // overflow-visible to allow rotated content to overflow perpendicularly
@@ -21,7 +23,7 @@ const TourOfTheFarmTab = ({ onClick }: { onClick: () => void }) => {
        * left -2.75rem to offset the tab's width
        */}
       <div className={cn("absolute rotate-[-90deg] origin-top-left -left-[2.5rem]", "top-[5.65rem]")}>
-        <GradientBox rounded={cornerRadius} animate>
+        <GradientBox rounded={cornerRadius} timeRange={ANIMATE_TIME_RANGE} animate>
           <div className="pinto-body-bold whitespace-nowrap px-4 py-2">Tour of the Farm</div>
         </GradientBox>
       </div>

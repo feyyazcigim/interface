@@ -2,7 +2,7 @@ import { Col } from "@/components/Container";
 import { cn, isObject } from "@/utils/utils";
 import clsx from "clsx";
 import { motion, useTime, useTransform } from "framer-motion";
-import { ReactNode, useRef, useState } from "react";
+import { ReactNode } from "react";
 
 export interface IGradientBox {
   children: ReactNode;
@@ -23,13 +23,10 @@ const GradientBox = ({
   rounded,
   innerClassName = "",
   outerClassName = "",
-  animate = true,
+  animate = false,
   defaultGradientRotation = 180,
   rotateGradient = getDefaultConicGradient,
 }: IGradientBox) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
   const time = useTime();
   const rotate = useTransform(time, timeRange, rotationRange, { clamp: false });
   const rotatingBox = useTransform(rotate, rotateGradient);
@@ -38,26 +35,15 @@ const GradientBox = ({
 
   const stillGradient = getDefaultConicGradient(defaultGradientRotation);
 
-  // callback functions
-  const handleMouseEnter = () => {
-    if (!animate) return;
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    if (!animate) return;
-    setIsHovered(false);
-  };
-
   return (
-    <div className="relative" ref={ref} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div className="relative">
       <Col className={cn("relative flex flex-col items-center justify-center z-10 bg-white", outer, outerClassName)}>
         {children}
       </Col>
       <motion.div
         className={cn(`absolute -inset-[0.125rem] z-0`, inner, innerClassName)}
         style={{
-          background: animate && isHovered ? rotatingBox : stillGradient,
+          background: animate ? rotatingBox : stillGradient,
         }}
       />
     </div>
