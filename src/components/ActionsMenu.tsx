@@ -15,11 +15,11 @@ import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { getSiloConvertUrl } from "@/utils/url";
 import { useAtom } from "jotai";
 import MobileActionBar from "./MobileActionBar";
+import { navLinks } from "./nav/nav/Navbar";
 // Components
 import { Button } from "./ui/Button";
 import IconImage from "./ui/IconImage";
 import { TabletPanel } from "./ui/Panel";
-
 interface Action {
   id: string;
   label: string;
@@ -97,7 +97,7 @@ const useAvailableActions = () => {
       id: "wrap",
       label: "Wrap Deposited Pinto",
       onClick: () => {
-        navigate("/wrap");
+        navigate(navLinks.sPinto);
       },
       enabled: canWrap,
       priority: 2,

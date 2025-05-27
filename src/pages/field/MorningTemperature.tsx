@@ -8,12 +8,19 @@ import { metallicMorningAreaGradientFn, metallicMorningStrokeGradientFn } from "
 import { MorningIntervalCountdown } from "@/pages/field/MorningCountdown";
 import useCalculateTemperature from "@/state/useCalculateTemperature";
 import { useMorning } from "@/state/useSunData";
+import { cn } from "@/utils/utils";
 import { Morning } from "../../state/protocol/sun";
 
 const makeLineGradients = [metallicMorningStrokeGradientFn];
 const makeAreaGradients = [metallicMorningAreaGradientFn];
 
-const MorningTemperatureChart = () => {
+const MorningTemperatureChart = ({
+  className,
+  chartWrapperClassName,
+}: {
+  className?: string;
+  chartWrapperClassName?: string;
+}) => {
   const { generate } = useCalculateTemperature();
 
   const [hoveredIndex, setHoveredIndex] = useState<number>();
@@ -36,10 +43,10 @@ const MorningTemperatureChart = () => {
   }, []);
 
   return (
-    <MorningCard className="flex flex-col w-full p-6 h-[423px] lg:h-[435px]">
+    <MorningCard className={cn("flex flex-col w-full p-6 h-[423px] lg:h-[435px]", className)}>
       <div className="flex flex-col w-full gap-2">
         <Stat morning={morning} data={mappedData} hoveredIndex={hoveredIndex} />
-        <div className="w-full h-[300px]">
+        <div className={cn("w-full h-[300px]", chartWrapperClassName)}>
           <LineChart
             data={mappedData}
             size="large"

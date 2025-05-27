@@ -1,6 +1,6 @@
 import META from "@/constants/meta";
 import { cn, isDev } from "@/utils/utils";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import DevPage from "./components/DevPage";
 import PageMetaWrapper from "./components/PageMetaWrapper";
 import ScrollToTop from "./components/ScrollToTop";
@@ -59,7 +59,8 @@ function ProtectedLayout() {
         }
       />
       <Route path="/silo/:tokenAddress" element={<SiloToken />} />
-      <Route path="/wrap" element={<SiloToken />} />
+      <Route path="/sPinto" element={<SiloToken />} />
+      <Route path="/wrap" element={<Navigate to="/sPinto" replace />} />
       <Route
         path="/field"
         element={

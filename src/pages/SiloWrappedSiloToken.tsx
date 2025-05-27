@@ -4,6 +4,7 @@ import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGro
 import LabelValue from "@/components/LabelValue";
 import MobileActionBar from "@/components/MobileActionBar";
 import TextSkeleton from "@/components/TextSkeleton";
+import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import IconImage from "@/components/ui/IconImage";
 import PageContainer from "@/components/ui/PageContainer";
@@ -78,7 +79,7 @@ export default function SiloWrappedSiloToken({ token }: { token: Token }) {
                 <div className="pt-0 sm:pt-8">
                   {currentAction && isMobile && (
                     <Button variant={"outline"} rounded="full" noPadding className="h-9 w-9 sm:h-12 sm:w-12 mb-4">
-                      <Link to={`/wrap`}>
+                      <Link to={navLinks.sPinto}>
                         <img src={backArrowIcon} alt="go to previous page" className="h-6 w-6 sm:h-8 sm:w-8" />
                       </Link>
                     </Button>
@@ -130,7 +131,7 @@ export default function SiloWrappedSiloToken({ token }: { token: Token }) {
         {!currentAction && (
           <MobileActionBar>
             <Button
-              onClick={() => navigate(`/wrap?action=wrap`)}
+              onClick={() => navigate(`/${navLinks.sPinto}?action=wrap`)}
               rounded={"full"}
               variant={"outline-secondary"}
               className="pinto-sm-bold text-sm flex-1 flex h-full"
@@ -138,7 +139,7 @@ export default function SiloWrappedSiloToken({ token }: { token: Token }) {
               Wrap
             </Button>
             <Button
-              onClick={() => navigate(`/wrap?action=unwrap`)}
+              onClick={() => navigate(`/${navLinks.sPinto}?action=unwrap`)}
               rounded={"full"}
               variant={"outline-secondary"}
               className="pinto-sm-bold text-sm flex-1 flex h-full"

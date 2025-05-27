@@ -10,6 +10,7 @@ import {
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
 import { useState } from "react";
+import FieldTemperatureBarChart from "../field/FieldTemperatureBarChart";
 
 const FieldExplorer = () => {
   const [podRateTab, setPodRateTab] = useState(TimeTab.Week);
@@ -28,17 +29,24 @@ const FieldExplorer = () => {
 
   return (
     <>
-      <SeasonalChart
-        title="Pod Rate"
-        tooltip="The ratio of Unharvestable Pods per Pinto. The Pod Rate is used by Pinto as a proxy for its health."
-        size="large"
-        fillArea
-        activeTab={podRateTab}
-        onChangeTab={setPodRateTab}
-        useSeasonalResult={podRateData}
-        valueFormatter={f.percent2dFormatter}
-        tickValueFormatter={f.percent0dFormatter}
-      />
+      <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
+        <div className="w-full sm:w-1/2">
+          <FieldTemperatureBarChart variant="explorer" />
+        </div>
+        <div className="w-full sm:w-1/2">
+          <SeasonalChart
+            title="Pod Rate"
+            tooltip="The ratio of Unharvestable Pods per Pinto. The Pod Rate is used by Pinto as a proxy for its health."
+            size="small"
+            fillArea
+            activeTab={podRateTab}
+            onChangeTab={setPodRateTab}
+            useSeasonalResult={podRateData}
+            valueFormatter={f.percent2dFormatter}
+            tickValueFormatter={f.percent0dFormatter}
+          />
+        </div>
+      </div>
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/2">
           <SeasonalChart

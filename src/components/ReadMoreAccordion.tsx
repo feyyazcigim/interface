@@ -29,7 +29,7 @@ export default function ReadMoreAccordion({ children, defaultOpen = false, onCha
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: "easeInOut" }}
           className={cn(
-            "text-pinto-light sm:text-pinto-light pinto-sm-light sm:pinto-body-light",
+            "text-pinto-light sm:text-pinto-light pinto-sm-light sm:pinto-body-light leading-[140%] sm:leading-[140%]",
             open ? "flex flex-col" : "",
           )}
         >
@@ -38,7 +38,7 @@ export default function ReadMoreAccordion({ children, defaultOpen = false, onCha
       </Col>
       <div
         onClick={handleToggle}
-        className={cn("cursor-pointer w-max pinto-sm-light text-pinto-green", open && "mt-2")}
+        className={cn("cursor-pointer w-max pinto-body-light text-pinto-green", open && "mt-2")}
       >
         {open ? "Read less" : "Read more"}
       </div>

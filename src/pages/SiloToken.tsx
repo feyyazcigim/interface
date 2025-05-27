@@ -25,7 +25,6 @@ import { S_MAIN_TOKEN } from "@/constants/tokens";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import { useDenomination } from "@/hooks/useAppSettings";
-import { useChainConstant } from "@/hooks/useChainConstant";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
@@ -33,6 +32,7 @@ import { useSeedGauge } from "@/state/useSeedGauge";
 import { SiloTokenYield, useSiloTokenAPYs } from "@/state/useSiloAPYs";
 import { useSiloData } from "@/state/useSiloData";
 import { useSeason } from "@/state/useSunData";
+import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
 import { stringEq } from "@/utils/string";
 import { getTokenIndex } from "@/utils/token";
@@ -174,9 +174,9 @@ export default function SiloToken() {
   const wrappedMain = useChainConstant(S_MAIN_TOKEN);
 
   const location = window.location.pathname;
-  const isWrap = location === "/wrap";
+  const isSiloedPinto = location === "/sPinto";
 
-  const siloToken = tokens[getTokenIndex(isWrap ? wrappedMain : tokenAddress ?? "")];
+  const siloToken = tokens[getTokenIndex(isSiloedPinto ? wrappedMain : tokenAddress ?? "")];
 
   useEffect(() => {
     if (!siloToken || siloToken.is3PSiloWrapped) {
@@ -189,7 +189,7 @@ export default function SiloToken() {
   }
 
   return (
-    <PageMetaWrapper metaKey={siloToken.isSiloWrapped ? "wrap" : (siloToken.symbol as MetaSlug)}>
+    <PageMetaWrapper metaKey={siloToken.isSiloWrapped ? "sPinto" : (siloToken.symbol as MetaSlug)}>
       {siloToken.isSiloWrapped ? <SiloWrappedSiloToken token={siloToken} /> : <SiloTokenInner siloToken={siloToken} />}
     </PageMetaWrapper>
   );

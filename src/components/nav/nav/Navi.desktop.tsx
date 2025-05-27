@@ -78,7 +78,7 @@ const AppNavi = () => {
             <Link href={navLinks.podmarket}>Pod Market</Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link href={navLinks.wrap}>Wrap</Link>
+            <Link href={navLinks.sPinto}>sPinto</Link>
           </NavigationMenuItem>
           {isDev() && (
             <NavigationMenuItem>
@@ -189,7 +189,7 @@ const MoreNavi = ({ setNaviTab }) => {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link href={navLinks.disclosures} rel="noopener noreferrer" target="_blank">
-              Disclosures
+              Terms of Service
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>

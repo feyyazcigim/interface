@@ -16,6 +16,7 @@ import {
 import { useSeason } from "@/state/useSunData";
 import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
+import { UseSeasonalResult } from "@/utils/types";
 import React, { useMemo, useState } from "react";
 
 export default function SiloedTokenCharts() {
@@ -60,7 +61,9 @@ const chartSharedProps = {
   size: "small",
 } as const;
 
-// ---------- Total Supply vs. Total Deposited ----------
+// ──────────────────────────────────────────────────────────────────────────────────────
+// Total Supply vs. Total Deposited
+// ──────────────────────────────────────────────────────────────────────────────────────
 
 // create stable references for headers & value formatters. Minimize re-renders
 const SPintoSupplyHeader = () => {
@@ -81,8 +84,14 @@ const DepositedPintoHeader = () => {
     </div>
   );
 };
-// biome-ignore lint/correctness/useJsxKeyInIterable:
-const totalDepositedHeaders = [<SPintoSupplyHeader />, <DepositedPintoHeader />];
+const totalDepositedHeaders = [
+  <React.Fragment key="total-supply-header">
+    <SPintoSupplyHeader />
+  </React.Fragment>,
+  <React.Fragment key="deposited-pinto-header">
+    <DepositedPintoHeader />
+  </React.Fragment>,
+];
 const totalDepositedFormatter = [
   (value: number) => formatter.twoDec(value),
   (value: number) => formatter.twoDec(value),
@@ -92,20 +101,23 @@ const totalDepositedBorderFunction = getStrokeGradientFunctions(["#CACACA", "#38
 const TotalDepositedPintoChart = React.memo(({ tab, season, setTab }: ISiloedTokenChart) => {
   const { mainToken, sMainToken } = useContextTokens();
 
-  const { fromSeason, toSeason } = truncateBeanstalkWrappedDespositsSeasons(
-    Math.max(0, season - tabToSeasonalLookback(tab)),
-    season,
-  );
+  const totalSupplyRange = useTimeToSeasonRange(season, tab);
+  const totalDepositedRange = useTimeToSeasonRange(season, tab, true);
 
   const totalDepositedQuery = useFarmerSeasonalSiloAssetDepositedAmount(
-    fromSeason,
-    toSeason,
+    totalSupplyRange.queryFrom,
+    totalSupplyRange.to,
     mainToken,
     sMainToken.address,
   );
-  const totalSupplyQuery = useSeasonalWrappedDepositTotalSupply(fromSeason, toSeason);
 
-  const results = useMemo(() => [totalSupplyQuery, totalDepositedQuery], [totalSupplyQuery, totalDepositedQuery]);
+  const totalSupplyQuery = useSeasonalWrappedDepositTotalSupply(totalDepositedRange.queryFrom, totalDepositedRange.to);
+  const totalSupplyResult = useConstrictSeasonalResultSeasons(
+    totalSupplyQuery,
+    totalSupplyRange.displayFrom,
+    totalSupplyRange.to,
+  );
+  const results = useMemo(() => [totalSupplyResult, totalDepositedQuery], [totalSupplyResult, totalDepositedQuery]);
 
   return (
     <CompactSeasonalLineChart
@@ -120,7 +132,9 @@ const TotalDepositedPintoChart = React.memo(({ tab, season, setTab }: ISiloedTok
   );
 });
 
-// ---------- Exchange Rate ----------
+// ──────────────────────────────────────────────────────────────────────────────────────
+// Exchange Rate
+// ──────────────────────────────────────────────────────────────────────────────────────
 
 // create stable references for headers & value formatters. Minimize re-renders
 const ExchangeRateHeader = () => {
@@ -133,20 +147,19 @@ const ExchangeRateHeader = () => {
   );
 };
 
-// biome-ignore lint/correctness/useJsxKeyInIterable:
-const exchangeRateHeaders = [<ExchangeRateHeader />];
+const exchangeRateHeaders = [
+  <React.Fragment key="exchange-rate-header">
+    <ExchangeRateHeader />
+  </React.Fragment>,
+];
 const exchangeRateFormatter = [(value: number) => formatter.xDec(value, 4)];
 const exchangeRateBorderFunction = getStrokeGradientFunctions(["#387F5C"]);
 
 const ExchangeRateChart = React.memo(({ tab, season, setTab }: ISiloedTokenChart) => {
   const { mainToken } = useContextTokens();
-  const { fromSeason, toSeason } = truncateBeanstalkWrappedDespositsSeasons(
-    Math.max(0, season - tabToSeasonalLookback(tab)),
-    season,
-  );
+  const range = useTimeToSeasonRange(season, tab);
 
-  const query = useSeasonalWrappedDepositExchangeRate(fromSeason, toSeason);
-
+  const query = useSeasonalWrappedDepositExchangeRate(range.queryFrom, range.to);
   const results = useMemo(() => [query], [query]);
 
   return (
@@ -163,7 +176,9 @@ const ExchangeRateChart = React.memo(({ tab, season, setTab }: ISiloedTokenChart
   );
 });
 
-// ---------- Pct of Total Deposited ----------
+// ──────────────────────────────────────────────────────────────────────────────────────
+// Pct of Total Deposited
+// ──────────────────────────────────────────────────────────────────────────────────────
 
 const pctOfTotalFormatter = [(value: number) => formatter.pct(value * 100, { minDecimals: 4, maxDecimals: 4 })];
 const pctOfTotalBorderFunction = getStrokeGradientFunctions(["#387F5C"]);
@@ -171,14 +186,10 @@ const pctOfTotalAreaFunction = getAreaGradientFunctions(["fadeGreen"]);
 
 const PctOfTotalDepositedChart = React.memo(({ tab, season, setTab }: ISiloedTokenChart) => {
   const { mainToken, sMainToken } = useContextTokens();
-  const { fromSeason, toSeason } = truncateBeanstalkWrappedDespositsSeasons(
-    Math.max(0, season - tabToSeasonalLookback(tab)),
-    season,
-  );
-
+  const range = useTimeToSeasonRange(season, tab, true);
   const query = useFarmerSeasonalSiloAssetPercentageOfTotalDeposited(
-    fromSeason,
-    toSeason,
+    range.queryFrom,
+    range.to,
     mainToken,
     sMainToken.address,
   );
@@ -188,7 +199,8 @@ const PctOfTotalDepositedChart = React.memo(({ tab, season, setTab }: ISiloedTok
     [mainToken, sMainToken],
   );
 
-  const results = useMemo(() => [query], [query]);
+  const constrainedResult = useConstrictSeasonalResultSeasons(query, range.displayFrom, range.to);
+  const results = useMemo(() => [constrainedResult], [constrainedResult]);
 
   return (
     <CompactSeasonalLineChart
@@ -204,7 +216,9 @@ const PctOfTotalDepositedChart = React.memo(({ tab, season, setTab }: ISiloedTok
   );
 });
 
-// ---------- Grown Stalk Per Deposited BDV ----------
+// ──────────────────────────────────────────────────────────────────────────────────────
+// Grown Stalk Per Deposited BDV
+// ──────────────────────────────────────────────────────────────────────────────────────
 
 const grownStalkPerBDVFormatter = [(value: number) => formatter.xDec(value, 4)];
 const grownStalkPerBDVBorderFunction = getStrokeGradientFunctions(["#387F5C"]);
@@ -213,12 +227,9 @@ const grownStalkPerBDVAreaFunction = getAreaGradientFunctions(["fadeGreen"]);
 const GrownStalkPerDepositedBDVChart = React.memo(({ tab, season, setTab }: ISiloedTokenChart) => {
   const { mainToken, sMainToken } = useContextTokens();
 
-  const { fromSeason, toSeason } = truncateBeanstalkWrappedDespositsSeasons(
-    Math.max(0, season - tabToSeasonalLookback(tab)),
-    season,
-  );
+  const range = useTimeToSeasonRange(season, tab);
 
-  const query = useFarmerSeasonalGrownStalkPerDepositedBDV(fromSeason, toSeason, sMainToken.address);
+  const query = useFarmerSeasonalGrownStalkPerDepositedBDV(range.queryFrom, range.to, sMainToken.address);
 
   const titles = useMemo(() => [`Grown Stalk Per Deposited ${mainToken.symbol}`], [mainToken]);
   const results = useMemo(() => [query], [query]);
@@ -237,3 +248,39 @@ const GrownStalkPerDepositedBDVChart = React.memo(({ tab, season, setTab }: ISil
     />
   );
 });
+
+// ──────────────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────────────────────────────
+
+// SG only creates a datapoint if there is an unwrap/wrap event. To protect against no datapoints being returned,
+// we fetch 1000 seasons to increase the likelihood of a single event.
+const useTimeToSeasonRange = (season: number, tab: TimeTab, minTabMonth: boolean = false) => {
+  const tabLookbackSeasons = tabToSeasonalLookback(tab);
+  const queryLookbackSeasons = minTabMonth
+    ? tab === TimeTab.AllTime
+      ? Number.MAX_SAFE_INTEGER
+      : 999
+    : tabLookbackSeasons;
+
+  const displayFromSeason = Math.max(0, season - tabLookbackSeasons);
+  const queryFromSeason = Math.max(0, season - queryLookbackSeasons);
+
+  const querySeasons = truncateBeanstalkWrappedDespositsSeasons(queryFromSeason, season);
+  const displaySeasons = truncateBeanstalkWrappedDespositsSeasons(displayFromSeason, season);
+
+  return {
+    displayFrom: displaySeasons.fromSeason,
+    queryFrom: querySeasons.fromSeason,
+    to: querySeasons.toSeason,
+  };
+};
+
+const useConstrictSeasonalResultSeasons = (result: UseSeasonalResult, fromSeason: number, toSeason: number) => {
+  return useMemo(() => {
+    return {
+      ...result,
+      data: result.data?.filter((d) => d.season >= fromSeason && d.season <= toSeason),
+    };
+  }, [result, fromSeason, toSeason]);
+};

@@ -49,6 +49,7 @@ interface SeasonalChartProps {
     [TimeTab.Month]?: YAxisRangeConfig;
     [TimeTab.AllTime]?: YAxisRangeConfig;
   };
+  chartWrapperClassName?: string;
   tooltip?: string;
 }
 
@@ -72,6 +73,7 @@ const SeasonalChart = ({
   useLogarithmicScale = false,
   showReferenceLineAtOne = false,
   yAxisRanges,
+  chartWrapperClassName,
 }: SeasonalChartProps) => {
   const [allData, setAllData] = useState<SeasonalChartData[] | null>(null);
   const [displayData, setDisplayData] = useState<SeasonalChartData | null>(null);
@@ -205,7 +207,7 @@ const SeasonalChart = ({
                 <div className="pinto-body-light">No data</div>
               </div>
             ) : (
-              <div className="px-4 pt-4 pb-4 h-[300px]">
+              <div className={cn("px-4 pt-4 pb-4 h-[300px]", chartWrapperClassName)}>
                 <LineChart
                   data={chartData}
                   xKey="timestamp"
