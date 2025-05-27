@@ -5,6 +5,7 @@ import { formatter } from "@/utils/format";
 import { Chart, Legend, LinearScale, Plugin, PointElement, ScatterController, Title, Tooltip } from "chart.js";
 import zoomPlugin from "chartjs-plugin-zoom";
 import { useEffect, useMemo, useRef } from "react";
+import { ReactChart } from "../ReactChart";
 
 Chart.register(ScatterController, PointElement, LinearScale, Title, Tooltip, Legend, zoomPlugin);
 
@@ -40,7 +41,15 @@ export interface ScatterChartProps {
   onPointClick?: (point: any) => void;
 }
 
-export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick, xLabel, yLabel }: Readonly<ScatterChartProps>) {
+export function ScatterChart({
+  title,
+  data,
+  isLoading,
+  xYMinMax,
+  onPointClick,
+  xLabel,
+  yLabel,
+}: Readonly<ScatterChartProps>) {
   const hasInitializedRef = useRef(false);
 
   const selectedPointRef = useRef<any>(null);
@@ -49,6 +58,8 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick, x
   const initialMaxY = useRef<number>(xYMinMax?.y?.max || 1);
   const isZoomedRef = useRef(false);
   const isPanningRef = useRef(false);
+
+  const chartRef = useRef<Chart<"scatter"> | null>(null);
 
   const crosshairPlugin: Plugin = useMemo<Plugin>(
     () => ({
@@ -169,6 +180,114 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick, x
     [initialMaxX, initialMaxY],
   );
 
+  const plugins = [crosshairPlugin, pulsingEffectPlugin, zoomInfoPlugin];
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        title: {
+          display: !!xLabel,
+          text: xLabel,
+        },
+        type: "linear",
+        position: "bottom",
+        min: xYMinMax?.x?.min || 0,
+        max: xYMinMax?.x?.max || initialMaxX.current,
+        ticks: {
+          stepSize: 50,
+          callback: (val) => `${Number(val).toFixed(2)}M`,
+        },
+      },
+      y: {
+        title: {
+          display: !!yLabel,
+          text: yLabel,
+        },
+        min: xYMinMax?.y?.min || 0,
+        max: xYMinMax?.y?.max || initialMaxY.current,
+        ticks: {
+          stepSize: 0.2,
+          callback: (val) => formatter.twoDec(val),
+        },
+      },
+    },
+    plugins: {
+      tooltip: {
+        displayColors: false,
+        callbacks: {
+          label: (ctx) => [`${formatter.noDec((ctx.raw as { amount: number | null }).amount || 0)} pods`],
+          labelPointStyle: () => ({ pointStyle: "rect", rotation: 0 }),
+        },
+      },
+      legend: { display: false },
+      zoom: {
+        zoom: {
+          wheel: { enabled: !isPointSelectedRef.current },
+          pinch: { enabled: !isPointSelectedRef.current },
+          mode: "xy",
+        },
+        pan: {
+          enabled: true,
+          mode: "xy",
+        },
+        limits: {
+          x: { min: 0, max: initialMaxX.current, minRange: 1 },
+          y: { min: 0, max: initialMaxY.current, minRange: 0.1 },
+        },
+      },
+    },
+    // onClick(event, elements) {
+    //   if (elements.length > 0) {
+    //     const element = elements[0];
+    //     const dataPoint = newChartInstance.data.datasets[element.datasetIndex].data[element.index] as any;
+    //     if (dataPoint.interactable) {
+    //       selectedPointRef.current = dataPoint;
+    //       isPointSelectedRef.current = true;
+
+    //       // if (newChartInstance.options.plugins?.zoom?.zoom?.wheel && newChartInstance.options.plugins.zoom.pan) {
+    //       //   newChartInstance.options.plugins.zoom.zoom.wheel.enabled = false;
+    //       //   newChartInstance.options.plugins.zoom.pan.enabled = false;
+    //       // }
+    //       newChartInstance.update();
+
+    //       onPointClick?.(dataPoint);
+    //     }
+    //   } else {
+    //     selectedPointRef.current = null;
+    //     isPointSelectedRef.current = false;
+
+    //     // if (newChartInstance.options.plugins?.zoom?.zoom?.wheel && newChartInstance.options.plugins.zoom.pan) {
+    //     //   newChartInstance.options.plugins.zoom.zoom.wheel.enabled = true;
+    //     //   newChartInstance.options.plugins.zoom.pan.enabled = true;
+    //     // }
+    //     newChartInstance.update();
+    //   }
+    // },
+
+    // onHover(event, elements) {
+    //   if (elements.length > 0) {
+    //     const element = elements[0];
+    //     const dataPoint = newChartInstance.data.datasets[element.datasetIndex].data[element.index] as any;
+
+    //     if (dataPoint?.interactable) {
+    //       selectedPointRef.current = dataPoint;
+    //       canvas.style.cursor = "pointer";
+    //     } else {
+    //       selectedPointRef.current = null;
+    //       canvas.style.cursor = isZoomedRef.current ? "grab" : "default";
+    //     }
+    //   } else {
+    //     if (!isPointSelectedRef.current) {
+    //       selectedPointRef.current = null;
+    //       canvas.style.cursor = isZoomedRef.current ? "grab" : "default";
+    //     }
+    //   }
+
+    //   newChartInstance.update();
+    // },
+  };
+
   useEffect(() => {
     if (isLoading || !data || !data.length || hasInitializedRef.current) {
       console.info("early returning");
@@ -218,7 +337,7 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick, x
           x: {
             title: {
               display: !!xLabel,
-              text: xLabel
+              text: xLabel,
             },
             type: "linear",
             position: "bottom",
@@ -232,7 +351,7 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick, x
           y: {
             title: {
               display: !!yLabel,
-              text: yLabel
+              text: yLabel,
             },
             min: xYMinMax?.y?.min || 0,
             max: xYMinMax?.y?.max || initialMaxY.current,
@@ -382,11 +501,20 @@ export function ScatterChart({ title, data, isLoading, xYMinMax, onPointClick, x
           </div>
         </div>
       </CardHeader>
-      <CardContent className="h-[25rem]">
+      {/* <CardContent className="h-[25rem]">
         <div className="w-full h-full">
           <canvas id="marketScatterChart" />
         </div>
-      </CardContent>
+      </CardContent> */}
+      <ReactChart
+        ref={chartRef}
+        type="scatter"
+        data={data}
+        options={chartOptions}
+        plugins={plugins}
+        width={300}
+        height={300}
+      />
     </Card>
   );
 }
