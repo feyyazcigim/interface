@@ -8,7 +8,7 @@ import { cn } from "@/utils/utils";
 import { ExternalLinkIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { useAtomValue } from "jotai";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const TourOfTheFarmTab = React.forwardRef<HTMLDivElement, { onClick: () => void }>(({ onClick }, ref) => {
@@ -99,8 +99,8 @@ const tourOfTheFarmOpenX = "-26rem";
 const tourOfTheFarmClosedX = "0rem";
 
 const motionSettings = {
-  initial: { x: tourOfTheFarmClosedX },
-  transition: { stiffness: 70, duration: 0.3, ease: "easeInOut" },
+  initial: { x: tourOfTheFarmClosedX, y: "-35%" },
+  transition: { stiffness: 70, duration: 0.15, ease: "easeInOut" },
 } as const;
 
 const VW_SCALAR = 0.75;
@@ -125,6 +125,19 @@ const useWindowDimensionProps = () => {
   return display;
 };
 
+function useClickAway(active: boolean, ref: React.RefObject<HTMLDivElement>, callback: () => void) {
+  useEffect(() => {
+    if (!active) return;
+    function handleClick(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        callback();
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [callback, ref, active]);
+}
+
 export default function TourOfTheFarm() {
   const tourOfTheFarmRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
@@ -134,8 +147,11 @@ export default function TourOfTheFarm() {
 
   const suggested = useSuggestedContentWithSlug();
 
+  const handleClickAway = useCallback(() => setActive(false), []);
+  useClickAway(active, tourOfTheFarmRef, handleClickAway);
+
   return (
-    <div className="h-full">
+    <div className="">
       <motion.div
         animate={{
           x: active ? tourOfTheFarmOpenX : tourOfTheFarmClosedX,
@@ -150,15 +166,15 @@ export default function TourOfTheFarm() {
           setActiveFinished(false);
         }}
         ref={tourOfTheFarmRef}
-        className="hidden h-full sm:flex fixed -bottom-[19%] -right-[25.875rem] w-max origin-bottom-right z-[3]"
+        className="hidden sm:flex fixed -bottom-0 -right-[25.875rem] w-max origin-bottom-right z-[3]"
       >
         <Row className="relative gap-0">
-          <div className="cursor-pointer">
+          <div className="cursor-pointer z-[4]">
             <TourOfTheFarmTab onClick={() => setActive((ac) => !ac)} />
           </div>
           <div className="relative">
             <GradientBox animate={false} rounded={contentCornerRadius}>
-              <Col className="gap-3 p-4">
+              <Col className="gap-3 p-4 z-[2]">
                 <Row className="justify-between items-center">
                   <div className="pinto-body-bold cursor-default">Looking For More Material?</div>
                   <Link
@@ -182,7 +198,7 @@ export default function TourOfTheFarm() {
              * This is to prevent the content box from being visible on fast window width resizes.
              */}
             {!active && activeFinished && (
-              <div className="absolute bg-gradient-light -inset-[0.125rem] rounded-sm h-[calc(100%+0.25rem)] w-[calc(100%+0.25rem)] z-[10]" />
+              <div className="absolute bg-gradient-light -inset-[0.125rem] rounded-sm h-[calc(100%+0.25rem)] w-[calc(100%+0.25rem)] z-[2]" />
             )}
           </div>
         </Row>
