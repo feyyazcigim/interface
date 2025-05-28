@@ -77,72 +77,93 @@ function APYBar() {
 }
 
 function AuditMarquee() {
-  function MarqueeLogos({ hideFromScreenReaders = false }: { hideFromScreenReaders?: boolean }) {
-    return (
-      <div className="flex flex-row pl-20 gap-20 flex-shrink-0" aria-hidden={hideFromScreenReaders}>
-        <Link to={"https://cantina.xyz/"} target="_blank" rel="noopener noreferrer">
-          <img
-            src="cantina.svg"
-            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
-            alt="cantina"
-          />
-        </Link>
-        <Link to={"https://codehawks.cyfrin.io/"} target="_blank" rel="noopener noreferrer">
-          <img
-            src="codehawks.svg"
-            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
-            alt="codehawks"
-          />
-        </Link>
-        <Link to={"https://www.cyfrin.io/"} target="_blank" rel="noopener noreferrer">
-          <img
-            src="cyfrin.svg"
-            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
-            alt="cyfrin"
-          />
-        </Link>
-        <Link to={"https://www.trailofbits.com/"} target="_blank" rel="noopener noreferrer">
-          <img
-            src="trail-of-bits.png"
-            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
-            alt="trail of bits"
-          />
-        </Link>
-        <Link to={"https://www.egissec.com/"} target="_blank" rel="noopener noreferrer">
-          <img
-            src="egis.png"
-            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
-            alt="egis security"
-          />
-        </Link>
-        <Link to={"https://www.halborn.com/"} target="_blank" rel="noopener noreferrer">
-          <img
-            src="halborn.png"
-            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
-            alt="halborn"
-          />
-        </Link>
-        <Link to={"https://immunefi.com/"} target="_blank" rel="noopener noreferrer">
-          <img
-            src={ImmunefiLogo}
-            alt={"ImmuneFi"}
-            className="h-10 flex-shrink-0 opacity-40 hover:opacity-100 transition-opacity"
-          />
-        </Link>
-      </div>
-    );
-  }
+  const logos = [
+    {
+      url: "https://cantina.xyz/",
+      src: "cantina.svg",
+      alt: "cantina",
+      className: "col-span-4",
+      height: "h-10",
+    },
+    {
+      url: "https://www.halborn.com/",
+      src: "halborn.png",
+      alt: "halborn",
+      className: "col-span-3",
+      height: "h-10",
+    },
+    {
+      url: "https://codehawks.cyfrin.io/",
+      src: "codehawks.svg",
+      alt: "codehawks",
+      className: "col-span-3",
+      height: "h-10",
+    },
+    {
+      url: "https://www.cyfrin.io/",
+      src: "cyfrin.svg",
+      alt: "cyfrin",
+      className: "col-span-2",
+      height: "h-10",
+    },
+    {
+      url: "https://www.egissec.com/",
+      src: "egis.png",
+      alt: "egis security",
+      className: "col-span-5",
+      height: "h-10",
+    },
+    {
+      url: "https://www.trailofbits.com/",
+      src: "trail-of-bits.png",
+      alt: "trail of bits",
+      className: "col-span-2 row-span-2",
+      height: "h-20",
+      imgClassName: "row-span-2",
+    },
+    /* {
+      url: "https://immunefi.com/",
+      src: ImmunefiLogo,
+      alt: "ImmuneFi",
+      className: "col-span-4",
+      height: "h-10",
+    },*/
+  ];
 
+  /*
   return (
     <div className="flex flex-col gap-9">
       <div className="mx-auto mt-[4.5rem] text-pinto-gray-4 text-[1.5rem] font-light">25 audits to date by</div>
-      <div className="flex flex-row animate-marquee hover:[animation-play-state:paused]">
-        <MarqueeLogos />
-        <MarqueeLogos hideFromScreenReaders />
-        <MarqueeLogos hideFromScreenReaders />
-        <MarqueeLogos hideFromScreenReaders />
-        <MarqueeLogos hideFromScreenReaders />
+      <div className="max-w-[100%]">
+        <div
+          className="grid grid-cols-[repeat(24,1fr)] auto-rows-[2.5rem] justify-items-center gap-2"
+          style={{ gridAutoFlow: "dense" }}
+        >
+          {Array(6)
+            .fill(logos)
+            .flat()
+            .map((logo, index) => (
+              <Link
+                key={`${logo.alt}-${index}`}
+                to={logo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={logo.className}
+              >
+                <img
+                  src={logo.src}
+                  className={`${logo.height} w-full object-fill opacity-40 hover:opacity-100 transition-opacity ${logo.imgClassName || ""}`}
+                  alt={logo.alt}
+                />
+              </Link>
+            ))}
+        </div>
       </div>
+    </div>
+  );*/
+  return (
+    <div className="relative">
+      <img src="sec-bg.png" className="mix-blend-multiply z-0 absolute top-0" />
     </div>
   );
 }
@@ -182,7 +203,7 @@ function BugBounty() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center mx-auto my-auto">
       <div className="flex flex-row gap-8 items-center" ref={componentRef}>
         <img src={PintoTokenLogo} alt={"Pinto Token Icon"} className="w-32 h-32" />
         <NumberFlow
@@ -198,9 +219,6 @@ function BugBounty() {
         <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-12" />
       </div>
       <div className="flex flex-row gap-4 pt-9">
-        <Link to={navLinks.overview}>
-          <Button rounded="full">Get Started</Button>
-        </Link>
         <Link to={"https://immunefi.com/bug-bounty/pinto/information/"} target="_blank" rel="noopener noreferrer">
           <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
             Read about the Bug Bounty Program
@@ -338,18 +356,16 @@ function FarmToTable({ height = 1600 }: { height: number }) {
       </div>
 
       <div className="flex flex-col items-center gap-4 z-10">
-        <h2 className="pinto-h2 text-5xl leading-[1.1] text-black">Farm to Table</h2>
+        <h2 className="pinto-h2 text-5xl leading-[1.1] text-black items-center flex flex-col">
+          <span>Pinto incentivizes coordination between</span>
+          <span>farmers to create new money</span>
+        </h2>
         <span ref={sloganRef} className="pinto-body-light font-thin text-pinto-gray-4">
-          No investors. Community first.
+          100% community backed
         </span>
         <div className="flex flex-row gap-4">
-          <Link to={"/overview"}>
-            <Button rounded="full">Get Started</Button>
-          </Link>
           <Link to={`${navLinks.docs}advanced/economics`} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
-              Read Docs
-            </Button>
+            <Button rounded="full">Learn How →</Button>
           </Link>
         </div>
       </div>
@@ -507,7 +523,7 @@ export default function Landing() {
       <div className="flex flex-col gap-12 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
         <FarmToTable height={initialHeightPx} />
       </div>
-      <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem}rem` }}>
+      <div className="flex flex-col gap-12 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
         <AuditMarquee />
         <BugBounty />
       </div>
