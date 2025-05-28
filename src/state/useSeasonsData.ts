@@ -172,6 +172,10 @@ export default function useSeasonsData(
   fromSeason: number,
   toSeason: number,
   {
+    // If true, syncs subgraph snapshot seasons with api snapshot seasons. In practice this means all datapoints
+    // are formatted to indicate the value at the start of the season, not anything during the season.
+    seasonSync = false,
+    // Controls whether each of these datapoints are fetched from their respective sources
     beanstalkData = true,
     beanData = true,
     basinData = true,
@@ -182,6 +186,7 @@ export default function useSeasonsData(
 ) {
   const chainId = useChainId();
   const tokenData = useTokenData();
+  const syncOffset = seasonSync ? 1 : 0;
 
   const stalkQueryFnFactory = useCallback(
     (vars: SeasonalQueryVars) => async () => {
@@ -210,7 +215,7 @@ export default function useSeasonsData(
   );
 
   const useStalkQuery = useMultiSeasonalQueries("all_seasonsTableStalk", {
-    fromSeason,
+    fromSeason: fromSeason - syncOffset,
     toSeason,
     queryVars: {},
     historicalQueryFnFactory: stalkQueryFnFactory as any, // TODO: better type support
@@ -226,8 +231,8 @@ export default function useSeasonsData(
   }) as any;
 
   const useBeanQuery = useSeasonalQueries("all_seasonsTableBean", {
-    fromSeason: fromSeason,
-    toSeason: toSeason,
+    fromSeason: fromSeason - syncOffset,
+    toSeason,
     queryVars: {},
     historicalQueryFnFactory: beanQueryFnFactory,
     currentQueryFnFactory: beanQueryFnFactory,
@@ -242,8 +247,8 @@ export default function useSeasonsData(
   });
 
   const useBasinQuery = useSeasonalQueries("all_seasonsTableBasin", {
-    fromSeason: fromSeason,
-    toSeason: toSeason,
+    fromSeason: fromSeason - syncOffset,
+    toSeason,
     queryVars: {},
     historicalQueryFnFactory: basinQueryFnFactory,
     currentQueryFnFactory: basinQueryFnFactory,
@@ -292,9 +297,9 @@ export default function useSeasonsData(
     const inflowSnapshots = useInflowQuery?.data || ([] as any);
 
     const maxLength = Math.max(
-      beanResults.length,
-      stalkResults.fieldHourlySnapshots.length,
-      basinResults.length,
+      beanResults.length - syncOffset,
+      stalkResults.fieldHourlySnapshots.length - syncOffset,
+      basinResults.length - syncOffset,
       apy24h?.length || 0,
       tractorSnapshots.length,
       inflowSnapshots.length,
@@ -303,11 +308,14 @@ export default function useSeasonsData(
     const transformedData: SeasonsTableData[] = [];
     for (let idx = 0; idx < maxLength; ++idx) {
       const allData: Partial<SeasonsTableData> = {};
+      const countSubgraphSeasons = stalkResults.seasons.length;
 
-      if (beanstalkData) {
-        const currFieldHourlySnapshots = stalkResults.fieldHourlySnapshots[idx];
-        const currSiloHourlySnapshots = stalkResults.siloHourlySnapshots[idx];
-        const currStalkSeasons = stalkResults.seasons[idx];
+      // Subgraph data optionally has a +1 season offset applied to the datapoints, such that
+      // the result indicates the value at the start rather than end of the season.
+      if (beanstalkData && idx + syncOffset < countSubgraphSeasons) {
+        const currFieldHourlySnapshots = stalkResults.fieldHourlySnapshots[idx + syncOffset];
+        const currSiloHourlySnapshots = stalkResults.siloHourlySnapshots[idx + syncOffset];
+        const currStalkSeasons = stalkResults.seasons[idx + syncOffset];
         const timeSown = currFieldHourlySnapshots.blocksToSoldOutSoil
           ? Duration.fromMillis(currFieldHourlySnapshots.blocksToSoldOutSoil * 2 * 1000).toFormat("mm:ss")
           : "-";
@@ -351,14 +359,15 @@ export default function useSeasonsData(
         }
 
         if (!allData.season) {
-          allData.season = currStalkSeasons.season;
-          allData.timestamp = Number(currStalkSeasons.createdAt || 0);
-          allData.sunriseBlock = Number(currStalkSeasons.sunriseBlock || 0);
+          const season = stalkResults.seasons[idx];
+          allData.season = season.season;
+          allData.timestamp = Number(season.createdAt || 0);
+          allData.sunriseBlock = Number(season.sunriseBlock || 0);
         }
       }
 
-      if (beanData) {
-        const beanHourly = beanResults[idx].beanHourlySnapshot;
+      if (beanData && idx + syncOffset < countSubgraphSeasons) {
+        const beanHourly = beanResults[idx + syncOffset].beanHourlySnapshot;
         allData.crosses = beanHourly.crosses;
         allData.marketCap = Number(beanHourly.marketCap);
         allData.supply = TokenValue.fromBlockchain(beanHourly.supply, tokenData.mainToken.decimals);
@@ -370,13 +379,14 @@ export default function useSeasonsData(
         allData.twaPrice = TokenValue.fromHuman(beanHourly.twaPrice, 4);
 
         if (!allData.season) {
-          allData.season = beanHourly.season.season;
-          allData.timestamp = Number(beanHourly.season.timestamp || 0);
+          const season = beanResults[idx].season;
+          allData.season = season.season;
+          allData.timestamp = Number(season.timestamp || 0);
         }
       }
 
-      if (basinData) {
-        const currBasinSeason = basinResults[idx];
+      if (basinData && idx + syncOffset < countSubgraphSeasons) {
+        const currBasinSeason = basinResults[idx + syncOffset];
         allData.cumulativeVolumeNet =
           Number(currBasinSeason.cumulativeBuyVolumeUSD) - Number(currBasinSeason.cumulativeSellVolumeUSD);
         allData.cumulativeBuyVolumeUSD = Number(currBasinSeason.cumulativeBuyVolumeUSD);
@@ -404,8 +414,9 @@ export default function useSeasonsData(
         allData.deltaLiquidityUSD = Number(currBasinSeason.deltaLiquidityUSD);
 
         if (!allData.season) {
-          allData.season = currBasinSeason.season.season;
-          allData.timestamp = Number(currBasinSeason.createdTimestamp);
+          const season = basinResults[idx].season;
+          allData.season = season.season;
+          allData.timestamp = Number(season.createdTimestamp);
         }
       }
 
@@ -502,6 +513,7 @@ export default function useSeasonsData(
     useAPYQuery.data,
     useTractorQuery.data,
     tokenData.mainToken.decimals,
+    seasonSync,
     beanstalkData,
     beanData,
     basinData,
