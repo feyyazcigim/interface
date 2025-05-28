@@ -51,7 +51,6 @@ const PintoExplorer = () => {
     const defaultRange = {
       min: 0,
       max: TARGET_PRICE,
-      averagePrice: TARGET_PRICE,
       showReferenceLine: true
     };
 
@@ -64,22 +63,15 @@ const PintoExplorer = () => {
       };
     }
 
-    // Calculate min, max, and average values from the actual data
+    // Calculate min, max values from the actual data
     const values = filteredPriceData.data.map((item) => item.value);
     const minValue = Math.min(...values) * PADDING.MIN;
     const maxValue = Math.max(...values) * PADDING.MAX;
-    
-    // Calculate average price
-    const averagePrice = values.reduce((sum, val) => sum + val, 0) / values.length;
-    
-    // For "All Time" tab, set average to 1
-    const effectiveAverage = priceTab === TimeTab.AllTime ? TARGET_PRICE : averagePrice;
 
     // Calculate range with buffer
     const range = {
       min: minValue,
       max: maxValue,
-      averagePrice: effectiveAverage,
       showReferenceLine: TARGET_PRICE >= minValue && TARGET_PRICE <= maxValue
     };
 
@@ -89,7 +81,7 @@ const PintoExplorer = () => {
       [TimeTab.Month]: range,
       [TimeTab.AllTime]: range,
     };
-  }, [filteredPriceData.data, priceTab]);
+  }, [filteredPriceData.data]);
 
   return (
     <>

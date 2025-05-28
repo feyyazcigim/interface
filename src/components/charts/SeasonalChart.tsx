@@ -28,7 +28,6 @@ export interface SeasonalChartData {
 export interface YAxisRangeConfig {
   min?: number;
   max?: number;
-  averagePrice?: number;
   showReferenceLine?: boolean;
 }
 
@@ -102,13 +101,10 @@ const SeasonalChart = ({
     if (allData) {
       // Get the current y-axis range
       const currentRange = yAxisRanges?.[activeTab];
-      const averagePrice = currentRange?.averagePrice;
 
       return allData.map((d) => ({
         values: [useLogarithmicScale ? Math.max(0.000001, d.value) : d.value],
         timestamp: d.timestamp,
-        // Add average price to the data point for reference
-        averagePrice: averagePrice,
       }));
     }
     return [];

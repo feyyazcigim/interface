@@ -18,7 +18,6 @@ Chart.register(LineController, LineElement, LinearScale, LogarithmicScale, Categ
 
 export type LineChartData = {
   values: number[];
-  averagePrice?: number;
 } & Record<string, any>;
 
 export type MakeGradientFunction = (
