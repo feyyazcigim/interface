@@ -56,10 +56,10 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
   const [amountIn, setAmountIn] = useState<string>("0");
   const [inputError, setInputError] = useState<boolean>(false);
   const [balanceFrom, setBalanceFrom] = useState<FarmFromMode>(FarmFromMode.INTERNAL_EXTERNAL);
-  const [mode, setMode] = useState<FarmToMode | undefined>(undefined);
+  const [mode, setMode] = useState<FarmToMode | undefined>(FarmToMode.EXTERNAL);
   const [token, setToken] = useState<Token>(mainToken);
   const [source, setSource] = useState<AssetOrigin>(depositedAmount ? "deposits" : "balances");
-  const [didInitSource, setDidInitSource] = useState(isConnecting ? false : depositedAmount !== undefined);
+  const [didInitSource, setDidInitSource] = useState(account ? depositedAmount !== undefined : !isConnecting);
 
   const filterTokens = useFilterTokens();
 
@@ -81,7 +81,12 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     queryKey: allowanceQueryKey,
     loading: allowanceLoading,
     confirming: allowanceConfirming,
-  } = useFarmerDepositAllowance(Boolean(usingDeposits && tokenIsSiloWrappedToken));
+  } = useFarmerDepositAllowance(
+    sMainToken.address,
+    // Only wrapping via PINTO is currently supported
+    mainToken,
+    Boolean(usingDeposits && tokenIsSiloWrappedToken),
+  );
 
   const needsDepositAllowanceIncrease = usingDeposits && !allowanceLoading && amountInTV.gt(allowance ?? 0n);
 
@@ -101,7 +106,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
   const amountOutUSD = useSiloWrappedTokenToUSD(amountOut);
 
   // Transaction hooks
-  const onSuccess = () => {
+  const onSuccess = useCallback(() => {
     setAmountIn("0");
     swap.resetSwap();
     const keys = [
@@ -111,7 +116,14 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
       ...contractSilo.queryKeys,
     ];
     keys.forEach((key) => qc.invalidateQueries({ queryKey: key }));
-  };
+  }, [
+    qc,
+    swap.resetSwap,
+    allowanceQueryKey,
+    farmerDeposits.queryKeys,
+    farmerBalances.queryKeys,
+    contractSilo.queryKeys,
+  ]);
 
   const { isConfirming, writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
     successMessage: "Wrap successful",
@@ -121,25 +133,29 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
 
   // Callbacks
   const handleWrap = useCallback(async () => {
+    const nofityIsWrapping = () => {
+      setSubmitting(true);
+      toast.loading("Wrapping...");
+    };
+
     try {
       if (!isValidAddress(account)) {
         throw new Error("Signer required");
+      }
+      if (exceedsBalance) {
+        throw new Error("Insufficient deposits");
       }
       if (source === "deposits") {
         const amount = TV.fromHuman(amountIn, mainToken.decimals);
         if (!deposits || !deposits.deposits.length) {
           throw new Error("No deposits found");
         }
-        if (exceedsBalance) {
-          throw new Error("Insufficient deposits");
-        }
         if (amount.lte(0)) {
           throw new Error("Invalid amount");
         }
-        setSubmitting(true);
+        nofityIsWrapping();
         const picked = sortAndPickCrates("wrap", amount, deposits.deposits);
         const extracted = extractStemsAndAmountsFromCrates(picked.crates);
-        toast.loading("Wrapping...");
 
         return writeWithEstimateGas({
           address: siloToken.address,
@@ -149,27 +165,26 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
         });
       }
 
+      const tokenAmount = TV.fromHuman(amountIn, token.decimals);
+      if (tokenAmount.lte(0)) {
+        throw new Error("Invalid amount");
+      }
+
       if (!swap.data || !buildSwap) {
         throw new Error("Invalid swap quote");
       }
-      if (exceedsBalance) {
-        throw new Error("Insufficient funds");
-      }
-
-      setSubmitting(true);
       const swapBuild = await buildSwap();
       if (!swapBuild) {
         throw new Error("Failed to build swap");
       }
 
-      const value = token.isNative ? TV.fromHuman(amountIn, token.decimals) : undefined;
-
+      nofityIsWrapping();
       return writeWithEstimateGas({
         address: diamond,
         abi: diamondABI,
         functionName: "advancedFarm",
         args: [swapBuild.advancedFarm],
-        value: value?.toBigInt(),
+        value: token.isNative ? tokenAmount.toBigInt() : undefined,
       });
     } catch (e: any) {
       console.error(e);
@@ -202,7 +217,12 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
 
   // Effects
   useEffect(() => {
-    if (didInitSource || !farmerTokenBalance || !deposits || isConnecting) {
+    if (didInitSource) return;
+    if (!isConnecting && !account) {
+      setDidInitSource(true);
+    }
+
+    if (!farmerTokenBalance || !deposits || isConnecting) {
       return;
     }
 
@@ -211,7 +231,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     }
 
     setDidInitSource(true);
-  }, [farmerTokenBalance, deposits, didInitSource, isConnecting]);
+  }, [farmerTokenBalance, deposits, didInitSource, isConnecting, account]);
 
   // Tokens other than main token are not supported
   if (!tokenIsSiloWrappedToken) {
@@ -232,7 +252,8 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     exceedsBalance ||
     inputError ||
     disabledFromLoading ||
-    !toModeSelected;
+    !toModeSelected ||
+    submitting;
 
   const buttonText = exceedsBalance ? "Insufficient funds" : needsDepositAllowanceIncrease ? "Approve" : "Wrap";
 
@@ -337,9 +358,9 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
           submitFunction={handleButtonSubmit}
           disabled={buttonDisabled}
           submitButtonText={buttonText}
-          spender={!usingDeposits ? siloToken.address : undefined}
           amount={!usingDeposits ? amountIn : undefined}
-          token={!usingDeposits ? mainToken : token}
+          // If using deposits, we handle the allowance increase in the button submit function
+          token={!usingDeposits ? token : undefined}
           balanceFrom={balanceFrom}
           variant="gradient"
           size="xxl"
@@ -350,9 +371,9 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
           submitFunction={handleButtonSubmit}
           disabled={buttonDisabled}
           submitButtonText={buttonText}
-          spender={!usingDeposits ? siloToken.address : undefined}
           amount={!usingDeposits ? amountIn : undefined}
-          token={!usingDeposits ? mainToken : token}
+          // If using deposits, we handle the allowance increase in the button submit function
+          token={!usingDeposits ? token : undefined}
           balanceFrom={balanceFrom}
           variant="gradient"
           className="h-full"

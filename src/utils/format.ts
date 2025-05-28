@@ -218,7 +218,7 @@ const numberAbbrThresholds: [number, string][] = [
 
 export const numberAbbr = (num: number, decimals = 1): string => {
   for (const threshold of numberAbbrThresholds) {
-    if (num > threshold[0]) {
+    if (num >= threshold[0]) {
       return `${(num / threshold[0]).toFixed(decimals)}${threshold[1]}`;
     }
   }

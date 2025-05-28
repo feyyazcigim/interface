@@ -7,6 +7,7 @@ import { Token } from "@/utils/types";
 import { useMemo } from "react";
 import useTokenData from "./useTokenData";
 
+type ChartType = "Pinto" | "Field" | "Silo" | "Tractor" | "Exchange" | "Inflow";
 interface ChartSetupBase {
   /**
    * Chart ID
@@ -15,7 +16,7 @@ interface ChartSetupBase {
   /**
    * Chart type, used to categorize charts in the Select panel
    */
-  type: "Pinto" | "Field" | "Silo" | "Tractor" | "Exchange";
+  type: ChartType;
   /**
    * Name of variable to be used to fill the time scale. Usually "timestamp"
    */
@@ -100,6 +101,16 @@ export const chartColors: ChartColors = [
   },
 ];
 
+const usdFormatter = (v: number) => {
+  const formatted = TokenValue.fromHuman(v, 2).toHuman("short");
+  // Ensure 2 decimal places
+  if (formatted.match(/[KMBT]$/)) {
+    const [num, suffix] = formatted.split(/([KMBT])/);
+    return `$${Number(num).toFixed(2)}${suffix}`;
+  }
+  return `$${formatted}`;
+};
+
 // Function to generate Pinto charts
 const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
   {
@@ -144,8 +155,8 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     priceScaleKey: "marketCap",
     valueAxisType: "marketCap",
     valueFormatter: (v: number) => v,
-    tickFormatter: (v: number) => formatUSD(v, { decimals: 2 }),
-    shortTickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
+    tickFormatter: usdFormatter,
+    shortTickFormatter: usdFormatter,
   },
   {
     id: "priceTargetCrosses",
@@ -228,22 +239,6 @@ const createPintoCharts = (mainToken: Token): ChartSetupBase[] => [
     valueFormatter: (v: TokenValue) => v.toNumber(),
     tickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
     shortTickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
-  },
-  {
-    id: "stalk",
-    type: "Pinto",
-    name: "Stalk Supply",
-    tooltipTitle: "Stalk Supply",
-    tooltipHoverText: "The total number of Stalk.",
-    shortDescription: "The total number of Stalk.",
-    icon: stalkIcon,
-    timeScaleKey: "timestamp",
-    priceScaleKey: "stalk",
-    valueAxisType: "stalk",
-    valueFormatter: (v: TokenValue) => v.toNumber(),
-    tickFormatter: (v: number) =>
-      formatNum(v, { allowZero: true, minDecimals: 2, maxDecimals: 2, showPositiveSign: false }),
-    shortTickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
   },
 ];
 
@@ -345,8 +340,8 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
   {
     id: "pintoSown",
     type: "Field",
-    name: "Pinto Sown (Cumulative)",
-    tooltipTitle: "Pinto Sown (Cumulative)",
+    name: "Cumulative Pinto Sown",
+    tooltipTitle: "Cumulative Pinto Sown",
     tooltipHoverText: "The total number of Pinto Sown as of the beginning of every Season.",
     shortDescription: "The total number of Pinto Sown.",
     icon: mainToken.logoURI,
@@ -360,8 +355,8 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
   {
     id: "pintoSownSeasonally",
     type: "Field",
-    name: "Pinto Sown (Seasonal)",
-    tooltipTitle: "Pinto Sown (Seasonal)",
+    name: "Seasonal Pinto Sown",
+    tooltipTitle: "Seasonal Pinto Sown",
     tooltipHoverText: "The total number of Pinto Sown during the Season.",
     shortDescription: "The total number of Pinto Sown during the Season.",
     icon: mainToken.logoURI,
@@ -420,85 +415,189 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
   },
 ];
 
-const createExchangeCharts = (_mainToken: Token): ChartSetupBase[] => [
-  {
-    id: "cumulativeVolume",
-    type: "Exchange",
-    name: "Cumulative Volume (USD)",
-    tooltipTitle: "Exchange Volume (Cumulative)",
-    tooltipHoverText: "Cumulative exchange volume since deployment.",
-    shortDescription: "Cumulative exchange volume.",
-    icon: pintoExchangeLogo,
-    timeScaleKey: "timestamp",
-    priceScaleKey: "cumulativeVolume",
-    valueAxisType: "cumulativeVolume",
-    valueFormatter: (v: number) => v,
-    tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-  },
-  {
-    id: "cumulativeConverts",
-    type: "Exchange",
-    name: "Cumulative Convert Volume (USD)",
-    tooltipTitle: "Convert Volume (Cumulative)",
-    tooltipHoverText: "Cumulative convert volume since deployment.",
-    shortDescription: "Cumulative convert volume.",
-    icon: pintoExchangeLogo,
-    timeScaleKey: "timestamp",
-    priceScaleKey: "cumulativeConverts",
-    valueAxisType: "cumulativeConverts",
-    valueFormatter: (v: number) => v,
-    tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-  },
-  {
-    id: "deltaBuysNet",
-    type: "Exchange",
-    name: "Net Pinto Buys (USD)",
-    tooltipTitle: "Net Pinto Buys (USD)",
-    tooltipHoverText: "Net Pinto Buys and Sells during the Season.",
-    shortDescription: "Net Pinto Buys/Sells during the Season.",
-    icon: pintoExchangeLogo,
-    timeScaleKey: "timestamp",
-    priceScaleKey: "deltaBuysNet",
-    valueAxisType: "deltaBuysNet",
-    valueFormatter: (v: number) => v,
-    tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-  },
-  {
-    id: "deltaConvertsUpNet",
-    type: "Exchange",
-    name: "Net Converts (USD)",
-    tooltipTitle: "Net Converts (USD)",
-    tooltipHoverText: "Net Converts during the Season.",
-    shortDescription: "Net Converts during the Season.",
-    icon: pintoExchangeLogo,
-    timeScaleKey: "timestamp",
-    priceScaleKey: "deltaConvertsUpNet",
-    valueAxisType: "deltaConvertsUpNet",
-    valueFormatter: (v: number) => v,
-    tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-  },
-  {
-    id: "liquidity",
-    type: "Exchange",
-    name: "Total Liquidity (USD)",
-    tooltipTitle: "Total Liquidity (USD)",
-    tooltipHoverText: "Total liquidity across all pools.",
-    shortDescription: "Total liquidity across all pools.",
-    icon: pintoExchangeLogo,
-    timeScaleKey: "timestamp",
-    priceScaleKey: "liquidity",
-    valueAxisType: "liquidity",
-    valueFormatter: (v: number) => v,
-    tickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-    shortTickFormatter: (v: number) => formatUSD(v, { decimals: 0 }),
-  },
-];
+const createExchangeCharts = (_mainToken: Token): ChartSetupBase[] => {
+  const exchangeEntry = ({
+    id,
+    name,
+    tooltipTitle,
+    description,
+    valueAxis = id,
+  }: {
+    id: string;
+    name: string;
+    tooltipTitle: string;
+    description: string;
+    valueAxis?: string;
+  }) => {
+    return {
+      id,
+      type: "Exchange" as ChartType,
+      name,
+      tooltipTitle,
+      tooltipHoverText: description,
+      shortDescription: description,
+      icon: pintoExchangeLogo,
+      timeScaleKey: "timestamp",
+      priceScaleKey: id,
+      valueAxisType: valueAxis,
+      valueFormatter: (v: number) => v,
+      tickFormatter: usdFormatter,
+      shortTickFormatter: usdFormatter,
+    };
+  };
+  return [
+    exchangeEntry({
+      id: "cumulativeVolumeNet",
+      name: "Cumulative Net Volume (USD)",
+      tooltipTitle: "Exchange: Cumulative Net Volume (USD)",
+      description: "Cumulative Net of Exchange Volume.",
+    }),
+    exchangeEntry({
+      id: "cumulativeBuyVolumeUSD",
+      name: "Cumulative Buy Volume (USD)",
+      tooltipTitle: "Exchange: Cumulative Buy Volume (USD)",
+      description: "Cumulative Sum of Exchange Buys.",
+      valueAxis: "exchangeCumulativeBuySell",
+    }),
+    exchangeEntry({
+      id: "cumulativeSellVolumeUSD",
+      name: "Cumulative Sell Volume (USD)",
+      tooltipTitle: "Exchange: Cumulative Sell Volume (USD)",
+      description: "Cumulative Sum of Exchange Sells.",
+      valueAxis: "exchangeCumulativeBuySell",
+    }),
+    exchangeEntry({
+      id: "cumulativeVolumeUSD",
+      name: "Cumulative Volume (USD)",
+      tooltipTitle: "Exchange: Cumulative Volume (USD)",
+      description: "Cumulative Sum of Exchange Buys/Sells.",
+      valueAxis: "exchangeCumulativeBuySell",
+    }),
+    exchangeEntry({
+      id: "deltaVolumeNet",
+      name: "Seasonal Net Volume (USD)",
+      tooltipTitle: "Exchange: Seasonal Net Volume (USD)",
+      description: "Seasonal Net of Exchange Volume.",
+    }),
+    exchangeEntry({
+      id: "deltaBuyVolumeUSD",
+      name: "Seasonal Buy Volume (USD)",
+      tooltipTitle: "Exchange: Seasonal Buy Volume (USD)",
+      description: "Seasonal Sum of Exchange Buys.",
+      valueAxis: "exchangeDeltaBuySell",
+    }),
+    exchangeEntry({
+      id: "deltaSellVolumeUSD",
+      name: "Seasonal Sell Volume (USD)",
+      tooltipTitle: "Exchange: Seasonal Sell Volume (USD)",
+      description: "Seasonal Sum of Exchange Sells.",
+      valueAxis: "exchangeDeltaBuySell",
+    }),
+    exchangeEntry({
+      id: "deltaVolumeUSD",
+      name: "Seasonal Volume (USD)",
+      tooltipTitle: "Exchange: Seasonal Volume (USD)",
+      description: "Seasonal Sum of Exchange Buys/Sells.",
+      valueAxis: "exchangeDeltaBuySell",
+    }),
+    exchangeEntry({
+      id: "cumulativeConvertVolumeNet",
+      name: "Cumulative Net Convert Volume (USD)",
+      tooltipTitle: "Exchange: Cumulative Net Convert Volume (USD)",
+      description: "Cumulative Net of Convert Volume.",
+    }),
+    exchangeEntry({
+      id: "cumulativeConvertUpVolumeUSD",
+      name: "Cumulative Convert Up Volume (USD)",
+      tooltipTitle: "Exchange: Cumulative Convert Up Volume (USD)",
+      description: "Cumulative Sum of Convert Up Volume.",
+      valueAxis: "exchangeCumulativeConvertUpDown",
+    }),
+    exchangeEntry({
+      id: "cumulativeConvertDownVolumeUSD",
+      name: "Cumulative Convert Down Volume (USD)",
+      tooltipTitle: "Exchange: Cumulative Convert Down Volume (USD)",
+      description: "Cumulative Sum of Convert Down Volume.",
+      valueAxis: "exchangeCumulativeConvertUpDown",
+    }),
+    exchangeEntry({
+      id: "cumulativeConvertVolumeUSD",
+      name: "Cumulative Convert Volume (USD)",
+      tooltipTitle: "Exchange: Cumulative Convert Volume (USD)",
+      description: "Cumulative Sum of Convert Up/Down Volume.",
+      valueAxis: "exchangeCumulativeConvertUpDown",
+    }),
+    exchangeEntry({
+      id: "cumulativeConvertNeutralTransferVolumeUSD",
+      name: "Cumulative LP->LP Convert Volume (USD)",
+      tooltipTitle: "Exchange: Cumulative LP->LP Convert Volume (USD)",
+      description: "Cumulative Sum of LP->LP Convert Volume.",
+    }),
+    exchangeEntry({
+      id: "deltaConvertVolumeNet",
+      name: "Seasonal Net Convert Volume (USD)",
+      tooltipTitle: "Exchange: Seasonal Net Convert Volume (USD)",
+      description: "Seasonal Net of Convert Volume.",
+    }),
+    exchangeEntry({
+      id: "deltaConvertUpVolumeUSD",
+      name: "Seasonal Convert Up Volume (USD)",
+      tooltipTitle: "Exchange: Seasonal Convert Up Volume (USD)",
+      description: "Seasonal Sum of Convert Up Volume.",
+      valueAxis: "exchangeDeltaConvertUpDown",
+    }),
+    exchangeEntry({
+      id: "deltaConvertDownVolumeUSD",
+      name: "Seasonal Convert Down Volume (USD)",
+      tooltipTitle: "Exchange: Seasonal Convert Down Volume (USD)",
+      description: "Seasonal Sum of Convert Down Volume.",
+      valueAxis: "exchangeDeltaConvertUpDown",
+    }),
+    exchangeEntry({
+      id: "deltaConvertVolumeUSD",
+      name: "Seasonal Convert Volume (USD)",
+      tooltipTitle: "Exchange: Seasonal Convert Volume (USD)",
+      description: "Seasonal Sum of Convert Up/Down Volume.",
+      valueAxis: "exchangeDeltaConvertUpDown",
+    }),
+    exchangeEntry({
+      id: "deltaConvertNeutralTransferVolumeUSD",
+      name: "Seasonal LP->LP Convert Volume (USD)",
+      tooltipTitle: "Exchange: Seasonal LP->LP Convert Volume (USD)",
+      description: "Seasonal Sum of LP->LP Convert Volume.",
+    }),
+    exchangeEntry({
+      id: "liquidityUSD",
+      name: "Total Liquidity (USD)",
+      tooltipTitle: "Exchange: Total Liquidity (USD)",
+      description: "Sum of Liquidity across all Pools.",
+    }),
+    exchangeEntry({
+      id: "deltaLiquidityUSD",
+      name: "Seasonal Delta Liquidity (USD)",
+      tooltipTitle: "Exchange: Seasonal Delta Liquidity (USD)",
+      description: "Seasonal Change in Liquidity across all Pools.",
+    }),
+  ];
+};
 
-const createAPYCharts = (mainToken: Token): ChartSetupBase[] => [
+const createSiloCharts = (mainToken: Token): ChartSetupBase[] => [
+  {
+    id: "stalk",
+    type: "Silo",
+    name: "Stalk Supply",
+    tooltipTitle: "Stalk Supply",
+    tooltipHoverText: "The total number of Stalk.",
+    shortDescription: "The total number of Stalk.",
+    icon: stalkIcon,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "stalk",
+    valueAxisType: "stalk",
+    valueFormatter: (v: TokenValue) => v.toNumber(),
+    tickFormatter: (v: number) =>
+      formatNum(v, { allowZero: true, minDecimals: 2, maxDecimals: 2, showPositiveSign: false }),
+    shortTickFormatter: (v: number) => TokenValue.fromHuman(v, 2).toHuman("short"),
+  },
   {
     id: "pinto30d",
     type: "Silo",
@@ -669,38 +768,228 @@ const createTractorCharts = (mainToken: Token): ChartSetupBase[] => [
   },
 ];
 
+const createInflowCharts = (mainToken: Token): ChartSetupBase[] => {
+  const inflowEntry = ({
+    id,
+    name,
+    tooltipTitle,
+    description,
+    valueAxis = id,
+  }: {
+    id: string;
+    name: string;
+    tooltipTitle: string;
+    description: string;
+    valueAxis?: string;
+  }) => {
+    return {
+      id,
+      type: "Inflow" as ChartType,
+      name,
+      tooltipTitle,
+      tooltipHoverText: description,
+      shortDescription: description,
+      icon: mainToken.logoURI,
+      timeScaleKey: "timestamp",
+      priceScaleKey: id,
+      valueAxisType: valueAxis,
+      valueFormatter: (v: number) => v,
+      tickFormatter: usdFormatter,
+      shortTickFormatter: usdFormatter,
+    };
+  };
+  return [
+    inflowEntry({
+      id: "inflowAllCumulativeNet",
+      name: "Protocol Cumulative Net (USD)",
+      tooltipTitle: "Inflow: Protocol Cumulative Net (USD)",
+      description: "Cumulative Net of Protocol Inflows/Outflows.",
+    }),
+    inflowEntry({
+      id: "inflowAllCumulativeIn",
+      name: "Protocol Cumulative Inflows (USD)",
+      tooltipTitle: "Inflow: Protocol Cumulative Inflows (USD)",
+      description: "Cumulative Sum of Protocol Inflows.",
+      valueAxis: "inflowAllCumulativeInOut",
+    }),
+    inflowEntry({
+      id: "inflowAllCumulativeOut",
+      name: "Protocol Cumulative Outflows (USD)",
+      tooltipTitle: "Inflow: Protocol Cumulative Outflows (USD)",
+      description: "Cumulative Sum of Protocol Outflows.",
+      valueAxis: "inflowAllCumulativeInOut",
+    }),
+    inflowEntry({
+      id: "inflowAllCumulativeVolume",
+      name: "Protocol Cumulative Volume (USD)",
+      tooltipTitle: "Inflow: Protocol Cumulative Volume (USD)",
+      description: "Cumulative Sum of Protocol Inflows/Outflows.",
+      valueAxis: "inflowAllCumulativeInOut",
+    }),
+    inflowEntry({
+      id: "inflowAllDeltaNet",
+      name: "Protocol Seasonal Net (USD)",
+      tooltipTitle: "Inflow: Protocol Seasonal Net (USD)",
+      description: "Seasonal Net of Protocol Inflows/Outflows.",
+    }),
+    inflowEntry({
+      id: "inflowAllDeltaIn",
+      name: "Protocol Seasonal Inflows (USD)",
+      tooltipTitle: "Inflow: Protocol Seasonal Inflows (USD)",
+      description: "Seasonal Sum of Protocol Inflows.",
+      valueAxis: "inflowAllDeltaInOut",
+    }),
+    inflowEntry({
+      id: "inflowAllDeltaOut",
+      name: "Protocol Seasonal Outflows (USD)",
+      tooltipTitle: "Inflow: Protocol Seasonal Outflows (USD)",
+      description: "Seasonal Sum of Protocol Outflows.",
+      valueAxis: "inflowAllDeltaInOut",
+    }),
+    inflowEntry({
+      id: "inflowAllDeltaVolume",
+      name: "Protocol Seasonal Volume (USD)",
+      tooltipTitle: "Inflow: Protocol Seasonal Volume (USD)",
+      description: "Seasonal Sum of Protocol Inflows/Outflows.",
+      valueAxis: "inflowAllDeltaInOut",
+    }),
+    inflowEntry({
+      id: "inflowSiloCumulativeNet",
+      name: "Silo Cumulative Net (USD)",
+      tooltipTitle: "Inflow: Silo Cumulative Net (USD)",
+      description: "Cumulative Net of Silo Inflows/Outflows.",
+    }),
+    inflowEntry({
+      id: "inflowSiloCumulativeIn",
+      name: "Silo Cumulative Inflows (USD)",
+      tooltipTitle: "Inflow: Silo Cumulative Inflows (USD)",
+      description: "Cumulative Sum of Silo Inflows.",
+      valueAxis: "inflowSiloCumulativeInOut",
+    }),
+    inflowEntry({
+      id: "inflowSiloCumulativeOut",
+      name: "Silo Cumulative Outflows (USD)",
+      tooltipTitle: "Inflow: Silo Cumulative Outflows (USD)",
+      description: "Cumulative Sum of Silo Outflows.",
+      valueAxis: "inflowSiloCumulativeInOut",
+    }),
+    inflowEntry({
+      id: "inflowSiloCumulativeVolume",
+      name: "Silo Cumulative Volume (USD)",
+      tooltipTitle: "Inflow: Silo Cumulative Volume (USD)",
+      description: "Cumulative Sum of Silo Inflows/Outflows.",
+      valueAxis: "inflowSiloCumulativeInOut",
+    }),
+    inflowEntry({
+      id: "inflowSiloDeltaNet",
+      name: "Silo Seasonal Net (USD)",
+      tooltipTitle: "Inflow: Silo Seasonal Net (USD)",
+      description: "Seasonal Net of Silo Inflows/Outflows.",
+    }),
+    inflowEntry({
+      id: "inflowSiloDeltaIn",
+      name: "Silo Seasonal Inflows (USD)",
+      tooltipTitle: "Inflow: Silo Seasonal Inflows (USD)",
+      description: "Seasonal Sum of Silo Inflows.",
+      valueAxis: "inflowSiloDeltaInOut",
+    }),
+    inflowEntry({
+      id: "inflowSiloDeltaOut",
+      name: "Silo Seasonal Outflows (USD)",
+      tooltipTitle: "Inflow: Silo Seasonal Outflows (USD)",
+      description: "Seasonal Sum of Silo Outflows.",
+      valueAxis: "inflowSiloDeltaInOut",
+    }),
+    inflowEntry({
+      id: "inflowSiloDeltaVolume",
+      name: "Silo Seasonal Volume (USD)",
+      tooltipTitle: "Inflow: Silo Seasonal Volume (USD)",
+      description: "Seasonal Sum of Silo Inflows/Outflows.",
+      valueAxis: "inflowSiloDeltaInOut",
+    }),
+    inflowEntry({
+      id: "inflowFieldCumulativeNet",
+      name: "Field Cumulative Net (USD)",
+      tooltipTitle: "Inflow: Field Cumulative Net (USD)",
+      description: "Cumulative Net of Field Inflows/Outflows.",
+    }),
+    inflowEntry({
+      id: "inflowFieldCumulativeIn",
+      name: "Field Cumulative Inflows (USD)",
+      tooltipTitle: "Inflow: Field Cumulative Inflows (USD)",
+      description: "Cumulative Sum of Field Inflows.",
+      valueAxis: "inflowFieldCumulativeInOut",
+    }),
+    inflowEntry({
+      id: "inflowFieldCumulativeOut",
+      name: "Field Cumulative Outflows (USD)",
+      tooltipTitle: "Inflow: Field Cumulative Outflows (USD)",
+      description: "Cumulative Sum of Field Outflows.",
+      valueAxis: "inflowFieldCumulativeInOut",
+    }),
+    inflowEntry({
+      id: "inflowFieldCumulativeVolume",
+      name: "Field Cumulative Volume (USD)",
+      tooltipTitle: "Inflow: Field Cumulative Volume (USD)",
+      description: "Cumulative Sum of Field Inflows/Outflows.",
+      valueAxis: "inflowFieldCumulativeInOut",
+    }),
+    inflowEntry({
+      id: "inflowFieldDeltaNet",
+      name: "Field Seasonal Net (USD)",
+      tooltipTitle: "Inflow: Field Seasonal Net (USD)",
+      description: "Seasonal Net of Field Inflows/Outflows.",
+    }),
+    inflowEntry({
+      id: "inflowFieldDeltaIn",
+      name: "Field Seasonal Inflows (USD)",
+      tooltipTitle: "Inflow: Field Seasonal Inflows (USD)",
+      description: "Seasonal Sum of Field Inflows.",
+      valueAxis: "inflowFieldDeltaInOut",
+    }),
+    inflowEntry({
+      id: "inflowFieldDeltaOut",
+      name: "Field Seasonal Outflows (USD)",
+      tooltipTitle: "Inflow: Field Seasonal Outflows (USD)",
+      description: "Seasonal Sum of Field Outflows.",
+      valueAxis: "inflowFieldDeltaInOut",
+    }),
+    inflowEntry({
+      id: "inflowFieldDeltaVolume",
+      name: "Field Seasonal Volume (USD)",
+      tooltipTitle: "Inflow: Field Seasonal Volume (USD)",
+      description: "Seasonal Sum of Field Inflows/Outflows.",
+      valueAxis: "inflowFieldDeltaInOut",
+    }),
+  ];
+};
+
 export function useChartSetupData() {
-  const { mainToken, lpTokens, whitelistedTokens } = useTokenData();
+  const { mainToken } = useTokenData();
 
   // Memoize data separately with proper dependencies
   const data = useMemo(() => {
     const pintoCharts = createPintoCharts(mainToken);
+    const siloCharts = createSiloCharts(mainToken);
     const fieldCharts = createFieldCharts(mainToken);
     const exchangeCharts = createExchangeCharts(mainToken);
-    const apyCharts = createAPYCharts(mainToken);
     const tractorCharts = createTractorCharts(mainToken);
-
-    if (lpTokens.length > 0) {
-      // Add LP charts here
-    }
-
-    if (whitelistedTokens.length > 0) {
-      // Add deposit & APY charts here
-    }
+    const inflowCharts = createInflowCharts(mainToken);
 
     const output: ChartSetup[] = [
       ...pintoCharts,
+      ...siloCharts,
       ...fieldCharts,
       ...exchangeCharts,
-      ...apyCharts,
       ...tractorCharts,
+      ...inflowCharts,
     ].map((setupData, index) => ({
       ...setupData,
       index: index,
     }));
 
     return output;
-  }, [mainToken, lpTokens, whitelistedTokens]); // Include all dependencies
+  }, [mainToken]); // Include all dependencies
 
   // Return a stable reference when dependencies don't change
   return { data, chartColors };

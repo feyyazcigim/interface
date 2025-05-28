@@ -3,44 +3,48 @@ import { API_SERVICES } from "@/constants/endpoints";
 import { UseSeasonalResult } from "@/utils/types";
 import { useQuery } from "@tanstack/react-query";
 
-type SowV0Snapshot = {
+type CombinedInflowSnapshot = {
   snapshotTimestamp: string;
   snapshotBlock: number;
   season: number;
-  totalPintoSown: string;
-  totalPodsMinted: string;
-  totalCascadeFundedBelowTemp: string;
-  totalCascadeFundedAnyTemp: string;
-  maxSowThisSeason: string;
-  totalTipsPaid: string;
-  currentMaxTip: string;
-  totalExecutions: number;
-  uniquePublishers: number;
+  all: InflowScope;
+  silo: InflowScope;
+  field: InflowScope;
 };
 
-type TractorSnapshotResponse = {
+type InflowScope = {
+  cumulative: InflowBreakdown;
+  delta: InflowBreakdown;
+};
+
+type InflowBreakdown = {
+  net: number;
+  in: number;
+  out: number;
+  volume: number;
+};
+
+type CombinedInflowSnapshotResponse = {
   lastUpdated: number;
-  snapshots: SowV0Snapshot[];
+  snapshots: CombinedInflowSnapshot[];
   totalRecords: number;
 };
 
-export default function useSeasonalTractorSnapshots(
-  orderType: "SOW_V0",
+export default function useSeasonalInflowSnapshots(
   fromSeason: number,
   toSeason: number,
-  selectFn: (entry: SowV0Snapshot) => SeasonalChartData,
+  selectFn: (entry: CombinedInflowSnapshot) => SeasonalChartData,
   { orderBy = "asc", enabled = true } = {},
 ): UseSeasonalResult {
   const dataQuery = useQuery({
-    queryKey: ["tractor", "snapshots", orderType, fromSeason, toSeason],
-    queryFn: async (): Promise<TractorSnapshotResponse> => {
-      const res = await fetch(`${API_SERVICES.pinto}/tractor/snapshots`, {
+    queryKey: ["inflows", "snapshots", fromSeason, toSeason],
+    queryFn: async (): Promise<CombinedInflowSnapshotResponse> => {
+      const res = await fetch(`${API_SERVICES.pinto}/inflows/combined`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          orderType,
           betweenSeasons: [fromSeason, toSeason],
           limit: 50000,
         }),
@@ -56,7 +60,7 @@ export default function useSeasonalTractorSnapshots(
         .map((d) => selectFn(d)),
     staleTime: Infinity,
     gcTime: 20 * 60 * 1000,
-    enabled: enabled && orderType && fromSeason >= 0 && toSeason > 0,
+    enabled: enabled && fromSeason >= 0 && toSeason > 0,
   });
 
   return {

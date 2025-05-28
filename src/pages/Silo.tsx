@@ -291,7 +291,12 @@ function Silo() {
               <SiloStats />
             </div>
             <div className="w-full">
-              <AccordionGroup items={FAQ_ITEMS} allExpanded={false} groupTitle="Frequently Asked Questions" />
+              <AccordionGroup
+                items={FAQ_ITEMS}
+                allExpanded={false}
+                groupTitle="Frequently Asked Questions"
+                variant="text"
+              />
             </div>
           </div>
         </div>

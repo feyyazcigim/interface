@@ -547,7 +547,7 @@ export function encodeGroupCombineCalls(
   deposits: DepositData[],
 ): `0x${string}`[] {
   // Exclude groups with only one deposit, since they are already alone
-  const groupsToEncode = validGroups.filter((group) => group.deposits.length > 1);
+  const groupsToEncode = validGroups.filter((group) => group.deposits.length > 0);
 
   return groupsToEncode.map((group) => {
     // Get selected deposits for this group

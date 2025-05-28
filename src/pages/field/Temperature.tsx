@@ -3,9 +3,15 @@ import { TimeTab } from "@/components/charts/TimeTabs";
 import { useSeasonalTemperature } from "@/state/seasonal/seasonalDataHooks";
 import { useSeason } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
+import { cn } from "@/utils/utils";
 import { useState } from "react";
 
-const TemperatureChart = () => {
+interface ITemperatureChartProps {
+  chartWrapperClassName?: string;
+  className?: string;
+}
+
+const TemperatureChart = ({ chartWrapperClassName, className }: ITemperatureChartProps) => {
   const [tempTab, setTempTab] = useState(TimeTab.Week);
   const season = useSeason();
   const tempData = useSeasonalTemperature(Math.max(0, season - tabToSeasonalLookback(tempTab)), season);
@@ -20,8 +26,9 @@ const TemperatureChart = () => {
       useSeasonalResult={tempData}
       valueFormatter={f.percent2dFormatter}
       tickValueFormatter={f.percent0dFormatter}
-      className="bg-pinto-off-white border border-pinto-gray-2 h-[423px] lg:h-[435px]"
+      className={cn("bg-pinto-off-white border border-pinto-gray-2 h-[423px] lg:h-[435px]", className)}
       statVariant="non-colored"
+      chartWrapperClassName={chartWrapperClassName}
     />
   );
 };

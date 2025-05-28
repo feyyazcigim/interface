@@ -3,7 +3,6 @@ import { TIME_TO_BLOCKS } from "@/constants/blocks";
 import { defaultQuerySettingsMedium } from "@/constants/query";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { getChainConstant } from "@/hooks/useChainConstant";
 import {
   OrderbookEntry,
   TractorAPI,
@@ -14,6 +13,7 @@ import {
 import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { queryKeys } from "@/state/queryKeys";
 import { useTemperature } from "@/state/useFieldData";
+import { getChainConstant } from "@/utils/chain";
 import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";
 import { isDev } from "@/utils/utils";

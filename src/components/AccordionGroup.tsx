@@ -23,10 +23,18 @@ export interface IAccordionGroup extends HTMLAttributes<HTMLDivElement> {
   groupTitle: string | JSX.Element;
   items: IBaseAccordionContent[];
   allExpanded?: boolean;
+  variant?: "default" | "text";
   size?: "large" | "small";
 }
 
-const AccordionGroup = ({ groupTitle, items, allExpanded = true, size = "large", ...props }: IAccordionGroup) => {
+const AccordionGroup = ({
+  groupTitle,
+  items,
+  allExpanded = true,
+  size = "large",
+  variant = "default",
+  ...props
+}: IAccordionGroup) => {
   const defaultValue = useRef<string[]>(allExpanded ? items.map(({ key }) => key) : []);
 
   return (
@@ -38,7 +46,14 @@ const AccordionGroup = ({ groupTitle, items, allExpanded = true, size = "large",
           {items.map(({ title, content, key }, i) => (
             <AccordionItem className="AccordionItem" value={key} key={`accordion-group-item-${i}-${key}`}>
               <AccordionTrigger className={`text-pinto-secondary ${styles.trigger[size]}`}>{title}</AccordionTrigger>
-              <AccordionContent className="pinto-sm font-thin text-pinto-light">{content}</AccordionContent>
+              <AccordionContent
+                className={cn(
+                  "pinto-sm font-thin text-pinto-light",
+                  variant === "text" && "leading-[140%] sm:leading-[140%]",
+                )}
+              >
+                {content}
+              </AccordionContent>
             </AccordionItem>
           ))}
         </Col>
