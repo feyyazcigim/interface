@@ -18,6 +18,7 @@ Chart.register(LineController, LineElement, LinearScale, LogarithmicScale, Categ
 
 export type LineChartData = {
   values: number[];
+  averagePrice?: number;
 } & Record<string, any>;
 
 export type MakeGradientFunction = (
@@ -87,33 +88,6 @@ const LineChart = React.memo(
     }, [activeIndex]);
 
     const [yTickMin, yTickMax] = useMemo(() => {
-      // If custom min/max are provided, use those
-      if (yAxisMin !== undefined && yAxisMax !== undefined) {
-        // Even with custom ranges, ensure 1.0 is visible if showReferenceLineAtOne is true
-        if (horizontalReferenceLines.some((line) => line.value === 1)) {
-          const hasOne = yAxisMin <= 1 && yAxisMax >= 1;
-          if (!hasOne) {
-            // If 1.0 is not in range, adjust the range to include it
-            if (useLogarithmicScale) {
-              // For logarithmic scale, we need to ensure we maintain the ratio
-              // but include 1.0 in the range
-              if (yAxisMin > 1) {
-                return [0.7, Math.max(yAxisMax, 1.5)]; // Include 1.0 with padding below
-              } else if (yAxisMax < 1) {
-                return [Math.min(yAxisMin, 0.7), 1.5]; // Include 1.0 with padding above
-              }
-            } else {
-              // For linear scale, just expand the range to include 1.0
-              if (yAxisMin > 1) {
-                return [0.9, Math.max(yAxisMax, 1.1)]; // Include 1.0 with padding
-              } else if (yAxisMax < 1) {
-                return [Math.min(yAxisMin, 0.9), 1.1]; // Include 1.0 with padding
-              }
-            }
-          }
-        }
-        return [yAxisMin, yAxisMax];
-      }
 
       // Otherwise calculate based on data
       const maxData = data.reduce((acc, next) => Math.max(acc, ...next.values), Number.MIN_SAFE_INTEGER);
@@ -542,7 +516,8 @@ const LineChart = React.memo(
             }),
             ticks: {
               padding: 0,
-              maxTicksLimit: 3,
+              maxTicksLimit: 4,
+              includeBounds: true,
               callback: (value) => {
                 let num = typeof value === "string" ? Number(value) : value;
                 // If there is custom scaling for this chart, reverse it to get the original value

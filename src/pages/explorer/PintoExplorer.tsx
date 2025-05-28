@@ -12,13 +12,11 @@ import { useMemo, useState } from "react";
 
 // Chart constants
 const CHART_CONSTANTS = {
-  MIN_PRICE: 0.5, // Minimum price to display (for stablecoin)
   TARGET_PRICE: 1.0, // Target price for reference line
   PADDING: {
     MIN: 0.95, // 5% padding below min
     MAX: 1.05, // 5% padding above max
   },
-  MIN_PADDING_ABOVE_TARGET: 0.01, // Minimum padding above target price
 };
 
 const PintoExplorer = () => {
@@ -30,22 +28,35 @@ const PintoExplorer = () => {
   const season = useSunData().current;
 
   const priceData = useSeasonalPrice(Math.max(0, season - tabToSeasonalLookback(priceTab)), season);
+  const filteredPriceData = useMemo(() => {
+    if (priceTab === TimeTab.AllTime && priceData.data) {
+      const startIdx = priceData.data.findIndex(d => d.season > 5);
+      return {
+        ...priceData,
+        data: priceData.data.slice(startIdx)
+      };
+    }
+    return priceData;
+  }, [priceData, priceTab]);
+
   const liquidityData = useSeasonalTotalLiquidity(Math.max(0, season - tabToSeasonalLookback(liquidityTab)), season);
   const supplyData = useSeasonalSupply(Math.max(0, season - tabToSeasonalLookback(supplyTab)), season);
   const mcapData = useSeasonalMcap(Math.max(0, season - tabToSeasonalLookback(mcapTab)), season);
 
-  // Dynamically calculate y-axis ranges based on the actual price data
+  // Calculate average price and determine y-axis ranges
   const priceYAxisRanges = useMemo(() => {
-    const { MIN_PRICE, TARGET_PRICE, PADDING, MIN_PADDING_ABOVE_TARGET } = CHART_CONSTANTS;
+    const { TARGET_PRICE, PADDING } = CHART_CONSTANTS;
 
     // Default range as fallback if data isn't available
     const defaultRange = {
-      min: MIN_PRICE,
-      max: TARGET_PRICE + MIN_PADDING_ABOVE_TARGET,
+      min: 0,
+      max: TARGET_PRICE,
+      averagePrice: TARGET_PRICE,
+      showReferenceLine: true
     };
 
     // If we don't have data yet, return the default range
-    if (!priceData.data || priceData.data.length === 0) {
+    if (!filteredPriceData.data || filteredPriceData.data.length === 0) {
       return {
         [TimeTab.Week]: defaultRange,
         [TimeTab.Month]: defaultRange,
@@ -53,15 +64,23 @@ const PintoExplorer = () => {
       };
     }
 
-    // Calculate min and max values from the actual data
-    const values = priceData.data.map((item) => item.value);
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
+    // Calculate min, max, and average values from the actual data
+    const values = filteredPriceData.data.map((item) => item.value);
+    const minValue = Math.min(...values) * PADDING.MIN;
+    const maxValue = Math.max(...values) * PADDING.MAX;
+    
+    // Calculate average price
+    const averagePrice = values.reduce((sum, val) => sum + val, 0) / values.length;
+    
+    // For "All Time" tab, set average to 1
+    const effectiveAverage = priceTab === TimeTab.AllTime ? TARGET_PRICE : averagePrice;
 
-    // Calculate a single dynamic range that works for all tabs
+    // Calculate range with buffer
     const range = {
-      min: Math.max(MIN_PRICE, minValue * PADDING.MIN),
-      max: Math.max(TARGET_PRICE + MIN_PADDING_ABOVE_TARGET, maxValue * PADDING.MAX),
+      min: minValue,
+      max: maxValue,
+      averagePrice: effectiveAverage,
+      showReferenceLine: TARGET_PRICE >= minValue && TARGET_PRICE <= maxValue
     };
 
     // Return the same range for all tabs
@@ -70,7 +89,7 @@ const PintoExplorer = () => {
       [TimeTab.Month]: range,
       [TimeTab.AllTime]: range,
     };
-  }, [priceData.data]);
+  }, [filteredPriceData.data, priceTab]);
 
   return (
     <>
@@ -82,11 +101,11 @@ const PintoExplorer = () => {
             size="small"
             activeTab={priceTab}
             onChangeTab={setPriceTab}
-            useSeasonalResult={priceData}
+            useSeasonalResult={filteredPriceData}
             valueFormatter={f.price6dFormatter}
             tickValueFormatter={f.price2dFormatter}
             useLogarithmicScale={true}
-            showReferenceLineAtOne={true}
+            showReferenceLineAtOne={priceYAxisRanges[priceTab]?.showReferenceLine ?? false}
             yAxisRanges={priceYAxisRanges}
           />
         </div>
