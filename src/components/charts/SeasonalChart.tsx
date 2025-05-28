@@ -28,6 +28,7 @@ export interface SeasonalChartData {
 export interface YAxisRangeConfig {
   min?: number;
   max?: number;
+  showReferenceLine?: boolean;
 }
 
 interface SeasonalChartProps {
@@ -98,13 +99,16 @@ const SeasonalChart = ({
 
   const chartData = useMemo<LineChartData[]>(() => {
     if (allData) {
+      // Get the current y-axis range
+      const currentRange = yAxisRanges?.[activeTab];
+
       return allData.map((d) => ({
         values: [useLogarithmicScale ? Math.max(0.000001, d.value) : d.value],
         timestamp: d.timestamp,
       }));
     }
     return [];
-  }, [allData, useLogarithmicScale]);
+  }, [allData, useLogarithmicScale, yAxisRanges, activeTab]);
 
   const horizontalReferenceLines = useMemo(() => {
     if (showReferenceLineAtOne) {
