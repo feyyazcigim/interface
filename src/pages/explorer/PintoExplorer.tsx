@@ -30,10 +30,10 @@ const PintoExplorer = () => {
   const priceData = useSeasonalPrice(Math.max(0, season - tabToSeasonalLookback(priceTab)), season);
   const filteredPriceData = useMemo(() => {
     if (priceTab === TimeTab.AllTime && priceData.data) {
-      const startIdx = priceData.data.findIndex(d => d.season > 5);
+      const startIdx = priceData.data.findIndex((d) => d.season > 5);
       return {
         ...priceData,
-        data: priceData.data.slice(startIdx)
+        data: priceData.data.slice(startIdx),
       };
     }
     return priceData;
@@ -51,7 +51,7 @@ const PintoExplorer = () => {
     const defaultRange = {
       min: 0,
       max: TARGET_PRICE,
-      showReferenceLine: true
+      showReferenceLine: true,
     };
 
     // If we don't have data yet, return the default range
@@ -72,7 +72,7 @@ const PintoExplorer = () => {
     const range = {
       min: minValue,
       max: maxValue,
-      showReferenceLine: TARGET_PRICE >= minValue && TARGET_PRICE <= maxValue
+      showReferenceLine: TARGET_PRICE >= minValue && TARGET_PRICE <= maxValue,
     };
 
     // Return the same range for all tabs

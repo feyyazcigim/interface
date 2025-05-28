@@ -87,7 +87,6 @@ const LineChart = React.memo(
     }, [activeIndex]);
 
     const [yTickMin, yTickMax] = useMemo(() => {
-
       // Otherwise calculate based on data
       const maxData = data.reduce((acc, next) => Math.max(acc, ...next.values), Number.MIN_SAFE_INTEGER);
       const minData = data.reduce((acc, next) => Math.min(acc, ...next.values), Number.MAX_SAFE_INTEGER);
