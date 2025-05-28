@@ -27,15 +27,8 @@ const PintoExplorer = () => {
 
   const season = useSunData().current;
 
-  const priceData = useSeasonalPrice(Math.max(0, season - tabToSeasonalLookback(priceTab)), season);
+  const priceData = useSeasonalPrice(Math.max(6, season - tabToSeasonalLookback(priceTab)), season);
   const filteredPriceData = useMemo(() => {
-    if (priceTab === TimeTab.AllTime && priceData.data) {
-      const startIdx = priceData.data.findIndex((d) => d.season > 5);
-      return {
-        ...priceData,
-        data: priceData.data.slice(startIdx),
-      };
-    }
     return priceData;
   }, [priceData, priceTab]);
 
