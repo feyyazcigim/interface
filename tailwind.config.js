@@ -158,10 +158,10 @@ module.exports = {
         "dot-grid": "radial-gradient(#D9D9D9 2px, transparent 2px)",
       },
       borderRadius: {
-        xl: "calc(var(--radius) + 8px)", // 20px
+        xl: "calc(var(--radius) + 0.5rem)", // 20px
         lg: `var(--radius)`, //12px
-        md: `calc(var(--radius) - 2px)`, //10px
-        sm: "calc(var(--radius) - 4px)", //8px
+        md: `calc(var(--radius) - 0.125rem)`, //10px
+        sm: "calc(var(--radius) - 0.25rem)", //8px
       },
       dropShadow: {
         "pinto-token-select": "0px 1px 8px 0px rgba(233, 240, 246, 1)",
