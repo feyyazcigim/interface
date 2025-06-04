@@ -1,3 +1,4 @@
+import MarketPerformanceChart from "@/components/charts/MarketPerformanceChart";
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
 import {
@@ -136,6 +137,7 @@ const PintoExplorer = () => {
           />
         </div>
       </div>
+      <MarketPerformanceChart season={season} size="large" />
     </>
   );
 };

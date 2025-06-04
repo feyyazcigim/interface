@@ -38,7 +38,7 @@ query BeanstalkAdvancedChart($from: Int, $to: Int) {
     soil
     soilSoldOut
     unharvestablePods
-}
+  }
   siloHourlySnapshots(
     first: 1000
     orderBy: season
