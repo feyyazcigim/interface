@@ -172,7 +172,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     );
   }
 
-  if (requisitions && executions && !requisitions.length && !executions.length) {
+  if (!requisitions?.length && !executions?.length) {
     return <EmptyTable type="tractor" onTractorClick={onCreateOrder} />;
   }
 
@@ -390,7 +390,9 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
           operatorPasteInstrs={[...selectedOrder.requisition.blueprint.operatorPasteInstrs]}
           blueprint={adaptBlueprintForDialog(selectedOrder.requisition.blueprint)}
           isViewOnly={true}
-          executionHistory={(executions ?? []).filter((exec) => exec.blueprintHash === selectedOrder.requisition.blueprintHash)}
+          executionHistory={(executions ?? []).filter(
+            (exec) => exec.blueprintHash === selectedOrder.requisition.blueprintHash,
+          )}
         />
       )}
     </div>
