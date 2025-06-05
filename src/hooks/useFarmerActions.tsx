@@ -763,7 +763,6 @@ export default function useFarmerActions(): FarmerActions {
   ]);
 }
 
-
 const defaultState: FarmerActions = {
   canDeposit: false,
   canWrapPinto: false,
