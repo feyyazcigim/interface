@@ -70,7 +70,7 @@ export default function usePublisherTractorExecutions(
   const { data: executionData, ...executionsQuery } = useTractorAPIExecutionsQuery(publisher, enabled, chainOnly);
 
   // Check if the API data exists and has any executions
-  const executionsExist = executionData && Object.values(executionData.executions).some((d) => !!d.length);
+  const executionsExist = !!executionData;
 
   // Only run the on-chain event query if we have a client, a publisher AND (the API data exists OR the API request failed)
   const executionsChainQueryEnabled =

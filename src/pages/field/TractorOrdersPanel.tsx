@@ -20,7 +20,7 @@ import { stringEq } from "@/utils/string";
 import { getTokenNameByIndex } from "@/utils/token";
 import { CalendarIcon, ClockIcon, CornerBottomLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { decodeFunctionData } from "viem";
 import { useAccount } from "wagmi";
 
@@ -38,15 +38,19 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const [showDialog, setShowDialog] = useState(false);
   const [rawSowBlueprintCall, setRawSowBlueprintCall] = useState<`0x${string}` | null>(null);
 
-  const { data: executions = [], ...executionsQuery } = usePublisherTractorExecutions(address, !!address);
-  const { data: requisitions = [], ...requisitionsQuery } = useTractorPublishedRequisitions(
+  const { data: executions, ...executionsQuery } = usePublisherTractorExecutions(address, !!address);
+  const { data: requisitions, ...requisitionsQuery } = useTractorPublishedRequisitions(
     address,
     "sowBlueprintv0",
     !!address,
   );
 
+  const filteredRequisitions = useMemo(() => {
+    return requisitions?.filter((req) => stringEq(req.requisition.blueprint.publisher, address));
+  }, [requisitions, address]);
+
   // derived
-  const dataHasLoaded = address ? Boolean(executions?.length && requisitions?.length) : true;
+  const dataHasLoaded = address ? Boolean(executions && filteredRequisitions) : true;
   const loading = executionsQuery.isLoading || requisitionsQuery.isLoading || !dataHasLoaded;
 
   const error = executionsQuery.error || requisitionsQuery.error;
@@ -172,13 +176,13 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     );
   }
 
-  if (requisitions.length === 0 && executions.length === 0) {
+  if (!filteredRequisitions?.length && !executions?.length) {
     return <EmptyTable type="tractor" onTractorClick={onCreateOrder} />;
   }
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      {requisitions.map((req, index) => {
+      {filteredRequisitions?.map((req, index) => {
         if (req.requisitionType !== "sowBlueprintv0" || !req.decodedData) return null;
 
         const data = req.decodedData;
@@ -186,7 +190,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
         const minTemp = TokenValue.fromBlockchain(data.minTemp, 6);
 
         // Get executions for this blueprint
-        const blueprintExecutions = executions.filter((exec) =>
+        const blueprintExecutions = (executions ?? []).filter((exec) =>
           stringEq(exec.blueprintHash, req.requisition.blueprintHash),
         );
 
@@ -390,7 +394,9 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
           operatorPasteInstrs={[...selectedOrder.requisition.blueprint.operatorPasteInstrs]}
           blueprint={adaptBlueprintForDialog(selectedOrder.requisition.blueprint)}
           isViewOnly={true}
-          executionHistory={executions.filter((exec) => exec.blueprintHash === selectedOrder.requisition.blueprintHash)}
+          executionHistory={(executions ?? []).filter(
+            (exec) => exec.blueprintHash === selectedOrder.requisition.blueprintHash,
+          )}
         />
       )}
     </div>
