@@ -77,26 +77,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const [morningAuction, setMorningAuction] = useState(false);
   const [operatorTip, setOperatorTip] = useState("1");
   const { address } = useAccount();
-  const [loading, setLoading] = useState<string | null>(null);
-
-  const handleClampAndToValidInput = (input: string, prevValue?: string) => {
-    const parsed = input.replace(/[^0-9.]/g, "");
-
-    const split = parsed.split(".");
-    // prevent multiple decimals of If input has gt 6 decimal places, prevent input
-    if (split.length > 2 || (split.length === 2 && split[1].length > 6)) return prevValue;
-
-    const newAmount = TokenValue.fromHuman(parsed || "0", 6);
-    // if 0-ish amount, return the parsed value
-    if (newAmount.eq(0)) return parsed;
-    // if the amount is less than the min input, return the min input
-    if (minInput.gt(newAmount)) {
-      return minInput.toHuman();
-    }
-
-    // return the parsed value
-    return parsed;
-  };
 
   // Create a comprehensive validation function that handles all validation cases
   const validateAllInputs = (
