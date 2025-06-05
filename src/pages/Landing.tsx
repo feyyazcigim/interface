@@ -30,24 +30,20 @@ import { Button } from "../components/ui/Button";
 
 function MainCTA() {
   return (
-    <div className="flex flex-col gap-8 max-w-[32rem]">
-      <div className="flex flex-col items-start gap-4 self-stretch">
-        <div className="flex flex-row gap-6">
-          <img src={PintoLogo} alt={"Pinto Logo"} />
-          <img src={PintoLogoText} alt={"Pinto Logo"} />
-        </div>
-        <h2 className="pinto-h2 text-black">Fair Fiat Money</h2>
-        <span className="pinto-body-light text-pinto-gray-4">
-          Prints for the people. Founded on decentralized credit.
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-4 self-stretch items-center">
+        <h2 className="text-[4rem] leading-[1.1] font-thin text-black">Fair Fiat Money</h2>
+        <span className="text-2xl leading-[1.4] font-thin text-pinto-gray-4">
+          Printed directly to the people. Founded on decentralized credit.
         </span>
       </div>
-      <div className="flex flex-row gap-4">
+      <div className="flex flex-row gap-4 mx-auto">
         <Link to={navLinks.overview}>
-          <Button rounded="full">Get Started</Button>
+          <Button rounded="full">Come Seed the Trustless Economy →</Button>
         </Link>
         <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">
           <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
-            Read Docs
+            Read the Docs
           </Button>
         </Link>
       </div>
@@ -299,7 +295,7 @@ function SecondaryCTAValues() {
         .fill(data)
         .flat()
         .map((info, index) => (
-          <div key={`dataInfo_${info.title}`} className="p-6 border rounded-2xl bg-pinto-off-white mb-12">
+          <div key={`dataInfo1_${info.title}_${index}`} className="p-6 border rounded-2xl bg-pinto-off-white mb-12">
             <div className="h-[18.75rem] flex flex-col gap-6">
               <img src={info.logo} className="w-24 flex-shrink-0 h-auto" alt={info.title} />
               <div className="flex flex-col gap-4">
@@ -343,7 +339,7 @@ function SecondaryCTAProperties() {
         .fill(data)
         .flat()
         .map((info, index) => (
-          <div key={`dataInfo_${info.title}`} className="p-6 border rounded-2xl bg-pinto-off-white mb-12">
+          <div key={`dataInfo2_${info.title}_${index}`} className="p-6 border rounded-2xl bg-pinto-off-white mb-12">
             <div className="h-[18.75rem] flex flex-col gap-6">
               <img src={info.logo} className="w-24 flex-shrink-0 h-auto" alt={info.title} />
               <div className="flex flex-col gap-4">
@@ -547,11 +543,13 @@ export default function Landing() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col" style={{ height: `${initialHeightRem}rem` }}>
+      <div className="flex flex-col gap-20 mt-12 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
+        <div className="mx-auto">
+          <MainCTA />
+        </div>
         <div className="my-auto">
           <LandingChart />
         </div>
-        <APYBar />
       </div>
       <div className="flex flex-row overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
         <div className="my-auto">
