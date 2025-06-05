@@ -432,76 +432,8 @@ export default function useFarmerActions(): FarmerActions {
     // If wallet not connected, return empty state
     if (!account.address) {
       return {
-        canDeposit: false,
-        canWrapPinto: false,
+        ...defaultState,
         optimalDepositToken,
-        tokensWithValue: new Map(),
-        claimRewards: {
-          enabled: false,
-          outputs: {
-            beanGain: TokenValue.ZERO,
-            bdvGain: TokenValue.ZERO,
-            stalkGain: TokenValue.ZERO,
-            seedGain: TokenValue.ZERO,
-            podGain: TokenValue.ZERO,
-          },
-        },
-        floodAssets: {
-          enabled: false,
-          assets: [],
-          totalValue: TokenValue.ZERO,
-        },
-        harvestPods: {
-          enabled: false,
-          outputs: {
-            beanGain: TokenValue.ZERO,
-            bdvGain: TokenValue.ZERO,
-            stalkGain: TokenValue.ZERO,
-            seedGain: TokenValue.ZERO,
-            podGain: TokenValue.ZERO,
-          },
-        },
-        convertDeposits: {
-          enabled: false,
-          deposits: [],
-          bestConversion: {
-            outputs: {
-              beanGain: TokenValue.ZERO,
-              bdvGain: TokenValue.ZERO,
-              stalkGain: TokenValue.ZERO,
-              seedGain: TokenValue.ZERO,
-              podGain: TokenValue.ZERO,
-            },
-          },
-        },
-        // Add the updateDeposits empty state
-        updateDeposits: {
-          enabled: false,
-          totalGains: {
-            beanGain: TokenValue.ZERO,
-            bdvGain: TokenValue.ZERO,
-            stalkGain: TokenValue.ZERO,
-            seedGain: TokenValue.ZERO,
-            podGain: TokenValue.ZERO,
-          },
-          tokenUpdates: new Map(),
-        },
-        totalValue: {
-          silo: TokenValue.ZERO,
-          field: TokenValue.ZERO,
-          wallet: {
-            external: TokenValue.ZERO,
-            internal: TokenValue.ZERO,
-            total: TokenValue.ZERO,
-            byToken: new Map(),
-          },
-          rewards: {
-            stalk: TokenValue.ZERO,
-            seeds: TokenValue.ZERO,
-            earnedBeans: TokenValue.ZERO,
-          },
-        },
-        tokenTotals: new Map(),
       };
     }
 
@@ -830,3 +762,77 @@ export default function useFarmerActions(): FarmerActions {
     siloData,
   ]);
 }
+
+
+const defaultState: FarmerActions = {
+  canDeposit: false,
+  canWrapPinto: false,
+  optimalDepositToken: undefined,
+  tokensWithValue: new Map(),
+  claimRewards: {
+    enabled: false,
+    outputs: {
+      beanGain: TokenValue.ZERO,
+      bdvGain: TokenValue.ZERO,
+      stalkGain: TokenValue.ZERO,
+      seedGain: TokenValue.ZERO,
+      podGain: TokenValue.ZERO,
+    },
+  },
+  floodAssets: {
+    enabled: false,
+    assets: [],
+    totalValue: TokenValue.ZERO,
+  },
+  harvestPods: {
+    enabled: false,
+    outputs: {
+      beanGain: TokenValue.ZERO,
+      bdvGain: TokenValue.ZERO,
+      stalkGain: TokenValue.ZERO,
+      seedGain: TokenValue.ZERO,
+      podGain: TokenValue.ZERO,
+    },
+  },
+  convertDeposits: {
+    enabled: false,
+    deposits: [],
+    bestConversion: {
+      outputs: {
+        beanGain: TokenValue.ZERO,
+        bdvGain: TokenValue.ZERO,
+        stalkGain: TokenValue.ZERO,
+        seedGain: TokenValue.ZERO,
+        podGain: TokenValue.ZERO,
+      },
+    },
+  },
+  // Add the updateDeposits empty state
+  updateDeposits: {
+    enabled: false,
+    totalGains: {
+      beanGain: TokenValue.ZERO,
+      bdvGain: TokenValue.ZERO,
+      stalkGain: TokenValue.ZERO,
+      seedGain: TokenValue.ZERO,
+      podGain: TokenValue.ZERO,
+    },
+    tokenUpdates: new Map(),
+  },
+  totalValue: {
+    silo: TokenValue.ZERO,
+    field: TokenValue.ZERO,
+    wallet: {
+      external: TokenValue.ZERO,
+      internal: TokenValue.ZERO,
+      total: TokenValue.ZERO,
+      byToken: new Map(),
+    },
+    rewards: {
+      stalk: TokenValue.ZERO,
+      seeds: TokenValue.ZERO,
+      earnedBeans: TokenValue.ZERO,
+    },
+  },
+  tokenTotals: new Map(),
+} as const;
