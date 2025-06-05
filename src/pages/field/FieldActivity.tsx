@@ -319,7 +319,7 @@ const FieldActivityRow = React.memo(
             href={`https://basescan.org/address/${activity.address}`}
             target="_blank"
             rel="noopener noreferrer"
-            className={`text-xs font-light text-pinto-secondary underline ${isHovered ? "font-medium" : ""}`}
+            className={`text-xs font-light text-pinto-secondary underline`}
           >
             {formatAddress(activity.address)}
           </a>
