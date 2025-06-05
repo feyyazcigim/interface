@@ -6,6 +6,7 @@ import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { stringEq } from "@/utils/string";
 import { cn } from "@/utils/utils";
 import { ExternalLinkIcon } from "@radix-ui/react-icons";
+import clsx from "clsx";
 import { motion } from "framer-motion";
 import { useAtomValue } from "jotai";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
