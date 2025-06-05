@@ -59,7 +59,7 @@ const FieldActivity = () => {
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
   const [showTractorOrdersDialog, setShowTractorOrdersDialog] = useState(false);
 
-  const { data: tractorOrders = [], ...tractorSowOrderbookQuery } = useTractorSowOrderbook({
+  const { data: tractorOrders, ...tractorSowOrderbookQuery } = useTractorSowOrderbook({
     select: useCallback(
       (data: OrderbookEntry[] | undefined) => {
         const orderbook = data ?? [];
@@ -82,21 +82,23 @@ const FieldActivity = () => {
     ),
   });
 
-  const { data: activities = [], isLoading: isActivitiesLoading } = useFieldSowEvents();
+  const { data: activities, isLoading: isActivitiesLoading } = useFieldSowEvents();
 
-  const loadingTractorOrders = tractorSowOrderbookQuery.isLoading || !tractorOrders.length;
+  const loadingTractorOrders = tractorSowOrderbookQuery.isLoading || !tractorOrders;
+  const loadingActivity = isActivitiesLoading || !activities;
 
   const ordersWithSowableAmount = useMemo(
-    () => tractorOrders.filter((order) => order.amountSowableNextSeason.gt(0)),
+    () => tractorOrders?.filter((order) => order.amountSowableNextSeason.gt(0)),
     [tractorOrders],
   );
 
   // Render a loading skeleton for the entire table
-  if (isActivitiesLoading && loadingTractorOrders) {
+  if (loadingActivity && loadingTractorOrders) {
     return <FieldActivitySkeleton />;
   }
 
-  if (activities.length === 0 && tractorOrders.length === 0) {
+  // Render if no data is available.
+  if (!activities?.length && !tractorOrders?.length) {
     return <FieldActivityNoDataDisplay />;
   }
 
@@ -118,10 +120,9 @@ const FieldActivity = () => {
                   <Col className="items-center justify-center p-4">Loading Tractor orders...</Col>
                 </td>
               </tr>
-            ) : !!ordersWithSowableAmount.length ? (
+            ) : !!ordersWithSowableAmount ? (
               <>
-                {ordersWithSowableAmount.map((order, index) => {
-                  // const temp = getOrderTemperature(order);
+                {ordersWithSowableAmount.map((order) => {
                   return (
                     <TractorOrderRow
                       key={`tractor-${order.requisition.blueprintHash}`}
@@ -143,7 +144,7 @@ const FieldActivity = () => {
             )}
 
             {/* Separator row between tractor orders and regular activity */}
-            {activities.length > 0 && ordersWithSowableAmount.length > 0 && (
+            {!!activities?.length && !!tractorOrders?.length && (
               <tr>
                 <td colSpan={9} className="border-b-2 border-pinto-gray-3/20 py-0" />
               </tr>
@@ -153,7 +154,7 @@ const FieldActivity = () => {
              */}
             {!loadingTractorOrders && <SeeAllTractorOrdersRow setShowOrdersDialog={setShowTractorOrdersDialog} />}
             {/* Regular Activity Section */}
-            {activities.map((activity) => (
+            {(activities ?? []).map((activity) => (
               <FieldActivityRow
                 key={activity.id}
                 activity={activity}
