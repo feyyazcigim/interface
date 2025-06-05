@@ -33,7 +33,7 @@ const GradientBox = ({
 
   const { outer, inner } = useCornerRadiusClassNames(rounded);
 
-  const stillGradient = getDefaultConicGradient(defaultGradientRotation);
+  const stillGradient = rotateGradient(defaultGradientRotation);
 
   return (
     <div className="relative">
