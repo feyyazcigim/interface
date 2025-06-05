@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 export default function ScrollToTop() {
-  const { pathname, search } = useLocation();
+  const { pathname } = useLocation();
 
   useEffect(() => {
     document.body.scrollTo({
@@ -11,7 +11,7 @@ export default function ScrollToTop() {
       left: 0,
       behavior: "instant",
     });
-  }, [pathname, search]); // Trigger on pathname or search param changes
+  }, [pathname]); // Trigger on pathname or search param changes
 
   return null;
 }
