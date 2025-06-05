@@ -20,7 +20,7 @@ import { stringEq } from "@/utils/string";
 import { getTokenNameByIndex } from "@/utils/token";
 import { CalendarIcon, ClockIcon, CornerBottomLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { decodeFunctionData } from "viem";
 import { useAccount } from "wagmi";
 
@@ -45,8 +45,12 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     !!address,
   );
 
+  const filteredRequisitions = useMemo(() => {
+    return requisitions?.filter((req) => stringEq(req.requisition.blueprint.publisher, address));
+  }, [requisitions, address]);
+
   // derived
-  const dataHasLoaded = address ? Boolean(executions && requisitions) : true;
+  const dataHasLoaded = address ? Boolean(executions && filteredRequisitions) : true;
   const loading = executionsQuery.isLoading || requisitionsQuery.isLoading || !dataHasLoaded;
 
   const error = executionsQuery.error || requisitionsQuery.error;
@@ -172,13 +176,13 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     );
   }
 
-  if (!requisitions?.length && !executions?.length) {
+  if (!filteredRequisitions?.length && !executions?.length) {
     return <EmptyTable type="tractor" onTractorClick={onCreateOrder} />;
   }
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      {(requisitions ?? []).map((req, index) => {
+      {filteredRequisitions?.map((req, index) => {
         if (req.requisitionType !== "sowBlueprintv0" || !req.decodedData) return null;
 
         const data = req.decodedData;
