@@ -55,7 +55,7 @@ export const AdvancedChart = () => {
 
   // By adjusting fromSeason here, we can avoid fetching data
   // that might break the chart
-  const seasonsData = useSeasonsData(7, currentSeason);
+  const seasonsData = useSeasonsData(7, currentSeason, { seasonSync: true });
 
   useEffect(() => {
     if (storedSelectedCharts && storedSelectedCharts.length > 0) {
