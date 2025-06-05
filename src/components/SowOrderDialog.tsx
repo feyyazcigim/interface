@@ -32,7 +32,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { encodeFunctionData, size } from "viem";
+import { encodeFunctionData } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { Col, Row } from "./Container";
 import TooltipSimple from "./TooltipSimple";
