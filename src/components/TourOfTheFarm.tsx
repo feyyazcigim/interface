@@ -153,8 +153,6 @@ export default function TourOfTheFarm() {
 
   const suggested = useSuggestedContentWithSlug();
 
-  // console.log(getSortedPosts(suggested));
-
   const handleClickAway = useCallback(() => setActive(false), []);
 
   useClickAway(active, tourOfTheFarmRef, handleClickAway);
@@ -234,21 +232,21 @@ const MAX_POSTS = 4;
 
 const getSortedPosts = (suggested: IPost) => {
   // Bubble up the suggested post to the top
+  return [...Object.entries(POSTS)]
+    .sort(([_keyA, valA], [_keyB, valB]) => {
+      if (!suggested) return 0;
 
-  console.log([...Object.entries(POSTS)]);
-  return [...Object.entries(POSTS)].sort(([keyA, valA], [keyB, valB]) => {
-    if (!suggested) return 0;
+      const aSuggested = suggested && stringEq(valA.title, suggested.title);
+      const bSuggested = suggested && stringEq(valB.title, suggested.title);
+      // If either is the suggested post, bubble it up to the top
+      if (aSuggested || bSuggested) {
+        return aSuggested ? -1 : 1;
+      }
 
-    const aSuggested = suggested && stringEq(valA.title, suggested.title);
-    const bSuggested = suggested && stringEq(valB.title, suggested.title);
-    // If either is the suggested post, bubble it up to the top
-    if (aSuggested || bSuggested) {
-      return aSuggested ? -1 : 1;
-    }
-
-    // Otherwise sort by priority
-    return valA.priority - valB.priority;
-  }).slice(0, MAX_POSTS);
+      // Otherwise sort by priority
+      return valA.priority - valB.priority;
+    })
+    .slice(0, MAX_POSTS);
 };
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -259,19 +257,19 @@ const getSortedPosts = (suggested: IPost) => {
 const usePanelOpenState = () => useAtomValue(navbarPanelAtom).openPanel;
 
 const getSuggestedWithSlug = (
-  slug: string | undefined, 
-  options: { 
+  slug: string | undefined,
+  options: {
     isSiloToken: boolean;
-  }
+  },
 ) => {
   if (slug === "silo" && options.isSiloToken) {
     return POSTS.converts;
   }
-  if (slug && (slug in POSTS)) {
+  if (slug && slug in POSTS) {
     return POSTS[slug];
   }
   return POSTS.yield;
-}
+};
 
 const useSuggestedContentWithSlug = () => {
   const { pathname } = useLocation();
