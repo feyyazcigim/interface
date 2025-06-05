@@ -32,7 +32,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { encodeFunctionData } from "viem";
+import { encodeFunctionData, size } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { Col, Row } from "./Container";
 import TooltipSimple from "./TooltipSimple";
@@ -58,6 +58,7 @@ interface SowOrderDialogProps {
 // 0.000001 is the min for PINTO input & temperature
 const minInput = TokenValue.fromHuman(0.000001, 6);
 
+
 export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }: SowOrderDialogProps) {
   const podLine = usePodLine();
   const currentTemperature = useTemperature();
@@ -80,7 +81,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleClampAndToValidInput = (input: string, prevValue?: string) => {
-    const parsed = input.replace(/[^0-9.,]/g, "");
+    const parsed = input.replace(/[^0-9.]/g, "");
 
     const split = parsed.split(".");
     // prevent multiple decimals of If input has gt 6 decimal places, prevent input
@@ -112,42 +113,28 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       return;
     }
 
+    const minClean = sanitizeNumericInputValue(minSoilAmount, PINTO.decimals);
+    const maxClean = sanitizeNumericInputValue(maxSeasonAmount, PINTO.decimals);
+    const totalClean = sanitizeNumericInputValue(totalSowAmount, PINTO.decimals);
+
     try {
       // Validate min, max, and total amounts if available
       if (minSoilAmount && maxSeasonAmount) {
-        const minClean = minSoilAmount.replace(/,/g, "");
-        const maxClean = maxSeasonAmount.replace(/,/g, "");
-
-        const min = TokenValue.fromHuman(minClean, PINTO.decimals);
-        const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
-
-        if (min.gt(max)) {
+        if (minClean.tv.gt(maxClean.tv)) {
           setError("Min per Season must be less than or equal to Max per Season");
           return;
         }
       }
 
       if (minSoilAmount && totalSowAmount) {
-        const minClean = minSoilAmount.replace(/,/g, "");
-        const totalClean = totalSowAmount.replace(/,/g, "");
-
-        const min = TokenValue.fromHuman(minClean, PINTO.decimals);
-        const total = TokenValue.fromHuman(totalClean, PINTO.decimals);
-
-        if (min.gt(total)) {
+        if (minClean.tv.gt(totalClean.tv)) {
           setError("Min per Season cannot exceed the total amount to Sow");
           return;
         }
       }
 
       if (maxSeasonAmount && totalSowAmount) {
-        const maxClean = maxSeasonAmount.replace(/,/g, "");
-        const totalClean = totalSowAmount.replace(/,/g, "");
-
-        const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
-        const total = TokenValue.fromHuman(totalClean, PINTO.decimals);
-
-        if (max.gt(total)) {
+        if (maxClean.tv.gt(totalClean.tv)) {
           setError("Max per Season cannot exceed the total amount to Sow");
           return;
         }
@@ -155,9 +142,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
       // Validate pod line length if provided
       if (podLineLengthValue) {
+        const podLineClean = sanitizeNumericInputValue(podLineLengthValue, PINTO.decimals);
         try {
-          const inputLength = parseFloat(podLineLengthValue.replace(/,/g, ""));
-          if (Number.isNaN(inputLength)) {
+          if (podLineClean.nonAmount) {
             setError("Pod Line Length must be a valid number");
             return;
           }
@@ -170,7 +157,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       // Validate temperature if provided
       if (temperatureValue) {
         try {
-          const tempValue = parseFloat(temperatureValue.replace(/[%,]/g, ""));
+          const tempClean = sanitizeNumericInputValue(temperatureValue, PINTO.decimals);
+          const tempValue = parseFloat(tempClean.str);
           if (Number.isNaN(tempValue)) {
             setError("Temperature must be a valid number");
             return;
@@ -191,29 +179,23 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
   // Update the handleSetMinSoil function to use the new validation
   const handleSetMinSoil = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const validatedAmount = handleClampAndToValidInput(e.target.value);
-    if (validatedAmount !== undefined) {
-      setMinSoil(validatedAmount);
-      validateAllInputs(validatedAmount, maxPerSeason, totalAmount, podLineLength, temperature);
-    }
+    const cleaned = sanitizeNumericInputValue(e.target.value, PINTO.decimals);
+    setMinSoil(cleaned.str);
+    validateAllInputs(cleaned.str, maxPerSeason, totalAmount, podLineLength, temperature);
   };
 
   // Update the handleSetMaxPerSeason function to use the new validation
   const handleSetMaxPerSeason = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const validatedAmount = handleClampAndToValidInput(e.target.value);
-    if (validatedAmount !== undefined) {
-      setMaxPerSeason(validatedAmount);
-      validateAllInputs(minSoil, validatedAmount, totalAmount, podLineLength, temperature);
-    }
+    const cleaned = sanitizeNumericInputValue(e.target.value, PINTO.decimals);
+    setMaxPerSeason(cleaned.str);
+    validateAllInputs(minSoil, cleaned.str, totalAmount, podLineLength, temperature);
   };
 
   // Update the handleSetTotalAmount function to use the new validation
   const handleSetTotalAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const validatedAmount = handleClampAndToValidInput(e.target.value);
-    if (validatedAmount !== undefined) {
-      setTotalAmount(validatedAmount);
-      validateAllInputs(minSoil, maxPerSeason, validatedAmount, podLineLength, temperature);
-    }
+    const cleaned = sanitizeNumericInputValue(e.target.value, PINTO.decimals);
+    setTotalAmount(cleaned.str);
+    validateAllInputs(minSoil, maxPerSeason, cleaned.str, podLineLength, temperature);
   };
 
   // Validate whenever any of the values changes
@@ -342,6 +324,17 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       }
     }
   }, [needsOptimization, formStep]);
+
+  // Form
+  const cleanedValues = useMemo(() => {
+    return {
+      min: sanitizeNumericInputValue(minSoil, PINTO.decimals).tv,
+      max: sanitizeNumericInputValue(maxPerSeason, PINTO.decimals).tv,
+      total: sanitizeNumericInputValue(totalAmount, PINTO.decimals).tv,
+      podLine: sanitizeNumericInputValue(podLineLength, PINTO.decimals).tv,
+      temperature: sanitizeNumericInputValue(temperature, PINTO.decimals).tv,
+    }
+  }, [minSoil, maxPerSeason, totalAmount, podLineLength, temperature]);
 
   // Get LP tokens
   const lpTokens = useMemo(() => whitelistedTokens.filter((t) => t.isLP), [whitelistedTokens]);
@@ -507,14 +500,15 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
   // Add handling for pasting into the pod line length input
   const handlePodLineLengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const cleanValue = handleClampAndToValidInput(e.target.value, podLineLength) ?? "";
+    const cleaned = sanitizeNumericInputValue(e.target.value, mainToken.decimals);
 
     // Store raw input and update displayed value
-    setRawPodLineLength(cleanValue);
-    setPodLineLength(cleanValue);
+    // Set raw value immediately to enable pasting
+    setRawPodLineLength(cleaned.strValue);
+    setPodLineLength(cleaned.str);
 
     // Run validation
-    validateAllInputs(minSoil, maxPerSeason, totalAmount, cleanValue, temperature);
+    validateAllInputs(minSoil, maxPerSeason, totalAmount, cleaned.str, temperature);
   };
 
   // Add a function to check if the pod line length is valid
@@ -827,24 +821,17 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     setOperatorTip(newValue);
   };
 
+
   // Calculate the estimated number of executions
   const calculateEstimatedExecutions = () => {
+    const { total, min, max } = cleanedValues;
+
     // If any of the required values are missing, return a default
     if (!totalAmount || !maxPerSeason) {
       return "~0";
     }
 
     try {
-      // Remove commas and convert to numbers
-      const totalClean = totalAmount.replace(/,/g, "");
-      const minClean = minSoil ? minSoil.replace(/,/g, "") : "0";
-      const maxClean = maxPerSeason.replace(/,/g, "");
-
-      // Convert to TokenValue for precision math
-      const total = TokenValue.fromHuman(totalClean, PINTO.decimals);
-      const min = TokenValue.fromHuman(minClean, PINTO.decimals);
-      const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
-
       // Check for zero values to avoid division by zero
       if (total.eq(0) || max.eq(0)) {
         return "~0";
@@ -884,17 +871,10 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       return "~0";
     }
 
+    const { total, min, max } = cleanedValues;
+
     try {
-      // Remove commas and convert to numbers
-      const totalClean = totalAmount.replace(/,/g, "");
-      const minClean = minSoil ? minSoil.replace(/,/g, "") : "0";
-      const maxClean = maxPerSeason.replace(/,/g, "");
-
-      // Convert to TokenValue for precision math
-      const total = TokenValue.fromHuman(totalClean, PINTO.decimals);
-      const min = TokenValue.fromHuman(minClean, PINTO.decimals);
-      const max = TokenValue.fromHuman(maxClean, PINTO.decimals);
-
+      // // Remove commas and convert to numbers
       // Parse the operator tip
       const tipValue = parseFloat(operatorTip);
 
@@ -949,27 +929,26 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     }
 
     // Remove % and any non-numeric characters except decimal
-    const cleanValue = handleClampAndToValidInput(value, temperature) ?? "";
-    cleanValue && setTemperature(cleanValue); // Store clean value without %
-    validateAllInputs(minSoil, maxPerSeason, totalAmount, podLineLength, cleanValue);
+    const cleanValue = sanitizeNumericInputValue(value, 6)
+    cleanValue && setTemperature(cleanValue.strValue); // Store clean value without %
+    validateAllInputs(minSoil, maxPerSeason, totalAmount, podLineLength, cleanValue.strValue);
 
     // Add % for display
-    const newDisplayValue = `${cleanValue}%`;
-    setDisplayTemperature(newDisplayValue);
+    setDisplayTemperature(`${cleanValue.str}%`);
 
     // Calculate where the cursor should be
     let newPosition = cursorPosition;
 
     // If we're deleting a character (current value is shorter than previous + adjustment for % sign)
-    if (cleanValue.length < temperature.length) {
+    if (cleanValue.str.length < temperature.length) {
       newPosition = cursorPosition;
-    } else if (!hadPercentSign && cleanValue.length > 0) {
+    } else if (!hadPercentSign && cleanValue.str.length > 0) {
       // If we didn't have a % sign before but now we do, adjust accordingly
       newPosition = cursorPosition;
     }
 
     // Ensure cursor position is clamped to a valid range and before %
-    newPosition = Math.min(newPosition, cleanValue.length);
+    newPosition = Math.min(newPosition, cleanValue.str.length);
 
     // Set cursor position with a timeout to ensure it happens after React's rendering
     setTimeout(() => {
@@ -981,8 +960,15 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
   // Function to handle temperature input blur
   const handleTemperatureBlur = () => {
-    if (temperature) {
-      setDisplayTemperature(`${temperature}%`);
+    const cleaned = sanitizeNumericInputValue(temperature, 6);
+
+    if (cleaned.nonAmount) {
+      setDisplayTemperature(`${cleaned.str}%`);
+    } else {
+      setDisplayTemperature(`${formatter.number(cleaned.tv, { 
+        minDecimals: 0,
+        maxDecimals: 6 
+      })}%`);
     }
   };
 
@@ -1056,11 +1042,11 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
   // Add handler for operator tip input changes
   const handleOperatorTipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value.replace(/[^0-9.,]/g, "");
-    setOperatorTip(newValue);
+    const cleaned = sanitizeNumericInputValue(e.target.value, 2);
+    setOperatorTip(cleaned.str);
 
     // Check if the new value matches any of our buttons
-    const activeButton = checkActiveTipButton(newValue);
+    const activeButton = checkActiveTipButton(cleaned.str);
     setActiveTipButton(activeButton);
   };
 
@@ -1257,21 +1243,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                       className="h-12 px-3 py-1.5 border border-pinto-gray-2 rounded-lg"
                       placeholder={formatter.number(podLine)}
                       value={podLineLength}
-                      onChange={(e) => {
-                        const cleanValue = e.target.value.replace(/[^0-9.,]/g, "");
-
-                        // Set raw value immediately to enable pasting
-                        setRawPodLineLength(cleanValue);
-
-                        // Set formatted value and validate
-                        if (cleanValue) {
-                          setPodLineLength(cleanValue);
-                          validateAllInputs(minSoil, maxPerSeason, totalAmount, cleanValue, temperature);
-                        } else {
-                          setPodLineLength("");
-                          validateAllInputs(minSoil, maxPerSeason, totalAmount, "", temperature);
-                        }
-                      }}
+                      onChange={handlePodLineLengthChange}
                     />
 
                     <div className="flex justify-between gap-2 mt-1 w-full">
@@ -1776,3 +1748,74 @@ const inputIds = {
   morningAuction: "morning-auction-input",
   operatorTip: "operator-tip-input",
 } as const;
+
+
+// ────────────────────────────────────────────────────────────────────────────────
+
+const nonAmounts = new Set<string>([".", ""]);
+
+const cleanAmount = (value: string) => value.replace(/[^0-9.]/g, "");
+
+export interface SanitizedNumericStrInput {
+  str: string;
+  strValue: string;
+  tv: TokenValue;
+  nonAmount: boolean;
+}
+
+const sanitizedNonAmount: SanitizedNumericStrInput = {
+  str: "",
+  strValue: "0",
+  tv: TokenValue.ZERO,
+  nonAmount: true,
+} as const;
+
+export const isValidNumericInputValue = (value: string) => !nonAmounts.has(value);
+
+/**
+ * Sanitize the user input
+ */
+export const sanitizeNumericInputValue = (value: string, valueDecimals: number): SanitizedNumericStrInput => {
+  const obj = { 
+    ...sanitizedNonAmount, 
+    str: value,
+    tv: TokenValue.fromHuman("0", valueDecimals),
+  };
+
+  // Early return for special cases
+  if (nonAmounts.has(value)) {
+    return obj;
+  }
+
+  // remove all non-numeric characters
+  const cleaned = cleanAmount(value);
+  if (!cleaned) {
+    return obj;
+  }
+
+  // treat all values after the first decimal point as decimal place.
+  const [pre, ...post] = cleaned.split(".");
+  const decimals = post.join("");
+
+  const endsWithDot = cleaned.endsWith(".") && !post.length;
+  const startsWithDot = cleaned.startsWith(".") && !pre.length;
+
+  const mayDot = !!post.length || endsWithDot ? "." : "";
+  const back = decimals.slice(0, valueDecimals);
+
+  if (startsWithDot) {
+    obj.str = `.${back}`;
+    obj.strValue = `0.${back}`;
+  } else if (endsWithDot) {
+    obj.str = `${pre}.`;
+    obj.strValue = `${pre}.0`;
+  } else {
+    obj.strValue = `${pre}${mayDot}${back}`;
+    obj.str = obj.strValue;
+  }
+
+  obj.tv = TokenValue.fromHuman(obj.strValue, valueDecimals);
+  obj.nonAmount = false;
+
+  return obj;
+};
