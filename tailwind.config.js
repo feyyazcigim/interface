@@ -203,11 +203,21 @@ module.exports = {
           from: { transform: "translateX( 0% )" },
           to: { transform: "translateX( -100% )" },
         },
+        "vertical-marquee": {
+          from: { transform: "translateY( 0% )" },
+          to: { transform: "translateY( -200% )" },
+        },
+        "vertical-marquee-reverse": {
+          from: { transform: "translateY( -300% )" },
+          to: { transform: "translateY( 0% )" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         marquee: "marquee 24s linear infinite",
+        "vertical-marquee": "vertical-marquee 36s linear infinite",
+        "vertical-marquee-reverse": "vertical-marquee-reverse 54s linear infinite",
       },
       aspectRatio: {
         "3/1": "3 / 1",

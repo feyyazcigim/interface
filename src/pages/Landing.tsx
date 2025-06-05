@@ -1,3 +1,13 @@
+import PropertyLowVolatility from "@/assets/misc/Property_Low_Volatility.svg";
+import PropertyMediumOfExchange from "@/assets/misc/Property_Medium_of_Exchange.svg";
+import PropertyScalable from "@/assets/misc/Property_Scalable.svg";
+import PropertyUnitOfAccount from "@/assets/misc/Property_Unit_of_Account.svg";
+import ValueCensorshipResistance from "@/assets/misc/Value_Censorship_Resistance.svg";
+import ValueCommunityRun from "@/assets/misc/Value_Community_Run.svg";
+import ValueFairness from "@/assets/misc/Value_Fairness.svg";
+import ValueOpenSource from "@/assets/misc/Value_Open_Source.svg";
+import ValuePermissionless from "@/assets/misc/Value_Permissionlessness.svg";
+import ValueTrustless from "@/assets/misc/Value_Trustlessness.svg";
 import ImmunefiLogo from "@/assets/misc/immunefi-logo.png";
 import PintoLogo from "@/assets/protocol/PintoLogo.svg";
 import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
@@ -7,6 +17,7 @@ import Usd0Logo from "@/assets/tokens/USD0.png";
 import UsdcLogo from "@/assets/tokens/USDC.png";
 import UsdeLogo from "@/assets/tokens/USDE.png";
 import UsdtLogo from "@/assets/tokens/USDT.png";
+import LandingChart from "@/components/LandingChart";
 import MinimalistConcentricCircles from "@/components/MinimalistConcentricCircles";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { useAverageBDVWeightedSiloAPYs } from "@/state/useSiloAPYs";
@@ -14,6 +25,7 @@ import { formatPct } from "@/utils/format";
 import NumberFlow from "@number-flow/react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { div, threshold } from "three/webgpu";
 import { Button } from "../components/ui/Button";
 
 function MainCTA() {
@@ -231,92 +243,116 @@ function BugBounty() {
 
 function SecondaryCTA() {
   return (
-    <div className="flex flex-col w-full h-full">
-      <div className="flex flex-row border-y border-pinto-gray-2 basis-[40rem]">
-        <div className="flex flex-col items-start place-content-center px-12 border-r border-pinto-gray-2 bg-pinto-off-white basis-5/12">
-          <h2 className="pinto-h2 text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center">
-            <span>Not a Stablecoin</span>
-            <div className="flex flex-row gap-2 items-center">
-              <img src={UsdcLogo} alt={"USDC"} className="h-6 w-6 min-h-6 min-w-6" />
-              <img src={DaiLogo} alt={"DAI"} className="h-6 w-6 min-h-6 min-w-6" />
-              <img src={UsdtLogo} alt={"USDT"} className="h-6 w-6 min-h-6 min-w-6" />
-              <img src={UsdeLogo} alt={"USDE"} className="h-6 w-6 min-h-6 min-w-6" />
-              <img src={Usd0Logo} alt={"USD0"} className="h-6 w-6 min-h-6 min-w-6" />
+    <div className="flex flex-col items-start place-content-center px-12 gap-6 w-[48rem]">
+      <h2 className="pinto-h2 text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center">
+        <span>Combining The Values of BTC with the properties of USD</span>
+      </h2>
+      <span className="text-lg leading-[1.1] text-pinto-gray-4">
+        Pinto prioritizes trustlessness and scalability to power the leviathan-free economy.
+      </span>
+      <div className="flex flex-row gap-4">
+        <Link to={"/overview"}>
+          <Button rounded="full">Learn More About Properties</Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function SecondaryCTAValues() {
+  const data = [
+    {
+      logo: ValueCensorshipResistance,
+      title: "Censorship Resistance",
+      description: "Pinto is designed to be maximally resistant to any censorship.",
+    },
+    {
+      logo: ValueTrustless,
+      title: "Trustlessness",
+      description: "The monetary policy of Pinto is deterministic, eliminating any need for trust.",
+    },
+    {
+      logo: ValuePermissionless,
+      title: "Permissionless",
+      description: "Anyone with an Ethereum wallet can participate in Pinto.",
+    },
+    {
+      logo: ValueFairness,
+      title: "Fairness",
+      description: "Pinto strives to fairly incentivize all participants.",
+    },
+    {
+      logo: ValueOpenSource,
+      title: "Open-source",
+      description: "All code is deployed on Base and publicly viewable by any participant.",
+    },
+    {
+      logo: ValueCommunityRun,
+      title: "Community-run",
+      description: "Pinto is maintained by a decentralized group of contributors and run by it’s community.",
+    },
+  ];
+
+  return (
+    <div className="flex flex-col items-start w-[25.625rem] animate-vertical-marquee-reverse">
+      {Array(2)
+        .fill(data)
+        .flat()
+        .map((info, index) => (
+          <div key={`dataInfo_${info.title}`} className="p-6 border rounded-2xl bg-pinto-off-white mb-12">
+            <div className="h-[18.75rem] flex flex-col gap-6">
+              <img src={info.logo} className="w-24 flex-shrink-0 h-auto" alt={info.title} />
+              <div className="flex flex-col gap-4">
+                <div className="text-lg leading-[1.1] font-thin text-black">{info.title}</div>
+                <div className="text-xl leading-[1.1] font-thin text-pinto-gray-4">{info.description}</div>
+              </div>
             </div>
-          </h2>
-          <span className="pinto-body-light text-[2rem] leading-[1.1] text-pinto-gray-4 mt-2 mb-5">
-            Stablecoins are not good enough.
-          </span>
-          <span className="pinto-body-light text-[2rem] leading-[1.1] text-pinto-gray-4">
-            Trustlessness and capital efficiency at scale are requisite to build the onchain economy.
-          </span>
-          <div className="flex flex-row gap-4 mt-8">
-            <Link to={"/overview"}>
-              <Button rounded="full">Get Started</Button>
-            </Link>
-            <Link to={`${navLinks.docs}advanced/stablecoin-overview`} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
-                Read Docs
-              </Button>
-            </Link>
           </div>
-        </div>
-        <div className="overflow-hidden shrink-0 relative basis-7/12 bg-double-fade">
-          <img
-            src="landing-2.png"
-            className="absolute inset-0 w-full h-full object-cover object-center mix-blend-overlay"
-            alt="landing 2"
-          />
-        </div>
-      </div>
-      <div className="flex flex-col basis-[27rem]">
-        <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white basis-1/3">
-          <span className="pinto-body-light text-[2rem] leading-[1.1] text-black">Scalable</span>
-          <div className="flex flex-row gap-4">
-            <span className="pinto-lg text-pinto-gray-4">
-              Pinto is credit based, allowing it to scale without limits
-            </span>
-            <Link
-              to={`${navLinks.docs}advanced/economics`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="pinto-body-light text-pinto-green-4 hover:underline transition-all"
-            >
-              Learn More →
-            </Link>
+        ))}
+    </div>
+  );
+}
+
+function SecondaryCTAProperties() {
+  const data = [
+    {
+      logo: PropertyScalable,
+      title: "Scalable",
+      description: "Pinto can scale to meet market demand for trustless currency in DeFi. ",
+    },
+    {
+      logo: PropertyLowVolatility,
+      title: "Low Volatility",
+      description: "Pinto seeks to minimize volatility in it’s value through thoughtful incentives.",
+    },
+    {
+      logo: PropertyMediumOfExchange,
+      title: "Medium of Exchange",
+      description: "Pinto can facilitate seamless transactions between users.",
+    },
+    {
+      logo: PropertyUnitOfAccount,
+      title: "Unit of Account",
+      description: "Pinto is a low-volatility value source onchain, which can be used to measure arbitrary value.",
+    },
+  ];
+
+  return (
+    <div className="flex flex-col items-start w-[25.625rem] animate-vertical-marquee">
+      {Array(2)
+        .fill(data)
+        .flat()
+        .map((info, index) => (
+          <div key={`dataInfo_${info.title}`} className="p-6 border rounded-2xl bg-pinto-off-white mb-12">
+            <div className="h-[18.75rem] flex flex-col gap-6">
+              <img src={info.logo} className="w-24 flex-shrink-0 h-auto" alt={info.title} />
+              <div className="flex flex-col gap-4">
+                <div className="text-lg leading-[1.1] font-thin text-black">{info.title}</div>
+                <div className="text-xl leading-[1.1] font-thin text-pinto-gray-4">{info.description}</div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white basis-1/3">
-          <span className="pinto-body-light text-[2rem] leading-[1.1] text-black">Trustless</span>
-          <div className="flex flex-row gap-4">
-            <span className="pinto-lg text-pinto-gray-4">Censorship resistant and decentralized governance</span>
-            <Link
-              to={`${navLinks.docs}advanced/economics`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="pinto-body-light text-pinto-green-4 hover:underline transition-all"
-            >
-              Learn More →
-            </Link>
-          </div>
-        </div>
-        <div className="flex flex-row items-center justify-between px-12 border-b border-pinto-gray-2 bg-white basis-1/3">
-          <span className="pinto-body-light text-[2rem] leading-[1.1] text-black">Capital efficient</span>
-          <div className="flex flex-row gap-4">
-            <span className="pinto-lg text-pinto-gray-4">
-              No collateral, no interest paid by depositors, no value lockups, and no liquidations
-            </span>
-            <Link
-              to={`${navLinks.docs}advanced/economics`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="pinto-body-light text-pinto-green-4 hover:underline transition-all"
-            >
-              Learn More →
-            </Link>
-          </div>
-        </div>
-      </div>
+        ))}
     </div>
   );
 }
@@ -512,13 +548,19 @@ export default function Landing() {
   return (
     <div className="flex flex-col">
       <div className="flex flex-col" style={{ height: `${initialHeightRem}rem` }}>
-        <div className="my-auto ml-[4.5rem]">
-          <MainCTA />
+        <div className="my-auto">
+          <LandingChart />
         </div>
         <APYBar />
       </div>
-      <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem}rem` }}>
-        <SecondaryCTA />
+      <div className="flex flex-row overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
+        <div className="my-auto">
+          <SecondaryCTA />
+        </div>
+        <div className="flex flex-row gap-12 ml-auto mr-12">
+          <SecondaryCTAProperties />
+          <SecondaryCTAValues />
+        </div>
       </div>
       <div className="flex flex-col gap-12 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
         <FarmToTable height={initialHeightPx} />
