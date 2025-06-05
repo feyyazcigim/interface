@@ -58,7 +58,6 @@ interface SowOrderDialogProps {
 // 0.000001 is the min for PINTO input & temperature
 const minInput = TokenValue.fromHuman(0.000001, 6);
 
-
 export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }: SowOrderDialogProps) {
   const podLine = usePodLine();
   const currentTemperature = useTemperature();
@@ -333,7 +332,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       total: sanitizeNumericInputValue(totalAmount, PINTO.decimals).tv,
       podLine: sanitizeNumericInputValue(podLineLength, PINTO.decimals).tv,
       temperature: sanitizeNumericInputValue(temperature, PINTO.decimals).tv,
-    }
+    };
   }, [minSoil, maxPerSeason, totalAmount, podLineLength, temperature]);
 
   // Get LP tokens
@@ -821,7 +820,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     setOperatorTip(newValue);
   };
 
-
   // Calculate the estimated number of executions
   const calculateEstimatedExecutions = () => {
     const { total, min, max } = cleanedValues;
@@ -929,7 +927,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     }
 
     // Remove % and any non-numeric characters except decimal
-    const cleanValue = sanitizeNumericInputValue(value, 6)
+    const cleanValue = sanitizeNumericInputValue(value, 6);
     cleanValue && setTemperature(cleanValue.strValue); // Store clean value without %
     validateAllInputs(minSoil, maxPerSeason, totalAmount, podLineLength, cleanValue.strValue);
 
@@ -965,10 +963,12 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     if (cleaned.nonAmount) {
       setDisplayTemperature(`${cleaned.str}%`);
     } else {
-      setDisplayTemperature(`${formatter.number(cleaned.tv, { 
-        minDecimals: 0,
-        maxDecimals: 6 
-      })}%`);
+      setDisplayTemperature(
+        `${formatter.number(cleaned.tv, {
+          minDecimals: 0,
+          maxDecimals: 6,
+        })}%`,
+      );
     }
   };
 
@@ -1749,7 +1749,6 @@ const inputIds = {
   operatorTip: "operator-tip-input",
 } as const;
 
-
 // ────────────────────────────────────────────────────────────────────────────────
 
 const nonAmounts = new Set<string>([".", ""]);
@@ -1776,8 +1775,8 @@ export const isValidNumericInputValue = (value: string) => !nonAmounts.has(value
  * Sanitize the user input
  */
 export const sanitizeNumericInputValue = (value: string, valueDecimals: number): SanitizedNumericStrInput => {
-  const obj = { 
-    ...sanitizedNonAmount, 
+  const obj = {
+    ...sanitizedNonAmount,
     str: value,
     tv: TokenValue.fromHuman("0", valueDecimals),
   };
