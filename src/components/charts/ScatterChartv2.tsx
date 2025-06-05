@@ -11,16 +11,12 @@ import {
   Plugin,
   Point,
   PointElement,
+  PointStyle,
 } from "chart.js";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ReactChart } from "../ReactChart";
 
 Chart.register(LineController, LineElement, LinearScale, LogarithmicScale, CategoryScale, PointElement, Filler);
-
-export type ScatterChartData = {
-  x: number;
-  y: number;
-} & Record<string, any>;
 
 export type MakeGradientFunction = (
   ctx: CanvasRenderingContext2D | null,
@@ -38,10 +34,22 @@ export type CustomChartValueTransform = {
   from: (value: number) => number;
 };
 
-export interface LineChartProps {
+export type ScatterChartData = {
+  label: string;
   data: Point[];
+  color: string;
+  pointStyle: PointStyle;
+}[];
+
+export type ScatterChartAxisOptions = {
+  label: string;
+  min: number;
+  max: number;
+}
+
+export interface ScatterChartProps {
+  data: ScatterChartData;
   size: "small" | "large";
-  xKey: keyof ScatterChartData;
   referenceDot?: LineChartReferenceDotProps;
   valueFormatter?: (value: number) => string;
   onMouseOver?: (index: number) => void;
@@ -53,12 +61,8 @@ export interface LineChartProps {
     dash?: number[];
     label?: string;
   }[];
-  // Props for custom y-axis range
-  yAxisMin?: number;
-  yAxisMax?: number;
-  // Props for custom x-axis range
-  xAxisMin?: number;
-  xAxisMax?: number;
+  xOptions: ScatterChartAxisOptions
+  yOptions: ScatterChartAxisOptions
   customValueTransform?: CustomChartValueTransform;
 }
 
@@ -66,22 +70,16 @@ const ScatterChartV2 = React.memo(
   ({
     data,
     size,
-    xKey,
     valueFormatter,
     onMouseOver,
     activeIndex,
     useLogarithmicScale = false,
     horizontalReferenceLines = [],
-    yAxisMin,
-    yAxisMax,
-    xAxisMin,
-    xAxisMax,
+    xOptions,
+    yOptions,
     customValueTransform,
-  }: LineChartProps) => {
+  }: ScatterChartProps) => {
     console.info("🚀 ~ data:", data);
-    if (!data.length) {
-      return null;
-    }
     const chartRef = useRef<Chart | null>(null);
     const activeIndexRef = useRef<number | undefined>(activeIndex);
 
@@ -94,36 +92,36 @@ const ScatterChartV2 = React.memo(
 
     const [yTickMin, yTickMax] = useMemo(() => {
       // If custom min/max are provided, use those
-      if (yAxisMin !== undefined && yAxisMax !== undefined) {
+      if (yOptions.min !== undefined && yOptions.max !== undefined) {
         // Even with custom ranges, ensure 1.0 is visible if showReferenceLineAtOne is true
         if (horizontalReferenceLines.some((line) => line.value === 1)) {
-          const hasOne = yAxisMin <= 1 && yAxisMax >= 1;
+          const hasOne = yOptions.min <= 1 && yOptions.max >= 1;
           if (!hasOne) {
             // If 1.0 is not in range, adjust the range to include it
             if (useLogarithmicScale) {
               // For logarithmic scale, we need to ensure we maintain the ratio
               // but include 1.0 in the range
-              if (yAxisMin > 1) {
-                return [0.7, Math.max(yAxisMax, 1.5)]; // Include 1.0 with padding below
-              } else if (yAxisMax < 1) {
-                return [Math.min(yAxisMin, 0.7), 1.5]; // Include 1.0 with padding above
+              if (yOptions.min > 1) {
+                return [0.7, Math.max(yOptions.max, 1.5)]; // Include 1.0 with padding below
+              } else if (yOptions.max < 1) {
+                return [Math.min(yOptions.min, 0.7), 1.5]; // Include 1.0 with padding above
               }
             } else {
               // For linear scale, just expand the range to include 1.0
-              if (yAxisMin > 1) {
-                return [0.9, Math.max(yAxisMax, 1.1)]; // Include 1.0 with padding
-              } else if (yAxisMax < 1) {
-                return [Math.min(yAxisMin, 0.9), 1.1]; // Include 1.0 with padding
+              if (yOptions.min > 1) {
+                return [0.9, Math.max(yOptions.max, 1.1)]; // Include 1.0 with padding
+              } else if (yOptions.max < 1) {
+                return [Math.min(yOptions.min, 0.9), 1.1]; // Include 1.0 with padding
               }
             }
           }
         }
-        return [yAxisMin, yAxisMax];
+        return [yOptions.min, yOptions.max];
       }
 
       // Otherwise calculate based on data
-      const maxData = data.reduce((acc, next) => Math.max(acc, next.y), Number.MIN_SAFE_INTEGER);
-      const minData = data.reduce((acc, next) => Math.min(acc, next.y), Number.MAX_SAFE_INTEGER);
+      const maxData = Number.MIN_SAFE_INTEGER //data.reduce((acc, next) => Math.max(acc, next.y), Number.MIN_SAFE_INTEGER);
+      const minData = Number.MAX_SAFE_INTEGER //data.reduce((acc, next) => Math.min(acc, next.y), Number.MAX_SAFE_INTEGER);
 
       const maxTick = maxData === minData && maxData === 0 ? 1 : maxData;
       let minTick = Math.max(0, minData - (maxData - minData) * 0.1);
@@ -137,8 +135,8 @@ const ScatterChartV2 = React.memo(
       }
 
       // Use custom min/max if provided
-      let finalMin = yAxisMin !== undefined ? yAxisMin : minTick;
-      let finalMax = yAxisMax !== undefined ? yAxisMax : maxTick;
+      let finalMin = yOptions.min !== undefined ? yOptions.min : minTick;
+      let finalMax = yOptions.max !== undefined ? yOptions.max : maxTick;
 
       // Ensure 1.0 is visible if there's a reference line at 1.0
       if (horizontalReferenceLines.some((line) => line.value === 1)) {
@@ -166,22 +164,23 @@ const ScatterChartV2 = React.memo(
       }
 
       return [finalMin, finalMax];
-    }, [data, useLogarithmicScale, yAxisMin, yAxisMax, horizontalReferenceLines]);
+    }, [data, useLogarithmicScale, yOptions.min, yOptions.max, horizontalReferenceLines]);
 
     const chartData = useCallback(
       (ctx: CanvasRenderingContext2D | null): ChartData => {
         return {
-          datasets: [
-            {
-              label: "Scatter Dataset",
-              data: data.map(({ x, y }) => ({ x, y })),
-              backgroundColor: "rgb(255, 99, 132)",
-            },
-          ],
+          datasets: data.map(({ label, data, color, pointStyle }) => ({
+            label,
+            data: data.map(({ x, y }) => ({ x, y })),
+            backgroundColor: color,
+            pointStyle,
+          })),
         };
       },
       [data],
     );
+    console.info("🚀 ~ chartData:", chartData)
+
 
     const verticalLinePlugin: Plugin = useMemo<Plugin>(
       () => ({
@@ -431,12 +430,12 @@ const ScatterChartV2 = React.memo(
           x: {
             title: {
               display: true,
-              text: "Place in line",
+              text: xOptions.label || '',
             },
             type: "linear",
             position: "bottom",
-            min: xAxisMin,
-            max: xAxisMax,
+            min: xOptions.min,
+            max: xOptions.max,
             ticks: {
               stepSize: 50,
               callback: (val) => `${Number(val).toFixed(2)}M`,
@@ -445,7 +444,7 @@ const ScatterChartV2 = React.memo(
           y: {
             title: {
               display: true,
-              text: "Price per pod",
+              text: yOptions.label || '',
             },
             // min: xYMinMax?.y?.min || 0,
             // max: xYMinMax?.y?.max || initialMaxY.current,
@@ -542,7 +541,7 @@ const ScatterChartV2 = React.memo(
         //   },
         // },
       };
-    }, [data, xKey, yTickMin, yTickMax, valueFormatter, useLogarithmicScale, customValueTransform]);
+    }, [data, yTickMin, yTickMax, valueFormatter, useLogarithmicScale, customValueTransform]);
 
     const allPlugins = useMemo<Plugin[]>(
       () => [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
