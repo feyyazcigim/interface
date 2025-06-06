@@ -1,20 +1,28 @@
+import { subgraphs } from "@/constants/subgraph";
 import {
   BeanstalkSeasonalMarketPerformanceDocument,
   BeanstalkSeasonalMarketPerformanceQuery,
   MarketPerformanceSeasonal,
 } from "@/generated/gql/pintostalk/graphql";
-import { SeasonalMarketPerformanceChartData, UseSeasonalMarketPerformanceResult } from "@/utils/types";
-import useSeasonalQueries, { SeasonalQueryVars } from "./useSeasonalInternalQueries";
-import { paginateSubgraph, PaginationSettings } from "@/utils/paginateSubgraph";
-import { useChainId } from "wagmi";
-import { subgraphs } from "@/constants/subgraph";
 import { useLPTokenToNonPintoUnderlyingMap } from "@/hooks/pinto/useTokenMap";
 import useTokenData from "@/state/useTokenData";
+import { PaginationSettings, paginateSubgraph } from "@/utils/paginateSubgraph";
+import { SeasonalMarketPerformanceChartData, UseSeasonalMarketPerformanceResult } from "@/utils/types";
+import { useChainId } from "wagmi";
+import useSeasonalQueries, { SeasonalQueryVars } from "./useSeasonalInternalQueries";
 
 export enum SMPChartType {
-  USD = 0,
-  PERCENT = 1,
+  USD_SEASONAL = 0,
+  PERCENT_SEASONAL = 1,
+  USD_CUMULATIVE = 2,
+  PERCENT_CUMULATIVE = 3,
 }
+const CHART_FIELDS = [
+  ["usdChange", "totalUsdChange"],
+  ["percentChange", "totalPercentChange"],
+  ["cumulativeUsdChange", "cumulativeTotalUsdChange"],
+  ["cumulativePercentChange", "cumulativeTotalPercentChange"],
+];
 
 const paginateSettings: PaginationSettings<
   MarketPerformanceSeasonal,
@@ -59,9 +67,7 @@ export function useSeasonalMarketPerformance(
     historicalQueryFnFactory: queryFnFactory,
     currentQueryFnFactory: queryFnFactory,
     resultTimestamp: (entry) => {
-      return new Date();
-      // TODO(pp): once timestamp is available
-      // return new Date(Number(entry.timestamp) * 1000);
+      return new Date(Number(entry.timestamp) * 1000);
     },
     // Return raw subgraph result for each season
     convertResult: (entry: any) => {
@@ -69,6 +75,7 @@ export function useSeasonalMarketPerformance(
     },
   });
 
+  // Expand results by token
   const sgData = result.data as unknown as MarketPerformanceSeasonal[];
   const responseData: SeasonalMarketPerformanceChartData = { NET: [] };
   if (sgData) {
@@ -88,25 +95,21 @@ export function useSeasonalMarketPerformance(
         responseData[underlyingToken.symbol] ??= [];
         responseData[underlyingToken.symbol].push({
           season: season.season,
-          // biome-ignore lint/style/noNonNullAssertion: subgraph invariant - can't be null for valid=true
-          value: chartType === SMPChartType.USD ? season.usdChange![tokenIdx] : season.percentChange![tokenIdx],
-          timestamp: new Date(), // TODO(pp): once timestamp is available
+          value: season[CHART_FIELDS[chartType][0]][tokenIdx],
+          timestamp: new Date(Number(season.timestamp) * 1000),
         });
         ++tokenIdx;
       }
       responseData.NET.push({
         season: season.season,
-        value: chartType === SMPChartType.USD ? season.totalUsdChange : season.totalPercentChange,
-        timestamp: new Date(), // TODO(pp): once timestamp is available
+        value: season[CHART_FIELDS[chartType][1]],
+        timestamp: new Date(Number(season.timestamp) * 1000),
       });
     }
   }
 
-  console.log("r", sgData, responseData);
-
-  // Expand result for each token
   return {
-    data: responseData,
+    data: !!sgData ? responseData : undefined,
     isLoading: result.isLoading,
     isError: result.isError,
   };

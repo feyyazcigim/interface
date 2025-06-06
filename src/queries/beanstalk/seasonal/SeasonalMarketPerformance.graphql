@@ -7,11 +7,15 @@ query BeanstalkSeasonalMarketPerformance($from: Int, $to: Int) {
   ) {
     id
     season
-    # TODO(pp): add timestamp once its available
+    timestamp
     usdChange
     percentChange
     totalUsdChange
     totalPercentChange
+    cumulativeUsdChange
+    cumulativePercentChange
+    cumulativeTotalUsdChange
+    cumulativeTotalPercentChange
     silo {
       whitelistedTokens
     }
