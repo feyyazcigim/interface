@@ -1,14 +1,15 @@
 import { SMPChartType, useSeasonalMarketPerformance } from "@/state/seasonal/queries/useSeasonalMarketPerformance";
-import { SeasonalMarketPerformanceChartData } from "@/utils/types";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { tabToSeasonalLookback } from "./SeasonalChart";
-import { TimeTab } from "./TimeTabs";
-import LineChart, { LineChartData } from "./LineChart";
 import { chartFormatters as f, formatDate } from "@/utils/format";
+import { SeasonalMarketPerformanceChartData } from "@/utils/types";
+import { cn } from "@/utils/utils";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
 import FrameAnimator from "../LoadingSpinner";
-import { cn } from "@/utils/utils";
+import LineChart, { LineChartData } from "./LineChart";
+import { tabToSeasonalLookback } from "./SeasonalChart";
+import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { gradientFunctions } from "./chartHelpers";
+import TooltipSimple from "../TooltipSimple";
 
 // TODO(pp): set these appropriately for each token. also filter usdc
 const strokeGradients = [
@@ -62,6 +63,12 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     return [];
   }, [allData]);
 
+  const handleChangeTimeTab = useCallback((tab: TimeTab) => {
+    setTimeTab(tab);
+    setAllData(null);
+    setDisplayIndex(null);
+  }, []);
+
   const handleMouseOver = useCallback(
     (index: number) => {
       if (allData) {
@@ -73,6 +80,16 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
 
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
+      <div className="flex justify-between pt-4 px-4 sm:pt-6 sm:px-6">
+        <div className="flex flex-row gap-1 items-center">
+          <div className="sm:pinto-body text-pinto-light sm:text-pinto-light">Crypto Market Performance</div>
+          <TooltipSimple
+            content="Measures historical value fluctuations of non-Pinto value in the ecosystem."
+            variant="gray"
+          />
+        </div>
+        <TimeTabsSelector tab={timeTab} setTab={handleChangeTimeTab} />
+      </div>
       {(!allData || displayIndex === null) && (
         <>
           {/* Keep sizing the same as when there is data. Allows centering spinner/error vertically */}
@@ -99,17 +116,21 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
         <>
           <div className="h-[85px] px-4 sm:px-6">
             <div className="pinto-body sm:pinto-h3">
-              {/* <span style={{ color: chartColors[0].lineColor }}>
-                30D: {f.percent2dFormatter(allData[APYWindow.MONTHLY][displayIndex].value)}
-              </span>
-              <span className="mx-3 text-pinto-gray-2">|</span>
-              <span style={{ color: chartColors[1].lineColor }}>
-                7D: {f.percent2dFormatter(allData[APYWindow.WEEKLY][displayIndex].value)}
-              </span>
-              <span className="mx-3 text-pinto-gray-2">|</span>
-              <span style={{ color: chartColors[2].lineColor }}>
-                24H: {f.percent2dFormatter(allData[APYWindow.DAILY][displayIndex].value)}
-              </span> */}
+              {Object.keys(allData).map((token, idx) => {
+                return (
+                  <>
+                    {/* style={{ color: chartColors[0].lineColor }} */}
+                    <span key={`${token}-value`}>
+                      {token}: {f.price0dFormatter(allData[token][displayIndex].value)}
+                    </span>
+                    {idx < Object.keys(allData).length - 1 && (
+                      <span key={`${token}-separator`} className="mx-3 text-pinto-gray-2">
+                        |
+                      </span>
+                    )}
+                  </>
+                );
+              })}
             </div>
             <div className="flex flex-col gap-0 mt-2 sm:gap-2 sm:mt-3">
               <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
@@ -132,7 +153,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                   xKey="timestamp"
                   size={size}
                   makeLineGradients={strokeGradients}
-                  valueFormatter={f.percent0dFormatter}
+                  valueFormatter={f.price0dFormatter}
                   onMouseOver={handleMouseOver}
                 />
               </div>
