@@ -1395,3 +1395,17 @@ export async function getAverageTipPaid(
     return 1;
   }
 }
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Sow Order Utility Functions
+// ────────────────────────────────────────────────────────────────────────────────
+
+export const getSowOrderTokenStrategy = (indicies: readonly number[]) => {
+  if (indicies.includes(255)) {
+    return "LOWEST_SEEDS";
+  } else if (indicies.includes(254)) {
+    return "LOWEST_PRICE";
+  } else {
+    return "SPECIFIC_TOKEN";
+  }
+};

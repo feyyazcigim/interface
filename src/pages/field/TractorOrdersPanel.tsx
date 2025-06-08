@@ -12,15 +12,17 @@ import { beanstalkAbi } from "@/generated/contractHooks";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useTransaction from "@/hooks/useTransaction";
 import { Blueprint } from "@/lib/Tractor/types";
-import { RequisitionEvent } from "@/lib/Tractor/utils";
+import { getSowOrderTokenStrategy, RequisitionEvent } from "@/lib/Tractor/utils";
 import usePublisherTractorExecutions from "@/state/tractor/useTractorExecutions";
 import useTractorPublishedRequisitions from "@/state/tractor/useTractorPublishedRequisitions";
+import { tryExtractErrorMessage } from "@/utils/error";
 import { formatter } from "@/utils/format";
 import { stringEq } from "@/utils/string";
 import { getTokenNameByIndex } from "@/utils/token";
 import { CalendarIcon, ClockIcon, CornerBottomLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { decodeFunctionData } from "viem";
 import { useAccount } from "wagmi";
 
@@ -38,7 +40,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const [showDialog, setShowDialog] = useState(false);
   const [rawSowBlueprintCall, setRawSowBlueprintCall] = useState<`0x${string}` | null>(null);
 
-  const { data: executions, ...executionsQuery } = usePublisherTractorExecutions(address, !!address);
+  const { data: executions, ...executionsQuery } = usePublisherTractorExecutions(address, !!address, true);
   const { data: requisitions, ...requisitionsQuery } = useTractorPublishedRequisitions(
     address,
     "sowBlueprintv0",
@@ -67,7 +69,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   }, [refreshData, dataHasLoaded]);
 
   // Add transaction handling for cancel order
-  const { writeWithEstimateGas, submitting } = useTransaction({
+  const { writeWithEstimateGas, setSubmitting, submitting, isConfirming } = useTransaction({
     successMessage: "Order cancelled successfully",
     errorMessage: "Failed to cancel order",
     successCallback: useCallback(() => {
@@ -77,12 +79,21 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   });
 
   const handleCancelBlueprint = async (req: RequisitionEvent, e: React.MouseEvent) => {
+    setSubmitting(true);
     e.stopPropagation(); // Prevent opening the order dialog
 
-    if (!address || !protocolAddress) return;
+    if (!address) {
+      throw new Error("Signer required.");
+    }
+
+    if (req.isCancelled) {
+      throw new Error("Order already cancelled");
+    }
+
+    toast.loading("Cancelling order...");
 
     try {
-      await writeWithEstimateGas({
+      return writeWithEstimateGas({
         address: protocolAddress,
         abi: diamondABI,
         functionName: "cancelBlueprint",
@@ -90,6 +101,9 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
       });
     } catch (error) {
       console.error("Error cancelling blueprint:", error);
+      toast.error(tryExtractErrorMessage(error, "Failed to cancel order"));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -357,12 +371,12 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
               </Row>
               <Button
                 variant="ghost"
-                className="inline-flex items-center gap-1 text-sm text-pinto-red-2 hover:bg-pinto-red-1"
+                className="text-sm text-pinto-red-2 hover:bg-pinto-red-1"
                 onClick={(e) => handleCancelBlueprint(req, e)}
-                disabled={submitting}
+                disabled={submitting || isConfirming}
               >
                 <Cross1Icon className="h-4 w-4" />
-                <span>Cancel</span>
+                <span className="inline ml-1">Cancel</span>
               </Button>
             </Row>
           </Col>
@@ -370,7 +384,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
       })}
 
       {/* Dialog for order details */}
-      {selectedOrder && selectedOrder.decodedData && (
+      {selectedOrder?.decodedData && (
         <ReviewTractorOrderDialog
           open={showDialog}
           onOpenChange={setShowDialog}
@@ -380,22 +394,14 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
             podLineLength: selectedOrder.decodedData.maxPodlineLengthAsString,
             minSoil: selectedOrder.decodedData.sowAmounts.minAmountToSowPerSeasonAsString,
             operatorTip: selectedOrder.decodedData.operatorParams.operatorTipAmountAsString,
-            tokenStrategy: (() => {
-              if (selectedOrder.decodedData?.sourceTokenIndices.includes(255)) {
-                return "LOWEST_SEEDS";
-              } else if (selectedOrder.decodedData?.sourceTokenIndices.includes(254)) {
-                return "LOWEST_PRICE";
-              } else {
-                return "SPECIFIC_TOKEN";
-              }
-            })(),
+            tokenStrategy: getSowOrderTokenStrategy(selectedOrder.decodedData.sourceTokenIndices),
           }}
           encodedData={rawSowBlueprintCall || selectedOrder.requisition.blueprint.data}
           operatorPasteInstrs={[...selectedOrder.requisition.blueprint.operatorPasteInstrs]}
           blueprint={adaptBlueprintForDialog(selectedOrder.requisition.blueprint)}
           isViewOnly={true}
           executionHistory={(executions ?? []).filter(
-            (exec) => exec.blueprintHash === selectedOrder.requisition.blueprintHash,
+            (exec) => stringEq(exec.blueprintHash, selectedOrder.requisition.blueprintHash),
           )}
         />
       )}
