@@ -19,13 +19,13 @@ import UsdeLogo from "@/assets/tokens/USDE.png";
 import UsdtLogo from "@/assets/tokens/USDT.png";
 import LandingChart from "@/components/LandingChart";
 import MinimalistConcentricCircles from "@/components/MinimalistConcentricCircles";
+import GameOfLife from "@/components/landing/GameOfLife";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { useAverageBDVWeightedSiloAPYs } from "@/state/useSiloAPYs";
 import { formatPct } from "@/utils/format";
 import NumberFlow from "@number-flow/react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { div, threshold } from "three/webgpu";
 import { Button } from "../components/ui/Button";
 
 function MainCTA() {
@@ -410,99 +410,98 @@ function Resources() {
     <div className="flex flex-col items-center self-stretch gap-12 mx-auto">
       <h2 className="text-4xl leading-same-h2 font-light text-black">Resources</h2>
       <div className="flex flex-row gap-8">
-        <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[36rem] flex flex-col gap-8 overflow-clip bg-white">
-          <div className="overflow-hidden relative">
-            <img
-              src="documentation.png"
-              className="w-full h-full object-cover object-top relative z-0"
-              alt="landing 2"
-            />
-            {/* Horizontal gradient overlay */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-white/50 via-transparent to-white/50 z-10 pointer-events-none" />
-
-            {/* Vertical gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-white/100 z-10 pointer-events-none" />
+        <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[32rem] flex flex-col gap-8 overflow-clip bg-white">
+          <div className="overflow-hidden relative h-[24rem] flex justify-center items-center">
+            <GameOfLife startingPattern={"tenCell"} />
           </div>
-          <div className="flex flex-col gap-4 mx-6">
-            <span className="text-[2rem] font-light text-black">Documentation</span>
-            <span className="text-[1.5rem] font-light text-pinto-gray-4">
-              Learn more about protocol economics, mechanisms, and implementation of the protocol smart contracts.
-            </span>
-            <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="outline-white"
-                className="w-full flex p-4 justify-center h-auto items-center gap-2.5 flex-1 mb-6"
-              >
-                <img src="gitbook.png" className="w-8 h-8" alt="documentation" />
-                <span className="w-full text-start">Read Documentation</span>
-                <span>→</span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-        <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[36rem] flex flex-col gap-8 overflow-clip bg-white">
-          <div className="overflow-hidden relative">
-            <img src="blog.png" className="w-full h-full object-cover object-top relative z-0" alt="landing 2" />
-            {/* Horizontal gradient overlay */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-white/50 via-transparent to-white/50 z-10 pointer-events-none" />
-
-            {/* Vertical gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-white/100 z-10 pointer-events-none" />
-          </div>
-          <div className="flex flex-col gap-4 mx-6">
-            <span className="text-[2rem] font-light text-black">Blog</span>
-            <span className="text-[1.5rem] font-light text-pinto-gray-4">
-              Find guides on protocol usage, detail about protocol upgrades, and more from core contributors.
-            </span>
-            <Link to={navLinks.blog} target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="outline-white"
-                className="w-full flex p-4 h-auto justify-center items-center gap-2.5 flex-1 mb-6"
-              >
-                <img src="mirror.png" className="w-8 h-8 min-w-8 min-h-8" alt="documentation" />
-                <span className="w-full text-start">Pinto Community Blog</span>
-                <span>→</span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-        <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[36rem] flex flex-col gap-8 overflow-clip bg-white">
-          <div className="overflow-hidden relative">
-            <img src="community.png" className="w-full h-full object-cover object-top relative z-0" alt="landing 2" />
-            {/* Horizontal gradient overlay */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-white/50 via-transparent to-white/50 z-10 pointer-events-none" />
-
-            {/* Vertical gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-white/100 z-10 pointer-events-none" />
-          </div>
-          <div className="flex flex-col gap-4 mx-6">
-            <span className="text-[2rem] font-light text-black">Community</span>
-            <span className="text-[1.5rem] font-light text-pinto-gray-4">
-              Ask questions about the protocol, participate in discussion about improvements and connect with other
-              Pinto enjoyers.
-            </span>
+          <div className="flex flex-col gap-8 mx-6 mb-6">
+            <div className="flex flex-col gap-4">
+              <span className="text-[2rem] font-light text-black">Learn</span>
+              <span className="text-[1.5rem] font-light text-pinto-gray-4 h-24">
+                Learn more about the incentives that coordinate the farm.
+              </span>
+            </div>
             <div className="flex flex-row gap-4">
-              <Link to={navLinks.discord} target="_blank" rel="noopener noreferrer" className="flex-1">
+              <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer" className="flex-1">
                 <Button
                   variant="outline-white"
-                  className="w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem]"
+                  className="w-full flex p-4 justify-center h-auto items-center gap-2.5 text-sm font-normal"
                 >
-                  <img src="discord.png" className="w-8 h-6 min-w-8 min-h-6" alt="documentation" />
-                  <span className="w-full text-start">Discord</span>
+                  <img src="gitbook.png" className="w-8 h-8 min-w-8 min-h-8" alt="documentation" />
+                  <span className="w-full text-start">Docs</span>
                   <span>→</span>
                 </Button>
               </Link>
+              <Link to={navLinks.discord} target="_blank" rel="noopener noreferrer" className="flex-1">
+                <Button
+                  variant="outline-white"
+                  className="w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal"
+                >
+                  <img src="mirror.png" className="w-8 h-8 min-w-8 min-h-8" alt="documentation" />
+                  <span className="w-full text-start">Blog</span>
+                  <span>→</span>
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+        <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[32rem] flex flex-col gap-8 overflow-clip bg-white">
+          <div className="overflow-hidden relative h-[24rem] flex justify-center items-center">
+            <GameOfLife startingPattern={"trafficCircle"} />
+          </div>
+          <div className="flex flex-col gap-8 mx-6 mb-6">
+            <div className="flex flex-col gap-4">
+              <span className="text-[2rem] font-light text-black">Engage</span>
+              <span className="text-[1.5rem] font-light text-pinto-gray-4 h-24">
+                Ask questions, participate in discussion about protocol improvements and connect with other farmers.
+              </span>
+            </div>
+            <div className="flex flex-row gap-4">
               <Link to={navLinks.twitter} target="_blank" rel="noopener noreferrer" className="flex-1">
                 <Button
                   variant="outline-white"
-                  className="w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem]"
+                  className="w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal"
                 >
                   <img src="twitter.png" className="w-8 h-8 min-w-8 min-h-8" alt="documentation" />
                   <span className="w-full text-start">@pintodotmoney</span>
                   <span>→</span>
                 </Button>
               </Link>
+              <Link to={navLinks.discord} target="_blank" rel="noopener noreferrer" className="flex-1">
+                <Button
+                  variant="outline-white"
+                  className="w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal"
+                >
+                  <img src="discord.png" className="w-8 h-6 min-w-8 min-h-6" alt="documentation" />
+                  <span className="w-full text-start">Discord</span>
+                  <span>→</span>
+                </Button>
+              </Link>
             </div>
+          </div>
+        </div>
+        <div className="border border-pinto-gray-2 rounded-[1.25rem] w-[32rem] flex flex-col gap-8 overflow-clip bg-white">
+          <div className="overflow-hidden relative">
+            <div className="overflow-hidden relative h-[24rem] flex justify-center items-center">
+              <GameOfLife startingPattern={"trafficCircle"} />
+            </div>
+          </div>
+          <div className="flex flex-col gap-8 mx-6 mb-6">
+            <div className="flex flex-col gap-4">
+              <span className="text-[2rem] font-light text-black">Participate</span>
+              <span className="text-[1.5rem] font-light text-pinto-gray-4 h-24">
+                Plant your own crops and join the movement.
+              </span>
+            </div>
+            <Link to={navLinks.discord} target="_blank" rel="noopener noreferrer" className="flex-1">
+              <Button
+                variant="outline-white"
+                className="w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal"
+              >
+                <span className="w-full text-start">Dashboard</span>
+                <span>→</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
