@@ -8,10 +8,9 @@ interface ErrorWithShortMessage {
   shortMessage: string;
 }
 
-type MayError = Record<string, unknown> | any;
-
 export const isErrorIsh = (val: unknown): val is ErrorIsh => {
   if (!exists(val) || !isObject(val)) return false;
+  else if (val instanceof Error) return true;
   return "message" in val && typeof val.message === "string";
 };
 
@@ -21,13 +20,11 @@ export const isShortMessageErrorIsh = (val: unknown): val is ErrorWithShortMessa
 };
 
 export const tryExtractErrorMessage = (value: unknown, defaultMessage: string): string => {
-  if (value instanceof Error || isObject(value)) {
-    if (isShortMessageErrorIsh(value)) {
-      return value.shortMessage;
-    }
-    if (isErrorIsh(value)) {
-      return value.message;
-    }
+  if (isShortMessageErrorIsh(value)) {
+    return value.shortMessage;
+  }
+  if (isErrorIsh(value)) {
+    return value.message;
   }
 
   return defaultMessage;
