@@ -936,6 +936,10 @@ export interface WithdrawalPlan {
 // Load Orderbook Data
 // ────────────────────────────────────────────────────────────────────────────────
 
+export interface LoadOrderbookDataOptions {
+  filterOutCompletedOrders?: boolean;
+}
+
 export async function loadOrderbookData(
   address: string | undefined,
   protocolAddress: `0x${string}` | undefined,
@@ -944,8 +948,11 @@ export async function loadOrderbookData(
   maxTemperature?: number,
   activeApiEntries?: OrderbookEntry[],
   lookbackBlocks?: bigint,
+  options?: LoadOrderbookDataOptions,
 ): Promise<OrderbookEntry[]> {
   if (!protocolAddress || !publicClient) return [];
+
+  const loadOptions = { filterOutCompletedOrders: true, ...options };
 
   const knownBlueprintHashes = new Set<string>(
     activeApiEntries?.map((order) => order.requisition.blueprintHash.toLowerCase()) ?? [],
@@ -991,9 +998,11 @@ export async function loadOrderbookData(
 
     // Create a set of completed blueprint hashes
     const completedOrders = new Set<`0x${string}`>(
-      sowOrderCompleteEvents
-        .map((event) => event.args?.blueprintHash)
-        .filter((hash): hash is `0x${string}` => hash !== undefined),
+      loadOptions.filterOutCompletedOrders
+        ? sowOrderCompleteEvents
+            .map((event) => event.args?.blueprintHash)
+            .filter((hash): hash is `0x${string}` => hash !== undefined)
+        : [],
     );
 
     // Filter out cancelled and completed orders
@@ -1035,7 +1044,14 @@ export async function loadOrderbookData(
     const publisherWithdrawalPlans: { [publisher: string]: any[] } = {};
 
     // Process requisitions in a single loop (already sorted by temperature)
-    const orderbookData: OrderbookEntry[] = [...(activeApiEntries ?? []).filter((entry) => !entry.isComplete)];
+    const orderbookData: OrderbookEntry[] = [
+      ...(activeApiEntries ?? []).filter((entry) => {
+        if (!!loadOptions.filterOutCompletedOrders) {
+          return !entry.isComplete;
+        }
+        return true;
+      }),
+    ];
 
     console.debug("\nProcessing orderbook data:");
 
