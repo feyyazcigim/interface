@@ -1,9 +1,10 @@
 import { TV } from "@/classes/TokenValue";
 import { TIME_TO_BLOCKS } from "@/constants/blocks";
-import { defaultQuerySettingsMedium } from "@/constants/query";
+import { defaultQuerySettings, defaultQuerySettingsMedium } from "@/constants/query";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import {
+  LoadOrderbookDataOptions,
   OrderbookEntry,
   TractorAPI,
   TractorAPIOrderOptions,
@@ -18,7 +19,7 @@ import { resolveChainId } from "@/utils/chain";
 import { HashString } from "@/utils/types.generic";
 import { isDev } from "@/utils/utils";
 import { DefaultError, QueryObserverOptions, useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useChainId, usePublicClient } from "wagmi";
 
 const getLookbackBlocks = (
@@ -41,17 +42,20 @@ const useTractorAPISowOrders = (address?: HashString, args?: TractorAPIOrderOpti
   const selectAndTransformOrders = useMemo(() => transformAPIOrderbookData(chainId), [chainId]);
 
   return useQuery({
-    queryKey: queryKeys.tractor.sowOrdersV0(args),
+    queryKey: queryKeys.tractor.sowOrdersV0({ ...args, publisher: args?.publisher || address }),
     queryFn: async () => {
       if (!chainId) return;
-      const options = { orderType: "SOW_V0", cancelled: false, ...args } satisfies TractorAPIOrderOptions;
-      if (address) options.publisher = address;
-
+      const options = {
+        publisher: address,
+        orderType: "SOW_V0",
+        cancelled: false,
+        ...args,
+      } satisfies TractorAPIOrderOptions;
       return TractorAPI.getOrders(options);
     },
     enabled: !!chainId && !chainOnly,
     select: selectAndTransformOrders,
-    ...defaultQuerySettingsMedium,
+    ...defaultQuerySettings,
   });
 };
 
@@ -108,6 +112,7 @@ type UseTractorSowOrderbookOptions<T> = {
   address?: HashString;
   args?: TractorAPIOrderOptions;
   chainOnly?: boolean;
+  options?: LoadOrderbookDataOptions;
 } & Pick<QueryObserverOptions<OrderbookEntry[] | undefined, DefaultError, T>, "select">;
 
 export function useTractorSowOrderbook<T = OrderbookEntry[]>({
@@ -115,6 +120,7 @@ export function useTractorSowOrderbook<T = OrderbookEntry[]>({
   args,
   chainOnly = false,
   select,
+  options,
 }: UseTractorSowOrderbookOptions<T> = {}) {
   const chainId = useChainId();
   const client = usePublicClient({ chainId });
@@ -138,7 +144,7 @@ export function useTractorSowOrderbook<T = OrderbookEntry[]>({
    */
 
   const ordersChainQuery = useQuery<OrderbookEntry[] | undefined, DefaultError, T>({
-    queryKey: queryKeys.tractor.sowOrdersV0Chain(orders?.lastUpdated ?? chainOnly ? 1 : 0, temperature.max),
+    queryKey: queryKeys.tractor.sowOrdersV0Chain(orders?.lastUpdated ?? chainOnly ? 1 : 0, temperature.max, options),
     queryFn: async () => {
       if (temperature.max.lte(0) || !client) {
         return [];
@@ -159,6 +165,7 @@ export function useTractorSowOrderbook<T = OrderbookEntry[]>({
         temperature.max.toNumber(),
         orders?.orders,
         lookbackBlocks,
+        options,
       );
 
       console.debug("[TRACTOR/useTractorSowOrderbook/ordersChainQuery] DATA", {
