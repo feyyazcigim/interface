@@ -28,7 +28,7 @@ import { getTokenNameByIndex } from "@/utils/token";
 import { AdvancedFarmCall, AdvancedPipeCall } from "@/utils/types";
 import { CalendarIcon, ClockIcon, CornerBottomLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { decodeFunctionData } from "viem";
 import { useAccount } from "wagmi";
@@ -60,6 +60,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
       }, {});
 
       return orderbookEntries
+        ?.filter((req) => stringEq(req.requisition.blueprint.publisher, address))
         ?.map((req) => ({
           ...req,
           executions: executionsByHash?.[req.requisition.blueprintHash] || undefined,
@@ -67,15 +68,15 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
         }))
         .sort((a, b) => a.blockNumber - b.blockNumber);
     },
-    [executions],
+    [executions, address],
   );
 
   // Fetch orders for the farmer
   const { data: orders, ...ordersQuery } = useTractorSowOrderbook({
     address,
-    args: { orderType: "SOW_V0" },
-    options: { filterOutCompletedOrders: false },
+    filterOutCompleted: false,
     select: selectOrdersWithExecutions,
+    enabled: !!address,
   });
 
   // derived
@@ -152,20 +153,28 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     setShowDialog(true);
   };
 
+  if (!address) {
+    return (
+      <EmptyContainer>
+        <div className="pinto-body-light text-pinto-light">Connect your wallet to view your Tractor Orders</div>
+      </EmptyContainer>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="flex flex-col gap-6 justify-center items-center w-full h-[22.5rem] border rounded-[0.75rem] bg-pinto-off-white border-pinto-gray-2">
+      <EmptyContainer>
         <div className="pinto-body-light text-pinto-light">Loading Tractor Orders...</div>
         <Skeleton className="h-6 w-48" />
-      </div>
+      </EmptyContainer>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col gap-6 justify-center items-center w-full h-[22.5rem] border rounded-[0.75rem] bg-pinto-off-white border-pinto-gray-2">
-        <div className="pinto-h4 text-pinto-red-2">Error loading tractor orders</div>
-      </div>
+      <EmptyContainer>
+        <div className="pinto-h4 text-pinto-red-2">Error Loading Tractor Orders</div>
+      </EmptyContainer>
     );
   }
 
@@ -384,6 +393,12 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     </div>
   );
 };
+
+const EmptyContainer = ({ children }: { children: React.ReactNode }) => (
+  <Col className="gap-6 justify-center items-center w-full h-[22.5rem] border rounded-lg bg-pinto-off-white border-pinto-gray-2">
+    {children}
+  </Col>
+);
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Helper functions
