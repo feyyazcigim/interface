@@ -158,7 +158,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
       <EmptyContainer>
         <div className="pinto-body-light text-pinto-light">Connect your wallet to view your Tractor Orders</div>
       </EmptyContainer>
-    )
+    );
   }
 
   if (loading) {
@@ -177,7 +177,6 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
       </EmptyContainer>
     );
   }
-
 
   if (!orders?.length && !executions?.length) {
     return <EmptyTable type="tractor" onTractorClick={onCreateOrder} />;

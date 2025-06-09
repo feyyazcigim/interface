@@ -3,12 +3,7 @@ import { TIME_TO_BLOCKS } from "@/constants/blocks";
 import { defaultQuerySettings, defaultQuerySettingsMedium } from "@/constants/query";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import {
-  OrderbookEntry,
-  TractorAPI,
-  TractorAPIOrdersResponse,
-  loadOrderbookData,
-} from "@/lib/Tractor";
+import { OrderbookEntry, TractorAPI, TractorAPIOrdersResponse, loadOrderbookData } from "@/lib/Tractor";
 import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { queryKeys } from "@/state/queryKeys";
 import { useTemperature } from "@/state/useFieldData";
@@ -112,7 +107,7 @@ const transformAPIOrderbookData = (chainId: number) => (response: TractorAPIOrde
 type UseTractorSowOrderbookOptions<T> = {
   /** The Blueprint Publisher Address If none provided, all orders will be returned */
   address?: HashString;
-  /** 
+  /**
    * If true, only cancelled orders will be returned
    * If false, only uncompleted orders will be returned
    * If undefined, all orders will be returned
@@ -147,10 +142,10 @@ export function useTractorSowOrderbook<T = OrderbookEntry[]>({
   const { address, chainOnly = false, enabled = true } = params;
 
   // Fetch from API
-  const { data: orders, ...ordersQuery } = useTractorAPISowOrders({ 
-    enabled, 
+  const { data: orders, ...ordersQuery } = useTractorAPISowOrders({
+    enabled,
     chainOnly,
-    ...params 
+    ...params,
   });
 
   // check if the API data exists, is not loading, and is not an error

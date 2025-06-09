@@ -31,10 +31,14 @@ const tractorQueryKeys = {
     args?.orderType,
     args?.cancelled ?? false,
   ],
-  sowOrdersV0Chain: (lastUpdatedBlock: number, maxTemp: TV | undefined, options?: {
-    cancelled?: boolean;
-    uncomplete?: boolean;
-  }) => [
+  sowOrdersV0Chain: (
+    lastUpdatedBlock: number,
+    maxTemp: TV | undefined,
+    options?: {
+      cancelled?: boolean;
+      uncomplete?: boolean;
+    },
+  ) => [
     BASE_QKS.tractor,
     "sowOrdersV0",
     "chain",
