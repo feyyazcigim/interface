@@ -31,13 +31,17 @@ const tractorQueryKeys = {
     args?.orderType,
     args?.cancelled ?? false,
   ],
-  sowOrdersV0Chain: (lastUpdatedBlock: number, maxTemp: TV | undefined, options?: LoadOrderbookDataOptions) => [
+  sowOrdersV0Chain: (lastUpdatedBlock: number, maxTemp: TV | undefined, options?: {
+    cancelled?: boolean;
+    uncomplete?: boolean;
+  }) => [
     BASE_QKS.tractor,
     "sowOrdersV0",
     "chain",
     lastUpdatedBlock?.toString() ?? "0",
     maxTemp?.blockchainString ?? "0",
-    `filter-completed-${Number(options?.filterOutCompletedOrders ?? true)}`,
+    `filter-completed-${Number(options?.uncomplete ?? true)}`,
+    `cancelled-${Number(options?.cancelled ?? false)}`,
   ],
   operatorAverageTipPaid: (lookbackBlocks?: bigint) => [
     BASE_QKS.tractor,

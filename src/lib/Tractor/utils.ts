@@ -937,7 +937,7 @@ export interface WithdrawalPlan {
 // ────────────────────────────────────────────────────────────────────────────────
 
 export interface LoadOrderbookDataOptions {
-  filterOutCompletedOrders?: boolean;
+  filterOutCompleted?: boolean;
 }
 
 export async function loadOrderbookData(
@@ -952,7 +952,7 @@ export async function loadOrderbookData(
 ): Promise<OrderbookEntry[]> {
   if (!protocolAddress || !publicClient) return [];
 
-  const loadOptions = { filterOutCompletedOrders: true, ...options };
+  const loadOptions: Required<LoadOrderbookDataOptions> = { filterOutCompleted: true, ...options };
 
   const knownBlueprintHashes = new Set<string>(
     activeApiEntries?.map((order) => order.requisition.blueprintHash.toLowerCase()) ?? [],
@@ -998,7 +998,7 @@ export async function loadOrderbookData(
 
     // Create a set of completed blueprint hashes
     const completedOrders = new Set<`0x${string}`>(
-      loadOptions.filterOutCompletedOrders
+      loadOptions.filterOutCompleted
         ? sowOrderCompleteEvents
             .map((event) => event.args?.blueprintHash)
             .filter((hash): hash is `0x${string}` => hash !== undefined)
@@ -1044,14 +1044,10 @@ export async function loadOrderbookData(
     const publisherWithdrawalPlans: { [publisher: string]: any[] } = {};
 
     // Process requisitions in a single loop (already sorted by temperature)
-    const orderbookData: OrderbookEntry[] = [
-      ...(activeApiEntries ?? []).filter((entry) => {
-        if (!!loadOptions.filterOutCompletedOrders) {
-          return !entry.isComplete;
-        }
-        return true;
-      }),
-    ];
+    const orderbookData: OrderbookEntry[] = (activeApiEntries ?? []).filter((entry) => {
+      if (!!loadOptions.filterOutCompleted && entry.isComplete) return false;
+      return true;
+    });
 
     console.debug("\nProcessing orderbook data:");
 
