@@ -1,7 +1,5 @@
 import { TV } from "@/classes/TokenValue";
-import { LoadOrderbookDataOptions } from "@/lib/Tractor";
 import { TractorAPIOrderOptions } from "@/lib/Tractor/api";
-import { MinimumViableBlock } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -18,25 +16,22 @@ const BASE_QKS = {
 // TRACTOR Query Keys
 // ────────────────────────────────────────────────────────────────────────────────
 
-const getLatestBlockKeyFragment = (args: MinimumViableBlock<bigint> | undefined) =>
-  args?.number.toString() ?? "no-block-number";
-
 const tractorQueryKeys = {
   // Sow Orders V0 api cal
   sowOrdersV0: (args?: TractorAPIOrderOptions) => [
     BASE_QKS.tractor,
     "sowOrdersV0",
     "api",
-    args?.publisher,
-    args?.orderType,
-    args?.cancelled ?? false,
+    `publisher-${args?.publisher ?? "none"}`,
+    `orderType-${args?.orderType ?? "any"}`,
+    `cancelled-${args?.cancelled ?? "any"}`,
   ],
   sowOrdersV0Chain: (
     lastUpdatedBlock: number,
     maxTemp: TV | undefined,
     options?: {
       cancelled?: boolean;
-      uncomplete?: boolean;
+      filterOutCompleted?: boolean;
     },
   ) => [
     BASE_QKS.tractor,
@@ -44,8 +39,8 @@ const tractorQueryKeys = {
     "chain",
     lastUpdatedBlock?.toString() ?? "0",
     maxTemp?.blockchainString ?? "0",
-    `filter-completed-${Number(options?.uncomplete ?? true)}`,
-    `cancelled-${Number(options?.cancelled ?? false)}`,
+    `filter-completed-${Number(options?.filterOutCompleted ?? true)}`,
+    `cancelled-${Number(options?.cancelled ?? "any")}`,
   ],
   operatorAverageTipPaid: (lookbackBlocks?: bigint) => [
     BASE_QKS.tractor,
