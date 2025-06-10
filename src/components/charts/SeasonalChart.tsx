@@ -86,10 +86,6 @@ const SeasonalChart = ({
 
   const inputData = useSeasonalResult.data;
 
-  if (title === "Planted Pinto") {
-    console.log("noDAta: ", Boolean(allData && allData.length === 0));
-    console.log("allData", allData);
-  }
   useEffect(() => {
     if (!inputData) {
       setAllData(null);
@@ -97,21 +93,17 @@ const SeasonalChart = ({
       return;
     }
 
-    // console.log("setting all data", inputData);
-    // console.log("setting display data", inputData[inputData.length - 1]);
-    setAllData(inputData);
-    setDisplayData(inputData[inputData.length - 1]);
-    // }
-  }, [inputData]);
+    const handleSet = (toSetData: SeasonalChartData[]) => {
+      setAllData(toSetData);
+      setDisplayData(toSetData[toSetData.length - 1]);
+    };
 
-  const handleChangeTab = useCallback(
-    (tab: TimeTab) => {
-      onChangeTab(tab);
-      // setAllData(null);
-      // setDisplayData(null);
-    },
-    [onChangeTab],
-  );
+    if (!allData || inputData.length !== allData.length) {
+      handleSet(inputData);
+    }
+  }, [inputData, allData]);
+
+  const handleChangeTab = useCallback((tab: TimeTab) => onChangeTab(tab), [onChangeTab]);
 
   const chartData = useMemo<LineChartData[]>(() => {
     if (allData) {
@@ -149,7 +141,9 @@ const SeasonalChart = ({
   const handleMouseOver = useCallback(
     (index: number) => {
       if (allData) {
-        setDisplayData(allData[index ?? allData.length - 1]);
+        const indexData = index !== undefined ? allData[index] : undefined;
+        const setData = indexData ?? allData[allData.length - 1];
+        setDisplayData(setData);
       }
     },
     [allData],

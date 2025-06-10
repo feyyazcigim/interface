@@ -165,11 +165,23 @@ export const defaultLineChartOptions: Omit<ChartOptions<"line">, "scales"> = {
 // Plugins
 // ---------------------------------------------------------------------------------------------------------------------
 
-const getVerticalLinePlugin = (
-  activeIndexRef: MutableRefObject<number | undefined>,
-  fillArea: boolean = false,
-): Plugin => ({
-  id: "customVerticalLine",
+const activeIndexVerticalLinePlugin = (activeIndexRef: MutableRefObject<number | undefined>) => ({
+  id: "activeIndexVerticalLine",
+  beforeDraw: (chart: Chart) => {
+    const ctx = chart.ctx;
+    if (ctx) {
+      // Clear only the area where the line was drawn
+      const activeIndex = activeIndexRef.current;
+      if (typeof activeIndex === "number") {
+        const dataPoint = chart.getDatasetMeta(0).data[activeIndex];
+        if (dataPoint) {
+          const { x } = dataPoint.getProps(["x"], true);
+          // Clear a slightly wider area to prevent artifacts
+          ctx.clearRect(x - 3, chart.chartArea.top, 6, chart.chartArea.bottom - chart.chartArea.top);
+        }
+      }
+    }
+  },
   afterDraw: (chart: Chart) => {
     const ctx = chart.ctx;
     const activeIndex = activeIndexRef.current;
@@ -179,9 +191,9 @@ const getVerticalLinePlugin = (
 
       // Draw the vertical line at morningIndex
       if (typeof activeIndex === "number") {
-        const morningDataPoint = chart.getDatasetMeta(0).data[activeIndex];
-        if (morningDataPoint) {
-          const { x } = morningDataPoint.getProps(["x"], true);
+        const activeIdxPoint = chart.getDatasetMeta(0).data[activeIndex];
+        if (activeIdxPoint) {
+          const { x } = activeIdxPoint.getProps(["x"], true);
           ctx.beginPath();
           ctx.moveTo(x, chart.chartArea.top);
           ctx.lineTo(x, chart.chartArea.bottom);
@@ -190,6 +202,38 @@ const getVerticalLinePlugin = (
           ctx.stroke();
         }
       }
+
+      ctx.restore();
+    }
+  },
+});
+
+const getVerticalLinePlugin = (
+  activeIndexRef: MutableRefObject<number | undefined>,
+  fillArea: boolean = false,
+): Plugin => ({
+  id: "customVerticalLine",
+  beforeDraw: (chart: Chart) => {
+    const ctx = chart.ctx;
+    if (ctx) {
+      // Clear only the area where the line was drawn
+      const activeIndex = activeIndexRef.current;
+      if (typeof activeIndex === "number") {
+        const dataPoint = chart.getDatasetMeta(0).data[activeIndex];
+        if (dataPoint) {
+          const { x } = dataPoint.getProps(["x"], true);
+          // Clear a slightly wider area to prevent artifacts
+          ctx.clearRect(x - 3, chart.chartArea.top, 6, chart.chartArea.bottom - chart.chartArea.top);
+        }
+      }
+    }
+  },
+
+  afterDraw: (chart: Chart) => {
+    const ctx = chart.ctx;
+    if (ctx) {
+      ctx.save();
+      ctx.setLineDash([4, 4]);
 
       // Draw the vertical line for the active element (hovered point)
       const activeElements = chart.getActiveElements();
@@ -335,14 +379,11 @@ export type LineChartHorizontalReferenceLine = {
   label?: string;
 };
 
-const getHorizontalLinePlugin = (
-  activeIndexRef: MutableRefObject<number | undefined>,
-  horizontalReferenceLines: LineChartHorizontalReferenceLine[],
-) => ({
+const getHorizontalLinePlugin = (horizontalReferenceLines: LineChartHorizontalReferenceLine[] = []) => ({
   id: "horizontalReferenceLine",
-  afterDraw: (chart: Chart) => {
+  beforeDraw: (chart: Chart) => {
     const ctx = chart.ctx;
-    if (!ctx || horizontalReferenceLines.length === 0) return;
+    if (!ctx || !horizontalReferenceLines.length) return;
 
     ctx.save();
 
@@ -412,6 +453,7 @@ const getHorizontalLinePlugin = (
 });
 
 export const plugins = {
+  activeIndexVerticalLine: activeIndexVerticalLinePlugin,
   verticalLine: getVerticalLinePlugin,
   selectionCallback: getSelectionCallbackPlugin,
   selectionPoint: getSelectionPointPlugin,

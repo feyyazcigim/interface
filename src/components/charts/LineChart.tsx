@@ -56,6 +56,9 @@ export interface LineChartProps {
   customValueTransform?: CustomChartValueTransform;
 }
 
+// provide a stable reference to the horizontal reference lines to avoid re-rendering the chart when some other prop changes
+const stableHorizontalReferenceLines: LineChartHorizontalReferenceLine[] = [];
+
 const LineChart = React.memo(
   ({
     data,
@@ -67,7 +70,7 @@ const LineChart = React.memo(
     onMouseOver,
     activeIndex,
     useLogarithmicScale = false,
-    horizontalReferenceLines = [],
+    horizontalReferenceLines = stableHorizontalReferenceLines,
     yAxisMin,
     yAxisMax,
     customValueTransform,
@@ -78,7 +81,7 @@ const LineChart = React.memo(
     useEffect(() => {
       activeIndexRef.current = activeIndex;
       if (chartRef.current) {
-        chartRef.current.update("none"); // Disable animations during update
+        chartRef.current.update("none");
       }
     }, [activeIndex]);
 
@@ -163,30 +166,25 @@ const LineChart = React.memo(
     const verticalLinePlugin: Plugin = useMemo(() => plugins.verticalLine(activeIndexRef, fillArea), [fillArea]);
 
     const horizontalReferenceLinePlugin: Plugin = useMemo(() => {
-      return plugins.horizontalReferenceLine(activeIndexRef, horizontalReferenceLines);
+      return plugins.horizontalReferenceLine(horizontalReferenceLines);
     }, [horizontalReferenceLines]);
 
     const selectionPointPlugin = useMemo(() => {
       return plugins.selectionPoint(activeIndexRef, fillArea);
     }, [fillArea]);
 
-    // create a ref to the onMouseOver function
-    const onMouseOverRef = useRef<typeof onMouseOver>(onMouseOver);
-
-    // update the ref when the onMouseOver function changes
-    useEffect(() => {
-      onMouseOverRef.current = onMouseOver;
-    }, [onMouseOver]);
-
-    // Plugin to handle mouse over
     const selectionCallbackPlugin: Plugin = useMemo(() => {
-      return plugins.selectionCallback(onMouseOverRef.current);
-    }, []);
+      return plugins.selectionCallback(onMouseOver);
+    }, [onMouseOver]);
 
     const chartOptions: ChartOptions = useMemo(() => {
       return {
         maintainAspectRatio: false,
         responsive: true,
+        animation: {
+          duration: 300, // Add smooth animation duration
+          easing: "easeInOutQuart", // Add smooth easing
+        },
         plugins: {
           tooltip: {
             enabled: false,
@@ -215,7 +213,7 @@ const LineChart = React.memo(
               display: true,
               color: (context) => {
                 const tickLabel = context.tick?.label;
-                if (typeof activeIndex === "number") {
+                if (typeof activeIndexRef.current === "number") {
                   if (tickLabel && tickLabel !== "") {
                     return "rgba(0, 0, 0, 0.1)";
                   } else {
@@ -233,8 +231,8 @@ const LineChart = React.memo(
               padding: 0,
               minRotation: 0,
               maxRotation: 0,
-              autoSkip: typeof activeIndex !== "number",
-              maxTicksLimit: typeof activeIndex !== "number" ? 6 : undefined,
+              autoSkip: typeof activeIndexRef.current !== "number",
+              maxTicksLimit: typeof activeIndexRef.current !== "number" ? 6 : undefined,
               callback: (_value, index, values) => {
                 const xValue = data[index][xKey];
 
@@ -244,7 +242,7 @@ const LineChart = React.memo(
 
                 const tickLabel = xValue instanceof Date ? `${xValue.getMonth() + 1}/${xValue.getDate()}` : xValue;
 
-                if (typeof activeIndex === "number") {
+                if (typeof activeIndexRef.current === "number") {
                   if (index === 0 || index === values.length - 1) {
                     return tickLabel;
                   }
@@ -299,10 +297,13 @@ const LineChart = React.memo(
       };
     }, [data, xKey, yTickMin, yTickMax, valueFormatter, useLogarithmicScale, customValueTransform]);
 
+    const activeIndexVerticalLinePlugin: Plugin = useMemo(() => plugins.activeIndexVerticalLine(activeIndexRef), []);
+
     const allPlugins = useMemo<Plugin[]>(
       () => [
         gradientPlugin,
         verticalLinePlugin,
+        activeIndexVerticalLinePlugin,
         horizontalReferenceLinePlugin,
         selectionPointPlugin,
         selectionCallbackPlugin,
@@ -312,6 +313,7 @@ const LineChart = React.memo(
         verticalLinePlugin,
         horizontalReferenceLinePlugin,
         selectionPointPlugin,
+        activeIndexVerticalLinePlugin,
         selectionCallbackPlugin,
       ],
     );
