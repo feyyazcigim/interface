@@ -279,7 +279,7 @@ export default function GameOfLife({ startingPattern }) {
   const canvasRef = useRef(null);
   const [isRunning, setIsRunning] = useState(false);
   const [generation, setGeneration] = useState(0);
-  const animationFrameRef = useRef();
+  const animationFrameRef = useRef(0);
   const lastTimeRef = useRef(0);
 
   // Use two grids for efficient double buffering
