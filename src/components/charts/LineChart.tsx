@@ -81,6 +81,7 @@ const LineChart = React.memo(
     useEffect(() => {
       activeIndexRef.current = activeIndex;
       if (chartRef.current) {
+        // prevent animation on update
         chartRef.current.update("none");
       }
     }, [activeIndex]);
@@ -182,7 +183,7 @@ const LineChart = React.memo(
         maintainAspectRatio: false,
         responsive: true,
         animation: {
-          duration: 300, // Add smooth animation duration
+          duration: 400, // Add smooth animation duration
           easing: "easeInOutQuart", // Add smooth easing
         },
         plugins: {

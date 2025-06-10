@@ -100,6 +100,8 @@ const SeasonalChart = ({
 
     if (!allData || inputData.length !== allData.length) {
       handleSet(inputData);
+    } else if (inputData.some((d, i) => d.value !== allData?.[i]?.value)) {
+      handleSet(inputData);
     }
   }, [inputData, allData]);
 
@@ -243,8 +245,6 @@ const DisplayData = ({
   statVariant: "explorer" | "non-colored";
   valueFormatter: (value: number) => string;
 }) => {
-  // const displayData = useDebounceValue(_displayData, 10);
-
   return (
     <div className="h-[85px] px-4 sm:px-6">
       <div
