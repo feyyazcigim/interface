@@ -44,6 +44,8 @@ interface SeasonalChartProps {
   className?: string;
   useLogarithmicScale?: boolean;
   showReferenceLineAtOne?: boolean;
+  dataNotFetching?: boolean;
+  noDataMessage?: string;
   // New props for custom y-axis ranges
   yAxisRanges?: {
     [TimeTab.Week]?: YAxisRangeConfig;
@@ -71,9 +73,11 @@ const SeasonalChart = ({
   fillArea,
   statVariant = "explorer",
   className,
+  dataNotFetching = false,
   useLogarithmicScale = false,
   showReferenceLineAtOne = false,
   yAxisRanges,
+  noDataMessage = "No data to display",
   chartWrapperClassName,
 }: SeasonalChartProps) => {
   const [allData, setAllData] = useState<SeasonalChartData[] | null>(null);
@@ -82,20 +86,23 @@ const SeasonalChart = ({
   const inputData = useSeasonalResult.data;
 
   useEffect(() => {
-    if (inputData && !allData) {
-      setAllData(inputData);
-      setDisplayData(inputData[inputData.length - 1]);
+    if (!inputData) {
+      setAllData(null);
+      setDisplayData(null);
+      return;
+    }
+
+    const handleSet = (toSetData: SeasonalChartData[]) => {
+      setAllData(toSetData);
+      setDisplayData(toSetData[toSetData.length - 1]);
+    };
+
+    if (!allData || inputData.length !== allData.length) {
+      handleSet(inputData);
     }
   }, [inputData, allData]);
 
-  const handleChangeTab = useCallback(
-    (tab: TimeTab) => {
-      onChangeTab(tab);
-      setAllData(null);
-      setDisplayData(null);
-    },
-    [onChangeTab],
-  );
+  const handleChangeTab = useCallback((tab: TimeTab) => onChangeTab(tab), [onChangeTab]);
 
   const chartData = useMemo<LineChartData[]>(() => {
     if (allData) {
@@ -133,11 +140,16 @@ const SeasonalChart = ({
   const handleMouseOver = useCallback(
     (index: number) => {
       if (allData) {
-        setDisplayData(allData[index ?? allData.length - 1]);
+        const indexData = index !== undefined ? allData[index] : undefined;
+        const setData = indexData ?? allData[allData.length - 1];
+        setDisplayData(setData);
       }
     },
     [allData],
   );
+
+  const isLoading = useSeasonalResult.isLoading;
+  const isError = useSeasonalResult.isError;
 
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
@@ -153,7 +165,7 @@ const SeasonalChart = ({
         <TimeTabsSelector tab={activeTab} setTab={handleChangeTab} />
       </div>
 
-      {!allData && !displayData && (
+      {((!allData && !displayData) || isLoading || isError) && !dataNotFetching && (
         <>
           {/* Keep sizing the same as when there is data. Allows centering spinner/error vertically */}
           <div
@@ -164,8 +176,8 @@ const SeasonalChart = ({
             }}
           >
             <div className="absolute inset-0 flex items-center justify-center">
-              {useSeasonalResult.isLoading && !useSeasonalResult.isError && <FrameAnimator size={75} />}
-              {useSeasonalResult.isError && (
+              {isLoading && !isError && <FrameAnimator size={75} />}
+              {isError && (
                 <>
                   <CloseIconAlt color={"red"} />
                   <div className="pinto-body text-pinto-green-3">An error has occurred</div>
@@ -175,7 +187,7 @@ const SeasonalChart = ({
           </div>
         </>
       )}
-      {allData && allData.length === 0 && !useSeasonalResult.isLoading && (
+      {((allData && allData.length === 0) || dataNotFetching) && (
         <div
           className={`relative w-full flex items-center justify-center ${size === "small" ? "aspect-3/1" : "aspect-6/1"}`}
           style={{
@@ -184,29 +196,15 @@ const SeasonalChart = ({
           }}
         >
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="pinto-body-light">No silo interactions from connected wallet</div>
+            <div className="pinto-body-light">{noDataMessage}</div>
           </div>
         </div>
       )}
-      {allData && displayData && (
+      {allData && displayData && !isLoading && !isError && !dataNotFetching && (
         <>
-          <div className="h-[85px] px-4 sm:px-6">
-            <div
-              className={`${statVariant === "explorer" ? "text-pinto-green-3 sm:text-pinto-green-3" : "text-pinto-primary sm:text-pinto-primary"} pinto-body sm:pinto-h3`}
-            >
-              {valueFormatter(displayData.value)}
-            </div>
-            <div className="flex flex-col gap-0 mt-2 sm:gap-2 sm:mt-3">
-              <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
-                Season {displayData.season}
-              </div>
-              <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
-                {formatDate(displayData.timestamp)}
-              </div>
-            </div>
-          </div>
+          <DisplayData displayData={displayData} statVariant={statVariant} valueFormatter={valueFormatter} />
           <div className={size === "small" ? "aspect-3/1" : "aspect-6/1"}>
-            {!chartData.length && !useSeasonalResult.isLoading ? (
+            {!chartData.length && !isLoading ? (
               <div className="w-full h-full flex items-center justify-center">
                 <div className="pinto-body-light">No data</div>
               </div>
@@ -234,3 +232,31 @@ const SeasonalChart = ({
   );
 };
 export default SeasonalChart;
+
+const DisplayData = ({
+  displayData,
+  statVariant,
+  valueFormatter,
+}: {
+  displayData: SeasonalChartData;
+  statVariant: "explorer" | "non-colored";
+  valueFormatter: (value: number) => string;
+}) => {
+  return (
+    <div className="h-[85px] px-4 sm:px-6">
+      <div
+        className={`${statVariant === "explorer" ? "text-pinto-green-3 sm:text-pinto-green-3" : "text-pinto-primary sm:text-pinto-primary"} pinto-body sm:pinto-h3`}
+      >
+        {valueFormatter(displayData.value)}
+      </div>
+      <div className="flex flex-col gap-0 mt-2 sm:gap-2 sm:mt-3">
+        <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
+          Season {displayData.season}
+        </div>
+        <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
+          {formatDate(displayData.timestamp)}
+        </div>
+      </div>
+    </div>
+  );
+};

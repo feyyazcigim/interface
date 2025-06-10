@@ -10,88 +10,30 @@ import {
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
+import React from "react";
 import { useState } from "react";
 
 const SiloExplorer = () => {
-  const [liquidityTab, setLiquidityTab] = useState(TimeTab.Week);
-  const [l2srTab, setL2srTab] = useState(TimeTab.Week);
-  const [avgSeedsTab, setAvgSeedsTab] = useState(TimeTab.Week);
-  const [stalkTab, setStalkTab] = useState(TimeTab.Week);
-  const [bdvTab, setBdvTab] = useState(TimeTab.Week);
-
   const season = useSunData().current;
-
-  const liquidityData = useSeasonalTotalLiquidity(Math.max(0, season - tabToSeasonalLookback(liquidityTab)), season);
-  const l2srData = useSeasonalL2SR(Math.max(0, season - tabToSeasonalLookback(l2srTab)), season);
-  const avgSeedsData = useSeasonalAvgSeeds(Math.max(0, season - tabToSeasonalLookback(avgSeedsTab)), season);
-  const stalkData = useSeasonalStalk(Math.max(0, season - tabToSeasonalLookback(stalkTab)), season);
-  const bdvData = useSeasonalBDV(Math.max(0, season - tabToSeasonalLookback(bdvTab)), season);
 
   return (
     <>
       {/* For debugging, cant double comment out with the comment in the middle */}
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/2">
-          <SeasonalChart
-            title="Total Liquidity"
-            tooltip="The total USD value of tokens in liquidity pools on the Minting Whitelist."
-            size="small"
-            fillArea
-            activeTab={liquidityTab}
-            onChangeTab={setLiquidityTab}
-            useSeasonalResult={liquidityData}
-            valueFormatter={f.price0dFormatter}
-            tickValueFormatter={f.largePriceFormatter}
-          />
+          <TotalLiquidityChart season={season} />
         </div>
         <div className="w-full sm:w-1/2">
-          <SeasonalChart
-            title="Liquidity to Supply ratio"
-            tooltip="The ratio of Pinto in Liquidity Pools on the Minting Whitelist per outstanding Pinto."
-            size="small"
-            activeTab={l2srTab}
-            onChangeTab={setL2srTab}
-            useSeasonalResult={l2srData}
-            valueFormatter={f.percent2dFormatter}
-            tickValueFormatter={f.percent0dFormatter}
-          />
+          <L2SRChart season={season} />
         </div>
       </div>
-      {/* <SeasonalChart
-        title="Average Seeds per PDV"
-        size="large"
-        activeTab={avgSeedsTab}
-        onChangeTab={setAvgSeedsTab}
-        useSeasonalResult={avgSeedsData}
-        valueFormatter={f.number6dFormatter}
-        tickValueFormatter={f.number2dFormatter}
-      /> */}
+      {/* <AvgSeedsChart season={season} /> */}
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8 mt-8">
         <div className="w-full sm:w-1/2">
-          <SeasonalChart
-            title="Stalk Supply"
-            tooltip="The total number of Stalk."
-            size="small"
-            fillArea
-            activeTab={stalkTab}
-            onChangeTab={setStalkTab}
-            useSeasonalResult={stalkData}
-            valueFormatter={f.number0dFormatter}
-            tickValueFormatter={f.largeNumberFormatter}
-          />
+          <StalkSupplyChart season={season} />
         </div>
         <div className="w-full sm:w-1/2">
-          <SeasonalChart
-            title="Total Deposited PDV"
-            tooltip="The total PDV of tokens in liquidity pools on the Minting Whitelist."
-            size="small"
-            fillArea
-            activeTab={bdvTab}
-            onChangeTab={setBdvTab}
-            useSeasonalResult={bdvData}
-            valueFormatter={f.number0dFormatter}
-            tickValueFormatter={f.largeNumberFormatter}
-          />
+          <TotalDepositedPDVChart season={season} />
         </div>
       </div>
       <SeasonalAPYChart season={season} size="large" />
@@ -99,3 +41,106 @@ const SiloExplorer = () => {
   );
 };
 export default SiloExplorer;
+
+interface ISeason {
+  season: number;
+}
+
+const useTimeTabs = () => useState(TimeTab.Week);
+
+const TotalLiquidityChart = React.memo(({ season }: ISeason) => {
+  const [liquidityTab, setLiquidityTab] = useTimeTabs();
+
+  const liquidityData = useSeasonalTotalLiquidity(Math.max(0, season - tabToSeasonalLookback(liquidityTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Total Liquidity"
+      tooltip="The total USD value of tokens in liquidity pools on the Minting Whitelist."
+      size="small"
+      fillArea
+      activeTab={liquidityTab}
+      onChangeTab={setLiquidityTab}
+      useSeasonalResult={liquidityData}
+      valueFormatter={f.price0dFormatter}
+      tickValueFormatter={f.largePriceFormatter}
+    />
+  );
+});
+
+const L2SRChart = React.memo(({ season }: ISeason) => {
+  const [l2srTab, setL2srTab] = useTimeTabs();
+
+  const l2srData = useSeasonalL2SR(Math.max(0, season - tabToSeasonalLookback(l2srTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Liquidity to Supply ratio"
+      tooltip="The ratio of Pinto in Liquidity Pools on the Minting Whitelist per outstanding Pinto."
+      size="small"
+      activeTab={l2srTab}
+      onChangeTab={setL2srTab}
+      useSeasonalResult={l2srData}
+      valueFormatter={f.percent2dFormatter}
+      tickValueFormatter={f.percent0dFormatter}
+    />
+  );
+});
+
+const StalkSupplyChart = React.memo(({ season }: ISeason) => {
+  const [stalkTab, setStalkTab] = useTimeTabs();
+
+  const stalkData = useSeasonalStalk(Math.max(0, season - tabToSeasonalLookback(stalkTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Stalk Supply"
+      tooltip="The total number of Stalk."
+      size="small"
+      fillArea
+      activeTab={stalkTab}
+      onChangeTab={setStalkTab}
+      useSeasonalResult={stalkData}
+      valueFormatter={f.number0dFormatter}
+      tickValueFormatter={f.largeNumberFormatter}
+    />
+  );
+});
+
+const TotalDepositedPDVChart = React.memo(({ season }: ISeason) => {
+  const [bdvTab, setBdvTab] = useTimeTabs();
+
+  const bdvData = useSeasonalBDV(Math.max(0, season - tabToSeasonalLookback(bdvTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Total Deposited PDV"
+      tooltip="The total PDV of tokens in liquidity pools on the Minting Whitelist."
+      size="small"
+      fillArea
+      activeTab={bdvTab}
+      onChangeTab={setBdvTab}
+      useSeasonalResult={bdvData}
+      valueFormatter={f.number0dFormatter}
+      tickValueFormatter={f.largeNumberFormatter}
+    />
+  );
+});
+
+const AvgSeedsChart = React.memo(({ season }: ISeason) => {
+  const [avgSeedsTab, setAvgSeedsTab] = useTimeTabs();
+
+  const avgSeedsData = useSeasonalAvgSeeds(Math.max(0, season - tabToSeasonalLookback(avgSeedsTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Average Seeds per PDV"
+      size="large"
+      activeTab={avgSeedsTab}
+      onChangeTab={setAvgSeedsTab}
+      useSeasonalResult={avgSeedsData}
+      valueFormatter={f.number6dFormatter}
+      tickValueFormatter={f.number2dFormatter}
+    />
+  );
+});
