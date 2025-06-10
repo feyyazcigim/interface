@@ -8,12 +8,15 @@ import {
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
 import { useState } from "react";
+import { useAccount } from "wagmi";
 
 const FarmerExplorer = () => {
   const [plantedTab, setPlantedTab] = useState(TimeTab.AllTime);
   const [grownStalkTab, setGrownStalkTab] = useState(TimeTab.AllTime);
   const [stalkOwnershipTab, setStalkOwnershipTab] = useState(TimeTab.AllTime);
   const season = useSunData().current;
+
+  const { address, isConnecting } = useAccount();
 
   const plantedData = useFarmerSeasonalPlantedPinto(Math.max(0, season - tabToSeasonalLookback(plantedTab)), season);
   const grownStalkData = useFarmerSeasonalClaimedGrownStalkBalance(
@@ -24,7 +27,7 @@ const FarmerExplorer = () => {
     Math.max(0, season - tabToSeasonalLookback(stalkOwnershipTab)),
     season,
   );
-  console.log(
+  console.debug(
     "🚀 ~ FarmerExplorer ~ Math.max(0, season - tabToSeasonalLookback(stalkOwnershipTab)), season:",
     Math.max(0, season - tabToSeasonalLookback(stalkOwnershipTab)),
     season,
@@ -40,8 +43,10 @@ const FarmerExplorer = () => {
         activeTab={plantedTab}
         onChangeTab={setPlantedTab}
         useSeasonalResult={plantedData}
+        dataNotFetching={!address && !isConnecting}
         valueFormatter={f.number0dFormatter}
         tickValueFormatter={f.largeNumberFormatter}
+        noDataMessage="No silo interactions from connected wallet"
       />
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/2">
@@ -52,8 +57,10 @@ const FarmerExplorer = () => {
             activeTab={grownStalkTab}
             onChangeTab={setGrownStalkTab}
             useSeasonalResult={grownStalkData}
+            dataNotFetching={!address && !isConnecting}
             valueFormatter={f.number0dFormatter}
             tickValueFormatter={f.largeNumberFormatter}
+            noDataMessage="No silo interactions from connected wallet"
           />
         </div>
         <div className="w-full sm:w-1/2">
@@ -64,8 +71,10 @@ const FarmerExplorer = () => {
             activeTab={stalkOwnershipTab}
             onChangeTab={setStalkOwnershipTab}
             useSeasonalResult={stalkOwnershipData}
+            dataNotFetching={!address && !isConnecting}
             valueFormatter={f.percent3dFormatter}
             tickValueFormatter={f.percent0dFormatter}
+            noDataMessage="No silo interactions from connected wallet"
           />
         </div>
       </div>
