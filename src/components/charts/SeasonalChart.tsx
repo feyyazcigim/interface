@@ -99,8 +99,6 @@ const SeasonalChart = ({
 
     if (!allData || inputData.length !== allData.length) {
       handleSet(inputData);
-    } else if (inputData.some((d, i) => d.value !== allData?.[i]?.value)) {
-      handleSet(inputData);
     }
   }, [inputData, allData]);
 
