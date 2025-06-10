@@ -10,6 +10,8 @@ import { chartFormatters as f } from "@/utils/format";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 
+const NO_DATA_MESSAGE = "No silo interactions from connected wallet";
+
 const FarmerExplorer = () => {
   const [plantedTab, setPlantedTab] = useState(TimeTab.AllTime);
   const [grownStalkTab, setGrownStalkTab] = useState(TimeTab.AllTime);
@@ -33,6 +35,8 @@ const FarmerExplorer = () => {
     season,
   );
 
+  const dataNotFetching = !address && !isConnecting;
+
   return (
     <>
       <SeasonalChart
@@ -43,10 +47,10 @@ const FarmerExplorer = () => {
         activeTab={plantedTab}
         onChangeTab={setPlantedTab}
         useSeasonalResult={plantedData}
-        dataNotFetching={!address && !isConnecting}
+        dataNotFetching={dataNotFetching}
         valueFormatter={f.number0dFormatter}
         tickValueFormatter={f.largeNumberFormatter}
-        noDataMessage="No silo interactions from connected wallet"
+        noDataMessage={NO_DATA_MESSAGE}
       />
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/2">
@@ -57,10 +61,10 @@ const FarmerExplorer = () => {
             activeTab={grownStalkTab}
             onChangeTab={setGrownStalkTab}
             useSeasonalResult={grownStalkData}
-            dataNotFetching={!address && !isConnecting}
+            dataNotFetching={dataNotFetching}
             valueFormatter={f.number0dFormatter}
             tickValueFormatter={f.largeNumberFormatter}
-            noDataMessage="No silo interactions from connected wallet"
+            noDataMessage={NO_DATA_MESSAGE}
           />
         </div>
         <div className="w-full sm:w-1/2">
@@ -71,10 +75,10 @@ const FarmerExplorer = () => {
             activeTab={stalkOwnershipTab}
             onChangeTab={setStalkOwnershipTab}
             useSeasonalResult={stalkOwnershipData}
-            dataNotFetching={!address && !isConnecting}
+            dataNotFetching={dataNotFetching}
             valueFormatter={f.percent3dFormatter}
             tickValueFormatter={f.percent0dFormatter}
-            noDataMessage="No silo interactions from connected wallet"
+            noDataMessage={NO_DATA_MESSAGE}
           />
         </div>
       </div>
