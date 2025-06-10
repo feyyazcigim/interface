@@ -1,7 +1,9 @@
 import {
+  ActiveElement,
   CategoryScale,
   Chart,
   ChartData,
+  ChartEvent,
   ChartOptions,
   Filler,
   LineController,
@@ -45,7 +47,7 @@ export type ScatterChartAxisOptions = {
   label: string;
   min: number;
   max: number;
-}
+};
 
 export interface ScatterChartProps {
   data: ScatterChartData;
@@ -61,8 +63,9 @@ export interface ScatterChartProps {
     dash?: number[];
     label?: string;
   }[];
-  xOptions: ScatterChartAxisOptions
-  yOptions: ScatterChartAxisOptions
+  onPointClick?: (event: ChartEvent, activeElements: ActiveElement[]) => void;
+  xOptions: ScatterChartAxisOptions;
+  yOptions: ScatterChartAxisOptions;
   customValueTransform?: CustomChartValueTransform;
 }
 
@@ -78,8 +81,8 @@ const ScatterChartV2 = React.memo(
     xOptions,
     yOptions,
     customValueTransform,
+    onPointClick,
   }: ScatterChartProps) => {
-    console.info("🚀 ~ data:", data);
     const chartRef = useRef<Chart | null>(null);
     const activeIndexRef = useRef<number | undefined>(activeIndex);
 
@@ -120,8 +123,8 @@ const ScatterChartV2 = React.memo(
       }
 
       // Otherwise calculate based on data
-      const maxData = Number.MIN_SAFE_INTEGER //data.reduce((acc, next) => Math.max(acc, next.y), Number.MIN_SAFE_INTEGER);
-      const minData = Number.MAX_SAFE_INTEGER //data.reduce((acc, next) => Math.min(acc, next.y), Number.MAX_SAFE_INTEGER);
+      const maxData = Number.MIN_SAFE_INTEGER; //data.reduce((acc, next) => Math.max(acc, next.y), Number.MIN_SAFE_INTEGER);
+      const minData = Number.MAX_SAFE_INTEGER; //data.reduce((acc, next) => Math.min(acc, next.y), Number.MAX_SAFE_INTEGER);
 
       const maxTick = maxData === minData && maxData === 0 ? 1 : maxData;
       let minTick = Math.max(0, minData - (maxData - minData) * 0.1);
@@ -179,8 +182,6 @@ const ScatterChartV2 = React.memo(
       },
       [data],
     );
-    console.info("🚀 ~ chartData:", chartData)
-
 
     const verticalLinePlugin: Plugin = useMemo<Plugin>(
       () => ({
@@ -430,7 +431,7 @@ const ScatterChartV2 = React.memo(
           x: {
             title: {
               display: true,
-              text: xOptions.label || '',
+              text: xOptions.label || "",
             },
             type: "linear",
             position: "bottom",
@@ -444,7 +445,7 @@ const ScatterChartV2 = React.memo(
           y: {
             title: {
               display: true,
-              text: yOptions.label || '',
+              text: yOptions.label || "",
             },
             // min: xYMinMax?.y?.min || 0,
             // max: xYMinMax?.y?.max || initialMaxY.current,
@@ -453,6 +454,9 @@ const ScatterChartV2 = React.memo(
             //   callback: (val) => formatter.twoDec(val),
             // },
           },
+        },
+        onClick: (event, activeElements) => {
+          onPointClick?.(event, activeElements);
         },
         // scales: {
         //   x: {

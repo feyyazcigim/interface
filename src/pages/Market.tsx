@@ -5,6 +5,7 @@ import { navLinks } from "@/components/nav/nav/Navbar";
 import { Separator } from "@/components/ui/Separator";
 import { useAllMarket } from "@/state/market/useAllMarket";
 import { useHarvestableIndex, usePodLine } from "@/state/useFieldData";
+import { ActiveElement, ChartEvent, PointStyle } from "chart.js";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -17,7 +18,6 @@ import CreateListing from "./market/actions/CreateListing";
 import CreateOrder from "./market/actions/CreateOrder";
 import FillListing from "./market/actions/FillListing";
 import FillOrder from "./market/actions/FillOrder";
-import { PointStyle } from "chart.js";
 
 const TABLE_SLUGS = ["activity", "listings", "orders", "my-activity"];
 const TABLE_LABELS = ["Activity", "Listings", "Orders", "My Activity"];
@@ -111,69 +111,75 @@ export function Market() {
     return acc;
   }, [] as any);
 
-  const orders = data?.reduce((acc, event) => {
-    // Skip Fill Orders
-    if ("toFarmer" in event || 'originalAmount' in event) {
+  const orders = data?.reduce(
+    (acc, event) => {
+      // Skip Fill Orders
+      if ("toFarmer" in event || "originalAmount" in event) {
+        return acc;
+      }
+      let placeInLine: number | null = null;
+      let amount: number | null = null;
+      let status = "";
+      const price = event.pricePerPod.toNumber();
+      const eventId = event.id;
+      const eventType: "ORDER" | "LISTING" = event.type as "ORDER" | "LISTING";
+      const eventIndex: number | null = null;
+      amount = event.beanAmount.div(event.pricePerPod).toNumber();
+      const fillPct = event.beanAmountFilled.div(event.beanAmount).mul(100).toNumber();
+      status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
+      placeInLine = event.maxPlaceInLine.toNumber() / 1_000_000;
+
+      if (placeInLine !== null && price !== null) {
+        acc.data.push({
+          x: placeInLine,
+          y: price,
+          eventId,
+          eventType,
+          status,
+          amount,
+        });
+      }
+
       return acc;
-    }
-    let placeInLine: number | null = null;
-    let amount: number | null = null;
-    let status = "";
-    const price = event.pricePerPod.toNumber();
-    const eventId = event.id;
-    const eventType: 'ORDER' | 'LISTING' = event.type as 'ORDER' | 'LISTING';
-    let eventIndex: number | null = null;
-    amount = event.beanAmount.div(event.pricePerPod).toNumber();
-    const fillPct = event.beanAmountFilled.div(event.beanAmount).mul(100).toNumber();
-    status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
-    placeInLine = event.maxPlaceInLine.toNumber() / 1_000_000;
+    },
+    { label: "Orders", data: [] as any, color: "#D3B567", pointStyle: "circle" as PointStyle },
+  );
 
-    if (placeInLine !== null && price !== null) {
-      acc.data.push({
-        x: placeInLine,
-        y: price,
-        eventId,
-        eventType,
-        status,
-        amount
-      });
-    }
+  const listings = data?.reduce(
+    (acc, event) => {
+      // Skip Fill Orders
+      if ("toFarmer" in event || "beanAmount" in event) {
+        return acc;
+      }
+      let placeInLine: number | null = null;
+      let amount: number | null = null;
+      let status = "";
+      const price = event.pricePerPod.toNumber();
+      const eventId = event.id;
+      const eventType: "ORDER" | "LISTING" = event.type as "ORDER" | "LISTING";
+      let eventIndex: number | null = null;
+      amount = event.originalAmount.toNumber();
+      const fillPct = event.filled.div(event.originalAmount).mul(100).toNumber();
+      status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
+      placeInLine = status === "ACTIVE" ? event.index.sub(harvestableIndex).toNumber() / 1_000_000 : null;
+      eventIndex = event.index.toNumber();
 
-    return acc;
-  }, { label: 'Orders', data: [] as any, color: "blue", pointStyle: "circle" as PointStyle, });
+      if (placeInLine !== null && price !== null) {
+        acc.data.push({
+          x: placeInLine,
+          y: price,
+          eventId,
+          eventType,
+          status,
+          amount,
+        });
+      }
 
-  const listings = data?.reduce((acc, event) => {
-    // Skip Fill Orders
-    if ("toFarmer" in event || "beanAmount" in event) {
       return acc;
-    }
-    let placeInLine: number | null = null;
-    let amount: number | null = null;
-    let status = "";
-    const price = event.pricePerPod.toNumber();
-    const eventId = event.id;
-    const eventType: 'ORDER' | 'LISTING' = event.type as 'ORDER' | 'LISTING';
-    let eventIndex: number | null = null;
-    amount = event.originalAmount.toNumber();
-    const fillPct = event.filled.div(event.originalAmount).mul(100).toNumber();
-    status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
-    placeInLine = status === "ACTIVE" ? event.index.sub(harvestableIndex).toNumber() / 1_000_000 : null;
-    eventIndex = event.index.toNumber();
-
-    if (placeInLine !== null && price !== null) {
-      acc.data.push({
-        x: placeInLine,
-        y: price,
-        eventId,
-        eventType,
-        status,
-        amount
-      });
-    }
-
-    return acc;
-  }, { label: 'Listings', data: [] as any, color: "red", pointStyle: "rect" as PointStyle, });
-  const datasets: ScatterChartData = [orders, listings]
+    },
+    { label: "Listings", data: [] as any, color: "#00C767", pointStyle: "rect" as PointStyle },
+  );
+  const datasets: ScatterChartData = [orders, listings];
 
   // Upon initial page load only, navigate to a page other than Activity if the url is granular.
   // In general it is allowed to be on Activity tab with these granular urls, hence the empty dependency array.
@@ -207,11 +213,14 @@ export function Market() {
     [mode],
   );
 
-  const onPointClick = (event: any) => {
-    if (event.type === "LISTING") {
-      navigate(`/market/pods/buy/${event.index.toString().replace(".", "")}`);
+  const onPointClick = (event: ChartEvent, activeElements: ActiveElement[]) => {
+    const element = activeElements[0];
+    const dataPoint = datasets[element.datasetIndex].data[element.index] as any;
+    console.info("🚀 ~ onPointClick ~ dataPoint:", dataPoint);
+    if (dataPoint.eventType === "LISTING") {
+      navigate(`/market/pods/buy/${dataPoint.eventId.toString().replace(".", "")}`);
     } else {
-      navigate(`/market/pods/sell/${event.id.replace(".", "")}`);
+      navigate(`/market/pods/sell/${dataPoint.eventId.replace(".", "")}`);
     }
   };
 
@@ -243,7 +252,9 @@ export function Market() {
                 data={datasets}
                 size="small"
                 xOptions={{ label: "Place in line", min: 0, max: podLineAsNumber }}
-                yOptions={{ label: "Price per pod", min: 0, max: 100 }} />
+                yOptions={{ label: "Price per pod", min: 0, max: 100 }}
+                onPointClick={onPointClick}
+              />
               <div className="flex gap-10 ml-2.5 mt-8 mb-[1.625rem]">
                 {TABLE_SLUGS.map((s, idx) => (
                   <p
