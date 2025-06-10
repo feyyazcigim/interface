@@ -278,7 +278,7 @@ const getSelectionPointPlugin = (
   },
 });
 
-const getSelectionCallbackPlugin = (onMouseOver?: (index: number | undefined) => void): Plugin => ({
+const getSelectionCallbackPlugin = (onMouseOver?: (index: number) => void): Plugin => ({
   id: "selectionCallback",
   afterDraw: (chart: Chart) => {
     onMouseOver?.(chart.getActiveElements()?.[0]?.index);
@@ -328,11 +328,95 @@ const getGradientShiftPlugin = (
   },
 });
 
+export type LineChartHorizontalReferenceLine = {
+  value: number;
+  color: string;
+  dash?: number[];
+  label?: string;
+};
+
+const getHorizontalLinePlugin = (
+  activeIndexRef: MutableRefObject<number | undefined>,
+  horizontalReferenceLines: LineChartHorizontalReferenceLine[],
+) => ({
+  id: "horizontalReferenceLine",
+  afterDraw: (chart: Chart) => {
+    const ctx = chart.ctx;
+    if (!ctx || horizontalReferenceLines.length === 0) return;
+
+    ctx.save();
+
+    // Draw each horizontal reference line
+    horizontalReferenceLines.forEach((line) => {
+      const yScale = chart.scales.y;
+      const y = yScale.getPixelForValue(line.value);
+
+      // Only draw if within chart area
+      if (y >= chart.chartArea.top && y <= chart.chartArea.bottom) {
+        ctx.beginPath();
+        if (line.dash) {
+          ctx.setLineDash(line.dash);
+        } else {
+          ctx.setLineDash([4, 4]); // Default dash pattern
+        }
+        ctx.moveTo(chart.chartArea.left, y);
+        ctx.lineTo(chart.chartArea.right, y);
+        ctx.strokeStyle = line.color;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Reset dash pattern
+        ctx.setLineDash([]);
+
+        // Add label if provided
+        if (line.label) {
+          ctx.font = "12px Arial";
+          ctx.fillStyle = line.color;
+
+          // Measure text width to ensure it doesn't get cut off
+          const textWidth = ctx.measureText(line.label).width;
+          const rightPadding = 10; // Padding from right edge
+
+          // Position the label at the right side of the chart with padding
+          const labelX = chart.chartArea.right - textWidth - rightPadding;
+          const labelPadding = 5; // Padding between line and text
+          const textHeight = 12; // Approximate height of the text
+
+          // Check if the line is too close to the top of the chart
+          const isNearTop = y - textHeight - labelPadding < chart.chartArea.top;
+
+          // Check if the line is too close to the bottom of the chart
+          const isNearBottom = y + textHeight + labelPadding > chart.chartArea.bottom;
+
+          // Set text alignment
+          ctx.textAlign = "left";
+
+          // Position the label based on proximity to chart edges
+          // biome-ignore lint/suspicious/noExplicitAny:
+          let labelY: any;
+          ctx.textBaseline = "bottom";
+          labelY = y - labelPadding;
+          if (isNearTop) {
+            ctx.textBaseline = "top";
+            labelY = y + labelPadding;
+          } else if (isNearBottom) {
+            labelY = y - labelPadding;
+          }
+          ctx.fillText(line.label, labelX, labelY);
+        }
+      }
+    });
+
+    ctx.restore();
+  },
+});
+
 export const plugins = {
   verticalLine: getVerticalLinePlugin,
   selectionCallback: getSelectionCallbackPlugin,
   selectionPoint: getSelectionPointPlugin,
   gradientShift: getGradientShiftPlugin,
+  horizontalReferenceLine: getHorizontalLinePlugin,
 };
 
 // ---------------------------------------------------------------------------------------------------------------------
