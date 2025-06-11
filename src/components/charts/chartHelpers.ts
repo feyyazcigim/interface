@@ -43,6 +43,11 @@ export const positionalGradientVertical = (ctx: CanvasRenderingContext2D, colors
 // ---------------------------------------------------------------------------------------------------------------------
 
 // stroke configs
+export type StrokeGradientFunction = (
+  ctx: CanvasRenderingContext2D | null,
+  position: number,
+) => CanvasGradient | undefined;
+
 const metallicGreenStrokeColors = ["#59f0a7", "#00C767", "#246645", "#00C767", "#F2F6F9"];
 const metallicRedStrokeColors = ["#FF7E7E", "#FF0000", "#8B0000", "#FF0000", "#F2F6F9"];
 const metallicBlueStrokeColors = ["#7EB5FF", "#0066FF", "#003380", "#0066FF", "#F2F6F9"];
@@ -50,7 +55,7 @@ const metallicBlueStrokeColors = ["#7EB5FF", "#0066FF", "#003380", "#0066FF", "#
 const metallicMorningStrokeColors = ["#F6F3E9", "#FEF400", "#BB9400"];
 const metallicMorningStrokePositions = [0, 0.52, 1];
 
-const strokeGradientFnFactory = (colors: string[]) => {
+const strokeGradientFnFactory = (colors: string[]): StrokeGradientFunction => {
   return (ctx: CanvasRenderingContext2D | null, position: number) => {
     if (ctx) {
       const positions = [position - 1, position - 0.5, position, position + 0.5, position + 1];
