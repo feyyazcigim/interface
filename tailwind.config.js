@@ -211,6 +211,10 @@ module.exports = {
           from: { transform: "translateY( -300% )" },
           to: { transform: "translateY( 0% )" },
         },
+        "vertical-marquee-small": {
+          from: { transform: "translateY( 0% )" },
+          to: { transform: "translateY( -100% )" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -218,6 +222,7 @@ module.exports = {
         marquee: "marquee 24s linear infinite",
         "vertical-marquee": "vertical-marquee 36s linear infinite",
         "vertical-marquee-reverse": "vertical-marquee-reverse 54s linear infinite",
+        "vertical-marquee-small": "vertical-marquee-small 80s linear infinite",
       },
       aspectRatio: {
         "3/1": "3 / 1",
