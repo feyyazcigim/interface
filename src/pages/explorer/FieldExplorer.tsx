@@ -106,7 +106,7 @@ const PodLineChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setPodlineTab}
       useSeasonalResult={podIndexData}
       valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.largeNumberFormatter}
+      tickValueFormatter={f.largeNumber1dFormatter}
     />
   );
 });
@@ -126,7 +126,7 @@ const SownPintoChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setSownTab}
       useSeasonalResult={sownData}
       valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.largeNumberFormatter}
+      tickValueFormatter={f.largeNumber1dFormatter}
     />
   );
 });
@@ -146,7 +146,7 @@ const PodsHarvestedChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setHarvestedTab}
       useSeasonalResult={harvestData}
       valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.largeNumberFormatter}
+      tickValueFormatter={f.largeNumber1dFormatter}
     />
   );
 });

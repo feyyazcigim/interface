@@ -63,7 +63,7 @@ const TractorExplorer = () => {
             onChangeTab={setSownTab}
             useSeasonalResult={pintoSownData}
             valueFormatter={f.number0dFormatter}
-            tickValueFormatter={f.largeNumberFormatter}
+            tickValueFormatter={f.largeNumber1dFormatter}
           />
         </div>
         <div className="w-full sm:w-1/2">
@@ -76,7 +76,7 @@ const TractorExplorer = () => {
             onChangeTab={setPodsTab}
             useSeasonalResult={podsIssuedData}
             valueFormatter={f.number0dFormatter}
-            tickValueFormatter={f.largeNumberFormatter}
+            tickValueFormatter={f.largeNumber1dFormatter}
           />
         </div>
       </div>
@@ -90,7 +90,7 @@ const TractorExplorer = () => {
             onChangeTab={setFundedTab}
             useSeasonalResult={fundedAmountData}
             valueFormatter={f.number0dFormatter}
-            tickValueFormatter={f.largeNumberFormatter}
+            tickValueFormatter={f.largeNumber1dFormatter}
           />
         </div>
         <div className="w-full sm:w-1/2">
@@ -102,7 +102,7 @@ const TractorExplorer = () => {
             onChangeTab={setMaxSowTab}
             useSeasonalResult={maxSowData}
             valueFormatter={f.number0dFormatter}
-            tickValueFormatter={f.largeNumberFormatter}
+            tickValueFormatter={f.largeNumber1dFormatter}
           />
         </div>
       </div>
@@ -144,7 +144,7 @@ const TractorExplorer = () => {
             onChangeTab={setExecutionsTab}
             useSeasonalResult={executionsCountData}
             valueFormatter={f.number0dFormatter}
-            tickValueFormatter={f.largeNumberFormatter}
+            tickValueFormatter={f.largeNumber1dFormatter}
           />
         </div>
         <div className="w-full sm:w-1/2">
@@ -157,7 +157,7 @@ const TractorExplorer = () => {
             onChangeTab={setPublishersTab}
             useSeasonalResult={uniquePublishersData}
             valueFormatter={f.number0dFormatter}
-            tickValueFormatter={f.largeNumberFormatter}
+            tickValueFormatter={f.largeNumber1dFormatter}
           />
         </div>
       </div>

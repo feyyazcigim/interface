@@ -138,11 +138,15 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                       {token && (
                         <IconImage src={token.logoURI} size={8} alt={token.symbol} className="inline-block mr-2" />
                       )}
-                      <span style={{ color: token?.color }} className={`mr-2 ${!token?.color && "text-pinto-green-3"}`}>
+                      <div style={{ color: token?.color }} className={`mr-2 ${!token?.color && "text-pinto-green-3"}`}>
                         {tokenSymbol === "NET" && "Total: "}
-                        {f.price0dFormatter(allData[tokenSymbol][displayIndex].value)}
-                      </span>
-                      {idx < Object.keys(allData).length - 1 && <span className="text-pinto-gray-2 mx-2">|</span>}
+                        <p className="inline-block w-[7.1ch] text-right">
+                          {f.largePriceFormatter({ decimals: 3, min: 1000000, uppercase: true })(
+                            allData[tokenSymbol][displayIndex].value,
+                          )}
+                        </p>
+                      </div>
+                      {idx < Object.keys(allData).length - 1 && <p className="text-pinto-gray-2 mx-2">|</p>}
                     </div>
                   );
                 })}

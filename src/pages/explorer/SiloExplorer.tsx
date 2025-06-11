@@ -63,7 +63,7 @@ const TotalLiquidityChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setLiquidityTab}
       useSeasonalResult={liquidityData}
       valueFormatter={f.price0dFormatter}
-      tickValueFormatter={f.largePriceFormatter}
+      tickValueFormatter={f.largePrice1dFormatter}
     />
   );
 });
@@ -102,7 +102,7 @@ const StalkSupplyChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setStalkTab}
       useSeasonalResult={stalkData}
       valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.largeNumberFormatter}
+      tickValueFormatter={f.largeNumber1dFormatter}
     />
   );
 });
@@ -122,7 +122,7 @@ const TotalDepositedPDVChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setBdvTab}
       useSeasonalResult={bdvData}
       valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.largeNumberFormatter}
+      tickValueFormatter={f.largeNumber1dFormatter}
     />
   );
 });
