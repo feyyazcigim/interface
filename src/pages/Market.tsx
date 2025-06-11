@@ -124,7 +124,6 @@ export function Market() {
       const price = event.pricePerPod.toNumber();
       const eventId = event.id;
       const eventType: "ORDER" | "LISTING" = event.type as "ORDER" | "LISTING";
-      const eventIndex: number | null = null;
       amount = event.beanAmount.div(event.pricePerPod).toNumber();
       const fillPct = event.beanAmountFilled.div(event.beanAmount).mul(100).toNumber();
       status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
@@ -170,6 +169,7 @@ export function Market() {
           x: placeInLine,
           y: price,
           eventId,
+          eventIndex,
           eventType,
           status,
           amount,
@@ -217,9 +217,8 @@ export function Market() {
   const onPointClick = (event: ChartEvent, activeElements: ActiveElement[]) => {
     const element = activeElements[0];
     const dataPoint = datasets[element.datasetIndex].data[element.index] as any;
-    console.info("🚀 ~ onPointClick ~ dataPoint:", dataPoint);
     if (dataPoint.eventType === "LISTING") {
-      navigate(`/market/pods/buy/${dataPoint.eventId.toString().replace(".", "")}`);
+      navigate(`/market/pods/buy/${dataPoint.eventIndex.toString().replace(".", "")}`);
     } else {
       navigate(`/market/pods/sell/${dataPoint.eventId.replace(".", "")}`);
     }
