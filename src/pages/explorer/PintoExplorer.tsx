@@ -9,6 +9,7 @@ import {
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
+import React from "react";
 import { useMemo, useState } from "react";
 
 // Chart constants
@@ -21,44 +22,73 @@ const CHART_CONSTANTS = {
 };
 
 const PintoExplorer = () => {
-  const [priceTab, setPriceTab] = useState(TimeTab.Week);
-  const [liquidityTab, setLiquidityTab] = useState(TimeTab.Week);
-  const [supplyTab, setSupplyTab] = useState(TimeTab.Week);
-  const [mcapTab, setMcapTab] = useState(TimeTab.Week);
-
   const season = useSunData().current;
 
-  const priceData = useSeasonalPrice(Math.max(6, season - tabToSeasonalLookback(priceTab)), season);
-  const filteredPriceData = useMemo(() => {
-    return priceData;
-  }, [priceData, priceTab]);
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
+        <div className="w-full sm:w-1/2">
+          <PriceChart season={season} />
+        </div>
+        <div className="w-full sm:w-1/2">
+          <TotalLiquidityChart season={season} />
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
+        <div className="w-full sm:w-1/2">
+          <TotalSupplyChart season={season} />
+        </div>
+        <div className="w-full sm:w-1/2">
+          <MarketCapChart season={season} />
+        </div>
+      </div>
+      <MarketPerformanceChart season={season} size="large" />
+    </>
+  );
+};
 
-  const liquidityData = useSeasonalTotalLiquidity(Math.max(0, season - tabToSeasonalLookback(liquidityTab)), season);
-  const supplyData = useSeasonalSupply(Math.max(0, season - tabToSeasonalLookback(supplyTab)), season);
-  const mcapData = useSeasonalMcap(Math.max(0, season - tabToSeasonalLookback(mcapTab)), season);
+export default PintoExplorer;
 
-  // Calculate average price and determine y-axis ranges
-  const priceYAxisRanges = useMemo(() => {
-    const { TARGET_PRICE, PADDING } = CHART_CONSTANTS;
+// ────────────────────────────────────────────────────────────────────────────────
+// Utils & Interfaces
+// ────────────────────────────────────────────────────────────────────────────────
 
-    // Default range as fallback if data isn't available
-    const defaultRange = {
-      min: 0,
-      max: TARGET_PRICE,
-      showReferenceLine: true,
-    };
+const { TARGET_PRICE, PADDING } = CHART_CONSTANTS;
 
+interface ISeason {
+  season: number;
+}
+
+const useTimeTabs = () => useState(TimeTab.Week);
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Price Chart
+// ────────────────────────────────────────────────────────────────────────────────
+
+// Default range as fallback if data isn't available
+const defaultPriceRange = {
+  min: 0,
+  max: TARGET_PRICE,
+  showReferenceLine: true,
+} as const;
+
+const defaultPriceRanges = {
+  [TimeTab.Week]: defaultPriceRange,
+  [TimeTab.Month]: defaultPriceRange,
+  [TimeTab.AllTime]: defaultPriceRange,
+} as const;
+
+/**
+ * Calculate average price and determine y-axis ranges
+ */
+const usePriceYAxisRanges = (data: ReturnType<typeof useSeasonalPrice>["data"]) => {
+  return useMemo(() => {
     // If we don't have data yet, return the default range
-    if (!filteredPriceData.data || filteredPriceData.data.length === 0) {
-      return {
-        [TimeTab.Week]: defaultRange,
-        [TimeTab.Month]: defaultRange,
-        [TimeTab.AllTime]: defaultRange,
-      };
+    if (!data?.length) {
+      return defaultPriceRanges;
     }
-
     // Calculate min, max values from the actual data
-    const values = filteredPriceData.data.map((item) => item.value);
+    const values = data.map((item) => item.value);
     const minValue = Math.min(...values) * PADDING.MIN;
     const maxValue = Math.max(...values) * PADDING.MAX;
 
@@ -75,70 +105,102 @@ const PintoExplorer = () => {
       [TimeTab.Month]: range,
       [TimeTab.AllTime]: range,
     };
-  }, [filteredPriceData.data]);
+  }, [data]);
+};
+
+const PriceChart = React.memo(({ season }: ISeason) => {
+  const [priceTab, setPriceTab] = useTimeTabs();
+
+  const priceData = useSeasonalPrice(Math.max(6, season - tabToSeasonalLookback(priceTab)), season);
+
+  // Calculate average price and determine y-axis ranges
+  const priceYAxisRanges = usePriceYAxisRanges(priceData.data);
 
   return (
-    <>
-      <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
-        <div className="w-full sm:w-1/2">
-          <SeasonalChart
-            title="Pinto Price"
-            tooltip="The Current Price of Pinto in USD."
-            size="small"
-            activeTab={priceTab}
-            onChangeTab={setPriceTab}
-            useSeasonalResult={filteredPriceData}
-            valueFormatter={f.price6dFormatter}
-            tickValueFormatter={f.price2dFormatter}
-            useLogarithmicScale={true}
-            showReferenceLineAtOne={priceYAxisRanges[priceTab]?.showReferenceLine ?? false}
-            yAxisRanges={priceYAxisRanges}
-          />
-        </div>
-        <div className="w-full sm:w-1/2">
-          <SeasonalChart
-            title="Total Liquidity"
-            tooltip="The total USD value of tokens in liquidity pools on the Minting Whitelist."
-            size="small"
-            fillArea
-            activeTab={liquidityTab}
-            onChangeTab={setLiquidityTab}
-            useSeasonalResult={liquidityData}
-            valueFormatter={f.price0dFormatter}
-            tickValueFormatter={f.largePriceFormatter}
-          />
-        </div>
-      </div>
-      <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
-        <div className="w-full sm:w-1/2">
-          <SeasonalChart
-            title="Pinto Supply"
-            tooltip="The total Pinto supply."
-            size="small"
-            fillArea
-            activeTab={supplyTab}
-            onChangeTab={setSupplyTab}
-            useSeasonalResult={supplyData}
-            valueFormatter={f.number0dFormatter}
-            tickValueFormatter={f.largeNumberFormatter}
-          />
-        </div>
-        <div className="w-full sm:w-1/2">
-          <SeasonalChart
-            title="Market Capitalization"
-            tooltip="The USD value of the Pinto supply."
-            size="small"
-            fillArea
-            activeTab={mcapTab}
-            onChangeTab={setMcapTab}
-            useSeasonalResult={mcapData}
-            valueFormatter={f.price0dFormatter}
-            tickValueFormatter={f.largePriceFormatter}
-          />
-        </div>
-      </div>
-      <MarketPerformanceChart season={season} size="large" />
-    </>
+    <SeasonalChart
+      title="Pinto Price"
+      tooltip="The Current Price of Pinto in USD."
+      size="small"
+      activeTab={priceTab}
+      onChangeTab={setPriceTab}
+      useSeasonalResult={priceData}
+      valueFormatter={f.price6dFormatter}
+      tickValueFormatter={f.price2dFormatter}
+      useLogarithmicScale={true}
+      showReferenceLineAtOne={priceYAxisRanges[priceTab]?.showReferenceLine ?? false}
+      yAxisRanges={priceYAxisRanges}
+    />
   );
-};
-export default PintoExplorer;
+});
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Total Liquidity Chart
+// ────────────────────────────────────────────────────────────────────────────────
+
+const TotalLiquidityChart = React.memo(({ season }: ISeason) => {
+  const [liquidityTab, setLiquidityTab] = useTimeTabs();
+
+  const liquidityData = useSeasonalTotalLiquidity(Math.max(0, season - tabToSeasonalLookback(liquidityTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Total Liquidity"
+      tooltip="The total USD value of tokens in liquidity pools on the Minting Whitelist."
+      size="small"
+      fillArea
+      activeTab={liquidityTab}
+      onChangeTab={setLiquidityTab}
+      useSeasonalResult={liquidityData}
+      valueFormatter={f.price0dFormatter}
+      tickValueFormatter={f.largePriceFormatter}
+    />
+  );
+});
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Total Supply Chart
+// ────────────────────────────────────────────────────────────────────────────────
+
+const TotalSupplyChart = React.memo(({ season }: ISeason) => {
+  const [supplyTab, setSupplyTab] = useTimeTabs();
+
+  const supplyData = useSeasonalSupply(Math.max(0, season - tabToSeasonalLookback(supplyTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Pinto Supply"
+      tooltip="The total Pinto supply."
+      size="small"
+      fillArea
+      activeTab={supplyTab}
+      onChangeTab={setSupplyTab}
+      useSeasonalResult={supplyData}
+      valueFormatter={f.number0dFormatter}
+      tickValueFormatter={f.largeNumberFormatter}
+    />
+  );
+});
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Market Cap Chart
+// ────────────────────────────────────────────────────────────────────────────────
+
+const MarketCapChart = React.memo(({ season }: ISeason) => {
+  const [mcapTab, setMcapTab] = useTimeTabs();
+
+  const mcapData = useSeasonalMcap(Math.max(0, season - tabToSeasonalLookback(mcapTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Market Capitalization"
+      tooltip="The USD value of the Pinto supply."
+      size="small"
+      fillArea
+      activeTab={mcapTab}
+      onChangeTab={setMcapTab}
+      useSeasonalResult={mcapData}
+      valueFormatter={f.price0dFormatter}
+      tickValueFormatter={f.largePriceFormatter}
+    />
+  );
+});

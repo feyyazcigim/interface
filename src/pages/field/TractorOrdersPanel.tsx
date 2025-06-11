@@ -12,15 +12,24 @@ import { beanstalkAbi } from "@/generated/contractHooks";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useTransaction from "@/hooks/useTransaction";
 import { Blueprint } from "@/lib/Tractor/types";
-import { RequisitionEvent } from "@/lib/Tractor/utils";
+import {
+  OrderbookEntry,
+  PublisherTractorExecution,
+  RequisitionEvent,
+  decodeSowTractorData,
+  getSowOrderTokenStrategy,
+} from "@/lib/Tractor/utils";
 import usePublisherTractorExecutions from "@/state/tractor/useTractorExecutions";
-import useTractorPublishedRequisitions from "@/state/tractor/useTractorPublishedRequisitions";
+import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
+import { tryExtractErrorMessage } from "@/utils/error";
 import { formatter } from "@/utils/format";
 import { stringEq } from "@/utils/string";
 import { getTokenNameByIndex } from "@/utils/token";
+import { AdvancedFarmCall, AdvancedPipeCall } from "@/utils/types";
 import { CalendarIcon, ClockIcon, CornerBottomLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { decodeFunctionData } from "viem";
 import { useAccount } from "wagmi";
 
@@ -38,18 +47,43 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const [showDialog, setShowDialog] = useState(false);
   const [rawSowBlueprintCall, setRawSowBlueprintCall] = useState<`0x${string}` | null>(null);
 
-  const { data: executions = [], ...executionsQuery } = usePublisherTractorExecutions(address, !!address);
-  const { data: requisitions = [], ...requisitionsQuery } = useTractorPublishedRequisitions(
-    address,
-    "sowBlueprintv0",
-    !!address,
+  // Fetch executions for the farmer's orders
+  const { data: executions, ...executionsQuery } = usePublisherTractorExecutions(address, !!address);
+
+  // Select orders with executions
+  const selectOrdersWithExecutions = useCallback(
+    (orderbookEntries: OrderbookEntry[] | undefined) => {
+      const executionsByHash = executions?.reduce<Record<`0x${string}`, PublisherTractorExecution[]>>((acc, curr) => {
+        if (curr.blueprintHash in acc) acc[curr.blueprintHash].push(curr);
+        else acc[curr.blueprintHash] = [curr];
+        return acc;
+      }, {});
+
+      return orderbookEntries
+        ?.filter((req) => stringEq(req.requisition.blueprint.publisher, address))
+        ?.map((req) => ({
+          ...req,
+          executions: executionsByHash?.[req.requisition.blueprintHash] || undefined,
+          decodedData: decodeSowTractorData(req.requisition.blueprint.data),
+        }))
+        .sort((a, b) => a.blockNumber - b.blockNumber);
+    },
+    [executions, address],
   );
 
-  // derived
-  const dataHasLoaded = address ? Boolean(executions?.length && requisitions?.length) : true;
-  const loading = executionsQuery.isLoading || requisitionsQuery.isLoading || !dataHasLoaded;
+  // Fetch orders for the farmer
+  const { data: orders, ...ordersQuery } = useTractorSowOrderbook({
+    address,
+    filterOutCompleted: false,
+    select: selectOrdersWithExecutions,
+    enabled: !!address,
+  });
 
-  const error = executionsQuery.error || requisitionsQuery.error;
+  // derived
+  const dataHasLoaded = address ? Boolean(executions && orders) : true;
+  const loading = executionsQuery.isLoading || ordersQuery.isLoading || !dataHasLoaded;
+
+  const error = executionsQuery.error || ordersQuery.error;
 
   const [lastRefetchedCounter, setLastRefetchedCounter] = useState<number>(0);
 
@@ -57,28 +91,38 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   useEffect(() => {
     if (refreshData && dataHasLoaded && lastRefetchedCounter !== refreshData) {
       setLastRefetchedCounter(refreshData);
+      ordersQuery.refetch();
       executionsQuery.refetch();
-      requisitionsQuery.refetch();
     }
   }, [refreshData, dataHasLoaded]);
 
   // Add transaction handling for cancel order
-  const { writeWithEstimateGas, submitting } = useTransaction({
+  const { writeWithEstimateGas, setSubmitting, submitting, isConfirming } = useTransaction({
     successMessage: "Order cancelled successfully",
     errorMessage: "Failed to cancel order",
     successCallback: useCallback(() => {
       executionsQuery.refetch();
-      requisitionsQuery.refetch();
-    }, [executionsQuery.refetch, requisitionsQuery.refetch]),
+      ordersQuery.refetch();
+    }, [executionsQuery.refetch, ordersQuery.refetch]),
   });
 
   const handleCancelBlueprint = async (req: RequisitionEvent, e: React.MouseEvent) => {
+    console.log("req", req.requisition.blueprintHash);
+    setSubmitting(true);
     e.stopPropagation(); // Prevent opening the order dialog
 
-    if (!address || !protocolAddress) return;
+    if (!address) {
+      throw new Error("Signer required.");
+    }
+
+    if (req.isCancelled) {
+      throw new Error("Order already cancelled");
+    }
+
+    toast.loading("Cancelling order...");
 
     try {
-      await writeWithEstimateGas({
+      return writeWithEstimateGas({
         address: protocolAddress,
         abi: diamondABI,
         functionName: "cancelBlueprint",
@@ -86,47 +130,9 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
       });
     } catch (error) {
       console.error("Error cancelling blueprint:", error);
-    }
-  };
-
-  // Extract the sowBlueprintv0 call from the advancedFarm call
-  const extractSowBlueprintCall = (data: `0x${string}`): `0x${string}` | null => {
-    try {
-      // Step 1: Decode as advancedFarm
-      const advancedFarmDecoded = decodeFunctionData({
-        abi: beanstalkAbi,
-        data: data,
-      });
-
-      if (advancedFarmDecoded.functionName === "advancedFarm" && advancedFarmDecoded.args[0]) {
-        const farmCalls = advancedFarmDecoded.args[0] as { callData: `0x${string}`; clipboard: `0x${string}` }[];
-
-        if (farmCalls.length > 0) {
-          // Step 2: Decode the inner call as advancedPipe
-          const pipeCallData = farmCalls[0].callData;
-          const advancedPipeDecoded = decodeFunctionData({
-            abi: beanstalkAbi,
-            data: pipeCallData,
-          });
-
-          if (advancedPipeDecoded.functionName === "advancedPipe" && advancedPipeDecoded.args[0]) {
-            const pipeCalls = advancedPipeDecoded.args[0] as {
-              target: `0x${string}`;
-              callData: `0x${string}`;
-              clipboard: `0x${string}`;
-            }[];
-
-            if (pipeCalls.length > 0) {
-              // Step 3: Get the sowBlueprintv0 call data
-              return pipeCalls[0].callData;
-            }
-          }
-        }
-      }
-      return null;
-    } catch (error) {
-      console.error("Failed to extract sowBlueprintv0 call:", error);
-      return null;
+      toast.error(tryExtractErrorMessage(error, "Failed to cancel order"));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -147,51 +153,48 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     setShowDialog(true);
   };
 
-  // Convert the blueprint to match the expected Blueprint type (fixing readonly issue)
-  const adaptBlueprintForDialog = (blueprint: RequisitionEvent["requisition"]["blueprint"]): Blueprint => {
-    return {
-      ...blueprint,
-      operatorPasteInstrs: [...blueprint.operatorPasteInstrs], // Create a mutable copy
-    };
-  };
+  if (!address) {
+    return (
+      <EmptyContainer>
+        <div className="pinto-body-light text-pinto-light">Connect your wallet to view your Tractor Orders</div>
+      </EmptyContainer>
+    );
+  }
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6 justify-center items-center w-full h-[22.5rem] border rounded-[0.75rem] bg-pinto-off-white border-pinto-gray-2">
+      <EmptyContainer>
         <div className="pinto-body-light text-pinto-light">Loading Tractor Orders...</div>
         <Skeleton className="h-6 w-48" />
-      </div>
+      </EmptyContainer>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col gap-6 justify-center items-center w-full h-[22.5rem] border rounded-[0.75rem] bg-pinto-off-white border-pinto-gray-2">
-        <div className="pinto-h4 text-pinto-red-2">Error loading tractor orders</div>
-      </div>
+      <EmptyContainer>
+        <div className="pinto-h4 text-pinto-red-2">Error Loading Tractor Orders</div>
+      </EmptyContainer>
     );
   }
 
-  if (requisitions.length === 0 && executions.length === 0) {
+  if (!orders?.length && !executions?.length) {
     return <EmptyTable type="tractor" onTractorClick={onCreateOrder} />;
   }
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      {requisitions.map((req, index) => {
+      {orders?.map((req, index) => {
         if (req.requisitionType !== "sowBlueprintv0" || !req.decodedData) return null;
 
         const data = req.decodedData;
         const totalAmount = TokenValue.fromBlockchain(data.sowAmounts.totalAmountToSow, 6);
-        const minTemp = TokenValue.fromBlockchain(data.minTemp, 6);
 
         // Get executions for this blueprint
-        const blueprintExecutions = executions.filter((exec) =>
-          stringEq(exec.blueprintHash, req.requisition.blueprintHash),
-        );
+        const blueprintExecutions = req.executions || [];
 
         // Count how many times this blueprint has been executed
-        const executionCount = blueprintExecutions.length;
+        const executionCount = blueprintExecutions?.length;
 
         // Calculate total PINTO sown so far for this blueprint
         const totalSown = blueprintExecutions.reduce((acc, exec) => {
@@ -353,12 +356,12 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
               </Row>
               <Button
                 variant="ghost"
-                className="inline-flex items-center gap-1 text-sm text-pinto-red-2 hover:bg-pinto-red-1"
+                className="text-sm text-pinto-red-2 hover:bg-pinto-red-1"
                 onClick={(e) => handleCancelBlueprint(req, e)}
-                disabled={submitting}
+                disabled={submitting || isConfirming}
               >
                 <Cross1Icon className="h-4 w-4" />
-                <span>Cancel</span>
+                <span className="inline ml-1">Cancel</span>
               </Button>
             </Row>
           </Col>
@@ -366,7 +369,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
       })}
 
       {/* Dialog for order details */}
-      {selectedOrder && selectedOrder.decodedData && (
+      {selectedOrder?.decodedData && (
         <ReviewTractorOrderDialog
           open={showDialog}
           onOpenChange={setShowDialog}
@@ -376,30 +379,79 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
             podLineLength: selectedOrder.decodedData.maxPodlineLengthAsString,
             minSoil: selectedOrder.decodedData.sowAmounts.minAmountToSowPerSeasonAsString,
             operatorTip: selectedOrder.decodedData.operatorParams.operatorTipAmountAsString,
-            tokenStrategy: (() => {
-              if (selectedOrder.decodedData?.sourceTokenIndices.includes(255)) {
-                return "LOWEST_SEEDS";
-              } else if (selectedOrder.decodedData?.sourceTokenIndices.includes(254)) {
-                return "LOWEST_PRICE";
-              } else {
-                return "SPECIFIC_TOKEN";
-              }
-            })(),
+            tokenStrategy: getSowOrderTokenStrategy(selectedOrder.decodedData.sourceTokenIndices),
           }}
           encodedData={rawSowBlueprintCall || selectedOrder.requisition.blueprint.data}
           operatorPasteInstrs={[...selectedOrder.requisition.blueprint.operatorPasteInstrs]}
           blueprint={adaptBlueprintForDialog(selectedOrder.requisition.blueprint)}
           isViewOnly={true}
-          executionHistory={executions.filter((exec) => exec.blueprintHash === selectedOrder.requisition.blueprintHash)}
+          executionHistory={(executions ?? []).filter((exec) =>
+            stringEq(exec.blueprintHash, selectedOrder.requisition.blueprintHash),
+          )}
         />
       )}
     </div>
   );
 };
 
+const EmptyContainer = ({ children }: { children: React.ReactNode }) => (
+  <Col className="gap-6 justify-center items-center w-full h-[22.5rem] border rounded-lg bg-pinto-off-white border-pinto-gray-2">
+    {children}
+  </Col>
+);
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Helper functions
+// ────────────────────────────────────────────────────────────────────────────────
+
 // Helper function for formatting percentage since formatter.percentage doesn't exist
 function formatPercentage(value: bigint): string {
   return `${(Number(value) / 1e6).toFixed(2)}%`;
 }
+
+// Convert the blueprint to match the expected Blueprint type (fixing readonly issue)
+const adaptBlueprintForDialog = (blueprint: RequisitionEvent["requisition"]["blueprint"]): Blueprint => {
+  return {
+    ...blueprint,
+    operatorPasteInstrs: [...blueprint.operatorPasteInstrs], // Create a mutable copy
+  };
+};
+
+// Extract the sowBlueprintv0 call from the advancedFarm call
+const extractSowBlueprintCall = (data: `0x${string}`): `0x${string}` | null => {
+  try {
+    // Step 1: Decode as advancedFarm
+    const advancedFarmDecoded = decodeFunctionData({
+      abi: beanstalkAbi,
+      data: data,
+    });
+
+    if (advancedFarmDecoded.functionName === "advancedFarm" && advancedFarmDecoded.args[0]) {
+      const farmCalls = advancedFarmDecoded.args[0] as AdvancedFarmCall[];
+      if (farmCalls.length > 0) {
+        // Step 2: Decode the inner call as advancedPipe
+        const pipeCallData = farmCalls[0].callData;
+
+        const advancedPipeDecoded = decodeFunctionData({
+          abi: beanstalkAbi,
+          data: pipeCallData,
+        });
+
+        if (advancedPipeDecoded.functionName === "advancedPipe" && advancedPipeDecoded.args[0]) {
+          const pipeCalls = advancedPipeDecoded.args[0] as AdvancedPipeCall[];
+
+          if (pipeCalls.length > 0) {
+            // Step 3: Get the sowBlueprintv0 call data
+            return pipeCalls[0].callData;
+          }
+        }
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error("Failed to extract sowBlueprintv0 call:", error);
+    return null;
+  }
+};
 
 export default TractorOrdersPanel;

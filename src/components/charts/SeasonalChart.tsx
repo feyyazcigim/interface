@@ -7,7 +7,12 @@ import { CloseIconAlt } from "../Icons";
 import TooltipSimple from "../TooltipSimple";
 import LineChart, { LineChartData } from "./LineChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
-import { gradientFunctions, metallicMorningAreaGradientFn, metallicMorningStrokeGradientFn } from "./chartHelpers";
+import {
+  LineChartHorizontalReferenceLine,
+  gradientFunctions,
+  metallicMorningAreaGradientFn,
+  metallicMorningStrokeGradientFn,
+} from "./chartHelpers";
 
 export const tabToSeasonalLookback = (tab: TimeTab): number => {
   if (tab === TimeTab.Week) {
@@ -44,6 +49,8 @@ interface SeasonalChartProps {
   className?: string;
   useLogarithmicScale?: boolean;
   showReferenceLineAtOne?: boolean;
+  dataNotFetching?: boolean;
+  noDataMessage?: string;
   // New props for custom y-axis ranges
   yAxisRanges?: {
     [TimeTab.Week]?: YAxisRangeConfig;
@@ -59,6 +66,18 @@ const greenStrokeGradients = [gradientFunctions.metallicGreen];
 
 const areaGradients = [metallicMorningAreaGradientFn];
 
+const DEFAULTS = {
+  oneHorizontalReferenceLine: [
+    {
+      value: 1,
+      color: "#9C9C9C",
+      dash: [2, 10],
+      label: "$1.00 target",
+    },
+  ] as LineChartHorizontalReferenceLine[],
+  chartData: [] as LineChartData[],
+} as const;
+
 const SeasonalChart = ({
   title,
   tooltip,
@@ -71,58 +90,49 @@ const SeasonalChart = ({
   fillArea,
   statVariant = "explorer",
   className,
+  dataNotFetching = false,
   useLogarithmicScale = false,
   showReferenceLineAtOne = false,
   yAxisRanges,
+  noDataMessage = "No data to display",
   chartWrapperClassName,
 }: SeasonalChartProps) => {
   const [allData, setAllData] = useState<SeasonalChartData[] | null>(null);
   const [displayData, setDisplayData] = useState<SeasonalChartData | null>(null);
 
   const inputData = useSeasonalResult.data;
+  const isLoading = useSeasonalResult.isLoading;
+  const isError = useSeasonalResult.isError;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Only update the data when the input data changes
   useEffect(() => {
-    if (inputData && !allData) {
-      setAllData(inputData);
-      setDisplayData(inputData[inputData.length - 1]);
-    }
-  }, [inputData, allData]);
-
-  const handleChangeTab = useCallback(
-    (tab: TimeTab) => {
-      onChangeTab(tab);
+    if (!inputData) {
       setAllData(null);
       setDisplayData(null);
-    },
-    [onChangeTab],
-  );
+      return;
+    }
+
+    const handleSet = (toSetData: SeasonalChartData[]) => {
+      setAllData(toSetData);
+      setDisplayData(toSetData[toSetData.length - 1]);
+    };
+
+    if (!allData || inputData.length !== allData.length) {
+      handleSet(inputData);
+    }
+  }, [inputData]);
+
+  const handleChangeTab = useCallback((tab: TimeTab) => onChangeTab(tab), [onChangeTab]);
 
   const chartData = useMemo<LineChartData[]>(() => {
     if (allData) {
-      // Get the current y-axis range
-      const currentRange = yAxisRanges?.[activeTab];
-
       return allData.map((d) => ({
         values: [useLogarithmicScale ? Math.max(0.000001, d.value) : d.value],
         timestamp: d.timestamp,
       }));
     }
-    return [];
-  }, [allData, useLogarithmicScale, yAxisRanges, activeTab]);
-
-  const horizontalReferenceLines = useMemo(() => {
-    if (showReferenceLineAtOne) {
-      return [
-        {
-          value: 1,
-          color: "#9C9C9C",
-          dash: [2, 10],
-          label: "$1.00 target",
-        },
-      ];
-    }
-    return [];
-  }, [showReferenceLineAtOne]);
+    return DEFAULTS.chartData;
+  }, [allData, useLogarithmicScale]);
 
   // Get the current y-axis range based on active tab
   const currentYAxisRange = useMemo(() => {
@@ -133,7 +143,9 @@ const SeasonalChart = ({
   const handleMouseOver = useCallback(
     (index: number) => {
       if (allData) {
-        setDisplayData(allData[index ?? allData.length - 1]);
+        const indexData = index !== undefined ? allData[index] : undefined;
+        const setData = indexData ?? allData[allData.length - 1];
+        setDisplayData(setData);
       }
     },
     [allData],
@@ -153,7 +165,7 @@ const SeasonalChart = ({
         <TimeTabsSelector tab={activeTab} setTab={handleChangeTab} />
       </div>
 
-      {!allData && !displayData && (
+      {((!allData && !displayData) || isLoading || isError) && !dataNotFetching && (
         <>
           {/* Keep sizing the same as when there is data. Allows centering spinner/error vertically */}
           <div
@@ -164,8 +176,8 @@ const SeasonalChart = ({
             }}
           >
             <div className="absolute inset-0 flex items-center justify-center">
-              {useSeasonalResult.isLoading && !useSeasonalResult.isError && <FrameAnimator size={75} />}
-              {useSeasonalResult.isError && (
+              {isLoading && !isError && <FrameAnimator size={75} />}
+              {isError && (
                 <>
                   <CloseIconAlt color={"red"} />
                   <div className="pinto-body text-pinto-green-3">An error has occurred</div>
@@ -175,7 +187,7 @@ const SeasonalChart = ({
           </div>
         </>
       )}
-      {allData && allData.length === 0 && !useSeasonalResult.isLoading && (
+      {((allData && allData.length === 0) || dataNotFetching) && (
         <div
           className={`relative w-full flex items-center justify-center ${size === "small" ? "aspect-3/1" : "aspect-6/1"}`}
           style={{
@@ -184,29 +196,15 @@ const SeasonalChart = ({
           }}
         >
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="pinto-body-light">No silo interactions from connected wallet</div>
+            <div className="pinto-body-light">{noDataMessage}</div>
           </div>
         </div>
       )}
-      {allData && displayData && (
+      {allData && displayData && !isLoading && !isError && !dataNotFetching && (
         <>
-          <div className="h-[85px] px-4 sm:px-6">
-            <div
-              className={`${statVariant === "explorer" ? "text-pinto-green-3 sm:text-pinto-green-3" : "text-pinto-primary sm:text-pinto-primary"} pinto-body sm:pinto-h3`}
-            >
-              {valueFormatter(displayData.value)}
-            </div>
-            <div className="flex flex-col gap-0 mt-2 sm:gap-2 sm:mt-3">
-              <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
-                Season {displayData.season}
-              </div>
-              <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
-                {formatDate(displayData.timestamp)}
-              </div>
-            </div>
-          </div>
+          <DisplayData displayData={displayData} statVariant={statVariant} valueFormatter={valueFormatter} />
           <div className={size === "small" ? "aspect-3/1" : "aspect-6/1"}>
-            {!chartData.length && !useSeasonalResult.isLoading ? (
+            {!chartData.length && !isLoading ? (
               <div className="w-full h-full flex items-center justify-center">
                 <div className="pinto-body-light">No data</div>
               </div>
@@ -221,7 +219,7 @@ const SeasonalChart = ({
                   valueFormatter={tickValueFormatter}
                   onMouseOver={handleMouseOver}
                   useLogarithmicScale={useLogarithmicScale}
-                  horizontalReferenceLines={horizontalReferenceLines}
+                  horizontalReferenceLines={showReferenceLineAtOne ? DEFAULTS.oneHorizontalReferenceLine : undefined}
                   yAxisMin={currentYAxisRange?.min}
                   yAxisMax={currentYAxisRange?.max}
                 />
@@ -234,3 +232,31 @@ const SeasonalChart = ({
   );
 };
 export default SeasonalChart;
+
+const DisplayData = ({
+  displayData,
+  statVariant,
+  valueFormatter,
+}: {
+  displayData: SeasonalChartData;
+  statVariant: "explorer" | "non-colored";
+  valueFormatter: (value: number) => string;
+}) => {
+  return (
+    <div className="h-[85px] px-4 sm:px-6">
+      <div
+        className={`${statVariant === "explorer" ? "text-pinto-green-3 sm:text-pinto-green-3" : "text-pinto-primary sm:text-pinto-primary"} pinto-body sm:pinto-h3`}
+      >
+        {valueFormatter(displayData.value)}
+      </div>
+      <div className="flex flex-col gap-0 mt-2 sm:gap-2 sm:mt-3">
+        <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
+          Season {displayData.season}
+        </div>
+        <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
+          {formatDate(displayData.timestamp)}
+        </div>
+      </div>
+    </div>
+  );
+};

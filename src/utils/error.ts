@@ -1,22 +1,30 @@
 import { API_SERVICES } from "@/constants/endpoints";
-import { deployedCommitHash, isDev, isObject } from "./utils";
+import { deployedCommitHash, exists, isDev, isObject } from "./utils";
 
+interface ErrorIsh {
+  message: string;
+}
 interface ErrorWithShortMessage {
   shortMessage: string;
 }
 
-type MayError = Record<string, unknown> | any;
+export const isErrorIsh = (val: unknown): val is ErrorIsh => {
+  if (!exists(val) || !isObject(val)) return false;
+  else if (val instanceof Error) return true;
+  return "message" in val && typeof val.message === "string";
+};
+
+export const isShortMessageErrorIsh = (val: unknown): val is ErrorWithShortMessage => {
+  if (!exists(val) || !isObject(val)) return false;
+  return "shortMessage" in val && typeof val.shortMessage === "string";
+};
 
 export const tryExtractErrorMessage = (value: unknown, defaultMessage: string): string => {
-  const hasShortMessage = (value: MayError): value is ErrorWithShortMessage => {
-    return "shortMessage" in value && typeof value.shortMessage === "string";
-  };
-
-  if (value instanceof Error || isObject(value)) {
-    if (hasShortMessage(value)) return value.shortMessage;
-    if ("message" in value && typeof value.message === "string") {
-      return value.message;
-    }
+  if (isShortMessageErrorIsh(value)) {
+    return value.shortMessage;
+  }
+  if (isErrorIsh(value)) {
+    return value.message;
   }
 
   return defaultMessage;

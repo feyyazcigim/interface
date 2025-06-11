@@ -6,9 +6,10 @@ import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { stringEq } from "@/utils/string";
 import { cn } from "@/utils/utils";
 import { ExternalLinkIcon } from "@radix-ui/react-icons";
+import clsx from "clsx";
 import { motion } from "framer-motion";
 import { useAtomValue } from "jotai";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const ANIMATE_TIME_RANGE: [number, number] = [0, 3000] as const;
@@ -40,13 +41,13 @@ export const TourOfTheFarmCard = ({ url, img, title }: IPost) => {
   return (
     <div
       className={cn(
-        "w-96 max-w-96 border-[0.5px] max-h-10 h-10 border-pinto-lighter rounded-sm overflow-hidden group",
+        "w-96 max-w-96 border-[0.5px] border-pinto-lighter rounded-sm overflow-hidden group",
         "transition-all duration-200 group hover:border-pinto-green-4 hover:shadow-gray-200 hover:shadow-md box-border",
       )}
     >
       <Link to={url} target="_blank" rel="noopener noreferrer" className="w-full h-full">
         <Row className="items-center">
-          <img src={img} alt={title} className="max-h-10 h-10 object-cover" />
+          <img src={img} alt={title} className="flex self-stretch max-w-20 object-cover" />
           <Row className="items-center justify-between w-full px-2 group-hover:bg-pinto-green-1 rounded-b-sm transition-colors duration-200 self-stretch box-border">
             <div className="pinto-sm box-border text-left flex-wrap p-2">{title}</div>
             <ExternalLinkIcon
@@ -99,7 +100,7 @@ const motionSettings = {
 } as const;
 
 const VW_SCALAR = 0.75;
-const CONDENSED_OFFSET = 700;
+const CONDENSED_OFFSET = 800;
 
 const getDisplayCard = () => {
   const scalar = getIsWindowScaledDown(window.innerWidth) ? VW_SCALAR : 1;
@@ -228,14 +229,25 @@ export default function TourOfTheFarm() {
   );
 }
 
+const MAX_POSTS = 4;
+
 const getSortedPosts = (suggested: IPost) => {
-  // bubble up the suggested post to the top
-  return [...Object.entries(POSTS)].sort(([keyA], [keyB]) => {
-    if (!suggested) return 0;
-    if (suggested && stringEq(keyA, suggested.title)) return -1;
-    if (suggested && stringEq(keyB, suggested.title)) return 1;
-    return 0;
-  });
+  // Bubble up the suggested post to the top
+  return [...Object.entries(POSTS)]
+    .sort(([_keyA, valA], [_keyB, valB]) => {
+      if (!suggested) return 0;
+
+      const aSuggested = suggested && stringEq(valA.title, suggested.title);
+      const bSuggested = suggested && stringEq(valB.title, suggested.title);
+      // If either is the suggested post, bubble it up to the top
+      if (aSuggested || bSuggested) {
+        return aSuggested ? -1 : 1;
+      }
+
+      // Otherwise sort by priority
+      return valA.priority - valB.priority;
+    })
+    .slice(0, MAX_POSTS);
 };
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -245,19 +257,34 @@ const getSortedPosts = (suggested: IPost) => {
 // Make stable boolean reference to the panel open state
 const usePanelOpenState = () => useAtomValue(navbarPanelAtom).openPanel;
 
-const getSuggestedWithSlug = (slug: string | undefined) => POSTS[slug === "field" ? "field" : "silo"];
+const getSuggestedWithSlug = (
+  slug: string | undefined,
+  options: {
+    isSiloToken: boolean;
+  },
+) => {
+  if (slug === "silo" && options.isSiloToken) {
+    return POSTS.converts;
+  }
+  if (slug && slug in POSTS) {
+    return POSTS[slug];
+  }
+  return POSTS.yield;
+};
 
 const useSuggestedContentWithSlug = () => {
   const { pathname } = useLocation();
-  const split = pathname.split("/");
+  const split = pathname.split("/").filter(Boolean);
 
-  const slug = split.length === 1 ? undefined : split[1];
+  const slug = split.length === 0 ? undefined : split[0];
 
-  const [suggested, setSuggested] = useState<IPost>(getSuggestedWithSlug(slug));
+  const isSiloToken = Boolean(slug === "silo" && split[1]?.startsWith("0x"));
+
+  const [suggested, setSuggested] = useState<IPost>(getSuggestedWithSlug(slug, { isSiloToken }));
 
   useEffect(() => {
-    setSuggested(getSuggestedWithSlug(slug));
-  }, [slug]);
+    setSuggested(getSuggestedWithSlug(slug, { isSiloToken }));
+  }, [slug, isSiloToken]);
 
   return suggested;
 };
@@ -270,26 +297,38 @@ interface IPost {
   url: string;
   img: string;
   title: string;
+  priority: number;
 }
 
-const POSTS: {
-  silo: IPost;
-  field: IPost;
-  sun: IPost;
-} = {
+const POSTS = {
+  yield: {
+    url: "https://mirror.xyz/0xEA13D1fB14934E41Ee7074198af8F089a6d956B5/_HlgnndHbaPaoG3E8BJDZEaTcmeGIlZ3KKqRPYlcU3s",
+    title: "How to Get Yield Using Pinto. A Complete Guide",
+    img: "https://images.mirror-media.xyz/publication-images/fVk1MCtLJeASzmDxVZu2b.jpeg",
+    priority: 0,
+  },
+  converts: {
+    url: "https://mirror.xyz/0xEA13D1fB14934E41Ee7074198af8F089a6d956B5/lox2ZwiuFtLGLZWCnnstC_1BA3vhBNoGcLiEciyh8vE",
+    title: "Understanding Converts",
+    img: "https://images.mirror-media.xyz/publication-images/sIl6RB1JAm6066yBiweuU.png",
+    priority: 1,
+  },
   silo: {
     url: "https://mirror.xyz/0xEA13D1fB14934E41Ee7074198af8F089a6d956B5/GCyB1WmkKI6YB4j-HEZa7TfeIUNCfr2QXqvMYbxKB2k",
     title: "Understanding the Silo",
     img: "https://images.mirror-media.xyz/publication-images/vTTP5AxogZN1LzGc039Db.jpeg",
+    priority: 2,
   },
   field: {
     url: "https://mirror.xyz/0xEA13D1fB14934E41Ee7074198af8F089a6d956B5/wdRHVI5mzDxMOp3BxKkZBS8m9BbrmWVPYd7dbPI6EMI",
     title: "Understanding the Field",
-    img: "https://images.mirror-media.xyz/publication-images/TYI1sz-fdcz1H46ypaLZB.png?height=1130&width=2259",
+    img: "https://images.mirror-media.xyz/publication-images/TYI1sz-fdcz1H46ypaLZB.png",
+    priority: 3,
   },
   sun: {
     url: "https://mirror.xyz/0xEA13D1fB14934E41Ee7074198af8F089a6d956B5/HObFHK3WL2ajHZmGwiuEJy-XWLypvxd41ilG6kRRF0o",
     title: "Sunrise and Parameterization",
-    img: "https://images.mirror-media.xyz/publication-images/1waB-4RrTrZ9sx5UiLpUy.png?height=768&width=1536",
+    img: "https://images.mirror-media.xyz/publication-images/1waB-4RrTrZ9sx5UiLpUy.png",
+    priority: 4,
   },
 } as const;
