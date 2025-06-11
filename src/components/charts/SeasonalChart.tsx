@@ -7,7 +7,12 @@ import { CloseIconAlt } from "../Icons";
 import TooltipSimple from "../TooltipSimple";
 import LineChart, { LineChartData } from "./LineChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
-import { gradientFunctions, metallicMorningAreaGradientFn, metallicMorningStrokeGradientFn } from "./chartHelpers";
+import {
+  LineChartHorizontalReferenceLine,
+  gradientFunctions,
+  metallicMorningAreaGradientFn,
+  metallicMorningStrokeGradientFn,
+} from "./chartHelpers";
 
 export const tabToSeasonalLookback = (tab: TimeTab): number => {
   if (tab === TimeTab.Week) {
@@ -61,6 +66,18 @@ const greenStrokeGradients = [gradientFunctions.metallicGreen];
 
 const areaGradients = [metallicMorningAreaGradientFn];
 
+const DEFAULTS = {
+  oneHorizontalReferenceLine: [
+    {
+      value: 1,
+      color: "#9C9C9C",
+      dash: [2, 10],
+      label: "$1.00 target",
+    },
+  ] as LineChartHorizontalReferenceLine[],
+  chartData: [] as LineChartData[],
+} as const;
+
 const SeasonalChart = ({
   title,
   tooltip,
@@ -84,7 +101,10 @@ const SeasonalChart = ({
   const [displayData, setDisplayData] = useState<SeasonalChartData | null>(null);
 
   const inputData = useSeasonalResult.data;
+  const isLoading = useSeasonalResult.isLoading;
+  const isError = useSeasonalResult.isError;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Only update the data when the input data changes
   useEffect(() => {
     if (!inputData) {
       setAllData(null);
@@ -100,36 +120,19 @@ const SeasonalChart = ({
     if (!allData || inputData.length !== allData.length) {
       handleSet(inputData);
     }
-  }, [inputData, allData]);
+  }, [inputData]);
 
   const handleChangeTab = useCallback((tab: TimeTab) => onChangeTab(tab), [onChangeTab]);
 
   const chartData = useMemo<LineChartData[]>(() => {
     if (allData) {
-      // Get the current y-axis range
-      const currentRange = yAxisRanges?.[activeTab];
-
       return allData.map((d) => ({
         values: [useLogarithmicScale ? Math.max(0.000001, d.value) : d.value],
         timestamp: d.timestamp,
       }));
     }
-    return [];
-  }, [allData, useLogarithmicScale, yAxisRanges, activeTab]);
-
-  const horizontalReferenceLines = useMemo(() => {
-    if (showReferenceLineAtOne) {
-      return [
-        {
-          value: 1,
-          color: "#9C9C9C",
-          dash: [2, 10],
-          label: "$1.00 target",
-        },
-      ];
-    }
-    return [];
-  }, [showReferenceLineAtOne]);
+    return DEFAULTS.chartData;
+  }, [allData, useLogarithmicScale]);
 
   // Get the current y-axis range based on active tab
   const currentYAxisRange = useMemo(() => {
@@ -147,9 +150,6 @@ const SeasonalChart = ({
     },
     [allData],
   );
-
-  const isLoading = useSeasonalResult.isLoading;
-  const isError = useSeasonalResult.isError;
 
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
@@ -219,7 +219,7 @@ const SeasonalChart = ({
                   valueFormatter={tickValueFormatter}
                   onMouseOver={handleMouseOver}
                   useLogarithmicScale={useLogarithmicScale}
-                  horizontalReferenceLines={horizontalReferenceLines}
+                  horizontalReferenceLines={showReferenceLineAtOne ? DEFAULTS.oneHorizontalReferenceLine : undefined}
                   yAxisMin={currentYAxisRange?.min}
                   yAxisMax={currentYAxisRange?.max}
                 />
