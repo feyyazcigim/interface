@@ -18,6 +18,7 @@ import CreateListing from "./market/actions/CreateListing";
 import CreateOrder from "./market/actions/CreateOrder";
 import FillListing from "./market/actions/FillListing";
 import FillOrder from "./market/actions/FillOrder";
+import FrameAnimator from "@/components/LoadingSpinner";
 
 const TABLE_SLUGS = ["activity", "listings", "orders", "my-activity"];
 const TABLE_LABELS = ["Activity", "Listings", "Orders", "My Activity"];
@@ -248,13 +249,20 @@ export function Market() {
                 xLabel="Place in line"
                 yLabel="Price per pod"
               /> */}
-              <ScatterChartV2
-                data={datasets}
-                size="small"
-                xOptions={{ label: "Place in line", min: 0, max: podLineAsNumber }}
-                yOptions={{ label: "Price per pod", min: 0, max: 100 }}
-                onPointClick={onPointClick}
-              />
+              <div className="w-full h-[28rem] mb-8 relative">
+                {!isLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
+                    <FrameAnimator className="-mt-5 -mb-12" size={80} />
+                  </div>
+                )}
+                <ScatterChartV2
+                  data={datasets}
+                  size="small"
+                  xOptions={{ label: "Place in line", min: 0, max: podLineAsNumber }}
+                  yOptions={{ label: "Price per pod", min: 0, max: 100 }}
+                  onPointClick={onPointClick}
+                />
+              </div>
               <div className="flex gap-10 ml-2.5 mt-8 mb-[1.625rem]">
                 {TABLE_SLUGS.map((s, idx) => (
                   <p
