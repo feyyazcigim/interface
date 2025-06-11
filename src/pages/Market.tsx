@@ -1,4 +1,5 @@
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
+import FrameAnimator from "@/components/LoadingSpinner";
 import { ScatterChart } from "@/components/charts/ScatterChart";
 import ScatterChartV2, { ScatterChartData } from "@/components/charts/ScatterChartv2";
 import { navLinks } from "@/components/nav/nav/Navbar";
@@ -18,7 +19,6 @@ import CreateListing from "./market/actions/CreateListing";
 import CreateOrder from "./market/actions/CreateOrder";
 import FillListing from "./market/actions/FillListing";
 import FillOrder from "./market/actions/FillOrder";
-import FrameAnimator from "@/components/LoadingSpinner";
 
 const TABLE_SLUGS = ["activity", "listings", "orders", "my-activity"];
 const TABLE_LABELS = ["Activity", "Listings", "Orders", "My Activity"];
@@ -257,7 +257,6 @@ export function Market() {
                 )}
                 <ScatterChartV2
                   data={datasets}
-                  size="small"
                   xOptions={{ label: "Place in line", min: 0, max: podLineAsNumber }}
                   yOptions={{ label: "Price per pod", min: 0, max: 100 }}
                   onPointClick={onPointClick}

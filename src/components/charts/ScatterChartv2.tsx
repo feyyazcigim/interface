@@ -51,7 +51,7 @@ export type ScatterChartAxisOptions = {
 
 export interface ScatterChartProps {
   data: ScatterChartData;
-  size: "small" | "large";
+  size?: "small" | "large";
   referenceDot?: LineChartReferenceDotProps;
   valueFormatter?: (value: number) => string;
   onMouseOver?: (index: number) => void;
@@ -573,7 +573,7 @@ const ScatterChartV2 = React.memo(
         options={chartOptions}
         plugins={allPlugins}
         width={chartDimensions.w}
-        height={chartDimensions.h}
+        height={500}
       />
     );
   },
