@@ -82,6 +82,7 @@ export const gradientFunctions = {
   solidGreen: strokeGradientFnFactory(Array.from({ length: 5 }).map((_) => chartColors[0].lineColor)),
   solidBlue: strokeGradientFnFactory(Array.from({ length: 5 }).map((_) => chartColors[1].lineColor)),
   solidRed: strokeGradientFnFactory(Array.from({ length: 5 }).map((_) => chartColors[2].lineColor)),
+  solid: (color: string) => strokeGradientFnFactory(Array.from({ length: 5 }).map((_) => color)),
 };
 
 export function getStrokeGradientFunctions(

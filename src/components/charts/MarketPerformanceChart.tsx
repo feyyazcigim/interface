@@ -1,28 +1,18 @@
 import { SMPChartType, useSeasonalMarketPerformance } from "@/state/seasonal/queries/useSeasonalMarketPerformance";
 import { chartFormatters as f, formatDate } from "@/utils/format";
+import { getChainTokenMap } from "@/utils/token";
 import { SeasonalMarketPerformanceChartData, Token } from "@/utils/types";
 import { cn } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useChainId } from "wagmi";
 import { CloseIconAlt } from "../Icons";
 import FrameAnimator from "../LoadingSpinner";
 import TooltipSimple from "../TooltipSimple";
+import IconImage from "../ui/IconImage";
 import LineChart, { LineChartData } from "./LineChart";
 import { tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
-import { gradientFunctions, StrokeGradientFunction } from "./chartHelpers";
-import { useChainId } from "wagmi";
-import { getChainTokenMap } from "@/utils/token";
-import IconImage from "../ui/IconImage";
-
-// TODO(pp): set these appropriately for each token.
-// Will need to be memoized as the chart data may be enumerated in unpredictable order.
-const strokeGradients = [
-  gradientFunctions.solidRed,
-  gradientFunctions.solidBlue,
-  gradientFunctions.solidGreen,
-  gradientFunctions.solidRed,
-  gradientFunctions.solidBlue,
-];
+import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
 
 interface MarketPerformanceChartProps {
   season: number;
@@ -74,8 +64,9 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
           };
           chartData[i].values.push(allData[token][i].value);
         }
-        tokens.push(tokenConfig.find((t) => t.symbol === token));
-        chartStrokeGradients.push(gradientFunctions.solidRed);
+        const tokenObj = tokenConfig.find((t) => t.symbol === token);
+        tokens.push(tokenObj);
+        chartStrokeGradients.push(gradientFunctions.solid(tokenObj?.color ?? "green"));
       }
       return {
         chartData,
@@ -147,8 +138,9 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                       {token && (
                         <IconImage src={token.logoURI} size={8} alt={token.symbol} className="inline-block mr-2" />
                       )}
-                      <span style={{ color: token?.color }} className="mr-2">
-                        {tokenSymbol}: {f.price0dFormatter(allData[tokenSymbol][displayIndex].value)}
+                      <span style={{ color: token?.color }} className={`mr-2 ${!token?.color && "text-pinto-green-3"}`}>
+                        {tokenSymbol === "NET" && "Total: "}
+                        {f.price0dFormatter(allData[tokenSymbol][displayIndex].value)}
                       </span>
                       {idx < Object.keys(allData).length - 1 && <span className="text-pinto-gray-2 mx-2">|</span>}
                     </div>
