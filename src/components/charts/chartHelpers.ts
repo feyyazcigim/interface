@@ -299,8 +299,7 @@ const getSelectionPointPlugin = (
 
     // Draw selection point for the hovered data point
     const activeElements = chart.getActiveElements();
-    if (activeElements.length > 0) {
-      const activeElement = activeElements[0];
+    for (const activeElement of activeElements) {
       const datasetIndex = activeElement.datasetIndex;
       const index = activeElement.index;
       const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];

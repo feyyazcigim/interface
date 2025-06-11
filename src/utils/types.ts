@@ -313,7 +313,8 @@ export type UseMultiSeasonalResult = UseSeasonalResult<{ [key: string]: Seasonal
 export type SeasonalAPYChartData = Record<APYWindow, SeasonalChartData[]>;
 export type UseSeasonalAPYResult = UseSeasonalResult<SeasonalAPYChartData>;
 
-export type SeasonalMarketPerformanceChartData = Record<Address | "NET", SeasonalChartData[]>;
+type TokenSymbol = string;
+export type SeasonalMarketPerformanceChartData = Record<TokenSymbol | "NET", SeasonalChartData[]>;
 export type UseSeasonalMarketPerformanceResult = UseSeasonalResult<SeasonalMarketPerformanceChartData>;
 
 export type BlockInfo = {

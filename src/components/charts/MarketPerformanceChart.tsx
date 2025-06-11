@@ -11,19 +11,19 @@ import { tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { gradientFunctions } from "./chartHelpers";
 
-// TODO(pp): set these appropriately for each token. also filter usdc
+// TODO(pp): set these appropriately for each token.
+// Will need to be memoized as the chart data may be enumerated in unpredictable order.
 const strokeGradients = [
   gradientFunctions.solidRed,
   gradientFunctions.solidBlue,
   gradientFunctions.solidGreen,
   gradientFunctions.solidRed,
   gradientFunctions.solidBlue,
-  gradientFunctions.solidBlue,
 ];
 
 interface MarketPerformanceChartProps {
   season: number;
-  size: "small" | "large";
+  size: "small" | "large" | "huge";
   className?: string;
 }
 
@@ -41,7 +41,9 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
 
   useEffect(() => {
     if (data && !allData) {
-      setAllData(data);
+      // Filter out USDC
+      const { USDC, ...rest } = data;
+      setAllData(rest);
       setDisplayIndex(data.NET.length - 1);
     }
   }, [data, allData]);
@@ -94,9 +96,9 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
         <>
           {/* Keep sizing the same as when there is data. Allows centering spinner/error vertically */}
           <div
-            className={`relative w-full flex items-center justify-center ${size === "small" ? "aspect-3/1" : "aspect-6/1"}`}
+            className={`relative w-full flex items-center justify-center ${size === "small" || size === "huge" ? "aspect-3/1" : "aspect-6/1"}`}
             style={{
-              paddingBottom: `calc(85px + ${size === "small" ? "33.33%" : "16.67%"})`,
+              paddingBottom: `calc(85px + ${size === "small" || size === "huge" ? "33.33%" : "16.67%"})`,
               height: "0",
             }}
           >
@@ -141,17 +143,17 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
               </div>
             </div>
           </div>
-          <div className={size === "small" ? "aspect-3/1" : "aspect-6/1"}>
+          <div className={size === "small" || size === "huge" ? "aspect-3/1" : "aspect-6/1"}>
             {!chartData.length && !seasonalPerformance.isLoading ? (
               <div className="w-full h-full flex items-center justify-center">
                 <div className="pinto-body-light">No data</div>
               </div>
             ) : (
-              <div className="px-4 pt-4 pb-4 h-[300px]">
+              <div className={`px-4 pt-4 pb-4 ${size === "huge" ? "h-[550px]" : "h-[300px]"}`}>
                 <LineChart
                   data={chartData}
                   xKey="timestamp"
-                  size={size}
+                  size={"small"}
                   makeLineGradients={strokeGradients}
                   valueFormatter={f.price0dFormatter}
                   onMouseOver={handleMouseOver}

@@ -311,9 +311,9 @@ const LineChart = React.memo(
       [
         gradientPlugin,
         verticalLinePlugin,
+        activeIndexVerticalLinePlugin,
         horizontalReferenceLinePlugin,
         selectionPointPlugin,
-        activeIndexVerticalLinePlugin,
         selectionCallbackPlugin,
       ],
     );
