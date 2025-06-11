@@ -182,10 +182,6 @@ const LineChart = React.memo(
       return {
         maintainAspectRatio: false,
         responsive: true,
-        animation: {
-          duration: 400, // Add smooth animation duration
-          easing: "easeInOutQuart", // Add smooth easing
-        },
         plugins: {
           tooltip: {
             enabled: false,
