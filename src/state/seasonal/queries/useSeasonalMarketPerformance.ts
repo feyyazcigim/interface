@@ -93,9 +93,30 @@ export function useSeasonalMarketPerformance(
 
   // Expand results by token
   const sgData = result.data as unknown as MarketPerformanceSeasonal[];
-  const responseData: SeasonalMarketPerformanceChartData = { NET: [] };
+  const responseData: SeasonalMarketPerformanceChartData = {};
   if (sgData) {
     for (const season of sgData) {
+      responseData.NET ??= [
+        {
+          season: season.season - 1,
+          value: 0,
+          timestamp: new Date((Number(season.timestamp) - 60 * 60) * 1000),
+        },
+      ];
+
+      const value =
+        chartType < SMPChartType.USD_CUMULATIVE
+          ? Number(season[CHART_FIELDS[chartType % 2][1]])
+          : accumulator(chartType)(
+              responseData.NET[responseData.NET.length - 1].value,
+              Number(season[CHART_FIELDS[chartType % 2][1]]),
+            );
+      responseData.NET.push({
+        season: season.season,
+        value,
+        timestamp: new Date(Number(season.timestamp) * 1000),
+      });
+
       let tokenIdx = 0;
       for (const token of season.silo.whitelistedTokens) {
         // Skip Pinto token
@@ -108,14 +129,20 @@ export function useSeasonalMarketPerformance(
           continue;
         }
 
-        responseData[underlyingToken.symbol] ??= [];
+        responseData[underlyingToken.symbol] ??= [
+          {
+            season: season.season - 1,
+            value: 0,
+            timestamp: new Date((Number(season.timestamp) - 60 * 60) * 1000),
+          },
+        ];
         const arr = responseData[underlyingToken.symbol];
 
         const value =
           chartType < SMPChartType.USD_CUMULATIVE
             ? Number(season[CHART_FIELDS[chartType % 2][0]][tokenIdx])
             : accumulator(chartType)(
-                arr[arr.length - 1]?.value ?? 0,
+                arr[arr.length - 1].value,
                 Number(season[CHART_FIELDS[chartType % 2][0]][tokenIdx]),
               );
         arr.push({
@@ -126,18 +153,6 @@ export function useSeasonalMarketPerformance(
 
         ++tokenIdx;
       }
-      const value =
-        chartType < SMPChartType.USD_CUMULATIVE
-          ? Number(season[CHART_FIELDS[chartType % 2][1]])
-          : accumulator(chartType)(
-              responseData.NET[responseData.NET.length - 1]?.value ?? 0,
-              Number(season[CHART_FIELDS[chartType % 2][1]]),
-            );
-      responseData.NET.push({
-        season: season.season,
-        value,
-        timestamp: new Date(Number(season.timestamp) * 1000),
-      });
     }
   }
 

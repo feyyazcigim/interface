@@ -32,7 +32,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
   const [allData, setAllData] = useState<SeasonalMarketPerformanceChartData | null>(null);
   const [displayIndex, setDisplayIndex] = useState<number | null>(null);
 
-  const [timeTab, setTimeTab] = useState(TimeTab.AllTime);
+  const [timeTab, setTimeTab] = useState(TimeTab.Week);
   const seasonalPerformance = useSeasonalMarketPerformance(
     Math.max(0, season - tabToSeasonalLookback(timeTab)),
     season,
@@ -134,7 +134,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                 {chartDataset.tokens.map((token, idx) => {
                   const tokenSymbol = token?.symbol ?? "NET";
                   return (
-                    <div key={`${token}-value`} className="flex items-center">
+                    <div key={`${tokenSymbol}-value`} className="flex items-center">
                       {token && (
                         <IconImage src={token.logoURI} size={8} alt={token.symbol} className="inline-block mr-2" />
                       )}
