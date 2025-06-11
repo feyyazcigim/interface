@@ -242,9 +242,18 @@ export const chartFormatters = {
   number2dFormatter: (v: number) => `${formatter.number(v, { minDecimals: 2, maxDecimals: 2 })}`,
   number6dFormatter: (v: number) => `${formatter.number(v, { minDecimals: 6, maxDecimals: 6 })}`,
   largeNumberFormatter: numberAbbr,
-  price0dFormatter: (v: number) => `$${formatter.number(v, { minDecimals: 0, maxDecimals: 0 })}`,
-  price2dFormatter: (v: number) => `$${formatter.number(v, { minDecimals: 2, maxDecimals: 2 })}`,
-  price6dFormatter: (v: number) => `$${formatter.number(v, { minDecimals: 6, maxDecimals: 6 })}`,
+  price0dFormatter: (v: number) => {
+    const formatted = formatter.number(v, { minDecimals: 0, maxDecimals: 0 });
+    return formatted.startsWith("-") ? `-$${formatted.slice(1)}` : `$${formatted}`;
+  },
+  price2dFormatter: (v: number) => {
+    const formatted = formatter.number(v, { minDecimals: 2, maxDecimals: 2 });
+    return formatted.startsWith("-") ? `-$${formatted.slice(1)}` : `$${formatted}`;
+  },
+  price6dFormatter: (v: number) => {
+    const formatted = formatter.number(v, { minDecimals: 6, maxDecimals: 6 });
+    return formatted.startsWith("-") ? `-$${formatted.slice(1)}` : `$${formatted}`;
+  },
   largePriceFormatter: (v: number) => `$${numberAbbr(v)}`,
   percent0dFormatter: (v: number) => `${formatter.number(v * 100, { minDecimals: 0, maxDecimals: 0 })}%`,
   percent2dFormatter: (v: number) => `${formatter.number(v * 100, { minDecimals: 2, maxDecimals: 2 })}%`,
