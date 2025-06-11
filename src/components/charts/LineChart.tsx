@@ -92,7 +92,10 @@ const LineChart = React.memo(
       const minData = data.reduce((acc, next) => Math.min(acc, ...next.values), Number.MAX_SAFE_INTEGER);
 
       const maxTick = maxData === minData && maxData === 0 ? 1 : maxData;
-      let minTick = Math.max(0, minData - (maxData - minData) * 0.1);
+      let minTick = minData - (maxData - minData) * 0.1;
+      if (minData >= 0) {
+        minTick = Math.max(minTick, 0);
+      }
       if (minTick === maxData) {
         minTick = maxData * 0.99;
       }

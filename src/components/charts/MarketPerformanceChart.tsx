@@ -5,11 +5,11 @@ import { cn } from "@/utils/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
 import FrameAnimator from "../LoadingSpinner";
+import TooltipSimple from "../TooltipSimple";
 import LineChart, { LineChartData } from "./LineChart";
 import { tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { gradientFunctions } from "./chartHelpers";
-import TooltipSimple from "../TooltipSimple";
 
 // TODO(pp): set these appropriately for each token. also filter usdc
 const strokeGradients = [
@@ -84,7 +84,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
         <div className="flex flex-row gap-1 items-center">
           <div className="sm:pinto-body text-pinto-light sm:text-pinto-light">Crypto Market Performance</div>
           <TooltipSimple
-            content="Measures historical value fluctuations of non-Pinto value in the ecosystem."
+            content="Measures historical fluctuations of non-Pinto value in the ecosystem."
             variant="gray"
           />
         </div>
