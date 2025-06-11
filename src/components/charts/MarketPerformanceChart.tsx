@@ -14,6 +14,22 @@ import { tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
 
+enum DataType {
+  USD = "USD",
+  PERCENT = "PERCENT",
+}
+
+const getDataTypeInfo = (type: DataType): { display: string; chartType: SMPChartType } => {
+  switch (type) {
+    case DataType.USD:
+      return { display: "USD", chartType: SMPChartType.USD_CUMULATIVE };
+    case DataType.PERCENT:
+      return { display: "%", chartType: SMPChartType.PERCENT_CUMULATIVE };
+    default:
+      throw new Error(`Invalid data type: ${type}`);
+  }
+};
+
 interface MarketPerformanceChartProps {
   season: number;
   size: "small" | "large" | "huge";
@@ -31,12 +47,13 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
   const chainId = useChainId();
   const [allData, setAllData] = useState<SeasonalMarketPerformanceChartData | null>(null);
   const [displayIndex, setDisplayIndex] = useState<number | null>(null);
+  const [dataType, setDataType] = useState<DataType>(DataType.USD);
 
   const [timeTab, setTimeTab] = useState(TimeTab.Week);
   const seasonalPerformance = useSeasonalMarketPerformance(
     Math.max(0, season - tabToSeasonalLookback(timeTab)),
     season,
-    SMPChartType.USD_CUMULATIVE,
+    getDataTypeInfo(dataType).chartType,
   );
   const data = seasonalPerformance.data;
 
@@ -77,6 +94,12 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     return { chartData: [], tokens: [], chartStrokeGradients: [] };
   }, [allData, chainId]);
 
+  const handleChangeDataType = useCallback((type: DataType) => {
+    setDataType(type);
+    setAllData(null);
+    setDisplayIndex(null);
+  }, []);
+
   const handleChangeTimeTab = useCallback((tab: TimeTab) => {
     setTimeTab(tab);
     setAllData(null);
@@ -92,15 +115,38 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     [allData],
   );
 
+  const displayValueFormatter =
+    dataType === DataType.USD
+      ? f.largePriceFormatter({ decimals: 3, min: 1000000, uppercase: true })
+      : f.percent3dFormatter;
+  const chartValueFormatter = dataType === DataType.USD ? f.price0dFormatter : f.percent0dFormatter;
+
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
-      <div className="flex justify-between pt-4 px-4 sm:pt-6 sm:px-6">
+      <div className="flex justify-between pt-4 px-4 mb-3 sm:pt-6 sm:px-6">
         <div className="flex flex-row gap-1 items-center">
           <div className="sm:pinto-body text-pinto-light sm:text-pinto-light">Crypto Market Performance</div>
           <TooltipSimple
             content="Measures historical fluctuations of non-Pinto value in the ecosystem."
             variant="gray"
           />
+          <div className="ml-4 flex items-center gap-1 bg-gray-2 rounded-lg p-0.5 border border-pinto-gray-2">
+            {Object.values(DataType).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => handleChangeDataType(type)}
+                className={cn(
+                  "px-3 pt-0.5 rounded-md text-sm transition-all duration-500",
+                  dataType === type
+                    ? "bg-pinto-green-3 text-white shadow-sm"
+                    : "text-pinto-gray-2 hover:text-pinto-light hover:bg-gray-1/50",
+                )}
+              >
+                {getDataTypeInfo(type).display}
+              </button>
+            ))}
+          </div>
         </div>
         <TimeTabsSelector tab={timeTab} setTab={handleChangeTimeTab} />
       </div>
@@ -141,9 +187,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                       <div style={{ color: token?.color }} className={`mr-2 ${!token?.color && "text-pinto-green-3"}`}>
                         {tokenSymbol === "NET" && "Total: "}
                         <p className="inline-block w-[7.1ch] text-right">
-                          {f.largePriceFormatter({ decimals: 3, min: 1000000, uppercase: true })(
-                            allData[tokenSymbol][displayIndex].value,
-                          )}
+                          {displayValueFormatter(allData[tokenSymbol][displayIndex].value)}
                         </p>
                       </div>
                       {idx < Object.keys(allData).length - 1 && <p className="text-pinto-gray-2 mx-2">|</p>}
@@ -173,7 +217,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                   xKey="timestamp"
                   size={"small"}
                   makeLineGradients={chartDataset.chartStrokeGradients}
-                  valueFormatter={f.price0dFormatter}
+                  valueFormatter={chartValueFormatter}
                   onMouseOver={handleMouseOver}
                 />
               </div>
