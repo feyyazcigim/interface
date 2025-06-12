@@ -140,8 +140,6 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     return { chartData: [], tokens: [], chartStrokeGradients: [] };
   }, [allData, chainId, minValues, maxValues]);
 
-  // TODO(pp): not necessary to supply the custom value transform given we want to kill the axis instead
-
   const handleChangeDataType = useCallback((type: DataType) => {
     setDataType(type);
     setAllData(null);
@@ -274,6 +272,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                   makeLineGradients={chartDataset.chartStrokeGradients}
                   valueFormatter={chartValueFormatter}
                   onMouseOver={handleMouseOver}
+                  hideYAxis={dataType === DataType.PRICE}
                 />
               </div>
             )}
