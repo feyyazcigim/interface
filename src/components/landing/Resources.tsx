@@ -8,7 +8,9 @@ const resourceCards = [
   {
     title: "Learn",
     description: "Learn more about the incentives that coordinate the farm.",
-    pattern: "tenCell",
+    pattern: "pufferfishCompanion",
+    initialScale: 2.4,
+    finalScale: 1.1,
     buttons: [
       {
         href: navLinks.docs,
@@ -26,6 +28,8 @@ const resourceCards = [
     title: "Engage",
     description: "Ask questions, participate in discussion about protocol improvements and connect with other farmers.",
     pattern: "trafficCircle",
+    initialScale: 1.5,
+    finalScale: 1.5,
     buttons: [
       {
         href: navLinks.twitter,
@@ -42,7 +46,9 @@ const resourceCards = [
   {
     title: "Participate",
     description: "Plant your own crops and join the movement.",
-    pattern: "trafficCircle",
+    pattern: "tenCell",
+    initialScale: 6,
+    finalScale: 1.1,
     buttons: [
       {
         href: navLinks.discord,
@@ -66,14 +72,16 @@ export default function Resources() {
           <div key={index} className={cardStyles}>
             <div className="overflow-hidden relative h-[24rem] flex justify-center items-center">
               <div
-                className="
-                flex
-                transition-transform duration-300 ease-in-out
-                scale-[4]
-                hover:scale-110
-                cursor-pointer
-                transform-gpu
-              "
+                className={`flex transition-transform duration-1000 ease-in-out transform-gpu`}
+                style={{
+                  transform: `scale(${card.initialScale})`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = `scale(${card.finalScale})`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = `scale(${card.initialScale})`;
+                }}
               >
                 <GameOfLife startingPattern={card.pattern} />
               </div>
