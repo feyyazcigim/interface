@@ -1,3 +1,4 @@
+import LandingChart from "@/components/LandingChart";
 import AuditsList from "@/components/landing/AuditsList";
 import BugBounty from "@/components/landing/BugBounty";
 import FarmToTable from "@/components/landing/FarmToTable";
@@ -6,8 +7,7 @@ import Resources from "@/components/landing/Resources";
 import SecondaryCTA from "@/components/landing/SecondaryCTA";
 import SecondaryCTAProperties from "@/components/landing/SecondaryCTAProperties";
 import SecondaryCTAValues from "@/components/landing/SecondaryCTAValues";
-import LandingChart from "@/components/LandingChart";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Landing() {
   const [initialHeightRem, setInitialHeightRem] = useState(100);
