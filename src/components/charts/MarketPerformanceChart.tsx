@@ -9,7 +9,7 @@ import { CloseIconAlt } from "../Icons";
 import FrameAnimator from "../LoadingSpinner";
 import TooltipSimple from "../TooltipSimple";
 import IconImage from "../ui/IconImage";
-import LineChart, { LineChartData } from "./LineChart";
+import LineChart, { CustomChartValueTransform, LineChartData } from "./LineChart";
 import { tabToSeasonalLookback } from "./SeasonalChart";
 import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
@@ -56,6 +56,16 @@ const priceDisplayFormatter = (v: number) => {
   return f.price6dFormatter(v);
 };
 
+// Linear transform that maps values from [min,max] to [0,1]
+const transformValue = (v: number, min: number, max: number): number => {
+  // Handle edge cases
+  if (v <= min) return 0;
+  if (v >= max) return 1;
+
+  // Linear interpolation between min and max
+  return (v - min) / (max - min);
+};
+
 // TODO(pp): will need to remove the y axis labels compeltely for price data, and have some scaling to have them all normalized
 //  according to some range in their high/lowest values
 
@@ -82,6 +92,22 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     }
   }, [data, allData]);
 
+  const [minValues, maxValues] = useMemo(() => {
+    if (allData) {
+      return [
+        Object.keys(allData).reduce((acc, token) => {
+          acc[token] = Math.min(...allData[token].map((d) => d.value));
+          return acc;
+        }, {}),
+        Object.keys(allData).reduce((acc, token) => {
+          acc[token] = Math.max(...allData[token].map((d) => d.value));
+          return acc;
+        }, {}),
+      ];
+    }
+    return [{}, {}];
+  }, [allData]);
+
   const chartDataset = useMemo<ChartDataset>(() => {
     if (allData) {
       const tokenConfig = Object.values(getChainTokenMap(chainId));
@@ -95,7 +121,11 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
             timestamp: allData[token][i].timestamp,
             values: [],
           };
-          chartData[i].values.push(allData[token][i].value);
+          if (dataType !== DataType.PRICE) {
+            chartData[i].values.push(allData[token][i].value);
+          } else {
+            chartData[i].values.push(transformValue(allData[token][i].value, minValues[token], maxValues[token]));
+          }
         }
         const tokenObj = tokenConfig.find((t) => t.symbol === token);
         tokens.push(tokenObj);
@@ -108,7 +138,9 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
       };
     }
     return { chartData: [], tokens: [], chartStrokeGradients: [] };
-  }, [allData, chainId]);
+  }, [allData, chainId, minValues, maxValues]);
+
+  // TODO(pp): not necessary to supply the custom value transform given we want to kill the axis instead
 
   const handleChangeDataType = useCallback((type: DataType) => {
     setDataType(type);
