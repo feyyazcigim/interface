@@ -15,16 +15,19 @@ import TimeTabsSelector, { TimeTab } from "./TimeTabs";
 import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
 
 enum DataType {
+  PRICE = "PRICE",
   USD = "USD",
   PERCENT = "PERCENT",
 }
 
 const getDataTypeInfo = (type: DataType): { display: string; chartType: SMPChartType } => {
   switch (type) {
+    case DataType.PRICE:
+      return { display: "PRICE", chartType: SMPChartType.TOKEN_PRICES };
     case DataType.USD:
-      return { display: "USD", chartType: SMPChartType.USD_CUMULATIVE };
+      return { display: "∆USD", chartType: SMPChartType.USD_CUMULATIVE };
     case DataType.PERCENT:
-      return { display: "%", chartType: SMPChartType.PERCENT_CUMULATIVE };
+      return { display: "∆%", chartType: SMPChartType.PERCENT_CUMULATIVE };
     default:
       throw new Error(`Invalid data type: ${type}`);
   }
@@ -43,11 +46,24 @@ type ChartDataset = {
   chartStrokeGradients: StrokeGradientFunction[];
 };
 
+// Use different formatters/precision for different price value ranges
+const priceDisplayFormatter = (v: number) => {
+  if (v > 10000) {
+    return f.largePriceFormatter({ decimals: 2, uppercase: true })(v);
+  } else if (v > 10) {
+    return f.price2dFormatter(v);
+  }
+  return f.price6dFormatter(v);
+};
+
+// TODO(pp): will need to remove the y axis labels compeltely for price data, and have some scaling to have them all normalized
+//  according to some range in their high/lowest values
+
 const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceChartProps) => {
   const chainId = useChainId();
   const [allData, setAllData] = useState<SeasonalMarketPerformanceChartData | null>(null);
   const [displayIndex, setDisplayIndex] = useState<number | null>(null);
-  const [dataType, setDataType] = useState<DataType>(DataType.USD);
+  const [dataType, setDataType] = useState<DataType>(DataType.PRICE);
 
   const [timeTab, setTimeTab] = useState(TimeTab.Week);
   const seasonalPerformance = useSeasonalMarketPerformance(
@@ -116,10 +132,17 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
   );
 
   const displayValueFormatter =
-    dataType === DataType.USD
-      ? f.largePriceFormatter({ decimals: 3, min: 1000000, uppercase: true })
-      : f.percent3dFormatter;
-  const chartValueFormatter = dataType === DataType.USD ? f.price0dFormatter : f.percent0dFormatter;
+    dataType === DataType.PRICE
+      ? priceDisplayFormatter
+      : dataType === DataType.USD
+        ? f.largePriceFormatter({ decimals: 3, min: 1000000, uppercase: true })
+        : f.percent3dFormatter;
+  const chartValueFormatter =
+    dataType === DataType.PRICE
+      ? f.price0dFormatter
+      : dataType === DataType.USD
+        ? f.price0dFormatter
+        : f.percent0dFormatter;
 
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>

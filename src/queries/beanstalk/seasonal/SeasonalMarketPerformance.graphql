@@ -8,6 +8,7 @@ query BeanstalkSeasonalMarketPerformance($from: Int, $to: Int) {
     id
     season
     timestamp
+    thisSeasonTokenUsdPrices
     usdChange
     percentChange
     totalUsdChange
