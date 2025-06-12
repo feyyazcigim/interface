@@ -1,8 +1,8 @@
 import MinimalistConcentricCircles from "@/components/MinimalistConcentricCircles";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "../ui/Button";
-import { useState, useRef, useEffect } from "react";
 import { navLinks } from "../nav/nav/Navbar";
+import { Button } from "../ui/Button";
 
 export default function FarmToTable({ height = 1600 }: { height: number }) {
   const [beginAnimation, setBeginAnimation] = useState(false);

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 const GRID_SIZE = 120;
 const CELL_SIZE = 16; // pixels
 const CANVAS_SIZE = GRID_SIZE * CELL_SIZE;
+const CELL_RADIUS = 3; // Radius for rounded corners
 
 // Pre-calculate neighbor offsets for performance
 const NEIGHBOR_OFFSETS = [
@@ -58,7 +59,14 @@ const renderGrid = (canvas, grid) => {
   for (let x = 0; x < GRID_SIZE; x++) {
     for (let y = 0; y < GRID_SIZE; y++) {
       if (grid[x * GRID_SIZE + y]) {
-        ctx.fillRect(y * CELL_SIZE, x * CELL_SIZE, CELL_SIZE - 1, CELL_SIZE - 1);
+        const cellX = y * CELL_SIZE;
+        const cellY = x * CELL_SIZE;
+        const cellWidth = CELL_SIZE - 1;
+        const cellHeight = CELL_SIZE - 1;
+
+        ctx.beginPath();
+        ctx.roundRect(cellX, cellY, cellWidth, cellHeight, CELL_RADIUS);
+        ctx.fill();
       }
     }
   }
@@ -78,6 +86,7 @@ const patterns = {
     [3, -2],
     [4, 1],
   ],
+
   trafficCircle: [
     [0, 21],
     [0, 22],
@@ -393,7 +402,7 @@ export default function GameOfLife({ startingPattern }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
-        imageRendering: "pixelated",
+        imageRendering: "crisp-edges",
       }}
     />
   );
