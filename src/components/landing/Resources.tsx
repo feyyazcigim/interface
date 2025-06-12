@@ -1,62 +1,63 @@
+import clsx from "clsx";
 import { Link } from "react-router-dom";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 import GameOfLife from "./GameOfLife";
 
+const resourceCards = [
+  {
+    title: "Learn",
+    description: "Learn more about the incentives that coordinate the farm.",
+    pattern: "tenCell",
+    buttons: [
+      {
+        href: navLinks.docs,
+        icon: "gitbook.png",
+        label: "Docs",
+      },
+      {
+        href: navLinks.blog,
+        icon: "mirror.png",
+        label: "Blog",
+      },
+    ],
+  },
+  {
+    title: "Engage",
+    description: "Ask questions, participate in discussion about protocol improvements and connect with other farmers.",
+    pattern: "trafficCircle",
+    buttons: [
+      {
+        href: navLinks.twitter,
+        icon: "twitter.png",
+        label: "@pintodotmoney",
+      },
+      {
+        href: navLinks.discord,
+        icon: "discord.png",
+        label: "Discord",
+      },
+    ],
+  },
+  {
+    title: "Participate",
+    description: "Plant your own crops and join the movement.",
+    pattern: "trafficCircle",
+    buttons: [
+      {
+        href: navLinks.discord,
+        label: "Dashboard",
+      },
+    ],
+  },
+];
+
+const cardStyles = clsx(
+  "border border-pinto-gray-2 rounded-[1.25rem] w-[32rem] flex flex-col gap-8 overflow-clip bg-white",
+);
+const buttonStyles = clsx("w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal");
+
 export default function Resources() {
-  const resourceCards = [
-    {
-      title: "Learn",
-      description: "Learn more about the incentives that coordinate the farm.",
-      pattern: "tenCell",
-      buttons: [
-        {
-          href: navLinks.docs,
-          icon: "gitbook.png",
-          label: "Docs",
-        },
-        {
-          href: navLinks.blog,
-          icon: "mirror.png",
-          label: "Blog",
-        },
-      ],
-    },
-    {
-      title: "Engage",
-      description:
-        "Ask questions, participate in discussion about protocol improvements and connect with other farmers.",
-      pattern: "trafficCircle",
-      buttons: [
-        {
-          href: navLinks.twitter,
-          icon: "twitter.png",
-          label: "@pintodotmoney",
-        },
-        {
-          href: navLinks.discord,
-          icon: "discord.png",
-          label: "Discord",
-        },
-      ],
-    },
-    {
-      title: "Participate",
-      description: "Plant your own crops and join the movement.",
-      pattern: "trafficCircle",
-      buttons: [
-        {
-          href: navLinks.discord,
-          label: "Dashboard",
-        },
-      ],
-    },
-  ];
-
-  const cardStyles =
-    "border border-pinto-gray-2 rounded-[1.25rem] w-[32rem] flex flex-col gap-8 overflow-clip bg-white";
-  const buttonStyles = "w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal";
-
   return (
     <div className="flex flex-col items-center self-stretch gap-12 mx-auto">
       <h2 className="text-4xl leading-same-h2 font-light text-black">Resources</h2>

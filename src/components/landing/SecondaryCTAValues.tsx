@@ -5,40 +5,40 @@ import ValueOpenSource from "@/assets/misc/Value_Open_Source.svg";
 import ValuePermissionless from "@/assets/misc/Value_Permissionlessness.svg";
 import ValueTrustless from "@/assets/misc/Value_Trustlessness.svg";
 
-export default function SecondaryCTAValues() {
-  const data = [
-    {
-      logo: ValueCensorshipResistance,
-      title: "Censorship Resistance",
-      description: "Pinto is designed to be maximally resistant to any censorship.",
-    },
-    {
-      logo: ValueTrustless,
-      title: "Trustlessness",
-      description: "The monetary policy of Pinto is deterministic, eliminating any need for trust.",
-    },
-    {
-      logo: ValuePermissionless,
-      title: "Permissionless",
-      description: "Anyone with an Ethereum wallet can participate in Pinto.",
-    },
-    {
-      logo: ValueFairness,
-      title: "Fairness",
-      description: "Pinto strives to fairly incentivize all participants.",
-    },
-    {
-      logo: ValueOpenSource,
-      title: "Open-source",
-      description: "All code is deployed on Base and publicly viewable by any participant.",
-    },
-    {
-      logo: ValueCommunityRun,
-      title: "Community-run",
-      description: "Pinto is maintained by a decentralized group of contributors and run by it’s community.",
-    },
-  ];
+const data = [
+  {
+    logo: ValueCensorshipResistance,
+    title: "Censorship Resistance",
+    description: "Pinto is designed to be maximally resistant to any censorship.",
+  },
+  {
+    logo: ValueTrustless,
+    title: "Trustlessness",
+    description: "The monetary policy of Pinto is deterministic, eliminating any need for trust.",
+  },
+  {
+    logo: ValuePermissionless,
+    title: "Permissionless",
+    description: "Anyone with an Ethereum wallet can participate in Pinto.",
+  },
+  {
+    logo: ValueFairness,
+    title: "Fairness",
+    description: "Pinto strives to fairly incentivize all participants.",
+  },
+  {
+    logo: ValueOpenSource,
+    title: "Open-source",
+    description: "All code is deployed on Base and publicly viewable by any participant.",
+  },
+  {
+    logo: ValueCommunityRun,
+    title: "Community-run",
+    description: "Pinto is maintained by a decentralized group of contributors and run by it’s community.",
+  },
+];
 
+export default function SecondaryCTAValues() {
   return (
     <div className="flex flex-col items-start w-[25.625rem] animate-vertical-marquee-reverse">
       {Array(2)
