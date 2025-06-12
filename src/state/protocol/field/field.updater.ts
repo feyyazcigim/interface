@@ -133,7 +133,7 @@ const useUpdateInitialSoil = () => {
       });
     },
     enabled: !!season && season > 0,
-    staleTime: Infinity,
+    ...settings.query,
   });
 
   useUpdateQueryKeys(fieldQueryKeysAtom, _queryKey, "initialSoil");
@@ -167,7 +167,7 @@ export const useTemperatureQuery = () => {
     ],
     allowFailure: false,
     scopeKey: "field",
-    query: defaultQuerySettings,
+    ...settings.query,
   });
 };
 

@@ -226,8 +226,8 @@ export default function useTransaction({
     [token, account.address, config, chainId, errorMessage, writeContractAsync, onEstimateGas],
   );
 
-  const isConfirming = receipt.isLoading || mutation.isPending;
   const error = mutation.error || receipt.error;
+  const isConfirming = (receipt.isLoading || mutation.isPending) && !error;
   const confirmed = receipt.isSuccess;
 
   return { writeContractAsync, writeWithEstimateGas, setSubmitting, isConfirming, confirmed, error, submitting };

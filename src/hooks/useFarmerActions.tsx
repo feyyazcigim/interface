@@ -426,79 +426,14 @@ export default function useFarmerActions(): FarmerActions {
   const mainToken = tokenData.mainToken;
 
   return useMemo(() => {
+    // Calculate optimal deposit token
+    const optimalDepositToken = findOptimalDepositToken(tokenData.whitelistedTokens, siloData.tokenData);
+
     // If wallet not connected, return empty state
     if (!account.address) {
       return {
-        canDeposit: false,
-        canWrapPinto: false,
-        optimalDepositToken: undefined,
-        tokensWithValue: new Map(),
-        claimRewards: {
-          enabled: false,
-          outputs: {
-            beanGain: TokenValue.ZERO,
-            bdvGain: TokenValue.ZERO,
-            stalkGain: TokenValue.ZERO,
-            seedGain: TokenValue.ZERO,
-            podGain: TokenValue.ZERO,
-          },
-        },
-        floodAssets: {
-          enabled: false,
-          assets: [],
-          totalValue: TokenValue.ZERO,
-        },
-        harvestPods: {
-          enabled: false,
-          outputs: {
-            beanGain: TokenValue.ZERO,
-            bdvGain: TokenValue.ZERO,
-            stalkGain: TokenValue.ZERO,
-            seedGain: TokenValue.ZERO,
-            podGain: TokenValue.ZERO,
-          },
-        },
-        convertDeposits: {
-          enabled: false,
-          deposits: [],
-          bestConversion: {
-            outputs: {
-              beanGain: TokenValue.ZERO,
-              bdvGain: TokenValue.ZERO,
-              stalkGain: TokenValue.ZERO,
-              seedGain: TokenValue.ZERO,
-              podGain: TokenValue.ZERO,
-            },
-          },
-        },
-        // Add the updateDeposits empty state
-        updateDeposits: {
-          enabled: false,
-          totalGains: {
-            beanGain: TokenValue.ZERO,
-            bdvGain: TokenValue.ZERO,
-            stalkGain: TokenValue.ZERO,
-            seedGain: TokenValue.ZERO,
-            podGain: TokenValue.ZERO,
-          },
-          tokenUpdates: new Map(),
-        },
-        totalValue: {
-          silo: TokenValue.ZERO,
-          field: TokenValue.ZERO,
-          wallet: {
-            external: TokenValue.ZERO,
-            internal: TokenValue.ZERO,
-            total: TokenValue.ZERO,
-            byToken: new Map(),
-          },
-          rewards: {
-            stalk: TokenValue.ZERO,
-            seeds: TokenValue.ZERO,
-            earnedBeans: TokenValue.ZERO,
-          },
-        },
-        tokenTotals: new Map(),
+        ...defaultState,
+        optimalDepositToken,
       };
     }
 
@@ -550,9 +485,6 @@ export default function useFarmerActions(): FarmerActions {
       seedGain: harvestablePods.mul(siloData.tokenData.get(mainToken)?.rewards.seeds ?? TokenValue.ZERO),
       podGain: TokenValue.ZERO.sub(harvestablePods), // Reduce pods by harvested amount
     };
-
-    // Calculate optimal deposit token
-    const optimalDepositToken = findOptimalDepositToken(tokenData.whitelistedTokens, siloData.tokenData);
 
     // Calculate convertible deposits and best conversion
     const { bestConversion, convertibleDeposits } = calculateConvertibleDeposits(
@@ -830,3 +762,76 @@ export default function useFarmerActions(): FarmerActions {
     siloData,
   ]);
 }
+
+const defaultState: FarmerActions = {
+  canDeposit: false,
+  canWrapPinto: false,
+  optimalDepositToken: undefined,
+  tokensWithValue: new Map(),
+  claimRewards: {
+    enabled: false,
+    outputs: {
+      beanGain: TokenValue.ZERO,
+      bdvGain: TokenValue.ZERO,
+      stalkGain: TokenValue.ZERO,
+      seedGain: TokenValue.ZERO,
+      podGain: TokenValue.ZERO,
+    },
+  },
+  floodAssets: {
+    enabled: false,
+    assets: [],
+    totalValue: TokenValue.ZERO,
+  },
+  harvestPods: {
+    enabled: false,
+    outputs: {
+      beanGain: TokenValue.ZERO,
+      bdvGain: TokenValue.ZERO,
+      stalkGain: TokenValue.ZERO,
+      seedGain: TokenValue.ZERO,
+      podGain: TokenValue.ZERO,
+    },
+  },
+  convertDeposits: {
+    enabled: false,
+    deposits: [],
+    bestConversion: {
+      outputs: {
+        beanGain: TokenValue.ZERO,
+        bdvGain: TokenValue.ZERO,
+        stalkGain: TokenValue.ZERO,
+        seedGain: TokenValue.ZERO,
+        podGain: TokenValue.ZERO,
+      },
+    },
+  },
+  // Add the updateDeposits empty state
+  updateDeposits: {
+    enabled: false,
+    totalGains: {
+      beanGain: TokenValue.ZERO,
+      bdvGain: TokenValue.ZERO,
+      stalkGain: TokenValue.ZERO,
+      seedGain: TokenValue.ZERO,
+      podGain: TokenValue.ZERO,
+    },
+    tokenUpdates: new Map(),
+  },
+  totalValue: {
+    silo: TokenValue.ZERO,
+    field: TokenValue.ZERO,
+    wallet: {
+      external: TokenValue.ZERO,
+      internal: TokenValue.ZERO,
+      total: TokenValue.ZERO,
+      byToken: new Map(),
+    },
+    rewards: {
+      stalk: TokenValue.ZERO,
+      seeds: TokenValue.ZERO,
+      earnedBeans: TokenValue.ZERO,
+    },
+  },
+  tokenTotals: new Map(),
+} as const;

@@ -1,15 +1,9 @@
 import { TV } from "@/classes/TokenValue";
 import { TIME_TO_BLOCKS } from "@/constants/blocks";
-import { defaultQuerySettingsMedium } from "@/constants/query";
+import { defaultQuerySettings, defaultQuerySettingsMedium } from "@/constants/query";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import {
-  OrderbookEntry,
-  TractorAPI,
-  TractorAPIOrderOptions,
-  TractorAPIOrdersResponse,
-  loadOrderbookData,
-} from "@/lib/Tractor";
+import { OrderbookEntry, TractorAPI, TractorAPIOrdersResponse, loadOrderbookData } from "@/lib/Tractor";
 import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { queryKeys } from "@/state/queryKeys";
 import { useTemperature } from "@/state/useFieldData";
@@ -35,23 +29,29 @@ const getLookbackBlocks = (
   return diff > 0n ? diff : undefined;
 };
 
-const useTractorAPISowOrders = (address?: HashString, args?: TractorAPIOrderOptions, chainOnly: boolean = false) => {
+type UseTractorAPISowOrdersParams = Omit<UseTractorSowOrderbookOptions<TractorAPIOrdersResponse>, "select">;
+
+const useTractorAPISowOrders = ({
+  address,
+  cancelled = false,
+  chainOnly,
+  enabled,
+}: UseTractorAPISowOrdersParams = {}) => {
   const chainId = useChainId();
 
   const selectAndTransformOrders = useMemo(() => transformAPIOrderbookData(chainId), [chainId]);
 
+  const args = { publisher: address, orderType: "SOW_V0", cancelled } as const;
+
   return useQuery({
-    queryKey: queryKeys.tractor.sowOrdersV0(args),
+    queryKey: queryKeys.tractor.sowOrdersV0({ ...args }),
     queryFn: async () => {
       if (!chainId) return;
-      const options = { orderType: "SOW_V0", cancelled: false, ...args } satisfies TractorAPIOrderOptions;
-      if (address) options.publisher = address;
-
-      return TractorAPI.getOrders(options);
+      return TractorAPI.getOrders(args);
     },
-    enabled: !!chainId && !chainOnly,
+    enabled: !!chainId && !chainOnly && !!enabled,
     select: selectAndTransformOrders,
-    ...defaultQuerySettingsMedium,
+    ...defaultQuerySettings,
   });
 };
 
@@ -105,30 +105,54 @@ const transformAPIOrderbookData = (chainId: number) => (response: TractorAPIOrde
 };
 
 type UseTractorSowOrderbookOptions<T> = {
+  /** The Blueprint Publisher Address If none provided, all orders will be returned */
   address?: HashString;
-  args?: TractorAPIOrderOptions;
+  /**
+   * If true, only cancelled orders will be returned
+   * If false, only uncompleted orders will be returned
+   * If undefined, all orders will be returned
+   */
+  cancelled?: boolean;
+  /**
+   * If false, only completed orders will be returned
+   * If true, only uncompleted orders will be returned
+   * If undefined, all orders will be returned
+   */
+  filterOutCompleted?: boolean;
+  /**
+   * If true, only fetch data from on-chain.
+   */
   chainOnly?: boolean;
+  /**
+   * Whether queries are enabled.
+   */
+  enabled?: boolean;
 } & Pick<QueryObserverOptions<OrderbookEntry[] | undefined, DefaultError, T>, "select">;
 
 export function useTractorSowOrderbook<T = OrderbookEntry[]>({
-  address,
-  args,
-  chainOnly = false,
   select,
+  ...params
 }: UseTractorSowOrderbookOptions<T> = {}) {
   const chainId = useChainId();
   const client = usePublicClient({ chainId });
   const diamond = useProtocolAddress();
   const temperature = useTemperature();
 
-  //
-  const { data: orders, ...ordersQuery } = useTractorAPISowOrders(address, args, chainOnly);
+  // Deconstructed args
+  const { address, chainOnly = false, enabled = true } = params;
+
+  // Fetch from API
+  const { data: orders, ...ordersQuery } = useTractorAPISowOrders({
+    enabled,
+    chainOnly,
+    ...params,
+  });
 
   // check if the API data exists, is not loading, and is not an error
-  const ordersAPIDataExists = Boolean(orders?.orders?.length && !ordersQuery.isLoading && !ordersQuery.isError);
+  const ordersAPIDataExists = Boolean(orders?.orders && !ordersQuery.isLoading && !ordersQuery.isError);
 
   // only run the chain query if we have a client, a max temperature, the API data exists, and we have a latest block reference.
-  const orderChainQueryEnabled = chainOnly || Boolean(temperature.max.gt(0) && ordersAPIDataExists);
+  const orderChainQueryEnabled = (chainOnly || Boolean(temperature.max.gt(0) && ordersAPIDataExists)) && enabled;
 
   /**
    * If the orders API request failed, fetch since the TRACTOR_DEPLOYMENT_BLOCK
@@ -138,7 +162,7 @@ export function useTractorSowOrderbook<T = OrderbookEntry[]>({
    */
 
   const ordersChainQuery = useQuery<OrderbookEntry[] | undefined, DefaultError, T>({
-    queryKey: queryKeys.tractor.sowOrdersV0Chain(orders?.lastUpdated ?? chainOnly ? 1 : 0, temperature.max),
+    queryKey: queryKeys.tractor.sowOrdersV0Chain(orders?.lastUpdated ?? chainOnly ? 1 : 0, temperature.max, params),
     queryFn: async () => {
       if (temperature.max.lte(0) || !client) {
         return [];
@@ -159,6 +183,7 @@ export function useTractorSowOrderbook<T = OrderbookEntry[]>({
         temperature.max.toNumber(),
         orders?.orders,
         lookbackBlocks,
+        params,
       );
 
       console.debug("[TRACTOR/useTractorSowOrderbook/ordersChainQuery] DATA", {
