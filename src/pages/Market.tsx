@@ -1,3 +1,4 @@
+import { TokenValue } from "@/classes/TokenValue";
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 import FrameAnimator from "@/components/LoadingSpinner";
 import { ScatterChart } from "@/components/charts/ScatterChart";
@@ -118,7 +119,6 @@ export function Market() {
       if ("toFarmer" in event || "originalAmount" in event) {
         return acc;
       }
-      let placeInLine: number | null = null;
       let amount: number | null = null;
       let status = "";
       const price = event.pricePerPod.toNumber();
@@ -127,16 +127,17 @@ export function Market() {
       amount = event.beanAmount.div(event.pricePerPod).toNumber();
       const fillPct = event.beanAmountFilled.div(event.beanAmount).mul(100).toNumber();
       status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
-      placeInLine = event.maxPlaceInLine.toNumber() / 1_000_000;
+      const placeInLine = event.maxPlaceInLine.toNumber();
 
       if (placeInLine !== null && price !== null) {
         acc.data.push({
-          x: placeInLine,
+          x: placeInLine / 1_000_000,
           y: price,
           eventId,
           eventType,
           status,
           amount,
+          placeInLine,
         });
       }
 
@@ -151,7 +152,6 @@ export function Market() {
       if ("toFarmer" in event || "beanAmount" in event) {
         return acc;
       }
-      let placeInLine: number | null = null;
       let amount: number | null = null;
       let status = "";
       const price = event.pricePerPod.toNumber();
@@ -161,18 +161,19 @@ export function Market() {
       amount = event.originalAmount.toNumber();
       const fillPct = event.filled.div(event.originalAmount).mul(100).toNumber();
       status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
-      placeInLine = status === "ACTIVE" ? event.index.sub(harvestableIndex).toNumber() / 1_000_000 : null;
+      const placeInLine = status === "ACTIVE" ? event.index.sub(harvestableIndex).toNumber() : null;
       eventIndex = event.index.toNumber();
 
       if (placeInLine !== null && price !== null) {
         acc.data.push({
-          x: placeInLine,
+          x: placeInLine / 1_000_000,
           y: price,
           eventId,
           eventIndex,
           eventType,
           status,
           amount,
+          placeInLine,
         });
       }
 
@@ -181,6 +182,26 @@ export function Market() {
     { label: "Listings", data: [] as any, color: "#00C767", pointStyle: "rect" as PointStyle },
   );
   const datasets: ScatterChartData = [orders, listings];
+
+  const toolTipOptions: any = {
+    enabled: true,
+    mode: "nearest",
+    callbacks: {
+      title: (context) => {
+        const elem = context?.[0]?.raw;
+        return elem.eventType === "ORDER" ? "Order" : "Listing";
+      },
+      label: (context) => {
+        // should only ever be one since it's set to nearest
+        const elem = context?.raw;
+        return `Price: ${elem.y} PINTO`;
+      },
+      footer: (context) => {
+        const elem = context?.[0]?.raw;
+        return `Place In Line: ${TokenValue.fromHuman(elem.placeInLine, 0).toHuman("short")}`;
+      },
+    },
+  };
 
   // Upon initial page load only, navigate to a page other than Activity if the url is granular.
   // In general it is allowed to be on Activity tab with these granular urls, hence the empty dependency array.
@@ -259,6 +280,7 @@ export function Market() {
                   xOptions={{ label: "Place in line", min: 0, max: podLineAsNumber }}
                   yOptions={{ label: "Price per pod", min: 0, max: 100 }}
                   onPointClick={onPointClick}
+                  toolTipOptions={toolTipOptions}
                 />
               </div>
               <div className="flex gap-10 ml-2.5 mt-8 mb-[1.625rem]">

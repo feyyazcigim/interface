@@ -14,6 +14,7 @@ import {
   Point,
   PointElement,
   PointStyle,
+  TooltipOptions,
 } from "chart.js";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ReactChart } from "../ReactChart";
@@ -67,6 +68,7 @@ export interface ScatterChartProps {
   xOptions: ScatterChartAxisOptions;
   yOptions: ScatterChartAxisOptions;
   customValueTransform?: CustomChartValueTransform;
+  toolTipOptions?: TooltipOptions;
 }
 
 const ScatterChartV2 = React.memo(
@@ -82,6 +84,7 @@ const ScatterChartV2 = React.memo(
     yOptions,
     customValueTransform,
     onPointClick,
+    toolTipOptions,
   }: ScatterChartProps) => {
     const chartRef = useRef<Chart | null>(null);
     const activeIndexRef = useRef<number | undefined>(activeIndex);
@@ -174,7 +177,7 @@ const ScatterChartV2 = React.memo(
         return {
           datasets: data.map(({ label, data, color, pointStyle }) => ({
             label,
-            data: data.map(({ x, y }) => ({ x, y })),
+            data,
             backgroundColor: color,
             pointStyle,
           })),
@@ -314,19 +317,18 @@ const ScatterChartV2 = React.memo(
         id: "customSelectPoint",
         afterDraw: (chart: Chart) => {
           const ctx = chart.ctx;
-          const activeIndex = activeIndexRef.current;
           if (!ctx) return;
 
           // Define the function to draw the selection point
           const drawSelectionPoint = (x: number, y: number) => {
             ctx.save();
-            ctx.fillStyle = "#D9AD0F";
-            ctx.strokeStyle = "#D9AD0F";
+            ctx.fillStyle = "transparent";
+            ctx.strokeStyle = "black";
             ctx.lineWidth = 1;
 
-            const rectWidth = 6;
-            const rectHeight = 6;
-            const cornerRadius = 4;
+            const rectWidth = 10;
+            const rectHeight = 10;
+            const cornerRadius = 5;
 
             ctx.beginPath();
             ctx.moveTo(x - rectWidth / 2 + cornerRadius, y - rectHeight / 2);
@@ -377,15 +379,6 @@ const ScatterChartV2 = React.memo(
               drawSelectionPoint(x, y);
             }
           }
-
-          // Draw selection point for the morningIndex
-          if (typeof activeIndex === "number") {
-            const dataPoint = chart.getDatasetMeta(0).data[activeIndex];
-            if (dataPoint) {
-              const { x, y } = dataPoint.getProps(["x", "y"], true);
-              drawSelectionPoint(x, y);
-            }
-          }
         },
       }),
       [], // Removed morningIndex from dependencies
@@ -406,9 +399,7 @@ const ScatterChartV2 = React.memo(
         maintainAspectRatio: false,
         responsive: true,
         plugins: {
-          tooltip: {
-            enabled: false,
-          },
+          tooltip: toolTipOptions || {},
           legend: {
             display: false,
           },
@@ -423,8 +414,7 @@ const ScatterChartV2 = React.memo(
           },
         },
         interaction: {
-          mode: "nearest", // Highlight the nearest point
-          axis: "x",
+          mode: "nearest",
           intersect: false,
         },
         scales: {
@@ -547,9 +537,14 @@ const ScatterChartV2 = React.memo(
       };
     }, [data, yTickMin, yTickMax, valueFormatter, useLogarithmicScale, customValueTransform]);
 
+    // const allPlugins = useMemo<Plugin[]>(
+    //   () => [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
+    //   [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
+    // );
+
     const allPlugins = useMemo<Plugin[]>(
-      () => [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
-      [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
+      () => [horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
+      [horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
     );
 
     const chartDimensions = useMemo(() => {
