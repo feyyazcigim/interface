@@ -129,7 +129,7 @@ export function Market() {
       status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
       const placeInLine = event.maxPlaceInLine.toNumber();
 
-      if (placeInLine !== null && price !== null) {
+      if (status === 'ACTIVE' && placeInLine !== null && price !== null) {
         acc.data.push({
           x: placeInLine / 1_000_000,
           y: price,
