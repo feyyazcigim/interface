@@ -1,7 +1,7 @@
 import { TV } from "@/classes/TokenValue";
 import { STALK } from "@/constants/internalTokens";
 import { ConvertResultStruct } from "@/lib/siloConvert/SiloConvert";
-import { ConvertStrategyQuote, ConvertType } from "@/lib/siloConvert/strategies/core";
+import { ConvertStrategyQuote, SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import { useSiloData } from "@/state/useSiloData";
 import { Token } from "@/utils/types";
 import { useMemo } from "react";
@@ -26,7 +26,7 @@ const defaultData = {
 export function useSiloConvertResult(
   source: Token,
   target: Token | undefined,
-  quote: ConvertStrategyQuote<ConvertType>[] | undefined,
+  quote: ConvertStrategyQuote<SiloConvertType>[] | undefined,
   results: ConvertResultStruct<TV>[] | undefined,
 ) {
   const silo = useSiloData();

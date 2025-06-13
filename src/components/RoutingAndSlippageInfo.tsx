@@ -11,7 +11,7 @@ import { SwapSummary, SwapSummaryExchange } from "@/hooks/swap/useSwapSummary";
 import { PriceImpactSummary } from "@/hooks/wells/usePriceImpactSummary";
 import { ConvertResultStruct, SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
 import { ExtendedPoolData } from "@/lib/siloConvert/SiloConvert.cache";
-import { ConvertStrategyQuote, ConvertType } from "@/lib/siloConvert/strategies/core";
+import { ConvertStrategyQuote, SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
@@ -29,7 +29,7 @@ interface RoutingAndSlippageInfoContext {
   preferredSummary: "swap" | "priceImpact";
   txnType: SiloTxn;
   swapSummary?: SwapSummary;
-  convertSummary?: SiloConvertSummary<ConvertType>;
+  convertSummary?: SiloConvertSummary<SiloConvertType>;
   priceImpactSummary?: PriceImpactSummary;
   secondaryPriceImpactSummary?: PriceImpactSummary;
   wellToken?: Token;
