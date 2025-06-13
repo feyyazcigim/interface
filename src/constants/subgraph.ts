@@ -7,7 +7,7 @@ export const subgraphs: { [chainId: number]: { beanstalk: string; bean: string; 
     basin: "https://graph.bean.money/exchange-dev",
   },
   [base.id]: {
-    beanstalk: "https://graph.pinto.money/pintostalk-dev", // TODO(pp)
+    beanstalk: "https://graph.pinto.money/pintostalk",
     bean: "https://graph.pinto.money/pinto",
     basin: "https://graph.pinto.money/exchange",
   },

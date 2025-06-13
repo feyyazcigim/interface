@@ -56,6 +56,8 @@ const priceDisplayFormatter = (v: number) => {
   return f.price6dFormatter(v);
 };
 
+// TODO(pp): The transform could be improved by only allowing the largest moving (percentage wise) value
+// to take up the entire height. This would better capture the magnitude of price movements. (currently all take up the full height)
 // Linear transform that maps values from [min,max] to [0,1]
 const transformValue = (v: number, min: number, max: number): number => {
   // Handle edge cases
@@ -65,9 +67,6 @@ const transformValue = (v: number, min: number, max: number): number => {
   // Linear interpolation between min and max
   return (v - min) / (max - min);
 };
-
-// TODO(pp): will need to remove the y axis labels compeltely for price data, and have some scaling to have them all normalized
-//  according to some range in their high/lowest values
 
 const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceChartProps) => {
   const chainId = useChainId();
