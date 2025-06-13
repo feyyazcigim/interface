@@ -11,7 +11,7 @@ import { SwapSummary, SwapSummaryExchange } from "@/hooks/swap/useSwapSummary";
 import { PriceImpactSummary } from "@/hooks/wells/usePriceImpactSummary";
 import { ConvertResultStruct, SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
 import { ExtendedPoolData } from "@/lib/siloConvert/SiloConvert.cache";
-import { LP2LPConvertStrategyResult } from "@/lib/siloConvert/strategies/LP2LPConvertStrategy";
+import { ConvertStrategyQuote, ConvertType } from "@/lib/siloConvert/strategies/core";
 import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
@@ -29,7 +29,7 @@ interface RoutingAndSlippageInfoContext {
   preferredSummary: "swap" | "priceImpact";
   txnType: SiloTxn;
   swapSummary?: SwapSummary;
-  convertSummary?: SiloConvertSummary;
+  convertSummary?: SiloConvertSummary<ConvertType>;
   priceImpactSummary?: PriceImpactSummary;
   secondaryPriceImpactSummary?: PriceImpactSummary;
   wellToken?: Token;
@@ -514,7 +514,7 @@ const ConvertRoutingDetails = () => {
 
   const normalizedConvertActions = convertSummary.quotes.map((quote, i) =>
     normalizeConvertSummary(
-      quote as LP2LPConvertStrategyResult,
+      quote as ConvertStrategyQuote<"LP2LP">,
       convertSummary.results[i],
       i,
       // use the price impact summary only if it's not the 1st action
@@ -741,7 +741,7 @@ function getPricesFromWellData(tokens: Token[], well: ExtendedPoolData, summary:
  * Combine the quote, result, and price impact summaries
  */
 function normalizeConvertSummary(
-  quote: LP2LPConvertStrategyResult,
+  quote: ConvertStrategyQuote<"LP2LP">,
   result: ConvertResultStruct<TV>,
   index: number,
   sourceWellSummary?: PriceImpactSummary,

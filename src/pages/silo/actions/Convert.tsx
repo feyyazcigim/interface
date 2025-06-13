@@ -31,6 +31,7 @@ import { useDeterminePriceImpact } from "@/hooks/wells/usePriceImpactSummary";
 import { useWellUnderlying } from "@/hooks/wells/wells";
 import { SiloConvert, SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
 import { SiloConvertMaxConvertQuoter } from "@/lib/siloConvert/SiloConvert.maxConvertQuoter";
+import { SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import ConvertProvider, { SiloTokenConvertPath, useConvertState } from "@/state/context/convert.provider";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { PoolData, usePriceData } from "@/state/usePriceData";
@@ -624,7 +625,7 @@ const ConvertTokenOutput = ({
 }: {
   amount: TV;
   siloToken: Token;
-  quote: SiloConvertSummary | undefined;
+  quote: SiloConvertSummary<SiloConvertType> | undefined;
 }) => {
   const { targetToken } = useSiloConvertContext();
   const formattedAmount = targetToken ? formatter.token(amount, targetToken) : "0.00";
