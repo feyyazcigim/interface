@@ -4,7 +4,9 @@ import { STALK } from "@/constants/internalTokens";
 import { defaultQuerySettingsQuote } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { SiloConvert } from "@/lib/siloConvert/SiloConvert";
+import { queryKeys } from "@/state/queryKeys";
 import { DepositData, Token, TokenDepositData } from "@/utils/types";
+import { isDev } from "@/utils/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -15,8 +17,6 @@ import { useSiloConvertResult } from "./useSiloConvertResult";
  * NOTE: B/c 0xV2 utilizes permits, LP<>LP convert quotes will fail if the local block time is further ahead than the permit's expiration.
  * Testing LP<>LP converts locally must be done by impersonating an account that already has deposits on a fork that has not been forwarded.
  */
-
-export const siloConvertQueryPrefix = ["silo-convert"] as const;
 
 export default function useSiloConvert() {
   const diamond = useProtocolAddress();
@@ -35,7 +35,7 @@ export function useClearSiloConvertQueries() {
   const qc = useQueryClient();
 
   const clear = useCallback(() => {
-    qc.invalidateQueries({ queryKey: siloConvertQueryPrefix, exact: false, type: "all" });
+    qc.invalidateQueries({ queryKey: queryKeys.base.silo.convert, exact: false, type: "all" });
   }, [qc]);
 
   return clear;
@@ -55,11 +55,7 @@ export function useSiloMaxConvertQuery(
   const farmerMax = farmerDeposits?.convertibleAmount?.toBlockchain();
 
   const queryKey = useMemo(
-    () => [
-      siloConvertQueryPrefix,
-      "max-convert",
-      { source: source?.address, target: target?.address, farmerMaxConvertible: farmerMax },
-    ],
+    () => queryKeys.silo.convert.maxConvert(source?.address, target?.address, farmerMax),
     [source, target, farmerMax],
   );
 
@@ -74,8 +70,7 @@ export function useSiloMaxConvertQuery(
     },
     enabled: !!account.address && !!source?.address && !!target?.address && enabled && !!farmerMax,
     ...defaultQuerySettingsQuote,
-    refetchInterval: 20_000,
-    staleTime: 20_000,
+    ...(isDev() ? { refetchInterval: 20_000, staleTime: 20_000 } : {}),
   });
 
   return { ...query, queryKey };
@@ -95,7 +90,7 @@ export function useSiloConvertQuote(
   const account = useAccount();
 
   const queryKey = useMemo(
-    () => [siloConvertQueryPrefix, "quote", account.address, source.address, target?.address, amountIn, slippage],
+    () => queryKeys.silo.convert.quote(account.address, source.address, target?.address, amountIn, slippage),
     [account.address, source.address, target?.address, amountIn, slippage],
   );
 

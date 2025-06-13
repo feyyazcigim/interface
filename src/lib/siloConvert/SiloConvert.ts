@@ -15,22 +15,15 @@ import { Config } from "@wagmi/core";
 import { Address, decodeFunctionResult } from "viem";
 import { SiloConvertCache } from "./SiloConvert.cache";
 import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
+import { ConvertStrategyQuote, SiloConvertStrategy } from "./strategies/core";
+import { LP2LPStrategy, SiloConvertType } from "./strategies/core";
 import {
-  ConvertStrategyQuote,
-  SiloConvertSourceSummary,
-  SiloConvertStrategy,
-  SiloConvertTargetSummary,
-} from "./strategies/ConvertStrategy";
-import { DefaultConvertStrategy, DefaultConvertStrategyResult } from "./strategies/DefaultConvertStrategy";
-import {
-  LP2LPConvertStrategyResult,
-  LP2LPStrategy,
-  SourceSummaryLP2LP,
-  TargetSummaryLP2LP,
-} from "./strategies/LP2LPConvertStrategy";
-import { SiloConvertLP2LPEq2EqStrategy } from "./strategies/strategy.lp2lpEq2Eq";
-import { SiloConvertLP2LPSingleSidedMainTokenStrategy } from "./strategies/strategy.lp2lpSingleSidedMainToken";
-import { SiloConvertLP2LPSingleSidedPairTokenStrategy } from "./strategies/strategy.lp2lpSingleSidedPairToken";
+  DefaultConvertStrategy,
+  SiloConvertLP2LPEq2EqStrategy,
+  SiloConvertLP2LPSingleSidedMainTokenStrategy,
+  SiloConvertLP2LPSingleSidedPairTokenStrategy,
+} from "./strategies/implementations";
+import { SiloConvertContext } from "./types";
 
 /**
  * Architecture notes:
@@ -108,22 +101,12 @@ export interface ConvertResultStruct<T = TV> {
   toBdv: T;
 }
 
-export interface SiloConvertSummary {
-  quotes: (DefaultConvertStrategyResult | LP2LPConvertStrategyResult)[];
+export interface SiloConvertSummary<T extends SiloConvertType> {
+  quotes: ConvertStrategyQuote<T>[];
   results: ConvertResultStruct<TV>[];
   workflow: AdvancedFarmWorkflow;
   totalAmountOut: TV;
   postPriceData: PriceContractPriceResult | undefined;
-}
-
-/**
- * shared context for all silo convert related operations
- */
-export interface SiloConvertContext {
-  diamond: Address;
-  account: Address;
-  wagmiConfig: Config;
-  chainId: number;
 }
 
 export class SiloConvert {
@@ -135,7 +118,7 @@ export class SiloConvert {
 
   maxConvertQuoter: SiloConvertMaxConvertQuoter;
 
-  strategies: SiloConvertStrategy[] = [];
+  strategies: SiloConvertStrategy<SiloConvertType>[] = [];
 
   amounts: TV[] = [];
 
@@ -181,14 +164,28 @@ export class SiloConvert {
     amountIn: TV,
     slippage: number,
     forceUpdateCache: boolean = false,
-  ): Promise<SiloConvertSummary> {
+  ): Promise<SiloConvertSummary<SiloConvertType>> {
     await this.cache.update(forceUpdateCache);
 
     const advancedFarm = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
 
     const isDefaultConvert = source.isMain || target.isMain;
+    // const isLP2PINTOBelowDollar = source.isLP && target.isMain && this.cache.getDeltaB().lt(0);
 
-    let quoterResult: Awaited<ReturnType<typeof this.quoteDefaultConvert> | ReturnType<typeof this.quoteLP2LP>>;
+    let quoterResult: Awaited<
+      ReturnType<typeof this.quoteDefaultConvert> | ReturnType<typeof this.quoteLP2LP>
+      // | ReturnType<typeof this.quoteLP2PINTOBelowDollar>
+    >;
+
+    // if (isLP2PINTOBelowDollar) {
+    // quoterResult = await this.quoteLP2PINTOBelowDollar(
+    //   source,
+    //   target,
+    //   farmerDeposits,
+    //   amountIn,
+    //   slippage,
+    //   advancedFarm,
+    // );
 
     if (isDefaultConvert) {
       quoterResult = await this.quoteDefaultConvert(source, target, farmerDeposits, amountIn, slippage, advancedFarm);
@@ -228,7 +225,7 @@ export class SiloConvert {
       const decodedAdvPipePriceCall = priceResult ? AdvancedPipeWorkflow.decodeResult(priceResult) : undefined;
       const postPriceData = decodedAdvPipePriceCall?.length ? decodePriceResult(decodedAdvPipePriceCall[0]) : undefined;
 
-      const result: SiloConvertSummary = {
+      const result: SiloConvertSummary<SiloConvertType> = {
         quotes,
         results,
         workflow: advancedFarm,
@@ -261,7 +258,7 @@ export class SiloConvert {
 
     const pickedDeposits = pickCratesMultiple(farmerDeposits, "bdv", "asc", [amountIn]);
 
-    const quotes: ConvertStrategyQuote<SiloConvertSourceSummary, SiloConvertTargetSummary>[] = [];
+    const quotes: ConvertStrategyQuote<SiloConvertType>[] = [];
 
     const quote = await strategy.quote(pickedDeposits[0], workflow, slippage);
     quotes.push(quote);
@@ -293,7 +290,7 @@ export class SiloConvert {
 
     const pickedDeposits = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
 
-    const quotes: ConvertStrategyQuote<SourceSummaryLP2LP, TargetSummaryLP2LP>[] = [];
+    const quotes: ConvertStrategyQuote<SiloConvertType>[] = [];
 
     let totalAmountOut = TV.fromHuman("0", target.decimals);
 
@@ -367,6 +364,35 @@ export class SiloConvert {
 
     return { strategies, amounts };
   }
+
+  // private async quoteLP2PINTOBelowDollar(
+  //   source: Token,
+  //   target: Token,
+  //   farmerDeposits: DepositData[],
+  //   amountIn: TV,
+  //   slippage: number,
+  //   workflow: AdvancedFarmWorkflow,
+  // ) {
+  //   const sourceWell = this.cache.getWell(source.address);
+  //   const strategy = new SiloConvertLP2PINTOBelowDollarStrategy(sourceWell, target, this.context);
+  //   this.strategies = [strategy];
+  //   this.amounts = [amountIn];
+
+  //   const pickedDeposits = pickCratesMultiple(farmerDeposits, "bdv", "asc", [amountIn]);
+
+  //   const quotes: ConvertStrategyQuote<SourceSummaryLP2LP, TargetSummaryLP2LP>[] = [];
+
+  //   const quote = await strategy.quote(pickedDeposits[0], workflow, slippage);
+  //   const encoded = strategy.encodeConvertResults(quote);
+  //   workflow.add(encoded);
+  //   quotes.push(quote);
+
+  //   return {
+  //     quotes,
+  //     totalAmountOut: quote.amountOut,
+  //     decoder: SiloConvert.decodeStaticResults,
+  //   };
+  // }
 
   getStalkChecks(expectedToStalk: TV) {
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
@@ -446,10 +472,10 @@ export class SiloConvert {
   /**
    * Returns an empty pipeline convert quote.
    */
-  static getEmptyResult() {
+  stagetEmptyResulttic() {
     return {
       workflow: new AdvancedFarmWorkflow(8543, defaultWagmiConfig),
-      quotes: [] as ConvertStrategyQuote<SourceSummaryLP2LP, TargetSummaryLP2LP>[],
+      quotes: [] as ConvertStrategyQuote<SiloConvertType>[],
       totalAmountOut: TV.ZERO,
       results: [] as ConvertResultStruct<TV>[],
       postPriceData: undefined,

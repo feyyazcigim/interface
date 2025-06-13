@@ -9,17 +9,17 @@ import { decodeGetMaxAmountIn } from "@/encoders/silo/convert";
 import { decodeCalcReserveAtRatioLiquidity } from "@/encoders/well/calcReserveAtRatioLiquidity";
 import { decodeGetRemoveLiquidityImbalanceIn } from "@/encoders/well/getRemoveLiquidityImbalancedIn";
 import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
-import { SiloConvertContext } from "@/lib/siloConvert/SiloConvert";
 import { SiloConvertCache } from "@/lib/siloConvert/SiloConvert.cache";
+import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExchangeWell, ExtendedRawWellData } from "@/lib/well/ExchangeWell";
 import { resolveChainId } from "@/utils/chain";
-import { pickCratesMultiple, sortCratesByBDVRatio } from "@/utils/convert";
+import { pickCratesMultiple } from "@/utils/convert";
 import { tokensEqual } from "@/utils/token";
 import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { exists } from "@/utils/utils";
 import { readContract } from "viem/actions";
-import { DefaultConvertStrategy } from "./strategies/DefaultConvertStrategy";
+import { DefaultConvertStrategy } from "./strategies/implementations/DefaultConvertStrategy";
 
 interface ConvertTokens {
   source: Token;

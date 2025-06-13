@@ -6,6 +6,7 @@ import { MAIN_TOKEN } from "@/constants/tokens";
 import { PriceContractPriceResult, decodePriceResult } from "@/encoders/ecosystem/price";
 import { beanstalkPriceAddress } from "@/generated/contractHooks";
 import { AdvancedPipeWorkflow } from "@/lib/farm/workflow";
+import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExchangeWell } from "@/lib/well/ExchangeWell";
 import { PoolData } from "@/state/usePriceData";
 import { resolveChainId } from "@/utils/chain";
@@ -14,7 +15,6 @@ import { tokensEqual } from "@/utils/token";
 import { Token } from "@/utils/types";
 import { AddressLookup } from "@/utils/types.generic";
 import { Address, decodeFunctionResult, encodeFunctionData } from "viem";
-import { SiloConvertContext } from "./SiloConvert";
 
 /**
  * SiloConvertCache is a class that caches the price struct data, well data to assist in quoting conversions.
