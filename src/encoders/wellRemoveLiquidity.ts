@@ -45,3 +45,40 @@ export function wellRemoveLiquidityOneToken(
     clipboard: clipboard ?? Clipboard.encode([]),
   };
 }
+
+export function wellGetRemoveLiquidityOut(
+  well: Token,
+  amount: TokenValue,
+  clipboard: HashString = Clipboard.encode([]),
+): AdvancedPipeCall {
+  const data = encodeFunctionData({
+    abi: basinWellABI,
+    functionName: "getRemoveLiquidityOut",
+    args: [amount.toBigInt()],
+  });
+
+  return {
+    target: well.address,
+    callData: data,
+    clipboard,
+  }
+}
+
+export function wellGetRemoveLiquidityOneTokenOut(
+  well: Token,
+  tokenOut: Token,
+  amount: TokenValue,
+  clipboard: HashString = Clipboard.encode([]),
+): AdvancedPipeCall {
+  const data = encodeFunctionData({
+    abi: basinWellABI,
+    functionName: "getRemoveLiquidityOneTokenOut",
+    args: [amount.toBigInt(), tokenOut.address],
+  });
+
+  return {
+    target: well.address,
+    callData: data,
+    clipboard,
+  };
+}
