@@ -64,9 +64,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
   // ------------------------------ Quote ------------------------------ //
 
   async quote(deposits: ExtendedPickedCratesDetails, advancedFarm: AdvancedFarmWorkflow, slippage: number) {
-    this.validatePickedCrates(deposits);
-    this.validateAmountIn(deposits.totalAmount);
-    this.validateSlippage(slippage);
+    this.validateQuoteArgs(deposits, slippage);
 
     const amountsOut = await this.#getRemoveLiquidityOut(deposits, advancedFarm);
     const pairAmountOut = amountsOut[this.removeIndex];

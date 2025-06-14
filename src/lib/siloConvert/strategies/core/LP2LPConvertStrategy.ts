@@ -7,16 +7,13 @@ import sync from "@/encoders/sync";
 import { AdvancedPipeWorkflow } from "@/lib/farm/workflow";
 import { ExtendedPoolData } from "@/lib/siloConvert/SiloConvert.cache";
 import { SiloConvertContext } from "@/lib/siloConvert/types";
-import { ExtendedPickedCratesDetails } from "@/utils/convert";
-import { AdvancedPipeCall, DepositData, Token } from "@/utils/types";
+import { AdvancedPipeCall, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { isAddress } from "viem";
 import { PipelineConvertStrategy } from "./PipelineConvertStrategy";
 import { ConvertStrategyQuote } from "./types";
 
 export abstract class LP2LPStrategy extends PipelineConvertStrategy<"LP2LP"> {
-  encoding: { callData: `0x${string}`; clipboard: `0x${string}` } | undefined = undefined;
-
   readonly sourceWell: ExtendedPoolData;
 
   readonly targetWell: ExtendedPoolData;
@@ -52,60 +49,6 @@ export abstract class LP2LPStrategy extends PipelineConvertStrategy<"LP2LP"> {
    * @returns The amounts out for each deposit and the summed amounts out.
    */
   abstract buildAdvancedPipeCalls(summary: ConvertStrategyQuote<"LP2LP">["summary"]): AdvancedPipeWorkflow;
-
-  /// ------------------------------ Public Methods ------------------------------ ///
-
-  encodeConvertResults(quote: ConvertStrategyQuote<"LP2LP">) {
-    const stems: bigint[] = [];
-    const amounts: bigint[] = [];
-
-    quote.pickedCrates.crates.forEach((crate) => {
-      stems.push(crate.stem.toBigInt());
-      amounts.push(crate.amount.toBigInt());
-    });
-
-    if (!quote.advPipeCalls) {
-      throw new Error("No advanced pipe calls provided");
-    }
-
-    const args = {
-      stems,
-      amounts,
-      advPipeCalls: quote.advPipeCalls?.getSteps() ?? [],
-    };
-
-    this.encoding = encoders.silo.pipelineConvert(this.sourceWell.pool, this.targetWell.pool, args);
-
-    return this.encoding;
-  }
-
-  /// ------------------------------ Validation Methods ------------------------------ ///
-
-  protected validatePickedCrates(data: ExtendedPickedCratesDetails) {
-    const isValid = data.crates.length > 0 && data.totalAmount.gt(0);
-
-    if (!isValid) {
-      throw new Error("Invalid picked crates");
-    }
-  }
-
-  protected validateHasDeposits(deposits: DepositData[]) {
-    if (deposits.length === 0) {
-      throw new Error("No deposits provided");
-    }
-  }
-
-  protected validateAmountIn(amountIn: TV) {
-    if (amountIn.lte(0)) {
-      throw new Error("Cannot convert 0 or less tokens");
-    }
-  }
-
-  protected validateSlippage(slippage: number) {
-    if (slippage < 0) {
-      throw new Error("Invalid slippage");
-    }
-  }
 
   /// ------------------------------ Static Methods ------------------------------ ///
 

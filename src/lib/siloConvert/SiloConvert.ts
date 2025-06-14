@@ -6,7 +6,7 @@ import encoders from "@/encoders";
 import { PriceContractPriceResult, decodePriceResult } from "@/encoders/ecosystem/price";
 import junctionGte from "@/encoders/junction/junctionGte";
 import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
-import { resolveChainId } from "@/utils/chain";
+import { getChainConstant, resolveChainId } from "@/utils/chain";
 import { pickCratesMultiple } from "@/utils/convert";
 import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
@@ -170,7 +170,7 @@ export class SiloConvert {
     const advancedFarm = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
 
     const isDefaultConvert = source.isMain || target.isMain;
-    // const isLP2PINTOBelowDollar = source.isLP && target.isMain && this.cache.getDeltaB().lt(0);
+    const isLP2PINTOBelowDollar = source.isLP && target.isMain && this.cache.getDeltaB().lt(0);
 
     let quoterResult: Awaited<
       ReturnType<typeof this.quoteDefaultConvert> | ReturnType<typeof this.quoteLP2LP>
@@ -210,7 +210,7 @@ export class SiloConvert {
       // Pop the last result from the sim results which is the price result
       const priceResult = simResults.pop();
 
-      const mainToken = MAIN_TOKEN[resolveChainId(this.context.chainId)];
+      const mainToken = getChainConstant(this.context.chainId, MAIN_TOKEN);
 
       const results: ConvertResultStruct<TV>[] = decoder(simResults).map((result) => {
         return {
@@ -290,14 +290,17 @@ export class SiloConvert {
 
     const pickedDeposits = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
 
-    const quotes: ConvertStrategyQuote<SiloConvertType>[] = [];
+    const quotes: ConvertStrategyQuote<"LP2LP">[] = [];
 
     let totalAmountOut = TV.fromHuman("0", target.decimals);
 
-    for (const [i, _strategy] of this.strategies.entries()) {
-      const strategy = _strategy as LP2LPStrategy;
+    for (const [i, strategy] of this.strategies.entries()) {
+      if (!(strategy instanceof LP2LPStrategy)) {
+        throw new Error("Invalid strategy");
+      }
+
       const quoteResult = await strategy.quote(pickedDeposits[i], workflow, slippage);
-      const encoded = strategy.encodeConvertResults(quoteResult);
+      const encoded = strategy.encodeQuoteToAdvancedFarmStruct(quoteResult);
       workflow.add(encoded);
       quotes.push(quoteResult);
       totalAmountOut = totalAmountOut.add(quoteResult.amountOut);

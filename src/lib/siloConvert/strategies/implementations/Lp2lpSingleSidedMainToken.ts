@@ -9,6 +9,7 @@ import { Token } from "@/utils/types";
 
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 
+import encoders from "@/encoders";
 import { HashString } from "@/utils/types.generic";
 import { LP2LPStrategy } from "../core/LP2LPConvertStrategy";
 import { ConvertStrategyQuote } from "../core/types";
@@ -41,9 +42,7 @@ class OneSidedSameToken extends LP2LPStrategy {
   // ------------------------------ Quote ------------------------------ //
 
   async quote(deposits: ExtendedPickedCratesDetails, advancedFarm: AdvancedFarmWorkflow, slippage: number) {
-    this.validatePickedCrates(deposits);
-    this.validateAmountIn(deposits.totalAmount);
-    this.validateSlippage(slippage);
+    this.validateQuoteArgs(deposits, slippage);
 
     const result = await this.#getRemoveAddLiquidityOut(deposits, advancedFarm);
 
@@ -182,29 +181,23 @@ class OneSidedSameToken extends LP2LPStrategy {
   #constructReadAdvancedPipe(amountIn: TV) {
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
-    pipe.add({
-      target: this.sourceWell.pool.address,
-      callData: encodeFunctionData({
-        abi: abiSnippets.wells.getRemoveLiquidityOneTokenOut,
-        functionName: "getRemoveLiquidityOneTokenOut",
-        args: [amountIn.toBigInt(), this.sourceWell.tokens[this.removeIndex].address],
-      }),
-      clipboard: Clipboard.encode([]),
-    });
+    pipe.add(
+      encoders.well.getRemoveLiquidityOneTokenOut(
+        this.sourceWell.pool,
+        this.sourceWell.tokens[this.removeIndex],
+        amountIn,
+      ),
+    );
 
-    const args = [TV.ZERO.toBigInt(), TV.ZERO.toBigInt()] as const;
-
-    pipe.add({
-      target: this.targetWell.pool.address,
-      callData: encodeFunctionData({
-        abi: abiSnippets.wells.getAddLiquidityOut,
-        functionName: "getAddLiquidityOut",
-        args: [args],
-      }),
-      // Parameter is an array, and we want to copy to the first index of the array.
-      // Paste to index 2 b/c 1 is the length of the array, 2 is index 0, and 3 is index 1
-      clipboard: Clipboard.encodeSlot(0, 0, 2),
-    });
+    pipe.add(
+      encoders.well.getAddLiquidityOut(
+        this.targetWell.pool,
+        [0n, 0n],
+        // Parameter is an array, and we want to copy to the first index of the array.
+        // Paste to index 2 b/c 1 is the length of the array, 2 is index 0, and 3 is index 1
+        Clipboard.encodeSlot(0, 0, 2),
+      ),
+    );
 
     return pipe;
   }

@@ -8,16 +8,16 @@ import { AdvancedFarmCall } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 
-export type DefaultConvertStrategyResult = ConvertStrategyQuote<"LPAndMain">;
-
 export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
   async quote(
     deposits: ExtendedPickedCratesDetails,
     advancedFarm: AdvancedFarmWorkflow,
     slippage: number,
   ): Promise<ConvertStrategyQuote<"LPAndMain">> {
+    this.validateQuoteArgs(deposits, slippage);
+
     const amountIn = deposits.totalAmount;
-    const farm = this.#encodeConvertAmountOut(amountIn);
+    const farm = this.encodeConvertAmountOut(amountIn);
 
     const sim = await advancedFarm.simulate({
       account: this.context.account,
@@ -37,7 +37,7 @@ export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
       },
     };
 
-    const { callStruct, convertData } = this.#buildConvertFarmStruct(amountIn, amountOut, deposits, slippage);
+    const { callStruct, convertData } = this.buildConvertFarmStruct(amountIn, amountOut, deposits, slippage);
 
     advancedFarm.add(callStruct);
 
@@ -57,7 +57,7 @@ export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
     };
   }
 
-  #buildConvertFarmStruct(amountIn: TV, amountOut: TV, deposits: ExtendedPickedCratesDetails, slippage: number) {
+  private buildConvertFarmStruct(amountIn: TV, amountOut: TV, deposits: ExtendedPickedCratesDetails, slippage: number) {
     const convertData = calculateConvertData(
       this.sourceToken,
       this.targetToken,
@@ -89,7 +89,7 @@ export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
     };
   }
 
-  #encodeConvertAmountOut(amount: TV) {
+  private encodeConvertAmountOut(amount: TV) {
     const farm = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
     const callData = encodeFunctionData({
       abi: diamondABI,

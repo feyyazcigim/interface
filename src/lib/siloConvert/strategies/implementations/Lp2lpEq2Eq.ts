@@ -2,11 +2,13 @@ import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import { abiSnippets } from "@/constants/abiSnippets";
 import { PIPELINE_ADDRESS } from "@/constants/address";
+import encoders from "@/encoders";
 import { pipelineAddress } from "@/generated/contractHooks";
 import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
 import { ZeroX } from "@/lib/matcha/ZeroX";
 import { ZeroXQuoteV2Response } from "@/lib/matcha/types";
 import { SiloConvertSwapQuoter } from "@/lib/siloConvert/siloConvert.swapQuoter";
+import { ExchangeWell } from "@/lib/well/ExchangeWell";
 import { resolveChainId } from "@/utils/chain";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { Token } from "@/utils/types";
@@ -35,9 +37,7 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
   // ------------------------------ Quote ------------------------------ //
 
   async quote(deposits: ExtendedPickedCratesDetails, advancedFarm: AdvancedFarmWorkflow, slippage: number) {
-    this.validatePickedCrates(deposits);
-    this.validateAmountIn(deposits.totalAmount);
-    this.validateSlippage(slippage);
+    this.validateQuoteArgs(deposits, slippage);
 
     // Remove Liquidity
     const removeLPResult = await this.getRemoveLiquidityOut(deposits, advancedFarm);
@@ -103,15 +103,7 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
     const [token0, token1] = this.sourceWell.tokens;
 
-    pipe.add({
-      target: this.sourceWell.pool.address,
-      callData: encodeFunctionData({
-        abi: abiSnippets.wells.getRemoveLiquidityOut,
-        functionName: "getRemoveLiquidityOut",
-        args: [pickedCratesDetails.totalAmount.toBigInt()],
-      }),
-      clipboard: Clipboard.encode([]),
-    });
+    pipe.add(encoders.well.getRemoveLiquidityOut(this.sourceWell.pool, pickedCratesDetails.totalAmount));
 
     const simulate = await workflow.simulate({
       after: pipe,

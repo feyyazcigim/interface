@@ -1,27 +1,52 @@
 import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
+import { abiSnippets } from "@/constants/abiSnippets";
 import encoders from "@/encoders";
 import erc20Approve from "@/encoders/erc20Approve";
 import erc20Transfer from "@/encoders/erc20Transfer";
 import sync from "@/encoders/sync";
-import { AdvancedPipeWorkflow } from "@/lib/farm/workflow";
+import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
 import { ExtendedPoolData } from "@/lib/siloConvert/SiloConvert.cache";
+import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { AdvancedFarmCall, AdvancedPipeCall, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
-import { isAddress } from "viem";
+import { encodeFunctionData, isAddress } from "viem";
 import { SiloConvertStrategy } from "./ConvertStrategy";
 import { ConvertStrategyQuote, SiloConvertType } from "./types";
 
+export type RemoveLiquidityStrategy = "equal" | "single-main" | "single-pair";
+
 export abstract class PipelineConvertStrategy<T extends SiloConvertType> extends SiloConvertStrategy<T> {
+  /// ------------------------------ Abstract Methods ------------------------------ ///
+
   /**
    * Builds the advanced pipe calls for the convert.
    */
   abstract buildAdvancedPipeCalls(summary: ConvertStrategyQuote<T>["summary"]): AdvancedPipeWorkflow;
 
-  /**
-   * Encodes the convert results for the convert.
-   */
-  abstract encodeConvertResults(quote: ConvertStrategyQuote<T>): AdvancedFarmCall;
+  /// ------------------------------ Protected Methods ------------------------------ ///
+
+  encodeQuoteToAdvancedFarmStruct(quote: ConvertStrategyQuote<T>): AdvancedFarmCall {
+    const stems: bigint[] = [];
+    const amounts: bigint[] = [];
+
+    quote.pickedCrates.crates.forEach((crate) => {
+      stems.push(crate.stem.toBigInt());
+      amounts.push(crate.amount.toBigInt());
+    });
+
+    if (!quote.advPipeCalls) {
+      throw new Error("No advanced pipe calls provided");
+    }
+
+    const args = {
+      stems,
+      amounts,
+      advPipeCalls: quote.advPipeCalls?.getSteps() ?? [],
+    };
+
+    return encoders.silo.pipelineConvert(this.sourceToken, this.targetToken, args);
+  }
 
   /**
    * Snippets for the advanced pipe calls.
