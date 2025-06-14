@@ -1,3 +1,5 @@
+import PintoLogo from "@/assets/protocol/PintoLogo.svg";
+import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
 import HelperLink, { hoveredIdAtom } from "@/components/HelperLink";
 import NoBaseValueAlert from "@/components/NoBaseValueAlert";
@@ -175,41 +177,48 @@ const Navbar = () => {
 
   return (
     <div className="flex flex-col sticky top-0 z-[2]" id="pinto-navbar" style={{ transformOrigin: "top left" }}>
-      <AnnouncementBanner />
+      {!isHome && <AnnouncementBanner />}
       <div
         className={cn(
           `grid px-4 pt-4 pb-2 sm:px-6 sm:pt-6 w-full z-[2] bg-gradient-light action-container transition-colors`,
           styles.navGrid,
         )}
       >
-        <div className="flex flex-row">
-          <div className={`transition-all duration-100 ${panelState.openPanel === "price" && "z-[51]"} mr-4`}>
-            <PriceButton
-              isOpen={panelState.openPanel === "price"}
-              togglePanel={() => togglePanel("price")}
-              onMouseEnter={() => refetchPriceData()}
-            />
+        {!isHome ? (
+          <div className="flex flex-row">
+            <div className={`transition-all duration-100 ${panelState.openPanel === "price" && "z-[51]"} mr-4`}>
+              <PriceButton
+                isOpen={panelState.openPanel === "price"}
+                togglePanel={() => togglePanel("price")}
+                onMouseEnter={() => refetchPriceData()}
+              />
+            </div>
+            <div className={`transition-all duration-100 ${panelState.openPanel === "seasons" && "z-[51]"}`}>
+              <SeasonsButton
+                isOpen={panelState.openPanel === "seasons"}
+                togglePanel={() => togglePanel("seasons")}
+                onMouseEnter={() => invalidateData("seasons")}
+              />
+            </div>
+            <Panel
+              isOpen={panelState.openPanel === "chart-select"}
+              side="left"
+              panelProps={{
+                className: cn("max-w-panel-price w-panel-price", "mt-14"),
+              }}
+              screenReaderTitle="Chart Select Panel"
+              trigger={<></>}
+              toggle={() => togglePanel(panelState.openPanel)}
+            >
+              <ChartSelectPanel />
+            </Panel>
           </div>
-          <div className={`transition-all duration-100 ${panelState.openPanel === "seasons" && "z-[51]"}`}>
-            <SeasonsButton
-              isOpen={panelState.openPanel === "seasons"}
-              togglePanel={() => togglePanel("seasons")}
-              onMouseEnter={() => invalidateData("seasons")}
-            />
+        ) : (
+          <div className="flex flex-row gap-2 items-center">
+            <img src={PintoLogo} alt="Pinto Logo" className="h-6" />
+            <img src={PintoLogoText} alt="Pinto Logo" className="h-6" />
           </div>
-          <Panel
-            isOpen={panelState.openPanel === "chart-select"}
-            side="left"
-            panelProps={{
-              className: cn("max-w-panel-price w-panel-price", "mt-14"),
-            }}
-            screenReaderTitle="Chart Select Panel"
-            trigger={<></>}
-            toggle={() => togglePanel(panelState.openPanel)}
-          >
-            <ChartSelectPanel />
-          </Panel>
-        </div>
+        )}
         <div className="hidden lg:flex lg:justify-center pr-[208px]">
           <Navi />
         </div>

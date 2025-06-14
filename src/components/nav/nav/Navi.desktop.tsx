@@ -8,7 +8,7 @@ import {
 import { isDev } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
-import { Link as ReactLink, useLocation } from "react-router-dom";
+import { Link as ReactLink, useLocation, useMatch } from "react-router-dom";
 import { navLinks } from "./Navbar";
 
 const Link = ({
@@ -205,6 +205,7 @@ const MoreNavi = ({ setNaviTab }) => {
 
 export default function Navi() {
   const [naviTab, setNaviTab] = useState("home");
+  const isHome = useMatch("/");
 
   return (
     <div className="flex flex-col items-center justify-center gap-5 z-[2]">
@@ -232,13 +233,14 @@ export default function Navi() {
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
-
-      <AnimatePresence mode="wait">
-        {naviTab === "home" && <AppNavi />}
-        {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
-        {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
-        {naviTab === "more" && <MoreNavi setNaviTab={setNaviTab} />}
-      </AnimatePresence>
+      {!isHome && (
+        <AnimatePresence mode="wait">
+          {naviTab === "home" && <AppNavi />}
+          {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
+          {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
+          {naviTab === "more" && <MoreNavi setNaviTab={setNaviTab} />}
+        </AnimatePresence>
+      )}
     </div>
   );
 }

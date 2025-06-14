@@ -42,7 +42,7 @@ export default function LandingChart() {
   ];
 
   const width = 1920;
-  const height = 576;
+  const height = 577;
 
   // Calculate min/max for scaling
   const minPrice = 0.98;
