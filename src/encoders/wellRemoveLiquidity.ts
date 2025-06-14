@@ -61,7 +61,7 @@ export function wellGetRemoveLiquidityOut(
     target: well.address,
     callData: data,
     clipboard,
-  }
+  };
 }
 
 export function wellGetRemoveLiquidityOneTokenOut(

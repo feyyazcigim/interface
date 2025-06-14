@@ -14,7 +14,7 @@ export function wellGetAddLiquidityOut(
     throw new Error("Invalid number of amounts in");
   }
 
-  const args = amountsIn.map((amt) => amt instanceof TokenValue ? amt.toBigInt() : amt);
+  const args = amountsIn.map((amt) => (amt instanceof TokenValue ? amt.toBigInt() : amt));
 
   const data = encodeFunctionData({
     abi: basinWellABI,
