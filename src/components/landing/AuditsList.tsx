@@ -332,7 +332,7 @@ export default function AuditsList() {
         </Link>
       </div>
       <div className="h-96 overflow-hidden">
-        <div className="flex flex-col gap-4 animate-vertical-marquee-small hover:[animation-play-state:paused]">
+        <div className="flex flex-col gap-4">
           {Array(4)
             .fill(audits)
             .flat()
