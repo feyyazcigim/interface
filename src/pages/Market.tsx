@@ -1,13 +1,13 @@
 import { TokenValue } from "@/classes/TokenValue";
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 import FrameAnimator from "@/components/LoadingSpinner";
-import { ScatterChart } from "@/components/charts/ScatterChart";
 import ScatterChartV2, { ScatterChartData } from "@/components/charts/ScatterChartv2";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Separator } from "@/components/ui/Separator";
 import { useAllMarket } from "@/state/market/useAllMarket";
 import { useHarvestableIndex, usePodLine } from "@/state/useFieldData";
 import { ActiveElement, ChartEvent, PointStyle } from "chart.js";
+import { Chart } from "chart.js";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -33,155 +33,69 @@ export function Market() {
   const podLineAsNumber = podLine.toNumber() / 1000000;
   const harvestableIndex = useHarvestableIndex();
 
-  const chartData = data?.reduce((acc, event) => {
-    // Skip Fill Orders
-    if ("toFarmer" in event) {
-      return acc;
-    }
-    let placeInLine: number | null = null;
-    let amount: number | null = null;
-    let status = "";
-    const price = event.pricePerPod.toNumber();
-    const eventId = event.id;
-    const eventType = event.type;
-    let eventIndex: number | null = null;
+  const scatterChartData: ScatterChartData =
+    data?.reduce(
+      (acc, event) => {
+        // Skip Fill Orders
+        if ("toFarmer" in event) {
+          return acc;
+        }
 
-    if ("originalAmount" in event) {
-      amount = event.originalAmount.toNumber();
-      const fillPct = event.filled.div(event.originalAmount).mul(100).toNumber();
-      status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
-      placeInLine = status === "ACTIVE" ? event.index.sub(harvestableIndex).toNumber() / 1_000_000 : null;
-      eventIndex = event.index.toNumber();
-    } else if ("beanAmount" in event) {
-      amount = event.beanAmount.div(event.pricePerPod).toNumber();
-      const fillPct = event.beanAmountFilled.div(event.beanAmount).mul(100).toNumber();
-      status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
-      placeInLine = event.maxPlaceInLine.toNumber() / 1_000_000;
-    }
+        let amount: number | null = null;
+        let status = "";
+        let placeInLine: number | null = null;
+        let eventIndex: number | null = null;
+        const price = event.pricePerPod.toNumber();
+        const eventId = event.id;
+        const eventType: "ORDER" | "LISTING" = event.type as "ORDER" | "LISTING";
 
-    if (placeInLine !== null && price !== null) {
-      acc.push({
-        x: placeInLine,
-        y: price,
-        r: Math.min(5, 3 + Math.log10(amount || 1) / 10),
-        amount,
-        status,
-        event,
-        id: eventId,
-        type: eventType,
-        index: eventIndex,
-        interactable: status === "ACTIVE",
-      });
-    }
+        if ("beanAmount" in event) {
+          // Handle Orders
+          amount = event.beanAmount.div(event.pricePerPod).toNumber();
+          const fillPct = event.beanAmountFilled.div(event.beanAmount).mul(100).toNumber();
+          status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
+          placeInLine = event.maxPlaceInLine.toNumber();
 
-    return acc;
-  }, [] as any);
+          if (status === "ACTIVE" && placeInLine !== null && price !== null) {
+            acc[0].data.push({
+              x: placeInLine / 1_000_000,
+              y: price,
+              eventId,
+              eventType,
+              status,
+              amount,
+              placeInLine,
+            });
+          }
+        } else if ("originalAmount" in event) {
+          // Handle Listings
+          amount = event.originalAmount.toNumber();
+          const fillPct = event.filled.div(event.originalAmount).mul(100).toNumber();
+          status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
+          placeInLine = status === "ACTIVE" ? event.index.sub(harvestableIndex).toNumber() : null;
+          eventIndex = event.index.toNumber();
 
-  const chartDataV2 = data?.reduce((acc, event) => {
-    // Skip Fill Orders
-    if ("toFarmer" in event) {
-      return acc;
-    }
-    let placeInLine: number | null = null;
-    let amount: number | null = null;
-    let status = "";
-    const price = event.pricePerPod.toNumber();
-    const eventId = event.id;
-    const eventType = event.type;
-    let eventIndex: number | null = null;
+          if (placeInLine !== null && price !== null) {
+            acc[1].data.push({
+              x: placeInLine / 1_000_000,
+              y: price,
+              eventId,
+              eventIndex,
+              eventType,
+              status,
+              amount,
+              placeInLine,
+            });
+          }
+        }
 
-    if ("originalAmount" in event) {
-      amount = event.originalAmount.toNumber();
-      const fillPct = event.filled.div(event.originalAmount).mul(100).toNumber();
-      status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
-      placeInLine = status === "ACTIVE" ? event.index.sub(harvestableIndex).toNumber() / 1_000_000 : null;
-      eventIndex = event.index.toNumber();
-    } else if ("beanAmount" in event) {
-      amount = event.beanAmount.div(event.pricePerPod).toNumber();
-      const fillPct = event.beanAmountFilled.div(event.beanAmount).mul(100).toNumber();
-      status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
-      placeInLine = event.maxPlaceInLine.toNumber() / 1_000_000;
-    }
-
-    if (placeInLine !== null && price !== null) {
-      acc.push({
-        x: placeInLine,
-        y: price,
-      });
-    }
-
-    return acc;
-  }, [] as any);
-
-  const orders = data?.reduce(
-    (acc, event) => {
-      // Skip Fill Orders
-      if ("toFarmer" in event || "originalAmount" in event) {
         return acc;
-      }
-      let amount: number | null = null;
-      let status = "";
-      const price = event.pricePerPod.toNumber();
-      const eventId = event.id;
-      const eventType: "ORDER" | "LISTING" = event.type as "ORDER" | "LISTING";
-      amount = event.beanAmount.div(event.pricePerPod).toNumber();
-      const fillPct = event.beanAmountFilled.div(event.beanAmount).mul(100).toNumber();
-      status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
-      const placeInLine = event.maxPlaceInLine.toNumber();
-
-      if (status === 'ACTIVE' && placeInLine !== null && price !== null) {
-        acc.data.push({
-          x: placeInLine / 1_000_000,
-          y: price,
-          eventId,
-          eventType,
-          status,
-          amount,
-          placeInLine,
-        });
-      }
-
-      return acc;
-    },
-    { label: "Orders", data: [] as any, color: "#D3B567", pointStyle: "circle" as PointStyle },
-  );
-
-  const listings = data?.reduce(
-    (acc, event) => {
-      // Skip Fill Orders
-      if ("toFarmer" in event || "beanAmount" in event) {
-        return acc;
-      }
-      let amount: number | null = null;
-      let status = "";
-      const price = event.pricePerPod.toNumber();
-      const eventId = event.id;
-      const eventType: "ORDER" | "LISTING" = event.type as "ORDER" | "LISTING";
-      let eventIndex: number | null = null;
-      amount = event.originalAmount.toNumber();
-      const fillPct = event.filled.div(event.originalAmount).mul(100).toNumber();
-      status = fillPct > 99 ? "FILLED" : event.status === "CANCELLED_PARTIAL" ? "CANCELLED" : event.status;
-      const placeInLine = status === "ACTIVE" ? event.index.sub(harvestableIndex).toNumber() : null;
-      eventIndex = event.index.toNumber();
-
-      if (placeInLine !== null && price !== null) {
-        acc.data.push({
-          x: placeInLine / 1_000_000,
-          y: price,
-          eventId,
-          eventIndex,
-          eventType,
-          status,
-          amount,
-          placeInLine,
-        });
-      }
-
-      return acc;
-    },
-    { label: "Listings", data: [] as any, color: "#00C767", pointStyle: "rect" as PointStyle },
-  );
-  const datasets: ScatterChartData = [orders, listings];
+      },
+      [
+        { label: "Orders", data: [] as any, color: "#D3B567", pointStyle: "circle" as PointStyle },
+        { label: "Listings", data: [] as any, color: "#00C767", pointStyle: "rect" as PointStyle },
+      ],
+    ) || [];
 
   const toolTipOptions: any = {
     enabled: true,
@@ -235,9 +149,8 @@ export function Market() {
     [mode],
   );
 
-  const onPointClick = (event: ChartEvent, activeElements: ActiveElement[]) => {
-    const element = activeElements[0];
-    const dataPoint = datasets[element.datasetIndex].data[element.index] as any;
+  const onPointClick = (event: ChartEvent, activeElements: ActiveElement[], chart: Chart) => {
+    const dataPoint = scatterChartData[activeElements[0].datasetIndex].data[activeElements[0].index] as any;
     if (dataPoint.eventType === "LISTING") {
       navigate(`/market/pods/buy/${dataPoint.eventIndex.toString().replace(".", "")}`);
     } else {
@@ -260,15 +173,6 @@ export function Market() {
         <div className={`flex flex-col`}>
           <div className="flex flex-row gap-4 border-t border-pinto-gray-2 mt-4 h-[calc(100vh-7.75rem)] lg:h-[calc(100vh-11rem)] overflow-hidden">
             <div className="flex flex-col flex-grow ml-4">
-              {/* <ScatterChart
-                title="All pod listings and orders"
-                data={chartData}
-                isLoading={isFetching}
-                onPointClick={onPointClick}
-                xYMinMax={{ x: { max: podLineAsNumber } }}
-                xLabel="Place in line"
-                yLabel="Price per pod"
-              /> */}
               <div className="w-full h-[28rem] mb-8 relative">
                 {!isLoaded && (
                   <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
@@ -276,7 +180,7 @@ export function Market() {
                   </div>
                 )}
                 <ScatterChartV2
-                  data={datasets}
+                  data={scatterChartData}
                   xOptions={{ label: "Place in line", min: 0, max: podLineAsNumber }}
                   yOptions={{ label: "Price per pod", min: 0, max: 100 }}
                   onPointClick={onPointClick}

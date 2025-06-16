@@ -16,7 +16,7 @@ import {
   PointStyle,
   TooltipOptions,
 } from "chart.js";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReactChart } from "../ReactChart";
 
 Chart.register(LineController, LineElement, LinearScale, LogarithmicScale, CategoryScale, PointElement, Filler);
@@ -64,7 +64,7 @@ export interface ScatterChartProps {
     dash?: number[];
     label?: string;
   }[];
-  onPointClick?: (event: ChartEvent, activeElements: ActiveElement[]) => void;
+  onPointClick?: (event: ChartEvent, activeElements: ActiveElement[], chart: Chart) => void;
   xOptions: ScatterChartAxisOptions;
   yOptions: ScatterChartAxisOptions;
   customValueTransform?: CustomChartValueTransform;
@@ -88,6 +88,7 @@ const ScatterChartV2 = React.memo(
   }: ScatterChartProps) => {
     const chartRef = useRef<Chart | null>(null);
     const activeIndexRef = useRef<number | undefined>(activeIndex);
+    const [selectedPoint, setSelectedPoint] = useState<[number, number] | null>(null);
 
     useEffect(() => {
       activeIndexRef.current = activeIndex;
@@ -196,20 +197,6 @@ const ScatterChartV2 = React.memo(
             ctx.save();
             ctx.setLineDash([4, 4]);
 
-            // Draw the vertical line at morningIndex
-            if (typeof activeIndex === "number") {
-              const morningDataPoint = chart.getDatasetMeta(0).data[activeIndex];
-              if (morningDataPoint) {
-                const { x } = morningDataPoint.getProps(["x"], true);
-                ctx.beginPath();
-                ctx.moveTo(x, chart.chartArea.top);
-                ctx.lineTo(x, chart.chartArea.bottom);
-                ctx.strokeStyle = "#D9AD0F"; // Use a different color for the morning line
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-              }
-            }
-
             // Draw the vertical line for the active element (hovered point)
             const activeElements = chart.getActiveElements();
             if (activeElements.length > 0) {
@@ -223,7 +210,7 @@ const ScatterChartV2 = React.memo(
                 ctx.beginPath();
                 ctx.moveTo(x, chart.chartArea.top);
                 ctx.lineTo(x, chart.chartArea.bottom);
-                ctx.strokeStyle = "#D9AD0F";
+                ctx.strokeStyle = "black";
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
               }
@@ -233,7 +220,7 @@ const ScatterChartV2 = React.memo(
           }
         },
       }),
-      [], // Removed morningIndex from dependencies
+      [],
     );
 
     const horizontalReferenceLinePlugin: Plugin = useMemo<Plugin>(
@@ -320,11 +307,11 @@ const ScatterChartV2 = React.memo(
           if (!ctx) return;
 
           // Define the function to draw the selection point
-          const drawSelectionPoint = (x: number, y: number) => {
+          const drawSelectionPoint = (x: number, y: number, color?: string) => {
             ctx.save();
             ctx.fillStyle = "transparent";
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = color || "black";
+            ctx.lineWidth = !!color ? 2 : 1;
 
             const rectWidth = 10;
             const rectHeight = 10;
@@ -379,9 +366,19 @@ const ScatterChartV2 = React.memo(
               drawSelectionPoint(x, y);
             }
           }
+
+          // Draw the circle around currently selected element (i.e. clicked)
+          const [selectedPointDatasetIndex, selectedPointIndex] = selectedPoint || [];
+          if (selectedPointDatasetIndex !== undefined && selectedPointIndex !== undefined) {
+            const dataPoint = chart.getDatasetMeta(selectedPointDatasetIndex).data[selectedPointIndex];
+            if (dataPoint) {
+              const { x, y } = dataPoint.getProps(["x", "y"], true);
+              drawSelectionPoint(x, y, "red");
+            }
+          }
         },
       }),
-      [], // Removed morningIndex from dependencies
+      [selectedPoint],
     );
 
     const selectionCallbackPlugin: Plugin = useMemo<Plugin>(
@@ -445,106 +442,17 @@ const ScatterChartV2 = React.memo(
             // },
           },
         },
-        onClick: (event, activeElements) => {
-          onPointClick?.(event, activeElements);
+        onClick: (event, activeElements, chart) => {
+          const activeElement = activeElements[0];
+          setSelectedPoint([activeElement.datasetIndex, activeElement.index]);
+          onPointClick?.(event, activeElements, chart);
         },
-        // scales: {
-        //   x: {
-        //     grid: {
-        //       display: true,
-        //       color: (context) => {
-        //         const tickLabel = context.tick && context.tick.label;
-        //         if (typeof activeIndex === "number") {
-        //           if (tickLabel && tickLabel !== "") {
-        //             return "rgba(0, 0, 0, 0.1)";
-        //           } else {
-        //             return "transparent";
-        //           }
-        //         } else {
-        //           return "rgba(0, 0, 0, 0.1)";
-        //         }
-        //       },
-        //     },
-        //     border: {
-        //       display: true,
-        //     },
-        //     // ticks: {
-        //     //   padding: 0,
-        //     //   minRotation: 0,
-        //     //   maxRotation: 0,
-        //     //   autoSkip: typeof activeIndex !== "number",
-        //     //   maxTicksLimit: typeof activeIndex !== "number" ? 6 : undefined,
-        //     //   callback: (_value, index, values) => {
-        //     //     const xValue = data[index][xKey];
-
-        //     //     if (!xValue) {
-        //     //       return "";
-        //     //     }
-
-        //     //     const tickLabel = xValue instanceof Date ? `${xValue.getMonth() + 1}/${xValue.getDate()}` : xValue;
-
-        //     //     if (typeof activeIndex === "number") {
-        //     //       if (index === 0 || index === values.length - 1) {
-        //     //         return tickLabel;
-        //     //       }
-
-        //     //       const indicesToShowTicks = [4, 9, 14, 19];
-
-        //     //       if (indicesToShowTicks.includes(index)) {
-        //     //         return tickLabel;
-        //     //       } else {
-        //     //         return "";
-        //     //       }
-        //     //     } else {
-        //     //       // Let Chart.js handle auto-skipping and tick labels
-        //     //       return tickLabel;
-        //     //     }
-        //     //   },
-        //     // },
-        //   },
-
-        //   y: {
-        //     type: useLogarithmicScale ? "logarithmic" : "linear",
-        //     position: "right",
-        //     min: yTickMin,
-        //     max: yTickMax,
-        //     grid: {
-        //       display: false,
-        //     },
-        //     border: {
-        //       display: false,
-        //     },
-        //     // Configure logarithmic scale options
-        //     ...(useLogarithmicScale && {
-        //       logarithmic: {
-        //         base: 10,
-        //       },
-        //     }),
-        //     ticks: {
-        //       padding: 0,
-        //       maxTicksLimit: 3,
-        //       callback: (value) => {
-        //         let num = typeof value === "string" ? Number(value) : value;
-        //         // If there is custom scaling for this chart, reverse it to get the original value
-        //         if (customValueTransform !== undefined) {
-        //           num = customValueTransform.from(num);
-        //         }
-        //         return valueFormatter ? valueFormatter(num) : value;
-        //       },
-        //     },
-        //   },
-        // },
       };
     }, [data, yTickMin, yTickMax, valueFormatter, useLogarithmicScale, customValueTransform]);
 
-    // const allPlugins = useMemo<Plugin[]>(
-    //   () => [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
-    //   [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
-    // );
-
     const allPlugins = useMemo<Plugin[]>(
-      () => [horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
-      [horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
+      () => [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
+      [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
     );
 
     const chartDimensions = useMemo(() => {
