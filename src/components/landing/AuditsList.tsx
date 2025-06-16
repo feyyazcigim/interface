@@ -331,7 +331,7 @@ export default function AuditsList() {
           Learn More about Audits
         </Link>
       </div>
-      <div className="h-96 overflow-hidden">
+      <div className="h-auto overflow-hidden">
         <div className="flex flex-col gap-4">
           {audits.map(
             (auditData, index) =>

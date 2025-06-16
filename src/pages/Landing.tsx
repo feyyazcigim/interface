@@ -58,7 +58,7 @@ export default function Landing() {
       <div className="flex flex-col gap-12 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
         <FarmToTable height={initialHeightPx} />
       </div>
-      <div className="flex flex-col gap-4 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
+      <div className="flex flex-col gap-4 overflow-clip mb-8" style={{ height: `${initialHeightRem + 8}rem` }}>
         <BugBounty />
         <AuditsList />
       </div>
