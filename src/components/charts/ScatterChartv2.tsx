@@ -88,7 +88,7 @@ const ScatterChartV2 = React.memo(
   }: ScatterChartProps) => {
     const chartRef = useRef<Chart | null>(null);
     const activeIndexRef = useRef<number | undefined>(activeIndex);
-    const [selectedPoint, setSelectedPoint] = useState<[number, number] | null>(null);
+    const selectedPointRef = useRef<[number, number] | null>(null);
 
     useEffect(() => {
       activeIndexRef.current = activeIndex;
@@ -368,7 +368,7 @@ const ScatterChartV2 = React.memo(
           }
 
           // Draw the circle around currently selected element (i.e. clicked)
-          const [selectedPointDatasetIndex, selectedPointIndex] = selectedPoint || [];
+          const [selectedPointDatasetIndex, selectedPointIndex] = selectedPointRef.current || [];
           if (selectedPointDatasetIndex !== undefined && selectedPointIndex !== undefined) {
             const dataPoint = chart.getDatasetMeta(selectedPointDatasetIndex).data[selectedPointIndex];
             if (dataPoint) {
@@ -378,7 +378,7 @@ const ScatterChartV2 = React.memo(
           }
         },
       }),
-      [selectedPoint],
+      [selectedPointRef.current],
     );
 
     const selectionCallbackPlugin: Plugin = useMemo<Plugin>(
@@ -444,7 +444,7 @@ const ScatterChartV2 = React.memo(
         },
         onClick: (event, activeElements, chart) => {
           const activeElement = activeElements[0];
-          setSelectedPoint([activeElement.datasetIndex, activeElement.index]);
+          selectedPointRef.current = [activeElement.datasetIndex, activeElement.index];
           onPointClick?.(event, activeElements, chart);
         },
       };
