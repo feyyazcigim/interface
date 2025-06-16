@@ -333,76 +333,76 @@ export default function AuditsList() {
       </div>
       <div className="h-96 overflow-hidden">
         <div className="flex flex-col gap-4">
-          {Array(4)
-            .fill(audits)
-            .flat()
-            .map((auditData, index) => (
-              <div key={`audit_${auditData.name}_${index}`}>
-                {auditData.name === "BIP-50" && (
-                  <div className="flex flex-row gap-4 items-center mb-4">
-                    <Separator className="flex-1" />
-                    <div className="font-thin text-[1.5rem] text-pinto-gray-4 whitespace-nowrap">
-                      Inherited security through Beanstalk
+          {audits.map(
+            (auditData, index) =>
+              index <= 3 && (
+                <div key={`audit_${auditData.name}_${index}`}>
+                  {auditData.name === "BIP-50" && (
+                    <div className="flex flex-row gap-4 items-center mb-4">
+                      <Separator className="flex-1" />
+                      <div className="font-thin text-[1.5rem] text-pinto-gray-4 whitespace-nowrap">
+                        Inherited security through Beanstalk
+                      </div>
+                      <Separator className="flex-1" />
                     </div>
-                    <Separator className="flex-1" />
-                  </div>
-                )}
-                <div className="flex flex-row justify-between p-6 border rounded-[0.75rem] bg-pinto-off-white w-[62.5rem]">
-                  <div className="flex flex-col gap-4 justify-between">
-                    <div className="flex flex-row gap-2 text-[1.5rem] text-black items-center leading-normal">
-                      <span className="font-normal">{auditData.name}</span>
-                      <span className="font-thin">{auditData.description}</span>
-                      <Link to={auditData.githubLink} target="_blank" rel="noopener noreferrer">
+                  )}
+                  <div className="flex flex-row justify-between p-6 border rounded-[0.75rem] bg-pinto-off-white w-[62.5rem]">
+                    <div className="flex flex-col gap-4 justify-between">
+                      <div className="flex flex-row gap-2 text-[1.5rem] text-black items-center leading-normal">
+                        <span className="font-normal">{auditData.name}</span>
+                        <span className="font-thin">{auditData.description}</span>
+                        <Link to={auditData.githubLink} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src="github.svg"
+                            alt="github"
+                            className="opacity-30 hover:opacity-100 transition-opacity"
+                          />
+                        </Link>
+                      </div>
+                      <div className="flex flex-row gap-2 text-[1.25rem] text-pinto-gray-4 font-thin items-center">
+                        <span>{auditData.date}</span>
+                        {auditData.auditHash && auditData.hashLink && (
+                          <>
+                            <Separator orientation="vertical" className="h-5" />
+                            <span>Audit Hash:</span>
+                            <Link
+                              to={auditData.hashLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex flex-row gap-0.5 items-center text-pinto-green-4 hover:underline decoration-1"
+                            >
+                              <span>{truncateAddress(auditData.auditHash, { suffix: true, letters: 3 })}</span>
+                              <DiagonalRightArrowIcon color="currentColor" />
+                            </Link>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-4">
+                      <span className="text-[1.25rem] text-pinto-gray-4 font-thin text-end">Audited by</span>
+                      <Link
+                        key={`${auditors[auditData.auditor].alt}-${index}`}
+                        to={auditors[auditData.auditor].url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={auditors[auditData.auditor].className}
+                      >
                         <img
-                          src="github.svg"
-                          alt="github"
-                          className="opacity-30 hover:opacity-100 transition-opacity"
+                          src={auditors[auditData.auditor].src}
+                          className={`${auditors[auditData.auditor].height} w-full object-fill opacity-40 hover:opacity-100 transition-opacity ${auditors[auditData.auditor].imgClassName || ""}`}
+                          alt={auditors[auditData.auditor].alt}
                         />
                       </Link>
                     </div>
-                    <div className="flex flex-row gap-2 text-[1.25rem] text-pinto-gray-4 font-thin items-center">
-                      <span>{auditData.date}</span>
-                      {auditData.auditHash && auditData.hashLink && (
-                        <>
-                          <Separator orientation="vertical" className="h-5" />
-                          <span>Audit Hash:</span>
-                          <Link
-                            to={auditData.hashLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex flex-row gap-0.5 items-center text-pinto-green-4 hover:underline decoration-1"
-                          >
-                            <span>{truncateAddress(auditData.auditHash, { suffix: true, letters: 3 })}</span>
-                            <DiagonalRightArrowIcon color="currentColor" />
-                          </Link>
-                        </>
-                      )}
+                  </div>
+                  {auditData.name === "Omniscia Audit" && (
+                    <div className="mt-4">
+                      <Separator />
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <span className="text-[1.25rem] text-pinto-gray-4 font-thin text-end">Audited by</span>
-                    <Link
-                      key={`${auditors[auditData.auditor].alt}-${index}`}
-                      to={auditors[auditData.auditor].url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={auditors[auditData.auditor].className}
-                    >
-                      <img
-                        src={auditors[auditData.auditor].src}
-                        className={`${auditors[auditData.auditor].height} w-full object-fill opacity-40 hover:opacity-100 transition-opacity ${auditors[auditData.auditor].imgClassName || ""}`}
-                        alt={auditors[auditData.auditor].alt}
-                      />
-                    </Link>
-                  </div>
+                  )}
                 </div>
-                {auditData.name === "Omniscia Audit" && (
-                  <div className="mt-4">
-                    <Separator />
-                  </div>
-                )}
-              </div>
-            ))}
+              ),
+          )}
         </div>
       </div>
     </div>

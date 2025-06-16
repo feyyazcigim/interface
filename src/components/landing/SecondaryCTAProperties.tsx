@@ -28,12 +28,15 @@ const data = [
 
 export default function SecondaryCTAProperties() {
   return (
-    <div className="flex flex-col items-start w-[25.625rem] animate-vertical-marquee">
+    <div className="flex items-center animate-marquee">
       {Array(2)
         .fill(data)
         .flat()
         .map((info, index) => (
-          <div key={`dataInfo2_${info.title}_${index}`} className="p-6 border rounded-2xl bg-pinto-off-white mb-12">
+          <div
+            key={`dataInfo2_${info.title}_${index}`}
+            className="p-6 w-[23.5rem] h-[18rem] flex-shrink-0 border rounded-2xl bg-pinto-off-white mr-12"
+          >
             <div className="h-[18.75rem] flex flex-col gap-6">
               <img src={info.logo} className="w-24 flex-shrink-0 h-auto" alt={info.title} />
               <div className="flex flex-col gap-4">

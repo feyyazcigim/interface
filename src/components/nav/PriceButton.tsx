@@ -74,6 +74,24 @@ function PriceButtonPanel() {
 
   const combinedDeltaB = priceData.deltaB;
 
+  const renderTokenItem = (token, index, marqueeId) => {
+    const [tokenData, priceInfo] = token;
+
+    if (!tokenData.isWhitelisted || !tokenData.name) return null;
+
+    const price = priceInfo[useTwa ? "twa" : "instant"];
+    const formattedPrice = formatter.usd(price ? price.toHuman() : 0);
+
+    return (
+      <div key={`${tokenData.address}_marquee${marqueeId}_${index}`}>
+        <div className="inline-flex items-center px-2 gap-1.5">
+          <IconImage src={tokenData.logoURI} size={6} />
+          <div className="pinto-body text-pinto-secondary text-nowrap">{`${tokenData.symbol}: ${formattedPrice}`}</div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <CardHeader className="transition-all p-0 space-y-0 sm:space-y-1.5">
@@ -412,58 +430,12 @@ function PriceButtonPanel() {
           className="flex flex-col absolute bottom-0 z-[2] peer bg-pinto-gray-1 pb-2 3xl:pb-4 items-stretch hover:bg-pinto-gray-2 transition-colors cursor-pointer"
         >
           <Separator className="w-[38rem] -ml-4 " />
-          <div className="inline-flex items-center">
-            <div className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4 animate-marquee">
-              {Array.from(priceData.tokenPrices).map((token, i) => {
-                if (!token[0].isWhitelisted) return;
-                return (
-                  <div key={`${token[0].address}_marquee1_${i}`}>
-                    {token[0]?.name && (
-                      <div className="inline-flex items-center px-2 gap-1.5">
-                        <IconImage src={token[0].logoURI} size={6} />
-                        <div className="pinto-body text-pinto-secondary text-nowrap">
-                          {`${token[0].symbol}: ${formatter.usd(token[1][useTwa ? "twa" : "instant"] ? token[1][useTwa ? "twa" : "instant"].toHuman() : 0)}`}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4 animate-marquee">
-              {Array.from(priceData.tokenPrices).map((token, i) => {
-                if (!token[0].isWhitelisted) return;
-                return (
-                  <div key={`${token[0].address}_marquee2_${i}`}>
-                    {token[0]?.name && (
-                      <div className="inline-flex items-center px-2 gap-1.5">
-                        <IconImage src={token[0].logoURI} size={6} />
-                        <div className="pinto-body text-pinto-secondary text-nowrap">
-                          {`${token[0].symbol}: ${formatter.usd(token[1][useTwa ? "twa" : "instant"] ? token[1][useTwa ? "twa" : "instant"].toHuman() : 0)}`}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4 animate-marquee">
-              {Array.from(priceData.tokenPrices).map((token, i) => {
-                if (!token[0].isWhitelisted) return;
-                return (
-                  <div key={`${token[0].address}_marquee3_${i}`}>
-                    {token[0]?.name && (
-                      <div className="inline-flex items-center px-2 gap-1.5">
-                        <IconImage src={token[0].logoURI} size={6} />
-                        <div className="pinto-body text-pinto-secondary text-nowrap">
-                          {`${token[0].symbol}: ${formatter.usd(token[1][useTwa ? "twa" : "instant"] ? token[1][useTwa ? "twa" : "instant"].toHuman() : 0)}`}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+          <div className="inline-flex items-center animate-marquee">
+            {[1, 2].map((marqueeId) => (
+              <div key={`marquee-${marqueeId}`} className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4">
+                {Array.from(priceData.tokenPrices).map((token, i) => renderTokenItem(token, i, marqueeId))}
+              </div>
+            ))}
           </div>
         </CardFooter>
       )}

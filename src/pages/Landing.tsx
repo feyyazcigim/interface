@@ -50,14 +50,10 @@ export default function Landing() {
           <LandingChart />
         </div>
       </div>
-      <div className="flex flex-row overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
-        <div className="my-auto">
-          <SecondaryCTA />
-        </div>
-        <div className="flex flex-row gap-12 ml-auto mr-12">
-          <SecondaryCTAProperties />
-          <SecondaryCTAValues />
-        </div>
+      <div className="flex flex-col overflow-clip gap-14" style={{ height: `${initialHeightRem + 8}rem` }}>
+        <SecondaryCTAValues />
+        <SecondaryCTA />
+        <SecondaryCTAProperties />
       </div>
       <div className="flex flex-col gap-12 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
         <FarmToTable height={initialHeightPx} />
