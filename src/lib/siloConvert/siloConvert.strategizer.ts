@@ -3,7 +3,7 @@ import { Token } from "@/utils/types";
 import { Prettify } from "@/utils/types.generic";
 import { SiloConvertCache } from "./SiloConvert.cache";
 import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
-import { LP2LPStrategy, SiloConvertStrategy } from "./strategies/core";
+import { SiloConvertStrategy } from "./strategies/core";
 import { SiloConvertType } from "./strategies/core/types";
 import {
   DefaultConvertStrategy,
@@ -110,33 +110,34 @@ export class Strategizer {
       convertType: "LP2LP",
     };
 
+    const strategies: StrategyWithAmount<"LP2LP">[] = [];
+
     // if dex aggregators are disabled for either token, we can only use a single sided main token strategy.
     if (isAggDisabled) {
-      return [
-        {
-          ...shared,
-          strategies: [
-            {
-              strategy: new LP2LPSingleSidedMain(sourceWell, targetWell, this.context),
-              amount: amountIn,
-            },
-          ],
-        },
-      ];
-    }
+      const defaultStrategy = new LP2LPSingleSidedMain(sourceWell, targetWell, this.context);
 
-    const strategies: StrategyWithAmount<"LP2LP">[] = [];
+      const route = {
+        ...shared,
+        strategies: [
+          {
+            strategy: defaultStrategy,
+            amount: amountIn,
+          },
+        ],
+      };
+
+      return [route];
+    }
 
     const convertTokens = { source, target };
 
     const sourceDeltaP = sourceWell.deltaB;
     const targetDeltaP = targetWell.deltaB;
 
-    const eq2eqStrategy = new LP2LPEq2Eq(sourceWell, targetWell, this.context);
-
     let maxConvert: TV | undefined = undefined;
     let amountUsed: TV = TV.fromHuman("0", source.decimals);
 
+    // if conditions allow for single sided main token convert, add the strategy.
     if (sourceDeltaP.lt(Strategizer.MIN_DELTA_B) && targetDeltaP.gt(Strategizer.MIN_DELTA_B)) {
       maxConvert = await this.maxConvertQuoter.getSingleSidedMainTokenMaxConvert(convertTokens);
       amountUsed = TV.min(amountIn, maxConvert);
@@ -144,7 +145,9 @@ export class Strategizer {
         strategy: new LP2LPSingleSidedMain(sourceWell, targetWell, this.context),
         amount: amountUsed,
       });
-    } else if (sourceDeltaP.gt(Strategizer.MIN_DELTA_B) && targetDeltaP.lt(Strategizer.MIN_DELTA_B)) {
+    }
+    // if conditions allow for single sided pair token convert, add the strategy.
+    else if (sourceDeltaP.gt(Strategizer.MIN_DELTA_B) && targetDeltaP.lt(Strategizer.MIN_DELTA_B)) {
       maxConvert = await this.maxConvertQuoter.getSingleSidedPairTokenMaxConvert(convertTokens);
       amountUsed = TV.min(amountIn, maxConvert);
       strategies.push({
@@ -153,10 +156,11 @@ export class Strategizer {
       });
     }
 
-    // If the amount used is not the same as the amount in, we need to add an eq2eq strategy
+    // If either nothing is used or the amountIn was partially used
+    // Default to adding the eq2eq strategy.
     if (!amountUsed.eq(amountIn)) {
       strategies.push({
-        strategy: eq2eqStrategy,
+        strategy: new LP2LPEq2Eq(sourceWell, targetWell, this.context),
         amount: amountIn.sub(amountUsed),
       });
     }

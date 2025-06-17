@@ -1,6 +1,7 @@
 import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import { diamondABI } from "@/constants/abi/diamondABI";
+import encoders from "@/encoders";
 import { AdvancedFarmWorkflow } from "@/lib/farm/workflow";
 import { ConvertStrategyQuote, SiloConvertStrategy } from "@/lib/siloConvert/strategies/core";
 import { ExtendedPickedCratesDetails, calculateConvertData } from "@/utils/convert";
@@ -55,6 +56,22 @@ export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
       amountOut,
       convertData,
     };
+  }
+
+  encodeFromQuote(quote: ConvertStrategyQuote<"LPAndMain">): AdvancedFarmCall {
+    if (!quote.convertData) {
+      throw new Error("No convert data provided");
+    }
+
+    const stems: bigint[] = [];
+    const amounts: bigint[] = [];
+
+    quote.pickedCrates.crates.forEach((crate) => {
+      stems.push(crate.stem.toBigInt());
+      amounts.push(crate.amount.toBigInt());
+    });
+
+    return encoders.silo.convert(quote.convertData, stems, amounts);
   }
 
   private buildConvertFarmStruct(amountIn: TV, amountOut: TV, deposits: ExtendedPickedCratesDetails, slippage: number) {

@@ -1,4 +1,4 @@
-import { DepositData, Token } from "@/utils/types";
+import { AdvancedFarmCall, Token } from "@/utils/types";
 
 import { TV } from "@/classes/TokenValue";
 import { AdvancedFarmWorkflow } from "@/lib/farm/workflow";
@@ -26,6 +26,8 @@ export abstract class SiloConvertStrategy<T extends SiloConvertType> {
   ): Promise<ConvertStrategyQuote<T>>;
 
   // ------------------------------ Validation Methods ------------------------------ //
+
+  abstract encodeFromQuote(quote: ConvertStrategyQuote<T>): AdvancedFarmCall;
 
   protected validateSlippage(slippage: number) {
     if (slippage < 0) {

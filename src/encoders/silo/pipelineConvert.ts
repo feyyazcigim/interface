@@ -1,9 +1,10 @@
 import { Clipboard } from "@/classes/Clipboard";
-import { TV } from "@/classes/TokenValue";
 import { diamondABI } from "@/constants/abi/diamondABI";
+import { abiSnippets } from "@/constants/abiSnippets";
+import { ConvertResultStruct } from "@/lib/siloConvert/SiloConvert";
 import { AdvancedPipeCall, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
-import { encodeFunctionData } from "viem";
+import { decodeFunctionResult, encodeFunctionData } from "viem";
 
 export type IPipelineConvert = {
   stems: bigint[];
@@ -23,4 +24,25 @@ export function pipelineConvert(sourceLP: Token, targetLP: Token, args: IPipelin
     callData: callData,
     clipboard: args.clipboard || Clipboard.encode([]),
   };
+}
+
+export function decodePipelineConvert(result: HashString): ConvertResultStruct<bigint> {
+  try {
+    const decoded = decodeFunctionResult<typeof abiSnippets.pipelineConvert>({
+      abi: abiSnippets.pipelineConvert,
+      functionName: "pipelineConvert",
+      data: result,
+    });
+
+    return {
+      toStem: decoded[0],
+      fromAmount: decoded[1],
+      toAmount: decoded[2],
+      fromBdv: decoded[3],
+      toBdv: decoded[4],
+    };
+  } catch (e) {
+    console.error(`Error decoding convert result: ${result}`);
+    throw e;
+  }
 }

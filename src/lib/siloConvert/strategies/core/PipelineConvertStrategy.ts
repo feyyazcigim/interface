@@ -26,6 +26,28 @@ export abstract class PipelineConvertStrategy<T extends SiloConvertType> extends
 
   /// ------------------------------ Protected Methods ------------------------------ ///
 
+  encodeFromQuote(quote: ConvertStrategyQuote<T>): AdvancedFarmCall {
+    const stems: bigint[] = [];
+    const amounts: bigint[] = [];
+
+    quote.pickedCrates.crates.forEach((crate) => {
+      stems.push(crate.stem.toBigInt());
+      amounts.push(crate.amount.toBigInt());
+    });
+
+    if (!quote.advPipeCalls) {
+      throw new Error("No advanced pipe calls provided");
+    }
+
+    const args = {
+      stems,
+      amounts,
+      advPipeCalls: quote.advPipeCalls?.getSteps() ?? [],
+    };
+
+    return encoders.silo.pipelineConvert(this.sourceToken, this.targetToken, args);
+  }
+
   encodeQuoteToAdvancedFarmStruct(quote: ConvertStrategyQuote<T>): AdvancedFarmCall {
     const stems: bigint[] = [];
     const amounts: bigint[] = [];

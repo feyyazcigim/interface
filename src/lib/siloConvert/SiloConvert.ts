@@ -1,29 +1,24 @@
 import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
-import { abiSnippets } from "@/constants/abiSnippets";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import encoders from "@/encoders";
 import { PriceContractPriceResult, decodePriceResult } from "@/encoders/ecosystem/price";
 import junctionGte from "@/encoders/junction/junctionGte";
 import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
-import { getChainConstant, resolveChainId } from "@/utils/chain";
+import { getChainConstant } from "@/utils/chain";
 import { pickCratesMultiple } from "@/utils/convert";
 import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import defaultWagmiConfig from "@/utils/wagmi/config";
 import { Config } from "@wagmi/core";
-import { Address, decodeFunctionResult } from "viem";
+import { Address } from "viem";
 import { SiloConvertCache } from "./SiloConvert.cache";
 import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
-import { ConvertStrategyQuote, SiloConvertStrategy } from "./strategies/core";
-import { LP2LPStrategy, SiloConvertType } from "./strategies/core";
-import {
-  DefaultConvertStrategy,
-  SiloConvertLP2LPEq2EqStrategy,
-  SiloConvertLP2LPSingleSidedMainTokenStrategy,
-  SiloConvertLP2LPSingleSidedPairTokenStrategy,
-} from "./strategies/implementations";
+import { SiloConvertRoute, SiloConvertStrategizer } from "./siloConvert.strategizer";
+import { ConvertStrategyQuote } from "./strategies/core";
+import { SiloConvertType } from "./strategies/core";
 import { SiloConvertContext } from "./types";
+import { decodeConvertResults } from "./utils";
 
 /**
  * Architecture notes:
@@ -106,21 +101,18 @@ export interface SiloConvertSummary<T extends SiloConvertType> {
   results: ConvertResultStruct<TV>[];
   workflow: AdvancedFarmWorkflow;
   totalAmountOut: TV;
+  reducedResults: Omit<ConvertResultStruct<TV>, "toStem">;
   postPriceData: PriceContractPriceResult | undefined;
 }
 
 export class SiloConvert {
   readonly context: SiloConvertContext;
 
-  private static MIN_DELTA_B = 100;
-
   cache: SiloConvertCache;
 
   maxConvertQuoter: SiloConvertMaxConvertQuoter;
 
-  strategies: SiloConvertStrategy<SiloConvertType>[] = [];
-
-  amounts: TV[] = [];
+  strategizer: SiloConvertStrategizer;
 
   constructor(diamondAddress: Address, account: Address, config: Config, chainId: number) {
     this.context = {
@@ -132,16 +124,16 @@ export class SiloConvert {
 
     this.cache = new SiloConvertCache(this.context);
     this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(this.context, this.cache);
+    this.strategizer = new SiloConvertStrategizer(this.context, this.cache, this.maxConvertQuoter);
   }
 
   /**
-   * Resets the strategies, amounts, and caches.
+   * Resets the strategies, amounts, caches, and re-initializes dependencies.
    */
   clear() {
-    this.strategies = [];
-    this.amounts = [];
     this.cache = new SiloConvertCache(this.context);
     this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(this.context, this.cache);
+    this.strategizer = new SiloConvertStrategizer(this.context, this.cache, this.maxConvertQuoter);
   }
 
   /**
@@ -164,238 +156,113 @@ export class SiloConvert {
     amountIn: TV,
     slippage: number,
     forceUpdateCache: boolean = false,
-  ): Promise<SiloConvertSummary<SiloConvertType>> {
+  ): Promise<SiloConvertSummary<SiloConvertType>[]> {
     await this.cache.update(forceUpdateCache);
 
-    const advancedFarm = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
+    const routes = await this.strategizer.strategize(source, target, amountIn);
 
-    const isDefaultConvert = source.isMain || target.isMain;
-    const isLP2PINTOBelowDollar = source.isLP && target.isMain && this.cache.getDeltaB().lt(0);
+    const quotedRoutes = await Promise.all(
+      routes.map(async (route, routeIndex) => {
+        const advFarm = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
+        const quotes: ConvertStrategyQuote<SiloConvertType>[] = [];
 
-    let quoterResult: Awaited<
-      ReturnType<typeof this.quoteDefaultConvert> | ReturnType<typeof this.quoteLP2LP>
-      // | ReturnType<typeof this.quoteLP2PINTOBelowDollar>
-    >;
+        const amounts = route.strategies.map((strategy) => strategy.amount);
+        const crates = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
 
-    // if (isLP2PINTOBelowDollar) {
-    // quoterResult = await this.quoteLP2PINTOBelowDollar(
-    //   source,
-    //   target,
-    //   farmerDeposits,
-    //   amountIn,
-    //   slippage,
-    //   advancedFarm,
-    // );
+        // Has to be run sequentially.
+        for (const [i, strategy] of route.strategies.entries()) {
+          const quote = await strategy.strategy.quote(crates[i], advFarm, slippage);
+          advFarm.add(strategy.strategy.encodeFromQuote(quote));
+          quotes.push(quote);
+        }
 
-    if (isDefaultConvert) {
-      quoterResult = await this.quoteDefaultConvert(source, target, farmerDeposits, amountIn, slippage, advancedFarm);
-    } else {
-      quoterResult = await this.quoteLP2LP(source, target, farmerDeposits, amountIn, slippage, advancedFarm);
-    }
-
-    const { quotes, totalAmountOut, decoder } = quoterResult;
-
-    console.debug("[SiloConvert/quote] quotes: ", {
-      quotes,
-      totalAmountOut,
-    });
-
-    try {
-      const sim = await advancedFarm.simulate({
-        account: this.context.account,
-        after: this.cache.constructPriceAdvPipe({ noTokenPrices: true }),
-      });
-
-      const simResults = [...sim.result];
-      // Pop the last result from the sim results which is the price result
-      const priceResult = simResults.pop();
-
-      const mainToken = getChainConstant(this.context.chainId, MAIN_TOKEN);
-
-      const results: ConvertResultStruct<TV>[] = decoder(simResults).map((result) => {
         return {
-          toStem: TV.fromBigInt(result.toStem, mainToken.decimals),
-          fromAmount: TV.fromBigInt(result.fromAmount, source.decimals),
-          toAmount: TV.fromBigInt(result.toAmount, target.decimals),
-          fromBdv: TV.fromBigInt(result.fromBdv, mainToken.decimals),
-          toBdv: TV.fromBigInt(result.toBdv, mainToken.decimals),
+          route,
+          routeIndex,
+          quotes,
+          workflow: advFarm,
         };
-      });
+      }),
+    );
+
+    const simulationsRawResults = await Promise.all(
+      quotedRoutes.map((route) =>
+        route.workflow.simulate({
+          account: this.context.account,
+          after: this.cache.constructPriceAdvPipe({ noTokenPrices: true }),
+        }),
+      ),
+    );
+
+    return quotedRoutes.map((route, i): SiloConvertSummary<SiloConvertType> => {
+      const rawResponse = simulationsRawResults[i];
+
+      if (!rawResponse || !rawResponse.result) {
+        throw new Error(`[SiloConvert/quote] Invalid route index: ${i}`);
+      }
+
+      const staticCallResult = [...rawResponse.result];
+
+      const decoded = this.decodeRouteAndPriceResults(staticCallResult, route.route);
+
+      return {
+        ...decoded,
+        quotes: route.quotes,
+        workflow: route.workflow,
+        totalAmountOut: decoded.reducedResults.toAmount, // TODO: Remove me when supporting multiple toToken
+      };
+    });
+  }
+
+  private decodeRouteAndPriceResults(
+    rawResponse: HashString[],
+    route: SiloConvertRoute<SiloConvertType>,
+  ): Pick<SiloConvertSummary<SiloConvertType>, "results" | "reducedResults" | "postPriceData"> {
+    const mainToken = getChainConstant(this.context.chainId, MAIN_TOKEN);
+    try {
+      const staticCallResult = [...rawResponse];
+      // price result is the last element in the static call result
+      const priceResult = [...rawResponse].pop();
+
+      const decodedConvertResults = decodeConvertResults(staticCallResult, route.convertType);
 
       const decodedAdvPipePriceCall = priceResult ? AdvancedPipeWorkflow.decodeResult(priceResult) : undefined;
       const postPriceData = decodedAdvPipePriceCall?.length ? decodePriceResult(decodedAdvPipePriceCall[0]) : undefined;
 
-      const result: SiloConvertSummary<SiloConvertType> = {
-        quotes,
-        results,
-        workflow: advancedFarm,
-        totalAmountOut,
+      return {
         postPriceData,
+        ...decodedConvertResults.reduce<Pick<SiloConvertSummary<SiloConvertType>, "results" | "reducedResults">>(
+          (prev, curr) => {
+            const fromAmount = TV.fromBigInt(curr.fromAmount, route.source.decimals);
+            const toAmount = TV.fromBigInt(curr.toAmount, route.target.decimals);
+            const fromBdv = TV.fromBigInt(curr.fromBdv, mainToken.decimals);
+            const toBdv = TV.fromBigInt(curr.toBdv, mainToken.decimals);
+            const toStem = TV.fromBigInt(curr.toStem, mainToken.decimals);
+
+            prev.results.push({ toStem, fromAmount, toAmount, fromBdv, toBdv });
+            prev.reducedResults.fromAmount = prev.reducedResults.fromAmount.add(fromAmount);
+            prev.reducedResults.toAmount = prev.reducedResults.toAmount.add(toAmount);
+            prev.reducedResults.fromBdv = prev.reducedResults.fromBdv.add(fromBdv);
+            prev.reducedResults.toBdv = prev.reducedResults.toBdv.add(toBdv);
+
+            return prev;
+          },
+          {
+            results: [],
+            reducedResults: {
+              fromAmount: TV.fromHuman("0", route.source.decimals),
+              toAmount: TV.fromHuman("0", route.target.decimals),
+              fromBdv: TV.fromHuman("0", mainToken.decimals),
+              toBdv: TV.fromHuman("0", mainToken.decimals),
+            },
+          },
+        ),
       };
-
-      console.debug("[SiloConvert/quote] result: ", result);
-      return result;
     } catch (e) {
-      console.error("[SiloConvert/quote] FAILED: ", e);
-      throw new Error("Failed to fetch quote");
+      console.error("[SiloConvert/decodeRouteAndPriceResults] FAILED: ", e);
+      throw new Error("Failed to decode convert and price results");
     }
   }
-
-  /**
-   * Quotes a convert between a source and target token where one of the tokens is the BEAN.
-   */
-  private async quoteDefaultConvert(
-    source: Token,
-    target: Token,
-    farmerDeposits: DepositData[],
-    amountIn: TV,
-    slippage: number,
-    workflow: AdvancedFarmWorkflow,
-  ) {
-    const strategy = new DefaultConvertStrategy(source, target, this.context);
-    this.strategies = [strategy];
-    this.amounts = [amountIn];
-
-    const pickedDeposits = pickCratesMultiple(farmerDeposits, "bdv", "asc", [amountIn]);
-
-    const quotes: ConvertStrategyQuote<SiloConvertType>[] = [];
-
-    const quote = await strategy.quote(pickedDeposits[0], workflow, slippage);
-    quotes.push(quote);
-
-    return {
-      quotes,
-      totalAmountOut: quote.amountOut,
-      decoder: SiloConvert.decodeDefaultConvertResults,
-    };
-  }
-
-  /**
-   * Quotes a convert between two LP tokens.
-   */
-  private async quoteLP2LP(
-    source: Token,
-    target: Token,
-    farmerDeposits: DepositData[],
-    amountIn: TV,
-    slippage: number,
-    workflow: AdvancedFarmWorkflow,
-  ) {
-    await this.cache.update();
-
-    const { strategies, amounts } = await this.#splitStrategies(source, target, amountIn);
-
-    this.strategies = strategies;
-    this.amounts = amounts;
-
-    const pickedDeposits = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
-
-    const quotes: ConvertStrategyQuote<"LP2LP">[] = [];
-
-    let totalAmountOut = TV.fromHuman("0", target.decimals);
-
-    for (const [i, strategy] of this.strategies.entries()) {
-      if (!(strategy instanceof LP2LPStrategy)) {
-        throw new Error("Invalid strategy");
-      }
-
-      const quoteResult = await strategy.quote(pickedDeposits[i], workflow, slippage);
-      const encoded = strategy.encodeQuoteToAdvancedFarmStruct(quoteResult);
-      workflow.add(encoded);
-      quotes.push(quoteResult);
-      totalAmountOut = totalAmountOut.add(quoteResult.amountOut);
-    }
-
-    return {
-      quotes,
-      totalAmountOut,
-      decoder: SiloConvert.decodeStaticResults,
-    };
-  }
-
-  /**
-   * Determines the strategies and amounts for a LP<>LP convert.
-   */
-  async #splitStrategies(source: Token, target: Token, amountIn: TV) {
-    const strategies: LP2LPStrategy[] = [];
-    const amounts: TV[] = [];
-
-    const convertTokens = { source, target };
-
-    const sourceWell = this.cache.getWell(source.address);
-    const targetWell = this.cache.getWell(target.address);
-
-    if (this.maxConvertQuoter.isAggDisabledToken(source) || this.maxConvertQuoter.isAggDisabledToken(target)) {
-      strategies.push(new SiloConvertLP2LPSingleSidedMainTokenStrategy(sourceWell, targetWell, this.context));
-      amounts.push(amountIn);
-
-      return { strategies, amounts };
-    }
-
-    const eq2eqStrategy = new SiloConvertLP2LPEq2EqStrategy(sourceWell, targetWell, this.context);
-
-    if (sourceWell.deltaB.lt(SiloConvert.MIN_DELTA_B) && targetWell.deltaB.gt(SiloConvert.MIN_DELTA_B)) {
-      const maxConvert = await this.maxConvertQuoter.getSingleSidedMainTokenMaxConvert(convertTokens);
-      const strategy = new SiloConvertLP2LPSingleSidedMainTokenStrategy(sourceWell, targetWell, this.context);
-
-      if (amountIn.lt(maxConvert)) {
-        strategies.push(strategy);
-        amounts.push(amountIn);
-      } else {
-        const diff = amountIn.sub(maxConvert);
-
-        strategies.push(strategy, eq2eqStrategy);
-        amounts.push(maxConvert, diff);
-      }
-    } else if (sourceWell.deltaB.gt(SiloConvert.MIN_DELTA_B) && targetWell.deltaB.lt(SiloConvert.MIN_DELTA_B)) {
-      const maxConvert = await this.maxConvertQuoter.getSingleSidedPairTokenMaxConvert(convertTokens);
-      const strategy = new SiloConvertLP2LPSingleSidedPairTokenStrategy(sourceWell, targetWell, this.context);
-
-      if (amountIn.lt(maxConvert)) {
-        strategies.push(strategy);
-        amounts.push(amountIn);
-      } else {
-        const diff = amountIn.sub(maxConvert);
-
-        strategies.push(strategy, eq2eqStrategy);
-        amounts.push(maxConvert, diff);
-      }
-    } else {
-      strategies.push(eq2eqStrategy);
-      amounts.push(amountIn);
-    }
-
-    return { strategies, amounts };
-  }
-
-  // private async quoteLP2PINTOBelowDollar(
-  //   source: Token,
-  //   target: Token,
-  //   farmerDeposits: DepositData[],
-  //   amountIn: TV,
-  //   slippage: number,
-  //   workflow: AdvancedFarmWorkflow,
-  // ) {
-  //   const sourceWell = this.cache.getWell(source.address);
-  //   const strategy = new SiloConvertLP2PINTOBelowDollarStrategy(sourceWell, target, this.context);
-  //   this.strategies = [strategy];
-  //   this.amounts = [amountIn];
-
-  //   const pickedDeposits = pickCratesMultiple(farmerDeposits, "bdv", "asc", [amountIn]);
-
-  //   const quotes: ConvertStrategyQuote<SourceSummaryLP2LP, TargetSummaryLP2LP>[] = [];
-
-  //   const quote = await strategy.quote(pickedDeposits[0], workflow, slippage);
-  //   const encoded = strategy.encodeConvertResults(quote);
-  //   workflow.add(encoded);
-  //   quotes.push(quote);
-
-  //   return {
-  //     quotes,
-  //     totalAmountOut: quote.amountOut,
-  //     decoder: SiloConvert.decodeStaticResults,
-  //   };
-  // }
 
   getStalkChecks(expectedToStalk: TV) {
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
@@ -413,63 +280,6 @@ export class SiloConvert {
     pipe.add(junctionGte(0n, safeMinStalk.toBigInt(), Clipboard.encodeSlot(0, 0, 0)));
 
     return pipe;
-  }
-
-  // -------------------- Static Methods --------------------
-
-  /**
-   * Decodes the results of a default convert.
-   */
-  static decodeDefaultConvertResults(results: readonly HashString[]): ConvertResultStruct<bigint>[] {
-    try {
-      const data = results.map((result) => {
-        const decoded = decodeFunctionResult<typeof abiSnippets.silo.convert>({
-          abi: abiSnippets.silo.convert,
-          data: result as HashString,
-          functionName: "convert",
-        });
-
-        return {
-          toStem: decoded[0],
-          fromAmount: decoded[1],
-          toAmount: decoded[2],
-          fromBdv: decoded[3],
-          toBdv: decoded[4],
-        };
-      });
-
-      return data;
-    } catch (e) {
-      console.error("[SiloConvert/decodeStaticResult] FAILED: ", e);
-      throw e;
-    }
-  }
-
-  /**
-   * Decodes the static results returned from either a successful pipeline convert txn or simulation.
-   */
-  static decodeStaticResults(results: readonly HashString[]): ConvertResultStruct<bigint>[] {
-    try {
-      const data = results.map((result) => {
-        const decoded = decodeFunctionResult<typeof abiSnippets.pipelineConvert>({
-          abi: abiSnippets.pipelineConvert,
-          data: result as HashString,
-          functionName: "pipelineConvert",
-        });
-        return {
-          toStem: decoded[0],
-          fromAmount: decoded[1],
-          toAmount: decoded[2],
-          fromBdv: decoded[3],
-          toBdv: decoded[4],
-        };
-      });
-
-      return data;
-    } catch (e) {
-      console.error("[SiloConvert/decodeStaticResult] FAILED: ", e);
-      throw e;
-    }
   }
 
   /**
