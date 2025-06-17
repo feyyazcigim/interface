@@ -66,9 +66,10 @@ class OneSidedSameToken extends LP2LPStrategy {
 
     return {
       pickedCrates: deposits,
+      summary,
       advPipeCalls: this.buildAdvancedPipeCalls(summary),
       amountOut: result.addAmountOut,
-      summary,
+      convertData: undefined,
     };
   }
 

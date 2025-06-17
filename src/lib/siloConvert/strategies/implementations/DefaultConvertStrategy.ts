@@ -38,15 +38,14 @@ export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
       },
     };
 
-    const { callStruct, convertData } = this.buildConvertFarmStruct(amountIn, amountOut, deposits, slippage);
-
-    advancedFarm.add(callStruct);
+    const convertData = this.getConvertData(amountIn, amountOut, slippage);
 
     console.debug("[DefaultConvertStrategy] quote: ", {
       source: this.sourceToken,
       target: this.targetToken,
       amountIn: amountIn,
       amountOut,
+      convertData,
     });
 
     return {
@@ -74,7 +73,7 @@ export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
     return encoders.silo.convert(quote.convertData, stems, amounts);
   }
 
-  private buildConvertFarmStruct(amountIn: TV, amountOut: TV, deposits: ExtendedPickedCratesDetails, slippage: number) {
+  private getConvertData(amountIn: TV, amountOut: TV, slippage: number) {
     const convertData = calculateConvertData(
       this.sourceToken,
       this.targetToken,
@@ -86,24 +85,8 @@ export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
       throw new Error("Invalid convert data");
     }
 
-    const stems: bigint[] = deposits.crates.map((crate) => crate.stem.toBigInt());
-    const amounts: bigint[] = deposits.crates.map((crate) => crate.amount.toBigInt());
 
-    const convertCall = encodeFunctionData({
-      abi: diamondABI,
-      functionName: "convert",
-      args: [convertData, stems, amounts],
-    });
-
-    const callStruct: AdvancedFarmCall = {
-      callData: convertCall,
-      clipboard: Clipboard.encode([]),
-    };
-
-    return {
-      callStruct,
-      convertData,
-    };
+    return convertData;
   }
 
   private encodeConvertAmountOut(amount: TV) {

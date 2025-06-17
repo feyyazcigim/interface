@@ -97,6 +97,7 @@ export interface ConvertResultStruct<T = TV> {
 }
 
 export interface SiloConvertSummary<T extends SiloConvertType> {
+  route: SiloConvertRoute<T>;
   quotes: ConvertStrategyQuote<T>[];
   results: ConvertResultStruct<TV>[];
   workflow: AdvancedFarmWorkflow;
@@ -161,12 +162,14 @@ export class SiloConvert {
 
     const routes = await this.strategizer.strategize(source, target, amountIn);
 
+    console.log("routes", routes);
+
     const quotedRoutes = await Promise.all(
       routes.map(async (route, routeIndex) => {
         const advFarm = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
         const quotes: ConvertStrategyQuote<SiloConvertType>[] = [];
 
-        const amounts = route.strategies.map((strategy) => strategy.amount);
+        const amounts = route.strategies.map((s) => s.amount);
         const crates = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
 
         // Has to be run sequentially.
@@ -175,6 +178,14 @@ export class SiloConvert {
           advFarm.add(strategy.strategy.encodeFromQuote(quote));
           quotes.push(quote);
         }
+
+        console.log({
+          amounts,
+          crates,
+          quotes,
+          advFarm,
+          route
+        });
 
         return {
           route,
@@ -185,6 +196,8 @@ export class SiloConvert {
       }),
     );
 
+    console.log("quotedRoutes", quotedRoutes);
+
     const simulationsRawResults = await Promise.all(
       quotedRoutes.map((route) =>
         route.workflow.simulate({
@@ -194,7 +207,9 @@ export class SiloConvert {
       ),
     );
 
-    return quotedRoutes.map((route, i): SiloConvertSummary<SiloConvertType> => {
+    console.log("simulationsRawResults", simulationsRawResults);
+
+    const datas = quotedRoutes.map((route, i): SiloConvertSummary<SiloConvertType> => {
       const rawResponse = simulationsRawResults[i];
 
       if (!rawResponse || !rawResponse.result) {
@@ -207,11 +222,16 @@ export class SiloConvert {
 
       return {
         ...decoded,
+        route: route.route,
         quotes: route.quotes,
         workflow: route.workflow,
         totalAmountOut: decoded.reducedResults.toAmount, // TODO: Remove me when supporting multiple toToken
       };
     });
+
+    console.log("datas", datas);
+
+    return datas;
   }
 
   private decodeRouteAndPriceResults(
@@ -222,9 +242,11 @@ export class SiloConvert {
     try {
       const staticCallResult = [...rawResponse];
       // price result is the last element in the static call result
-      const priceResult = [...rawResponse].pop();
+      const priceResult = staticCallResult.pop();
 
       const decodedConvertResults = decodeConvertResults(staticCallResult, route.convertType);
+
+      console.log("decodedConvertResults", decodedConvertResults);
 
       const decodedAdvPipePriceCall = priceResult ? AdvancedPipeWorkflow.decodeResult(priceResult) : undefined;
       const postPriceData = decodedAdvPipePriceCall?.length ? decodePriceResult(decodedAdvPipePriceCall[0]) : undefined;
