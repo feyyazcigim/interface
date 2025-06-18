@@ -2,12 +2,10 @@ import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
 import { abiSnippets } from "@/constants/abiSnippets";
 import { PIPELINE_ADDRESS } from "@/constants/address";
-import { pipelineAddress } from "@/generated/contractHooks";
 import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
 import { ZeroX } from "@/lib/matcha/ZeroX";
-import { ZeroXQuoteV2Response } from "@/lib/matcha/types";
 import { ExtendedPoolData } from "@/lib/siloConvert/SiloConvert.cache";
-import { SiloConvertSwapQuote, SiloConvertSwapQuoter } from "@/lib/siloConvert/siloConvert.swapQuoter";
+import { SiloConvertSwapQuoter } from "@/lib/siloConvert/siloConvert.swapQuoter";
 import {
   ConvertQuoteSummary,
   ConvertStrategyQuote,
@@ -15,9 +13,8 @@ import {
   PipelineConvertStrategy,
 } from "@/lib/siloConvert/strategies/core";
 import { SiloConvertContext } from "@/lib/siloConvert/types";
-import { resolveChainId } from "@/utils/chain";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
-import { AdvancedFarmCall, Token } from "@/utils/types";
+import { Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 
@@ -116,9 +113,9 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
     };
   }
 
-  buildAdvancedPipeCalls({ source, swap, target }: ConvertStrategyQuote<"LP2MainPipeline">["summary"]) {
+  buildAdvancedPipeCalls({ source, swap }: ConvertStrategyQuote<"LP2MainPipeline">["summary"]) {
     if (!swap) {
-      throw new Error("Swap is required for LP2PINTO below dollar strategy");
+      throw new Error("Swap required for LP2MainPipeline Strategy");
     }
 
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
@@ -170,7 +167,7 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
 
     const amounts: TV[] = [TV.fromBigInt(result[0], token0.decimals), TV.fromBigInt(result[1], token1.decimals)];
 
-    console.debug("[LP2PINTOBelowDollarStrategy] getRemoveLiquidityOut: ", {
+    console.debug("[LP2MainPipelineStrategy] getRemoveLiquidityOut: ", {
       well: this.sourceWell.pool.name,
       amountIn: pickedCratesDetails.totalAmount,
       amountsOut: amounts,
