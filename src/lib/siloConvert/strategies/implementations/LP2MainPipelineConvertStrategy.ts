@@ -65,13 +65,19 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
 
     const mainTokenAmountRemoved = removeLPResult[this.sourceIndexes.main];
 
-    console.log("removeLPResult", removeLPResult);
-
     const pairAmount = removeLPResult[this.sourceIndexes.pair];
 
-    const swapParams = this.swapQuoter.generateSwapQuoteParams(this.targetToken, this.pairToken, pairAmount, slippage);
+    const swapQuotes = await ZeroX.quote(
+      this.swapQuoter.generateSwapQuoteParams(
+        this.targetToken,
+        this.pairToken,
+        pairAmount,
+        slippage,
+        false,
+      )
+    );
 
-    const swapQuotes = await ZeroX.quote(swapParams);
+    // Should always be the 1 quote b/c we are going from pair token -> main token.
     if (swapQuotes.length !== 1) {
       throw new Error("Expected 1 swap quote");
     }
@@ -120,7 +126,7 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
 
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
-    // // 1. Approve source well to use LP token
+    // 1. Approve source well to use LP token
     pipe.add(LP2MainStrategy.snippets.erc20Approve(source.well.pool, source.well.pool.address));
 
     // 2. Remove liquidity in equal proportions

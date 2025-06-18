@@ -311,7 +311,6 @@ const convert = [
 ] as const;
 
 export const abiSnippets = {
-  
   advancedPipe,
   advancedFarm,
   wells: {
