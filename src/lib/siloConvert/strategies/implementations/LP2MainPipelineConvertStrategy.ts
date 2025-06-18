@@ -68,13 +68,7 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
     const pairAmount = removeLPResult[this.sourceIndexes.pair];
 
     const swapQuotes = await ZeroX.quote(
-      this.swapQuoter.generateSwapQuoteParams(
-        this.targetToken,
-        this.pairToken,
-        pairAmount,
-        slippage,
-        false,
-      )
+      this.swapQuoter.generateSwapQuoteParams(this.targetToken, this.pairToken, pairAmount, slippage, false),
     );
 
     // Should always be the 1 quote b/c we are going from pair token -> main token.
