@@ -1,10 +1,10 @@
 import { TV } from "@/classes/TokenValue";
 import { STALK } from "@/constants/internalTokens";
-import { ConvertResultStruct } from "@/lib/siloConvert/SiloConvert";
-import { ConvertStrategyQuote, SiloConvertType } from "@/lib/siloConvert/strategies/core";
+import { SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
+import { SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import { useSiloData } from "@/state/useSiloData";
-import { Token } from "@/utils/types";
-import { useMemo } from "react";
+import { SiloTokenData, Token } from "@/utils/types";
+import { useEffect, useMemo } from "react";
 
 const defaultData = {
   germinatingStalk: TV.ZERO,
@@ -23,81 +23,174 @@ const defaultData = {
   toBdv: TV.ZERO,
 };
 
+type SiloConvertResultResult = typeof defaultData & {
+  deltaInitialStalk: TV;
+  deltaGrownStalk: TV;
+  deltaStalk: TV;
+  deltaSeed: TV;
+}
+
+export interface IUseSiloConvertResultReturnType {
+  results: SiloConvertResultResult[] | undefined;
+  sortedIndexes: number[] | undefined;
+}
+
 export function useSiloConvertResult(
   source: Token,
   target: Token | undefined,
-  quote: ConvertStrategyQuote<SiloConvertType>[] | undefined,
-  results: ConvertResultStruct<TV>[] | undefined,
-) {
+  summaries: SiloConvertSummary<SiloConvertType>[] | undefined,
+): IUseSiloConvertResultReturnType {
   const silo = useSiloData();
   const siloTokenData = silo.tokenData;
 
-  return useMemo(() => {
-    if (!quote || !results || !target) return;
+  useEffect(() => {
+    console.log("summaries", summaries);
+  }, [summaries]);
+
+  const results = useMemo(() => {
+    if (!summaries || !target || !summaries.length) return;
 
     const sourceData = siloTokenData.get(source);
     const targetData = siloTokenData.get(target);
 
-    if (!targetData || !sourceData || quote.length !== results.length) return;
+    if (!targetData || !sourceData) return;
 
-    const targetRewards = targetData.rewards;
-    const targetStemTip = targetData.stemTip;
+    const calcs = summaries.reduce<(typeof defaultData)[]>((memo, summary) => {
+      memo.push(reduceSummary(summary, targetData));
+      return memo;
+    }, []);
 
-    const calc = results.reduce<typeof defaultData>(
-      (prev, result, i) => {
-        const { pickedCrates: picked } = quote[i];
+    const data = calcs.map((calc) => {
+      const deltaInitialStalk = calc.toInitialStalk.sub(calc.fromInitialStalk);
+      const deltaGrownStalk = calc.toGrownStalk.sub(calc.fromGrownStalk);
+      const deltaStalk = deltaInitialStalk.add(deltaGrownStalk);
+      const deltaSeed = calc.toSeed.sub(calc.fromSeed);
 
-        const resultToStem = result.toStem;
-        const willGerminate = resultToStem.gte(targetStemTip);
-        const germinatingSeasons = willGerminate ? (resultToStem.eq(targetStemTip) ? 2 : 1) : 0;
-
-        const targetDeltaStem = targetStemTip.sub(result.toStem);
-        const grownStalkBigInt = willGerminate ? 0n : targetDeltaStem.toBigInt() * result.toBdv.toBigInt();
-
-        const toInitialStalk = result.toBdv.reDecimal(STALK.decimals);
-        const toGrownStalk = TV.fromBigInt(grownStalkBigInt, STALK.decimals);
-        const toTotalStalk = toInitialStalk.add(toGrownStalk);
-        const toSeed = targetRewards.seeds.mul(result.toBdv);
-        const fromBdv = picked.totalBDV;
-
-        const toBdv = result.toBdv;
-        const deltaBdv = toBdv.sub(fromBdv);
-
-        const struct: typeof defaultData = {
-          germinatingStalk: willGerminate ? prev.germinatingStalk.add(toInitialStalk) : TV.ZERO,
-          germinatingSeasons: willGerminate && !prev.germinatingSeasons ? germinatingSeasons : prev.germinatingSeasons,
-          totalAmountOut: prev.totalAmountOut.add(result.toAmount),
-          toTotalStalk: willGerminate ? prev.toTotalStalk : prev.toTotalStalk.add(toTotalStalk),
-          toInitialStalk: prev.toInitialStalk.add(toInitialStalk),
-          toGrownStalk: prev.toGrownStalk.add(toGrownStalk),
-          toSeed: prev.toSeed.add(toSeed),
-          fromTotalStalk: prev.fromTotalStalk.add(picked.totalStalk),
-          fromInitialStalk: prev.fromInitialStalk.add(picked.totalInitialStalk),
-          fromGrownStalk: prev.fromGrownStalk.add(picked.totalGrownStalkSinceDeposit),
-          fromSeed: prev.fromSeed.add(picked.totalSeeds),
-          deltaBdv: prev.deltaBdv.add(deltaBdv),
-          fromBdv: prev.fromBdv.add(fromBdv),
-          toBdv: prev.toBdv.add(toBdv),
-        };
-
-        return struct;
-      },
-      { ...defaultData },
-    );
-
-    const deltaInitialStalk = calc.toInitialStalk.sub(calc.fromInitialStalk);
-    const deltaGrownStalk = calc.toGrownStalk.sub(calc.fromGrownStalk);
-    const deltaStalk = deltaInitialStalk.add(deltaGrownStalk);
-    const deltaSeed = calc.toSeed.sub(calc.fromSeed);
-
-    const data = {
-      ...calc,
-      deltaGrownStalk,
-      deltaInitialStalk,
-      deltaStalk,
-      deltaSeed,
-    };
+      return {
+        ...calc,
+        deltaInitialStalk,
+        deltaGrownStalk,
+        deltaStalk,
+        deltaSeed,
+      };
+    });
 
     return data;
-  }, [quote, results, siloTokenData, source, target]);
+  }, [summaries, siloTokenData, source, target]);
+
+  const sortedIndexes = useMemo(() => {
+    if (!results) return;
+
+    console.log("setting sorted results...");
+
+    const sortedIndexes = [...results].sort((a, b) => {
+      const aBDV = a.toBdv;
+      const bBDV = b.toBdv;
+      const aGrownStalk = a.toGrownStalk;
+      const bGrownStalk = b.toGrownStalk;
+
+      if (aBDV.gt(bBDV)) return -1;
+      if (aBDV.lt(bBDV)) return 1;
+
+      if (aGrownStalk.gt(bGrownStalk)) return -1;
+      if (aGrownStalk.lt(bGrownStalk)) return 1;
+
+      return 0;
+    }).map((_, i) => i);
+
+    return sortedIndexes;
+  }, [results]);
+
+  // const maxIndexes = useMemo(() => {
+  //   if (!results) return;
+
+  //   let maxBDVIndex = 0;
+  //   let maxStalkIndex = 0;
+
+  //   results.forEach((result, index) => {
+  //     if (result.toBdv.gt(results[maxBDVIndex].toBdv)) {
+  //       maxBDVIndex = index;
+  //     }
+
+  //     if (result.toGrownStalk.gt(results[maxStalkIndex].toGrownStalk)) {
+  //       maxStalkIndex = index;
+  //     }
+  //   });
+
+  //   return {
+  //     pdv: maxBDVIndex,
+  //     grownStalk: maxStalkIndex,
+  //   };
+  // }, [results]);
+
+  return {
+    results,
+    sortedIndexes,
+    // maxIndexes
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Compare Convert Results
+// ────────────────────────────────────────────────────────────────────────────────
+
+const reduceSummary = (summary: SiloConvertSummary<SiloConvertType>, targetTokenData: SiloTokenData) => {
+  const targetRewards = targetTokenData.rewards;
+  const targetStemTip = targetTokenData.stemTip;
+
+  return summary.results.reduce<typeof defaultData>(
+    (prev, result, i) => {
+      const quote = summary.quotes[i];
+      const { pickedCrates: picked } = quote;
+
+      const resultToStem = result.toStem;
+      const willGerminate = resultToStem.gte(targetStemTip);
+      const germinatingSeasons = willGerminate ? (resultToStem.eq(targetStemTip) ? 2 : 1) : 0;
+
+      const targetDeltaStem = targetStemTip.sub(result.toStem);
+      const grownStalkBigInt = willGerminate ? 0n : targetDeltaStem.toBigInt() * result.toBdv.toBigInt();
+
+      const toInitialStalk = result.toBdv.reDecimal(STALK.decimals);
+      const toGrownStalk = TV.fromBigInt(grownStalkBigInt, STALK.decimals);
+      const toTotalStalk = toInitialStalk.add(toGrownStalk);
+      const toSeed = targetRewards.seeds.mul(result.toBdv);
+      const fromBdv = picked.totalBDV;
+
+      const toBdv = result.toBdv;
+      const deltaBdv = toBdv.sub(fromBdv);
+
+      const struct: typeof defaultData = {
+        germinatingStalk: willGerminate ? prev.germinatingStalk.add(toInitialStalk) : TV.ZERO,
+        germinatingSeasons: willGerminate && !prev.germinatingSeasons ? germinatingSeasons : prev.germinatingSeasons,
+        totalAmountOut: prev.totalAmountOut.add(result.toAmount),
+        toTotalStalk: willGerminate ? prev.toTotalStalk : prev.toTotalStalk.add(toTotalStalk),
+        toInitialStalk: prev.toInitialStalk.add(toInitialStalk),
+        toGrownStalk: prev.toGrownStalk.add(toGrownStalk),
+        toSeed: prev.toSeed.add(toSeed),
+        fromTotalStalk: prev.fromTotalStalk.add(picked.totalStalk),
+        fromInitialStalk: prev.fromInitialStalk.add(picked.totalInitialStalk),
+        fromGrownStalk: prev.fromGrownStalk.add(picked.totalGrownStalkSinceDeposit),
+        fromSeed: prev.fromSeed.add(picked.totalSeeds),
+        deltaBdv: prev.deltaBdv.add(deltaBdv),
+        fromBdv: prev.fromBdv.add(fromBdv),
+        toBdv: prev.toBdv.add(toBdv),
+      };
+
+      return struct;
+    },
+    { ...defaultData },
+  );
+};
+// ────────────────────────────────────────────────────────────────────────────────
+// Extract Price data from Convert quotes
+// ────────────────────────────────────────────────────────────────────────────────
+
+export function useExtractSiloConvertResultPriceResults(
+  summaries: (SiloConvertSummary<SiloConvertType> | undefined)[] | undefined,
+) {
+  return useMemo(() => {
+    if (!summaries) return;
+
+    return summaries.map((summary) => summary?.postPriceData);
+  }, [summaries]);
 }

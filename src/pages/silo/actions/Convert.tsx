@@ -1,6 +1,7 @@
 import arrowDown from "@/assets/misc/ChevronDown.svg";
 import { TV } from "@/classes/TokenValue";
 import { ComboInputField } from "@/components/ComboInputField";
+import { Col } from "@/components/Container";
 import { RightArrowIcon } from "@/components/Icons";
 import FrameAnimator from "@/components/LoadingSpinner";
 import MobileActionBar from "@/components/MobileActionBar";
@@ -21,13 +22,13 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import useSiloConvert, {
   useClearSiloConvertQueries,
-  useSiloConvertDownPenaltyQuery,
   useSiloConvertQuote,
   useSiloMaxConvertQuery,
 } from "@/hooks/silo/useSiloConvert";
-import { useSiloConvertResult } from "@/hooks/silo/useSiloConvertResult";
+import { useExtractSiloConvertResultPriceResults, useSiloConvertResult } from "@/hooks/silo/useSiloConvertResult";
+import { useSiloConvertDownPenaltyQuery } from "@/hooks/silo/useSiloGrownStalkPenalty";
 import useTransaction from "@/hooks/useTransaction";
-import { useDeterminePriceImpact } from "@/hooks/wells/usePriceImpactSummary";
+import { useDeterminePriceImpactWithResults } from "@/hooks/wells/usePriceImpactSummary";
 import { useWellUnderlying } from "@/hooks/wells/wells";
 import { SiloConvert, SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
 import { SiloConvertMaxConvertQuoter } from "@/lib/siloConvert/SiloConvert.maxConvertQuoter";
@@ -43,7 +44,7 @@ import { stringEq, stringToNumber } from "@/utils/string";
 import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { AddressMap, Token } from "@/utils/types";
 import { useDebounceValue } from "@/utils/useDebounce";
-import { cn, noop } from "@/utils/utils";
+import { cn, exists, noop } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -127,30 +128,53 @@ function ConvertForm({
     ...quoteQuery
   } = useSiloConvertQuote(siloConvert, siloToken, targetToken, amountIn, convertibleDeposits, slippage, quoteEnabled);
 
-  const convertResults = useSiloConvertResult(siloToken, targetToken, quote?.quotes, quote?.results);
+  const [routeIndex, setRouteIndex] = useState<number | undefined>(undefined);
+
+  const { results: convertResults, sortedIndexes } = useSiloConvertResult(siloToken, targetToken, quote);
   const grownStalkPenaltyQuery = useSiloConvertDownPenaltyQuery(siloToken, targetToken, convertResults, isDownConvert);
 
-  const priceImpact = useDeterminePriceImpact(quote?.postPriceData);
-  const priceImpactSummary1 = !siloToken.isMain ? priceImpact.get(siloToken) : undefined;
-  const priceImpactSummary2 = targetToken && !targetToken.isMain ? priceImpact.get(targetToken) : undefined;
+  const convertPriceResults = useExtractSiloConvertResultPriceResults(quote);
+  const priceImpact = useDeterminePriceImpactWithResults(convertPriceResults);
 
-  const amountOut = quote?.totalAmountOut ?? TV.ZERO;
+  // initialize the route index to the first sorted index
+  useEffect(() => {
+    if (!sortedIndexes?.length || routeIndex !== undefined) {
+      return;
+    }
+    
+    setRouteIndex(sortedIndexes[0]);
+  }, [sortedIndexes, routeIndex]);
+  
+  
+  const priceImpactSummaries1 = !siloToken.isMain ? priceImpact.get(siloToken) : undefined;
+  const priceImpactSummaires2 = targetToken && !targetToken.isMain ? priceImpact.get(targetToken) : undefined;
+  
+  const convertResult = exists(routeIndex) ? convertResults?.[routeIndex] : undefined;
+  const priceImpactSummary1 = exists(routeIndex) && exists(priceImpactSummaries1) ? priceImpactSummaries1[routeIndex] : undefined;
+  const priceImpactSummary2 = exists(routeIndex) && exists(priceImpactSummaires2) ? priceImpactSummaires2[routeIndex] : undefined;
+
+
+  const amountOut = quote?.[0]?.totalAmountOut ?? TV.ZERO;
 
   const depositsMowAmount = deposits?.stalk.grown;
   const targetDepositsMowAmount = targetDeposits?.stalk.grown;
 
+  // useEffect(() => {
+  //   console.log("priceImpactSummary1", priceImpactSummary1);
+  // }, [priceImpactSummary1]);
+
   // The expected total amount of stalk from 'balanceOfStalk(account)' after the convert.
   const expectedTotalStalk = useMemo(() => {
-    if (!convertResults) return;
+    if (!convertResult) return;
 
     // PipelineConvert will mow the source & target deposits.
     const mowAmount = depositsMowAmount?.add(targetDepositsMowAmount ?? 0n) ?? TV.ZERO;
     // Add mow amounts & subtract any germinating stalk as a result of the convert.
-    const currTotalStalk = farmerActiveStalk.add(mowAmount).sub(convertResults.germinatingStalk);
+    const currTotalStalk = farmerActiveStalk.add(mowAmount).sub(convertResult.germinatingStalk);
 
     // Add the expected delta stalk
-    return currTotalStalk.add(convertResults.deltaStalk);
-  }, [convertResults, farmerActiveStalk, depositsMowAmount, targetDepositsMowAmount]);
+    return currTotalStalk.add(convertResult.deltaStalk);
+  }, [convertResult, farmerActiveStalk, depositsMowAmount, targetDepositsMowAmount]);
 
   // ------------------------------ TXN SUBMISSION ------------------------------
 
@@ -171,57 +195,49 @@ function ConvertForm({
   });
 
   const onSubmit = useCallback(async () => {
-    setSubmitting(true);
-    try {
-      if (!targetToken) throw new Error("Target token not set");
-      if (!account.address) throw new Error("Signer required");
-      if (!quote || quote.totalAmountOut.lte(0) || !expectedTotalStalk) throw new Error("No convert quote");
-
-      toast.loading(`Converting...`);
-
-      if (isDefaultConvert) {
-        // If there is only 1 quote, we can unwrap the quote & use the convert funciton directly instead of using advancedFarm
-        if (quote.quotes.length === 1) {
-          const singleQuote = quote.quotes[0];
-          const convertData = singleQuote.convertData;
-          const crates = singleQuote.pickedCrates.crates;
-
-          const stems = crates.map((crate) => crate.stem.toBigInt());
-          const amounts = crates.map((crate) => crate.amount.toBigInt());
-
-          if (!convertData || !stems.length || !amounts.length || stems.length !== amounts.length) {
-            throw new Error("Invalid convert data");
-          }
-
-          return writeWithEstimateGas({
-            address: diamond,
-            abi: diamondABI,
-            functionName: "convert",
-            args: [convertData, stems, amounts],
-          });
-        }
-      }
-
-      const encodedAdvFarm = [...quote.workflow.getSteps()];
-
-      if (!isDefaultConvert) {
-        const grownStalkChecks = siloConvert.getStalkChecks(expectedTotalStalk);
-        encodedAdvFarm.push(grownStalkChecks.encode());
-      }
-
-      return writeWithEstimateGas({
-        address: diamond,
-        abi: diamondABI,
-        functionName: "advancedFarm",
-        args: [encodedAdvFarm],
-      });
-    } catch (e) {
-      console.error(e);
-      toast.error("Convert failed");
-      return e;
-    } finally {
-      setSubmitting(false);
-    }
+    // setSubmitting(true);
+    // try {
+    //   if (!targetToken) throw new Error("Target token not set");
+    //   if (!account.address) throw new Error("Signer required");
+    //   if (!quote || quote.totalAmountOut.lte(0) || !expectedTotalStalk) throw new Error("No convert quote");
+    //   toast.loading(`Converting...`);
+    //   if (isDefaultConvert) {
+    //     // If there is only 1 quote, we can unwrap the quote & use the convert funciton directly instead of using advancedFarm
+    //     if (quote.quotes.length === 1) {
+    //       const singleQuote = quote.quotes[0];
+    //       const convertData = singleQuote.convertData;
+    //       const crates = singleQuote.pickedCrates.crates;
+    //       const stems = crates.map((crate) => crate.stem.toBigInt());
+    //       const amounts = crates.map((crate) => crate.amount.toBigInt());
+    //       if (!convertData || !stems.length || !amounts.length || stems.length !== amounts.length) {
+    //         throw new Error("Invalid convert data");
+    //       }
+    //       return writeWithEstimateGas({
+    //         address: diamond,
+    //         abi: diamondABI,
+    //         functionName: "convert",
+    //         args: [convertData, stems, amounts],
+    //       });
+    //     }
+    //   }
+    //   const encodedAdvFarm = [...quote.workflow.getSteps()];
+    //   if (!isDefaultConvert) {
+    //     const grownStalkChecks = siloConvert.getStalkChecks(expectedTotalStalk);
+    //     encodedAdvFarm.push(grownStalkChecks.encode());
+    //   }
+    //   return writeWithEstimateGas({
+    //     address: diamond,
+    //     abi: diamondABI,
+    //     functionName: "advancedFarm",
+    //     args: [encodedAdvFarm],
+    //   });
+    // } catch (e) {
+    //   console.error(e);
+    //   toast.error("Convert failed");
+    //   return e;
+    // } finally {
+    //   setSubmitting(false);
+    // }
   }, [
     setSubmitting,
     writeWithEstimateGas,
@@ -309,13 +325,13 @@ function ConvertForm({
     return <Warning variant="info">{msg}</Warning>;
   };
 
-  const renderGerminatingStalkWarning = !(!convertResults || convertResults.germinatingStalk.lte(0));
+  const renderGerminatingStalkWarning = !(!convertResult || convertResult.germinatingStalk.lte(0));
 
   const GerminatingStalkWarning = () => {
     if (!renderGerminatingStalkWarning) return null;
 
-    const germinating = convertResults.germinatingStalk;
-    const germinatingSeasons = convertResults.germinatingSeasons;
+    const germinating = convertResult.germinatingStalk;
+    const germinatingSeasons = convertResult.germinatingSeasons;
 
     return (
       <Warning variant="info" className="text-pinto-off-green bg-pinto-off-green-bg border border-pinto-off-green">
@@ -355,22 +371,23 @@ function ConvertForm({
     );
   };
 
-  const renderGrownStalkPenaltyWarning = grownStalkPenaltyQuery.data?.isPenalty;
+  const renderGrownStalkPenaltyWarning = exists(grownStalkPenaltyQuery.data) && exists(routeIndex) && exists(grownStalkPenaltyQuery.data[routeIndex]) && grownStalkPenaltyQuery.data[routeIndex].isPenalty;
 
   const GrownStalkPenaltyWarning = () => {
     if (!renderGrownStalkPenaltyWarning) return null;
-    const penaltyPct = (grownStalkPenaltyQuery.data?.penaltyRatio ?? 0) * 100;
+    const grownStalkPenaltyRatio = grownStalkPenaltyQuery.data?.[routeIndex];
+
+    if (!grownStalkPenaltyRatio) return null;
+    
+    const penaltyPct = (grownStalkPenaltyRatio?.penaltyRatio ?? 0) * 100;
 
     return (
       <Warning variant="warning">This conversion incurs a {formatter.pct(penaltyPct)} Grown Stalk penalty.</Warning>
     );
   };
 
-  const warningRendered =
-    renderGerminatingStalkWarning ||
-    renderDownPenaltyWarning ||
-    renderMinAmountWarning ||
-    renderGrownStalkPenaltyWarning;
+  const warningRendered = renderGerminatingStalkWarning || renderDownPenaltyWarning || renderMinAmountWarning;
+  // renderGrownStalkPenaltyWarning;
 
   const disabled =
     !targetToken ||
@@ -425,29 +442,45 @@ function ConvertForm({
           <GrownStalkPenaltyWarning />
         </div>
       ) : null}
-      <ConvertTokenOutput quote={quote} amount={convertResults?.totalAmountOut || TV.ZERO} siloToken={siloToken} />
+      <ConvertTokenOutput quote={quote} siloToken={siloToken} />
       <div className="flex flex-col">
         {loading && !quoteQuery.isError ? (
           <div className="flex flex-col w-full h-[181px] items-center justify-center">
             <FrameAnimator size={64} />
           </div>
-        ) : convertResults ? (
+          ) : convertResult ? (
           <>
             <GerminatingStalkWarning />
             <SiloOutputDisplay
-              amount={convertResults.totalAmountOut}
+              amount={convertResult.totalAmountOut}
               token={targetToken}
-              stalk={convertResults.deltaStalk}
-              seeds={convertResults.deltaSeed}
+              stalk={convertResult.deltaStalk}
+              seeds={convertResult.deltaSeed}
             />
           </>
         ) : null}
-        {targetToken && isValidAmountIn && (
+        {quote && (
+          <Col className="gap-2">
+            {quote.map((q) => {
+              return (
+                <div key={q.route.convertType}>
+                  <div>
+                    {q.route.convertType}
+                  </div>
+                  <div>
+                    {formatter.token(q.totalAmountOut, q.route.target)}
+                  </div>
+                </div>
+              )
+            })}
+          </Col>
+        )}
+        {targetToken && isValidAmountIn && exists(routeIndex) && (
           <RoutingAndSlippageInfo
             title="Total Convert Slippage"
             priceImpactSummary={priceImpactSummary1 || priceImpactSummary2}
             secondaryPriceImpactSummary={priceImpactSummary1 && priceImpactSummary2}
-            convertSummary={quote}
+            convertSummary={quote?.[routeIndex]}
             preferredSummary="priceImpact"
             txnType="Convert"
             tokenIn={siloToken}
@@ -619,19 +652,21 @@ export default Convert;
 // ------------------------------ Convert Output ------------------------------
 
 const ConvertTokenOutput = ({
-  amount,
+  // amount,
   siloToken,
   quote,
 }: {
-  amount: TV;
+  // amount: TV;
   siloToken: Token;
-  quote: SiloConvertSummary<SiloConvertType> | undefined;
+  quote: SiloConvertSummary<SiloConvertType>[] | undefined;
 }) => {
   const { targetToken } = useSiloConvertContext();
+
+  const amount = quote?.[0]?.totalAmountOut ?? TV.ZERO;
   const formattedAmount = targetToken ? formatter.token(amount, targetToken) : "0.00";
   const displayAmount = useDebounceValue(formattedAmount, 50);
 
-  const postPriceData = quote?.postPriceData;
+  const postPriceData = quote?.[0]?.postPriceData;
 
   const getDisplayUSD = () => {
     if (!targetToken || !postPriceData) {
