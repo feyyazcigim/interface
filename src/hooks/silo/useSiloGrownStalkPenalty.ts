@@ -37,7 +37,7 @@ const selectGrownStalkPenaltyMultiple = (results: (readonly [bigint, bigint])[])
 export const useSiloConvertDownPenaltyQuery = (
   source: Token,
   target: Token | undefined,
-  result: ReturnType<typeof useSiloConvertResult>['results'],
+  result: ReturnType<typeof useSiloConvertResult>["results"],
   enabled: boolean = true,
 ) => {
   const [structs, setStructs] = useState<SiloConvertGrownStalkPenaltyBreakdown[] | undefined>(undefined);

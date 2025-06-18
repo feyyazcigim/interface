@@ -141,18 +141,18 @@ function ConvertForm({
     if (!sortedIndexes?.length || routeIndex !== undefined) {
       return;
     }
-    
+
     setRouteIndex(sortedIndexes[0]);
   }, [sortedIndexes, routeIndex]);
-  
-  
+
   const priceImpactSummaries1 = !siloToken.isMain ? priceImpact.get(siloToken) : undefined;
   const priceImpactSummaires2 = targetToken && !targetToken.isMain ? priceImpact.get(targetToken) : undefined;
-  
-  const convertResult = exists(routeIndex) ? convertResults?.[routeIndex] : undefined;
-  const priceImpactSummary1 = exists(routeIndex) && exists(priceImpactSummaries1) ? priceImpactSummaries1[routeIndex] : undefined;
-  const priceImpactSummary2 = exists(routeIndex) && exists(priceImpactSummaires2) ? priceImpactSummaires2[routeIndex] : undefined;
 
+  const convertResult = exists(routeIndex) ? convertResults?.[routeIndex] : undefined;
+  const priceImpactSummary1 =
+    exists(routeIndex) && exists(priceImpactSummaries1) ? priceImpactSummaries1[routeIndex] : undefined;
+  const priceImpactSummary2 =
+    exists(routeIndex) && exists(priceImpactSummaires2) ? priceImpactSummaires2[routeIndex] : undefined;
 
   const amountOut = quote?.[0]?.totalAmountOut ?? TV.ZERO;
 
@@ -371,14 +371,18 @@ function ConvertForm({
     );
   };
 
-  const renderGrownStalkPenaltyWarning = exists(grownStalkPenaltyQuery.data) && exists(routeIndex) && exists(grownStalkPenaltyQuery.data[routeIndex]) && grownStalkPenaltyQuery.data[routeIndex].isPenalty;
+  const renderGrownStalkPenaltyWarning =
+    exists(grownStalkPenaltyQuery.data) &&
+    exists(routeIndex) &&
+    exists(grownStalkPenaltyQuery.data[routeIndex]) &&
+    grownStalkPenaltyQuery.data[routeIndex].isPenalty;
 
   const GrownStalkPenaltyWarning = () => {
     if (!renderGrownStalkPenaltyWarning) return null;
     const grownStalkPenaltyRatio = grownStalkPenaltyQuery.data?.[routeIndex];
 
     if (!grownStalkPenaltyRatio) return null;
-    
+
     const penaltyPct = (grownStalkPenaltyRatio?.penaltyRatio ?? 0) * 100;
 
     return (
@@ -448,7 +452,7 @@ function ConvertForm({
           <div className="flex flex-col w-full h-[181px] items-center justify-center">
             <FrameAnimator size={64} />
           </div>
-          ) : convertResult ? (
+        ) : convertResult ? (
           <>
             <GerminatingStalkWarning />
             <SiloOutputDisplay
@@ -464,14 +468,10 @@ function ConvertForm({
             {quote.map((q) => {
               return (
                 <div key={q.route.convertType}>
-                  <div>
-                    {q.route.convertType}
-                  </div>
-                  <div>
-                    {formatter.token(q.totalAmountOut, q.route.target)}
-                  </div>
+                  <div>{q.route.convertType}</div>
+                  <div>{formatter.token(q.totalAmountOut, q.route.target)}</div>
                 </div>
-              )
+              );
             })}
           </Col>
         )}

@@ -28,7 +28,7 @@ type SiloConvertResultResult = typeof defaultData & {
   deltaGrownStalk: TV;
   deltaStalk: TV;
   deltaSeed: TV;
-}
+};
 
 export interface IUseSiloConvertResultReturnType {
   results: SiloConvertResultResult[] | undefined;
@@ -83,20 +83,22 @@ export function useSiloConvertResult(
 
     console.log("setting sorted results...");
 
-    const sortedIndexes = [...results].sort((a, b) => {
-      const aBDV = a.toBdv;
-      const bBDV = b.toBdv;
-      const aGrownStalk = a.toGrownStalk;
-      const bGrownStalk = b.toGrownStalk;
+    const sortedIndexes = [...results]
+      .sort((a, b) => {
+        const aBDV = a.toBdv;
+        const bBDV = b.toBdv;
+        const aGrownStalk = a.toGrownStalk;
+        const bGrownStalk = b.toGrownStalk;
 
-      if (aBDV.gt(bBDV)) return -1;
-      if (aBDV.lt(bBDV)) return 1;
+        if (aBDV.gt(bBDV)) return -1;
+        if (aBDV.lt(bBDV)) return 1;
 
-      if (aGrownStalk.gt(bGrownStalk)) return -1;
-      if (aGrownStalk.lt(bGrownStalk)) return 1;
+        if (aGrownStalk.gt(bGrownStalk)) return -1;
+        if (aGrownStalk.lt(bGrownStalk)) return 1;
 
-      return 0;
-    }).map((_, i) => i);
+        return 0;
+      })
+      .map((_, i) => i);
 
     return sortedIndexes;
   }, [results]);
