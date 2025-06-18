@@ -28,8 +28,8 @@ export function pipelineConvert(sourceLP: Token, targetLP: Token, args: IPipelin
 
 export function decodePipelineConvert(result: HashString): ConvertResultStruct<bigint> {
   try {
-    const decoded = decodeFunctionResult<typeof abiSnippets.pipelineConvert>({
-      abi: abiSnippets.pipelineConvert,
+    const decoded = decodeFunctionResult<typeof abiSnippets.silo.pipelineConvert>({
+      abi: abiSnippets.silo.pipelineConvert,
       functionName: "pipelineConvert",
       data: result,
     });
