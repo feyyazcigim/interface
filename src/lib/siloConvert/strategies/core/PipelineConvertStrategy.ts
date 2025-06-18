@@ -1,16 +1,14 @@
 import { Clipboard } from "@/classes/Clipboard";
 import { TV } from "@/classes/TokenValue";
-import { abiSnippets } from "@/constants/abiSnippets";
 import encoders from "@/encoders";
 import erc20Approve from "@/encoders/erc20Approve";
 import erc20Transfer from "@/encoders/erc20Transfer";
 import sync from "@/encoders/sync";
-import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
+import { AdvancedPipeWorkflow } from "@/lib/farm/workflow";
 import { ExtendedPoolData } from "@/lib/siloConvert/SiloConvert.cache";
-import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { AdvancedFarmCall, AdvancedPipeCall, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
-import { encodeFunctionData, isAddress } from "viem";
+import { isAddress } from "viem";
 import { SiloConvertStrategy } from "./ConvertStrategy";
 import { ConvertStrategyQuote, SiloConvertType } from "./types";
 

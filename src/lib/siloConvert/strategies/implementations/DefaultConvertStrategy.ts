@@ -85,7 +85,6 @@ export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
       throw new Error("Invalid convert data");
     }
 
-
     return convertData;
   }
 
