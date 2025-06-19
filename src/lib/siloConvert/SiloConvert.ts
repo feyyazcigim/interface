@@ -14,6 +14,7 @@ import { Address } from "viem";
 import { IConvertScalarCache, InMemoryConvertScalarCache } from "./IConvertScalarCache";
 import { SiloConvertCache } from "./SiloConvert.cache";
 import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
+import { ConversionQuotationError, SimulationError } from "./SiloConvertErrors";
 import { SiloConvertRoute, SiloConvertStrategizer } from "./siloConvert.strategizer";
 import { ConvertStrategyQuote } from "./strategies/core";
 import { SiloConvertType } from "./strategies/core";
@@ -175,11 +176,21 @@ export class SiloConvert {
     slippage: number,
     forceUpdateCache: boolean = false,
   ): Promise<SiloConvertSummary<SiloConvertType>[]> {
-    await this.cache.update(forceUpdateCache);
+    await this.cache.update(forceUpdateCache).catch((e) => {
+      console.error("[SiloConvert/quote] FAILED: ", e);
+      throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to update cache", {
+        source,
+        target,
+      });
+    });
 
-    const routes = await this.strategizer.strategize(source, target, amountIn);
-
-    console.log("routes", routes);
+    const routes = await this.strategizer.strategize(source, target, amountIn).catch((e) => {
+      console.error("[SiloConvert/quote] FAILED: ", e);
+      throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to strategize", {
+        source,
+        target,
+      });
+    });
 
     const quotedRoutes = await Promise.all(
       routes.map(async (route, routeIndex) => {
@@ -191,18 +202,16 @@ export class SiloConvert {
 
         // Has to be run sequentially.
         for (const [i, strategy] of route.strategies.entries()) {
-          const quote = await strategy.strategy.quote(crates[i], advFarm, slippage);
+          let quote: ConvertStrategyQuote<SiloConvertType>;
+          try {
+            quote = await strategy.strategy.quote(crates[i], advFarm, slippage);
+          } catch (e) {
+            console.error(`[SiloConvert/quote${i}] FAILED: `, strategy, e);
+            throw e;
+          }
           advFarm.add(strategy.strategy.encodeFromQuote(quote));
           quotes.push(quote);
         }
-
-        console.log({
-          amounts,
-          crates,
-          quotes,
-          advFarm,
-          route,
-        });
 
         return {
           route,
@@ -211,9 +220,13 @@ export class SiloConvert {
           workflow: advFarm,
         };
       }),
-    );
-
-    console.log("quotedRoutes", quotedRoutes);
+    ).catch((e) => {
+      console.error("[SiloConvert/quote] FAILED: ", e);
+      throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to quote routes", {
+        routes,
+        quotedRoutes,
+      });
+    });
 
     const simulationsRawResults = await Promise.all(
       quotedRoutes.map((route) =>
@@ -222,9 +235,13 @@ export class SiloConvert {
           after: this.cache.constructPriceAdvPipe({ noTokenPrices: true }),
         }),
       ),
-    );
-
-    console.log("simulationsRawResults", simulationsRawResults);
+    ).catch((e) => {
+      console.error("[SiloConvert/quote] FAILED: ", e);
+      throw new SimulationError("quote", e instanceof Error ? e.message : "Unknown error", {
+        routes,
+        quotedRoutes,
+      });
+    });
 
     const datas = quotedRoutes.map((route, i): SiloConvertSummary<SiloConvertType> => {
       const rawResponse = simulationsRawResults[i];
@@ -235,7 +252,17 @@ export class SiloConvert {
 
       const staticCallResult = [...rawResponse.result];
 
-      const decoded = this.decodeRouteAndPriceResults(staticCallResult, route.route);
+      let decoded: ReturnType<typeof this.decodeRouteAndPriceResults>;
+
+      try {
+        decoded = this.decodeRouteAndPriceResults(staticCallResult, route.route);
+      } catch (e) {
+        console.error("[SiloConvert/quote] FAILED: ", e);
+        throw new ConversionQuotationError("Failed to decode route and price results", {
+          staticCallResult,
+          route,
+        });
+      }
 
       return {
         ...decoded,
@@ -245,8 +272,6 @@ export class SiloConvert {
         totalAmountOut: decoded.reducedResults.toAmount, // TODO: Remove me when supporting multiple toToken
       };
     });
-
-    console.log("datas", datas);
 
     return datas;
   }
@@ -262,8 +287,6 @@ export class SiloConvert {
       const priceResult = staticCallResult.pop();
 
       const decodedConvertResults = decodeConvertResults(staticCallResult, route.convertType);
-
-      console.log("decodedConvertResults", decodedConvertResults);
 
       const decodedAdvPipePriceCall = priceResult ? AdvancedPipeWorkflow.decodeResult(priceResult) : undefined;
       const postPriceData = decodedAdvPipePriceCall?.length ? decodePriceResult(decodedAdvPipePriceCall[0]) : undefined;

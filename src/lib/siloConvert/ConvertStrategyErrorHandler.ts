@@ -112,8 +112,8 @@ export class ConvertStrategyErrorHandler {
       });
     }
 
-    if (name.includes("slippage") && (value < 0 || value > 1)) {
-      throw new InvalidAmountError(displayValue, "Slippage must be between 0 and 1", {
+    if (name.includes("slippage") && (value < 0 || value > 100)) {
+      throw new InvalidAmountError(displayValue, "Slippage must be between 0 and 100", {
         sourceToken: this.sourceToken,
         targetToken: this.targetToken,
         slippage: value,
