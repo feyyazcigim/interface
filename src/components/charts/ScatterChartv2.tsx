@@ -373,7 +373,7 @@ const ScatterChartV2 = React.memo(
             const dataPoint = chart.getDatasetMeta(selectedPointDatasetIndex).data[selectedPointIndex];
             if (dataPoint) {
               const { x, y } = dataPoint.getProps(["x", "y"], true);
-              drawSelectionPoint(x, y, "red");
+              drawSelectionPoint(x, y, "#387F5C");
             }
           }
         },
