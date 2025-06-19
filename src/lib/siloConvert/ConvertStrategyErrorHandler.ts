@@ -4,7 +4,7 @@ import { ConversionQuotationError, InvalidAmountError, SimulationError } from "@
 /**
  * Error handler utility for consistent error handling across all conversion strategies
  */
-export class StrategyErrorHandler {
+export class ConvertStrategyErrorHandler {
   constructor(
     private sourceToken: string,
     private targetToken: string,
