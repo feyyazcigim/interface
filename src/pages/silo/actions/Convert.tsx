@@ -393,7 +393,11 @@ function ConvertForm({
     );
   };
 
-  const warningRendered = renderGerminatingStalkWarning || renderDownPenaltyWarning || renderMinAmountWarning || renderGrownStalkPenaltyWarning;
+  const warningRendered =
+    renderGerminatingStalkWarning ||
+    renderDownPenaltyWarning ||
+    renderMinAmountWarning ||
+    renderGrownStalkPenaltyWarning;
 
   const disabled =
     !targetToken ||
@@ -465,18 +469,6 @@ function ConvertForm({
             />
           </>
         ) : null}
-        {quote && (
-          <Col className="gap-2">
-            {quote.map((q) => {
-              return (
-                <div key={q.route.convertType}>
-                  <div>{q.route.convertType}</div>
-                  <div>{formatter.token(q.totalAmountOut, q.route.target)}</div>
-                </div>
-              );
-            })}
-          </Col>
-        )}
         {targetToken && isValidAmountIn && exists(routeIndex) && (
           <RoutingAndSlippageInfo
             title="Total Convert Slippage"
