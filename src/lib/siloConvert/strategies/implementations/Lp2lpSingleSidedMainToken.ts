@@ -32,9 +32,16 @@ class OneSidedSameToken extends LP2LPStrategy {
     const removeToken = this.sourceWell.tokens[this.removeIndex];
     const addToken = this.targetWell.tokens[this.addIndex];
 
-    if (!tokensEqual(removeToken, addToken)) {
-      throw new Error("Remove and add indexes must point to the same token");
-    }
+    this.errorHandler.assert(
+      tokensEqual(removeToken, addToken),
+      "Remove and add indexes must point to the same token",
+      {
+        removeToken: removeToken.symbol,
+        addToken: addToken.symbol,
+        removeIndex: this.removeIndex,
+        addIndex: this.addIndex,
+      },
+    );
 
     this.token = removeToken;
   }
@@ -42,9 +49,14 @@ class OneSidedSameToken extends LP2LPStrategy {
   // ------------------------------ Quote ------------------------------ //
 
   async quote(deposits: ExtendedPickedCratesDetails, advancedFarm: AdvancedFarmWorkflow, slippage: number) {
+    // Validation
     this.validateQuoteArgs(deposits, slippage);
 
-    const result = await this.#getRemoveAddLiquidityOut(deposits, advancedFarm);
+    const result = await this.errorHandler.wrapAsync(
+      () => this.#getRemoveAddLiquidityOut(deposits, advancedFarm),
+      "remove and add liquidity simulation",
+      { amountIn: deposits.totalAmount.toHuman() },
+    );
 
     const summary = {
       source: {
@@ -67,7 +79,10 @@ class OneSidedSameToken extends LP2LPStrategy {
     return {
       pickedCrates: deposits,
       summary,
-      advPipeCalls: this.buildAdvancedPipeCalls(summary),
+      advPipeCalls: this.errorHandler.wrap(() => this.buildAdvancedPipeCalls(summary), "build advanced pipe calls", {
+        sourceWell: this.sourceWell.pool.symbol,
+        targetWell: this.targetWell.pool.symbol,
+      }),
       amountOut: result.addAmountOut,
       convertData: undefined,
     };
@@ -76,6 +91,12 @@ class OneSidedSameToken extends LP2LPStrategy {
   // ------------------------------ Build Advanced Pipe Calls ------------------------------ //
 
   buildAdvancedPipeCalls({ source, target }: ConvertStrategyQuote<"LP2LP">["summary"]) {
+    // Validation
+    this.errorHandler.assert(!!source.well, "Source well is required", { hasSourceWell: !!source.well });
+    this.errorHandler.assert(!!target.well, "Target well is required", { hasTargetWell: !!target.well });
+    this.errorHandler.validateAmount(source.amountIn, "source amount in");
+    this.errorHandler.validateAmount(target.minAmountOut, "target min amount out");
+
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
     // 0. approve sourceWell to use sourceWell.LPToken in Pipeline (max)
@@ -121,23 +142,51 @@ class OneSidedSameToken extends LP2LPStrategy {
     pickedCratesDetails: ExtendedPickedCratesDetails,
     advancedFarm: AdvancedFarmWorkflow,
   ) {
-    const pipe = this.#constructReadAdvancedPipe(pickedCratesDetails.totalAmount);
+    // Validation
+    this.errorHandler.validateAmount(pickedCratesDetails.totalAmount, "remove add liquidity amount");
 
-    const result = await advancedFarm.simulate({
-      after: pipe,
-      account: this.context.account,
-    });
+    const pipe = this.errorHandler.wrap(
+      () => this.#constructReadAdvancedPipe(pickedCratesDetails.totalAmount),
+      "construct read advanced pipe",
+      { amountIn: pickedCratesDetails.totalAmount.toHuman() },
+    );
 
-    const decodedResults = this.#decodeAddRemoveResult(result.result);
+    const result = await this.errorHandler.wrapAsync(
+      () =>
+        advancedFarm.simulate({
+          after: pipe,
+          account: this.context.account,
+        }),
+      "remove add liquidity simulation",
+      { amountIn: pickedCratesDetails.totalAmount.toHuman(), account: this.context.account },
+    );
 
-    const removeAmount = TV.fromBlockchain(decodedResults.removeLiquidityResult, this.token.decimals);
+    // Validate simulation results
+    this.errorHandler.validateSimulation(result, "remove add liquidity simulation");
+
+    const decodedResults = this.errorHandler.wrap(
+      () => this.#decodeAddRemoveResult(result.result),
+      "decode remove add liquidity result",
+      { resultLength: result.result.length },
+    );
+
+    const removeAmount = this.errorHandler.wrap(
+      () => TV.fromBlockchain(decodedResults.removeLiquidityResult, this.token.decimals),
+      "convert remove liquidity amount",
+      { token: this.token.symbol, decimals: this.token.decimals },
+    );
+
     const removeAmountsOut = [removeAmount, TV.ZERO];
 
     if (this.removeIndex === 1) {
       removeAmountsOut.reverse();
     }
 
-    const addAmountOut = TV.fromBlockchain(decodedResults.addLiquidityResult, this.targetWell.pool.decimals);
+    const addAmountOut = this.errorHandler.wrap(
+      () => TV.fromBlockchain(decodedResults.addLiquidityResult, this.targetWell.pool.decimals),
+      "convert add liquidity amount out",
+      { targetWell: this.targetWell.pool.symbol, decimals: this.targetWell.pool.decimals },
+    );
 
     return {
       removeAmountsOut,
@@ -149,29 +198,47 @@ class OneSidedSameToken extends LP2LPStrategy {
    * Decodes the result of the remove and add liquidity operations from getRemoveAddLiquidityOut
    */
   #decodeAddRemoveResult(data: readonly HashString[]) {
-    if (!data.length) {
-      throw new Error("No data to decode");
-    }
-
-    const decoded = decodeFunctionResult({
-      abi: abiSnippets.advancedPipe,
-      functionName: "advancedPipe",
-      data: data[0],
+    this.errorHandler.assert(data.length > 0, "No data to decode", {
+      dataLength: data.length,
     });
+
+    const decoded = this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.advancedPipe,
+          functionName: "advancedPipe",
+          data: data[0],
+        }),
+      "decode advanced pipe result",
+      { dataLength: data.length },
+    );
 
     const len = decoded.length;
-
-    const removeAmountBigInt = decodeFunctionResult({
-      abi: abiSnippets.wells.getRemoveLiquidityOneTokenOut,
-      functionName: "getRemoveLiquidityOneTokenOut",
-      data: decoded[len - 2], // 2nd to last index
+    this.errorHandler.assert(len >= 2, "Decoded result must have at least 2 elements", {
+      decodedLength: len,
     });
 
-    const addAmountOutBigInt = decodeFunctionResult({
-      abi: abiSnippets.wells.getAddLiquidityOut,
-      functionName: "getAddLiquidityOut",
-      data: decoded[len - 1], // last index
-    });
+    const removeAmountBigInt = this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.wells.getRemoveLiquidityOneTokenOut,
+          functionName: "getRemoveLiquidityOneTokenOut",
+          data: decoded[len - 2], // 2nd to last index
+        }),
+      "decode remove liquidity one token result",
+      { decodedLength: len },
+    );
+
+    const addAmountOutBigInt = this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.wells.getAddLiquidityOut,
+          functionName: "getAddLiquidityOut",
+          data: decoded[len - 1], // last index
+        }),
+      "decode add liquidity result",
+      { decodedLength: len },
+    );
 
     return {
       removeLiquidityResult: removeAmountBigInt,
@@ -180,6 +247,14 @@ class OneSidedSameToken extends LP2LPStrategy {
   }
 
   #constructReadAdvancedPipe(amountIn: TV) {
+    // Validation
+    this.errorHandler.validateAmount(amountIn, "construct read pipe amount in");
+    this.errorHandler.assert(
+      this.removeIndex >= 0 && this.removeIndex < this.sourceWell.tokens.length,
+      "Remove index is out of bounds",
+      { removeIndex: this.removeIndex, sourceTokensLength: this.sourceWell.tokens.length },
+    );
+
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
     pipe.add(
