@@ -9,9 +9,9 @@ import { getChainConstant } from "@/utils/chain";
 import { pickCratesMultiple } from "@/utils/convert";
 import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
-import defaultWagmiConfig from "@/utils/wagmi/config";
 import { Config } from "@wagmi/core";
 import { Address } from "viem";
+import { IConvertScalarCache, InMemoryConvertScalarCache } from "./IConvertScalarCache";
 import { SiloConvertCache } from "./SiloConvert.cache";
 import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
 import { SiloConvertRoute, SiloConvertStrategizer } from "./siloConvert.strategizer";
@@ -115,7 +115,15 @@ export class SiloConvert {
 
   strategizer: SiloConvertStrategizer;
 
-  constructor(diamondAddress: Address, account: Address, config: Config, chainId: number) {
+  private scalarCache: IConvertScalarCache;
+
+  constructor(
+    diamondAddress: Address,
+    account: Address,
+    config: Config,
+    chainId: number,
+    scalarCache?: IConvertScalarCache,
+  ) {
     this.context = {
       diamond: diamondAddress,
       account: account,
@@ -124,7 +132,8 @@ export class SiloConvert {
     };
 
     this.cache = new SiloConvertCache(this.context);
-    this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(this.context, this.cache);
+    this.scalarCache = scalarCache || new InMemoryConvertScalarCache();
+    this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(this.context, this.cache, this.scalarCache);
     this.strategizer = new SiloConvertStrategizer(this.context, this.cache, this.maxConvertQuoter);
   }
 
@@ -133,8 +142,16 @@ export class SiloConvert {
    */
   clear() {
     this.cache = new SiloConvertCache(this.context);
-    this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(this.context, this.cache);
+    this.scalarCache.clear();
+    this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(this.context, this.cache, this.scalarCache);
     this.strategizer = new SiloConvertStrategizer(this.context, this.cache, this.maxConvertQuoter);
+  }
+
+  /**
+   * Get scalar cache metrics for monitoring
+   */
+  getScalarCacheMetrics() {
+    return this.maxConvertQuoter.getScalarCacheMetrics();
   }
 
   /**
@@ -307,13 +324,13 @@ export class SiloConvert {
   /**
    * Returns an empty pipeline convert quote.
    */
-  stagetEmptyResulttic() {
-    return {
-      workflow: new AdvancedFarmWorkflow(8543, defaultWagmiConfig),
-      quotes: [] as ConvertStrategyQuote<SiloConvertType>[],
-      totalAmountOut: TV.ZERO,
-      results: [] as ConvertResultStruct<TV>[],
-      postPriceData: undefined,
-    };
-  }
+  // getEmptyResult() {
+  //   return {
+  //     workflow: new AdvancedFarmWorkflow(8543, defaultWagmiConfig),
+  //     quotes: [] as ConvertStrategyQuote<SiloConvertType>[],
+  //     totalAmountOut: TV.ZERO,
+  //     results: [] as ConvertResultStruct<TV>[],
+  //     postPriceData: undefined,
+  //   };
+  // }
 }

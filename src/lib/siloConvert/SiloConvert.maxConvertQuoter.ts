@@ -17,8 +17,8 @@ import { pickCratesMultiple } from "@/utils/convert";
 import { tokensEqual } from "@/utils/token";
 import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
-import { exists } from "@/utils/utils";
 import { readContract } from "viem/actions";
+import { IConvertScalarCache, InMemoryConvertScalarCache } from "./IConvertScalarCache";
 import { DefaultConvertStrategy } from "./strategies/implementations/DefaultConvertStrategy";
 
 interface ConvertTokens {
@@ -36,29 +36,23 @@ interface ConvertTokens {
  */
 const MIN_THRESHOLD = 150;
 
-const SCALARS_UPDATE_INTERVAL = 15_000;
-
 /**
  * Utility class that quotes the max convert from a source to a target.
+ * Now uses dependency injection for scalar caching to separate concerns.
  */
 export class SiloConvertMaxConvertQuoter {
-  #context: SiloConvertContext;
-
-  #cache: SiloConvertCache;
-
-  #scalars: Record<string, number>;
-
-  #scalarsLastUpdateTime: number;
+  private readonly context: SiloConvertContext;
+  private readonly cache: SiloConvertCache;
+  private readonly scalarCache: IConvertScalarCache;
 
   static NO_MAX_CONVERT_AMOUNT = 1_000_000_000;
 
   // ---------- Constructor ----------
 
-  constructor(context: SiloConvertContext, cache: SiloConvertCache) {
-    this.#context = context;
-    this.#cache = cache;
-    this.#scalars = {};
-    this.#scalarsLastUpdateTime = 0;
+  constructor(context: SiloConvertContext, cache: SiloConvertCache, scalarCache?: IConvertScalarCache) {
+    this.context = context;
+    this.cache = cache;
+    this.scalarCache = scalarCache || new InMemoryConvertScalarCache();
   }
 
   // ===================================================================
@@ -70,18 +64,22 @@ export class SiloConvertMaxConvertQuoter {
    * If true, we have no choice but to withdraw & add liquidity as single-sided BEAN.
    */
   isAggDisabledToken(token: Token) {
-    const PINTOWSOL = PINTO_WSOL_TOKEN[resolveChainId(this.#context.chainId)];
+    const PINTOWSOL = PINTO_WSOL_TOKEN[resolveChainId(this.context.chainId)];
     return tokensEqual(token, PINTOWSOL);
   }
 
   /**
    * Clears the scalars cache.
-   *
-   * Same thing as re-initializing this class, but provided as a method for convenience.
    */
   clear() {
-    this.#scalars = {};
-    this.#scalarsLastUpdateTime = 0;
+    this.scalarCache.clear();
+  }
+
+  /**
+   * Get scalar cache metrics for monitoring
+   */
+  getScalarCacheMetrics() {
+    return this.scalarCache.getMetrics();
   }
 
   /**
@@ -90,11 +88,11 @@ export class SiloConvertMaxConvertQuoter {
    */
   async quoteMaxConvert(source: Token, target: Token, farmerDeposits?: DepositData[]) {
     if (source.isMain || target.isMain) {
-      return this.#getDefaultConvertMaxConvert({ source, target }, farmerDeposits);
+      return this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits);
     }
 
     if (source.isLP && target.isLP) {
-      return this.#getMaxConvertLPToLP({ source, target });
+      return this.getMaxConvertLPToLP({ source, target });
     }
 
     throw new Error("Convert Router: Invalid source and target tokens");
@@ -108,7 +106,7 @@ export class SiloConvertMaxConvertQuoter {
    * Gets the max convert from the source to the target.
    * @throws Error if the source or target is not a main token.
    */
-  async #getDefaultConvertMaxConvert(convertTokens: ConvertTokens, farmerDeposits?: DepositData[]): Promise<TV> {
+  private async getDefaultConvertMaxConvert(convertTokens: ConvertTokens, farmerDeposits?: DepositData[]): Promise<TV> {
     validateConversionTokens(convertTokens, "default");
 
     const { source, target } = convertTokens;
@@ -118,16 +116,16 @@ export class SiloConvertMaxConvertQuoter {
       throw new Error("Convert Router: Invalid source and target tokens");
     }
 
-    const [rawWellData] = await Promise.all([this.#cache.getRawWellData(lpToken.address), this.#cache.update()]);
+    const [rawWellData] = await Promise.all([this.cache.getRawWellData(lpToken.address), this.cache.update()]);
 
-    const maxAmountIn = await readContract(this.#context.wagmiConfig.getClient({ chainId: this.#context.chainId }), {
+    const maxAmountIn = await readContract(this.context.wagmiConfig.getClient({ chainId: this.context.chainId }), {
       abi: abiSnippets.silo.getMaxAmountIn,
-      address: this.#context.diamond,
+      address: this.context.diamond,
       functionName: "getMaxAmountIn",
       args: [source.address, target.address],
     });
 
-    const { scaledAmountIn, scalingReason } = this.#scaleDefaultConvertMaxAmountIn(
+    const { scaledAmountIn, scalingReason } = this.scaleDefaultConvertMaxAmountIn(
       convertTokens,
       TV.fromBigInt(maxAmountIn, source.decimals),
       rawWellData,
@@ -142,7 +140,7 @@ export class SiloConvertMaxConvertQuoter {
     });
 
     if (farmerDeposits) {
-      return this.#findSafeDefaultMaxConvert(convertTokens, scaledAmountIn, farmerDeposits);
+      return this.findSafeDefaultMaxConvert(convertTokens, scaledAmountIn, farmerDeposits);
     }
 
     return scaledAmountIn;
@@ -161,7 +159,11 @@ export class SiloConvertMaxConvertQuoter {
    *
    * @returns The max convert that doesn't revert.
    */
-  async #findSafeDefaultMaxConvert(tokens: ConvertTokens, maxConvert: TV, farmerDeposits: DepositData[]): Promise<TV> {
+  private async findSafeDefaultMaxConvert(
+    tokens: ConvertTokens,
+    maxConvert: TV,
+    farmerDeposits: DepositData[],
+  ): Promise<TV> {
     validateConversionTokens(tokens, "default");
 
     const { source, target } = tokens;
@@ -181,68 +183,23 @@ export class SiloConvertMaxConvertQuoter {
       return maxConvert;
     }
 
-    const scalars = SCALE_DOWN_SCALARS;
-    const existingScalar = this.#scalars[`${source.address}-${target.address}`];
-    const diffMS = Date.now() - this.#scalarsLastUpdateTime;
-
-    if (exists(existingScalar) && diffMS < SCALARS_UPDATE_INTERVAL) {
-      console.debug("[MaxConvertQuoter/findSafeDefaultMaxConvert]: using existing scalar", {
-        existingScalar,
-        diffMS,
+    // Check cache first
+    const cachedScalar = this.scalarCache.get(source, target);
+    if (cachedScalar !== undefined && !this.scalarCache.isStale()) {
+      console.debug("[MaxConvertQuoter/findSafeDefaultMaxConvert]: using cached scalar", {
+        cachedScalar,
+        cacheMetrics: this.scalarCache.getMetrics(),
       });
-      return maxConvert.mul(existingScalar);
+      return maxConvert.mul(cachedScalar);
     }
 
-    const workflow = new AdvancedFarmWorkflow(this.#context.chainId, this.#context.wagmiConfig);
+    // Compute optimal scalar using jump algorithm
+    const optimalScalar = await this.computeOptimalScalar(tokens, maxConvert, farmerDeposits);
 
-    // try scalar[0] 100% first.
-    const res = await this.#testDefaultConvertScalar(tokens, farmerDeposits, workflow, maxConvert, scalars[0]);
-    if (res) {
-      this.#updateScalars(tokens, scalars[0]);
-      return res;
-    }
+    // Cache the result
+    this.scalarCache.set(source, target, optimalScalar);
 
-    // we start at index 2 b/c we know that 100% will fail.
-    const startIndex = 1;
-    const jumpAmount = 2;
-
-    // Jump in pairs: for each odd index, try the previous one.
-    // For example, try index 3. If it works, then test index 2.
-    for (let i = startIndex; i < scalars.length - 1; i += jumpAmount) {
-      const jIndex = i + 1;
-      const jInBounds = jIndex <= scalars.length - 1;
-
-      const jScalar = scalars[jIndex];
-      const iScalar = scalars[i];
-
-      let jMax: TV | undefined = undefined;
-
-      // Try scalar[jIndex] if in bounds.
-      if (jInBounds) {
-        jMax = await this.#testDefaultConvertScalar(tokens, farmerDeposits, workflow, maxConvert, jScalar);
-      }
-
-      // If it failed, continue.
-      if (!jMax && jInBounds) continue;
-
-      // Try scalar[i]
-      const iMax = await this.#testDefaultConvertScalar(tokens, farmerDeposits, workflow, maxConvert, iScalar);
-      // If iMax is defined, update scalars & return iMax.
-      if (iMax) {
-        this.#updateScalars(tokens, iScalar);
-        return iMax;
-      }
-      // if jMax is defined, update scalars & return jMax.
-      // We check if jMax is defined b/c jMax is defined if jIndex is in bounds.
-      if (jMax) {
-        this.#updateScalars(tokens, jScalar);
-        return jMax;
-      }
-    }
-
-    // Everyting fails, throw error.
-    // throw new Error("Failed to fetch max convert");
-    return maxConvert;
+    return maxConvert.mul(optimalScalar);
   }
 
   /**
@@ -250,7 +207,7 @@ export class SiloConvertMaxConvertQuoter {
    *
    * @returns The scaled maxAmountIn if it doesn't revert, otherwise undefined.
    */
-  async #testDefaultConvertScalar(
+  private async testDefaultConvertScalar(
     { source, target }: ConvertTokens,
     farmerDeposits: DepositData[],
     workflow: AdvancedFarmWorkflow,
@@ -267,10 +224,10 @@ export class SiloConvertMaxConvertQuoter {
     try {
       const scaledMaxAmountIn = maxAmountIn.mul(scalar);
       const crates = pickCratesMultiple(farmerDeposits, "bdv", "asc", [scaledMaxAmountIn]);
-      const strategy = new DefaultConvertStrategy(source, target, this.#context);
+      const strategy = new DefaultConvertStrategy(source, target, this.context);
 
       await strategy.quote(crates[0], workflow, 0.5);
-      await workflow.simulate({ account: this.#context.account });
+      await workflow.simulate({ account: this.context.account });
       amount = scaledMaxAmountIn;
     } catch (_e) {}
 
@@ -287,7 +244,7 @@ export class SiloConvertMaxConvertQuoter {
    * Scales down the max amount in if needed.
    * The number returned by getMaxAmountIn is too high, so we scale the result down.
    */
-  #scaleDefaultConvertMaxAmountIn({ source, target }: ConvertTokens, max: TV, rawWellData: ExtendedRawWellData) {
+  private scaleDefaultConvertMaxAmountIn({ source, target }: ConvertTokens, max: TV, rawWellData: ExtendedRawWellData) {
     validateConversionTokens({ source, target }, "default");
 
     const lpToken = source.isMain ? target : source;
@@ -317,8 +274,8 @@ export class SiloConvertMaxConvertQuoter {
     }
 
     // Scale down the result if we are constrained by the overall ΔP.
-    const overallDeltaB = this.#cache.getDeltaB();
-    const wellDeltaB = this.#cache.getWell(lpToken.address).deltaB;
+    const overallDeltaB = this.cache.getDeltaB();
+    const wellDeltaB = this.cache.getWell(lpToken.address).deltaB;
 
     // If we are constrained by the overall ΔP, we need to scale down the result
     const overallDeltaBConstrained = overallDeltaB.abs().lt(wellDeltaB.abs());
@@ -341,10 +298,10 @@ export class SiloConvertMaxConvertQuoter {
    *
    * @throws Error if the source or target is not a LP token.
    */
-  async #getMaxConvertLPToLP({ source, target }: ConvertTokens) {
+  private async getMaxConvertLPToLP({ source, target }: ConvertTokens) {
     validateConversionTokens({ source, target }, "LP2LP");
 
-    await this.#cache.update();
+    await this.cache.update();
 
     // There is only a max convert if there is a restriction on whether we can use 0x or not, because
     // We can always convert LP<>LP in equal proportions if liquidity external to wells exists.
@@ -366,8 +323,8 @@ export class SiloConvertMaxConvertQuoter {
   async getSingleSidedPairTokenMaxConvert({ source, target }: ConvertTokens): Promise<TV> {
     validateConversionTokens({ source, target }, "LP2LP");
 
-    const sourceWell = this.#cache.getWell(source.address);
-    const targetWell = this.#cache.getWell(target.address);
+    const sourceWell = this.cache.getWell(source.address);
+    const targetWell = this.cache.getWell(target.address);
 
     // Find the Well with the smaller absolute value of deltaP.
     // The amount we can convert single sided is limited by this well.
@@ -378,9 +335,9 @@ export class SiloConvertMaxConvertQuoter {
     const ratios = ExchangeWell.getRatiosJ(restrictiveWell.tokens, restrictiveWell.prices);
 
     // Get the raw well data for the restrictive well.
-    const rawWellData = await this.#cache.getRawWellData(restrictiveWell.pool.address);
+    const rawWellData = await this.cache.getRawWellData(restrictiveWell.pool.address);
 
-    const pipe = new AdvancedPipeWorkflow(this.#context.chainId, this.#context.wagmiConfig);
+    const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
     // 1. Calculate the reserves at the ideal ratios.
     pipe.add(
@@ -445,7 +402,7 @@ export class SiloConvertMaxConvertQuoter {
       throw new Error("Failed to fetch max convert");
     }
 
-    return this.#decodeSingleSidedPairAdvPipeResult({ source, target }, sourceIsRestrictive, result);
+    return this.decodeSingleSidedPairAdvPipeResult({ source, target }, sourceIsRestrictive, result);
   }
 
   /**
@@ -456,20 +413,20 @@ export class SiloConvertMaxConvertQuoter {
   async getSingleSidedMainTokenMaxConvert({ source, target }: ConvertTokens): Promise<TV> {
     validateConversionTokens({ source, target }, "LP2LP");
 
-    const mainToken = MAIN_TOKEN[resolveChainId(this.#context.chainId)];
+    const mainToken = MAIN_TOKEN[resolveChainId(this.context.chainId)];
 
-    const pipe = new AdvancedPipeWorkflow(this.#context.chainId, this.#context.wagmiConfig);
+    const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
     // 1. max convertible Source LP -> BEAN
     pipe.add({
       ...encoders.silo.getMaxAmountIn(source.address, mainToken.address),
-      target: this.#context.diamond,
+      target: this.context.diamond,
     });
 
     // 2.max convertible BEAN -> Target LP
     pipe.add({
       ...encoders.silo.getMaxAmountIn(mainToken.address, target.address),
-      target: this.#context.diamond,
+      target: this.context.diamond,
     });
 
     // 3. max convertible Source LP -> BEAN from step 2.
@@ -501,7 +458,7 @@ export class SiloConvertMaxConvertQuoter {
   // ------------------------- Utility methods -------------------------
   // ===================================================================
 
-  #decodeSingleSidedPairAdvPipeResult(
+  private decodeSingleSidedPairAdvPipeResult(
     { source, target }: ConvertTokens,
     sourceIsRestrictive: boolean,
     result: HashString[],
@@ -529,19 +486,19 @@ export class SiloConvertMaxConvertQuoter {
         ...debugData,
         "2maxSourceLP": maxSourceLP.toBigInt(),
         "00currReserves": [
-          this.#cache.getWell(source.address).balances[0].toBigInt(),
-          this.#cache.getWell(source.address).balances[1].toBigInt(),
+          this.cache.getWell(source.address).balances[0].toBigInt(),
+          this.cache.getWell(source.address).balances[1].toBigInt(),
         ],
-        "0idealLPReserves": [this.#cache.getWell(source.address).balances[0].toBigInt(), calcReserveAtRatioLiquidity],
+        "0idealLPReserves": [this.cache.getWell(source.address).balances[0].toBigInt(), calcReserveAtRatioLiquidity],
       };
     } else {
       debugData = {
         ...debugData,
         "00currReserves": [
-          this.#cache.getWell(target.address).balances[0].toBigInt(),
-          this.#cache.getWell(target.address).balances[1].toBigInt(),
+          this.cache.getWell(target.address).balances[0].toBigInt(),
+          this.cache.getWell(target.address).balances[1].toBigInt(),
         ],
-        "0idealLPReserves": [this.#cache.getWell(target.address).balances[0].toBigInt(), calcReserveAtRatioLiquidity],
+        "0idealLPReserves": [this.cache.getWell(target.address).balances[0].toBigInt(), calcReserveAtRatioLiquidity],
         "3reserveDiffScaledUp": decodeJunctionResult("mul", result[2]),
         "4sourcePairTokenAmountScaled": decodeJunctionResult("mulDiv", result[3]),
         "5sourcePairTokenAmount": decodeJunctionResult("div", result[4]),
@@ -554,21 +511,61 @@ export class SiloConvertMaxConvertQuoter {
     return maxSourceLP;
   }
 
-  #updateScalars({ source, target }: ConvertTokens, scalar: number) {
-    const scalarKey = `${source.address}-${target.address}`;
-    const prevScalar = this.#scalars[scalarKey];
+  /**
+   * Computes the optimal scalar using a jump algorithm to find the highest
+   * scalar that doesn't cause the conversion to revert.
+   */
+  private async computeOptimalScalar(
+    tokens: ConvertTokens,
+    maxConvert: TV,
+    farmerDeposits: DepositData[],
+  ): Promise<number> {
+    const scalars = SCALE_DOWN_SCALARS;
+    const workflow = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
 
-    this.#scalars[scalarKey] = scalar;
-    this.#scalarsLastUpdateTime = Date.now();
+    // try scalar[0] 100% first.
+    const res = await this.testDefaultConvertScalar(tokens, farmerDeposits, workflow, maxConvert, scalars[0]);
+    if (res) {
+      return scalars[0];
+    }
 
-    console.debug("[MaxConvertQuoter/updateScalars]: scalars updated", {
-      source,
-      target,
-      scalar,
-      prevScalar,
-      scalars: this.#scalars,
-      scalarsLastUpdateTime: this.#scalarsLastUpdateTime,
-    });
+    // we start at index 1 b/c we know that 100% will fail.
+    const startIndex = 1;
+    const jumpAmount = 2;
+
+    // Jump in pairs: for each odd index, try the previous one.
+    // For example, try index 3. If it works, then test index 2.
+    for (let i = startIndex; i < scalars.length - 1; i += jumpAmount) {
+      const jIndex = i + 1;
+      const jInBounds = jIndex <= scalars.length - 1;
+
+      const jScalar = scalars[jIndex];
+      const iScalar = scalars[i];
+
+      let jMax: TV | undefined = undefined;
+
+      // Try scalar[jIndex] if in bounds.
+      if (jInBounds) {
+        jMax = await this.testDefaultConvertScalar(tokens, farmerDeposits, workflow, maxConvert, jScalar);
+      }
+
+      // If it failed, continue.
+      if (!jMax && jInBounds) continue;
+
+      // Try scalar[i]
+      const iMax = await this.testDefaultConvertScalar(tokens, farmerDeposits, workflow, maxConvert, iScalar);
+      // If iMax is defined, return iScalar.
+      if (iMax) {
+        return iScalar;
+      }
+      // if jMax is defined, return jScalar.
+      if (jMax) {
+        return jScalar;
+      }
+    }
+
+    // Everything fails, return the most conservative scalar
+    return scalars[scalars.length - 1];
   }
 }
 
