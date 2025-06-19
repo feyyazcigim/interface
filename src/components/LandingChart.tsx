@@ -1,279 +1,181 @@
-import {
-  animate,
-  cubicBezier,
-  motion,
-  progress,
-  steps,
-  useAnimation,
-  useMotionTemplate,
-  useMotionValue,
-  useTime,
-  useTransform,
-} from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
-type Segment = { x: number; y: number; price: number };
+const height = 577;
+const baselinePrice = 1.0;
+
+// Convert price to Y coordinate (inverted because SVG Y increases downward)
+const priceToY = (price) => {
+  const minPrice = 0.99;
+  const maxPrice = 1.01;
+  const minY = height - 0; // Bottom margin
+  const maxY = 0; // Top margin
+  return minY - ((price - minPrice) / (maxPrice - minPrice)) * (minY - maxY);
+};
 
 export default function LandingChart() {
-  // Predefined price-like data points (oscillating between 0.95 and 1.01)
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [viewportWidth, setViewportWidth] = useState(1920); // Default width
+  const animationRef = useRef(null);
+  const containerRef = useRef(null);
+
+  // Price data with more baseline points to space out peaks and dips
   const priceData = [
-    // Extended initial baseline period (hovering between 0.999-1.001)
-    0.9995, 1, 1.0005, 1, 0.9997, 1, 1.0002, 1, 0.9998, 1, 0.9999, 1, 1.001, 1, 0.9993, 1, 1.0001, 1, 0.9998, 1, 1.0001,
-    1, 0.999, 1, 1.0002, 1, 0.9998, 1, 1.0001, 1, 0.9997, 1, 1.0003, 1, 0.999, 1, 1.0001, 1, 0.9999,
-
-    // First spike cycle - DOUBLED LENGTH
-    1, 0.9999, 1, 1.002, 1.015, 1.013, 1.014, 1.0135, 1.014, 1.0138, 1.0145, 1.015, 1.0148, 1.015, 1.0141, 1.0147, 1,
-    0.985, 0.987, 0.99, 0.9865, 0.9875, 0.988, 0.9855, 0.986, 0.9852, 0.9868, 0.9855, 0.987, 0.9858, 0.9862, 0.9858, 1,
-
-    // Extended middle baseline period (hovering between 0.999-1.001)
-    1.0001, 1, 0.9998, 1, 1.0001, 1, 0.9997, 1, 1.0001, 1, 1.0002, 1, 0.999, 1, 1.0001, 1, 1.0002, 1, 0.9998, 1, 1.0001,
-    1, 0.9997, 1, 1.0003, 1, 0.9999, 1, 1.0001, 1, 0.9998, 1, 1.0003, 1, 0.9997, 1, 1.0002, 1, 0.9999, 1, 1.0001, 1,
-    0.9997, 1, 1.0002, 1, 0.999, 1, 1.0002, 1, 0.9998, 1, 1.0001, 1, 0.9997, 1, 1.0003, 1, 0.9999,
-
-    // Second spike cycle - DOUBLED LENGTH
-    1, 1.015, 1.014, 1.0142, 1.01435, 1.01425, 1.0147, 1.0148, 1.0143, 1.0145, 1.015, 1.0146, 1.015, 1.0142, 1.015,
-    1.0149, 1, 0.985, 0.9852, 0.9851, 0.986, 0.9857, 0.9855, 0.9856, 0.9853, 0.9855, 0.9862, 0.9858, 0.9865, 0.9854,
-    0.9858, 0.985, 1,
-
-    // Extended final baseline period (hovering between 0.999-1.001)
-    1.0001, 1, 0.9998, 1, 1.0003, 1, 0.9999, 1, 0.9998, 1, 0.9997, 1, 1.0001, 1, 0.9998, 1, 1.0001, 1, 0.999, 1, 1.0003,
-    1, 0.999, 1, 1.0001, 1, 0.9997, 1, 1.0002, 1, 0.9999, 1, 1.0001, 1, 0.9998, 1, 1.0001, 1, 0.9997, 1, 1.0002, 1,
-    0.9999, 1, 1.0001, 1, 0.9998, 1, 1.0001, 1, 0.999, 1, 1.0001, 1, 0.9997,
+    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.01, 1.005, 1.002, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+    1.0, 0.998, 0.995, 0.99, 0.995, 0.998, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.003,
+    1.006, 1.003, 1.0, 1.0, 1.0, 1.0, 1.0,
   ];
 
-  const width = 1920;
-  const height = 577;
-
-  // Calculate min/max for scaling
-  const minPrice = 0.98;
-  const maxPrice = 1.02;
-  const priceRange = maxPrice - minPrice;
-
-  const time = useTime();
-  const clipPathValue = useTransform(time, (latest) => {
-    const progress = (latest % 20000) / 20000;
-    return 100 - progress * 100;
-  });
-  const clipPathTemplate = useMotionTemplate`inset(0px ${clipPathValue}% 0px 0px)`;
-
-  // Generate path points
-  const generatePath = () => {
-    const points = priceData.map((price, index) => {
-      const x = (index / (priceData.length - 1)) * width;
-      const y = height - ((price - minPrice) / priceRange) * height;
-      return `${index === 0 ? "M" : "L"} ${x} ${y}`;
-    });
-
-    return points.join(" ");
-  };
-
-  // Generate green area paths (only where price is above 1)
-  const generateGreenAreaPaths = () => {
-    const baselineY = height - ((1 - minPrice) / priceRange) * height;
-    const segments: Segment[][] = [];
-    let currentSegment: Segment[] = [];
-
-    priceData.forEach((price, index) => {
-      const x = (index / (priceData.length - 1)) * width;
-      const y = height - ((price - minPrice) / priceRange) * height;
-
-      if (price >= 1) {
-        // Add to current segment
-        currentSegment.push({ x, y, price });
-      } else {
-        // End current segment if it exists
-        if (currentSegment.length > 0) {
-          segments.push([...currentSegment]);
-          currentSegment = [];
-        }
+  // Update viewport width on mount and resize
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setViewportWidth(containerRef.current.clientWidth);
       }
-    });
+    };
 
-    // Don't forget the last segment
-    if (currentSegment.length > 0) {
-      segments.push(currentSegment);
+    // Initial measurement
+    updateWidth();
+
+    // Listen for resize events
+    window.addEventListener("resize", updateWidth);
+
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
+
+  const baselineY = priceToY(baselinePrice);
+  const pointSpacing = 30; // pixels between each data point
+  const scrollSpeed = 1.5;
+
+  // Generate complete line path
+  const generateCompletePath = () => {
+    const totalWidth = priceData.length * pointSpacing;
+    const points = [];
+
+    // Create points from price data
+    for (let i = 0; i < priceData.length; i++) {
+      const x = i * pointSpacing;
+      const y = priceToY(priceData[i]);
+      points.push({ x, y, price: priceData[i] });
     }
 
-    // Convert segments to paths
-    return segments
-      .map((segment) => {
-        if (segment.length === 0) return "";
+    // Create SVG path
+    if (points.length === 0) return "";
 
-        const points: string[] = [];
-
-        // Start at baseline
-        points.push(`M ${segment[0].x} ${baselineY}`);
-
-        // Follow the price line
-        segment.forEach((point) => {
-          points.push(`L ${point.x} ${point.y}`);
-        });
-
-        // Close back to baseline
-        points.push(`L ${segment[segment.length - 1].x} ${baselineY}`);
-        points.push("Z");
-
-        return points.join(" ");
-      })
-      .filter((path) => path !== "");
-  };
-
-  // Generate yellow area paths (only where price is below 1)
-  const generateYellowAreaPaths = () => {
-    const baselineY = height - ((1 - minPrice) / priceRange) * height;
-    const segments: Segment[][] = [];
-    let currentSegment: Segment[] = [];
-
-    priceData.forEach((price, index) => {
-      const x = (index / (priceData.length - 1)) * width;
-      const y = height - ((price - minPrice) / priceRange) * height;
-
-      if (price <= 1) {
-        // Add to current segment
-        currentSegment.push({ x, y, price });
-      } else {
-        // End current segment if it exists
-        if (currentSegment.length > 0) {
-          segments.push([...currentSegment]);
-          currentSegment = [];
-        }
-      }
-    });
-
-    // Don't forget the last segment
-    if (currentSegment.length > 0) {
-      segments.push(currentSegment);
+    let path = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      path += ` L ${points[i].x} ${points[i].y}`;
     }
 
-    // Convert segments to paths
-    return segments
-      .map((segment) => {
-        if (segment.length === 0) return "";
-
-        const points: string[] = [];
-
-        // Start at price line
-        points.push(`M ${segment[0].x} ${segment[0].y}`);
-
-        // Follow the price line
-        segment.forEach((point, index) => {
-          if (index > 0) points.push(`L ${point.x} ${point.y}`);
-        });
-
-        // Close to baseline and back
-        points.push(`L ${segment[segment.length - 1].x} ${baselineY}`);
-        points.push(`L ${segment[0].x} ${baselineY}`);
-        points.push("Z");
-
-        return points.join(" ");
-      })
-      .filter((path) => path !== "");
+    return { path, points, totalWidth };
   };
 
-  const path = generatePath();
-  const greenAreaPaths = generateGreenAreaPaths();
-  const yellowAreaPaths = generateYellowAreaPaths();
+  const { path, points, totalWidth } = generateCompletePath();
 
-  // Transform values for the dot position
-  // const dotX = useTransform(clipPathValue, [0, 1], [0, width]);
-  /*const dotY = useTransform(clipPathValue, (progress) => {
-    const index = Math.floor(progress * (priceData.length - 1));
-    const price = priceData[index] || priceData[0];
-    return height - ((price - minPrice) / priceRange) * height;
-  });*/
+  // Animation loop
+  useEffect(() => {
+    const animate = () => {
+      setScrollOffset((prevOffset) => {
+        const newOffset = prevOffset + scrollSpeed;
+        // Reset when the line has completely scrolled past
+        return newOffset > totalWidth + viewportWidth ? 0 : newOffset;
+      });
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [totalWidth, viewportWidth]);
+
+  // Get current price at the 75% position
+  const measurementX = viewportWidth * 0.75;
+  const getCurrentPrice = () => {
+    // Find exact position between points for smooth interpolation
+    const originalPositionAtMeasurement = (measurementX + scrollOffset) % totalWidth;
+    const exactIndex = originalPositionAtMeasurement / pointSpacing;
+
+    // Get the two surrounding points
+    const lowerIndex = Math.floor(exactIndex);
+    const upperIndex = Math.ceil(exactIndex);
+
+    // Handle bounds
+    const clampedLowerIndex = Math.max(0, Math.min(lowerIndex, points.length - 1));
+    const clampedUpperIndex = Math.max(0, Math.min(upperIndex, points.length - 1));
+
+    // If we're exactly on a point, return that price
+    if (clampedLowerIndex === clampedUpperIndex) {
+      return points[clampedLowerIndex].price;
+    }
+
+    // Linear interpolation between the two points
+    const t = exactIndex - lowerIndex; // fraction between 0 and 1
+    const lowerPrice = points[clampedLowerIndex].price;
+    const upperPrice = points[clampedUpperIndex].price;
+
+    return lowerPrice + (upperPrice - lowerPrice) * t;
+  };
+
+  const currentPrice = getCurrentPrice();
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full">
-      <div>
-        <div>
-          <svg width={width} height={height}>
-            <defs>
-              <pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse">
-                <path d="M 72 0 L 0 0 0 72" fill="none" stroke="#D9D9D9" strokeWidth="1" />
-              </pattern>
-              <linearGradient id="priceGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: "#387F5C", stopOpacity: 1 }} />
-                <stop offset="49.9999%" style={{ stopColor: "#387F5C", stopOpacity: 1 }} />
-                <stop offset="50.0001%" style={{ stopColor: "#D5AB38", stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: "#D5AB38", stopOpacity: 1 }} />
-              </linearGradient>
+      <div ref={containerRef} className="w-full">
+        <svg width="100%" height={height} viewBox={`0 0 ${viewportWidth} ${height}`}>
+          <defs>
+            <pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse">
+              <path d="M 72 0 L 0 0 0 72" fill="none" stroke="#D9D9D9" strokeWidth="1" />
+            </pattern>
+            {/* Clip path to hide line outside viewport */}
+            <clipPath id="viewport">
+              <rect x="0" y="0" width={viewportWidth - viewportWidth * 0.25} height={height} />
+            </clipPath>
+          </defs>
 
-              {/* Gradient for green area (above 1) */}
-              <linearGradient id="greenAreaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: "#387F5C", stopOpacity: 0.4 }} />
-                <stop offset="100%" style={{ stopColor: "#387F5C", stopOpacity: 0.1 }} />
-              </linearGradient>
+          <rect width="100%" height="100%" fill="url(#grid)" />
 
-              {/* Gradient for yellow area (below 1) */}
-              <linearGradient id="yellowAreaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: "#D5AB38", stopOpacity: 0.1 }} />
-                <stop offset="100%" style={{ stopColor: "#D5AB38", stopOpacity: 0.4 }} />
-              </linearGradient>
+          {/* Measurement line at 75% */}
+          <line
+            x1={measurementX}
+            y1={0}
+            x2={measurementX}
+            y2={height}
+            stroke="rgba(0,0,0,0.3)"
+            strokeWidth="2"
+            strokeDasharray="5,5"
+          />
 
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                <feMerge>
-                  <feMergeNode in="coloredBlur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            <rect width="100%" height="100%" fill="url(#grid)" />
-
-            {/* Animated axes */}
-            <line x1={0} y1={height / 2} x2={width} y2={height / 2} stroke="rgba(0,0,0,0.4)" strokeWidth="1" />
-
-            {/* Ghost line - shows full path */}
-            <path d={path} fill="none" stroke="rgba(0,0,0,0.15)" strokeWidth="2" strokeLinecap="round" />
-
-            <motion.g
-              style={{
-                clipPath: clipPathTemplate,
-              }}
-            >
-              {/* Green area fills (only where price is above 1) */}
-              {greenAreaPaths.map((pathData, index) => (
-                <path key={`green-${index}`} d={pathData} fill="url(#greenAreaGradient)" stroke="none" />
-              ))}
-
-              {/* Yellow area fills (only where price is below 1) */}
-              {yellowAreaPaths.map((pathData, index) => (
-                <path key={`yellow-${index}`} d={pathData} fill="url(#yellowAreaGradient)" stroke="none" />
-              ))}
-
-              {/* Animated price line */}
-              <path
-                d={path}
-                fill="none"
-                stroke="url(#priceGradient)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                filter="url(#glow)"
-              />
-            </motion.g>
-
-            {/* Current price indicator dot */}
-            {/*<motion.circle
-              r="5"
-              fill="#fff"
-              stroke="url(#priceGradient)"
+          {/* Scrolling price line */}
+          <g clipPath="url(#viewport)">
+            <path
+              d={path}
+              fill="none"
+              stroke="#22c55e"
               strokeWidth="3"
-              className="drop-shadow-lg"
-              cx={dotX}
-              cy={dotY}
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.8, 1, 0.8],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />*/}
-          </svg>
-        </div>
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              transform={`translate(${-scrollOffset}, 0)`}
+            />
+
+            {/* Duplicate the line for seamless looping */}
+            <path
+              d={path}
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              transform={`translate(${totalWidth - scrollOffset}, 0)`}
+            />
+          </g>
+
+          {/* Current measurement point */}
+          <circle cx={measurementX} cy={priceToY(currentPrice)} r="4" fill="#22c55e" stroke="white" strokeWidth="2" />
+        </svg>
       </div>
     </div>
   );
