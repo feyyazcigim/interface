@@ -35,34 +35,60 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
   // ------------------------------ Quote ------------------------------ //
 
   async quote(deposits: ExtendedPickedCratesDetails, advancedFarm: AdvancedFarmWorkflow, slippage: number) {
+    // Validation
     this.validateQuoteArgs(deposits, slippage);
 
     // Remove Liquidity
-    const removeLPResult = await this.getRemoveLiquidityOut(deposits, advancedFarm);
+    const removeLPResult = await this.errorHandler.wrapAsync(
+      () => this.getRemoveLiquidityOut(deposits, advancedFarm),
+      "remove liquidity simulation",
+      { amountIn: deposits.totalAmount.toHuman() },
+    );
 
     const pairAmount = removeLPResult[this.sourceWell.pair.index];
-    const swapParams = this.swapQuoter.generateSwapQuoteParams(this.buyToken, this.sellToken, pairAmount, slippage);
+    const swapParams = this.errorHandler.wrap(
+      () => this.swapQuoter.generateSwapQuoteParams(this.buyToken, this.sellToken, pairAmount, slippage),
+      "generate swap quote params",
+      { pairAmount: pairAmount.toHuman(), sellToken: this.sellToken.symbol, buyToken: this.buyToken.symbol },
+    );
 
     // Swap
-    const swapQuotes = await ZeroX.quote(swapParams);
-    if (swapQuotes.length !== 1) {
-      throw new Error("Expected 1 swap quote");
-    }
+    const swapQuotes = await this.errorHandler.wrapAsync(() => ZeroX.quote(swapParams), "0x swap quotation", {
+      sellToken: this.sellToken.symbol,
+      buyToken: this.buyToken.symbol,
+      amount: pairAmount.toHuman(),
+    });
+
+    this.errorHandler.assert(swapQuotes.length === 1, "Expected exactly 1 swap quote from 0x", {
+      quotesCount: swapQuotes.length,
+    });
 
     const swapQuote = swapQuotes[0];
 
     // Add Liquidity
-    const addLiquidityAmountOut = await this.getAddLiquidityOut(
-      this.#getAddLiquidityParams(removeLPResult, swapQuote),
-      advancedFarm,
+    const addLiquidityParams = this.errorHandler.wrap(
+      () => this.#getAddLiquidityParams(removeLPResult, swapQuote),
+      "calculate add liquidity params",
+      { swapQuoteAmount: swapQuote.minBuyAmount },
     );
 
-    const swapSummary = this.swapQuoter.makeSwapSummary(
-      swapQuote,
-      this.sellToken,
-      this.buyToken,
-      this.sourceWell.pair.price,
-      this.targetWell.pair.price,
+    const addLiquidityAmountOut = await this.errorHandler.wrapAsync(
+      () => this.getAddLiquidityOut(addLiquidityParams, advancedFarm),
+      "add liquidity simulation",
+      { addLiquidityParams: addLiquidityParams.map((v) => v.toHuman()) },
+    );
+
+    const swapSummary = this.errorHandler.wrap(
+      () =>
+        this.swapQuoter.makeSwapSummary(
+          swapQuote,
+          this.sellToken,
+          this.buyToken,
+          this.sourceWell.pair.price,
+          this.targetWell.pair.price,
+        ),
+      "create swap summary",
+      { sellToken: this.sellToken.symbol, buyToken: this.buyToken.symbol },
     );
 
     const summary = {
@@ -84,7 +110,11 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
       },
     };
 
-    const advPipeCalls = this.buildAdvancedPipeCalls(summary);
+    const advPipeCalls = this.errorHandler.wrap(
+      () => this.buildAdvancedPipeCalls(summary),
+      "build advanced pipe calls",
+      { sourceWell: this.sourceWell.pool.symbol, targetWell: this.targetWell.pool.symbol },
+    );
 
     return {
       pickedCrates: deposits,
@@ -98,19 +128,38 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
     pickedCratesDetails: ExtendedPickedCratesDetails,
     workflow: AdvancedFarmWorkflow,
   ): Promise<TV[]> {
+    // Validation
+    this.errorHandler.validateAmount(pickedCratesDetails.totalAmount, "remove liquidity amount");
+
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
     const [token0, token1] = this.sourceWell.tokens;
 
     pipe.add(encoders.well.getRemoveLiquidityOut(this.sourceWell.pool, pickedCratesDetails.totalAmount));
 
-    const simulate = await workflow.simulate({
-      after: pipe,
-      account: this.context.account,
-    });
+    const simulate = await this.errorHandler.wrapAsync(
+      () =>
+        workflow.simulate({
+          after: pipe,
+          account: this.context.account,
+        }),
+      "remove liquidity simulation",
+      { amountIn: pickedCratesDetails.totalAmount.toHuman(), account: this.context.account },
+    );
 
-    const result = this.#decodeRemoveLiquidityResult(simulate.result);
+    // Validate simulation results
+    this.errorHandler.validateSimulation(simulate, "remove liquidity simulation");
 
-    const amounts: TV[] = [TV.fromBigInt(result[0], token0.decimals), TV.fromBigInt(result[1], token1.decimals)];
+    const result = this.errorHandler.wrap(
+      () => this.#decodeRemoveLiquidityResult(simulate.result),
+      "decode remove liquidity result",
+      { resultLength: simulate.result.length },
+    );
+
+    const amounts: TV[] = this.errorHandler.wrap(
+      () => [TV.fromBigInt(result[0], token0.decimals), TV.fromBigInt(result[1], token1.decimals)],
+      "convert remove liquidity amounts",
+      { token0: token0.symbol, token1: token1.symbol },
+    );
 
     console.debug("[PipelineConvertStrategy/Equal2Equal] getRemoveLiquidityOut: ", {
       well: this.sourceWell.pool.name,
@@ -122,25 +171,57 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
   }
 
   async getAddLiquidityOut(amountsIn: TV[], advFarm: AdvancedFarmWorkflow): Promise<TV> {
+    // Validation
+    this.errorHandler.assert(amountsIn.length > 0, "Add liquidity amounts array is empty", {
+      amountsInLength: amountsIn.length,
+    });
+    amountsIn.forEach((amount, index) => {
+      this.errorHandler.validateAmount(amount, `add liquidity amount[${index}]`, { index });
+    });
+
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
+
+    const callData = this.errorHandler.wrap(
+      () =>
+        encodeFunctionData({
+          abi: abiSnippets.wells.getAddLiquidityOut,
+          functionName: "getAddLiquidityOut",
+          args: [amountsIn.map((v) => BigInt(v.blockchainString))],
+        }),
+      "encode add liquidity call data",
+      { amountsIn: amountsIn.map((v) => v.toHuman()) },
+    );
 
     pipe.add({
       target: this.targetWell.pool.address,
-      callData: encodeFunctionData({
-        abi: abiSnippets.wells.getAddLiquidityOut,
-        functionName: "getAddLiquidityOut",
-        args: [amountsIn.map((v) => BigInt(v.blockchainString))],
-      }),
+      callData,
       clipboard: Clipboard.encode([]),
     });
 
-    const simulate = await advFarm.simulate({
-      after: pipe,
-      account: this.context.account,
-    });
+    const simulate = await this.errorHandler.wrapAsync(
+      () =>
+        advFarm.simulate({
+          after: pipe,
+          account: this.context.account,
+        }),
+      "add liquidity simulation",
+      { amountsIn: amountsIn.map((v) => v.toHuman()), account: this.context.account },
+    );
 
-    const decodedAmountOut = this.#decodeAddLiquidityResult(simulate.result);
-    const amountOut = TV.fromBlockchain(decodedAmountOut, this.targetWell.pool.decimals);
+    // Validate simulation results
+    this.errorHandler.validateSimulation(simulate, "add liquidity simulation");
+
+    const decodedAmountOut = this.errorHandler.wrap(
+      () => this.#decodeAddLiquidityResult(simulate.result),
+      "decode add liquidity result",
+      { resultLength: simulate.result.length },
+    );
+
+    const amountOut = this.errorHandler.wrap(
+      () => TV.fromBlockchain(decodedAmountOut, this.targetWell.pool.decimals),
+      "convert add liquidity amount out",
+      { decodedAmountOut: decodedAmountOut.toString(), decimals: this.targetWell.pool.decimals },
+    );
 
     console.debug("[PipelineConvertStrategy/Equal2Equal] getAddLiquidityOut: ", {
       well: this.targetWell,
@@ -154,12 +235,24 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
   // ------------------------------ Build Advanced Pipe Calls ------------------------------ //
 
   buildAdvancedPipeCalls({ source, swap, target }: ConvertStrategyQuote<"LP2LP">["summary"]) {
-    if (!swap) {
-      throw new Error("Swap is required for equal2equal strategy");
-    }
+    // Validation
+    const validatedSwap = this.errorHandler.assertDefined(swap, "Swap is required for equal2equal strategy");
+    this.errorHandler.assert(!!source.well, "Source well is required", { hasSourceWell: !!source.well });
+    this.errorHandler.assert(!!target.well, "Target well is required", { hasTargetWell: !!target.well });
 
-    const sellTokenIndex = this.sourceWell.tokens.findIndex(
-      (t) => t.address.toLowerCase() === swap.sellToken.address.toLowerCase(),
+    const sellTokenIndex = this.errorHandler.wrap(
+      () => {
+        const index = this.sourceWell.tokens.findIndex(
+          (t) => t.address.toLowerCase() === validatedSwap.sellToken.address.toLowerCase(),
+        );
+        this.errorHandler.assert(index >= 0, "Sell token not found in source well tokens", {
+          sellToken: validatedSwap.sellToken.symbol,
+          sourceTokens: this.sourceWell.tokens.map((t) => t.symbol),
+        });
+        return index;
+      },
+      "find sell token index",
+      { sellToken: validatedSwap.sellToken.symbol },
     );
 
     const pipe = new AdvancedPipeWorkflow(
@@ -177,24 +270,27 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
     );
 
     // 2: Approve swap contract to spend sellToken
-    pipe.add(Eq2EQStrategy.snippets.erc20Approve(swap.sellToken, swap.quote.transaction.to));
+    pipe.add(Eq2EQStrategy.snippets.erc20Approve(validatedSwap.sellToken, validatedSwap.quote.transaction.to));
 
     // 3: Swap non-bean token of well 1 for non-bean token of well 2
     pipe.add({
-      target: swap.quote.transaction.to,
-      callData: swap.quote.transaction.data,
+      target: validatedSwap.quote.transaction.to,
+      callData: validatedSwap.quote.transaction.data,
       clipboard: Clipboard.encode([]),
     });
 
     // 4: check balance of buyToken in pipeline.
     pipe.add(
-      Eq2EQStrategy.snippets.erc20BalanceOf(swap.buyToken, pipelineAddress[resolveChainId(this.context.chainId)]),
+      Eq2EQStrategy.snippets.erc20BalanceOf(
+        validatedSwap.buyToken,
+        pipelineAddress[resolveChainId(this.context.chainId)],
+      ),
     );
 
     // 4: transfer swap result to target well
     pipe.add(
       Eq2EQStrategy.snippets.erc20Transfer(
-        swap.buyToken,
+        validatedSwap.buyToken,
         target.well.pool.address,
         TV.ZERO, // overriden w/ clipboard
         Clipboard.encodeSlot(4, 0, 1),
@@ -243,33 +339,69 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
   // ------------------------------ Decoders ------------------------------ //
 
   #decodeRemoveLiquidityResult(data: readonly HashString[]) {
-    const decoded = decodeFunctionResult({
-      abi: abiSnippets.advancedPipe,
-      functionName: "advancedPipe",
-      data: data[data.length - 1],
+    this.errorHandler.assert(data.length > 0, "Remove liquidity result data is empty", {
+      dataLength: data.length,
     });
 
-    const removeLiquidityResult = decodeFunctionResult({
-      abi: abiSnippets.wells.getRemoveLiquidityOut,
-      functionName: "getRemoveLiquidityOut",
-      data: decoded[decoded.length - 1],
+    const decoded = this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.advancedPipe,
+          functionName: "advancedPipe",
+          data: data[data.length - 1],
+        }),
+      "decode advanced pipe result",
+      { dataLength: data.length },
+    );
+
+    this.errorHandler.assert(decoded.length > 0, "Decoded advanced pipe result is empty", {
+      decodedLength: decoded.length,
     });
+
+    const removeLiquidityResult = this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.wells.getRemoveLiquidityOut,
+          functionName: "getRemoveLiquidityOut",
+          data: decoded[decoded.length - 1],
+        }),
+      "decode remove liquidity result",
+      { decodedLength: decoded.length },
+    );
 
     return removeLiquidityResult;
   }
 
   #decodeAddLiquidityResult(data: readonly HashString[]) {
-    const decoded = decodeFunctionResult({
-      abi: abiSnippets.advancedPipe,
-      functionName: "advancedPipe",
-      data: data[data.length - 1],
+    this.errorHandler.assert(data.length > 0, "Add liquidity result data is empty", {
+      dataLength: data.length,
     });
 
-    const addLiquidityResult = decodeFunctionResult({
-      abi: abiSnippets.wells.getAddLiquidityOut,
-      functionName: "getAddLiquidityOut",
-      data: decoded[decoded.length - 1],
+    const decoded = this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.advancedPipe,
+          functionName: "advancedPipe",
+          data: data[data.length - 1],
+        }),
+      "decode advanced pipe result for add liquidity",
+      { dataLength: data.length },
+    );
+
+    this.errorHandler.assert(decoded.length > 0, "Decoded advanced pipe result is empty for add liquidity", {
+      decodedLength: decoded.length,
     });
+
+    const addLiquidityResult = this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.wells.getAddLiquidityOut,
+          functionName: "getAddLiquidityOut",
+          data: decoded[decoded.length - 1],
+        }),
+      "decode add liquidity result",
+      { decodedLength: decoded.length },
+    );
 
     return addLiquidityResult;
   }
