@@ -40,23 +40,23 @@ export interface ConvertScalarCacheMetrics {
 }
 
 /**
-   * IConvertScalarCache Interface & Implementations
-   * 
-   * Architecture notes:
-   * 
-   * The scalar cache system provides efficient caching for expensive calculations
-   * used in conversion quotations, particularly for iterative algorithms like
-   * the jump search used in max convert calculations.
-   * 
-   * [Cache Implementations]
-   * Two implementations are provided:
-   * 1. InMemoryConvertScalarCache: Full-featured caching with metrics
-   * 
-   * [Metrics and Monitoring]
-   * The in-memory implementation tracks:
-   * - Cache hit/miss ratios for performance analysis
-   * - Staleness detection for cache invalidation
-   */
+ * IConvertScalarCache Interface & Implementations
+ *
+ * Architecture notes:
+ *
+ * The scalar cache system provides efficient caching for expensive calculations
+ * used in conversion quotations, particularly for iterative algorithms like
+ * the jump search used in max convert calculations.
+ *
+ * [Cache Implementations]
+ * Two implementations are provided:
+ * 1. InMemoryConvertScalarCache: Full-featured caching with metrics
+ *
+ * [Metrics and Monitoring]
+ * The in-memory implementation tracks:
+ * - Cache hit/miss ratios for performance analysis
+ * - Staleness detection for cache invalidation
+ */
 export class InMemoryConvertScalarCache implements IConvertScalarCache {
   private scalars: Record<string, number> = {};
   private lastUpdateTime: number = 0;
@@ -112,7 +112,6 @@ export class InMemoryConvertScalarCache implements IConvertScalarCache {
     return `${source.address.toLowerCase()}-${target.address.toLowerCase()}`;
   }
 }
-
 
 // Keeping for testing purposes
 // /**

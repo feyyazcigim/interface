@@ -43,31 +43,31 @@ export type ExtendedPriceResult = PriceContractPriceResult<TV, Token, ExtendedPo
  */
 const REFETCH_INTERVAL = 1000 * 15; // 15 seconds
 
-  /**
-   * SiloConvertCache
-   * 
-   * Architecture notes:
-   * 
-   * The SiloConvertCache manages all cached data required for conversion quotations,
-   * including price data, well information, and pool states.
-   *
-   * [Cache Strategy]
-   * The cache uses a 15-second refresh interval for price-sensitive data.
-   * We opt to cache this data separately from what is managed by Wagmi's hooks to have greater control over when the cache is updated.
-   * 
-   * Refetching price & well data via the hooks causes re-renders throughout the app that could cause performance bottlenecks,
-   * so we introduce a degree of redundancy to ensure we have the most up to date data.
-   * 
-   * [Data Sources]
-   * The cache aggregates data from multiple sources:
-   * 1. Price contract for real-time token pricing
-   * 2. Well contracts for liquidity pool states
-   * 
-   * [Extended Well Data]
-   * The cache enriches basic well data with:
-   * - Pair token information and metadata
-   * - Current ΔP (delta B) calculations
-   */
+/**
+ * SiloConvertCache
+ *
+ * Architecture notes:
+ *
+ * The SiloConvertCache manages all cached data required for conversion quotations,
+ * including price data, well information, and pool states.
+ *
+ * [Cache Strategy]
+ * The cache uses a 15-second refresh interval for price-sensitive data.
+ * We opt to cache this data separately from what is managed by Wagmi's hooks to have greater control over when the cache is updated.
+ *
+ * Refetching price & well data via the hooks causes re-renders throughout the app that could cause performance bottlenecks,
+ * so we introduce a degree of redundancy to ensure we have the most up to date data.
+ *
+ * [Data Sources]
+ * The cache aggregates data from multiple sources:
+ * 1. Price contract for real-time token pricing
+ * 2. Well contracts for liquidity pool states
+ *
+ * [Extended Well Data]
+ * The cache enriches basic well data with:
+ * - Pair token information and metadata
+ * - Current ΔP (delta B) calculations
+ */
 export class SiloConvertCache {
   /** Shared context */
   #context: SiloConvertContext;

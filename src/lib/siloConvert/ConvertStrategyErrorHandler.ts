@@ -2,34 +2,34 @@ import { TV } from "@/classes/TokenValue";
 import { ConversionQuotationError, InvalidAmountError, SimulationError } from "@/lib/siloConvert/SiloConvertErrors";
 
 /**
-   * ConvertStrategyErrorHandler
-   * 
-   * Architecture notes:
-   * 
-   * The ConvertStrategyErrorHandler provides centralized error handling for all
-   * conversion strategies, ensuring consistent error reporting and debugging context.
-   * 
-   * [Error Wrapping Strategy]
-   * The handler wraps all strategy operations with try-catch blocks that:
-   * 1. Capture the original error context
-   * 2. Add strategy-specific metadata
-   * 3. Transform errors into user-friendly messages
-   * 4. Preserve stack traces for debugging
-   * 
-   * [Validation Framework]
-   * The handler provides validation utilities for:
-   * - Token amounts and balance sufficiency
-   * - Slippage tolerance limits
-   * - Simulation result integrity
-   * - Type-safe assertions with detailed error messages
-   * 
-   * [Strategy Integration]
-   * Each conversion strategy uses the error handler to:
-   * - Wrap quote generation operations
-   * - Validate input parameters
-   * - Handle simulation failures
-   * - Provide consistent error reporting
-   */
+ * ConvertStrategyErrorHandler
+ *
+ * Architecture notes:
+ *
+ * The ConvertStrategyErrorHandler provides centralized error handling for all
+ * conversion strategies, ensuring consistent error reporting and debugging context.
+ *
+ * [Error Wrapping Strategy]
+ * The handler wraps all strategy operations with try-catch blocks that:
+ * 1. Capture the original error context
+ * 2. Add strategy-specific metadata
+ * 3. Transform errors into user-friendly messages
+ * 4. Preserve stack traces for debugging
+ *
+ * [Validation Framework]
+ * The handler provides validation utilities for:
+ * - Token amounts and balance sufficiency
+ * - Slippage tolerance limits
+ * - Simulation result integrity
+ * - Type-safe assertions with detailed error messages
+ *
+ * [Strategy Integration]
+ * Each conversion strategy uses the error handler to:
+ * - Wrap quote generation operations
+ * - Validate input parameters
+ * - Handle simulation failures
+ * - Provide consistent error reporting
+ */
 export class ConvertStrategyErrorHandler {
   constructor(
     private sourceToken: string,

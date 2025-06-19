@@ -36,32 +36,32 @@ interface ConvertTokens {
  */
 const MIN_THRESHOLD = 150;
 
- /**
-   * SiloConvertMaxConvertQuoter
-   * 
-   * Architecture notes:
-   * 
-   * The SiloConvertMaxConvertQuoter is responsible for calculating the maximum convertible
-   * amount between any two tokens in the Silo. It handles both:
-   * 1. LP ↔ Main token conversions (default converts)
-   * 2. LP ↔ LP conversions (pipeline converts)
-   * 
-   * [Max Convert Calculation Strategy]
-   * For default converts (LP ↔ Main token), the quoter uses a jump algorithm to find
-   * the maximum safe conversion amount that maintains system stability.
-   * 
-   * For LP ↔ LP converts, the quoter must consider:
-   * - The ΔP (delta B) of both source and target wells
-   * - Available liquidity in both wells
-   * - Strategy-specific constraints (SSMT, SSPT, EQ2EQ)
-   * 
-   * [Scalar Caching]
-   * The quoter implements caching for scalar values to avoid redundant calculations.
-   * The cache tracks:
-   * - Hit/miss ratios for performance monitoring
-   * - Staleness detection for cache invalidation
-   *
-   */
+/**
+ * SiloConvertMaxConvertQuoter
+ *
+ * Architecture notes:
+ *
+ * The SiloConvertMaxConvertQuoter is responsible for calculating the maximum convertible
+ * amount between any two tokens in the Silo. It handles both:
+ * 1. LP ↔ Main token conversions (default converts)
+ * 2. LP ↔ LP conversions (pipeline converts)
+ *
+ * [Max Convert Calculation Strategy]
+ * For default converts (LP ↔ Main token), the quoter uses a jump algorithm to find
+ * the maximum safe conversion amount that maintains system stability.
+ *
+ * For LP ↔ LP converts, the quoter must consider:
+ * - The ΔP (delta B) of both source and target wells
+ * - Available liquidity in both wells
+ * - Strategy-specific constraints (SSMT, SSPT, EQ2EQ)
+ *
+ * [Scalar Caching]
+ * The quoter implements caching for scalar values to avoid redundant calculations.
+ * The cache tracks:
+ * - Hit/miss ratios for performance monitoring
+ * - Staleness detection for cache invalidation
+ *
+ */
 export class SiloConvertMaxConvertQuoter {
   private readonly context: SiloConvertContext;
   private readonly cache: SiloConvertCache;

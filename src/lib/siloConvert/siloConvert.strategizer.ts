@@ -32,29 +32,29 @@ export interface SiloConvertRoute<T extends SiloConvertType> {
   strategies: Prettify<StrategyWithAmount<T>>[];
   convertType: T;
 }
- /**
-   * SiloConvertStrategizer
-   * 
-   * Architecture notes:
-   * 
-   * The Strategizer is the brain of the conversion system, responsible for:
-   * 1. Analyzing market conditions and token relationships
-   * 2. Selecting optimal conversion strategies based on ΔP analysis
-   * 3. Determining conversion amounts and route selection
-   * 
-   * [Strategy Selection Logic]
-   * The strategizer uses the following decision matrix for LP ↔ LP conversions:
-   * - If ΔP(source) > 0 & ΔP(target) < 0: Use Single-Sided Pair Token (SSPT) strategy
-   * - If ΔP(source) < 0 & ΔP(target) > 0: Use Single-Sided Main Token (SSMT) strategy  
-   * - If ΔP(source) & ΔP(target) have same sign: Use Equal-to-Equal (EQ2EQ) strategy
-   * 
-   * [Route Optimization]
-   * When the requested amount exceeds the maximum safe amount for a preferred strategy,
-   * the strategizer automatically splits the conversion into multiple routes:
-   * 1. Maximum amount via the optimal strategy (SSPT/SSMT)
-   * 2. Remainder via the fallback strategy (EQ2EQ)
-   * 
-   */
+/**
+ * SiloConvertStrategizer
+ *
+ * Architecture notes:
+ *
+ * The Strategizer is the brain of the conversion system, responsible for:
+ * 1. Analyzing market conditions and token relationships
+ * 2. Selecting optimal conversion strategies based on ΔP analysis
+ * 3. Determining conversion amounts and route selection
+ *
+ * [Strategy Selection Logic]
+ * The strategizer uses the following decision matrix for LP ↔ LP conversions:
+ * - If ΔP(source) > 0 & ΔP(target) < 0: Use Single-Sided Pair Token (SSPT) strategy
+ * - If ΔP(source) < 0 & ΔP(target) > 0: Use Single-Sided Main Token (SSMT) strategy
+ * - If ΔP(source) & ΔP(target) have same sign: Use Equal-to-Equal (EQ2EQ) strategy
+ *
+ * [Route Optimization]
+ * When the requested amount exceeds the maximum safe amount for a preferred strategy,
+ * the strategizer automatically splits the conversion into multiple routes:
+ * 1. Maximum amount via the optimal strategy (SSPT/SSMT)
+ * 2. Remainder via the fallback strategy (EQ2EQ)
+ *
+ */
 export class Strategizer {
   constructor(
     private readonly context: SiloConvertContext,

@@ -14,22 +14,21 @@ import { ConvertStrategyQuote, SiloConvertType } from "./types";
 
 export type RemoveLiquidityStrategy = "equal" | "single-main" | "single-pair";
 
-
- /**
-   * PipelineConvertStrategy (Abstract Base Class)
-   * 
-   * Architecture notes:
-   * 
-   * PipelineConvertStrategy is the base class for all conversion strategies that
-   * utilizes 'diamond.pipelineConvert' for multi-step conversions.
-   * 
-   * [Operation Snippets]
-   * The strategy provides utility methods:
-   * - Encoding
-   * - ERC20 methods
-   * - Well liquidity operations (add/remove)
-   * - Junction operations for conditional logic
-   */
+/**
+ * PipelineConvertStrategy (Abstract Base Class)
+ *
+ * Architecture notes:
+ *
+ * PipelineConvertStrategy is the base class for all conversion strategies that
+ * utilizes 'diamond.pipelineConvert' for multi-step conversions.
+ *
+ * [Operation Snippets]
+ * The strategy provides utility methods:
+ * - Encoding
+ * - ERC20 methods
+ * - Well liquidity operations (add/remove)
+ * - Junction operations for conditional logic
+ */
 export abstract class PipelineConvertStrategy<T extends SiloConvertType> extends SiloConvertStrategy<T> {
   /// ------------------------------ Abstract Methods ------------------------------ ///
 

@@ -31,14 +31,14 @@ import { decodeConvertResults } from "./utils";
  *
  * To fetch the maximum convert, we utilize the SiloConvertMaxConvertQuoter class.
  * (more on this in ./SiloConvert.maxConvertQuoter.ts)
- * 
+ *
  * If the source or target is the main token, we refer to it as a 'default convert'.
  * For default converts, we create 2 different routes
  * - one that utilizes the Diamond's 'convert()' function
  * - one that utilizes the Diamond's 'pipelineConvert()' function (Only if path = LP -> Main)
- * 
+ *
  * For LP<>LP converts, we create 1 route that utilizes the Diamond's 'pipelineConvert()' function.
- * 
+ *
  * If we are converting LP<>LP, we must calculate the following information:
  * - Which strategies do we utilize?
  * - Given the strategies, how much can we convert via each strategy?

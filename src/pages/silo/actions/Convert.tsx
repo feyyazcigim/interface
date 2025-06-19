@@ -195,54 +195,57 @@ function ConvertForm({
   });
 
   const onSubmit = useCallback(async () => {
-    // setSubmitting(true);
-    // try {
-    //   if (!targetToken) throw new Error("Target token not set");
-    //   if (!account.address) throw new Error("Signer required");
-    //   if (!quote || quote.totalAmountOut.lte(0) || !expectedTotalStalk) throw new Error("No convert quote");
-    //   toast.loading(`Converting...`);
-    //   if (isDefaultConvert) {
-    //     // If there is only 1 quote, we can unwrap the quote & use the convert funciton directly instead of using advancedFarm
-    //     if (quote.quotes.length === 1) {
-    //       const singleQuote = quote.quotes[0];
-    //       const convertData = singleQuote.convertData;
-    //       const crates = singleQuote.pickedCrates.crates;
-    //       const stems = crates.map((crate) => crate.stem.toBigInt());
-    //       const amounts = crates.map((crate) => crate.amount.toBigInt());
-    //       if (!convertData || !stems.length || !amounts.length || stems.length !== amounts.length) {
-    //         throw new Error("Invalid convert data");
-    //       }
-    //       return writeWithEstimateGas({
-    //         address: diamond,
-    //         abi: diamondABI,
-    //         functionName: "convert",
-    //         args: [convertData, stems, amounts],
-    //       });
-    //     }
-    //   }
-    //   const encodedAdvFarm = [...quote.workflow.getSteps()];
-    //   if (!isDefaultConvert) {
-    //     const grownStalkChecks = siloConvert.getStalkChecks(expectedTotalStalk);
-    //     encodedAdvFarm.push(grownStalkChecks.encode());
-    //   }
-    //   return writeWithEstimateGas({
-    //     address: diamond,
-    //     abi: diamondABI,
-    //     functionName: "advancedFarm",
-    //     args: [encodedAdvFarm],
-    //   });
-    // } catch (e) {
-    //   console.error(e);
-    //   toast.error("Convert failed");
-    //   return e;
-    // } finally {
-    //   setSubmitting(false);
-    // }
+    setSubmitting(true);
+    try {
+      if (!targetToken) throw new Error("Target token not set");
+      if (!account.address) throw new Error("Signer required");
+      if (!exists(routeIndex)) throw new Error("No route index");
+      const bestQuote = quote?.[routeIndex];
+      if (!bestQuote || bestQuote.totalAmountOut.lte(0) || !expectedTotalStalk) throw new Error("No convert quote");
+      toast.loading(`Converting...`);
+      if (isDefaultConvert) {
+        // If there is only 1 quote, we can unwrap the quote & use the convert funciton directly instead of using advancedFarm
+        if (bestQuote.quotes.length === 1 && bestQuote.route.convertType === "LPAndMain") {
+          const singleQuote = bestQuote.quotes[0];
+          const convertData = singleQuote.convertData;
+          const crates = singleQuote.pickedCrates.crates;
+          const stems = crates.map((crate) => crate.stem.toBigInt());
+          const amounts = crates.map((crate) => crate.amount.toBigInt());
+          if (!convertData || !stems.length || !amounts.length || stems.length !== amounts.length) {
+            throw new Error("Invalid convert data");
+          }
+          return writeWithEstimateGas({
+            address: diamond,
+            abi: diamondABI,
+            functionName: "convert",
+            args: [convertData, stems, amounts],
+          });
+        }
+      }
+      const encodedAdvFarm = [...bestQuote.workflow.getSteps()];
+      if (!isDefaultConvert) {
+        const grownStalkChecks = siloConvert.getStalkChecks(expectedTotalStalk);
+        encodedAdvFarm.push(grownStalkChecks.encode());
+      }
+      return writeWithEstimateGas({
+        address: diamond,
+        abi: diamondABI,
+        functionName: "advancedFarm",
+        args: [encodedAdvFarm],
+      });
+    } catch (e) {
+      console.error(e);
+      toast.error("Convert failed");
+      return e;
+    } finally {
+      setSubmitting(false);
+    }
   }, [
     setSubmitting,
     writeWithEstimateGas,
     isDefaultConvert,
     diamond,
+    routeIndex,
     account.address,
     targetToken,
     quote,
@@ -390,8 +393,7 @@ function ConvertForm({
     );
   };
 
-  const warningRendered = renderGerminatingStalkWarning || renderDownPenaltyWarning || renderMinAmountWarning;
-  // renderGrownStalkPenaltyWarning;
+  const warningRendered = renderGerminatingStalkWarning || renderDownPenaltyWarning || renderMinAmountWarning || renderGrownStalkPenaltyWarning;
 
   const disabled =
     !targetToken ||
