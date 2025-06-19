@@ -4,7 +4,7 @@ import { SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
 import { SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import { useSiloData } from "@/state/useSiloData";
 import { SiloTokenData, Token } from "@/utils/types";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 const defaultData = {
   germinatingStalk: TV.ZERO,
@@ -43,10 +43,6 @@ export function useSiloConvertResult(
   const silo = useSiloData();
   const siloTokenData = silo.tokenData;
 
-  useEffect(() => {
-    console.log("summaries", summaries);
-  }, [summaries]);
-
   const results = useMemo(() => {
     if (!summaries || !target || !summaries.length) return;
 
@@ -80,8 +76,6 @@ export function useSiloConvertResult(
 
   const sortedIndexes = useMemo(() => {
     if (!results) return;
-
-    console.log("setting sorted results...");
 
     const sortedIndexes = [...results]
       .sort((a, b) => {

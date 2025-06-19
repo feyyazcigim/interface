@@ -159,10 +159,6 @@ function ConvertForm({
   const depositsMowAmount = deposits?.stalk.grown;
   const targetDepositsMowAmount = targetDeposits?.stalk.grown;
 
-  // useEffect(() => {
-  //   console.log("priceImpactSummary1", priceImpactSummary1);
-  // }, [priceImpactSummary1]);
-
   // The expected total amount of stalk from 'balanceOfStalk(account)' after the convert.
   const expectedTotalStalk = useMemo(() => {
     if (!convertResult) return;
