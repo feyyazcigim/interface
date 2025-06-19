@@ -1,9 +1,8 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { FarmerBalance } from "@/state/useFarmerBalances";
-import { calculateConvertData } from "@/utils/convert";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { FarmFromMode, Token } from "./types";
+import { FarmFromMode } from "./types";
 import { MayArray } from "./types.generic";
 
 export function cn(...inputs: ClassValue[]) {
