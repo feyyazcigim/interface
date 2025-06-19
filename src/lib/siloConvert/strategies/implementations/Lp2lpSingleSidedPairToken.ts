@@ -45,17 +45,24 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     const removeToken = this.sourceWell.tokens[this.removeIndex];
     const addToken = this.targetWell.tokens[this.addIndex];
 
-    if (removeToken.isMain) {
-      throw new Error(`Remove index ${this.removeIndex} must not be the main token`);
-    }
+    this.errorHandler.assert(!removeToken.isMain, `Remove index ${this.removeIndex} must not be the main token`, {
+      removeIndex: this.removeIndex,
+      removeToken: removeToken.symbol,
+      isMain: removeToken.isMain,
+    });
 
-    if (addToken.isMain) {
-      throw new Error(`Add index ${this.addIndex} must be the main token`);
-    }
+    this.errorHandler.assert(!addToken.isMain, `Add index ${this.addIndex} must not be the main token`, {
+      addIndex: this.addIndex,
+      addToken: addToken.symbol,
+      isMain: addToken.isMain,
+    });
 
-    if (tokensEqual(removeToken, addToken)) {
-      throw new Error("Remove and add indexes must be different tokens");
-    }
+    this.errorHandler.assert(!tokensEqual(removeToken, addToken), "Remove and add indexes must be different tokens", {
+      removeToken: removeToken.symbol,
+      addToken: addToken.symbol,
+      removeIndex: this.removeIndex,
+      addIndex: this.addIndex,
+    });
 
     this.removeToken = removeToken;
     this.addToken = addToken;
@@ -64,40 +71,65 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
   // ------------------------------ Quote ------------------------------ //
 
   async quote(deposits: ExtendedPickedCratesDetails, advancedFarm: AdvancedFarmWorkflow, slippage: number) {
+    // Validation
     this.validateQuoteArgs(deposits, slippage);
 
-    const amountsOut = await this.#getRemoveLiquidityOut(deposits, advancedFarm);
-    const pairAmountOut = amountsOut[this.removeIndex];
+    const amountsOut = await this.errorHandler.wrapAsync(
+      () => this.#getRemoveLiquidityOut(deposits, advancedFarm),
+      "remove liquidity simulation",
+      { amountIn: deposits.totalAmount.toHuman() },
+    );
 
-    const swapParams = this.swapQuoter.generateSwapQuoteParams(
-      this.addToken,
-      this.removeToken,
-      pairAmountOut,
-      slippage,
+    const pairAmountOut = amountsOut[this.removeIndex];
+    this.errorHandler.validateAmount(pairAmountOut, "pair amount out from remove liquidity");
+
+    const swapParams = this.errorHandler.wrap(
+      () => this.swapQuoter.generateSwapQuoteParams(this.addToken, this.removeToken, pairAmountOut, slippage),
+      "generate swap quote params",
+      {
+        sellToken: this.removeToken.symbol,
+        buyToken: this.addToken.symbol,
+        amount: pairAmountOut.toHuman(),
+      },
     );
 
     // Swap
-    const swapQuotes = await ZeroX.quote(swapParams);
-    if (swapQuotes.length !== 1) {
-      throw new Error("Expected 1 swap quote");
-    }
+    const swapQuotes = await this.errorHandler.wrapAsync(() => ZeroX.quote(swapParams), "0x swap quotation", {
+      sellToken: this.removeToken.symbol,
+      buyToken: this.addToken.symbol,
+      amount: pairAmountOut.toHuman(),
+    });
+
+    this.errorHandler.assert(swapQuotes.length === 1, "Expected exactly 1 swap quote from 0x", {
+      quotesCount: swapQuotes.length,
+    });
 
     console.debug("[SiloConvert/OneSidedPairToken] swapQuotes: ", {
       amountsOut,
       swapQuotes,
     });
 
-    const addAmountOut = await this.#getAddLiquidityOut(swapQuotes[0], advancedFarm);
+    const addAmountOut = await this.errorHandler.wrapAsync(
+      () => this.#getAddLiquidityOut(swapQuotes[0], advancedFarm),
+      "add liquidity simulation",
+      { swapQuoteAmount: swapQuotes[0].minBuyAmount },
+    );
+
     console.debug("[SiloConvert/OneSidedPairToken] addAmountOut: ", {
       addAmountOut: addAmountOut.toHuman(),
     });
 
-    const swapSummary = this.swapQuoter.makeSwapSummary(
-      swapQuotes[0],
-      this.removeToken,
-      this.addToken,
-      this.sourceWell.pair.price,
-      this.targetWell.pair.price,
+    const swapSummary = this.errorHandler.wrap(
+      () =>
+        this.swapQuoter.makeSwapSummary(
+          swapQuotes[0],
+          this.removeToken,
+          this.addToken,
+          this.sourceWell.pair.price,
+          this.targetWell.pair.price,
+        ),
+      "create swap summary",
+      { sellToken: this.removeToken.symbol, buyToken: this.addToken.symbol },
     );
 
     const summary = {
@@ -121,7 +153,10 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
 
     return {
       pickedCrates: deposits,
-      advPipeCalls: this.buildAdvancedPipeCalls(summary),
+      advPipeCalls: this.errorHandler.wrap(() => this.buildAdvancedPipeCalls(summary), "build advanced pipe calls", {
+        sourceWell: this.sourceWell.pool.symbol,
+        targetWell: this.targetWell.pool.symbol,
+      }),
       amountOut: addAmountOut,
       summary,
     };
@@ -130,9 +165,12 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
   // ------------------------------ Build Advanced Pipe Calls ------------------------------ //
 
   buildAdvancedPipeCalls({ source, swap, target }: ConvertStrategyQuote<"LP2LP">["summary"]) {
-    if (!swap) {
-      throw new Error("Swap is required for one sided pair token strategy");
-    }
+    // Validation
+    const validatedSwap = this.errorHandler.assertDefined(swap, "Swap is required for one sided pair token strategy");
+    this.errorHandler.assert(!!source.well, "Source well is required", { hasSourceWell: !!source.well });
+    this.errorHandler.assert(!!target.well, "Target well is required", { hasTargetWell: !!target.well });
+    this.errorHandler.validateAmount(source.amountIn, "source amount in");
+    this.errorHandler.validateAmount(target.minAmountOut, "target min amount out");
 
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
@@ -151,24 +189,27 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     );
 
     // 2. approve swap contract to spend sellToken
-    pipe.add(OneSidedPairToken.snippets.erc20Approve(swap.sellToken, swap.quote.transaction.to));
+    pipe.add(OneSidedPairToken.snippets.erc20Approve(validatedSwap.sellToken, validatedSwap.quote.transaction.to));
 
     // 3. swap removeToken for addToken via 0x
     pipe.add({
-      target: swap.quote.transaction.to,
-      callData: swap.quote.transaction.data,
+      target: validatedSwap.quote.transaction.to,
+      callData: validatedSwap.quote.transaction.data,
       clipboard: Clipboard.encode([]),
     });
 
     // 4. get balance of buyToken
     pipe.add(
-      OneSidedPairToken.snippets.erc20BalanceOf(swap.buyToken, pipelineAddress[resolveChainId(this.context.chainId)]),
+      OneSidedPairToken.snippets.erc20BalanceOf(
+        validatedSwap.buyToken,
+        pipelineAddress[resolveChainId(this.context.chainId)],
+      ),
     );
 
     // 5. transfer swap result to target well
     pipe.add(
       OneSidedPairToken.snippets.erc20Transfer(
-        swap.buyToken,
+        validatedSwap.buyToken,
         target.well.pool.address,
         TV.MAX_UINT256, // overriden w/ clipboard
         Clipboard.encodeSlot(4, 0, 1),
@@ -184,43 +225,97 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
   // ------------------------------ Private Methods ------------------------------ //
 
   async #getAddLiquidityOut(swapQuote: ZeroXQuoteV2Response, advancedFarm: AdvancedFarmWorkflow) {
-    const buyAmount = TV.fromBlockchain(swapQuote.minBuyAmount, this.addToken.decimals);
+    // Validation
+    this.errorHandler.assert(!!swapQuote.minBuyAmount, "Swap quote minBuyAmount is required", {
+      minBuyAmount: swapQuote.minBuyAmount,
+    });
+
+    const buyAmount = this.errorHandler.wrap(
+      () => TV.fromBlockchain(swapQuote.minBuyAmount, this.addToken.decimals),
+      "convert swap buy amount",
+      { minBuyAmount: swapQuote.minBuyAmount, decimals: this.addToken.decimals },
+    );
 
     const amountsIn = [TV.ZERO, buyAmount];
     if (this.addIndex === 0) {
       amountsIn.reverse();
     }
 
-    const pipe = this.#constructAddAdvancedPipe(amountsIn);
+    const pipe = this.errorHandler.wrap(
+      () => this.#constructAddAdvancedPipe(amountsIn),
+      "construct add advanced pipe",
+      { amountsIn: amountsIn.map((v) => v.toHuman()) },
+    );
 
-    const simulate = await advancedFarm.simulate({
-      after: pipe,
-      account: this.context.account,
-    });
+    const simulate = await this.errorHandler.wrapAsync(
+      () =>
+        advancedFarm.simulate({
+          after: pipe,
+          account: this.context.account,
+        }),
+      "add liquidity simulation",
+      { amountsIn: amountsIn.map((v) => v.toHuman()), account: this.context.account },
+    );
 
-    const addAmountOut = this.#decodeAddLiquidityResult(simulate.result);
+    // Validate simulation results
+    this.errorHandler.validateSimulation(simulate, "add liquidity simulation");
 
-    return TV.fromBigInt(addAmountOut, this.targetWell.pool.decimals);
+    const addAmountOut = this.errorHandler.wrap(
+      () => this.#decodeAddLiquidityResult(simulate.result),
+      "decode add liquidity result",
+      { resultLength: simulate.result.length },
+    );
+
+    return this.errorHandler.wrap(
+      () => TV.fromBigInt(addAmountOut, this.targetWell.pool.decimals),
+      "convert add liquidity amount out",
+      { addAmountOut: addAmountOut.toString(), decimals: this.targetWell.pool.decimals },
+    );
   }
 
   async #getRemoveLiquidityOut(
     pickedCratesDetails: ExtendedPickedCratesDetails,
     advancedFarm: AdvancedFarmWorkflow,
   ): Promise<TV[]> {
-    const pipe = this.#constructRemoveAdvancedPipe(pickedCratesDetails.totalAmount);
+    // Validation
+    this.errorHandler.validateAmount(pickedCratesDetails.totalAmount, "remove liquidity amount");
 
-    const result = await advancedFarm.simulate({
-      after: pipe,
-      account: this.context.account,
-    });
+    const pipe = this.errorHandler.wrap(
+      () => this.#constructRemoveAdvancedPipe(pickedCratesDetails.totalAmount),
+      "construct remove advanced pipe",
+      { amountIn: pickedCratesDetails.totalAmount.toHuman() },
+    );
 
-    const decodedResults = this.#decodeRemoveLiquidityResult(result.result);
+    const result = await this.errorHandler.wrapAsync(
+      () =>
+        advancedFarm.simulate({
+          after: pipe,
+          account: this.context.account,
+        }),
+      "remove liquidity simulation",
+      { amountIn: pickedCratesDetails.totalAmount.toHuman(), account: this.context.account },
+    );
 
-    const amountsOut = [TV.ZERO, TV.fromBigInt(decodedResults, this.removeToken.decimals)];
+    // Validate simulation results
+    this.errorHandler.validateSimulation(result, "remove liquidity simulation");
 
-    if (this.removeIndex === 0) {
-      amountsOut.reverse();
-    }
+    const decodedResults = this.errorHandler.wrap(
+      () => this.#decodeRemoveLiquidityResult(result.result),
+      "decode remove liquidity result",
+      { resultLength: result.result.length },
+    );
+
+    const amountsOut = this.errorHandler.wrap(
+      () => {
+        const amounts = [TV.ZERO, TV.fromBigInt(decodedResults, this.removeToken.decimals)];
+        if (this.removeIndex === 0) {
+          amounts.reverse();
+        }
+        return amounts;
+      },
+      "convert remove liquidity amounts out",
+      { removeToken: this.removeToken.symbol, removeIndex: this.removeIndex },
+    );
 
     return amountsOut;
   }
@@ -228,14 +323,30 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
   // ------------------------------ Construct Advanced Pipe Methods ------------------------------ //
 
   #constructRemoveAdvancedPipe(amount: TV) {
+    // Validation
+    this.errorHandler.validateAmount(amount, "construct remove pipe amount");
+    this.errorHandler.assert(
+      this.removeIndex >= 0 && this.removeIndex < this.sourceWell.tokens.length,
+      "Remove index is out of bounds",
+      { removeIndex: this.removeIndex, sourceTokensLength: this.sourceWell.tokens.length },
+    );
+
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
+
+    const callData = this.errorHandler.wrap(
+      () =>
+        encodeFunctionData({
+          abi: abiSnippets.wells.getRemoveLiquidityOneTokenOut,
+          functionName: "getRemoveLiquidityOneTokenOut",
+          args: [amount.toBigInt(), this.sourceWell.tokens[this.removeIndex].address],
+        }),
+      "encode remove liquidity one token call data",
+      { amount: amount.toHuman(), removeIndex: this.removeIndex },
+    );
+
     pipe.add({
       target: this.sourceWell.pool.address,
-      callData: encodeFunctionData({
-        abi: abiSnippets.wells.getRemoveLiquidityOneTokenOut,
-        functionName: "getRemoveLiquidityOneTokenOut",
-        args: [amount.toBigInt(), this.sourceWell.tokens[this.removeIndex].address],
-      }),
+      callData,
       clipboard: Clipboard.encode([]),
     });
 
@@ -243,15 +354,30 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
   }
 
   #constructAddAdvancedPipe(amountsIn: TV[]) {
+    // Validation
+    this.errorHandler.assert(amountsIn.length > 0, "Add liquidity amounts array is empty", {
+      amountsInLength: amountsIn.length,
+    });
+    amountsIn.forEach((amount, index) => {
+      this.errorHandler.validateAmount(amount, `construct add pipe amount[${index}]`, { index });
+    });
+
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
+
+    const callData = this.errorHandler.wrap(
+      () =>
+        encodeFunctionData({
+          abi: abiSnippets.wells.getAddLiquidityOut,
+          functionName: "getAddLiquidityOut",
+          args: [amountsIn.map((v) => v.toBigInt())],
+        }),
+      "encode add liquidity call data",
+      { amountsIn: amountsIn.map((v) => v.toHuman()) },
+    );
 
     pipe.add({
       target: this.targetWell.pool.address,
-      callData: encodeFunctionData({
-        abi: abiSnippets.wells.getAddLiquidityOut,
-        functionName: "getAddLiquidityOut",
-        args: [amountsIn.map((v) => v.toBigInt())],
-      }),
+      callData,
       clipboard: Clipboard.encode([]),
     });
 
@@ -261,33 +387,59 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
   // ------------------------------ Decode Methods ------------------------------ //
 
   #decodeRemoveLiquidityResult(data: readonly HashString[]): bigint {
-    if (!data.length) {
-      throw new Error("No data to decode");
-    }
-
-    const decoded = AdvancedPipeWorkflow.decodeResult(data[data.length - 1]);
-
-    const removeAmountBigInt = decodeFunctionResult({
-      abi: abiSnippets.wells.getRemoveLiquidityOneTokenOut,
-      functionName: "getRemoveLiquidityOneTokenOut",
-      data: decoded[decoded.length - 1], // Last index
+    this.errorHandler.assert(data.length > 0, "No data to decode for remove liquidity", {
+      dataLength: data.length,
     });
+
+    const decoded = this.errorHandler.wrap(
+      () => AdvancedPipeWorkflow.decodeResult(data[data.length - 1]),
+      "decode advanced pipe result for remove liquidity",
+      { dataLength: data.length },
+    );
+
+    this.errorHandler.assert(decoded.length > 0, "Decoded result is empty for remove liquidity", {
+      decodedLength: decoded.length,
+    });
+
+    const removeAmountBigInt = this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.wells.getRemoveLiquidityOneTokenOut,
+          functionName: "getRemoveLiquidityOneTokenOut",
+          data: decoded[decoded.length - 1], // Last index
+        }),
+      "decode remove liquidity one token result",
+      { decodedLength: decoded.length },
+    );
 
     return removeAmountBigInt;
   }
 
   #decodeAddLiquidityResult(data: readonly HashString[]): bigint {
-    if (!data.length) {
-      throw new Error("No data to decode");
-    }
-
-    const decoded = AdvancedPipeWorkflow.decodeResult(data[data.length - 1]);
-
-    return decodeFunctionResult({
-      abi: abiSnippets.wells.getAddLiquidityOut,
-      functionName: "getAddLiquidityOut",
-      data: decoded[decoded.length - 1],
+    this.errorHandler.assert(data.length > 0, "No data to decode for add liquidity", {
+      dataLength: data.length,
     });
+
+    const decoded = this.errorHandler.wrap(
+      () => AdvancedPipeWorkflow.decodeResult(data[data.length - 1]),
+      "decode advanced pipe result for add liquidity",
+      { dataLength: data.length },
+    );
+
+    this.errorHandler.assert(decoded.length > 0, "Decoded result is empty for add liquidity", {
+      decodedLength: decoded.length,
+    });
+
+    return this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.wells.getAddLiquidityOut,
+          functionName: "getAddLiquidityOut",
+          data: decoded[decoded.length - 1],
+        }),
+      "decode add liquidity result",
+      { decodedLength: decoded.length },
+    );
   }
 }
 
