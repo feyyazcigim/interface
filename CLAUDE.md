@@ -62,6 +62,7 @@ src/
 ├── generated/         # Auto-generated files (contracts, GraphQL)
 ├── hooks/             # Custom React hooks
 ├── lib/               # Core business logic
+|   |__ matcha/        # ZeroX API http request abstraction
 │   ├── Swap/          # Swap routing and price calculation
 │   ├── Tractor/       # Tractor (automation) system
 │   └── siloConvert/   # Silo conversion strategies
@@ -145,7 +146,6 @@ yarn format              # Format code with Biome
 ### Required Environment Variables
 ```bash
 VITE_ALCHEMY_API_KEY=""     # Alchemy RPC provider
-VITE_ZEROEX_API_KEY=""      # 0x Protocol API key
 VITE_CHAINS=""              # Supported chain IDs (comma-separated)
 VITE_BASE_ENDPOINT=""       # Base domain for the application
 ```
