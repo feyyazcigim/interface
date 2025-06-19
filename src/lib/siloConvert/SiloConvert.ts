@@ -31,11 +31,14 @@ import { decodeConvertResults } from "./utils";
  *
  * To fetch the maximum convert, we utilize the SiloConvertMaxConvertQuoter class.
  * (more on this in ./SiloConvert.maxConvertQuoter.ts)
- *
+ * 
  * If the source or target is the main token, we refer to it as a 'default convert'.
- * For default converts specifically, we utilize the Diamond's 'convert()' function.
- * For any LP<>LP converts, we utilize the Diamond's 'pipelineConvert()' function.
- *
+ * For default converts, we create 2 different routes
+ * - one that utilizes the Diamond's 'convert()' function
+ * - one that utilizes the Diamond's 'pipelineConvert()' function (Only if path = LP -> Main)
+ * 
+ * For LP<>LP converts, we create 1 route that utilizes the Diamond's 'pipelineConvert()' function.
+ * 
  * If we are converting LP<>LP, we must calculate the following information:
  * - Which strategies do we utilize?
  * - Given the strategies, how much can we convert via each strategy?
@@ -67,7 +70,6 @@ import { decodeConvertResults } from "./utils";
  * Additionally, in the case where the amount the user wishes to convert exceeds the max convert, we split the amount into 2 parts:
  * 1. The max amount that can be converted via the SSPT / SSMT strategy.
  * 2. The remainder of the amount that is converted via the EQ2EQ strategy.
- *
  *
  */
 

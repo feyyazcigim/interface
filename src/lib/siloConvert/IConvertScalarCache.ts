@@ -40,8 +40,23 @@ export interface ConvertScalarCacheMetrics {
 }
 
 /**
- * In-memory implementation of convert scalar cache
- */
+   * IConvertScalarCache Interface & Implementations
+   * 
+   * Architecture notes:
+   * 
+   * The scalar cache system provides efficient caching for expensive calculations
+   * used in conversion quotations, particularly for iterative algorithms like
+   * the jump search used in max convert calculations.
+   * 
+   * [Cache Implementations]
+   * Two implementations are provided:
+   * 1. InMemoryConvertScalarCache: Full-featured caching with metrics
+   * 
+   * [Metrics and Monitoring]
+   * The in-memory implementation tracks:
+   * - Cache hit/miss ratios for performance analysis
+   * - Staleness detection for cache invalidation
+   */
 export class InMemoryConvertScalarCache implements IConvertScalarCache {
   private scalars: Record<string, number> = {};
   private lastUpdateTime: number = 0;
@@ -98,34 +113,36 @@ export class InMemoryConvertScalarCache implements IConvertScalarCache {
   }
 }
 
-/**
- * No-op cache implementation for testing or when caching is disabled
- */
-export class NoOpConvertScalarCache implements IConvertScalarCache {
-  get(): undefined {
-    return undefined;
-  }
 
-  set(): void {
-    // No-op
-  }
+// Keeping for testing purposes
+// /**
+//  * No-op cache implementation for testing or when caching is disabled
+//  */
+// export class NoOpConvertScalarCache implements IConvertScalarCache {
+//   get(): undefined {
+//     return undefined;
+//   }
 
-  isStale(): boolean {
-    return false;
-  }
+//   set(): void {
+//     // No-op
+//   }
 
-  clear(): void {
-    // No-op
-  }
+//   isStale(): boolean {
+//     return false;
+//   }
 
-  getMetrics(): ConvertScalarCacheMetrics {
-    return {
-      cachedPairCount: 0,
-      lastUpdateTime: null,
-      isStale: false,
-      hitCount: 0,
-      missCount: 0,
-      hitRate: 0,
-    };
-  }
-}
+//   clear(): void {
+//     // No-op
+//   }
+
+//   getMetrics(): ConvertScalarCacheMetrics {
+//     return {
+//       cachedPairCount: 0,
+//       lastUpdateTime: null,
+//       isStale: false,
+//       hitCount: 0,
+//       missCount: 0,
+//       hitRate: 0,
+//     };
+//   }
+// }
