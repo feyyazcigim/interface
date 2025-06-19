@@ -8,14 +8,12 @@ import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow"
 import { ZeroX } from "@/lib/matcha/ZeroX";
 import { ZeroXQuoteV2Response } from "@/lib/matcha/types";
 import { SiloConvertSwapQuoter } from "@/lib/siloConvert/siloConvert.swapQuoter";
-import { ExchangeWell } from "@/lib/well/ExchangeWell";
+import { ConvertStrategyQuote, ConvertStrategyWithSwap, LP2LPStrategy } from "@/lib/siloConvert/strategies/core";
 import { resolveChainId } from "@/utils/chain";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
-import { LP2LPStrategy } from "../core/LP2LPConvertStrategy";
-import { ConvertStrategyQuote, ConvertStrategyWithSwap } from "../core/types";
 
 class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
   swapQuoter: SiloConvertSwapQuoter;
