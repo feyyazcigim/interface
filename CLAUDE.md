@@ -235,3 +235,24 @@ VITE_BASE_ENDPOINT=""       # Base domain for the application
 - **Environment Variables**: Ensure all required VITE_ variables are set
 
 This project represents a sophisticated DeFi frontend with complex state management, multi-chain support, and integration with various DeFi protocols and services.
+
+## AI Agent Workflow Rules
+
+### Pull Request Management
+When working on code changes that result in commits, AI agents must:
+
+1. **Always create a pull request** after pushing commits to a feature branch
+2. **Update PR descriptions** to accurately reflect all changes made, including:
+   - Summary of what was implemented/fixed
+   - Technical details of the changes
+   - Any new files created or workflows added
+   - Testing considerations
+3. **Reference relevant issues** if the PR addresses specific GitHub issues
+4. **Include appropriate labels** for the type of change (feature, bugfix, documentation, etc.)
+5. **Ensure PR title clearly describes the change** using conventional commit format when possible
+
+### Commit Standards
+- Use clear, descriptive commit messages
+- Include the Claude Code attribution footer
+- Group related changes into logical commits
+- Ensure commits are atomic and focused on single concerns
