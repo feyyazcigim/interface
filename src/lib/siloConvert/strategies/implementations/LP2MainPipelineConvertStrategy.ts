@@ -58,35 +58,66 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
     advancedFarm: AdvancedFarmWorkflow,
     slippage: number,
   ): Promise<ConvertStrategyQuote<"LP2MainPipeline">> {
+    // Validation
     this.validateQuoteArgs(deposits, slippage);
 
     // Remove liquidity in equal proportions
-    const removeLPResult = await this.getRemoveLiquidityOut(deposits, advancedFarm);
-
-    const mainTokenAmountRemoved = removeLPResult[this.sourceIndexes.main];
-
-    const pairAmount = removeLPResult[this.sourceIndexes.pair];
-
-    const swapQuotes = await ZeroX.quote(
-      this.swapQuoter.generateSwapQuoteParams(this.targetToken, this.pairToken, pairAmount, slippage, false),
+    const removeLPResult = await this.errorHandler.wrapAsync(
+      () => this.getRemoveLiquidityOut(deposits, advancedFarm),
+      "remove liquidity simulation",
+      { amountIn: deposits.totalAmount.toHuman() },
     );
 
+    const mainTokenAmountRemoved = removeLPResult[this.sourceIndexes.main];
+    this.errorHandler.validateAmount(mainTokenAmountRemoved, "main token amount from remove liquidity");
+
+    const pairAmount = removeLPResult[this.sourceIndexes.pair];
+    this.errorHandler.validateAmount(pairAmount, "pair token amount from remove liquidity");
+
+    const swapParams = this.errorHandler.wrap(
+      () => this.swapQuoter.generateSwapQuoteParams(this.targetToken, this.pairToken, pairAmount, slippage, false),
+      "generate swap quote params",
+      {
+        sellToken: this.pairToken.symbol,
+        buyToken: this.targetToken.symbol,
+        amount: pairAmount.toHuman(),
+      },
+    );
+
+    const swapQuotes = await this.errorHandler.wrapAsync(() => ZeroX.quote(swapParams), "0x swap quotation", {
+      sellToken: this.pairToken.symbol,
+      buyToken: this.targetToken.symbol,
+      amount: pairAmount.toHuman(),
+    });
+
     // Should always be the 1 quote b/c we are going from pair token -> main token.
-    if (swapQuotes.length !== 1) {
-      throw new Error("Expected 1 swap quote");
-    }
+    this.errorHandler.assert(swapQuotes.length === 1, "Expected exactly 1 swap quote from 0x", {
+      quotesCount: swapQuotes.length,
+    });
 
     const swapQuote = swapQuotes[0];
 
-    const swapSummary = this.swapQuoter.makeSwapSummary(
-      swapQuote,
-      this.pairToken,
-      this.targetToken,
-      this.sourceWell.pair.price,
-      this.sourceWell.price, // TODO: get price of main token after the swap... fix me.
+    const swapSummary = this.errorHandler.wrap(
+      () =>
+        this.swapQuoter.makeSwapSummary(
+          swapQuote,
+          this.pairToken,
+          this.targetToken,
+          this.sourceWell.pair.price,
+          this.sourceWell.price, // TODO: get price of main token after the swap... fix me.
+        ),
+      "create swap summary",
+      { sellToken: this.pairToken.symbol, buyToken: this.targetToken.symbol },
     );
 
-    const totalAmountOut = swapSummary.buyAmount.add(mainTokenAmountRemoved);
+    const totalAmountOut = this.errorHandler.wrap(
+      () => swapSummary.buyAmount.add(mainTokenAmountRemoved),
+      "calculate total amount out",
+      {
+        swapBuyAmount: swapSummary.buyAmount.toHuman(),
+        mainTokenRemoved: mainTokenAmountRemoved.toHuman(),
+      },
+    );
 
     const summary: ConvertQuoteSummary<"LP2MainPipeline"> = {
       source: {
@@ -107,16 +138,20 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
     return {
       pickedCrates: deposits,
       summary,
-      advPipeCalls: this.buildAdvancedPipeCalls(summary),
+      advPipeCalls: this.errorHandler.wrap(() => this.buildAdvancedPipeCalls(summary), "build advanced pipe calls", {
+        sourceWell: this.sourceWell.pool.symbol,
+        targetToken: this.targetToken.symbol,
+      }),
       amountOut: totalAmountOut,
       convertData: undefined,
     };
   }
 
   buildAdvancedPipeCalls({ source, swap }: ConvertStrategyQuote<"LP2MainPipeline">["summary"]) {
-    if (!swap) {
-      throw new Error("Swap required for LP2MainPipeline Strategy");
-    }
+    // Validation
+    const validatedSwap = this.errorHandler.assertDefined(swap, "Swap required for LP2MainPipeline Strategy");
+    this.errorHandler.assert(!!source.well, "Source well is required", { hasSourceWell: !!source.well });
+    this.errorHandler.validateAmount(source.amountIn, "source amount in");
 
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
@@ -129,12 +164,12 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
     );
 
     // 3. Approve swap contract to spend main token
-    pipe.add(LP2MainStrategy.snippets.erc20Approve(swap.sellToken, swap.quote.transaction.to));
+    pipe.add(LP2MainStrategy.snippets.erc20Approve(validatedSwap.sellToken, validatedSwap.quote.transaction.to));
 
     // 4. Swap pair token for PINTO
     pipe.add({
-      target: swap.quote.transaction.to,
-      callData: swap.quote.transaction.data,
+      target: validatedSwap.quote.transaction.to,
+      callData: validatedSwap.quote.transaction.data,
       clipboard: Clipboard.encode([]),
     });
 
@@ -145,27 +180,53 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
     pickedCratesDetails: ExtendedPickedCratesDetails,
     advancedFarm: AdvancedFarmWorkflow,
   ): Promise<TV[]> {
+    // Validation
+    this.errorHandler.validateAmount(pickedCratesDetails.totalAmount, "remove liquidity amount");
+
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
     const [token0, token1] = this.sourceWell.tokens;
 
+    const callData = this.errorHandler.wrap(
+      () =>
+        encodeFunctionData({
+          abi: abiSnippets.wells.getRemoveLiquidityOut,
+          functionName: "getRemoveLiquidityOut",
+          args: [pickedCratesDetails.totalAmount.toBigInt()],
+        }),
+      "encode remove liquidity call data",
+      { amountIn: pickedCratesDetails.totalAmount.toHuman() },
+    );
+
     pipe.add({
       target: this.sourceWell.pool.address,
-      callData: encodeFunctionData({
-        abi: abiSnippets.wells.getRemoveLiquidityOut,
-        functionName: "getRemoveLiquidityOut",
-        args: [pickedCratesDetails.totalAmount.toBigInt()],
-      }),
+      callData,
       clipboard: Clipboard.encode([]),
     });
 
-    const simulate = await advancedFarm.simulate({
-      after: pipe,
-      account: this.context.account,
-    });
+    const simulate = await this.errorHandler.wrapAsync(
+      () =>
+        advancedFarm.simulate({
+          after: pipe,
+          account: this.context.account,
+        }),
+      "remove liquidity simulation",
+      { amountIn: pickedCratesDetails.totalAmount.toHuman(), account: this.context.account },
+    );
 
-    const result = this.decodeRemoveLiquidityResult(simulate.result);
+    // Validate simulation results
+    this.errorHandler.validateSimulation(simulate, "remove liquidity simulation");
 
-    const amounts: TV[] = [TV.fromBigInt(result[0], token0.decimals), TV.fromBigInt(result[1], token1.decimals)];
+    const result = this.errorHandler.wrap(
+      () => this.decodeRemoveLiquidityResult(simulate.result),
+      "decode remove liquidity result",
+      { resultLength: simulate.result.length },
+    );
+
+    const amounts: TV[] = this.errorHandler.wrap(
+      () => [TV.fromBigInt(result[0], token0.decimals), TV.fromBigInt(result[1], token1.decimals)],
+      "convert remove liquidity amounts",
+      { token0: token0.symbol, token1: token1.symbol },
+    );
 
     console.debug("[LP2MainPipelineStrategy] getRemoveLiquidityOut: ", {
       well: this.sourceWell.pool.name,
@@ -177,17 +238,35 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
   }
 
   private decodeRemoveLiquidityResult(data: readonly HashString[]) {
-    const decoded = decodeFunctionResult({
-      abi: abiSnippets.advancedPipe,
-      functionName: "advancedPipe",
-      data: data[data.length - 1],
+    this.errorHandler.assert(data.length > 0, "Remove liquidity result data is empty", {
+      dataLength: data.length,
     });
 
-    const removeLiquidityResult = decodeFunctionResult({
-      abi: abiSnippets.wells.getRemoveLiquidityOut,
-      functionName: "getRemoveLiquidityOut",
-      data: decoded[decoded.length - 1],
+    const decoded = this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.advancedPipe,
+          functionName: "advancedPipe",
+          data: data[data.length - 1],
+        }),
+      "decode advanced pipe result",
+      { dataLength: data.length },
+    );
+
+    this.errorHandler.assert(decoded.length > 0, "Decoded advanced pipe result is empty", {
+      decodedLength: decoded.length,
     });
+
+    const removeLiquidityResult = this.errorHandler.wrap(
+      () =>
+        decodeFunctionResult({
+          abi: abiSnippets.wells.getRemoveLiquidityOut,
+          functionName: "getRemoveLiquidityOut",
+          data: decoded[decoded.length - 1],
+        }),
+      "decode remove liquidity result",
+      { decodedLength: decoded.length },
+    );
 
     return removeLiquidityResult;
   }
