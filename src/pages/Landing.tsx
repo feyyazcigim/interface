@@ -60,7 +60,9 @@ export default function Landing() {
       </div>
       <div className="flex flex-col gap-4 overflow-clip mb-8" style={{ height: `${initialHeightRem + 8}rem` }}>
         <BugBounty />
+        {/* 
         <AuditsList />
+        */}
       </div>
       <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem + navBarHeightRem / 3}rem` }}>
         <Resources />

@@ -62,6 +62,12 @@ export default function BugBounty() {
           </Button>
         </Link>
       </div>
+      <div className="flex flex-row justify-between px-4 py-2 w-full font-light text-2xl mt-[4.5rem]">
+        <div className="text-pinto-gray-4">{`25 audits to date`}</div>
+        <Link to={"Idk"} target="_blank" rel="noopener noreferrer" className="text-pinto-green-4">
+          Learn More about Audits →
+        </Link>
+      </div>
     </div>
   );
 }
