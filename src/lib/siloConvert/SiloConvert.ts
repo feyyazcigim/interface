@@ -176,10 +176,27 @@ export class SiloConvert {
     return this.maxConvertQuoter.quoteMaxConvert(source, target, deposits);
   }
 
+  async quote(
+    source: Token,
+    target: Token,
+    farmerDeposits: DepositData[],
+    amountIn: TV,
+    slippage: number,
+    forceUpdateCache: boolean = false,
+  ): Promise<SiloConvertSummary<SiloConvertType>[]> {
+    try {
+      return this._quote(source, target, farmerDeposits, amountIn, slippage, forceUpdateCache);
+    } catch (_e) {
+      console.debug("[SiloConvert/quote] Failed to quote, retrying with forceUpdateCache: ", forceUpdateCache);
+      // if we fail to quote, force update the caches and try again.
+      return this._quote(source, target, farmerDeposits, amountIn, slippage, true);
+    }
+  }
+
   /**
    * Given a source and target token, returns the convert result.
    */
-  async quote(
+  async _quote(
     source: Token,
     target: Token,
     farmerDeposits: DepositData[],
@@ -194,6 +211,13 @@ export class SiloConvert {
         target,
       });
     });
+
+    // force update the caches if requested
+    if (forceUpdateCache) {
+      console.debug("[SiloConvert/quote] forceUpdateCache: ", forceUpdateCache);
+      await this.maxConvertCache.clear();
+      await this.scalarCache.clear();
+    }
 
     const routes = await this.strategizer.strategize(source, target, amountIn).catch((e) => {
       console.error("[SiloConvert/quote] FAILED to strategize: ", e);
