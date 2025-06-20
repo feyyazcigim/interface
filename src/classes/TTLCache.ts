@@ -61,6 +61,13 @@ export interface ITTLCache<T> {
    * Get cache metrics for monitoring
    */
   getMetrics(): TTLCacheMetrics;
+
+  /**
+   * Generate a cache key from an array of strings
+   * @param args - Array of strings to join
+   * @param additionalKey - Optional additional key to append
+   */
+  generateKey(args: MayArray<string>, additionalKey?: string): string;
 }
 
 /**
@@ -279,6 +286,10 @@ export class NoOpTTLCache<T> implements ITTLCache<T> {
       hitRate: 0,
       expiredEntryCount: 0,
     };
+  }
+
+  generateKey(): string {
+    return "";
   }
 }
 

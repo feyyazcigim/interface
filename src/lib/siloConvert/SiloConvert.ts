@@ -131,10 +131,15 @@ export class SiloConvert {
     };
 
     this.priceCache = new SiloConvertPriceCache(this.context);
-    this.scalarCache = new InMemoryTTLCache<number>(15_000, 15_000);
-    this.maxConvertCache = new InMemoryTTLCache<TV>(15_000, 15_000);
+    this.scalarCache = new InMemoryTTLCache<number>();
+    this.maxConvertCache = new InMemoryTTLCache<TV>();
 
-    this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(this.context, this.priceCache);
+    this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(
+      this.context,
+      this.priceCache,
+      this.scalarCache,
+      this.maxConvertCache,
+    );
     this.strategizer = new SiloConvertStrategizer(this.context, this.priceCache, this.maxConvertQuoter);
   }
 

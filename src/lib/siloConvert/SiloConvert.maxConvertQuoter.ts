@@ -1,4 +1,5 @@
 import { Clipboard } from "@/classes/Clipboard";
+import { ITTLCache, InMemoryTTLCache } from "@/classes/TTLCache";
 import { TV } from "@/classes/TokenValue";
 import { abiSnippets } from "@/constants/abiSnippets";
 import { MAIN_TOKEN, PINTO_WSOL_TOKEN } from "@/constants/tokens";
@@ -9,7 +10,7 @@ import { decodeGetMaxAmountIn } from "@/encoders/silo/convert";
 import { decodeCalcReserveAtRatioLiquidity } from "@/encoders/well/calcReserveAtRatioLiquidity";
 import { decodeGetRemoveLiquidityImbalanceIn } from "@/encoders/well/getRemoveLiquidityImbalancedIn";
 import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow";
-import { SiloConvertCache } from "@/lib/siloConvert/SiloConvert.cache";
+import { SiloConvertPriceCache } from "@/lib/siloConvert/SiloConvert.cache";
 import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExchangeWell, ExtendedRawWellData } from "@/lib/well/ExchangeWell";
 import { resolveChainId } from "@/utils/chain";
@@ -18,7 +19,6 @@ import { tokensEqual } from "@/utils/token";
 import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { readContract } from "viem/actions";
-import { IConvertScalarCache, InMemoryConvertScalarCache } from "./IConvertScalarCache";
 import { DefaultConvertStrategy } from "./strategies/implementations/DefaultConvertStrategy";
 
 interface ConvertTokens {
@@ -64,17 +64,24 @@ const MIN_THRESHOLD = 150;
  */
 export class SiloConvertMaxConvertQuoter {
   private readonly context: SiloConvertContext;
-  private readonly cache: SiloConvertCache;
-  private readonly scalarCache: IConvertScalarCache;
+  private readonly cache: SiloConvertPriceCache;
+  private readonly scalarCache: ITTLCache<number>;
+  private readonly maxConvertCache: ITTLCache<TV>;
 
   static NO_MAX_CONVERT_AMOUNT = 1_000_000_000;
 
   // ---------- Constructor ----------
 
-  constructor(context: SiloConvertContext, cache: SiloConvertCache, scalarCache?: IConvertScalarCache) {
+  constructor(
+    context: SiloConvertContext,
+    cache: SiloConvertPriceCache,
+    scalarCache?: ITTLCache<number>,
+    maxConvertCache?: ITTLCache<TV>,
+  ) {
     this.context = context;
     this.cache = cache;
-    this.scalarCache = scalarCache || new InMemoryConvertScalarCache();
+    this.scalarCache = scalarCache || new InMemoryTTLCache<number>();
+    this.maxConvertCache = maxConvertCache || new InMemoryTTLCache<TV>();
   }
 
   // ===================================================================
@@ -91,33 +98,74 @@ export class SiloConvertMaxConvertQuoter {
   }
 
   /**
-   * Clears the scalars cache.
+   * Clears both the scalars cache and max convert cache.
    */
   clear() {
     this.scalarCache.clear();
+    this.maxConvertCache.clear();
   }
 
   /**
    * Get scalar cache metrics for monitoring
    */
   getScalarCacheMetrics() {
-    return this.scalarCache.getMetrics();
+    return {
+      scalar: this.scalarCache.getMetrics(),
+      maxConvert: this.maxConvertCache.getMetrics(),
+    };
   }
 
   /**
    * Given a source & target token, returns the max convert amount.
    * If farmerDeposits are provided, it will return a tested scaled max convert.
+   * Results are cached for 15 seconds to avoid duplicate expensive calculations.
    */
   async quoteMaxConvert(source: Token, target: Token, farmerDeposits?: DepositData[]) {
+    // Generate cache key based on deposits to ensure cache invalidation when deposits change
+    const cacheKey = this.maxConvertCache.generateKey([source.address, target.address]);
+    const depositsHash = hashDeposits(farmerDeposits);
+
+    const withDepositsKey =
+      farmerDeposits?.length && depositsHash
+        ? this.maxConvertCache.generateKey([source.address, target.address], depositsHash)
+        : undefined;
+
+    // Check cache first
+    const cached = withDepositsKey ? this.maxConvertCache.get(withDepositsKey) : this.maxConvertCache.get(cacheKey);
+    if (cached) {
+      console.debug("[MaxConvertQuoter/quoteMaxConvert]: using cached result", {
+        source: source.symbol,
+        target: target.symbol,
+        cached: cached.toHuman(),
+        cacheMetrics: this.maxConvertCache.getMetrics(),
+      });
+      return cached;
+    }
+
+    // Cache miss - perform expensive calculation
+    let result: TV;
     if (source.isMain || target.isMain) {
-      return this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits);
+      result = await this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits);
+    } else if (source.isLP && target.isLP) {
+      result = await this.getMaxConvertLPToLP({ source, target });
+    } else {
+      throw new Error("Convert Router: Invalid source and target tokens");
     }
 
-    if (source.isLP && target.isLP) {
-      return this.getMaxConvertLPToLP({ source, target });
+    // Cache the result. Update for both keys.
+    if (withDepositsKey) {
+      this.maxConvertCache.set(withDepositsKey, result);
     }
+    this.maxConvertCache.set(cacheKey, result);
 
-    throw new Error("Convert Router: Invalid source and target tokens");
+    console.debug("[MaxConvertQuoter/quoteMaxConvert]: calculated and cached result", {
+      source: source.symbol,
+      target: target.symbol,
+      result: result.toHuman(),
+      cacheMetrics: this.maxConvertCache.getMetrics(),
+    });
+
+    return result;
   }
 
   // ===================================================================
@@ -206,8 +254,9 @@ export class SiloConvertMaxConvertQuoter {
     }
 
     // Check cache first
-    const cachedScalar = this.scalarCache.get(source, target);
-    if (cachedScalar !== undefined && !this.scalarCache.isStale()) {
+    const cacheKey = this.generateTokensCacheKey(source, target);
+    const cachedScalar = this.scalarCache.get(cacheKey);
+    if (cachedScalar) {
       console.debug("[MaxConvertQuoter/findSafeDefaultMaxConvert]: using cached scalar", {
         cachedScalar,
         cacheMetrics: this.scalarCache.getMetrics(),
@@ -219,7 +268,7 @@ export class SiloConvertMaxConvertQuoter {
     const optimalScalar = await this.computeOptimalScalar(tokens, maxConvert, farmerDeposits);
 
     // Cache the result
-    this.scalarCache.set(source, target, optimalScalar);
+    this.scalarCache.set(cacheKey, optimalScalar);
 
     return maxConvert.mul(optimalScalar);
   }
@@ -589,11 +638,20 @@ export class SiloConvertMaxConvertQuoter {
     // Everything fails, return the most conservative scalar
     return scalars[scalars.length - 1];
   }
+
+  private generateTokensCacheKey(source: Token, target: Token, depositsData?: DepositData[]): string {
+    const depositsKey = depositsData ? depositsData.map((d) => d.idHex.substring(0, 8)).join("-") : undefined;
+    return this.maxConvertCache.generateKey([source.address, target.address], depositsKey ?? "");
+  }
 }
 
 // Helper Methods
 
 const baseErrMessage = `[MaxConvertQuoter/validation]: Invalid source or target.`;
+
+const hashDeposits = (deposits: DepositData[] | undefined): string => {
+  return deposits?.map((d) => d.idHex.substring(0, 8)).join("-") ?? "";
+};
 
 const validateConversionTokens = (tokens: ConvertTokens, expectedType: "LP2LP" | "default") => {
   const { source, target } = tokens;
