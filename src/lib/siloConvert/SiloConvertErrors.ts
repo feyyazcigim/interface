@@ -1,4 +1,5 @@
 import { Token } from "@/utils/types";
+import { AnyRecord } from "@/utils/types.generic";
 import { Address } from "viem";
 
 /**
@@ -10,12 +11,12 @@ export abstract class SiloConvertError extends Error {
 
   constructor(
     message: string,
-    public readonly context?: Record<string, any>,
+    public readonly context?: AnyRecord,
   ) {
     super(message);
     this.name = this.constructor.name;
 
-    // Maintain proper stack trace for where our error was thrown (only available on V8)
+    // Maintain proper stack trace for where our error was thrown
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
@@ -73,7 +74,7 @@ export class StrategySelectionError extends SiloConvertError {
   readonly code = "STRATEGY_SELECTION_FAILED";
   readonly category = "quotation" as const;
 
-  constructor(source: Token, target: Token, reason: string, context?: Record<string, any>) {
+  constructor(source: Token, target: Token, reason: string, context?: AnyRecord) {
     super(`Failed to select conversion strategy for ${source.symbol} -> ${target.symbol}: ${reason}`, {
       source: source.symbol,
       target: target.symbol,
@@ -90,7 +91,7 @@ export class MaxConvertQuotationError extends SiloConvertError {
   readonly code = "MAX_CONVERT_QUOTATION_FAILED";
   readonly category = "quotation" as const;
 
-  constructor(source: Token, target: Token, reason: string, context?: Record<string, any>) {
+  constructor(source: Token, target: Token, reason: string, context?: AnyRecord) {
     super(`Failed to quote max convert for ${source.symbol} -> ${target.symbol}: ${reason}`, {
       source: source.symbol,
       target: target.symbol,
@@ -115,7 +116,7 @@ export class SwapQuotationError extends SiloConvertError {
   readonly code = "SWAP_QUOTATION_FAILED";
   readonly category = "network" as const;
 
-  constructor(sellToken: Token, buyToken: Token, amount: string, reason: string, context?: Record<string, any>) {
+  constructor(sellToken: Token, buyToken: Token, amount: string, reason: string, context?: AnyRecord) {
     super(`Failed to quote swap ${sellToken.symbol} -> ${buyToken.symbol} for amount ${amount}: ${reason}`, {
       sellToken: sellToken.symbol,
       buyToken: buyToken.symbol,
@@ -133,7 +134,7 @@ export class CacheError extends SiloConvertError {
   readonly code = "CACHE_ERROR";
   readonly category = "network" as const;
 
-  constructor(operation: string, reason: string, context?: Record<string, any>) {
+  constructor(operation: string, reason: string, context?: AnyRecord) {
     super(`Cache operation '${operation}' failed: ${reason}`, {
       operation,
       reason,
@@ -149,7 +150,7 @@ export class WellDataError extends SiloConvertError {
   readonly code = "WELL_DATA_ERROR";
   readonly category = "configuration" as const;
 
-  constructor(wellAddress: Address, reason: string, context?: Record<string, any>) {
+  constructor(wellAddress: Address, reason: string, context?: AnyRecord) {
     super(`Well data error for ${wellAddress}: ${reason}`, {
       wellAddress,
       reason,
@@ -165,7 +166,7 @@ export class PipelineExecutionError extends SiloConvertError {
   readonly code = "PIPELINE_EXECUTION_FAILED";
   readonly category = "execution" as const;
 
-  constructor(operation: string, reason: string, context?: Record<string, any>) {
+  constructor(operation: string, reason: string, context?: AnyRecord) {
     super(`Pipeline execution failed for '${operation}': ${reason}`, {
       operation,
       reason,
@@ -181,7 +182,7 @@ export class SimulationError extends SiloConvertError {
   readonly code = "SIMULATION_FAILED";
   readonly category = "execution" as const;
 
-  constructor(operation: string, reason: string, context?: Record<string, any>) {
+  constructor(operation: string, reason: string, context?: AnyRecord) {
     super(`Simulation failed for '${operation}': ${reason}`, {
       operation,
       reason,
@@ -197,7 +198,7 @@ export class InvalidAmountError extends SiloConvertError {
   readonly code = "INVALID_AMOUNT";
   readonly category = "validation" as const;
 
-  constructor(amount: string, reason: string, context?: Record<string, any>) {
+  constructor(amount: string, reason: string, context?: AnyRecord) {
     super(`Invalid amount '${amount}': ${reason}`, {
       amount,
       reason,
@@ -213,7 +214,7 @@ export class AggregatorDisabledError extends SiloConvertError {
   readonly code = "AGGREGATOR_DISABLED";
   readonly category = "configuration" as const;
 
-  constructor(token: Token, context?: Record<string, any>) {
+  constructor(token: Token, context?: AnyRecord) {
     super(`Aggregator is disabled for token ${token.symbol} (${token.address})`, {
       token: {
         symbol: token.symbol,

@@ -10,6 +10,13 @@ import { HashString } from "@/utils/types.generic";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 
 export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
+  readonly name = "LP_And_Main_Default";
+
+  constructor(...args: ConstructorParameters<typeof SiloConvertStrategy<"LPAndMain">>) {
+    super(...args);
+    this.initErrorHandlerCtx();
+  }
+
   async quote(
     deposits: ExtendedPickedCratesDetails,
     advancedFarm: AdvancedFarmWorkflow,

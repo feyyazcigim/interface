@@ -30,14 +30,17 @@ import { decodeFunctionResult, encodeFunctionData } from "viem";
  */
 
 class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> implements ConvertStrategyWithSwap {
+  readonly name = "LP2Main_Pipeline";
+
   swapQuoter: SiloConvertSwapQuoter;
 
   readonly sourceWell: ExtendedPoolData;
 
   constructor(source: ExtendedPoolData, target: Token, context: SiloConvertContext) {
     super(source.pool, target, context);
-
     this.swapQuoter = new SiloConvertSwapQuoter(context);
+
+    this.initErrorHandlerCtx();
     this.sourceWell = source;
   }
 

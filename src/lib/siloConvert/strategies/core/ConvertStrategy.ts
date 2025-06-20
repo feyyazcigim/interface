@@ -4,6 +4,7 @@ import { TV } from "@/classes/TokenValue";
 import { AdvancedFarmWorkflow } from "@/lib/farm/workflow";
 import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
+import { AnyRecord } from "@/utils/types.generic";
 import { ConvertStrategyErrorHandler } from "../../ConvertStrategyErrorHandler";
 import { ConvertStrategyQuote, SiloConvertType } from "./types";
 
@@ -11,6 +12,8 @@ export abstract class SiloConvertStrategy<T extends SiloConvertType> {
   readonly context: SiloConvertContext;
   readonly sourceToken: Token;
   readonly targetToken: Token;
+
+  abstract readonly name: string;
 
   // Error handler instance available to all strategies
   protected readonly errorHandler: ConvertStrategyErrorHandler;
@@ -52,5 +55,12 @@ export abstract class SiloConvertStrategy<T extends SiloConvertType> {
     this.validatePickedCrates(deposits);
     this.validateAmountIn(deposits.totalAmount);
     this.validateSlippage(slippage);
+  }
+
+  protected initErrorHandlerCtx(moreCtx?: AnyRecord) {
+    this.errorHandler.addCtx({
+      objectName: this.name,
+      ...(moreCtx ?? {}),
+    });
   }
 }

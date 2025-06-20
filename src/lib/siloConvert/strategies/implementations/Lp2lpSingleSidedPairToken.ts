@@ -22,6 +22,8 @@ import {
 } from "@/lib/siloConvert/strategies/core";
 
 class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap {
+  readonly name = "LP2LP_SingleSidedPairToken";
+
   swapQuoter: SiloConvertSwapQuoter;
 
   // The index of the token in the well to remove liquidity from.
@@ -39,6 +41,8 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
   constructor(...args: ConstructorParameters<typeof SiloConvertLP2LPConvertStrategy>) {
     super(...args);
     this.swapQuoter = new SiloConvertSwapQuoter(this.context);
+    this.initErrorHandlerCtx();
+
     this.removeIndex = this.sourceIndexes.pair;
     this.addIndex = this.targetIndexes.pair;
 
@@ -75,7 +79,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     this.validateQuoteArgs(deposits, slippage);
 
     const amountsOut = await this.errorHandler.wrapAsync(
-      () => this.#getRemoveLiquidityOut(deposits, advancedFarm),
+      () => this.getRemoveLiquidityOut(deposits, advancedFarm),
       "remove liquidity simulation",
       { amountIn: deposits.totalAmount.toHuman() },
     );
@@ -110,7 +114,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     });
 
     const addAmountOut = await this.errorHandler.wrapAsync(
-      () => this.#getAddLiquidityOut(swapQuotes[0], advancedFarm),
+      () => this.getAddLiquidityOut(swapQuotes[0], advancedFarm),
       "add liquidity simulation",
       { swapQuoteAmount: swapQuotes[0].minBuyAmount },
     );
@@ -224,7 +228,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
 
   // ------------------------------ Private Methods ------------------------------ //
 
-  async #getAddLiquidityOut(swapQuote: ZeroXQuoteV2Response, advancedFarm: AdvancedFarmWorkflow) {
+  private async getAddLiquidityOut(swapQuote: ZeroXQuoteV2Response, advancedFarm: AdvancedFarmWorkflow) {
     // Validation
     this.errorHandler.assert(!!swapQuote.minBuyAmount, "Swap quote minBuyAmount is required", {
       minBuyAmount: swapQuote.minBuyAmount,
@@ -241,11 +245,9 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
       amountsIn.reverse();
     }
 
-    const pipe = this.errorHandler.wrap(
-      () => this.#constructAddAdvancedPipe(amountsIn),
-      "construct add advanced pipe",
-      { amountsIn: amountsIn.map((v) => v.toHuman()) },
-    );
+    const pipe = this.errorHandler.wrap(() => this.constructAddAdvancedPipe(amountsIn), "construct add advanced pipe", {
+      amountsIn: amountsIn.map((v) => v.toHuman()),
+    });
 
     const simulate = await this.errorHandler.wrapAsync(
       () =>
@@ -261,7 +263,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     this.errorHandler.validateSimulation(simulate, "add liquidity simulation");
 
     const addAmountOut = this.errorHandler.wrap(
-      () => this.#decodeAddLiquidityResult(simulate.result),
+      () => this.decodeAddLiquidityResult(simulate.result),
       "decode add liquidity result",
       { resultLength: simulate.result.length },
     );
@@ -273,7 +275,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     );
   }
 
-  async #getRemoveLiquidityOut(
+  private async getRemoveLiquidityOut(
     pickedCratesDetails: ExtendedPickedCratesDetails,
     advancedFarm: AdvancedFarmWorkflow,
   ): Promise<TV[]> {
@@ -281,7 +283,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     this.errorHandler.validateAmount(pickedCratesDetails.totalAmount, "remove liquidity amount");
 
     const pipe = this.errorHandler.wrap(
-      () => this.#constructRemoveAdvancedPipe(pickedCratesDetails.totalAmount),
+      () => this.constructRemoveAdvancedPipe(pickedCratesDetails.totalAmount),
       "construct remove advanced pipe",
       { amountIn: pickedCratesDetails.totalAmount.toHuman() },
     );
@@ -300,7 +302,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     this.errorHandler.validateSimulation(result, "remove liquidity simulation");
 
     const decodedResults = this.errorHandler.wrap(
-      () => this.#decodeRemoveLiquidityResult(result.result),
+      () => this.decodeRemoveLiquidityResult(result.result),
       "decode remove liquidity result",
       { resultLength: result.result.length },
     );
@@ -322,7 +324,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
 
   // ------------------------------ Construct Advanced Pipe Methods ------------------------------ //
 
-  #constructRemoveAdvancedPipe(amount: TV) {
+  private constructRemoveAdvancedPipe(amount: TV) {
     // Validation
     this.errorHandler.validateAmount(amount, "construct remove pipe amount");
     this.errorHandler.assert(
@@ -353,7 +355,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     return pipe;
   }
 
-  #constructAddAdvancedPipe(amountsIn: TV[]) {
+  private constructAddAdvancedPipe(amountsIn: TV[]) {
     // Validation
     this.errorHandler.assert(amountsIn.length > 0, "Add liquidity amounts array is empty", {
       amountsInLength: amountsIn.length,
@@ -386,7 +388,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
 
   // ------------------------------ Decode Methods ------------------------------ //
 
-  #decodeRemoveLiquidityResult(data: readonly HashString[]): bigint {
+  private decodeRemoveLiquidityResult(data: readonly HashString[]): bigint {
     this.errorHandler.assert(data.length > 0, "No data to decode for remove liquidity", {
       dataLength: data.length,
     });
@@ -415,7 +417,7 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     return removeAmountBigInt;
   }
 
-  #decodeAddLiquidityResult(data: readonly HashString[]): bigint {
+  private decodeAddLiquidityResult(data: readonly HashString[]): bigint {
     this.errorHandler.assert(data.length > 0, "No data to decode for add liquidity", {
       dataLength: data.length,
     });

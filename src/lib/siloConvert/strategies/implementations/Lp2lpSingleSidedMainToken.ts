@@ -15,6 +15,8 @@ import { LP2LPStrategy } from "../core/LP2LPConvertStrategy";
 import { ConvertStrategyQuote } from "../core/types";
 
 class OneSidedSameToken extends LP2LPStrategy {
+  readonly name = "LP2LP_SingleSidedMainToken";
+
   // The index of the token in the well to remove liquidity from.
   readonly removeIndex: number;
 
@@ -26,6 +28,8 @@ class OneSidedSameToken extends LP2LPStrategy {
 
   constructor(...args: ConstructorParameters<typeof LP2LPStrategy>) {
     super(...args);
+    this.initErrorHandlerCtx();
+
     this.removeIndex = this.sourceIndexes.main;
     this.addIndex = this.targetIndexes.main;
 
@@ -53,7 +57,7 @@ class OneSidedSameToken extends LP2LPStrategy {
     this.validateQuoteArgs(deposits, slippage);
 
     const result = await this.errorHandler.wrapAsync(
-      () => this.#getRemoveAddLiquidityOut(deposits, advancedFarm),
+      () => this.getRemoveAddLiquidityOut(deposits, advancedFarm),
       "remove and add liquidity simulation",
       { amountIn: deposits.totalAmount.toHuman() },
     );
@@ -138,7 +142,7 @@ class OneSidedSameToken extends LP2LPStrategy {
    * @param advancedFarm - The advanced farm workflow. Quote is done w/ subsequent actions in the workflow for most precision.
    * @returns The remove and add liquidity amounts.
    */
-  async #getRemoveAddLiquidityOut(
+  private async getRemoveAddLiquidityOut(
     pickedCratesDetails: ExtendedPickedCratesDetails,
     advancedFarm: AdvancedFarmWorkflow,
   ) {
@@ -146,7 +150,7 @@ class OneSidedSameToken extends LP2LPStrategy {
     this.errorHandler.validateAmount(pickedCratesDetails.totalAmount, "remove add liquidity amount");
 
     const pipe = this.errorHandler.wrap(
-      () => this.#constructReadAdvancedPipe(pickedCratesDetails.totalAmount),
+      () => this.constructReadAdvancedPipe(pickedCratesDetails.totalAmount),
       "construct read advanced pipe",
       { amountIn: pickedCratesDetails.totalAmount.toHuman() },
     );
@@ -165,7 +169,7 @@ class OneSidedSameToken extends LP2LPStrategy {
     this.errorHandler.validateSimulation(result, "remove add liquidity simulation");
 
     const decodedResults = this.errorHandler.wrap(
-      () => this.#decodeAddRemoveResult(result.result),
+      () => this.decodeAddRemoveResult(result.result),
       "decode remove add liquidity result",
       { resultLength: result.result.length },
     );
@@ -197,7 +201,7 @@ class OneSidedSameToken extends LP2LPStrategy {
   /**
    * Decodes the result of the remove and add liquidity operations from getRemoveAddLiquidityOut
    */
-  #decodeAddRemoveResult(data: readonly HashString[]) {
+  private decodeAddRemoveResult(data: readonly HashString[]) {
     this.errorHandler.assert(data.length > 0, "No data to decode", {
       dataLength: data.length,
     });
@@ -246,7 +250,7 @@ class OneSidedSameToken extends LP2LPStrategy {
     };
   }
 
-  #constructReadAdvancedPipe(amountIn: TV) {
+  private constructReadAdvancedPipe(amountIn: TV) {
     // Validation
     this.errorHandler.validateAmount(amountIn, "construct read pipe amount in");
     this.errorHandler.assert(

@@ -16,11 +16,14 @@ import { HashString } from "@/utils/types.generic";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 
 class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
+  readonly name = "LP2LP_EQ2EQ";
+
   swapQuoter: SiloConvertSwapQuoter;
 
   constructor(...params: ConstructorParameters<typeof LP2LPStrategy>) {
     super(...params);
     this.swapQuoter = new SiloConvertSwapQuoter(this.context);
+    this.initErrorHandlerCtx();
   }
 
   // Getters
@@ -67,7 +70,7 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
 
     // Add Liquidity
     const addLiquidityParams = this.errorHandler.wrap(
-      () => this.#getAddLiquidityParams(removeLPResult, swapQuote),
+      () => this.getAddLiquidityParams(removeLPResult, swapQuote),
       "calculate add liquidity params",
       { swapQuoteAmount: swapQuote.minBuyAmount },
     );
@@ -150,7 +153,7 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
     this.errorHandler.validateSimulation(simulate, "remove liquidity simulation");
 
     const result = this.errorHandler.wrap(
-      () => this.#decodeRemoveLiquidityResult(simulate.result),
+      () => this.decodeRemoveLiquidityResult(simulate.result),
       "decode remove liquidity result",
       { resultLength: simulate.result.length },
     );
@@ -212,7 +215,7 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
     this.errorHandler.validateSimulation(simulate, "add liquidity simulation");
 
     const decodedAmountOut = this.errorHandler.wrap(
-      () => this.#decodeAddLiquidityResult(simulate.result),
+      () => this.decodeAddLiquidityResult(simulate.result),
       "decode add liquidity result",
       { resultLength: simulate.result.length },
     );
@@ -321,7 +324,7 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
 
   // ------------------------------ Private Methods ------------------------------ //
 
-  #getAddLiquidityParams(removeLPResult: TV[], swapQuote: ZeroXQuoteV2Response): TV[] {
+  private getAddLiquidityParams(removeLPResult: TV[], swapQuote: ZeroXQuoteV2Response): TV[] {
     const [_, token1] = this.targetWell.tokens;
 
     const mainAmountIn = removeLPResult[this.sourceIndexes.main];
@@ -338,7 +341,7 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
 
   // ------------------------------ Decoders ------------------------------ //
 
-  #decodeRemoveLiquidityResult(data: readonly HashString[]) {
+  private decodeRemoveLiquidityResult(data: readonly HashString[]) {
     this.errorHandler.assert(data.length > 0, "Remove liquidity result data is empty", {
       dataLength: data.length,
     });
@@ -372,7 +375,7 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
     return removeLiquidityResult;
   }
 
-  #decodeAddLiquidityResult(data: readonly HashString[]) {
+  private decodeAddLiquidityResult(data: readonly HashString[]) {
     this.errorHandler.assert(data.length > 0, "Add liquidity result data is empty", {
       dataLength: data.length,
     });
