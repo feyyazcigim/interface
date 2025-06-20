@@ -1,4 +1,5 @@
 import { Clipboard } from "@/classes/Clipboard";
+import { ITTLCache, InMemoryTTLCache } from "@/classes/TTLCache";
 import { TV } from "@/classes/TokenValue";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import encoders from "@/encoders";
@@ -11,8 +12,7 @@ import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { Config } from "@wagmi/core";
 import { Address } from "viem";
-import { IConvertScalarCache, InMemoryConvertScalarCache } from "./IConvertScalarCache";
-import { SiloConvertCache } from "./SiloConvert.cache";
+import { SiloConvertPriceCache } from "./SiloConvert.cache";
 import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
 import { ConversionQuotationError, SimulationError } from "./SiloConvertErrors";
 import { SiloConvertRoute, SiloConvertStrategizer } from "./siloConvert.strategizer";
@@ -112,21 +112,17 @@ export interface SiloConvertSummary<T extends SiloConvertType> {
 export class SiloConvert {
   readonly context: SiloConvertContext;
 
-  cache: SiloConvertCache;
-
   maxConvertQuoter: SiloConvertMaxConvertQuoter;
 
   strategizer: SiloConvertStrategizer;
 
-  private scalarCache: IConvertScalarCache;
+  private priceCache: SiloConvertPriceCache;
 
-  constructor(
-    diamondAddress: Address,
-    account: Address,
-    config: Config,
-    chainId: number,
-    scalarCache?: IConvertScalarCache,
-  ) {
+  private scalarCache: ITTLCache<number>;
+
+  private maxConvertCache: ITTLCache<TV>;
+
+  constructor(diamondAddress: Address, account: Address, config: Config, chainId: number) {
     this.context = {
       diamond: diamondAddress,
       account: account,
@@ -134,20 +130,28 @@ export class SiloConvert {
       chainId: chainId,
     };
 
-    this.cache = new SiloConvertCache(this.context);
-    this.scalarCache = scalarCache || new InMemoryConvertScalarCache();
-    this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(this.context, this.cache, this.scalarCache);
-    this.strategizer = new SiloConvertStrategizer(this.context, this.cache, this.maxConvertQuoter);
+    this.priceCache = new SiloConvertPriceCache(this.context);
+    this.scalarCache = new InMemoryTTLCache<number>(15_000, 15_000);
+    this.maxConvertCache = new InMemoryTTLCache<TV>(15_000, 15_000);
+
+    this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(this.context, this.priceCache);
+    this.strategizer = new SiloConvertStrategizer(this.context, this.priceCache, this.maxConvertQuoter);
   }
 
   /**
    * Resets the strategies, amounts, caches, and re-initializes dependencies.
    */
   clear() {
-    this.cache = new SiloConvertCache(this.context);
+    this.priceCache.clear();
     this.scalarCache.clear();
-    this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(this.context, this.cache, this.scalarCache);
-    this.strategizer = new SiloConvertStrategizer(this.context, this.cache, this.maxConvertQuoter);
+    this.maxConvertCache.clear();
+    this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(
+      this.context,
+      this.priceCache,
+      this.scalarCache,
+      this.maxConvertCache,
+    );
+    this.strategizer = new SiloConvertStrategizer(this.context, this.priceCache, this.maxConvertQuoter);
   }
 
   /**
@@ -162,7 +166,7 @@ export class SiloConvert {
    */
   async getMaxConvert(source: Token, target: Token, deposits?: DepositData[], forceUpdateCache?: boolean): Promise<TV> {
     // update cache if requested
-    await this.cache.update(forceUpdateCache);
+    await this.priceCache.update(forceUpdateCache);
 
     return this.maxConvertQuoter.quoteMaxConvert(source, target, deposits);
   }
@@ -178,7 +182,7 @@ export class SiloConvert {
     slippage: number,
     forceUpdateCache: boolean = false,
   ): Promise<SiloConvertSummary<SiloConvertType>[]> {
-    await this.cache.update(forceUpdateCache).catch((e) => {
+    await this.priceCache.update(forceUpdateCache).catch((e) => {
       console.error("[SiloConvert/quote] FAILED: ", e);
       throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to update cache", {
         source,
@@ -234,7 +238,7 @@ export class SiloConvert {
       quotedRoutes.map((route) =>
         route.workflow.simulate({
           account: this.context.account,
-          after: this.cache.constructPriceAdvPipe({ noTokenPrices: true }),
+          after: this.priceCache.constructPriceAdvPipe({ noTokenPrices: true }),
         }),
       ),
     ).catch((e) => {

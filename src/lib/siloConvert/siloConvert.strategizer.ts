@@ -1,10 +1,9 @@
 import { TV } from "@/classes/TokenValue";
 import { Token } from "@/utils/types";
 import { Prettify } from "@/utils/types.generic";
-import { ExtendedPoolData, SiloConvertCache } from "./SiloConvert.cache";
+import { ExtendedPoolData, SiloConvertPriceCache } from "./SiloConvert.cache";
 import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
 import {
-  AggregatorDisabledError,
   CacheError,
   InvalidConversionTokensError,
   MaxConvertQuotationError,
@@ -58,7 +57,7 @@ export interface SiloConvertRoute<T extends SiloConvertType> {
 export class Strategizer {
   constructor(
     private readonly context: SiloConvertContext,
-    private readonly cache: SiloConvertCache,
+    private readonly cache: SiloConvertPriceCache,
     private readonly maxConvertQuoter: SiloConvertMaxConvertQuoter,
   ) {}
 
