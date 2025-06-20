@@ -68,7 +68,7 @@ const REFETCH_INTERVAL = 1000 * 15; // 15 seconds
  * - Pair token information and metadata
  * - Current ΔP (delta B) calculations
  */
-export class SiloConvertCache {
+export class SiloConvertPriceCache {
   /** Shared context */
   private context: SiloConvertContext;
 
