@@ -74,7 +74,7 @@ export default function LandingChart() {
     return { path, points, totalWidth };
   };
 
-  const { path, points, totalWidth } = generateCompletePath();
+  const { path } = generateCompletePath();
 
   // Get current price at the 75% position
   const measurementX = viewportWidth * 0.75;
