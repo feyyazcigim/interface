@@ -3,12 +3,6 @@ import { Token } from "@/utils/types";
 import { Prettify } from "@/utils/types.generic";
 import { ExtendedPoolData, SiloConvertPriceCache } from "./SiloConvert.cache";
 import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
-import {
-  CacheError,
-  InvalidConversionTokensError,
-  MaxConvertQuotationError,
-  StrategySelectionError,
-} from "./SiloConvertErrors";
 import { SiloConvertStrategy } from "./strategies/core";
 import { SiloConvertType } from "./strategies/core/types";
 import {
@@ -18,6 +12,12 @@ import {
   SiloConvertLP2LPSingleSidedPairTokenStrategy as LP2LPSingleSidedPair,
   SiloConvertLP2MainPipelineConvertStrategy as LP2MainPipeline,
 } from "./strategies/implementations";
+import {
+  CacheError,
+  InvalidConversionTokensError,
+  MaxConvertQuotationError,
+  StrategySelectionError,
+} from "./strategies/validation/SiloConvertErrors";
 import { SiloConvertContext } from "./types";
 
 interface StrategyWithAmount<T extends SiloConvertType> {

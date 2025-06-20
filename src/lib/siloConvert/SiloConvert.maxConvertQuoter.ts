@@ -20,6 +20,8 @@ import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { readContract } from "viem/actions";
 import { DefaultConvertStrategy } from "./strategies/implementations/DefaultConvertStrategy";
+import { MaxConvertQuoterErrorHandler } from "./strategies/validation/MaxConvertQuoterErrorHandler";
+import { MaxConvertQuotationError } from "./strategies/validation/SiloConvertErrors";
 
 interface ConvertTokens {
   source: Token;
@@ -120,52 +122,84 @@ export class SiloConvertMaxConvertQuoter {
    * If farmerDeposits are provided, it will return a tested scaled max convert.
    * Results are cached for 15 seconds to avoid duplicate expensive calculations.
    */
-  async quoteMaxConvert(source: Token, target: Token, farmerDeposits?: DepositData[]) {
-    // Generate cache key based on deposits to ensure cache invalidation when deposits change
-    const cacheKey = this.maxConvertCache.generateKey([source.address, target.address]);
-    const depositsHash = hashDeposits(farmerDeposits);
+  async quoteMaxConvert(source: Token, target: Token, farmerDeposits?: DepositData[]): Promise<TV> {
+    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
 
-    const withDepositsKey =
-      farmerDeposits?.length && depositsHash
-        ? this.maxConvertCache.generateKey([source.address, target.address], depositsHash)
-        : undefined;
+    return errorHandler.wrapAsync(async () => {
+      // Basic validation
+      errorHandler.assert(!!source && !!target, "Missing source or target token");
+      errorHandler.assert(source.address !== target.address, "Cannot convert token to itself");
 
-    // Check cache first
-    const cached = withDepositsKey ? this.maxConvertCache.get(withDepositsKey) : this.maxConvertCache.get(cacheKey);
-    if (cached) {
-      console.debug("[MaxConvertQuoter/quoteMaxConvert]: using cached result", {
+      // Generate cache keys
+      const cacheKey = errorHandler.wrapCache(
+        () => this.maxConvertCache.generateKey([source.address, target.address]),
+        "generate base cache key",
+        `${source.address}-${target.address}`, // fallback
+      );
+
+      const depositsHash = hashDeposits(farmerDeposits);
+      const withDepositsKey =
+        farmerDeposits?.length && depositsHash
+          ? errorHandler.wrapCache(
+              () => this.maxConvertCache.generateKey([source.address, target.address], depositsHash),
+              "generate deposits cache key",
+              undefined, // fallback
+            )
+          : undefined;
+
+      // Check cache first
+      const cached = errorHandler.wrapCache(
+        () => (withDepositsKey ? this.maxConvertCache.get(withDepositsKey) : this.maxConvertCache.get(cacheKey)),
+        "read from cache",
+        undefined, // fallback - cache miss
+      );
+
+      if (cached) {
+        console.debug("[MaxConvertQuoter/quoteMaxConvert]: using cached result", {
+          source: source.symbol,
+          target: target.symbol,
+          cached: cached.toHuman(),
+          cacheMetrics: this.maxConvertCache.getMetrics(),
+        });
+        return cached;
+      }
+
+      // Cache miss - perform expensive calculation
+      let result: TV;
+
+      if (source.isMain || target.isMain) {
+        result = await this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits);
+      } else if (source.isLP && target.isLP) {
+        result = await this.getMaxConvertLPToLP({ source, target });
+      } else {
+        errorHandler.validateConversionTokens("default"); // This will throw appropriate error
+        throw new Error("Unreachable: validation should have thrown");
+      }
+
+      // Validate result
+      errorHandler.validateAmount(result, "max convert result");
+
+      // Cache the result
+      errorHandler.wrapCache(
+        () => {
+          if (withDepositsKey) {
+            this.maxConvertCache.set(withDepositsKey, result);
+          }
+          this.maxConvertCache.set(cacheKey, result);
+        },
+        "write to cache",
+        undefined, // non-fatal if cache write fails
+      );
+
+      console.debug("[MaxConvertQuoter/quoteMaxConvert]: calculated and cached result", {
         source: source.symbol,
         target: target.symbol,
-        cached: cached.toHuman(),
+        result: result.toHuman(),
         cacheMetrics: this.maxConvertCache.getMetrics(),
       });
-      return cached;
-    }
 
-    // Cache miss - perform expensive calculation
-    let result: TV;
-    if (source.isMain || target.isMain) {
-      result = await this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits);
-    } else if (source.isLP && target.isLP) {
-      result = await this.getMaxConvertLPToLP({ source, target });
-    } else {
-      throw new Error("Convert Router: Invalid source and target tokens");
-    }
-
-    // Cache the result. Update for both keys.
-    if (withDepositsKey) {
-      this.maxConvertCache.set(withDepositsKey, result);
-    }
-    this.maxConvertCache.set(cacheKey, result);
-
-    console.debug("[MaxConvertQuoter/quoteMaxConvert]: calculated and cached result", {
-      source: source.symbol,
-      target: target.symbol,
-      result: result.toHuman(),
-      cacheMetrics: this.maxConvertCache.getMetrics(),
-    });
-
-    return result;
+      return result;
+    }, "quote max convert");
   }
 
   // ===================================================================
@@ -174,46 +208,76 @@ export class SiloConvertMaxConvertQuoter {
 
   /**
    * Gets the max convert from the source to the target.
-   * @throws Error if the source or target is not a main token.
+   * @throws MaxConvertQuotationError if calculation fails
+   * @throws InvalidConversionTokensError if tokens are invalid for default convert
    */
   private async getDefaultConvertMaxConvert(convertTokens: ConvertTokens, farmerDeposits?: DepositData[]): Promise<TV> {
-    validateConversionTokens(convertTokens, "default");
-
     const { source, target } = convertTokens;
-    const lpToken = source.isMain ? target : source;
+    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
 
-    if (!source || !target || (!source.isMain && !target.isMain) || !lpToken) {
-      throw new Error("Convert Router: Invalid source and target tokens");
-    }
+    return errorHandler.wrapAsync(async () => {
+      // Validate conversion tokens
+      errorHandler.validateConversionTokens("default");
 
-    const [rawWellData] = await Promise.all([this.cache.getRawWellData(lpToken.address), this.cache.update()]);
+      const lpToken = source.isMain ? target : source;
+      errorHandler.assertDefined(lpToken, "LP token must be defined for default convert");
 
-    const maxAmountIn = await readContract(this.context.wagmiConfig.getClient({ chainId: this.context.chainId }), {
-      abi: abiSnippets.silo.getMaxAmountIn,
-      address: this.context.diamond,
-      functionName: "getMaxAmountIn",
-      args: [source.address, target.address],
-    });
+      // Get raw well data and update cache in parallel
+      const [rawWellData] = await Promise.all([
+        errorHandler.wrapAsync(() => this.cache.getRawWellData(lpToken.address), "get raw well data", {
+          lpTokenAddress: lpToken.address,
+        }),
+        errorHandler.wrapAsync(() => this.cache.update(), "update cache"),
+      ]);
 
-    const { scaledAmountIn, scalingReason } = this.scaleDefaultConvertMaxAmountIn(
-      convertTokens,
-      TV.fromBigInt(maxAmountIn, source.decimals),
-      rawWellData,
-    );
+      // Get max amount from contract
+      const client = this.context.wagmiConfig.getClient({ chainId: this.context.chainId });
+      errorHandler.assertDefined(client, `No wagmi client available for chain ID: ${this.context.chainId}`);
 
-    console.debug("[MaxConvertQuoter/getDefaultConvertMaxConvert]: ", {
-      source: source,
-      target: target,
-      maxConvertResult: maxAmountIn,
-      scaledAmountIn: scaledAmountIn.toHuman(),
-      scalingReason,
-    });
+      const maxAmountIn = await errorHandler.wrapAsync(
+        () =>
+          readContract(client, {
+            abi: abiSnippets.silo.getMaxAmountIn,
+            address: this.context.diamond,
+            functionName: "getMaxAmountIn",
+            args: [source.address, target.address],
+          }),
+        "read max amount from contract",
+        {
+          diamond: this.context.diamond,
+          chainId: this.context.chainId,
+        },
+      );
 
-    if (farmerDeposits) {
-      return this.findSafeDefaultMaxConvert(convertTokens, scaledAmountIn, farmerDeposits);
-    }
+      // Validate contract response
+      errorHandler.validateContractResponse(maxAmountIn, "getMaxAmountIn");
 
-    return scaledAmountIn;
+      // Scale the max amount
+      const { scaledAmountIn, scalingReason } = errorHandler.wrap(
+        () =>
+          this.scaleDefaultConvertMaxAmountIn(convertTokens, TV.fromBigInt(maxAmountIn, source.decimals), rawWellData),
+        "scale max amount",
+        {
+          maxAmountIn: maxAmountIn.toString(),
+          sourceDecimals: source.decimals,
+        },
+      );
+
+      console.debug("[MaxConvertQuoter/getDefaultConvertMaxConvert]: ", {
+        source: source.symbol,
+        target: target.symbol,
+        maxConvertResult: maxAmountIn.toString(),
+        scaledAmountIn: scaledAmountIn.toHuman(),
+        scalingReason,
+      });
+
+      // If farmer deposits are provided, find safe max convert
+      if (farmerDeposits) {
+        return await this.findSafeDefaultMaxConvert(convertTokens, scaledAmountIn, farmerDeposits);
+      }
+
+      return scaledAmountIn;
+    }, "get default convert max convert");
   }
 
   /**
@@ -234,43 +298,84 @@ export class SiloConvertMaxConvertQuoter {
     maxConvert: TV,
     farmerDeposits: DepositData[],
   ): Promise<TV> {
-    validateConversionTokens(tokens, "default");
-
     const { source, target } = tokens;
+    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
 
-    // Get the max amount convertible from the farmer deposits.
-    const farmerAvailableAmount = farmerDeposits.reduce((prev, curr) => prev.add(curr.amount), TV.ZERO);
+    return errorHandler.wrapAsync(async () => {
+      // Validate inputs
+      errorHandler.validateConversionTokens("default");
+      errorHandler.validateAmount(maxConvert, "max convert amount");
+      errorHandler.assert(!!farmerDeposits, "Farmer deposits are required");
 
-    if (farmerDeposits.length === 0 || farmerAvailableAmount.isZero) {
-      return maxConvert;
-    }
+      // Calculate farmer available amount
+      const farmerAvailableAmount = errorHandler.wrap(
+        () =>
+          farmerDeposits.reduce((prev, curr) => {
+            if (!curr?.amount) {
+              throw new Error(`Invalid deposit data: missing amount for deposit ${curr?.idHex || "unknown"}`);
+            }
+            return prev.add(curr.amount);
+          }, TV.ZERO),
+        "calculate farmer available amount",
+        { depositsCount: farmerDeposits.length },
+      );
 
-    if (farmerAvailableAmount.lt(maxConvert)) {
-      console.debug("[MaxConvertQuoter/findSafeDefaultMaxConvert]: convertible amount < than max convert", {
-        maxConvert: maxConvert.toHuman(),
-        farmerAvailableAmount: farmerAvailableAmount.toHuman(),
-      });
-      return maxConvert;
-    }
+      // Early returns for simple cases
+      if (farmerDeposits.length === 0 || farmerAvailableAmount.isZero) {
+        console.debug("[MaxConvertQuoter/findSafeDefaultMaxConvert]: no farmer deposits or zero amount", {
+          depositsCount: farmerDeposits.length,
+          farmerAvailableAmount: farmerAvailableAmount.toHuman(),
+        });
+        return maxConvert;
+      }
 
-    // Check cache first
-    const cacheKey = this.generateTokensCacheKey(source, target);
-    const cachedScalar = this.scalarCache.get(cacheKey);
-    if (cachedScalar) {
-      console.debug("[MaxConvertQuoter/findSafeDefaultMaxConvert]: using cached scalar", {
-        cachedScalar,
-        cacheMetrics: this.scalarCache.getMetrics(),
-      });
-      return maxConvert.mul(cachedScalar);
-    }
+      if (farmerAvailableAmount.lt(maxConvert)) {
+        console.debug("[MaxConvertQuoter/findSafeDefaultMaxConvert]: convertible amount < than max convert", {
+          maxConvert: maxConvert.toHuman(),
+          farmerAvailableAmount: farmerAvailableAmount.toHuman(),
+        });
+        return maxConvert;
+      }
 
-    // Compute optimal scalar using jump algorithm
-    const optimalScalar = await this.computeOptimalScalar(tokens, maxConvert, farmerDeposits);
+      // Check cache first
+      const cacheKey = errorHandler.wrapCache(
+        () => this.generateTokensCacheKey(source, target),
+        "generate cache key",
+        `${source.address}-${target.address}`, // fallback
+      );
 
-    // Cache the result
-    this.scalarCache.set(cacheKey, optimalScalar);
+      const cachedScalar = errorHandler.wrapCache(
+        () => this.scalarCache.get(cacheKey),
+        "read cached scalar",
+        undefined, // fallback - cache miss
+      );
 
-    return maxConvert.mul(optimalScalar);
+      if (cachedScalar !== undefined && !Number.isNaN(cachedScalar) && cachedScalar > 0) {
+        console.debug("[MaxConvertQuoter/findSafeDefaultMaxConvert]: using cached scalar", {
+          cachedScalar,
+          cacheMetrics: this.scalarCache.getMetrics(),
+        });
+        return maxConvert.mul(cachedScalar);
+      }
+
+      // Compute optimal scalar using jump algorithm
+      const optimalScalar = await this.computeOptimalScalar(tokens, maxConvert, farmerDeposits);
+
+      // Validate optimal scalar
+      errorHandler.validateScalar(optimalScalar, "optimal scalar");
+
+      // Cache the result
+      errorHandler.wrapCache(
+        () => this.scalarCache.set(cacheKey, optimalScalar),
+        "cache optimal scalar",
+        undefined, // non-fatal if cache write fails
+      );
+
+      const result = maxConvert.mul(optimalScalar);
+      errorHandler.validateAmount(result, "final result");
+
+      return result;
+    }, "find safe default max convert");
   }
 
   /**
@@ -285,7 +390,7 @@ export class SiloConvertMaxConvertQuoter {
     maxAmountIn: TV,
     scalar: number,
   ) {
-    validateConversionTokens({ source, target }, "default");
+    // Validation is handled by calling method
 
     // clear the workflow before testing.
     workflow.clear();
@@ -316,7 +421,7 @@ export class SiloConvertMaxConvertQuoter {
    * The number returned by getMaxAmountIn is too high, so we scale the result down.
    */
   private scaleDefaultConvertMaxAmountIn({ source, target }: ConvertTokens, max: TV, rawWellData: ExtendedRawWellData) {
-    validateConversionTokens({ source, target }, "default");
+    // Validation is handled by calling method
 
     const lpToken = source.isMain ? target : source;
     const scalingReason: string[] = [];
@@ -370,7 +475,7 @@ export class SiloConvertMaxConvertQuoter {
    * @throws Error if the source or target is not a LP token.
    */
   private async getMaxConvertLPToLP({ source, target }: ConvertTokens) {
-    validateConversionTokens({ source, target }, "LP2LP");
+    // Validation is handled by calling method
 
     await this.cache.update();
 
@@ -392,7 +497,7 @@ export class SiloConvertMaxConvertQuoter {
    * @throws Error if the source or target is not a single sided pair token.
    */
   async getSingleSidedPairTokenMaxConvert({ source, target }: ConvertTokens): Promise<TV> {
-    validateConversionTokens({ source, target }, "LP2LP");
+    // Validation is handled by calling method
 
     const sourceWell = this.cache.getWell(source.address);
     const targetWell = this.cache.getWell(target.address);
@@ -482,7 +587,7 @@ export class SiloConvertMaxConvertQuoter {
    * @returns MaxConvertSummary
    */
   async getSingleSidedMainTokenMaxConvert({ source, target }: ConvertTokens): Promise<TV> {
-    validateConversionTokens({ source, target }, "LP2LP");
+    // Validation is handled by calling method
 
     const mainToken = MAIN_TOKEN[resolveChainId(this.context.chainId)];
 
@@ -545,7 +650,7 @@ export class SiloConvertMaxConvertQuoter {
     // index 2 | 5
     const maxSourceLP = TV.fromBigInt(decodeGetRemoveLiquidityImbalanceIn(result[result.length - 1]), source.decimals);
 
-    let debugData: any = {
+    let debugData: Record<string, unknown> = {
       source,
       target,
       sourceIsRestrictive,
@@ -595,7 +700,14 @@ export class SiloConvertMaxConvertQuoter {
     const workflow = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
 
     // try scalar[0] 100% first.
-    const res = await this.testDefaultConvertScalar(tokens, farmerDeposits, workflow, maxConvert, scalars[0]);
+    const res = await this.testDefaultConvertScalar(tokens, farmerDeposits, workflow, maxConvert, scalars[0]).catch(
+      (e) => {
+        throw new MaxConvertQuotationError(tokens.source, tokens.target, "Failed to test default convert scalar", {
+          maxConvert,
+          error: e,
+        });
+      },
+    );
     if (res) {
       return scalars[0];
     }
@@ -647,33 +759,13 @@ export class SiloConvertMaxConvertQuoter {
 
 // Helper Methods
 
-const baseErrMessage = `[MaxConvertQuoter/validation]: Invalid source or target.`;
+// Note: baseErrMessage is no longer used - error handling is now done via MaxConvertQuoterErrorHandler
 
 const hashDeposits = (deposits: DepositData[] | undefined): string => {
   return deposits?.map((d) => d.idHex.substring(0, 8)).join("-") ?? "";
 };
 
-const validateConversionTokens = (tokens: ConvertTokens, expectedType: "LP2LP" | "default") => {
-  const { source, target } = tokens;
-
-  if ((source.isMain || target.isMain) && expectedType === "LP2LP") {
-    throw new Error(
-      `${baseErrMessage} Expected both to be Wells but got source: ${source.address} and target: ${target.address}`,
-    );
-  }
-
-  if (source.isLP && target.isLP && expectedType === "default") {
-    throw new Error(
-      `${baseErrMessage} Expected only 1 Well, but got source: ${source.address} and target: ${target.address}`,
-    );
-  }
-
-  if (source.isMain && target.isMain) {
-    throw new Error(
-      `${baseErrMessage} Expected only 1 Main token but got source: ${source.address} and target: ${target.address}`,
-    );
-  }
-};
+// Note: validateConversionTokens is now handled by MaxConvertQuoterErrorHandler.validateConversionTokens()
 
 // total of 15 scalars
 const SCALE_DOWN_SCALARS: number[] = [
