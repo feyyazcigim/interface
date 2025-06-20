@@ -188,7 +188,7 @@ export class SiloConvert {
     forceUpdateCache: boolean = false,
   ): Promise<SiloConvertSummary<SiloConvertType>[]> {
     await this.priceCache.update(forceUpdateCache).catch((e) => {
-      console.error("[SiloConvert/quote] FAILED: ", e);
+      console.error("[SiloConvert/quote] FAILED to update cache: ", e);
       throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to update cache", {
         source,
         target,
@@ -196,7 +196,7 @@ export class SiloConvert {
     });
 
     const routes = await this.strategizer.strategize(source, target, amountIn).catch((e) => {
-      console.error("[SiloConvert/quote] FAILED: ", e);
+      console.error("[SiloConvert/quote] FAILED to strategize: ", e);
       throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to strategize", {
         source,
         target,
@@ -232,12 +232,14 @@ export class SiloConvert {
         };
       }),
     ).catch((e) => {
-      console.error("[SiloConvert/quote] FAILED: ", e);
+      console.error("[SiloConvert/quote] FAILED to quote routes: ", e);
       throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to quote routes", {
         routes,
         quotedRoutes,
       });
     });
+
+    console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
 
     const simulationsRawResults = await Promise.all(
       quotedRoutes.map((route) =>
@@ -247,12 +249,14 @@ export class SiloConvert {
         }),
       ),
     ).catch((e) => {
-      console.error("[SiloConvert/quote] FAILED: ", e);
+      console.error("[SiloConvert/quote] FAILED to simulate routes: ", e);
       throw new SimulationError("quote", e instanceof Error ? e.message : "Unknown error", {
         routes,
         quotedRoutes,
       });
     });
+
+    console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
 
     const datas = quotedRoutes.map((route, i): SiloConvertSummary<SiloConvertType> => {
       const rawResponse = simulationsRawResults[i];
@@ -268,7 +272,7 @@ export class SiloConvert {
       try {
         decoded = this.decodeRouteAndPriceResults(staticCallResult, route.route);
       } catch (e) {
-        console.error("[SiloConvert/quote] FAILED: ", e);
+        console.error("[SiloConvert/quote] FAILED to decode route and price results: ", e);
         throw new ConversionQuotationError("Failed to decode route and price results", {
           staticCallResult,
           route,
@@ -283,6 +287,8 @@ export class SiloConvert {
         totalAmountOut: decoded.reducedResults.toAmount, // TODO: Remove me when supporting multiple toToken
       };
     });
+
+    console.debug("[SiloConvert/quote] quoting finished!!!", datas);
 
     return datas;
   }
@@ -332,7 +338,7 @@ export class SiloConvert {
         ),
       };
     } catch (e) {
-      console.error("[SiloConvert/decodeRouteAndPriceResults] FAILED: ", e);
+      console.error("[SiloConvert/decodeRouteAndPriceResults] FAILED to decode convert and price results: ", e);
       throw new Error("Failed to decode convert and price results");
     }
   }
