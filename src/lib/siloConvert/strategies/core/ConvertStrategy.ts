@@ -5,7 +5,7 @@ import { AdvancedFarmWorkflow } from "@/lib/farm/workflow";
 import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { AnyRecord } from "@/utils/types.generic";
-import { ConvertStrategyErrorHandler } from "../../ConvertStrategyErrorHandler";
+import { ConvertStrategyErrorHandler } from "../validation/ConvertStrategyErrorHandler";
 import { ConvertStrategyQuote, SiloConvertType } from "./types";
 
 export abstract class SiloConvertStrategy<T extends SiloConvertType> {
