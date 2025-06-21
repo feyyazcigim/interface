@@ -5,6 +5,7 @@ import { Col } from "@/components/Container";
 import { RightArrowIcon } from "@/components/Icons";
 import FrameAnimator from "@/components/LoadingSpinner";
 import MobileActionBar from "@/components/MobileActionBar";
+import QuotedRoutesSelector from "@/components/QuotedRoutesSelector";
 import RoutingAndSlippageInfo from "@/components/RoutingAndSlippageInfo";
 import SiloOutputDisplay from "@/components/SiloOutputDisplay";
 import SlippageButton from "@/components/SlippageButton";
@@ -83,6 +84,7 @@ function ConvertForm({
   const diamond = useProtocolAddress();
   const account = useAccount();
   const [amountIn, setAmountIn] = useState("0");
+  // const [slippage, setSlippage] = useState(25);
   const [slippage, setSlippage] = useState(0.25);
   const [maxConvert, setMaxConvert] = useState(TV.ZERO);
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
@@ -349,6 +351,8 @@ function ConvertForm({
     };
   };
 
+  const selectedPriceImpacts = exists(routeIndex) ? priceImpact.priceImpactByWell?.[routeIndex] : undefined;
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -417,6 +421,17 @@ function ConvertForm({
             />
           </>
         ) : null}
+        {targetToken && isValidAmountIn && (
+          <QuotedRoutesSelector
+            quote={quote}
+            convertResults={convertResults}
+            sortedIndexes={sortedIndexes}
+            routeIndex={routeIndex}
+            sourceToken={siloToken}
+            targetToken={targetToken}
+            onRouteSelect={setRouteIndex}
+          />
+        )}
         {targetToken && isValidAmountIn && exists(routeIndex) && (
           <RoutingAndSlippageInfo
             title="Total Convert Slippage"
@@ -427,6 +442,7 @@ function ConvertForm({
             txnType="Convert"
             tokenIn={siloToken}
             tokenOut={targetToken}
+            // priceImpacts={selectedPriceImpacts}
           />
         )}
       </div>
