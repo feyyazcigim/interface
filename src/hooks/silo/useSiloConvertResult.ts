@@ -23,7 +23,7 @@ const defaultData = {
   toBdv: TV.ZERO,
 };
 
-type SiloConvertResultResult = typeof defaultData & {
+export type SiloConvertResultResult = typeof defaultData & {
   deltaInitialStalk: TV;
   deltaGrownStalk: TV;
   deltaStalk: TV;
@@ -78,6 +78,7 @@ export function useSiloConvertResult(
     if (!results) return;
 
     const sortedIndexes = [...results]
+      .map((result, index) => ({ ...result, index }))
       .sort((a, b) => {
         const aBDV = a.toBdv;
         const bBDV = b.toBdv;
@@ -86,43 +87,19 @@ export function useSiloConvertResult(
 
         if (aBDV.gt(bBDV)) return -1;
         if (aBDV.lt(bBDV)) return 1;
-
         if (aGrownStalk.gt(bGrownStalk)) return -1;
         if (aGrownStalk.lt(bGrownStalk)) return 1;
 
         return 0;
       })
-      .map((_, i) => i);
+      .map((r) => r.index);
 
     return sortedIndexes;
   }, [results]);
 
-  // const maxIndexes = useMemo(() => {
-  //   if (!results) return;
-
-  //   let maxBDVIndex = 0;
-  //   let maxStalkIndex = 0;
-
-  //   results.forEach((result, index) => {
-  //     if (result.toBdv.gt(results[maxBDVIndex].toBdv)) {
-  //       maxBDVIndex = index;
-  //     }
-
-  //     if (result.toGrownStalk.gt(results[maxStalkIndex].toGrownStalk)) {
-  //       maxStalkIndex = index;
-  //     }
-  //   });
-
-  //   return {
-  //     pdv: maxBDVIndex,
-  //     grownStalk: maxStalkIndex,
-  //   };
-  // }, [results]);
-
   return {
     results,
     sortedIndexes,
-    // maxIndexes
   };
 }
 
