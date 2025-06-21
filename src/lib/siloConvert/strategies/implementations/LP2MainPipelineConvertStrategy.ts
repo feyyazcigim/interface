@@ -85,14 +85,12 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
     const pairAmount = removeLPResult[this.sourceIndexes.pair];
     this.errorHandler.validateAmount(pairAmount, "pair token amount from remove liquidity");
 
-    const swapParams = this.errorHandler.wrap(
-      () => this.swapQuoter.generateSwapQuoteParams(this.targetToken, this.pairToken, pairAmount, slippage, false),
-      "generate swap quote params",
-      {
-        sellToken: this.pairToken.symbol,
-        buyToken: this.targetToken.symbol,
-        amount: pairAmount.toHuman(),
-      },
+    const swapParams = this.swapQuoter.generateSwapQuoteParams(
+      this.targetToken,
+      this.pairToken,
+      pairAmount,
+      slippage,
+      false,
     );
 
     const swapQuotes = await this.errorHandler.wrapAsync(
@@ -115,27 +113,15 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
 
     const swapQuote = swapQuotes[0];
 
-    const swapSummary = this.errorHandler.wrap(
-      () =>
-        this.swapQuoter.makeSwapSummary(
-          swapQuote,
-          this.pairToken,
-          this.targetToken,
-          this.sourceWell.pair.price,
-          this.sourceWell.price, // TODO: get price of main token after the swap... fix me.
-        ),
-      "create swap summary",
-      { sellToken: this.pairToken.symbol, buyToken: this.targetToken.symbol },
+    const swapSummary = this.swapQuoter.makeSwapSummary(
+      swapQuote,
+      this.pairToken,
+      this.targetToken,
+      this.sourceWell.pair.price,
+      this.sourceWell.price, // TODO: get price of main token after the swap... fix me.
     );
 
-    const totalAmountOut = this.errorHandler.wrap(
-      () => swapSummary.buyAmount.add(mainTokenAmountRemoved),
-      "calculate total amount out",
-      {
-        swapBuyAmount: swapSummary.buyAmount.toHuman(),
-        mainTokenRemoved: mainTokenAmountRemoved.toHuman(),
-      },
-    );
+    const totalAmountOut = swapSummary.buyAmount.add(mainTokenAmountRemoved);
 
     const summary: ConvertQuoteSummary<"LP2MainPipeline"> = {
       source: {
@@ -173,18 +159,18 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
 
     const pipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
-    // 1. Approve source well to use LP token
+    // 0. Approve source well to use LP token
     pipe.add(LP2MainStrategy.snippets.erc20Approve(source.well.pool, source.well.pool.address));
 
-    // 2. Remove liquidity in equal proportions
+    // 1. Remove liquidity in equal proportions
     pipe.add(
       LP2MainStrategy.snippets.removeLiquidity(source.well, source.amountIn, source.minAmountOut, PIPELINE_ADDRESS),
     );
 
-    // 3. Approve swap contract to spend main token
+    // 2. Approve swap contract to spend main token
     pipe.add(LP2MainStrategy.snippets.erc20Approve(validatedSwap.sellToken, validatedSwap.quote.transaction.to));
 
-    // 4. Swap pair token for PINTO
+    // 3. Swap pair token for PINTO
     pipe.add({
       target: validatedSwap.quote.transaction.to,
       callData: validatedSwap.quote.transaction.data,
@@ -240,11 +226,7 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
       { resultLength: simulate.result.length },
     );
 
-    const amounts: TV[] = this.errorHandler.wrap(
-      () => [TV.fromBigInt(result[0], token0.decimals), TV.fromBigInt(result[1], token1.decimals)],
-      "convert remove liquidity amounts",
-      { token0: token0.symbol, token1: token1.symbol },
-    );
+    const amounts: TV[] = [TV.fromBigInt(result[0], token0.decimals), TV.fromBigInt(result[1], token1.decimals)];
 
     console.debug("[LP2MainPipelineStrategy] getRemoveLiquidityOut: ", {
       well: this.sourceWell.pool.name,
