@@ -610,7 +610,7 @@ const ConvertRoutingDetails = () => {
 
   const normalizedConvertActions = convertSummary.quotes.map((quote, i) =>
     normalizeConvertSummary(
-      quote,
+      quote as ConvertStrategyQuote<"LP2LP">,
       convertSummary.results[i],
       i,
       // use the price impact summary only if it's not the 1st action
@@ -835,102 +835,11 @@ function getPricesFromWellData(tokens: Token[], well: ExtendedPoolData, summary:
   });
 }
 
-// function getConversionSteps(
-//   summary: SiloConvertSummary<SiloConvertType>,
-//   result: ConvertResultStruct<TV>,
-//   priceImpactSummary?: PriceImpactSummaryMap,
-// ) {
-//   const { quotes, results } = summary;
-
-//   if (summary.route.convertType === "LPAndMain") {
-//     return handleNormalizeLPAndMainConvert(summary, result, priceImpactSummary);
-//   }
-// }
-
-// const handleNormalizeLPAndMainConvert = (
-//   summary: SiloConvertSummary<SiloConvertType>,
-//   result: ConvertResultStruct<TV>,
-//   priceImpactSummary?: PriceImpactSummaryMap
-// ) => {
-//   if (summary.route.convertType !== "LPAndMain") {
-//     throw new Error("Invalid convert type");
-//   }
-//   const data: IConvertActionItem[] = [];
-
-//   const { source, target } = summary.route;
-
-//   const priceImpact = source.isLP ? priceImpactSummary?.main : priceImpactSummary?.[getTokenIndex(source)];
-
-//   if (!priceImpact) {
-//     return data;
-//   }
-
-//   data.push({
-//     from: [source],
-//     to: [target],
-//     amounts: [result.toAmount],
-//     usd: [priceImpact.priceAfter ?? TV.ZERO],
-//     exchange: "pinto-exchange" as const,
-//     itemKey: `default-convert-${source.symbol}-${target.symbol}`,
-//   });
-
-//   return data;
-// }
-
-// const handleNormalizeLP2LPConvert = (
-//   summary: SiloConvertSummary<SiloConvertType>,
-//   result: ConvertResultStruct<TV>,
-//   priceImpactSummary?: PriceImpactSummaryMap
-// ) => {
-//   if (summary.route.convertType !== "LP2LP") {
-//     throw new Error("Invalid convert type");
-//   }
-//   const data: IConvertActionItem[] = [];
-
-//   summary.quotes.forEach((quote) => {
-//     const { source, swap, target } = quote.summary;
-//   })
-
-//   const { source, swap, target } = summary.route as SiloConvertSummary<"LP2LP">;
-
-//   data.push({
-//     from: [source.token],
-//     to: source.removeTokens,
-//     amounts: source.amountOut,
-//     usd: getPricesFromWellData(source.removeTokens, source.well, sourceWellSummary),
-//     exchange: "pinto-exchange" as const,
-//     itemKey: `${index}-convert-source`,
-//   });
-
-//     if (swap) {
-//       data.push({
-//         from: [swap.sellToken],
-//         to: [swap.buyToken],
-//         amounts: [swap.buyAmount],
-//         usd: getPricesFromWellData([swap.buyToken], target.well, undefined),
-//         exchange: "0x",
-//         feePct: swap.fee?.feePct,
-//         itemKey: `${index}-convert-swap`,
-//       });
-//     }
-
-//     data.push({
-//       from: target.addTokens,
-//       to: [target.token],
-//       // for the target, we show the amount via the result instead of the quote
-//       amounts: [result.toAmount],
-//       usd: getPricesFromWellData([target.token], target.well, targetWellSummary),
-//       exchange: "pinto-exchange" as const,
-//       itemKey: `${index}-convert-target`,
-//     });
-
-// }
-
 /**
  * Combine the quote, result, and price impact summaries
  */
 function normalizeConvertSummary(
-  quote: ConvertStrategyQuote<SiloConvertType>,
+  quote: ConvertStrategyQuote<"LP2LP">,
   result: ConvertResultStruct<TV>,
   index: number,
   sourceWellSummary?: PriceImpactSummary,
@@ -940,38 +849,36 @@ function normalizeConvertSummary(
 
   const data: IConvertActionItem[] = [];
 
-  if ("removeTokens" in source && "addTokens" in target) {
-    data.push({
-      from: [source.token],
-      to: source.removeTokens,
-      amounts: source.amountOut,
-      usd: getPricesFromWellData(source.removeTokens, source.well, sourceWellSummary),
-      exchange: "pinto-exchange" as const,
-      itemKey: `${index}-convert-source`,
-    });
+  data.push({
+    from: [source.token],
+    to: source.removeTokens,
+    amounts: source.amountOut,
+    usd: getPricesFromWellData(source.removeTokens, source.well, sourceWellSummary),
+    exchange: "pinto-exchange" as const,
+    itemKey: `${index}-convert-source`,
+  });
 
-    if (swap) {
-      data.push({
-        from: [swap.sellToken],
-        to: [swap.buyToken],
-        amounts: [swap.buyAmount],
-        usd: getPricesFromWellData([swap.buyToken], target.well, undefined),
-        exchange: "0x",
-        feePct: swap.fee?.feePct,
-        itemKey: `${index}-convert-swap`,
-      });
-    }
-
+  if (swap) {
     data.push({
-      from: target.addTokens,
-      to: [target.token],
-      // for the target, we show the amount via the result instead of the quote
-      amounts: [result.toAmount],
-      usd: getPricesFromWellData([target.token], target.well, targetWellSummary),
-      exchange: "pinto-exchange" as const,
-      itemKey: `${index}-convert-target`,
+      from: [swap.sellToken],
+      to: [swap.buyToken],
+      amounts: [swap.buyAmount],
+      usd: getPricesFromWellData([swap.buyToken], target.well, undefined),
+      exchange: "0x",
+      feePct: swap.fee?.feePct,
+      itemKey: `${index}-convert-swap`,
     });
   }
+
+  data.push({
+    from: target.addTokens,
+    to: [target.token],
+    // for the target, we show the amount via the result instead of the quote
+    amounts: [result.toAmount],
+    usd: getPricesFromWellData([target.token], target.well, targetWellSummary),
+    exchange: "pinto-exchange" as const,
+    itemKey: `${index}-convert-target`,
+  });
 
   return data;
 }

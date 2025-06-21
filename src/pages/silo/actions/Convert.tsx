@@ -1,7 +1,6 @@
 import arrowDown from "@/assets/misc/ChevronDown.svg";
 import { TV } from "@/classes/TokenValue";
 import { ComboInputField } from "@/components/ComboInputField";
-import { Col } from "@/components/Container";
 import { RightArrowIcon } from "@/components/Icons";
 import FrameAnimator from "@/components/LoadingSpinner";
 import MobileActionBar from "@/components/MobileActionBar";
