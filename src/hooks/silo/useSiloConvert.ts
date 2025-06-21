@@ -40,6 +40,16 @@ export default function useSiloConvert() {
     scRef.current = new SiloConvert(diamond, address, config, chainId);
   }
 
+  // Cleanup on unmount to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (scRef.current) {
+        scRef.current.clear();
+        scRef.current = null;
+      }
+    }
+  }, []);
+
   return scRef.current;
 }
 
@@ -152,14 +162,18 @@ export function useSiloConvertQuote(
 
   const query = useQuery({
     queryKey,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!account.address || !convertibleDeposits?.length || sourceAmount.lte(0) || !target) {
         return;
       }
 
       try {
-        return siloConvert.quote(source, target, convertibleDeposits, sourceAmount, slippage);
+        return await siloConvert.quote(source, target, convertibleDeposits, sourceAmount, slippage, signal);
       } catch (e) {
+        // Don't log or throw for aborted requests
+        if (e instanceof Error && e.name === 'AbortError') {
+          return;
+        }
         console.error("Error fetching quote: ", e);
         throw e;
       }
@@ -173,6 +187,11 @@ export function useSiloConvertQuote(
 
   useEffect(() => {
     if (!query.error || sourceAmount.lte(0) || !target?.address) {
+      return;
+    }
+
+    // Skip error toast for aborted requests
+    if (query.error instanceof Error && query.error.name === 'AbortError') {
       return;
     }
 
