@@ -84,8 +84,7 @@ function ConvertForm({
   const diamond = useProtocolAddress();
   const account = useAccount();
   const [amountIn, setAmountIn] = useState("0");
-  const [slippage, setSlippage] = useState(25);
-  // const [slippage, setSlippage] = useState(0.25);
+  const [slippage, setSlippage] = useState(0.25);
   const [maxConvert, setMaxConvert] = useState(TV.ZERO);
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
   const [showMinAmountWarning, setShowMinAmountWarning] = useState(false);
@@ -428,7 +427,7 @@ function ConvertForm({
             />
           </>
         ) : null}
-        {targetToken && isValidAmountIn && (
+        {targetToken && isValidAmountIn && showRoutes && (
           <QuotedRoutesSelector
             quote={quote}
             convertResults={convertResults}
