@@ -195,7 +195,9 @@ export function useSiloConvertQuote(
       return;
     }
 
-    const msg = isDefaultConvert ? "Quote failed. Try lowering amount or increasing slippage" : "Quote failed. Try increasing slippage";
+    const msg = isDefaultConvert
+      ? "Quote failed. Try lowering amount or increasing slippage"
+      : "Quote failed. Try increasing slippage";
     toast.dismiss();
     toast.error(msg);
   }, [query.error, target?.address, isDefaultConvert, sourceAmount]);
