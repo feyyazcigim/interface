@@ -16,7 +16,7 @@ import VerticalAccordion from "@/components/ui/VerticalAccordion";
 import Warning from "@/components/ui/Warning";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { SEEDS } from "@/constants/internalTokens";
-import { PINTO_USDC_TOKEN } from "@/constants/tokens";
+import { MAIN_TOKEN, PINTO_USDC_TOKEN } from "@/constants/tokens";
 import useDelayedLoading from "@/hooks/display/useDelayedLoading";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useTokenMap } from "@/hooks/pinto/useTokenMap";
@@ -81,6 +81,7 @@ function ConvertForm({
   const { mode, targetToken, setTargetToken } = useSiloConvertContext();
 
   const diamond = useProtocolAddress();
+  const pintoToken = useChainConstant(MAIN_TOKEN);
   const account = useAccount();
   const [amountIn, setAmountIn] = useState("0");
   const [slippage, setSlippage] = useState(0.25);
@@ -306,6 +307,12 @@ function ConvertForm({
       setShowMinAmountWarning(true);
     }
   }, [amountInNum, minAmountIn, showMinAmountWarning]);
+
+  // Auto-default target token to PINTO when converting from LP tokens
+  useEffect(() => {
+    if (!siloToken.isLP || targetToken || !pintoToken) return;
+    setTargetToken(pintoToken);
+  }, [siloToken.isLP, targetToken, pintoToken, setTargetToken]);
 
   // ------------------------------ DERIVED ------------------------------
 
