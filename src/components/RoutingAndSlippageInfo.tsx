@@ -7,6 +7,7 @@ import { TV } from "@/classes/TokenValue";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
 import { MAIN_TOKEN } from "@/constants/tokens";
+import { useParseConvertRouteRoutes } from "@/hooks/silo/useSiloConvertResult";
 import { SwapSummary, SwapSummaryExchange } from "@/hooks/swap/useSwapSummary";
 import { PriceImpactSummary, PriceImpactSummaryMap } from "@/hooks/wells/usePriceImpactSummary";
 import { ConvertResultStruct, SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
@@ -14,14 +15,14 @@ import { ExtendedPoolData } from "@/lib/siloConvert/SiloConvert.cache";
 import { ConvertStrategyQuote, SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
+import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { Token } from "@/utils/types";
 import { cn, exists } from "@/utils/utils";
 import { ArrowRightIcon, CornerBottomLeftIcon } from "@radix-ui/react-icons";
 import { Separator } from "@radix-ui/react-separator";
 import React, { createContext, useContext, useMemo } from "react";
+import { Col, Row } from "./Container";
 import IconImage from "./ui/IconImage";
-import { useParseConvertRouteRoutes } from "@/hooks/silo/useSiloConvertResult";
-import { Row } from "./Container";
 
 type SiloTxn = "Swap" | "Deposit" | "Convert" | "Withdraw";
 
@@ -187,21 +188,15 @@ const PriceImpactRow = ({
 };
 
 const ConvertRoutesThroughRow = ({ variant }: Pick<IPriceImpactContent, "variant">) => {
-  const { convertSummary } = useRoutingAndSlippageInfoContext();  
+  const { convertSummary } = useRoutingAndSlippageInfoContext();
   const parseRoutes = useParseConvertRouteRoutes();
-  
-  const routes = useMemo(() => !convertSummary ? [] : parseRoutes(convertSummary), [convertSummary]);
+
+  const routes = useMemo(() => (!convertSummary ? [] : parseRoutes(convertSummary)), [convertSummary]);
 
   if (!routes.length) return null;
 
-
   return (
-    <InlineRow 
-    variant={variant} 
-    left={<InlineRowLeft className="text-pinto-primary">
-      Routing
-    </InlineRowLeft>}
-    >
+    <InlineRow variant={variant} left={<InlineRowLeft className="text-pinto-primary">Routing</InlineRowLeft>}>
       <Row className="place-content-end">
         {routes.map((route, _, arr) => (
           <div key={`convert-routing-through-${route.address}`} className={cn(arr.length > 1 && "-ml-1")}>
@@ -210,16 +205,85 @@ const ConvertRoutesThroughRow = ({ variant }: Pick<IPriceImpactContent, "variant
         ))}
       </Row>
     </InlineRow>
-  )
-}
+  );
+};
 
-const ConvertPriceImpactSummary = ({ variant, showTokenName }: IPriceImpactContent) => {
-  const { tokenIn, tokenOut, priceImpactSummary, secondaryPriceImpactSummary } = useRoutingAndSlippageInfoContext();
+const LP2MainPipelineConvertSummary = ({
+  priceImpactSummary,
+}: {
+  priceImpactSummary: PriceImpactSummaryMap | undefined;
+}) => {
+  const { tokenIn } = useRoutingAndSlippageInfoContext();
+
+  const affectedWells = useMemo(() => {
+    if (!priceImpactSummary) return [];
+    const start = priceImpactSummary?.[getTokenIndex(tokenIn)];
+    const mid = Object.values(priceImpactSummary).filter((p) => {
+      if (tokensEqual(p.token, tokenIn) || p.token.isMain) return false;
+      return p.priceAfter && !p.priceAfter.eq(p.priceBefore);
+    });
+    const end = priceImpactSummary?.main;
+
+    return [start, ...mid, end];
+  }, [priceImpactSummary, tokenIn]);
+
+  return (
+    <>
+      {/* <ConvertRoutesThroughRow variant={"sm-light"} /> */}
+      <Col className="gap-y-2">
+        {affectedWells.map((wells) => {
+          return (
+            <Col key={`convert-price-impact-details-${wells.token.symbol}`}>
+              <Row className="w-full justify-between items-start">
+                <div className="inline-flex flex-row items-center gap-x-1">
+                  <IconImage src={pintoIcon} alt={"pinto-price"} size={4} />
+                  <span className="pinto-sm-light text-pinto-light">Price ({wells.token.symbol})</span>
+                </div>
+                <Col className="place-content-end">
+                  <Row className="gap-x-1 items-center place-self-end">
+                    <div className="pinto-sm text-pinto-secondary">
+                      {formatter.usd(wells.priceBefore, { decimals: 4 })}
+                    </div>
+                    <ArrowRightIcon className="w-4 h-4 text-pinto-light" />
+                    <div className="pinto-sm text-pinto-green-4">
+                      {formatter.usd(wells.priceAfter, { decimals: 4 })}
+                    </div>
+                  </Row>
+                  <Row className="w-full justify-between place-content-end">
+                    <Row className="text-pinto-light">
+                      <div>
+                        (<span className="">{formatPriceImpact(wells.priceImpact)}</span> Price Impact)
+                      </div>
+                    </Row>
+                  </Row>
+                </Col>
+              </Row>
+            </Col>
+          );
+        })}
+      </Col>
+    </>
+  );
+};
+
+const ConvertPriceImpactSummary = ({
+  variant,
+  showTokenName,
+  isDialog,
+}: IPriceImpactContent & {
+  isDialog?: boolean;
+}) => {
+  const { tokenIn, tokenOut, convertSummary, priceImpact, priceImpactSummary, secondaryPriceImpactSummary } =
+    useRoutingAndSlippageInfoContext();
 
   if (!tokenOut) return null;
 
   const isDefaultConvert = tokenIn.isMain || tokenOut.isMain;
   const nudge = variant === "xs" ? 1 : 0;
+
+  if (isDialog && convertSummary?.route.convertType === "LP2MainPipeline" && priceImpact) {
+    return <LP2MainPipelineConvertSummary priceImpactSummary={priceImpact} />;
+  }
 
   return (
     <>
@@ -275,7 +339,7 @@ const ConvertPriceImpactDetails = () => {
   const isDefaultConvert = tokenIn.isMain || tokenOut.isMain;
 
   if (isDefaultConvert) {
-    return <ConvertPriceImpactSummary variant="sm-light" showTokenName />;
+    return <ConvertPriceImpactSummary variant="sm-light" showTokenName isDialog />;
   }
 
   const details = [
@@ -771,7 +835,6 @@ function getPricesFromWellData(tokens: Token[], well: ExtendedPoolData, summary:
   });
 }
 
-
 // function getConversionSteps(
 //   summary: SiloConvertSummary<SiloConvertType>,
 //   result: ConvertResultStruct<TV>,
@@ -784,10 +847,9 @@ function getPricesFromWellData(tokens: Token[], well: ExtendedPoolData, summary:
 //   }
 // }
 
-
 // const handleNormalizeLPAndMainConvert = (
-//   summary: SiloConvertSummary<SiloConvertType>, 
-//   result: ConvertResultStruct<TV>, 
+//   summary: SiloConvertSummary<SiloConvertType>,
+//   result: ConvertResultStruct<TV>,
 //   priceImpactSummary?: PriceImpactSummaryMap
 // ) => {
 //   if (summary.route.convertType !== "LPAndMain") {
@@ -815,10 +877,9 @@ function getPricesFromWellData(tokens: Token[], well: ExtendedPoolData, summary:
 //   return data;
 // }
 
-
 // const handleNormalizeLP2LPConvert = (
-//   summary: SiloConvertSummary<SiloConvertType>, 
-//   result: ConvertResultStruct<TV>, 
+//   summary: SiloConvertSummary<SiloConvertType>,
+//   result: ConvertResultStruct<TV>,
 //   priceImpactSummary?: PriceImpactSummaryMap
 // ) => {
 //   if (summary.route.convertType !== "LP2LP") {
@@ -826,9 +887,8 @@ function getPricesFromWellData(tokens: Token[], well: ExtendedPoolData, summary:
 //   }
 //   const data: IConvertActionItem[] = [];
 
-
 //   summary.quotes.forEach((quote) => {
-//     const { source, swap, target } = quote.summary; 
+//     const { source, swap, target } = quote.summary;
 //   })
 
 //   const { source, swap, target } = summary.route as SiloConvertSummary<"LP2LP">;
@@ -841,8 +901,7 @@ function getPricesFromWellData(tokens: Token[], well: ExtendedPoolData, summary:
 //     exchange: "pinto-exchange" as const,
 //     itemKey: `${index}-convert-source`,
 //   });
-  
-  
+
 //     if (swap) {
 //       data.push({
 //         from: [swap.sellToken],
@@ -854,7 +913,7 @@ function getPricesFromWellData(tokens: Token[], well: ExtendedPoolData, summary:
 //         itemKey: `${index}-convert-swap`,
 //       });
 //     }
-  
+
 //     data.push({
 //       from: target.addTokens,
 //       to: [target.token],
@@ -890,29 +949,28 @@ function normalizeConvertSummary(
       exchange: "pinto-exchange" as const,
       itemKey: `${index}-convert-source`,
     });
-    
-    
-      if (swap) {
-        data.push({
-          from: [swap.sellToken],
-          to: [swap.buyToken],
-          amounts: [swap.buyAmount],
-          usd: getPricesFromWellData([swap.buyToken], target.well, undefined),
-          exchange: "0x",
-          feePct: swap.fee?.feePct,
-          itemKey: `${index}-convert-swap`,
-        });
-      }
-    
+
+    if (swap) {
       data.push({
-        from: target.addTokens,
-        to: [target.token],
-        // for the target, we show the amount via the result instead of the quote
-        amounts: [result.toAmount],
-        usd: getPricesFromWellData([target.token], target.well, targetWellSummary),
-        exchange: "pinto-exchange" as const,
-        itemKey: `${index}-convert-target`,
+        from: [swap.sellToken],
+        to: [swap.buyToken],
+        amounts: [swap.buyAmount],
+        usd: getPricesFromWellData([swap.buyToken], target.well, undefined),
+        exchange: "0x",
+        feePct: swap.fee?.feePct,
+        itemKey: `${index}-convert-swap`,
       });
+    }
+
+    data.push({
+      from: target.addTokens,
+      to: [target.token],
+      // for the target, we show the amount via the result instead of the quote
+      amounts: [result.toAmount],
+      usd: getPricesFromWellData([target.token], target.well, targetWellSummary),
+      exchange: "pinto-exchange" as const,
+      itemKey: `${index}-convert-target`,
+    });
   }
 
   return data;

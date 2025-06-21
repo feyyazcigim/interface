@@ -152,6 +152,11 @@ function ConvertForm({
 
   const selectedRoute = exists(routeIndex) && quote?.[routeIndex] ? quote[routeIndex] : undefined;
 
+  const selectedPriceImpact =
+    exists(routeIndex) && priceImpact.priceImpactByWell?.[routeIndex]
+      ? priceImpact.priceImpactByWell[routeIndex]
+      : undefined;
+
   const priceImpactSummaries1 = !siloToken.isMain ? priceImpact.get(siloToken) : undefined;
   const priceImpactSummaires2 = targetToken && !targetToken.isMain ? priceImpact.get(targetToken) : undefined;
 
@@ -184,6 +189,7 @@ function ConvertForm({
   const successCallback = useCallback(() => {
     setAmountIn("0");
     setTargetToken(undefined);
+    setRouteIndex(undefined);
     siloConvert.clear();
     onSuccess();
     invalidateSun("all", { refetchType: "active" });
@@ -269,6 +275,7 @@ function ConvertForm({
   useEffect(() => {
     setAmountIn("0");
     setMaxConvert(TV.ZERO);
+    setRouteIndex(undefined);
     setShowMinAmountWarning(false);
   }, [targetToken]);
 
@@ -436,6 +443,7 @@ function ConvertForm({
             title="Total Convert Slippage"
             priceImpactSummary={priceImpactSummary1 || priceImpactSummary2}
             secondaryPriceImpactSummary={priceImpactSummary1 && priceImpactSummary2}
+            priceImpact={selectedPriceImpact}
             convertSummary={selectedRoute}
             preferredSummary="priceImpact"
             txnType="Convert"
