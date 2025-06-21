@@ -1,10 +1,13 @@
 import { TV } from "@/classes/TokenValue";
 import { STALK } from "@/constants/internalTokens";
+import { useLPTokenToNonPintoUnderlyingMap, useTokenMap } from "@/hooks/pinto/useTokenMap";
 import { SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
 import { SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import { useSiloData } from "@/state/useSiloData";
+import { stringEq } from "@/utils/string";
+import { getTokenIndex } from "@/utils/token";
 import { SiloTokenData, Token } from "@/utils/types";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 const defaultData = {
   germinatingStalk: TV.ZERO,
@@ -33,6 +36,7 @@ export type SiloConvertResultResult = typeof defaultData & {
 export interface IUseSiloConvertResultReturnType {
   results: SiloConvertResultResult[] | undefined;
   sortedIndexes: number[] | undefined;
+  showRoutes: boolean;
 }
 
 export function useSiloConvertResult(
@@ -97,9 +101,26 @@ export function useSiloConvertResult(
     return sortedIndexes;
   }, [results]);
 
+  const showRoutes = useMemo(() => {
+    if (!results || !sortedIndexes || sortedIndexes.length < 2) return false;
+
+    // Get the best route (first in sortedIndexes) and the next best route
+    const bestRouteIndex = sortedIndexes[0];
+    const nextBestRouteIndex = sortedIndexes[1];
+
+    const bestRoute = results[bestRouteIndex];
+    const nextBestRoute = results[nextBestRouteIndex];
+
+    if (!bestRoute || !nextBestRoute) return false;
+
+    // Return true only if best route has higher totalAmountOut but lower toBdv than next route
+    return bestRoute.totalAmountOut.gt(nextBestRoute.totalAmountOut) && bestRoute.toBdv.lt(nextBestRoute.toBdv);
+  }, [results, sortedIndexes]);
+
   return {
     results,
     sortedIndexes,
+    showRoutes,
   };
 }
 
@@ -167,3 +188,53 @@ export function useExtractSiloConvertResultPriceResults(
     return summaries.map((summary) => summary?.postPriceData);
   }, [summaries]);
 }
+
+export const useParseConvertRouteRoutes = () => {
+  const tokenMap = useTokenMap();
+
+  const underlying2LP = useLPTokenToNonPintoUnderlyingMap("underlying2LP");
+
+  const findWellRoutes = useCallback(
+    (summary: SiloConvertSummary<SiloConvertType>) => {
+      const zeroXData = summary.quotes
+        .map((quote) => quote.summary.swap)
+        .filter((swap): swap is NonNullable<typeof swap> => !!swap);
+      const routesThrough = new Set<string>();
+
+      for (const swap of zeroXData) {
+        swap.quote.route.fills.forEach((fill) => {
+          if (stringEq(fill.source, "pinto")) {
+            const source = tokenMap[getTokenIndex(fill.from)];
+            const lp = underlying2LP[getTokenIndex(source.isMain ? fill.to : source)];
+            lp && routesThrough.add(getTokenIndex(lp));
+          }
+        });
+      }
+
+      if (summary.route.source.isLP) {
+        routesThrough.add(getTokenIndex(summary.route.source));
+      }
+
+      if (summary.route.target.isLP) {
+        routesThrough.add(getTokenIndex(summary.route.target));
+      }
+
+      return [...routesThrough].map((address) => tokenMap[address]).filter((token) => !!token);
+    },
+    [underlying2LP, tokenMap],
+  );
+
+  return useCallback(
+    (summary: SiloConvertSummary<SiloConvertType>) => {
+      if (summary.route.convertType === "LPAndMain") {
+        const route = summary.route;
+
+        const lp = route.source.isLP ? route.source : route.target;
+        return [lp];
+      }
+
+      return findWellRoutes(summary);
+    },
+    [findWellRoutes],
+  );
+};

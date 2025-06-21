@@ -68,8 +68,8 @@ export function useClearSiloConvertQueries() {
 const SILO_CONVERT_QUERY_SETTINGS = {
   ...(isDev()
     ? {
-        refetchInterval: 20_000,
-        staleTime: 20_000,
+        refetchInterval: 30_000,
+        staleTime: 30_000,
       }
     : defaultQuerySettingsQuote),
   meta: { persist: false },

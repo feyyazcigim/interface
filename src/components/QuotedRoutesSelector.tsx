@@ -1,15 +1,14 @@
-import { TV } from "@/classes/TokenValue";
 import { SEEDS, STALK } from "@/constants/internalTokens";
-import { SiloConvertResultResult } from "@/hooks/silo/useSiloConvertResult";
+import { SiloConvertResultResult, useParseConvertRouteRoutes } from "@/hooks/silo/useSiloConvertResult";
 import { SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
 import { SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import { formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
 import { cn } from "@/utils/utils";
-import { CheckIcon, ChevronDownIcon } from "@radix-ui/react-icons";
+import { ChevronDownIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
-import { Col } from "./Container";
-import ConversionFlowDiagram from "./ConversionFlowDiagram";
+import { ClassNameValue } from "tailwind-merge";
+import { Col, Row } from "./Container";
 import { Card, CardContent, CardHeader } from "./ui/Card";
 import IconImage from "./ui/IconImage";
 
@@ -18,33 +17,36 @@ interface QuotedRoutesSelectorProps {
   convertResults: SiloConvertResultResult[] | undefined;
   sortedIndexes: number[] | undefined;
   routeIndex: number | undefined;
-  sourceToken: Token;
   targetToken: Token;
   onRouteSelect: (index: number) => void;
 }
 
 interface RouteCardProps {
-  routeNumber: number;
   result: SiloConvertResultResult;
   targetToken: Token;
-  sourceToken: Token;
   isSelected: boolean;
   onClick: () => void;
   routeIndex: number;
   summary: SiloConvertSummary<SiloConvertType>;
 }
 
-function RouteCard({
-  routeNumber,
-  result,
-  targetToken,
-  sourceToken,
-  isSelected,
-  onClick,
-  routeIndex,
-  summary,
-}: RouteCardProps) {
-  const routeLabel = routeNumber === 1 ? "Best Route" : `${routeNumber}${getOrdinalSuffix(routeNumber)} Best`;
+const InlineRow = ({
+  label,
+  value,
+  className,
+}: { label: string; value: JSX.Element | string; className?: ClassNameValue }) => {
+  return (
+    <div className={cn("flex items-center justify-between", className)}>
+      <span className="text-pinto-sm-light text-pinto-light">{label}</span>
+      <span className="flex flex-row items-center gap-2 text-sm-light text-pinto-primary">{value}</span>
+    </div>
+  );
+};
+
+function RouteCard({ result, targetToken, isSelected, onClick, summary }: RouteCardProps) {
+  const parsedRoute = useParseConvertRouteRoutes();
+
+  const routes = parsedRoute(summary);
 
   return (
     <div
@@ -52,92 +54,76 @@ function RouteCard({
       className={cn(
         "relative rounded-lg border p-4 cursor-pointer transition-all duration-200",
         "hover:shadow-sm hover:border-border-dark",
-        isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-card",
+        isSelected ? "border-pinto-green-4 bg-pinto-green-1" : "border-border bg-card",
       )}
     >
-      {/* Selected indicator */}
-      {isSelected && (
-        <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-          <CheckIcon className="h-3 w-3" />
-        </div>
-      )}
-
-      {/* Route header */}
-      <div className="flex items-center justify-between mb-3">
-        <span className={cn("text-sm font-medium", isSelected ? "text-primary" : "text-muted-foreground")}>
-          {routeLabel}
-        </span>
-        <span className="text-xs text-muted-foreground">Route {routeIndex + 1}</span>
-      </div>
-
       {/* Route metrics */}
       <div className="space-y-2">
+        {routes.length ? (
+          <InlineRow
+            label="Routing"
+            value={
+              <Row>
+                {routes.map((r, _, arr) => (
+                  <div key={`convert-route-${r.address}-${r.symbol}`} className={`${arr.length > 1 ? "-ml-1" : ""}`}>
+                    <IconImage src={r.logoURI} size={4} className="h-4 w-4" />
+                  </div>
+                ))}
+              </Row>
+            }
+          />
+        ) : null}
         {/* Token Amount */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <IconImage src={targetToken.logoURI} size={4} className="h-4 w-4" />
-            <span className="text-sm font-medium">Amount</span>
-          </div>
-          <span className="text-sm font-mono">
-            {formatter.token(result.totalAmountOut, targetToken)} {targetToken.symbol}
-          </span>
-        </div>
-
-        {/* BDV */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">BDV</span>
-          <span className="text-sm font-mono">{formatter.token(result.toBdv, targetToken)}</span>
-        </div>
-
+        <InlineRow
+          label="Deposited Amount"
+          className={"items-start"}
+          value={
+            <Col className="gap-0 items-end">
+              <div className="flex flex-row items-center gap-1  text-pinto-light">
+                <IconImage src={targetToken.logoURI} size={4} className="h-4 w-4" />
+                {formatter.token(result.totalAmountOut, targetToken)}
+              </div>
+              <div className="place-self-end text-xs text-pinto-light font-thin">
+                ({formatter.token(result.toBdv, targetToken)} PDV)
+              </div>
+            </Col>
+          }
+        />
         {/* Stalk */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <IconImage src={STALK.logoURI} size={4} className="h-4 w-4" />
-            <span className="text-sm text-muted-foreground">Stalk</span>
-          </div>
-          <span className={cn("text-sm font-mono", result.deltaStalk.gte(0) ? "text-green-600" : "text-red-600")}>
-            {result.deltaStalk.gte(0) ? "+" : ""}
-            {formatter.token(result.deltaStalk, STALK)}
-          </span>
-        </div>
-
+        <InlineRow
+          label="Stalk"
+          value={
+            <span
+              className={cn(
+                "flex flex-row items-center gap-1 text-pinto-sm-light text-pinto-light",
+                result.deltaStalk.gte(0) ? "text-pinto-green-4" : "text-pinto-error",
+              )}
+            >
+              {result.deltaStalk.gt(0) ? "+" : result.deltaStalk.lt(0) ? "-" : ""}
+              <IconImage src={STALK.logoURI} size={4} className="h-4 w-4" />
+              {formatter.token(result.deltaStalk, STALK)}
+            </span>
+          }
+        />
         {/* Seeds */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <IconImage src={SEEDS.logoURI} size={4} className="h-4 w-4" />
-            <span className="text-sm text-muted-foreground">Seeds</span>
-          </div>
-          <span className={cn("text-sm font-mono", result.deltaSeed.gte(0) ? "text-green-600" : "text-red-600")}>
-            {result.deltaSeed.gte(0) ? "+" : ""}
-            {formatter.token(result.deltaSeed, SEEDS)}
-          </span>
-        </div>
+        <InlineRow
+          label="Seeds"
+          value={
+            <span
+              className={cn(
+                "flex flex-row items-center gap-1 text-pinto-sm-light text-pinto-light",
+                result.deltaSeed.gte(0) ? "text-pinto-green-4" : "text-pinto-error",
+              )}
+            >
+              {result.deltaSeed.gt(0) ? "+" : result.deltaSeed.lt(0) ? "-" : ""}
+              <IconImage src={SEEDS.logoURI} size={4} className="h-4 w-4" />
+              {formatter.token(result.deltaSeed, SEEDS)}
+            </span>
+          }
+        />
       </div>
-
-      {/* Conversion Flow Diagram */}
-      <ConversionFlowDiagram
-        convertType={summary.route.convertType}
-        summary={summary}
-        sourceToken={sourceToken}
-        targetToken={targetToken}
-      />
     </div>
   );
-}
-
-function getOrdinalSuffix(num: number): string {
-  const j = num % 10;
-  const k = num % 100;
-  if (j === 1 && k !== 11) {
-    return "st";
-  }
-  if (j === 2 && k !== 12) {
-    return "nd";
-  }
-  if (j === 3 && k !== 13) {
-    return "rd";
-  }
-  return "th";
 }
 
 export default function QuotedRoutesSelector({
@@ -145,7 +131,6 @@ export default function QuotedRoutesSelector({
   convertResults,
   sortedIndexes,
   routeIndex,
-  sourceToken,
   targetToken,
   onRouteSelect,
 }: QuotedRoutesSelectorProps) {
@@ -162,17 +147,19 @@ export default function QuotedRoutesSelector({
         className="cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-foreground">Available Routes ({quote.length})</h3>
+        <div className="flex items-center justify-between text-pinto-light">
+          <div className="text-pinto-body-light">View Routes</div>
           <ChevronDownIcon
-            className={cn("h-4 w-4 transition-transform duration-200", isExpanded ? "rotate-180" : "")}
+            className={cn(
+              "h-4 w-4 text-pinto-primary transition-transform duration-200",
+              isExpanded ? "rotate-180" : "",
+            )}
           />
         </div>
       </CardHeader>
-
       {isExpanded && (
         <CardContent className="pt-0">
-          <Col className="gap-2 w-full">
+          <Col className="gap-4 w-full">
             {sortedIndexes.map((originalIndex, displayIndex) => {
               const result = convertResults[originalIndex];
               const summary = quote[originalIndex];
@@ -181,9 +168,7 @@ export default function QuotedRoutesSelector({
               return (
                 <RouteCard
                   key={originalIndex}
-                  routeNumber={displayIndex + 1}
                   result={result}
-                  sourceToken={sourceToken}
                   targetToken={targetToken}
                   isSelected={routeIndex === originalIndex}
                   onClick={() => onRouteSelect(originalIndex)}

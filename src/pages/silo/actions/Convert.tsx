@@ -84,8 +84,8 @@ function ConvertForm({
   const diamond = useProtocolAddress();
   const account = useAccount();
   const [amountIn, setAmountIn] = useState("0");
-  // const [slippage, setSlippage] = useState(25);
-  const [slippage, setSlippage] = useState(0.25);
+  const [slippage, setSlippage] = useState(25);
+  // const [slippage, setSlippage] = useState(0.25);
   const [maxConvert, setMaxConvert] = useState(TV.ZERO);
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
   const [showMinAmountWarning, setShowMinAmountWarning] = useState(false);
@@ -135,7 +135,7 @@ function ConvertForm({
 
   const [routeIndex, setRouteIndex] = useState<number | undefined>(undefined);
 
-  const { results: convertResults, sortedIndexes } = useSiloConvertResult(siloToken, targetToken, quote);
+  const { results: convertResults, sortedIndexes, showRoutes } = useSiloConvertResult(siloToken, targetToken, quote);
   const grownStalkPenaltyQuery = useSiloConvertDownPenaltyQuery(siloToken, targetToken, convertResults, isDownConvert);
 
   const convertPriceResults = useExtractSiloConvertResultPriceResults(quote);
@@ -149,6 +149,8 @@ function ConvertForm({
 
     setRouteIndex(sortedIndexes[0]);
   }, [sortedIndexes, routeIndex]);
+
+  const selectedRoute = exists(routeIndex) && quote?.[routeIndex] ? quote[routeIndex] : undefined;
 
   const priceImpactSummaries1 = !siloToken.isMain ? priceImpact.get(siloToken) : undefined;
   const priceImpactSummaires2 = targetToken && !targetToken.isMain ? priceImpact.get(targetToken) : undefined;
@@ -351,8 +353,6 @@ function ConvertForm({
     };
   };
 
-  const selectedPriceImpacts = exists(routeIndex) ? priceImpact.priceImpactByWell?.[routeIndex] : undefined;
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -400,7 +400,7 @@ function ConvertForm({
           />
         </div>
       ) : null}
-      <ConvertTokenOutput quote={quote} siloToken={siloToken} />
+      <ConvertTokenOutput route={selectedRoute} siloToken={siloToken} />
       <div className="flex flex-col">
         {loading && !quoteQuery.isError ? (
           <div className="flex flex-col w-full h-[181px] items-center justify-center">
@@ -427,22 +427,20 @@ function ConvertForm({
             convertResults={convertResults}
             sortedIndexes={sortedIndexes}
             routeIndex={routeIndex}
-            sourceToken={siloToken}
             targetToken={targetToken}
             onRouteSelect={setRouteIndex}
           />
         )}
-        {targetToken && isValidAmountIn && exists(routeIndex) && (
+        {targetToken && isValidAmountIn && selectedRoute && (
           <RoutingAndSlippageInfo
             title="Total Convert Slippage"
             priceImpactSummary={priceImpactSummary1 || priceImpactSummary2}
             secondaryPriceImpactSummary={priceImpactSummary1 && priceImpactSummary2}
-            convertSummary={quote?.[routeIndex]}
+            convertSummary={selectedRoute}
             preferredSummary="priceImpact"
             txnType="Convert"
             tokenIn={siloToken}
             tokenOut={targetToken}
-            // priceImpacts={selectedPriceImpacts}
           />
         )}
       </div>
@@ -612,19 +610,19 @@ export default Convert;
 const ConvertTokenOutput = ({
   // amount,
   siloToken,
-  quote,
+  route,
 }: {
   // amount: TV;
   siloToken: Token;
-  quote: SiloConvertSummary<SiloConvertType>[] | undefined;
+  route: SiloConvertSummary<SiloConvertType> | undefined;
 }) => {
   const { targetToken } = useSiloConvertContext();
 
-  const amount = quote?.[0]?.totalAmountOut ?? TV.ZERO;
+  const amount = route?.totalAmountOut ?? TV.ZERO;
   const formattedAmount = targetToken ? formatter.token(amount, targetToken) : "0.00";
   const displayAmount = useDebounceValue(formattedAmount, 50);
 
-  const postPriceData = quote?.[0]?.postPriceData;
+  const postPriceData = route?.postPriceData;
 
   const getDisplayUSD = () => {
     if (!targetToken || !postPriceData) {
@@ -898,12 +896,6 @@ const ConvertSelectRow = ({
 };
 
 // ------------------------------ Warnings ------------------------------
-
-const useSiloConvertWarnings = ({
-  siloToken,
-}: {
-  siloToken: Token;
-}) => {};
 
 const MinAmountWarning = ({
   enabled,
