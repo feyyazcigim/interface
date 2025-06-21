@@ -285,18 +285,24 @@ export class SiloConvert {
 
     const simulationsRawResults = await Promise.all(
       quotedRoutes.map((route) =>
-        route.workflow.simulate({
-          account: this.context.account,
-          after: this.priceCache.constructPriceAdvPipe({ noTokenPrices: true }),
-        }),
+        route.workflow
+          .simulate({
+            account: this.context.account,
+            after: this.priceCache.constructPriceAdvPipe({ noTokenPrices: true }),
+          })
+          .catch((e) => {
+            console.error("[SiloConvert/quote] FAILED to simulate routes : ", route, e);
+            throw new SimulationError("quote", e instanceof Error ? e.message : "Unknown error", {
+              routes,
+              quotedRoutes,
+            });
+          })
+          .then((r) => {
+            console.debug("[SiloConvert/quote] simulated route!: ", route, r);
+            return r;
+          }),
       ),
-    ).catch((e) => {
-      console.error("[SiloConvert/quote] FAILED to simulate routes: ", e);
-      throw new SimulationError("quote", e instanceof Error ? e.message : "Unknown error", {
-        routes,
-        quotedRoutes,
-      });
-    });
+    );
 
     console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
 
