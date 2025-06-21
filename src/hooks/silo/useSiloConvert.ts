@@ -47,7 +47,7 @@ export default function useSiloConvert() {
         scRef.current.clear();
         scRef.current = null;
       }
-    }
+    };
   }, []);
 
   return scRef.current;
@@ -171,7 +171,7 @@ export function useSiloConvertQuote(
         return await siloConvert.quote(source, target, convertibleDeposits, sourceAmount, slippage, signal);
       } catch (e) {
         // Don't log or throw for aborted requests
-        if (e instanceof Error && e.name === 'AbortError') {
+        if (e instanceof Error && e.name === "AbortError") {
           return;
         }
         console.error("Error fetching quote: ", e);
@@ -191,7 +191,7 @@ export function useSiloConvertQuote(
     }
 
     // Skip error toast for aborted requests
-    if (query.error instanceof Error && query.error.name === 'AbortError') {
+    if (query.error instanceof Error && query.error.name === "AbortError") {
       return;
     }
 

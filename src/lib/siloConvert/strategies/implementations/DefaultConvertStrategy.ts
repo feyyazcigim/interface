@@ -7,6 +7,7 @@ import { ConvertStrategyQuote, SiloConvertStrategy } from "@/lib/siloConvert/str
 import { ExtendedPickedCratesDetails, calculateConvertData } from "@/utils/convert";
 import { AdvancedFarmCall } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
+import { throwIfAborted } from "@/utils/utils";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 
 export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
@@ -21,7 +22,10 @@ export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
     deposits: ExtendedPickedCratesDetails,
     advancedFarm: AdvancedFarmWorkflow,
     slippage: number,
+    signal?: AbortSignal,
   ): Promise<ConvertStrategyQuote<"LPAndMain">> {
+    // Check if already aborted
+    throwIfAborted(signal);
     // Validation
     this.validateQuoteArgs(deposits, slippage);
 
@@ -39,6 +43,9 @@ export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
       "default convert simulation",
       { amountIn: amountIn.toHuman(), account: this.context.account },
     );
+
+    // Check if aborted after async operation
+    throwIfAborted(signal);
 
     // Validate simulation results
     this.errorHandler.validateSimulation(sim, "default convert simulation");

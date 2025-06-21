@@ -13,6 +13,7 @@ import { resolveChainId } from "@/utils/chain";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
+import { throwIfAborted } from "@/utils/utils";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 
 class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
@@ -37,7 +38,14 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
 
   // ------------------------------ Quote ------------------------------ //
 
-  async quote(deposits: ExtendedPickedCratesDetails, advancedFarm: AdvancedFarmWorkflow, slippage: number) {
+  async quote(
+    deposits: ExtendedPickedCratesDetails,
+    advancedFarm: AdvancedFarmWorkflow,
+    slippage: number,
+    signal?: AbortSignal,
+  ) {
+    // Check if already aborted
+    throwIfAborted(signal);
     // Validation
     this.validateQuoteArgs(deposits, slippage);
 
@@ -48,6 +56,9 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
       { amountIn: deposits.totalAmount.toHuman() },
     );
 
+    // Check if aborted after async operation
+    throwIfAborted(signal);
+
     const pairAmount = removeLPResult[this.sourceWell.pair.index];
     const swapParams = this.errorHandler.wrap(
       () => this.swapQuoter.generateSwapQuoteParams(this.buyToken, this.sellToken, pairAmount, slippage),
@@ -56,15 +67,22 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
     );
 
     // Swap
-    const swapQuotes = await this.errorHandler.wrapAsync(() => ZeroX.quote(swapParams), "0x swap quotation", {
-      sellToken: this.sellToken.symbol,
-      buyToken: this.buyToken.symbol,
-      amount: pairAmount.toHuman(),
-    });
+    const swapQuotes = await this.errorHandler.wrapAsync(
+      () => ZeroX.quote(swapParams, { signal }),
+      "0x swap quotation",
+      {
+        sellToken: this.sellToken.symbol,
+        buyToken: this.buyToken.symbol,
+        amount: pairAmount.toHuman(),
+      },
+    );
 
     this.errorHandler.assert(swapQuotes.length === 1, "Expected exactly 1 swap quote from 0x", {
       quotesCount: swapQuotes.length,
     });
+
+    // Check if aborted after swap
+    throwIfAborted(signal);
 
     const swapQuote = swapQuotes[0];
 
@@ -80,6 +98,9 @@ class Eq2EQStrategy extends LP2LPStrategy implements ConvertStrategyWithSwap {
       "add liquidity simulation",
       { addLiquidityParams: addLiquidityParams.map((v) => v.toHuman()) },
     );
+
+    // Check if aborted after add liquidity simulation
+    throwIfAborted(signal);
 
     const swapSummary = this.errorHandler.wrap(
       () =>

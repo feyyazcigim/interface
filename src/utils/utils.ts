@@ -17,6 +17,17 @@ export const generateID = (prefix = "") => {
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export const noop = () => {};
 
+/**
+ * Utility function to check if an AbortSignal has been aborted and throw an error if so.
+ * @param signal - Optional AbortSignal to check
+ * @throws {DOMException} - Throws an AbortError if the signal has been aborted
+ */
+export function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new DOMException("The operation was aborted", "AbortError");
+  }
+}
+
 export function unpackStem(data: string | number | bigint): bigint {
   // Convert input to BigInt if it isn't already
   const dataBigInt = BigInt(data);

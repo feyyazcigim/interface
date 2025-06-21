@@ -29,6 +29,7 @@ export abstract class SiloConvertStrategy<T extends SiloConvertType> {
     deposits: ExtendedPickedCratesDetails,
     advancedFarm: AdvancedFarmWorkflow,
     slippage: number,
+    signal?: AbortSignal,
   ): Promise<ConvertStrategyQuote<T>>;
 
   // ------------------------------ Validation Methods ------------------------------ //

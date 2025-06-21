@@ -11,6 +11,7 @@ import { decodeFunctionResult, encodeFunctionData } from "viem";
 
 import encoders from "@/encoders";
 import { HashString } from "@/utils/types.generic";
+import { throwIfAborted } from "@/utils/utils";
 import { LP2LPStrategy } from "../core/LP2LPConvertStrategy";
 import { ConvertStrategyQuote } from "../core/types";
 
@@ -52,7 +53,14 @@ class OneSidedSameToken extends LP2LPStrategy {
 
   // ------------------------------ Quote ------------------------------ //
 
-  async quote(deposits: ExtendedPickedCratesDetails, advancedFarm: AdvancedFarmWorkflow, slippage: number) {
+  async quote(
+    deposits: ExtendedPickedCratesDetails,
+    advancedFarm: AdvancedFarmWorkflow,
+    slippage: number,
+    signal?: AbortSignal,
+  ) {
+    // Check if already aborted
+    throwIfAborted(signal);
     // Validation
     this.validateQuoteArgs(deposits, slippage);
 
@@ -61,6 +69,9 @@ class OneSidedSameToken extends LP2LPStrategy {
       "remove and add liquidity simulation",
       { amountIn: deposits.totalAmount.toHuman() },
     );
+
+    // Check if aborted after async operation
+    throwIfAborted(signal);
 
     const summary = {
       source: {

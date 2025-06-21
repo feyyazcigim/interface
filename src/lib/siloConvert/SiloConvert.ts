@@ -10,6 +10,7 @@ import { getChainConstant } from "@/utils/chain";
 import { pickCratesMultiple } from "@/utils/convert";
 import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
+import { throwIfAborted } from "@/utils/utils";
 import { Config } from "@wagmi/core";
 import { Address } from "viem";
 import { SiloConvertPriceCache } from "./SiloConvert.cache";
@@ -114,7 +115,7 @@ export class SiloConvert {
 
   maxConvertQuoter: SiloConvertMaxConvertQuoter;
 
-  strategizer: SiloConvertStrategizer;
+  private strategizer: SiloConvertStrategizer;
 
   private priceCache: SiloConvertPriceCache;
 
@@ -182,14 +183,19 @@ export class SiloConvert {
     farmerDeposits: DepositData[],
     amountIn: TV,
     slippage: number,
+    signal?: AbortSignal,
     forceUpdateCache: boolean = false,
   ): Promise<SiloConvertSummary<SiloConvertType>[]> {
     try {
-      return this._quote(source, target, farmerDeposits, amountIn, slippage, forceUpdateCache);
+      return this._quote(source, target, farmerDeposits, amountIn, slippage, signal, forceUpdateCache);
     } catch (_e) {
+      // Don't retry if the request was aborted
+      if (_e instanceof Error && _e.name === "AbortError") {
+        throw _e;
+      }
       console.debug("[SiloConvert/quote] Failed to quote, retrying with forceUpdateCache: ", forceUpdateCache);
       // if we fail to quote, force update the caches and try again.
-      return this._quote(source, target, farmerDeposits, amountIn, slippage, true);
+      return this._quote(source, target, farmerDeposits, amountIn, slippage, signal, true);
     }
   }
 
@@ -202,8 +208,11 @@ export class SiloConvert {
     farmerDeposits: DepositData[],
     amountIn: TV,
     slippage: number,
+    signal?: AbortSignal,
     forceUpdateCache: boolean = false,
   ): Promise<SiloConvertSummary<SiloConvertType>[]> {
+    // Check if already aborted
+    throwIfAborted(signal);
     await this.priceCache.update(forceUpdateCache).catch((e) => {
       console.error("[SiloConvert/quote] FAILED to update cache: ", e);
       throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to update cache", {
@@ -212,11 +221,14 @@ export class SiloConvert {
       });
     });
 
+    // Check if aborted after async operation
+    throwIfAborted(signal);
+
     // force update the caches if requested
     if (forceUpdateCache) {
       console.debug("[SiloConvert/quote] forceUpdateCache: ", forceUpdateCache);
-      await this.maxConvertCache.clear();
-      await this.scalarCache.clear();
+      this.maxConvertCache.clear();
+      this.scalarCache.clear();
     }
 
     const routes = await this.strategizer.strategize(source, target, amountIn).catch((e) => {
@@ -226,6 +238,9 @@ export class SiloConvert {
         target,
       });
     });
+
+    // Check if aborted after async operation
+    throwIfAborted(signal);
 
     const quotedRoutes = await Promise.all(
       routes.map(async (route, routeIndex) => {
@@ -237,9 +252,12 @@ export class SiloConvert {
 
         // Has to be run sequentially.
         for (const [i, strategy] of route.strategies.entries()) {
+          // Check if aborted before each strategy
+          throwIfAborted(signal);
+
           let quote: ConvertStrategyQuote<SiloConvertType>;
           try {
-            quote = await strategy.strategy.quote(crates[i], advFarm, slippage);
+            quote = await strategy.strategy.quote(crates[i], advFarm, slippage, signal);
           } catch (e) {
             console.error(`[SiloConvert/quote${i}] FAILED: `, strategy, e);
             throw e;

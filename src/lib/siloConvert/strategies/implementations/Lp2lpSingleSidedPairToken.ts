@@ -11,6 +11,7 @@ import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { tokensEqual } from "@/utils/token";
 import { Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
+import { throwIfAborted } from "@/utils/utils";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 
 import { SiloConvertSwapQuoter } from "@/lib/siloConvert/siloConvert.swapQuoter";
@@ -74,7 +75,15 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
 
   // ------------------------------ Quote ------------------------------ //
 
-  async quote(deposits: ExtendedPickedCratesDetails, advancedFarm: AdvancedFarmWorkflow, slippage: number) {
+  async quote(
+    deposits: ExtendedPickedCratesDetails,
+    advancedFarm: AdvancedFarmWorkflow,
+    slippage: number,
+    signal?: AbortSignal,
+  ) {
+    // Check if already aborted
+    throwIfAborted(signal);
+
     // Validation
     this.validateQuoteArgs(deposits, slippage);
 
@@ -83,6 +92,9 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
       "remove liquidity simulation",
       { amountIn: deposits.totalAmount.toHuman() },
     );
+
+    // Check if aborted after async operation
+    throwIfAborted(signal);
 
     const pairAmountOut = amountsOut[this.removeIndex];
     this.errorHandler.validateAmount(pairAmountOut, "pair amount out from remove liquidity");
@@ -98,11 +110,15 @@ class OneSidedPairToken extends LP2LPStrategy implements ConvertStrategyWithSwap
     );
 
     // Swap
-    const swapQuotes = await this.errorHandler.wrapAsync(() => ZeroX.quote(swapParams), "0x swap quotation", {
-      sellToken: this.removeToken.symbol,
-      buyToken: this.addToken.symbol,
-      amount: pairAmountOut.toHuman(),
-    });
+    const swapQuotes = await this.errorHandler.wrapAsync(
+      () => ZeroX.quote(swapParams, { signal }),
+      "0x swap quotation",
+      {
+        sellToken: this.removeToken.symbol,
+        buyToken: this.addToken.symbol,
+        amount: pairAmountOut.toHuman(),
+      },
+    );
 
     this.errorHandler.assert(swapQuotes.length === 1, "Expected exactly 1 swap quote from 0x", {
       quotesCount: swapQuotes.length,

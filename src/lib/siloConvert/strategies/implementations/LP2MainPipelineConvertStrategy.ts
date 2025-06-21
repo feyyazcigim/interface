@@ -16,6 +16,7 @@ import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
+import { throwIfAborted } from "@/utils/utils";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 
 /**
@@ -60,7 +61,11 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
     deposits: ExtendedPickedCratesDetails,
     advancedFarm: AdvancedFarmWorkflow,
     slippage: number,
+    signal?: AbortSignal,
   ): Promise<ConvertStrategyQuote<"LP2MainPipeline">> {
+    // Check if already aborted
+    throwIfAborted(signal);
+
     // Validation
     this.validateQuoteArgs(deposits, slippage);
 
@@ -70,6 +75,9 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
       "remove liquidity simulation",
       { amountIn: deposits.totalAmount.toHuman() },
     );
+
+    // Check if aborted after async operation
+    throwIfAborted(signal);
 
     const mainTokenAmountRemoved = removeLPResult[this.sourceIndexes.main];
     this.errorHandler.validateAmount(mainTokenAmountRemoved, "main token amount from remove liquidity");
@@ -87,11 +95,18 @@ class LP2MainStrategy extends PipelineConvertStrategy<"LP2MainPipeline"> impleme
       },
     );
 
-    const swapQuotes = await this.errorHandler.wrapAsync(() => ZeroX.quote(swapParams), "0x swap quotation", {
-      sellToken: this.pairToken.symbol,
-      buyToken: this.targetToken.symbol,
-      amount: pairAmount.toHuman(),
-    });
+    const swapQuotes = await this.errorHandler.wrapAsync(
+      () => ZeroX.quote(swapParams, { signal }),
+      "0x swap quotation",
+      {
+        sellToken: this.pairToken.symbol,
+        buyToken: this.targetToken.symbol,
+        amount: pairAmount.toHuman(),
+      },
+    );
+
+    // Check if aborted after swap
+    throwIfAborted(signal);
 
     // Should always be the 1 quote b/c we are going from pair token -> main token.
     this.errorHandler.assert(swapQuotes.length === 1, "Expected exactly 1 swap quote from 0x", {

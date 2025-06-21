@@ -26,7 +26,10 @@ import useSiloConvert, {
   useSiloMaxConvertQuery,
 } from "@/hooks/silo/useSiloConvert";
 import { useExtractSiloConvertResultPriceResults, useSiloConvertResult } from "@/hooks/silo/useSiloConvertResult";
-import { useSiloConvertDownPenaltyQuery } from "@/hooks/silo/useSiloGrownStalkPenalty";
+import {
+  SiloConvertGrownStalkPenaltyBreakdown,
+  useSiloConvertDownPenaltyQuery,
+} from "@/hooks/silo/useSiloGrownStalkPenalty";
 import useTransaction from "@/hooks/useTransaction";
 import { useDeterminePriceImpactWithResults } from "@/hooks/wells/usePriceImpactSummary";
 import { useWellUnderlying } from "@/hooks/wells/wells";
@@ -45,7 +48,7 @@ import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { AddressMap, Token } from "@/utils/types";
 import { useDebounceValue } from "@/utils/useDebounce";
 import { cn, exists, noop } from "@/utils/utils";
-import { useQueryClient } from "@tanstack/react-query";
+import { UseQueryResult, useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -300,45 +303,7 @@ function ConvertForm({
   const canConvert = isDefaultConvert ? hasConvertible && deltaPEnabled : hasConvertible;
   const canExceedMax = farmerConvertibleAmount?.gt(maxConvert);
 
-  const ConvertWarning = () => {
-    const showWarning = (!canConvert || canExceedMax || !deltaPEnabled) && farmerConvertibleAmount?.gt(0);
-    if (!targetToken || !maxConvertQuery.isFetched || !isDefaultConvert || !showWarning) return null;
-
-    let msg = "";
-
-    if (!canConvert) {
-      const lowerOrGreater = targetToken?.isLP ? "greater" : "less";
-      const well = siloToken.isLP ? siloToken : targetToken;
-      const wellSymbol = well?.symbol;
-
-      msg = `${siloToken.symbol} can only be Converted to ${targetToken?.symbol} when ΔP ${deltaPEnabled ? `in the ${wellSymbol} Well` : ""} is ${lowerOrGreater} than 0.`;
-    } else {
-      const maxConvertFormatted = formatter.number(maxConvert, {
-        minDecimals: 2,
-        maxDecimals: siloToken.displayDecimals ?? 6,
-        minValue: 0.000001,
-      });
-      msg = `Converting any more than ${maxConvertFormatted} ${siloToken.symbol} will result in a loss of Stalk and Seeds`;
-    }
-
-    return <Warning variant="info">{msg}</Warning>;
-  };
-
   const renderGerminatingStalkWarning = !(!convertResult || convertResult.germinatingStalk.lte(0));
-
-  const GerminatingStalkWarning = () => {
-    if (!renderGerminatingStalkWarning) return null;
-
-    const germinating = convertResult.germinatingStalk;
-    const germinatingSeasons = convertResult.germinatingSeasons;
-
-    return (
-      <Warning variant="info" className="text-pinto-off-green bg-pinto-off-green-bg border border-pinto-off-green">
-        {formatter.number(germinating)} Stalk will become germinating and will be available in {germinatingSeasons}{" "}
-        season{germinatingSeasons === 1 ? "" : "s"}.
-      </Warning>
-    );
-  };
 
   const renderDownPenaltyWarning = !(
     !siloToken.isLP ||
@@ -347,47 +312,13 @@ function ConvertForm({
     maxConvertQueryData.eq(SiloConvertMaxConvertQuoter.NO_MAX_CONVERT_AMOUNT)
   );
 
-  const LP2LPMinConvertWarning = () => {
-    if (!renderDownPenaltyWarning) return null;
-
-    return (
-      <Warning variant="info">
-        Converting more than {formatter.token(maxConvertQueryData, siloToken)} {siloToken.symbol} will result in a loss
-        of Grown Stalk.
-      </Warning>
-    );
-  };
-
   const renderMinAmountWarning = minAmountIn?.gt(0) && !isValidAmountIn;
-
-  const MinAmountWarning = () => {
-    if (!renderMinAmountWarning) return null;
-
-    return (
-      <Warning variant="info">
-        A minimum amount of {formatter.token(minAmountIn, siloToken)} {siloToken.symbol} is required to convert.
-      </Warning>
-    );
-  };
 
   const renderGrownStalkPenaltyWarning =
     exists(grownStalkPenaltyQuery.data) &&
     exists(routeIndex) &&
     exists(grownStalkPenaltyQuery.data[routeIndex]) &&
     grownStalkPenaltyQuery.data[routeIndex].isPenalty;
-
-  const GrownStalkPenaltyWarning = () => {
-    if (!renderGrownStalkPenaltyWarning) return null;
-    const grownStalkPenaltyRatio = grownStalkPenaltyQuery.data?.[routeIndex];
-
-    if (!grownStalkPenaltyRatio) return null;
-
-    const penaltyPct = (grownStalkPenaltyRatio?.penaltyRatio ?? 0) * 100;
-
-    return (
-      <Warning variant="warning">This conversion incurs a {formatter.pct(penaltyPct)} Grown Stalk penalty.</Warning>
-    );
-  };
 
   const warningRendered =
     renderGerminatingStalkWarning ||
@@ -442,10 +373,27 @@ function ConvertForm({
       </div>
       {warningRendered ? (
         <div className="flex flex-col gap-2">
-          <MinAmountWarning />
-          <ConvertWarning />
-          <LP2LPMinConvertWarning />
-          <GrownStalkPenaltyWarning />
+          <MinAmountWarning enabled={!!renderMinAmountWarning} minAmountIn={minAmountIn} siloToken={siloToken} />
+          <ConvertWarning
+            canConvert={!!canConvert}
+            canExceedMax={canExceedMax}
+            deltaPEnabled={deltaPEnabled}
+            farmerConvertibleAmount={farmerConvertibleAmount}
+            targetToken={targetToken}
+            siloToken={siloToken}
+            maxConvertQuery={maxConvertQuery}
+            isDefaultConvert={!!isDefaultConvert}
+            maxConvert={maxConvert}
+          />
+          <LP2LPMinConvertWarning
+            enabled={!!renderDownPenaltyWarning}
+            maxConvertQueryData={maxConvertQueryData}
+            siloToken={siloToken}
+          />
+          <GrownStalkPenaltyWarning
+            enabled={!!renderGrownStalkPenaltyWarning}
+            summary={exists(routeIndex) ? grownStalkPenaltyQuery.data?.[routeIndex] : undefined}
+          />
         </div>
       ) : null}
       <ConvertTokenOutput quote={quote} siloToken={siloToken} />
@@ -456,7 +404,11 @@ function ConvertForm({
           </div>
         ) : convertResult ? (
           <>
-            <GerminatingStalkWarning />
+            <GerminatingStalkWarning
+              enabled={!!renderGerminatingStalkWarning}
+              germinatingStalk={convertResult.germinatingStalk}
+              germinatingSeasons={convertResult.germinatingSeasons}
+            />
             <SiloOutputDisplay
               amount={convertResult.totalAmountOut}
               token={targetToken}
@@ -927,4 +879,114 @@ const ConvertSelectRow = ({
       </div>
     </div>
   );
+};
+
+// ------------------------------ Warnings ------------------------------
+
+const useSiloConvertWarnings = ({
+  siloToken,
+}: {
+  siloToken: Token;
+}) => {};
+
+const MinAmountWarning = ({
+  enabled,
+  minAmountIn,
+  siloToken,
+}: { enabled: boolean; minAmountIn: TV | undefined; siloToken: Token }) => {
+  if (!enabled || !minAmountIn) return null;
+
+  return (
+    <Warning variant="info">
+      A minimum amount of {formatter.token(minAmountIn, siloToken)} {siloToken.symbol} is required to convert.
+    </Warning>
+  );
+};
+
+const LP2LPMinConvertWarning = ({
+  enabled,
+  maxConvertQueryData,
+  siloToken,
+}: { enabled: boolean; maxConvertQueryData: TV; siloToken: Token }) => {
+  if (!enabled || !maxConvertQueryData) return null;
+
+  return (
+    <Warning variant="info">
+      Converting more than {formatter.token(maxConvertQueryData, siloToken)} {siloToken.symbol} will result in a loss of
+      Grown Stalk.
+    </Warning>
+  );
+};
+
+const ConvertWarning = ({
+  canConvert,
+  canExceedMax,
+  deltaPEnabled,
+  farmerConvertibleAmount,
+  targetToken,
+  siloToken,
+  maxConvertQuery,
+  isDefaultConvert,
+  maxConvert,
+}: {
+  canConvert: boolean;
+  canExceedMax: boolean;
+  deltaPEnabled: boolean;
+  farmerConvertibleAmount: TV;
+  targetToken: Token | undefined;
+  siloToken: Token;
+  maxConvertQuery: Omit<UseQueryResult<TV>, "data"> | undefined;
+  isDefaultConvert: boolean;
+  maxConvert: TV;
+}) => {
+  const showWarning = (!canConvert || canExceedMax || !deltaPEnabled) && farmerConvertibleAmount?.gt(0);
+  if (!targetToken || !maxConvertQuery?.isFetched || !isDefaultConvert || !showWarning) return null;
+
+  let msg = "";
+
+  if (!canConvert) {
+    const lowerOrGreater = targetToken?.isLP ? "greater" : "less";
+    const well = siloToken.isLP ? siloToken : targetToken;
+    const wellSymbol = well?.symbol;
+
+    msg = `${siloToken.symbol} can only be Converted to ${targetToken?.symbol} when ΔP ${deltaPEnabled ? `in the ${wellSymbol} Well` : ""} is ${lowerOrGreater} than 0.`;
+  } else {
+    const maxConvertFormatted = formatter.number(maxConvert, {
+      minDecimals: 2,
+      maxDecimals: siloToken.displayDecimals ?? 6,
+      minValue: 0.000001,
+    });
+    msg = `Converting any more than ${maxConvertFormatted} ${siloToken.symbol} will result in a loss of Stalk and Seeds`;
+  }
+
+  return <Warning variant="info">{msg}</Warning>;
+};
+
+const GerminatingStalkWarning = ({
+  enabled,
+  germinatingStalk,
+  germinatingSeasons,
+}: { enabled: boolean; germinatingStalk: TV; germinatingSeasons: number }) => {
+  if (!enabled) return null;
+
+  return (
+    <Warning variant="info" className="text-pinto-off-green bg-pinto-off-green-bg border border-pinto-off-green">
+      {formatter.number(germinatingStalk)} Stalk will become germinating and will be available in {germinatingSeasons}{" "}
+      season{germinatingSeasons === 1 ? "" : "s"}.
+    </Warning>
+  );
+};
+
+const GrownStalkPenaltyWarning = ({
+  enabled,
+  summary,
+}: { enabled: boolean; summary: SiloConvertGrownStalkPenaltyBreakdown | undefined }) => {
+  if (!enabled || !summary) return null;
+  const grownStalkPenaltyRatio = summary.penaltyRatio;
+
+  if (!grownStalkPenaltyRatio) return null;
+
+  const penaltyPct = (grownStalkPenaltyRatio ?? 0) * 100;
+
+  return <Warning variant="warning">This conversion incurs a {formatter.pct(penaltyPct)} Grown Stalk penalty.</Warning>;
 };
