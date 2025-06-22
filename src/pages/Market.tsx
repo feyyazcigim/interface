@@ -98,22 +98,65 @@ export function Market() {
     ) || [];
 
   const toolTipOptions: any = {
-    enabled: true,
-    mode: "nearest",
-    callbacks: {
-      title: (context) => {
-        const elem = context?.[0]?.raw;
-        return elem.eventType === "ORDER" ? "Order" : "Listing";
-      },
-      label: (context) => {
-        // should only ever be one since it's set to nearest
-        const elem = context?.raw;
-        return `Price: ${elem.y} PINTO`;
-      },
-      footer: (context) => {
-        const elem = context?.[0]?.raw;
-        return `Place In Line: ${TokenValue.fromHuman(elem.placeInLine, 0).toHuman("short")}`;
-      },
+    enabled: false,
+    external: (context) => {
+      console.info("🚀 ~ Market ~ context:", context);
+      const tooltipEl = document.getElementById("chartjs-tooltip");
+
+      // Create element on first render
+      if (!tooltipEl) {
+        const div = document.createElement("div");
+        div.id = "chartjs-tooltip";
+        div.style.background = "rgba(0, 0, 0, 0.7)";
+        div.style.borderRadius = "3px";
+        div.style.color = "white";
+        div.style.opacity = "1";
+        div.style.pointerEvents = "none";
+        div.style.position = "absolute";
+        div.style.transform = "translate(10px, -50%)"; // Position to right of point
+        div.style.transition = "all .1s ease";
+        document.body.appendChild(div);
+      } else {
+        // Hide if no tooltip
+        if (context.tooltip.opacity === 0) {
+          tooltipEl.style.opacity = "0";
+          return;
+        }
+
+        // Set Text
+        if (context.tooltip.body) {
+          const position = context.tooltip.dataPoints[0].element.getProps(["x", "y"], true);
+          tooltipEl.style.opacity = "1";
+          tooltipEl.style.width = "250px";
+          tooltipEl.style.backgroundColor = "white";
+          tooltipEl.style.color = "black";
+          tooltipEl.style.borderRadius = "10px";
+          tooltipEl.style.border = "1px solid #D9D9D9";
+          tooltipEl.style.zIndex = "1";
+          tooltipEl.style.left = position.x + "px"; // Position relative to point x
+          tooltipEl.style.top = position.y + "px"; // Position relative to point y
+          tooltipEl.style.padding = context.tooltip.options.padding + "px " + context.tooltip.options.padding + "px";
+          tooltipEl.innerHTML = `
+        <div class="flex flex-col">
+          <div class="flex">
+            <span>Pod icon</span>
+            <span>100,000 Pods Listed</span>
+          </div>
+          <div class="flex justify-between">
+            <p>Price:</p>
+            <div class="flex">
+              <p>Pinto icon</p>
+              <p>0.70</p>
+            </div>
+          </div>
+          <div class="flex justify-between">
+            <span>Place in Line:</span>
+            <span>7,708,083</span>
+          </div>
+        </div>
+        `;
+        }
+      }
     },
   };
 
