@@ -126,6 +126,7 @@ export function Market() {
         // Set Text
         if (context.tooltip.body) {
           const position = context.tooltip.dataPoints[0].element.getProps(["x", "y"], true);
+          const dataPoint = context.tooltip.dataPoints[0].raw;
           tooltipEl.style.opacity = "1";
           tooltipEl.style.width = "250px";
           tooltipEl.style.backgroundColor = "white";
@@ -136,24 +137,33 @@ export function Market() {
           tooltipEl.style.left = position.x + "px"; // Position relative to point x
           tooltipEl.style.top = position.y + "px"; // Position relative to point y
           tooltipEl.style.padding = context.tooltip.options.padding + "px " + context.tooltip.options.padding + "px";
+          const listingHeader = `
+           <div class="flex items-center">
+            <img src="/src/assets/protocol/Pod.png" class="w-4 h-4 scale-110 mr-[6px]" alt="pod icon">
+            <span>${TokenValue.fromHuman(dataPoint.amount, 0).toHuman("short")} Pods Listed</span>
+          </div>
+          `
+          const orderHeader = `
+          <div class="flex items-center">
+           <img src="/src/assets/protocol/Pod.png" class="w-4 h-4 scale-110 mr-[6px]" alt="pod icon">
+           <span>Order for ${TokenValue.fromHuman(dataPoint.amount, 0).toHuman("short")} Pods</span>
+         </div>
+         `
           tooltipEl.innerHTML = `
-        <div class="flex flex-col">
-          <div class="flex">
-            <span>Pod icon</span>
-            <span>100,000 Pods Listed</span>
-          </div>
-          <div class="flex justify-between">
-            <p>Price:</p>
-            <div class="flex">
-              <p>Pinto icon</p>
-              <p>0.70</p>
+            <div class="flex flex-col">
+            ${dataPoint.eventType === "LISTING" ? listingHeader : orderHeader}
+              <div class="flex justify-between">
+                <p>Price:</p>
+                <div class="flex items-center">
+                  <img src="/src/assets/tokens/PINTO.png" class="w-4 h-4 scale-110 mr-[6px]" alt="pinto icon">
+                  <p>${dataPoint.y}</p>
+                </div>
+              </div>
+              <div class="flex justify-between">
+                <span>Place in Line:</span>
+                <span>${TokenValue.fromHuman(dataPoint.placeInLine, 0).toHuman("short")}</span>
+              </div>
             </div>
-          </div>
-          <div class="flex justify-between">
-            <span>Place in Line:</span>
-            <span>7,708,083</span>
-          </div>
-        </div>
         `;
         }
       }
