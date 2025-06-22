@@ -24,6 +24,26 @@ import FillOrder from "./market/actions/FillOrder";
 const TABLE_SLUGS = ["activity", "listings", "orders", "my-activity"];
 const TABLE_LABELS = ["Activity", "Listings", "Orders", "My Activity"];
 
+const getPointTopOffset = () => {
+  if (window.innerWidth > 1600) {
+    return 90;
+  } else if (window.innerWidth > 1100) {
+    return 80;
+  } else {
+    return 40;
+  }
+}
+
+const getPointBottomOffset = () => {
+  if (window.innerWidth > 1600) {
+    return 175;
+  } else if (window.innerWidth > 1100) {
+    return 130;
+  } else {
+    return 90;
+  }
+}
+
 export function Market() {
   const { mode, id } = useParams();
   const [tab, handleChangeTab] = useState(TABLE_SLUGS[0]);
@@ -113,7 +133,7 @@ export function Market() {
         div.style.opacity = "1";
         div.style.pointerEvents = "none";
         div.style.position = "absolute";
-        div.style.transform = "translate(10px, -50%)"; // Position to right of point
+        div.style.transform = "translate(25px)"; // Position to right of point
         div.style.transition = "all .1s ease";
         document.body.appendChild(div);
       } else {
@@ -134,21 +154,25 @@ export function Market() {
           tooltipEl.style.borderRadius = "10px";
           tooltipEl.style.border = "1px solid #D9D9D9";
           tooltipEl.style.zIndex = "1";
+          // Basically all of this is custom logic for 3 different breakpoints to either display the tooltip to the top right or bottom right of the point.
+          const topOfPoint = position.y + getPointTopOffset();
+          const bottomOfPoint = position.y + getPointBottomOffset();
+          tooltipEl.style.top = dataPoint.y > .8 ? bottomOfPoint : topOfPoint + "px"; // Position relative to point y
+          // end custom logic
           tooltipEl.style.left = position.x + "px"; // Position relative to point x
-          tooltipEl.style.top = position.y + "px"; // Position relative to point y
           tooltipEl.style.padding = context.tooltip.options.padding + "px " + context.tooltip.options.padding + "px";
           const listingHeader = `
            <div class="flex items-center">
             <img src="/src/assets/protocol/Pod.png" class="w-4 h-4 scale-110 mr-[6px]" alt="pod icon">
             <span>${TokenValue.fromHuman(dataPoint.amount, 0).toHuman("short")} Pods Listed</span>
           </div>
-          `
+          `;
           const orderHeader = `
           <div class="flex items-center">
            <img src="/src/assets/protocol/Pod.png" class="w-4 h-4 scale-110 mr-[6px]" alt="pod icon">
            <span>Order for ${TokenValue.fromHuman(dataPoint.amount, 0).toHuman("short")} Pods</span>
          </div>
-         `
+         `;
           tooltipEl.innerHTML = `
             <div class="flex flex-col">
             ${dataPoint.eventType === "LISTING" ? listingHeader : orderHeader}
