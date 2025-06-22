@@ -1,9 +1,12 @@
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
 import {
+  useSeasonalCultivationFactor,
   useSeasonalPodLine,
   useSeasonalPodRate,
   useSeasonalPodsHarvested,
+  useSeasonalSoilDemand,
+  useSeasonalSoilSupply,
   useSeasonalSownPinto,
   useSeasonalTemperature,
 } from "@/state/seasonal/seasonalDataHooks";
@@ -39,6 +42,17 @@ const FieldExplorer = () => {
         </div>
         <div className="w-full sm:w-1/2">
           <PodsHarvestedChart season={season} />
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
+        <div className="w-full sm:w-1/3">
+          <CultivationFactorChart season={season} />
+        </div>
+        <div className="w-full sm:w-1/3">
+          <SoilSupplyChart season={season} />
+        </div>
+        <div className="w-full sm:w-1/3">
+          <SoilDemandChart season={season} />
         </div>
       </div>
     </>
@@ -145,6 +159,65 @@ const PodsHarvestedChart = React.memo(({ season }: ISeason) => {
       activeTab={harvestedTab}
       onChangeTab={setHarvestedTab}
       useSeasonalResult={harvestData}
+      valueFormatter={f.number0dFormatter}
+      tickValueFormatter={f.largeNumberFormatter}
+    />
+  );
+});
+
+const CultivationFactorChart = React.memo(({ season }: ISeason) => {
+  const [cultivationTab, setCultivationTab] = useTimeTabs();
+
+  const cultivationData = useSeasonalCultivationFactor(Math.max(0, season - tabToSeasonalLookback(cultivationTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Cultivation Factor"
+      tooltip="The efficiency factor for converting Seeds to Stalk in the Silo."
+      size="small"
+      activeTab={cultivationTab}
+      onChangeTab={setCultivationTab}
+      useSeasonalResult={cultivationData}
+      valueFormatter={f.percent2dFormatter}
+      tickValueFormatter={f.percent0dFormatter}
+    />
+  );
+});
+
+const SoilSupplyChart = React.memo(({ season }: ISeason) => {
+  const [soilSupplyTab, setSoilSupplyTab] = useTimeTabs();
+
+  const soilSupplyData = useSeasonalSoilSupply(Math.max(0, season - tabToSeasonalLookback(soilSupplyTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Soil Supply per Season"
+      tooltip="The amount of Soil available for Sowing each Season."
+      size="small"
+      fillArea
+      activeTab={soilSupplyTab}
+      onChangeTab={setSoilSupplyTab}
+      useSeasonalResult={soilSupplyData}
+      valueFormatter={f.number0dFormatter}
+      tickValueFormatter={f.largeNumberFormatter}
+    />
+  );
+});
+
+const SoilDemandChart = React.memo(({ season }: ISeason) => {
+  const [soilDemandTab, setSoilDemandTab] = useTimeTabs();
+
+  const soilDemandData = useSeasonalSoilDemand(Math.max(0, season - tabToSeasonalLookback(soilDemandTab)), season);
+
+  return (
+    <SeasonalChart
+      title="Soil Demand per Season"
+      tooltip="The amount of Soil that was actually Sown each Season."
+      size="small"
+      fillArea
+      activeTab={soilDemandTab}
+      onChangeTab={setSoilDemandTab}
+      useSeasonalResult={soilDemandData}
       valueFormatter={f.number0dFormatter}
       tickValueFormatter={f.largeNumberFormatter}
     />
