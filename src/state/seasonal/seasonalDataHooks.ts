@@ -294,7 +294,7 @@ export function useSeasonalPodsHarvested(fromSeason: number, toSeason: number): 
 export function useSeasonalCultivationFactor(fromSeason: number, toSeason: number): UseSeasonalResult {
   return useSeasonalBeanstalkFieldSG(fromSeason, toSeason, (fieldHourly, timestamp) => ({
     season: Number(fieldHourly.season),
-    value: Number(fieldHourly.cultivationFactor || 0) / 100,
+    value: TV.fromHuman(fieldHourly.cultivationFactor || 0, 2).toNumber(),
     timestamp,
   }));
 }
