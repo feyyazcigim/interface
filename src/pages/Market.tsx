@@ -32,7 +32,7 @@ const getPointTopOffset = () => {
   } else {
     return 40;
   }
-}
+};
 
 const getPointBottomOffset = () => {
   if (window.innerWidth > 1600) {
@@ -42,7 +42,7 @@ const getPointBottomOffset = () => {
   } else {
     return 90;
   }
-}
+};
 
 export function Market() {
   const { mode, id } = useParams();
@@ -157,7 +157,7 @@ export function Market() {
           // Basically all of this is custom logic for 3 different breakpoints to either display the tooltip to the top right or bottom right of the point.
           const topOfPoint = position.y + getPointTopOffset();
           const bottomOfPoint = position.y + getPointBottomOffset();
-          tooltipEl.style.top = dataPoint.y > .8 ? bottomOfPoint : topOfPoint + "px"; // Position relative to point y
+          tooltipEl.style.top = dataPoint.y > 0.8 ? bottomOfPoint : topOfPoint + "px"; // Position relative to point y
           // end custom logic
           tooltipEl.style.left = position.x + "px"; // Position relative to point x
           tooltipEl.style.padding = context.tooltip.options.padding + "px " + context.tooltip.options.padding + "px";
