@@ -173,7 +173,7 @@ const CultivationFactorChart = React.memo(({ season }: ISeason) => {
   return (
     <SeasonalChart
       title="Cultivation Factor"
-      tooltip="The efficiency factor for converting Seeds to Stalk in the Silo."
+      tooltip="Protocol Controlled Value to control soil issuance"
       size="small"
       activeTab={cultivationTab}
       onChangeTab={setCultivationTab}
