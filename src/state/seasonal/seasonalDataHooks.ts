@@ -315,28 +315,6 @@ export function useSeasonalSoilDemand(fromSeason: number, toSeason: number): Use
   }));
 }
 
-export function useSeasonalSoilDemandTrend(fromSeason: number, toSeason: number): UseSeasonalResult {
-  return useSeasonalBeanstalkFieldSG(fromSeason, toSeason, (fieldHourly, timestamp) => {
-    const deltaPodDemand = TV.fromBlockchain(fieldHourly.deltaPodDemand || 0, PINTO.decimals).toNumber();
-
-    // Map to numerical trend values based on LibEvaluate.sol thresholds
-    let trendValue: number;
-    if (deltaPodDemand >= 1e18) {
-      trendValue = 1; // Increasing
-    } else if (deltaPodDemand >= 1) {
-      trendValue = 0; // Steady
-    } else {
-      trendValue = -1; // Decreasing
-    }
-
-    return {
-      season: Number(fieldHourly.season),
-      value: trendValue,
-      timestamp,
-    };
-  });
-}
-
 /** ==================== WrappedDepositERC20HourlySnapshot ==================== **/
 
 export function useSeasonalWrappedDepositExchangeRate(fromSeason: number, toSeason: number): UseSeasonalResult {

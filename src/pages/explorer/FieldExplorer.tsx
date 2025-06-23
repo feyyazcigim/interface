@@ -6,7 +6,6 @@ import {
   useSeasonalPodRate,
   useSeasonalPodsHarvested,
   useSeasonalSoilDemand,
-  useSeasonalSoilDemandTrend,
   useSeasonalSoilSupply,
   useSeasonalSownPinto,
   useSeasonalTemperature,
@@ -46,14 +45,11 @@ const FieldExplorer = () => {
         </div>
       </div>
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
-        <div className="w-full sm:w-1/3">
+        <div className="w-full sm:w-1/2">
           <SoilSupplyChart season={season} />
         </div>
-        <div className="w-full sm:w-1/3">
+        <div className="w-full sm:w-1/2">
           <CultivationFactorChart season={season} />
-        </div>
-        <div className="w-full sm:w-1/3">
-          <SoilDemandTrend season={season} />
         </div>
       </div>
     </>
@@ -204,40 +200,6 @@ const SoilSupplyChart = React.memo(({ season }: ISeason) => {
       useSeasonalResult={soilSupplyData}
       valueFormatter={f.number0dFormatter}
       tickValueFormatter={f.largeNumberFormatter}
-    />
-  );
-});
-
-const SoilDemandTrend = React.memo(({ season }: ISeason) => {
-  const [soilDemandTab, setSoilDemandTab] = useTimeTabs();
-
-  const soilDemandTrendData = useSeasonalSoilDemandTrend(
-    Math.max(0, season - tabToSeasonalLookback(soilDemandTab)),
-    season,
-  );
-
-  // Custom formatter to show trend labels
-  const trendFormatter = (value: number) => {
-    if (value >= 1) return "Increasing";
-    if (value >= 0) return "Steady"; 
-    return "Decreasing";
-  };
-
-  return (
-    <SeasonalChart
-      title="Soil Demand Trend"
-      tooltip="Shows whether soil demand is increasing (high), steady (moderate), or decreasing (low) based on consumption speed and patterns."
-      size="small"
-      activeTab={soilDemandTab}
-      onChangeTab={setSoilDemandTab}
-      useSeasonalResult={soilDemandTrendData}
-      valueFormatter={trendFormatter}
-      tickValueFormatter={trendFormatter}
-      yAxisRanges={{
-        [TimeTab.Week]: { min: -1.5, max: 1.5 },
-        [TimeTab.Month]: { min: -1.5, max: 1.5 },
-        [TimeTab.AllTime]: { min: -1.5, max: 1.5 },
-      }}
     />
   );
 });
