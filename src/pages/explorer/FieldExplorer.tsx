@@ -15,7 +15,6 @@ import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
 import React, { useState } from "react";
 import FieldTemperatureBarChart from "../field/FieldTemperatureBarChart";
-import SoilDemandTrendChart from "@/components/charts/SoilDemandTrendChart";
 
 const FieldExplorer = () => {
   const season = useSunData().current;
@@ -217,14 +216,30 @@ const SoilDemandTrend = React.memo(({ season }: ISeason) => {
     season,
   );
 
+  // Custom formatter to show trend labels
+  const trendFormatter = (value: number) => {
+    if (value >= 1) return "Increasing";
+    if (value >= 0) return "Steady";
+    return "Decreasing";
+  };
+
+  const trendTickFormatter = (value: number) => {
+    if (value >= 1) return "↗";
+    if (value >= 0) return "→";
+    return "↘";
+  };
+
   return (
-    <SoilDemandTrendChart
+    <SeasonalChart
       title="Soil Demand Trend"
       tooltip="Shows whether soil demand is increasing (high), steady (moderate), or decreasing (low) based on consumption speed and patterns."
       size="small"
+      fillArea
       activeTab={soilDemandTab}
       onChangeTab={setSoilDemandTab}
       useSeasonalResult={soilDemandTrendData}
+      valueFormatter={trendFormatter}
+      tickValueFormatter={trendTickFormatter}
     />
   );
 });
