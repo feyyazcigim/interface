@@ -1,5 +1,6 @@
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
+import TimeTabsSelector from "@/components/charts/TimeTabs";
 import {
   useSeasonalMcap,
   useSeasonalPrice,
@@ -8,6 +9,7 @@ import {
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
+import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
 import React from "react";
 import { useMemo, useState } from "react";
 
@@ -22,9 +24,17 @@ const CHART_CONSTANTS = {
 
 const PintoExplorer = () => {
   const season = useSunData().current;
+  const [globalTimeTab, setGlobalTimeTab] = useSharedTimeTab();
 
   return (
     <>
+      {/* Global Time Selector */}
+      <div className="flex justify-end mb-6">
+        <div className="scale-110">
+          <TimeTabsSelector tab={globalTimeTab} setTab={setGlobalTimeTab} />
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/2">
           <PriceChart season={season} />
@@ -57,7 +67,7 @@ interface ISeason {
   season: number;
 }
 
-const useTimeTabs = () => useState(TimeTab.Week);
+const useTimeTabs = (chartId: string) => useSharedTimeTab(chartId);
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Price Chart
@@ -107,7 +117,7 @@ const usePriceYAxisRanges = (data: ReturnType<typeof useSeasonalPrice>["data"]) 
 };
 
 const PriceChart = React.memo(({ season }: ISeason) => {
-  const [priceTab, setPriceTab] = useTimeTabs();
+  const [priceTab, setPriceTab] = useTimeTabs("price");
 
   const priceData = useSeasonalPrice(Math.max(6, season - tabToSeasonalLookback(priceTab)), season);
 
@@ -136,7 +146,7 @@ const PriceChart = React.memo(({ season }: ISeason) => {
 // ────────────────────────────────────────────────────────────────────────────────
 
 const TotalLiquidityChart = React.memo(({ season }: ISeason) => {
-  const [liquidityTab, setLiquidityTab] = useTimeTabs();
+  const [liquidityTab, setLiquidityTab] = useTimeTabs("liquidity");
 
   const liquidityData = useSeasonalTotalLiquidity(Math.max(0, season - tabToSeasonalLookback(liquidityTab)), season);
 
@@ -160,7 +170,7 @@ const TotalLiquidityChart = React.memo(({ season }: ISeason) => {
 // ────────────────────────────────────────────────────────────────────────────────
 
 const TotalSupplyChart = React.memo(({ season }: ISeason) => {
-  const [supplyTab, setSupplyTab] = useTimeTabs();
+  const [supplyTab, setSupplyTab] = useTimeTabs("supply");
 
   const supplyData = useSeasonalSupply(Math.max(0, season - tabToSeasonalLookback(supplyTab)), season);
 
@@ -184,7 +194,7 @@ const TotalSupplyChart = React.memo(({ season }: ISeason) => {
 // ────────────────────────────────────────────────────────────────────────────────
 
 const MarketCapChart = React.memo(({ season }: ISeason) => {
-  const [mcapTab, setMcapTab] = useTimeTabs();
+  const [mcapTab, setMcapTab] = useTimeTabs("marketCap");
 
   const mcapData = useSeasonalMcap(Math.max(0, season - tabToSeasonalLookback(mcapTab)), season);
 

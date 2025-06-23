@@ -1,5 +1,6 @@
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
+import TimeTabsSelector from "@/components/charts/TimeTabs";
 import {
   useSeasonalCultivationFactor,
   useSeasonalPodLine,
@@ -12,14 +13,23 @@ import {
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
+import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
 import React, { useState } from "react";
 import FieldTemperatureBarChart from "../field/FieldTemperatureBarChart";
 
 const FieldExplorer = () => {
   const season = useSunData().current;
+  const [globalTimeTab, setGlobalTimeTab] = useSharedTimeTab();
 
   return (
     <>
+      {/* Global Time Selector */}
+      <div className="flex justify-end mb-6">
+        <div className="scale-110">
+          <TimeTabsSelector tab={globalTimeTab} setTab={setGlobalTimeTab} />
+        </div>
+      </div>
+      
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/2">
           <FieldTemperatureBarChart variant="explorer" />
@@ -61,10 +71,10 @@ interface ISeason {
   season: number;
 }
 
-const useTimeTabs = () => useState(TimeTab.Week);
+const useTimeTabs = (chartId: string) => useSharedTimeTab(chartId);
 
 const PodRateChart = React.memo(({ season }: ISeason) => {
-  const [podRateTab, setPodRateTab] = useTimeTabs();
+  const [podRateTab, setPodRateTab] = useTimeTabs("podRate");
 
   const podRateData = useSeasonalPodRate(Math.max(0, season - tabToSeasonalLookback(podRateTab)), season);
 
@@ -84,7 +94,7 @@ const PodRateChart = React.memo(({ season }: ISeason) => {
 });
 
 const MaxTempChart = React.memo(({ season }: ISeason) => {
-  const [tempTab, setTempTab] = useTimeTabs();
+  const [tempTab, setTempTab] = useTimeTabs("maxTemp");
 
   const tempData = useSeasonalTemperature(Math.max(0, season - tabToSeasonalLookback(tempTab)), season);
 
@@ -103,7 +113,7 @@ const MaxTempChart = React.memo(({ season }: ISeason) => {
 });
 
 const PodLineChart = React.memo(({ season }: ISeason) => {
-  const [podlineTab, setPodlineTab] = useTimeTabs();
+  const [podlineTab, setPodlineTab] = useTimeTabs("podLine");
 
   const podIndexData = useSeasonalPodLine(Math.max(0, season - tabToSeasonalLookback(podlineTab)), season);
 
@@ -123,7 +133,7 @@ const PodLineChart = React.memo(({ season }: ISeason) => {
 });
 
 const SownPintoChart = React.memo(({ season }: ISeason) => {
-  const [sownTab, setSownTab] = useTimeTabs();
+  const [sownTab, setSownTab] = useTimeTabs("sownPinto");
 
   const sownData = useSeasonalSownPinto(Math.max(0, season - tabToSeasonalLookback(sownTab)), season);
 
@@ -143,7 +153,7 @@ const SownPintoChart = React.memo(({ season }: ISeason) => {
 });
 
 const PodsHarvestedChart = React.memo(({ season }: ISeason) => {
-  const [harvestedTab, setHarvestedTab] = useTimeTabs();
+  const [harvestedTab, setHarvestedTab] = useTimeTabs("podsHarvested");
 
   const harvestData = useSeasonalPodsHarvested(Math.max(0, season - tabToSeasonalLookback(harvestedTab)), season);
 
@@ -163,7 +173,7 @@ const PodsHarvestedChart = React.memo(({ season }: ISeason) => {
 });
 
 const CultivationFactorChart = React.memo(({ season }: ISeason) => {
-  const [cultivationTab, setCultivationTab] = useTimeTabs();
+  const [cultivationTab, setCultivationTab] = useTimeTabs("cultivationFactor");
 
   const cultivationData = useSeasonalCultivationFactor(
     Math.max(0, season - tabToSeasonalLookback(cultivationTab)),
@@ -185,7 +195,7 @@ const CultivationFactorChart = React.memo(({ season }: ISeason) => {
 });
 
 const SoilSupplyChart = React.memo(({ season }: ISeason) => {
-  const [soilSupplyTab, setSoilSupplyTab] = useTimeTabs();
+  const [soilSupplyTab, setSoilSupplyTab] = useTimeTabs("soilSupply");
 
   const soilSupplyData = useSeasonalSoilSupply(Math.max(0, season - tabToSeasonalLookback(soilSupplyTab)), season);
 

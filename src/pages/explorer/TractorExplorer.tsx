@@ -1,5 +1,6 @@
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
+import TimeTabsSelector from "@/components/charts/TimeTabs";
 import {
   useSeasonalTractorCumulativeTips,
   useSeasonalTractorExecutionsCount,
@@ -12,6 +13,7 @@ import {
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
+import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
 import { useState } from "react";
 
 const TractorExplorer = () => {
