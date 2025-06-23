@@ -216,6 +216,13 @@ const SoilDemandTrend = React.memo(({ season }: ISeason) => {
     season,
   );
 
+  // Custom formatter to show trend labels
+  const trendFormatter = (value: number) => {
+    if (value >= 1) return "Increasing";
+    if (value >= 0) return "Steady"; 
+    return "Decreasing";
+  };
+
   return (
     <SeasonalChart
       title="Soil Demand Trend"
@@ -224,8 +231,13 @@ const SoilDemandTrend = React.memo(({ season }: ISeason) => {
       activeTab={soilDemandTab}
       onChangeTab={setSoilDemandTab}
       useSeasonalResult={soilDemandTrendData}
-      valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.number0dFormatter}
+      valueFormatter={trendFormatter}
+      tickValueFormatter={trendFormatter}
+      yAxisRanges={{
+        [TimeTab.Week]: { min: -1.5, max: 1.5 },
+        [TimeTab.Month]: { min: -1.5, max: 1.5 },
+        [TimeTab.AllTime]: { min: -1.5, max: 1.5 },
+      }}
     />
   );
 });
