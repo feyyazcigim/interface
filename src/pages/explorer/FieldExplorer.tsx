@@ -46,10 +46,10 @@ const FieldExplorer = () => {
       </div>
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/3">
-          <CultivationFactorChart season={season} />
+          <SoilSupplyChart season={season} />
         </div>
         <div className="w-full sm:w-1/3">
-          <SoilSupplyChart season={season} />
+          <CultivationFactorChart season={season} />
         </div>
         <div className="w-full sm:w-1/3">
           <SoilDemandChart season={season} />
