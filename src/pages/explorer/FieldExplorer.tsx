@@ -216,30 +216,16 @@ const SoilDemandTrend = React.memo(({ season }: ISeason) => {
     season,
   );
 
-  // Custom formatter to show trend labels
-  const trendFormatter = (value: number) => {
-    if (value >= 1) return "Increasing";
-    if (value >= 0) return "Steady";
-    return "Decreasing";
-  };
-
-  const trendTickFormatter = (value: number) => {
-    if (value >= 1) return "↗";
-    if (value >= 0) return "→";
-    return "↘";
-  };
-
   return (
     <SeasonalChart
       title="Soil Demand Trend"
       tooltip="Shows whether soil demand is increasing (high), steady (moderate), or decreasing (low) based on consumption speed and patterns."
       size="small"
-      fillArea
       activeTab={soilDemandTab}
       onChangeTab={setSoilDemandTab}
       useSeasonalResult={soilDemandTrendData}
-      valueFormatter={trendFormatter}
-      tickValueFormatter={trendTickFormatter}
+      valueFormatter={f.number0dFormatter}
+      tickValueFormatter={f.number0dFormatter}
     />
   );
 });
