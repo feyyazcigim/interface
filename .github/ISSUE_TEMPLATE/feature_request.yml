@@ -35,6 +35,7 @@ body:
         - Silo (Staking/Deposits)
         - Field (Sowing/Pods)
         - Market (Pod Trading)
+        - Converts
         - Swap
         - Explorer (Analytics)
         - Navigation/Layout
