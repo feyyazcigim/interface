@@ -315,6 +315,14 @@ export function useSeasonalSoilDemand(fromSeason: number, toSeason: number): Use
   }));
 }
 
+export function useSeasonalSoilDemandTrend(fromSeason: number, toSeason: number): UseSeasonalResult {
+  return useSeasonalBeanstalkFieldSG(fromSeason, toSeason, (fieldHourly, timestamp) => ({
+    season: Number(fieldHourly.season),
+    value: TV.fromBlockchain(fieldHourly.deltaPodDemand || 0, PINTO.decimals).toNumber(),
+    timestamp,
+  }));
+}
+
 /** ==================== WrappedDepositERC20HourlySnapshot ==================== **/
 
 export function useSeasonalWrappedDepositExchangeRate(fromSeason: number, toSeason: number): UseSeasonalResult {

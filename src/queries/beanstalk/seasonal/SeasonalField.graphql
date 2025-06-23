@@ -16,6 +16,7 @@ query BeanstalkSeasonalField($from: Int, $to: Int, $field: String) {
     cultivationFactor
     issuedSoil
     deltaSownBeans
+    deltaPodDemand
     createdAt
   }
 }

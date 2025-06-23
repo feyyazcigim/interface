@@ -6,6 +6,7 @@ import {
   useSeasonalPodRate,
   useSeasonalPodsHarvested,
   useSeasonalSoilDemand,
+  useSeasonalSoilDemandTrend,
   useSeasonalSoilSupply,
   useSeasonalSownPinto,
   useSeasonalTemperature,
@@ -14,6 +15,7 @@ import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
 import React, { useState } from "react";
 import FieldTemperatureBarChart from "../field/FieldTemperatureBarChart";
+import SoilDemandTrendChart from "@/components/charts/SoilDemandTrendChart";
 
 const FieldExplorer = () => {
   const season = useSunData().current;
@@ -52,7 +54,7 @@ const FieldExplorer = () => {
           <CultivationFactorChart season={season} />
         </div>
         <div className="w-full sm:w-1/3">
-          <SoilDemandChart season={season} />
+          <SoilDemandTrend season={season} />
         </div>
       </div>
     </>
@@ -168,7 +170,10 @@ const PodsHarvestedChart = React.memo(({ season }: ISeason) => {
 const CultivationFactorChart = React.memo(({ season }: ISeason) => {
   const [cultivationTab, setCultivationTab] = useTimeTabs();
 
-  const cultivationData = useSeasonalCultivationFactor(Math.max(0, season - tabToSeasonalLookback(cultivationTab)), season);
+  const cultivationData = useSeasonalCultivationFactor(
+    Math.max(0, season - tabToSeasonalLookback(cultivationTab)),
+    season,
+  );
 
   return (
     <SeasonalChart
@@ -204,22 +209,22 @@ const SoilSupplyChart = React.memo(({ season }: ISeason) => {
   );
 });
 
-const SoilDemandChart = React.memo(({ season }: ISeason) => {
+const SoilDemandTrend = React.memo(({ season }: ISeason) => {
   const [soilDemandTab, setSoilDemandTab] = useTimeTabs();
 
-  const soilDemandData = useSeasonalSoilDemand(Math.max(0, season - tabToSeasonalLookback(soilDemandTab)), season);
+  const soilDemandTrendData = useSeasonalSoilDemandTrend(
+    Math.max(0, season - tabToSeasonalLookback(soilDemandTab)),
+    season,
+  );
 
   return (
-    <SeasonalChart
-      title="Soil Demand per Season"
-      tooltip="The amount of Soil that was actually Sown each Season."
+    <SoilDemandTrendChart
+      title="Soil Demand Trend"
+      tooltip="Shows whether soil demand is increasing (high), steady (moderate), or decreasing (low) based on consumption speed and patterns."
       size="small"
-      fillArea
       activeTab={soilDemandTab}
       onChangeTab={setSoilDemandTab}
-      useSeasonalResult={soilDemandData}
-      valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.largeNumberFormatter}
+      useSeasonalResult={soilDemandTrendData}
     />
   );
 });
