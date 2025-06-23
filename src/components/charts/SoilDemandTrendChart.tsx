@@ -1,19 +1,13 @@
 import FrameAnimator from "@/components/LoadingSpinner.tsx";
-import { formatDate } from "@/utils/format";
 import { UseSeasonalResult } from "@/utils/types";
 import { cn } from "@/utils/utils";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { CloseIconAlt } from "../Icons";
 import TooltipSimple from "../TooltipSimple";
-import TimeTabsSelector, { TimeTab } from "./TimeTabs";
+import LineChart, { LineChartData } from "./LineChart";
 import { tabToSeasonalLookback } from "./SeasonalChart";
-
-export interface SoilDemandTrendData {
-  season: number;
-  value: number;
-  timestamp: Date;
-  trend: "increasing" | "steady" | "decreasing";
-}
+import TimeTabsSelector, { TimeTab } from "./TimeTabs";
+import { metallicMorningAreaGradientFn, metallicMorningStrokeGradientFn } from "./chartHelpers";
 
 interface SoilDemandTrendChartProps {
   title: string;
@@ -30,37 +24,24 @@ interface SoilDemandTrendChartProps {
 const HIGH_DEMAND_THRESHOLD = 1e18;
 const STEADY_DEMAND_THRESHOLD = 1; // Minimum floor for steady demand
 
-const getDemandTrend = (deltaPodDemand: number): "increasing" | "steady" | "decreasing" => {
+const getDemandTrendValue = (deltaPodDemand: number): number => {
   if (deltaPodDemand >= HIGH_DEMAND_THRESHOLD) {
-    return "increasing";
+    return 1; // Increasing
   } else if (deltaPodDemand >= STEADY_DEMAND_THRESHOLD) {
-    return "steady";
+    return 0; // Steady
   } else {
-    return "decreasing";
+    return -1; // Decreasing
   }
 };
 
-const getTrendColor = (trend: "increasing" | "steady" | "decreasing"): string => {
-  switch (trend) {
-    case "increasing":
-      return "#22c55e"; // green-500
-    case "steady":
-      return "#f59e0b"; // amber-500
-    case "decreasing":
-      return "#ef4444"; // red-500
-    default:
-      return "#6b7280"; // gray-500
-  }
-};
-
-const getTrendLabel = (trend: "increasing" | "steady" | "decreasing"): string => {
-  switch (trend) {
-    case "increasing":
-      return "High Demand";
-    case "steady":
-      return "Steady Demand";
-    case "decreasing":
-      return "Low Demand";
+const getTrendLabel = (value: number): string => {
+  switch (value) {
+    case 1:
+      return "Increasing";
+    case 0:
+      return "Steady";
+    case -1:
+      return "Decreasing";
     default:
       return "Unknown";
   }
@@ -77,28 +58,30 @@ const SoilDemandTrendChart: React.FC<SoilDemandTrendChartProps> = ({
 }) => {
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
 
-  const trendData = useMemo((): SoilDemandTrendData[] => {
+  const chartData = useMemo((): LineChartData[] => {
     if (!useSeasonalResult.data) return [];
 
     return useSeasonalResult.data.map((item) => ({
       season: item.season,
-      value: item.value,
       timestamp: item.timestamp,
-      trend: getDemandTrend(item.value),
+      values: [getDemandTrendValue(item.value)],
     }));
   }, [useSeasonalResult.data]);
 
-  const latestTrend = trendData[trendData.length - 1]?.trend || "decreasing";
-  const latestSeason = trendData[trendData.length - 1]?.season || 0;
+  const latestTrend = chartData[chartData.length - 1]?.values[0] ?? -1;
+  const latestSeason = chartData[chartData.length - 1]?.season ?? 0;
 
   // Count trends for summary stats
   const trendCounts = useMemo(() => {
     const counts = { increasing: 0, steady: 0, decreasing: 0 };
-    trendData.forEach((item) => {
-      counts[item.trend]++;
+    chartData.forEach((item) => {
+      const trend = item.values[0];
+      if (trend === 1) counts.increasing++;
+      else if (trend === 0) counts.steady++;
+      else if (trend === -1) counts.decreasing++;
     });
     return counts;
-  }, [trendData]);
+  }, [chartData]);
 
   const handleTooltipClick = useCallback(() => {
     setIsTooltipVisible(!isTooltipVisible);
@@ -106,6 +89,11 @@ const SoilDemandTrendChart: React.FC<SoilDemandTrendChartProps> = ({
 
   const handleTooltipClose = useCallback(() => {
     setIsTooltipVisible(false);
+  }, []);
+
+  // Custom value formatter for y-axis
+  const valueFormatter = useCallback((value: number) => {
+    return getTrendLabel(value);
   }, []);
 
   if (useSeasonalResult.isLoading) {
@@ -124,7 +112,7 @@ const SoilDemandTrendChart: React.FC<SoilDemandTrendChartProps> = ({
     );
   }
 
-  if (useSeasonalResult.isError || !trendData.length) {
+  if (useSeasonalResult.isError || !chartData.length) {
     return (
       <div
         className={cn("bg-white rounded-lg shadow-sm border", size === "small" ? "p-4 h-64" : "p-6 h-80", className)}
@@ -169,16 +157,16 @@ const SoilDemandTrendChart: React.FC<SoilDemandTrendChartProps> = ({
                   <p className="text-sm text-gray-600 mb-3">{tooltip}</p>
                   <div className="space-y-1 text-xs">
                     <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span>High Demand: Fast soil consumption</span>
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <span>Increasing: Fast soil consumption (≥1e18)</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                      <span>Steady Demand: Moderate consumption</span>
+                      <div className="w-3 h-3 rounded-full bg-amber-500" />
+                      <span>Steady: Moderate consumption (≥1)</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <span>Low Demand: Slow consumption</span>
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <span>Decreasing: Low consumption (&lt;1)</span>
                     </div>
                   </div>
                 </div>
@@ -190,48 +178,42 @@ const SoilDemandTrendChart: React.FC<SoilDemandTrendChartProps> = ({
       </div>
 
       {/* Current Status */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-3 mb-2">
-          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: getTrendColor(latestTrend) }}></div>
+      <div className="mb-4">
+        <div className="flex items-center space-x-3">
+          <span className="text-sm font-medium text-gray-700">Current Trend:</span>
           <span className="text-lg font-semibold text-gray-900">{getTrendLabel(latestTrend)}</span>
           <span className="text-sm text-gray-500">Season {latestSeason}</span>
         </div>
       </div>
 
-      {/* Trend Timeline */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Recent Trend History</h4>
-        <div className="flex flex-wrap gap-1">
-          {trendData.slice(-20).map((item, index) => (
-            <div key={item.season} className="group relative">
-              <div
-                className="w-3 h-8 rounded-sm cursor-pointer transition-all duration-200 hover:scale-110"
-                style={{ backgroundColor: getTrendColor(item.trend) }}
-                title={`Season ${item.season}: ${getTrendLabel(item.trend)} (${formatDate(item.timestamp)})`}
-              ></div>
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-between text-xs text-gray-500 mt-2">
-          <span>Season {trendData[Math.max(0, trendData.length - 20)]?.season || 0}</span>
-          <span>Season {latestSeason}</span>
-        </div>
+      {/* Line Chart */}
+      <div className={cn("relative", size === "small" ? "h-48" : "h-64")}>
+        <LineChart
+          data={chartData}
+          size={size}
+          xKey="season"
+          makeLineGradients={[metallicMorningStrokeGradientFn]}
+          makeAreaGradients={[metallicMorningAreaGradientFn]}
+          valueFormatter={valueFormatter}
+          yAxisMin={-1.2}
+          yAxisMax={1.2}
+        />
       </div>
 
       {/* Summary Stats */}
-      <div className="mt-6 pt-4 border-t border-gray-100">
+      <div className="mt-4 pt-4 border-t border-gray-100">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <div className="text-2xl font-bold text-green-600">{trendCounts.increasing}</div>
-            <div className="text-xs text-gray-500">High Demand</div>
+            <div className="text-xl font-bold text-green-600">{trendCounts.increasing}</div>
+            <div className="text-xs text-gray-500">Increasing</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-amber-600">{trendCounts.steady}</div>
-            <div className="text-xs text-gray-500">Steady Demand</div>
+            <div className="text-xl font-bold text-amber-600">{trendCounts.steady}</div>
+            <div className="text-xs text-gray-500">Steady</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-red-600">{trendCounts.decreasing}</div>
-            <div className="text-xs text-gray-500">Low Demand</div>
+            <div className="text-xl font-bold text-red-600">{trendCounts.decreasing}</div>
+            <div className="text-xs text-gray-500">Decreasing</div>
           </div>
         </div>
       </div>
