@@ -49,7 +49,7 @@ export interface DisplayValueProps extends React.HTMLAttributes<HTMLDivElement> 
 
 const DisplayValue = forwardRef<HTMLDivElement, DisplayValueProps>(
   ({ value, suffix = "", showArrow, token, delta, className, ...props }, ref) => {
-    const isPositiveDelta = delta ? (typeof delta === "number" ? delta >= 0 : delta === "up") : false;
+    const isPositiveDelta = delta ? (typeof delta === "number" ? delta > -0.0001 : delta === "up") : false;
 
     return (
       <div
