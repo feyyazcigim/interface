@@ -1,6 +1,5 @@
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
-import TimeTabsSelector from "@/components/charts/TimeTabs";
 import {
   useSeasonalMcap,
   useSeasonalPrice,
@@ -24,17 +23,9 @@ const CHART_CONSTANTS = {
 
 const PintoExplorer = () => {
   const season = useSunData().current;
-  const [globalTimeTab, setGlobalTimeTab] = useSharedTimeTab();
 
   return (
     <>
-      {/* Global Time Selector */}
-      <div className="flex justify-end mb-6">
-        <div className="scale-110">
-          <TimeTabsSelector tab={globalTimeTab} setTab={setGlobalTimeTab} />
-        </div>
-      </div>
-
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/2">
           <PriceChart season={season} />

@@ -1,6 +1,5 @@
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
-import TimeTabsSelector from "@/components/charts/TimeTabs";
 import {
   useFarmerSeasonalClaimedGrownStalkBalance,
   useFarmerSeasonalPlantedPinto,
@@ -15,7 +14,6 @@ import { useAccount } from "wagmi";
 const NO_DATA_MESSAGE = "No silo interactions from connected wallet";
 
 const FarmerExplorer = () => {
-  const [globalTimeTab, setGlobalTimeTab] = useSharedTimeTab();
   const [plantedTab, setPlantedTab] = useSharedTimeTab("farmerPlanted");
   const [grownStalkTab, setGrownStalkTab] = useSharedTimeTab("farmerGrownStalk"); 
   const [stalkOwnershipTab, setStalkOwnershipTab] = useSharedTimeTab("farmerStalkOwnership");
@@ -42,13 +40,6 @@ const FarmerExplorer = () => {
 
   return (
     <>
-      {/* Global Time Selector */}
-      <div className="flex justify-end mb-6">
-        <div className="scale-110">
-          <TimeTabsSelector tab={globalTimeTab} setTab={setGlobalTimeTab} />
-        </div>
-      </div>
-
       <SeasonalChart
         title="Planted Pinto"
         tooltip="Total amount of Pinto planted."

@@ -1,5 +1,7 @@
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import TimeTabsSelector from "@/components/charts/TimeTabs";
+import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
 import useRouterTabs, { UseRouterTabsOptions } from "@/hooks/useRouterTabs";
 import { useCallback } from "react";
 import AllExplorer from "./explorer/AllExplorer";
@@ -51,6 +53,7 @@ const routerTabsOptions: UseRouterTabsOptions = {
 };
 const Explorer = () => {
   const [tab, handleChangeTab] = useRouterTabs(routerSlugs, routerTabsOptions);
+  const [globalTimeTab, setGlobalTimeTab] = useSharedTimeTab();
 
   const handleMainTabClickFactory = useCallback(
     (selection: string) => () => handleChangeTab(selection),
@@ -66,7 +69,12 @@ const Explorer = () => {
       <div className="flex flex-col w-full items-center">
         <div className="flex flex-col w-full gap-4 sm:gap-8">
           <div className="flex flex-col gap-2 sm:ml-4">
-            <div className="pinto-h2 sm:pinto-h1 ml-[-3px]">Explorer</div>
+            <div className="flex justify-between items-start">
+              <div className="pinto-h2 sm:pinto-h1 ml-[-3px]">Explorer</div>
+              <div className="scale-110">
+                <TimeTabsSelector tab={globalTimeTab} setTab={setGlobalTimeTab} />
+              </div>
+            </div>
             <div className="flex gap-6 sm:gap-10 mt-4 sm:mt-8 overflow-x-auto scrollbar-none  ml-[-1px]">
               {TABS.map(({ tabName, urlSlug }, idx) => (
                 <div
