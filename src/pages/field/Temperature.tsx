@@ -19,10 +19,10 @@ const calculateTemperatureYAxisRanges = (data: Array<{ value: number }> | undefi
   const maxValue = Math.max(...values);
   const range = maxValue - minValue;
 
-  // For temperature graphs, ensure a minimum buffer of 1 percentage point
+  // For temperature graphs, ensure a minimum buffer of 5 percentage points
   // and scale the buffer based on the data range
-  const minBuffer = 1; // 1 percentage point minimum buffer
-  const percentageBuffer = Math.max(range * 0.15, minBuffer); // 15% of range or 1pp, whichever is larger
+  const minBuffer = 5; // 5 percentage points minimum buffer
+  const percentageBuffer = Math.max(range * 0.15, minBuffer); // 15% of range or 5pp, whichever is larger
 
   const bufferMin = Math.max(0, minValue - percentageBuffer);
   const bufferMax = maxValue + percentageBuffer;
