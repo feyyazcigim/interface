@@ -139,12 +139,17 @@ jobs:
                - Ensure the fix doesn't break existing functionality
                - Add comments if the fix requires explanation
 
-            5. **Create a Pull Request** with:
-               - Clear description of what was broken and how it's fixed
-               - Reference to the original issue
-               - Any testing steps for reviewers
+            5. **Commit and Create Pull Request**:
+               - Commit your changes with clear, descriptive commit messages
+               - Create a pull request automatically with:
+                 - Clear description of what was broken and how it's fixed
+                 - Reference to the original issue (closes #${{ github.event.issue.number }})
+                 - Any testing steps for reviewers
+               - Use the gh CLI to create the PR automatically
 
             Focus on creating a robust, well-tested fix that follows the project's established patterns.
+            
+            **IMPORTANT**: You must create the pull request automatically using the gh CLI. Do not wait for manual intervention.
 
   claude-feature-implementation:
     needs: [check-permissions, detect-issue-type]
@@ -203,13 +208,19 @@ jobs:
                - Run linting and type checking
                - Verify it works across different screen sizes
 
-            6. **Create a Pull Request** with:
-               - Comprehensive description of the new feature
-               - Screenshots or demos if UI-related
-               - Documentation of any new APIs or components
-               - Testing instructions for reviewers
+            6. **Commit and Create Pull Request**:
+               - Commit your changes with clear, descriptive commit messages
+               - Create a pull request automatically with:
+                 - Comprehensive description of the new feature
+                 - Screenshots or demos if UI-related
+                 - Documentation of any new APIs or components
+                 - Testing instructions for reviewers
+                 - Reference to the original issue (closes #${{ github.event.issue.number }})
+               - Use the gh CLI to create the PR automatically
 
             Focus on creating a well-architected, maintainable feature that seamlessly integrates with the existing application.
+            
+            **IMPORTANT**: You must create the pull request automatically using the gh CLI. Do not wait for manual intervention.
   
   unauthorized-user:
     needs: check-permissions

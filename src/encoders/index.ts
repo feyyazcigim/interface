@@ -23,7 +23,12 @@ import calcReserveAtRatioLiquidity from "./well/calcReserveAtRatioLiquidity";
 import getRemoveLiquidityImbalancedIn from "./well/getRemoveLiquidityImbalancedIn";
 import getWellSwapOut from "./well/getWellSwapOut";
 import swapFrom from "./well/swapFrom";
-import wellRemoveLiquidity, { wellRemoveLiquidityOneToken } from "./wellRemoveLiquidity";
+import { wellGetAddLiquidityOut } from "./wellAddLiquidity";
+import wellRemoveLiquidity, {
+  wellRemoveLiquidityOneToken,
+  wellGetRemoveLiquidityOneTokenOut,
+  wellGetRemoveLiquidityOut,
+} from "./wellRemoveLiquidity";
 import wrapEth from "./wrapEth";
 
 const encoders = {
@@ -70,6 +75,9 @@ const encoders = {
     swapFrom,
     getRemoveLiquidityImbalancedIn,
     calcReserveAtRatioLiquidity,
+    getRemoveLiquidityOut: wellGetRemoveLiquidityOut,
+    getRemoveLiquidityOneTokenOut: wellGetRemoveLiquidityOneTokenOut,
+    getAddLiquidityOut: wellGetAddLiquidityOut,
   },
 
   farmerSilo: {
