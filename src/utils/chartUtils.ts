@@ -1,18 +1,20 @@
-import { TimeTab } from "@/components/charts/TimeTabs";
 import { YAxisRangeConfig } from "@/components/charts/SeasonalChart";
+import { TimeTab } from "@/components/charts/TimeTabs";
 
 /**
  * Utility function to calculate better y-axis ranges for temperature data
  * Ensures reasonable buffer that shows oscillation without being excessive
  */
-export const calculateTemperatureYAxisRanges = (data: Array<{ value: number }> | undefined): {
+export const calculateTemperatureYAxisRanges = (
+  data: Array<{ value: number }> | undefined,
+): {
   [TimeTab.Week]?: YAxisRangeConfig;
   [TimeTab.Month]?: YAxisRangeConfig;
   [TimeTab.AllTime]?: YAxisRangeConfig;
 } => {
   if (!data || data.length === 0) return {};
 
-  const values = data.map(d => d.value);
+  const values = data.map((d) => d.value);
   const minValue = Math.min(...values);
   const maxValue = Math.max(...values);
   const range = maxValue - minValue;

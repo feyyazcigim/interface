@@ -8,8 +8,8 @@ import {
   useSeasonalTemperature,
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";
-import { chartFormatters as f } from "@/utils/format";
 import { calculateTemperatureYAxisRanges } from "@/utils/chartUtils";
+import { chartFormatters as f } from "@/utils/format";
 import React, { useState, useMemo } from "react";
 import FieldTemperatureBarChart from "../field/FieldTemperatureBarChart";
 

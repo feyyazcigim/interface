@@ -2,10 +2,10 @@ import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/Season
 import { TimeTab } from "@/components/charts/TimeTabs";
 import { useSeasonalTemperature } from "@/state/seasonal/seasonalDataHooks";
 import { useSeason } from "@/state/useSunData";
+import { calculateTemperatureYAxisRanges } from "@/utils/chartUtils";
 import { chartFormatters as f } from "@/utils/format";
 import { cn } from "@/utils/utils";
-import { calculateTemperatureYAxisRanges } from "@/utils/chartUtils";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 
 interface ITemperatureChartProps {
   chartWrapperClassName?: string;
