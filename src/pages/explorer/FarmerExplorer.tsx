@@ -1,5 +1,6 @@
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
+import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
 import {
   useFarmerSeasonalClaimedGrownStalkBalance,
   useFarmerSeasonalPlantedPinto,
@@ -7,7 +8,6 @@ import {
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
-import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 
@@ -15,7 +15,7 @@ const NO_DATA_MESSAGE = "No silo interactions from connected wallet";
 
 const FarmerExplorer = () => {
   const [plantedTab, setPlantedTab] = useSharedTimeTab("farmerPlanted");
-  const [grownStalkTab, setGrownStalkTab] = useSharedTimeTab("farmerGrownStalk"); 
+  const [grownStalkTab, setGrownStalkTab] = useSharedTimeTab("farmerGrownStalk");
   const [stalkOwnershipTab, setStalkOwnershipTab] = useSharedTimeTab("farmerStalkOwnership");
   const season = useSunData().current;
 

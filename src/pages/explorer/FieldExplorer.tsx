@@ -1,5 +1,6 @@
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
+import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
 import {
   useSeasonalCultivationFactor,
   useSeasonalPodLine,
@@ -12,7 +13,6 @@ import {
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
-import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
 import React, { useState } from "react";
 import FieldTemperatureBarChart from "../field/FieldTemperatureBarChart";
 

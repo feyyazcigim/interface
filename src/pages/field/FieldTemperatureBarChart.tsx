@@ -31,7 +31,10 @@ const FieldTemperatureBarChart = React.memo(({ className, variant = "default" }:
 
   // local State
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
-  const [tab, setTab] = variant === "explorer" ? useSharedTimeTab("fieldTemperature") : useState<TimeTab>(TimeTab.AllTime);
+  const [explorerTab, setExplorerTab] = useSharedTimeTab("fieldTemperature");
+  const [localTab, setLocalTab] = useState<TimeTab>(TimeTab.AllTime);
+
+  const [tab, setTab] = variant === "explorer" ? [explorerTab, setExplorerTab] : [localTab, setLocalTab];
 
   const handleSelect = useCallback(
     (data: FieldPlotBucketSummary[] | undefined) => {
