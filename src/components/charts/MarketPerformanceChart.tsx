@@ -61,11 +61,11 @@ const priceDisplayFormatter = (v: number) => {
 // Linear transform that maps values from [min,max] to [0,1]
 const transformValue = (v: number, min: number, max: number): number => {
   // Handle edge cases
-  if (v <= min) return 0;
-  if (v >= max) return 1;
+  if (v <= min) return 0.01;
+  if (v >= max) return 0.99;
 
-  // Linear interpolation between min and max
-  return (v - min) / (max - min);
+  // Linear interpolation between min and max. Keep away from the bottom/top of the chart canvas with a small buffer.
+  return 0.01 + 0.98 * ((v - min) / (max - min));
 };
 
 const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceChartProps) => {
@@ -272,6 +272,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                   valueFormatter={chartValueFormatter}
                   onMouseOver={handleMouseOver}
                   hideYAxis={dataType === DataType.PRICE}
+                  {...(dataType === DataType.PRICE && { yAxisMin: 0, yAxisMax: 1 })}
                 />
               </div>
             )}
