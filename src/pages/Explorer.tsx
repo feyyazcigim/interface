@@ -71,7 +71,7 @@ const Explorer = () => {
           <div className="flex flex-col gap-2 sm:ml-4">
             <div className="flex justify-between items-center">
               <div className="pinto-h2 sm:pinto-h1 ml-[-3px]">Explorer</div>
-              <div className="scale-110">
+              <div className="scale-110 sm:mr-4">
                 <TimeTabsSelector tab={globalTimeTab} setTab={setGlobalTimeTab} />
               </div>
             </div>
