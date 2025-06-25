@@ -56,16 +56,14 @@ const priceDisplayFormatter = (v: number) => {
   return f.price6dFormatter(v);
 };
 
-// TODO(pp): The transform could be improved by only allowing the largest moving (percentage wise) value
-// to take up the entire height. This would better capture the magnitude of price movements. (currently all take up the full height)
 // Linear transform that maps values from [min,max] to [0,1]
-const transformValue = (v: number, min: number, max: number): number => {
+const transformValue = (v: number, min: number, max: number, range: [number, number]): number => {
   // Handle edge cases
-  if (v <= min) return 0.01;
-  if (v >= max) return 0.99;
+  if (v <= min) return range[0];
+  if (v >= max) return range[1];
 
   // Linear interpolation between min and max. Keep away from the bottom/top of the chart canvas with a small buffer.
-  return 0.01 + 0.98 * ((v - min) / (max - min));
+  return range[0] + (range[1] - range[0]) * ((v - min) / (max - min));
 };
 
 const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceChartProps) => {
@@ -107,6 +105,32 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     return [{}, {}];
   }, [allData]);
 
+  // For the price chart, calculate the high/low value that each token can transform to.
+  // Larger percent moves are able to take up more of the vertical space.
+  const priceTransformRanges = useMemo(() => {
+    if (dataType === DataType.PRICE && Object.keys(minValues).length > 0) {
+      let maxSwing = 0;
+      const percentSwings = {};
+      for (const token in minValues) {
+        const min = minValues[token];
+        const max = maxValues[token];
+        const pct = (max - min) / min;
+        percentSwings[token] = pct;
+        maxSwing = Math.max(maxSwing, pct);
+      }
+
+      const result = {};
+      const maxRange = [0.01, 0.99];
+      const mid = (maxRange[0] + maxRange[1]) / 2;
+      for (const token in percentSwings) {
+        const relativeSwing = percentSwings[token] / maxSwing;
+        result[token] = [mid - (mid - maxRange[0]) * relativeSwing, mid + (maxRange[1] - mid) * relativeSwing];
+      }
+      return result;
+    }
+    return {};
+  }, [dataType, minValues, maxValues]);
+
   const chartDataset = useMemo<ChartDataset>(() => {
     if (allData) {
       const tokenConfig = Object.values(getChainTokenMap(chainId));
@@ -123,7 +147,9 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
           if (dataType !== DataType.PRICE) {
             chartData[i].values.push(allData[token][i].value);
           } else {
-            chartData[i].values.push(transformValue(allData[token][i].value, minValues[token], maxValues[token]));
+            chartData[i].values.push(
+              transformValue(allData[token][i].value, minValues[token], maxValues[token], priceTransformRanges[token]),
+            );
           }
         }
         const tokenObj = tokenConfig.find((t) => t.symbol === token);
@@ -137,7 +163,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
       };
     }
     return { chartData: [], tokens: [], chartStrokeGradients: [] };
-  }, [allData, chainId, minValues, maxValues]);
+  }, [dataType, allData, chainId, minValues, maxValues, priceTransformRanges]);
 
   const handleChangeDataType = useCallback((type: DataType) => {
     setDataType(type);
