@@ -9,10 +9,18 @@ import { CloseIconAlt } from "../Icons";
 import FrameAnimator from "../LoadingSpinner";
 import TooltipSimple from "../TooltipSimple";
 import IconImage from "../ui/IconImage";
-import LineChart, { CustomChartValueTransform, LineChartData } from "./LineChart";
-import { tabToSeasonalLookback } from "./SeasonalChart";
-import TimeTabsSelector, { TimeTab } from "./TimeTabs";
+import LineChart, { LineChartData } from "./LineChart";
 import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
+import CalendarButton, { DatePresetConfig } from "../CalendarButton";
+import { IRange, Time } from "lightweight-charts";
+import { subMonths, subWeeks } from "date-fns";
+
+// Predefined date ranges
+const DATE_PRESETS: Record<Exclude<string, "CUSTOM">, DatePresetConfig> = {
+  Week: { from: () => subWeeks(new Date(), 1), to: () => new Date() },
+  Month: { from: () => subMonths(new Date(), 1), to: () => new Date() },
+  All: { from: () => undefined, to: () => undefined },
+};
 
 enum DataType {
   PRICE = "PRICE",
@@ -72,13 +80,32 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
   const [displayIndex, setDisplayIndex] = useState<number | null>(null);
   const [dataType, setDataType] = useState<DataType>(DataType.PRICE);
 
-  const [timeTab, setTimeTab] = useState(TimeTab.Week);
-  const seasonalPerformance = useSeasonalMarketPerformance(
-    Math.max(0, season - tabToSeasonalLookback(timeTab)),
-    season,
-    getDataTypeInfo(dataType).chartType,
-  );
-  const data = seasonalPerformance.data;
+  // TODO(pp): fix utc (it works on the all chart)
+  const [timePeriod, setTimePeriod] = useState<IRange<Time> | undefined>();
+  // Convert the selected time period to season numbers
+  const [fromSeason, toSeason] = useMemo(() => {
+    if (timePeriod) {
+      const currentSeasonTime = new Date();
+      currentSeasonTime.setMinutes(0, 0, 0);
+      // Assume 1 hour = 1 season. Acceptable assumption in practice.
+      const hoursDiffFrom = Math.ceil(
+        (currentSeasonTime.getTime() - new Date(timePeriod.from.valueOf() as number).getTime()) / (1000 * 60 * 60),
+      );
+      const hoursDiffTo = Math.ceil(
+        (currentSeasonTime.getTime() - new Date(timePeriod.to.valueOf() as number).getTime()) / (1000 * 60 * 60),
+      );
+      return [
+        Math.min(season, Math.max(0, season - hoursDiffFrom)),
+        Math.min(season, Math.max(0, season - hoursDiffTo)),
+      ];
+    }
+    return [Math.max(0, season - 168), season];
+  }, [timePeriod, season]);
+
+  console.log(timePeriod, "fromSeason", fromSeason, "toSeason", toSeason);
+
+  const seasonalPerformance = useSeasonalMarketPerformance(fromSeason, toSeason, getDataTypeInfo(dataType).chartType);
+  const data = !seasonalPerformance.isLoading && seasonalPerformance.data;
 
   useEffect(() => {
     if (data && !allData) {
@@ -171,8 +198,8 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     setDisplayIndex(null);
   }, []);
 
-  const handleChangeTimeTab = useCallback((tab: TimeTab) => {
-    setTimeTab(tab);
+  const handleChangeTimeSelect = useCallback((range: IRange<Time>) => {
+    setTimePeriod(range);
     setAllData(null);
     setDisplayIndex(null);
   }, []);
@@ -226,7 +253,11 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
             ))}
           </div>
         </div>
-        <TimeTabsSelector tab={timeTab} setTab={handleChangeTimeTab} />
+        <CalendarButton
+          setTimePeriod={handleChangeTimeSelect}
+          datePresets={DATE_PRESETS}
+          storageKeyPrefix="marketPerformanceChart"
+        />
       </div>
       {(!allData || displayIndex === null) && (
         <>

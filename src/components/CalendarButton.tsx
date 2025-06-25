@@ -9,21 +9,18 @@ import { Input } from "./ui/Input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
 import { Separator } from "./ui/Separator";
 
-// Define types
-export type CalendarPresetRange = "1D" | "1W" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "2Y" | "ALL" | "CUSTOM";
-
 export interface DateRange {
   from: Date | undefined;
   to: Date | undefined;
 }
 
-interface DatePresetConfig {
+export interface DatePresetConfig {
   from: () => Date | undefined;
   to: () => Date | undefined;
 }
 
 // Predefined date ranges
-const DATE_PRESETS: Record<Exclude<CalendarPresetRange, "CUSTOM">, DatePresetConfig> = {
+const DATE_PRESETS: Record<Exclude<string, "CUSTOM">, DatePresetConfig> = {
   "1D": { from: () => subHours(new Date(), 24), to: () => new Date() },
   "1W": { from: () => subWeeks(new Date(), 1), to: () => new Date() },
   "1M": { from: () => subMonths(new Date(), 1), to: () => new Date() },
@@ -133,13 +130,20 @@ const PresetButton = ({ preset, isSelected, onClick }: PresetButtonProps) => (
 
 // CalendarContent component - handles the popover content
 interface CalendarContentProps {
+  datePresets: typeof DATE_PRESETS;
   range: DateRange;
-  selectedPreset: CalendarPresetRange;
+  selectedPreset: string;
   onRangeChange: (range: DateRange) => void;
-  onPresetChange: (preset: CalendarPresetRange) => void;
+  onPresetChange: (preset: string) => void;
 }
 
-const CalendarContent = ({ range, selectedPreset, onRangeChange, onPresetChange }: CalendarContentProps) => {
+const CalendarContent = ({
+  datePresets,
+  range,
+  selectedPreset,
+  onRangeChange,
+  onPresetChange,
+}: CalendarContentProps) => {
   const [month, setMonth] = useState<Date>(new Date());
   const [dateInputs, setDateInputs] = useState<DateTimeInputs>({ from: "", to: "" });
   const [timeInputs, setTimeInputs] = useState<DateTimeInputs>({ from: "", to: "" });
@@ -210,7 +214,7 @@ const CalendarContent = ({ range, selectedPreset, onRangeChange, onPresetChange 
   // Mobile preset buttons
   const renderMobilePresets = () => (
     <div className="flex flex-row justify-between mt-4">
-      {Object.keys(DATE_PRESETS).map((preset) => (
+      {Object.keys(datePresets).map((preset) => (
         <button
           key={`mobile-preset-${preset}`}
           type="button"
@@ -219,11 +223,11 @@ const CalendarContent = ({ range, selectedPreset, onRangeChange, onPresetChange 
           }`}
           onClick={() => {
             const newRange = {
-              from: DATE_PRESETS[preset].from(),
-              to: DATE_PRESETS[preset].to(),
+              from: datePresets[preset].from(),
+              to: datePresets[preset].to(),
             };
             onRangeChange(newRange);
-            onPresetChange(preset as CalendarPresetRange);
+            onPresetChange(preset);
           }}
         >
           {preset}
@@ -271,12 +275,18 @@ const CalendarContent = ({ range, selectedPreset, onRangeChange, onPresetChange 
 
 // Main CalendarButton component
 interface CalendarButtonProps {
-  storageKeyPrefix?: string;
   setTimePeriod: (timePeriod: IRange<Time>) => void;
+  storageKeyPrefix?: string;
+  datePresets?: typeof DATE_PRESETS;
 }
 
-const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: CalendarButtonProps) => {
-  const [selectedPreset, setSelectedPreset] = useState<CalendarPresetRange>("1W");
+const CalendarButton = ({
+  setTimePeriod,
+  storageKeyPrefix = "advancedChart",
+  datePresets = DATE_PRESETS,
+}: CalendarButtonProps) => {
+  const defaultPreset = Object.keys(datePresets)[0];
+  const [selectedPreset, setSelectedPreset] = useState<string>(defaultPreset);
   const [range, setRange] = useState<DateRange>({ from: undefined, to: undefined });
 
   // Initialize from localStorage if available
@@ -293,8 +303,7 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
           to: parsedRange.to ? new Date(parsedRange.to) : undefined,
         });
       } else {
-        // Default to 1W preset
-        applyPreset("1W");
+        applyPreset(defaultPreset);
       }
 
       if (storedPreset) {
@@ -302,13 +311,13 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
       }
     } catch (e) {
       console.error("Error loading saved date range", e);
-      applyPreset("1W"); // Fallback to 1W
+      applyPreset(defaultPreset);
     }
-  }, [storageKeyPrefix]);
+  }, [storageKeyPrefix, defaultPreset]);
 
   // Apply preset range
-  const applyPreset = (preset: Exclude<CalendarPresetRange, "CUSTOM">): void => {
-    const presetConfig = DATE_PRESETS[preset];
+  const applyPreset = (preset: Exclude<string, "CUSTOM">): void => {
+    const presetConfig = datePresets[preset];
     if (!presetConfig) return;
 
     const newRange: DateRange = {
@@ -328,7 +337,7 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
   };
 
   // Handle preset changes
-  const handlePresetChange = (preset: CalendarPresetRange): void => {
+  const handlePresetChange = (preset: string): void => {
     setSelectedPreset(preset);
     if (preset !== "CUSTOM") {
       saveRangeAndSetPeriod(range, preset);
@@ -336,7 +345,7 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
   };
 
   // Save to localStorage and set period
-  const saveRangeAndSetPeriod = (rangeToSave: DateRange, presetToSave: CalendarPresetRange): void => {
+  const saveRangeAndSetPeriod = (rangeToSave: DateRange, presetToSave: string): void => {
     if (!rangeToSave.from && !rangeToSave.to) return;
 
     // Save to localStorage
@@ -350,6 +359,7 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
         to: (rangeToSave.to ? rangeToSave.to.valueOf() : Date.now()) as UTCTimestamp,
       };
 
+      // TODO(pp): Troubleshoot why this isnt being called on initial mount
       setTimePeriod(timePeriod);
       localStorage.setItem(`${storageKeyPrefix}TimePeriod`, safeJSONStringify(timePeriod));
     } catch (error) {
@@ -361,12 +371,12 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
     <div className="relative flex flex-row items-center">
       <div className="hidden lg:flex">
         <div className="flex flex-row items-center gap-6">
-          {Object.keys(DATE_PRESETS).map((preset) => (
+          {Object.keys(datePresets).map((preset) => (
             <PresetButton
               key={`preset-${preset}`}
               preset={preset}
               isSelected={selectedPreset === preset}
-              onClick={() => applyPreset(preset as Exclude<CalendarPresetRange, "CUSTOM">)}
+              onClick={() => applyPreset(preset as Exclude<string, "CUSTOM">)}
             />
           ))}
         </div>
@@ -382,6 +392,7 @@ const CalendarButton = ({ storageKeyPrefix = "advancedChart", setTimePeriod }: C
         </PopoverTrigger>
         <PopoverContent align="end" className="w-[22rem] lg:w-[17.5rem]">
           <CalendarContent
+            datePresets={datePresets}
             range={range}
             selectedPreset={selectedPreset}
             onRangeChange={handleRangeChange}
