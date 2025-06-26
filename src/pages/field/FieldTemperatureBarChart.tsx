@@ -31,7 +31,7 @@ const FieldTemperatureBarChart = React.memo(({ className, variant = "default" }:
 
   // local State
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
-  const [explorerTab, setExplorerTab] = useSharedTimeTab("fieldTemperature");
+  const [explorerTab, setExplorerTab] = useSharedTimeTab("fieldTemperature", TimeTab.AllTime);
   const [localTab, setLocalTab] = useState<TimeTab>(TimeTab.AllTime);
 
   const [tab, setTab] = variant === "explorer" ? [explorerTab, setExplorerTab] : [localTab, setLocalTab];
