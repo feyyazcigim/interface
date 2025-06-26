@@ -19,7 +19,7 @@ import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
 const DATE_PRESETS: Record<Exclude<string, "CUSTOM">, DatePresetConfig> = {
   Week: { from: () => subWeeks(new Date(), 1), to: () => new Date() },
   Month: { from: () => subMonths(new Date(), 1), to: () => new Date() },
-  All: { from: () => undefined, to: () => undefined },
+  All: { from: () => new Date("2024-11-01"), to: () => new Date() },
 };
 
 enum DataType {
@@ -80,14 +80,13 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
   const [displayIndex, setDisplayIndex] = useState<number | null>(null);
   const [dataType, setDataType] = useState<DataType>(DataType.PRICE);
 
-  // TODO(pp): fix utc (it works on the all chart)
   const [timePeriod, setTimePeriod] = useState<IRange<Time> | undefined>();
   // Convert the selected time period to season numbers
   const [fromSeason, toSeason] = useMemo(() => {
     if (timePeriod) {
       const currentSeasonTime = new Date();
       currentSeasonTime.setMinutes(0, 0, 0);
-      // Assume 1 hour = 1 season. Acceptable assumption in practice.
+      // Assume 1 hour = 1 season and the current season began this hour. Acceptable assumption in practice.
       const hoursDiffFrom = Math.ceil(
         (currentSeasonTime.getTime() - new Date(timePeriod.from.valueOf() as number).getTime()) / (1000 * 60 * 60),
       );
@@ -102,6 +101,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     return [Math.max(0, season - 168), season];
   }, [timePeriod, season]);
 
+  // TODO(pp): fix utc (it works on the all chart)
   console.log(timePeriod, "fromSeason", fromSeason, "toSeason", toSeason);
 
   const seasonalPerformance = useSeasonalMarketPerformance(fromSeason, toSeason, getDataTypeInfo(dataType).chartType);
@@ -256,6 +256,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
         <CalendarButton
           setTimePeriod={handleChangeTimeSelect}
           datePresets={DATE_PRESETS}
+          defaultPreset="Week"
           storageKeyPrefix="marketPerformanceChart"
         />
       </div>

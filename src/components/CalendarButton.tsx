@@ -2,7 +2,7 @@ import { safeJSONStringify } from "@/utils/utils";
 import { format, isValid, parse, set, startOfYear, subHours, subMonths, subWeeks, subYears } from "date-fns";
 import { IRange, Time, UTCTimestamp } from "lightweight-charts";
 import { useCallback, useEffect, useState } from "react";
-import { ClassNames, DayPicker, DeprecatedUI, SelectRangeEventHandler } from "react-day-picker";
+import { ClassNames, DayPicker, DeprecatedUI, DateRange as DayPickerDateRange } from "react-day-picker";
 import { CalendarIcon, ClockIcon } from "./Icons";
 import { Input } from "./ui/Input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
@@ -28,7 +28,7 @@ const DATE_PRESETS: Record<Exclude<string, "CUSTOM">, DatePresetConfig> = {
   YTD: { from: () => startOfYear(new Date()), to: () => new Date() },
   "1Y": { from: () => subYears(new Date(), 1), to: () => new Date() },
   "2Y": { from: () => subYears(new Date(), 2), to: () => new Date() },
-  ALL: { from: () => undefined, to: () => undefined },
+  ALL: { from: () => new Date("2024-11-01"), to: () => new Date() },
 };
 
 // Calendar styling classes
@@ -132,17 +132,10 @@ interface CalendarContentProps {
   datePresets: typeof DATE_PRESETS;
   range: DateRange;
   selectedPreset: string;
-  onRangeChange: (range: DateRange) => void;
-  onPresetChange: (preset: string) => void;
+  onChange: (range: DateRange, preset: string) => void;
 }
 
-const CalendarContent = ({
-  datePresets,
-  range,
-  selectedPreset,
-  onRangeChange,
-  onPresetChange,
-}: CalendarContentProps) => {
+const CalendarContent = ({ datePresets, range, selectedPreset, onChange }: CalendarContentProps) => {
   const [month, setMonth] = useState<Date>(new Date());
   const [dateInputs, setDateInputs] = useState<DateTimeInputs>({ from: "", to: "" });
   const [timeInputs, setTimeInputs] = useState<DateTimeInputs>({ from: "", to: "" });
@@ -160,79 +153,86 @@ const CalendarContent = ({
   }, [range]);
 
   // Handle date picker selection
-  const handleDayPickerSelect: SelectRangeEventHandler = (selectedRange) => {
-    if (!selectedRange) {
-      onRangeChange({ from: undefined, to: undefined });
-      onPresetChange("ALL");
-      return;
-    }
+  const handleDayPickerSelect = useCallback(
+    (selectedRange: DayPickerDateRange | undefined) => {
+      if (!selectedRange) {
+        onChange({ from: DATE_PRESETS.ALL.from(), to: DATE_PRESETS.ALL.to() }, "ALL");
+        return;
+      }
 
-    const { from, to } = selectedRange;
-    const newRange: DateRange = {
-      from: from ? parseDate(formatDate(from), timeInputs.from || "00:00") : undefined,
-      to: to ? parseDate(formatDate(to), timeInputs.to || "23:59") : undefined,
-    };
+      const { from, to } = selectedRange;
+      const newRange: DateRange = {
+        from: from ? parseDate(formatDate(from), timeInputs.from || "00:00") : undefined,
+        to: to ? parseDate(formatDate(to), timeInputs.to || "23:59") : undefined,
+      };
 
-    onRangeChange(newRange);
-    onPresetChange("CUSTOM");
-  };
+      onChange(newRange, "CUSTOM");
+    },
+    [onChange, timeInputs],
+  );
 
   // Handle date input change
-  const handleDateChange = (type: "from" | "to", value: string): void => {
-    setDateInputs((prev) => ({ ...prev, [type]: value }));
+  const handleDateChange = useCallback(
+    (type: "from" | "to", value: string): void => {
+      setDateInputs((prev) => ({ ...prev, [type]: value }));
 
-    const newDate = parseDate(value, timeInputs[type]);
-    if (newDate) {
-      const newRange: DateRange = { ...range, [type]: newDate };
-      onRangeChange(newRange);
-      onPresetChange("CUSTOM");
-      setMonth(newDate);
-    }
-  };
+      const newDate = parseDate(value, timeInputs[type]);
+      if (newDate) {
+        const newRange: DateRange = { ...range, [type]: newDate };
+        onChange(newRange, "CUSTOM");
+        setMonth(newDate);
+      }
+    },
+    [onChange, range, timeInputs],
+  );
 
   // Handle time input change
-  const handleTimeChange = (type: "from" | "to", value: string): void => {
-    setTimeInputs((prev) => ({ ...prev, [type]: value }));
+  const handleTimeChange = useCallback(
+    (type: "from" | "to", value: string): void => {
+      setTimeInputs((prev) => ({ ...prev, [type]: value }));
 
-    if (range[type] && value) {
-      try {
-        const [hours, minutes] = value.split(":").map(Number);
-        const newDate = set(range[type] as Date, {
-          hours: Number.isNaN(hours) ? 0 : hours,
-          minutes: Number.isNaN(minutes) ? 0 : minutes,
-        });
-        const newRange: DateRange = { ...range, [type]: newDate };
-        onRangeChange(newRange);
-        onPresetChange("CUSTOM");
-      } catch (e) {
-        // Invalid time format
+      if (range[type] && value) {
+        try {
+          const [hours, minutes] = value.split(":").map(Number);
+          const newDate = set(range[type] as Date, {
+            hours: Number.isNaN(hours) ? 0 : hours,
+            minutes: Number.isNaN(minutes) ? 0 : minutes,
+          });
+          const newRange: DateRange = { ...range, [type]: newDate };
+          onChange(newRange, "CUSTOM");
+        } catch (e) {
+          // Invalid time format
+        }
       }
-    }
-  };
+    },
+    [onChange, range],
+  );
 
   // Mobile preset buttons
-  const renderMobilePresets = () => (
-    <div className="flex flex-row justify-between mt-4">
-      {Object.keys(datePresets).map((preset) => (
-        <button
-          key={`mobile-preset-${preset}`}
-          type="button"
-          className={`rounded py-1 text-sm min-w-fit w-8 pinto-body-light ${
-            selectedPreset === preset ? "bg-pinto-green text-white" : "border border-pinto-gray-2 text-pinto-gray-5"
-          }`}
-          onClick={() => {
-            const newRange = {
-              from: datePresets[preset].from(),
-              to: datePresets[preset].to(),
-            };
-            onRangeChange(newRange);
-            onPresetChange(preset);
-          }}
-        >
-          {preset}
-        </button>
-      ))}
-    </div>
+  const renderMobilePresets = useCallback(
+    () => (
+      <div className="flex flex-row justify-between mt-4">
+        {Object.keys(datePresets).map((preset) => (
+          <button
+            key={`mobile-preset-${preset}`}
+            type="button"
+            className={`rounded py-1 text-sm min-w-fit w-8 pinto-body-light ${
+              selectedPreset === preset ? "bg-pinto-green text-white" : "border border-pinto-gray-2 text-pinto-gray-5"
+            }`}
+            onClick={() => {
+              const newRange = {
+                from: datePresets[preset].from(),
+                to: datePresets[preset].to(),
+              };
+              onChange(newRange, preset);
+            }}
+          >
+            {preset}
+          </button>
+        ))}
+      </div>
+    ),
+    [datePresets, onChange, selectedPreset],
   );
 
   return (
@@ -273,19 +273,19 @@ const CalendarContent = ({
 };
 
 // Main CalendarButton component
-interface CalendarButtonProps {
+interface CalendarButtonProps<T extends Record<string, DatePresetConfig> = typeof DATE_PRESETS> {
   setTimePeriod: (timePeriod: IRange<Time>) => void;
   storageKeyPrefix?: string;
-  datePresets?: typeof DATE_PRESETS;
+  datePresets?: T;
+  defaultPreset?: keyof T;
 }
 
 const CalendarButton = ({
   setTimePeriod,
   storageKeyPrefix = "advancedChart",
   datePresets = DATE_PRESETS,
+  defaultPreset = "1W",
 }: CalendarButtonProps) => {
-  // TODO(pp): custom default
-  const defaultPreset = Object.keys(datePresets)[0];
   const [selectedPreset, setSelectedPreset] = useState<string>(defaultPreset);
   const [range, setRange] = useState<DateRange>({ from: undefined, to: undefined });
 
@@ -306,7 +306,6 @@ const CalendarButton = ({
         };
 
         setTimePeriod(timePeriod);
-        localStorage.setItem(`${storageKeyPrefix}TimePeriod`, safeJSONStringify(timePeriod));
       } catch (error) {
         console.error("Error saving date range to localStorage", error);
       }
@@ -362,18 +361,10 @@ const CalendarButton = ({
     }
   }, [storageKeyPrefix, defaultPreset, setTimePeriod, applyPreset]);
 
-  // Handle range changes
-  const handleRangeChange = (newRange: DateRange): void => {
+  const handleCalendarInteraction = (newRange: DateRange, preset: string): void => {
     setRange(newRange);
-    saveRangeAndSetPeriod(newRange, selectedPreset);
-  };
-
-  // Handle preset changes
-  const handlePresetChange = (preset: string): void => {
     setSelectedPreset(preset);
-    if (preset !== "CUSTOM") {
-      saveRangeAndSetPeriod(range, preset);
-    }
+    saveRangeAndSetPeriod(newRange, preset);
   };
 
   return (
@@ -404,8 +395,7 @@ const CalendarButton = ({
             datePresets={datePresets}
             range={range}
             selectedPreset={selectedPreset}
-            onRangeChange={handleRangeChange}
-            onPresetChange={handlePresetChange}
+            onChange={handleCalendarInteraction}
           />
         </PopoverContent>
       </Popover>
