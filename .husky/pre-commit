@@ -1,4 +1,15 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# Run format and lint
 yarn run format && yarn run lint:fix-all
+
+# Check if any files were modified by the linter/formatter
+CHANGED_FILES=$(git diff --name-only)
+
+# If files were changed, add them to the commit
+if [ -n "$CHANGED_FILES" ]; then
+  echo "Staging files modified by linter/formatter:"
+  echo "$CHANGED_FILES"
+  git add $CHANGED_FILES
+fi
