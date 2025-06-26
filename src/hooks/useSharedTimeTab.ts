@@ -32,7 +32,6 @@ const chartTabFamily = atomFamily(
 
 type UseSharedTimeTabReturn = readonly [tab: TimeTab, setTab: (tab: TimeTab) => void];
 
-
 export const useSharedTimeTab = (
   chartId?: string,
   defaultOverride?: TimeTab,
