@@ -13,8 +13,7 @@ export default function useClearTokenAllowances() {
 
   const clearAllowances = useCallback(
     (token?: Token) => {
-      qc.removeQueries({
-        predicate: ({ queryKey }) => {
+      qc.removeQueries({ predicate: ({ queryKey }) => {
           if (!Array.isArray(queryKey)) return false;
           if (queryKey?.[0] !== "readContract") return false;
           const obj = queryKey?.[1];
