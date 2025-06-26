@@ -12,8 +12,9 @@ import {
   useSeasonalTemperature,
 } from "@/state/seasonal/seasonalDataHooks";
 import { useSunData } from "@/state/useSunData";
+import { calculateTemperatureYAxisRanges } from "@/utils/chartUtils";
 import { chartFormatters as f } from "@/utils/format";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import FieldTemperatureBarChart from "../field/FieldTemperatureBarChart";
 
 const FieldExplorer = () => {
@@ -89,6 +90,11 @@ const MaxTempChart = React.memo(({ season }: ISeason) => {
 
   const tempData = useSeasonalTemperature(Math.max(0, season - tabToSeasonalLookback(tempTab)), season);
 
+  // Calculate appropriate Y-axis ranges for temperature data
+  const yAxisRanges = useMemo(() => {
+    return calculateTemperatureYAxisRanges(tempData.data);
+  }, [tempData.data]);
+
   return (
     <SeasonalChart
       title="Max Temperature"
@@ -99,6 +105,7 @@ const MaxTempChart = React.memo(({ season }: ISeason) => {
       useSeasonalResult={tempData}
       valueFormatter={f.percent2dFormatter}
       tickValueFormatter={f.percent0dFormatter}
+      yAxisRanges={yAxisRanges}
     />
   );
 });
