@@ -1,50 +1,93 @@
 import { TimeTab } from "@/components/charts/TimeTabs";
-import { useCallback, useState } from "react";
+import { atom, useAtomValue, useSetAtom } from "jotai";
+import { atomFamily, atomWithStorage } from "jotai/utils";
+import { useCallback, useEffect, useMemo } from "react";
 
-// Global shared state for time tabs
-const globalTimeState = { current: TimeTab.Week };
-const chartOverrides = new Map<string, TimeTab>();
-const listeners = new Set<() => void>();
+export const getSharedTimeTabContextStorageKey = (ctx: string) => `pinto-shared-time-tab-ctx-${ctx}`;
 
-// Notify all components when state changes
-const notifyListeners = () => {
-  listeners.forEach((listener) => listener());
-};
+// Atom families for different context keys and their registered overrides
+const contextTimeTabFamily = atomFamily((contextKey: string) =>
+  atomWithStorage<TimeTab>(getSharedTimeTabContextStorageKey(contextKey), TimeTab.Week),
+);
 
-export const useSharedTimeTab = (chartId?: string) => {
-  const [, forceUpdate] = useState({});
+// Atom family for registered overrides per given context key
+const contextOverridesFamily = atomFamily((_contextKey: string) => atom<Record<string, TimeTab>>({}));
 
-  // Subscribe to global state changes
-  const updateListener = useCallback(() => {
-    forceUpdate({});
-  }, []);
+// Derived atom that combines chart override with context state
+const chartTabFamily = atomFamily(
+  ({ chartId, contextKey }: { chartId?: string; contextKey: string }) =>
+    atom<TimeTab>((get) => {
+      const ctxAtom = contextTimeTabFamily(contextKey);
 
-  // Add listener on mount, remove on unmount
-  useState(() => {
-    listeners.add(updateListener);
+      if (!chartId) {
+        return get(ctxAtom);
+      }
+      const overrideAtom = contextOverridesFamily(contextKey);
+      const overrides = get(overrideAtom);
+
+      return overrides[chartId] ?? get(ctxAtom);
+    }),
+  (a, b) => a.chartId === b.chartId && a.contextKey === b.contextKey,
+);
+
+type UseSharedTimeTabReturn = readonly [tab: TimeTab, setTab: (tab: TimeTab) => void];
+
+
+export const useSharedTimeTab = (
+  chartId?: string,
+  defaultOverride?: TimeTab,
+  contextKey: string = "sharedTimeTab",
+): UseSharedTimeTabReturn => {
+  // Context tab is the global tab for the given contextKey
+  const setContextTab = useSetAtom(contextTimeTabFamily(contextKey));
+
+  // Set registered overrides for the given contextKey
+  const setContextOverrides = useSetAtom(useMemo(() => contextOverridesFamily(contextKey), [contextKey]));
+
+  // Get the chart tab for the given chartId and contextKey
+  const contextChartTab = useAtomValue(useMemo(() => chartTabFamily({ chartId, contextKey }), [chartId, contextKey]));
+
+  // Set the default override for the given chartId only if it's not already set
+  useEffect(() => {
+    if (defaultOverride && chartId) {
+      setContextOverrides((prev) => {
+        // If the chartId is already in the overrides, don't do anything
+        if (!prev[chartId]) {
+          return {
+            ...prev,
+            [chartId]: defaultOverride,
+          };
+        }
+        return prev;
+      });
+    }
+  }, [chartId, defaultOverride, setContextOverrides]);
+
+  // Clear all overrides when the global context unmounts
+  useEffect(() => {
     return () => {
-      listeners.delete(updateListener);
+      if (!chartId || chartId === contextKey) {
+        setContextOverrides({});
+        setContextTab(TimeTab.Week);
+      }
     };
-  });
-
-  // Get current tab - check for chart-specific override first, then global
-  const currentTab =
-    chartId && chartOverrides.has(chartId) ? (chartOverrides.get(chartId) as TimeTab) : globalTimeState.current;
+  }, [chartId, contextKey, setContextOverrides]);
 
   const setTab = useCallback(
     (tab: TimeTab) => {
       if (chartId) {
-        // Individual chart override
-        chartOverrides.set(chartId, tab);
+        setContextOverrides((prev) => ({ ...prev, [chartId]: tab }));
       } else {
-        // Global change - update global state and clear all overrides
-        globalTimeState.current = tab;
-        chartOverrides.clear();
+        // Clear all overrides when setting context tab
+        setContextOverrides({});
+        // Set the context tab
+        setContextTab(tab);
       }
-      notifyListeners();
     },
-    [chartId],
+    [chartId, setContextTab, setContextOverrides],
   );
+
+  const currentTab = contextChartTab;
 
   return [currentTab, setTab] as const;
 };
