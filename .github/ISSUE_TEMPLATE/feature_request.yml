@@ -1,0 +1,76 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for the Pinto interface
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please describe what you'd like to see added to the Pinto interface.
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: What feature would you like?
+      description: A clear description of the feature you'd like to see implemented.
+      placeholder: "Example: Add a dark mode toggle to the interface settings so users can switch between light and dark themes."
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-story
+    attributes:
+      label: Why do you need this?
+      description: Describe the problem this feature would solve or the value it would add.
+      placeholder: "Example: Many users prefer dark interfaces, especially when using DeFi apps at night. This would improve user experience and reduce eye strain."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area of the app?
+      description: Where should this feature be added?
+      options:
+        - Silo (Staking/Deposits)
+        - Field (Sowing/Pods)
+        - Market (Pod Trading)
+        - Converts
+        - Swap
+        - Explorer (Analytics)
+        - Navigation/Layout
+        - Settings/Preferences
+        - Wallet Integration
+        - General UI/UX
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How important is this?
+      description: How would you rate the priority of this feature?
+      options:
+        - Nice to have
+        - Would be helpful
+        - Important for my workflow
+        - Critical/Blocking issue
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional details
+      description: Any mockups, examples from other apps, or technical details that might help?
+      placeholder: "Screenshots, links to similar features, technical requirements, etc."
+
+  - type: checkboxes
+    id: claude-implement
+    attributes:
+      label: AI Assistant
+      description: Would you like Claude to automatically attempt to implement this feature?
+      options:
+        - label: "🤖 @claude please implement this feature"
+          required: false

@@ -1,0 +1,23 @@
+# query SiloFarmerAssetsByToken ($token: String!) {
+#   farmers(
+#     where: {
+#       deposits_: {
+#         token: $token
+#       }
+#     }
+#     orderBy: silo__depositedBDV
+#     orderDirection: desc
+#   ) {
+#     id
+#     silo {
+#       depositedBDV
+#     }
+#     deposits {
+#       farmer {
+#         id
+#       }
+#       token
+#       depositedBDV
+#     }
+#   }
+# }

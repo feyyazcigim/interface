@@ -1,0 +1,72 @@
+name: 🐛 Bug Report
+description: Report a bug or issue with the Pinto interface
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below to help us understand and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What's the bug?
+      description: A clear description of what the bug is and what you expected to happen.
+      placeholder: "Example: The swap button doesn't work when trying to swap BEAN to USDC. Expected the swap to execute, but nothing happens when I click the button."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Go to the Swap page
+        2. Select BEAN as input token
+        3. Select USDC as output token
+        4. Enter amount and click "Swap"
+        5. Nothing happens
+    validations:
+      required: true
+
+  - type: dropdown
+    id: page
+    attributes:
+      label: Which page/section?
+      description: Where did you encounter this bug?
+      options:
+        - Silo (Staking/Deposits)
+        - Field (Sowing/Pods)
+        - Market (Pod Trading)
+        - Converts
+        - Swap
+        - Explorer (Analytics)
+        - Wallet Connection
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & Device
+      description: What browser and device are you using?
+      placeholder: "Chrome on MacOS, Mobile Safari on iPhone, etc."
+
+  - type: textarea
+    id: console-errors
+    attributes:
+      label: Console errors (if any)
+      description: Check browser console (F12) for any error messages
+      placeholder: "Paste any error messages here"
+
+  - type: checkboxes
+    id: claude-fix
+    attributes:
+      label: AI Assistant
+      description: Would you like Claude to automatically attempt to fix this bug?
+      options:
+        - label: "🤖 @claude please fix this bug"
+          required: false

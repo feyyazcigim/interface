@@ -7,18 +7,21 @@ import { TV } from "@/classes/TokenValue";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
 import { MAIN_TOKEN } from "@/constants/tokens";
+import { useParseConvertRouteRoutes } from "@/hooks/silo/useSiloConvertResult";
 import { SwapSummary, SwapSummaryExchange } from "@/hooks/swap/useSwapSummary";
-import { PriceImpactSummary } from "@/hooks/wells/usePriceImpactSummary";
+import { PriceImpactSummary, PriceImpactSummaryMap } from "@/hooks/wells/usePriceImpactSummary";
 import { ConvertResultStruct, SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
 import { ExtendedPoolData } from "@/lib/siloConvert/SiloConvert.cache";
-import { LP2LPConvertStrategyResult } from "@/lib/siloConvert/strategies/LP2LPConvertStrategy";
+import { ConvertStrategyQuote, SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
+import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { Token } from "@/utils/types";
 import { cn, exists } from "@/utils/utils";
 import { ArrowRightIcon, CornerBottomLeftIcon } from "@radix-ui/react-icons";
 import { Separator } from "@radix-ui/react-separator";
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useMemo } from "react";
+import { Col, Row } from "./Container";
 import IconImage from "./ui/IconImage";
 
 type SiloTxn = "Swap" | "Deposit" | "Convert" | "Withdraw";
@@ -29,7 +32,8 @@ interface RoutingAndSlippageInfoContext {
   preferredSummary: "swap" | "priceImpact";
   txnType: SiloTxn;
   swapSummary?: SwapSummary;
-  convertSummary?: SiloConvertSummary;
+  convertSummary?: SiloConvertSummary<SiloConvertType>;
+  priceImpact?: PriceImpactSummaryMap;
   priceImpactSummary?: PriceImpactSummary;
   secondaryPriceImpactSummary?: PriceImpactSummary;
   wellToken?: Token;
@@ -60,6 +64,7 @@ const RoutingAndSlippageInfo = (props: RoutingAndSlippageInfoProps) => {
             swapSummary: props.swapSummary,
             priceImpactSummary: props.priceImpactSummary,
             preferredSummary: props.preferredSummary,
+            priceImpact: props.priceImpact,
             secondaryPriceImpactSummary: props.secondaryPriceImpactSummary,
             tokenOut: props.tokenOut,
             txnType: props.txnType,
@@ -182,13 +187,103 @@ const PriceImpactRow = ({
   );
 };
 
-const ConvertPriceImpactSummary = ({ variant, showTokenName }: IPriceImpactContent) => {
-  const { tokenIn, tokenOut, priceImpactSummary, secondaryPriceImpactSummary } = useRoutingAndSlippageInfoContext();
+const ConvertRoutesThroughRow = ({ variant }: Pick<IPriceImpactContent, "variant">) => {
+  const { convertSummary } = useRoutingAndSlippageInfoContext();
+  const parseRoutes = useParseConvertRouteRoutes();
+
+  const routes = useMemo(() => (!convertSummary ? [] : parseRoutes(convertSummary)), [convertSummary]);
+
+  if (!routes.length) return null;
+
+  return (
+    <InlineRow variant={variant} left={<InlineRowLeft className="text-pinto-primary">Routing</InlineRowLeft>}>
+      <Row className="place-content-end">
+        {routes.map((route, _, arr) => (
+          <div key={`convert-routing-through-${route.address}`} className={cn(arr.length > 1 && "-ml-1")}>
+            <IconImage src={route.logoURI} alt={route.symbol} size={4} />
+          </div>
+        ))}
+      </Row>
+    </InlineRow>
+  );
+};
+
+const LP2MainPipelineConvertSummary = ({
+  priceImpactSummary,
+}: {
+  priceImpactSummary: PriceImpactSummaryMap | undefined;
+}) => {
+  const { tokenIn } = useRoutingAndSlippageInfoContext();
+
+  const affectedWells = useMemo(() => {
+    if (!priceImpactSummary) return [];
+    const start = priceImpactSummary?.[getTokenIndex(tokenIn)];
+    const mid = Object.values(priceImpactSummary).filter((p) => {
+      if (tokensEqual(p.token, tokenIn) || p.token.isMain) return false;
+      return p.priceAfter && !p.priceAfter.eq(p.priceBefore);
+    });
+    const end = priceImpactSummary?.main;
+
+    return [start, ...mid, end];
+  }, [priceImpactSummary, tokenIn]);
+
+  return (
+    <>
+      {/* <ConvertRoutesThroughRow variant={"sm-light"} /> */}
+      <Col className="gap-y-2">
+        {affectedWells.map((wells) => {
+          return (
+            <Col key={`convert-price-impact-details-${wells.token.symbol}`}>
+              <Row className="w-full justify-between items-start">
+                <div className="inline-flex flex-row items-center gap-x-1">
+                  <IconImage src={pintoIcon} alt={"pinto-price"} size={4} />
+                  <span className="pinto-sm-light text-pinto-light">Price ({wells.token.symbol})</span>
+                </div>
+                <Col className="place-content-end">
+                  <Row className="gap-x-1 items-center place-self-end">
+                    <div className="pinto-sm text-pinto-secondary">
+                      {formatter.usd(wells.priceBefore, { decimals: 4 })}
+                    </div>
+                    <ArrowRightIcon className="w-4 h-4 text-pinto-light" />
+                    <div className="pinto-sm text-pinto-green-4">
+                      {formatter.usd(wells.priceAfter, { decimals: 4 })}
+                    </div>
+                  </Row>
+                  <Row className="w-full justify-between place-content-end">
+                    <Row className="text-pinto-light">
+                      <div>
+                        (<span className="">{formatPriceImpact(wells.priceImpact)}</span> Price Impact)
+                      </div>
+                    </Row>
+                  </Row>
+                </Col>
+              </Row>
+            </Col>
+          );
+        })}
+      </Col>
+    </>
+  );
+};
+
+const ConvertPriceImpactSummary = ({
+  variant,
+  showTokenName,
+  isDialog,
+}: IPriceImpactContent & {
+  isDialog?: boolean;
+}) => {
+  const { tokenIn, tokenOut, convertSummary, priceImpact, priceImpactSummary, secondaryPriceImpactSummary } =
+    useRoutingAndSlippageInfoContext();
 
   if (!tokenOut) return null;
 
   const isDefaultConvert = tokenIn.isMain || tokenOut.isMain;
   const nudge = variant === "xs" ? 1 : 0;
+
+  if (isDialog && convertSummary?.route.convertType === "LP2MainPipeline" && priceImpact) {
+    return <LP2MainPipelineConvertSummary priceImpactSummary={priceImpact} />;
+  }
 
   return (
     <>
@@ -197,6 +292,7 @@ const ConvertPriceImpactSummary = ({ variant, showTokenName }: IPriceImpactConte
        */}
       {isDefaultConvert ? (
         <>
+          <ConvertRoutesThroughRow variant={variant} />
           <InlineRow
             variant={variant}
             left={
@@ -243,7 +339,7 @@ const ConvertPriceImpactDetails = () => {
   const isDefaultConvert = tokenIn.isMain || tokenOut.isMain;
 
   if (isDefaultConvert) {
-    return <ConvertPriceImpactSummary variant="sm-light" showTokenName />;
+    return <ConvertPriceImpactSummary variant="sm-light" showTokenName isDialog />;
   }
 
   const details = [
@@ -514,7 +610,7 @@ const ConvertRoutingDetails = () => {
 
   const normalizedConvertActions = convertSummary.quotes.map((quote, i) =>
     normalizeConvertSummary(
-      quote as LP2LPConvertStrategyResult,
+      quote as ConvertStrategyQuote<"LP2LP">,
       convertSummary.results[i],
       i,
       // use the price impact summary only if it's not the 1st action
@@ -731,7 +827,9 @@ function getPricesFromWellData(tokens: Token[], well: ExtendedPoolData, summary:
   return tokens.map((token) => {
     if (!token.isMain && !token.isLP) return well.pair.price;
     // Well LP Token price
-    if (token.isLP) return summary?.lpUSDAfter ?? well.lpUsd;
+    if (token.isLP) {
+      return summary?.lpUSDAfter ?? well.lpUsd;
+    }
     // Protocol Token price
     return summary?.priceAfter ?? well.price;
   });
@@ -741,7 +839,7 @@ function getPricesFromWellData(tokens: Token[], well: ExtendedPoolData, summary:
  * Combine the quote, result, and price impact summaries
  */
 function normalizeConvertSummary(
-  quote: LP2LPConvertStrategyResult,
+  quote: ConvertStrategyQuote<"LP2LP">,
   result: ConvertResultStruct<TV>,
   index: number,
   sourceWellSummary?: PriceImpactSummary,
@@ -784,35 +882,3 @@ function normalizeConvertSummary(
 
   return data;
 }
-
-/* {well && (
-        <div className="flex flex-row justify-between items-center">
-          <div
-            className={cn(
-              variant === "xs" && "pinto-xs",
-              variant === "sm-light" && "pinto-sm-light",
-              "text-pinto-light",
-              "pinto-body",
-              "flex",
-              "flex-row",
-              "gap-x-1",
-            )}
-          >
-            <IconImage nudge={nudge} size={4} src={pintoIcon} />
-            <span>
-              Price Impact
-              {showTokenName && <span className="text-pinto-light">{`: (${well.symbol})`}</span>}
-            </span>
-          </div>
-          <div
-            className={cn(
-              variant === "xs" && "pinto-xs",
-              variant === "sm-light" && "pinto-sm-light",
-              highPriceImpact && (variant === "sm-light" ? "font-medium" : "font-regular"),
-              highPriceImpact ? "text-pinto-error" : "text-pinto-primary",
-            )}
-          >
-            {formatPriceImpact(priceImpact)}
-          </div>
-        </div>
-      )} */

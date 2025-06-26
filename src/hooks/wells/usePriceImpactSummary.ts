@@ -8,7 +8,8 @@ import { usePriceData } from "@/state/usePriceData";
 import { getOverrideAllowanceStateOverride, useChainConstant } from "@/utils/chain";
 import { getTokenIndex } from "@/utils/token";
 import { Token } from "@/utils/types";
-import { AddressLookup } from "@/utils/types.generic";
+import { AddressLookup, MayArray } from "@/utils/types.generic";
+import { arrayify } from "@/utils/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { Address } from "viem";
@@ -30,58 +31,69 @@ export type PriceImpactSummaryMap = AddressLookup<PriceImpactSummary> & {
 
 export const PRICE_IMPACT_PREDICATE = ["priceImpactSummary"];
 
-export function useDeterminePriceImpact(result: ReturnType<typeof decodePriceResult> | undefined) {
+const useGetPriceImpactWithDecodedPriceResultFn = () => {
   const priceData = usePriceData();
   const wells = useWells();
 
   const mainToken = useChainConstant(MAIN_TOKEN);
 
+  const determinePriceImpact = useCallback(
+    (result: ReturnType<typeof decodePriceResult> | undefined) => {
+      const overallPriceBefore = priceData.price;
+      const overallPriceAfter = result?.price ? TV.fromBigInt(result.price, 6) : undefined;
+
+      const mainTokenData = {
+        priceBefore: priceData.price,
+        priceAfter: overallPriceAfter,
+        token: mainToken,
+        priceImpact: calculatePriceImpact(overallPriceBefore, overallPriceAfter),
+        lpUSDBefore: TV.ZERO,
+        lpUSDAfter: TV.ZERO,
+      };
+
+      const map = Object.values(wells).reduce<PriceImpactSummaryMap>(
+        (prev, curr) => {
+          // current pool data
+          const well = curr.pool;
+          const wellIndex = getTokenIndex(well);
+          const priceBefore = wells[wellIndex].price;
+          const lpUSDBefore = wells[wellIndex].lpUsd;
+
+          // after simulation pool data
+          const postWellState = result?.pools?.[wellIndex];
+          const after = postWellState?.price;
+          const lpUSDAfter = postWellState ? TV.fromBigInt(postWellState?.lpUsd, 6) : undefined;
+
+          const priceAfter = after ? TV.fromBigInt(after, 6) : undefined;
+          const priceImpact = calculatePriceImpact(priceBefore, priceAfter);
+
+          prev[wellIndex] = {
+            priceBefore,
+            priceAfter,
+            priceImpact,
+            token: well,
+            lpUSDBefore,
+            lpUSDAfter,
+          };
+
+          return prev;
+        },
+        { main: mainTokenData },
+      );
+
+      return map;
+    },
+    [priceData, wells, mainToken],
+  );
+
+  return determinePriceImpact;
+};
+
+export function useDeterminePriceImpact(result: ReturnType<typeof decodePriceResult> | undefined) {
+  const mapPriceImpactCallback = useGetPriceImpactWithDecodedPriceResultFn();
+
   // Price impact is calculated as ((priceAfter - priceBefore) / priceBefore) * 100%
-  const priceImpactByWell = useMemo(() => {
-    const overallPriceBefore = priceData.price;
-    const overallPriceAfter = result?.price ? TV.fromBigInt(result.price, 6) : undefined;
-
-    const mainTokenData = {
-      priceBefore: priceData.price,
-      priceAfter: overallPriceAfter,
-      token: mainToken,
-      priceImpact: calculatePriceImpact(overallPriceBefore, overallPriceAfter),
-      lpUSDBefore: TV.ZERO,
-      lpUSDAfter: TV.ZERO,
-    };
-
-    const map = Object.values(wells).reduce<PriceImpactSummaryMap>(
-      (prev, curr) => {
-        // current pool data
-        const well = curr.pool;
-        const wellIndex = getTokenIndex(well);
-        const priceBefore = wells[wellIndex].price;
-        const lpUSDBefore = wells[wellIndex].lpUsd;
-
-        // after simulation pool data
-        const postWellState = result?.pools?.[wellIndex];
-        const after = postWellState?.price;
-        const lpUSDAfter = postWellState ? TV.fromBigInt(postWellState?.lpUsd, 6) : undefined;
-
-        const priceAfter = after ? TV.fromBigInt(after, 6) : undefined;
-        const priceImpact = calculatePriceImpact(priceBefore, priceAfter);
-
-        prev[wellIndex] = {
-          priceBefore,
-          priceAfter,
-          priceImpact,
-          token: well,
-          lpUSDBefore,
-          lpUSDAfter,
-        };
-
-        return prev;
-      },
-      { main: mainTokenData },
-    );
-
-    return map;
-  }, [result, wells, mainToken, priceData.price]);
+  const priceImpactByWell = useMemo(() => mapPriceImpactCallback(result), [mapPriceImpactCallback, result]);
 
   /**
    * Get the price impact with a well
@@ -94,6 +106,32 @@ export function useDeterminePriceImpact(result: ReturnType<typeof decodePriceRes
   return {
     priceImpactByWell,
     get: getPriceImpactWithWell,
+  } as const;
+}
+
+/**
+ * Use this hook to determine the price impact of an Array of results.
+ */
+export function useDeterminePriceImpactWithResults(
+  results: MayArray<ReturnType<typeof decodePriceResult> | undefined> | undefined,
+) {
+  const mapPriceImpactCallback = useGetPriceImpactWithDecodedPriceResultFn();
+
+  // Price impact is calculated as ((priceAfter - priceBefore) / priceBefore) * 100%
+  const priceImpactByWell = useMemo(() => {
+    return arrayify(results).map((result) => mapPriceImpactCallback(result));
+  }, [results, mapPriceImpactCallback]);
+
+  const getPriceImpact = useCallback(
+    (well: Token) => {
+      return priceImpactByWell.map((r) => r[getTokenIndex(well)]);
+    },
+    [priceImpactByWell],
+  );
+
+  return {
+    priceImpactByWell,
+    get: getPriceImpact,
   } as const;
 }
 
