@@ -1,8 +1,7 @@
-import useIsDesktop from "@/hooks/display/useIsDesktop";
 import { safeJSONStringify } from "@/utils/utils";
 import { format, isValid, parse, set, startOfYear, subHours, subMonths, subWeeks, subYears } from "date-fns";
 import { IRange, Time, UTCTimestamp } from "lightweight-charts";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ClassNames, DayPicker, DeprecatedUI, SelectRangeEventHandler } from "react-day-picker";
 import { CalendarIcon, ClockIcon } from "./Icons";
 import { Input } from "./ui/Input";
@@ -285,9 +284,53 @@ const CalendarButton = ({
   storageKeyPrefix = "advancedChart",
   datePresets = DATE_PRESETS,
 }: CalendarButtonProps) => {
+  // TODO(pp): custom default
   const defaultPreset = Object.keys(datePresets)[0];
   const [selectedPreset, setSelectedPreset] = useState<string>(defaultPreset);
   const [range, setRange] = useState<DateRange>({ from: undefined, to: undefined });
+
+  // Save to localStorage and set period
+  const saveRangeAndSetPeriod = useCallback(
+    (rangeToSave: DateRange, presetToSave: string): void => {
+      if (!rangeToSave.from && !rangeToSave.to) return;
+
+      // Save to localStorage
+      try {
+        localStorage.setItem(`${storageKeyPrefix}Range`, safeJSONStringify(rangeToSave));
+        localStorage.setItem(`${storageKeyPrefix}Preset`, safeJSONStringify(presetToSave));
+
+        // Set time period
+        const timePeriod: IRange<Time> = {
+          from: (rangeToSave.from ? rangeToSave.from.valueOf() : 0) as UTCTimestamp,
+          to: (rangeToSave.to ? rangeToSave.to.valueOf() : Date.now()) as UTCTimestamp,
+        };
+
+        setTimePeriod(timePeriod);
+        localStorage.setItem(`${storageKeyPrefix}TimePeriod`, safeJSONStringify(timePeriod));
+      } catch (error) {
+        console.error("Error saving date range to localStorage", error);
+      }
+    },
+    [storageKeyPrefix, setTimePeriod],
+  );
+
+  // Apply preset range
+  const applyPreset = useCallback(
+    (preset: Exclude<string, "CUSTOM">): void => {
+      const presetConfig = datePresets[preset];
+      if (!presetConfig) return;
+
+      const newRange: DateRange = {
+        from: presetConfig.from(),
+        to: presetConfig.to(),
+      };
+
+      setRange(newRange);
+      setSelectedPreset(preset);
+      saveRangeAndSetPeriod(newRange, preset);
+    },
+    [datePresets, saveRangeAndSetPeriod],
+  );
 
   // Initialize from localStorage if available
   useEffect(() => {
@@ -302,6 +345,10 @@ const CalendarButton = ({
           from: parsedRange.from ? new Date(parsedRange.from) : undefined,
           to: parsedRange.to ? new Date(parsedRange.to) : undefined,
         });
+        setTimePeriod({
+          from: (parsedRange.from ? parsedRange.from.valueOf() : 0) as UTCTimestamp,
+          to: (parsedRange.to ? parsedRange.to.valueOf() : Date.now()) as UTCTimestamp,
+        });
       } else {
         applyPreset(defaultPreset);
       }
@@ -313,22 +360,7 @@ const CalendarButton = ({
       console.error("Error loading saved date range", e);
       applyPreset(defaultPreset);
     }
-  }, [storageKeyPrefix, defaultPreset]);
-
-  // Apply preset range
-  const applyPreset = (preset: Exclude<string, "CUSTOM">): void => {
-    const presetConfig = datePresets[preset];
-    if (!presetConfig) return;
-
-    const newRange: DateRange = {
-      from: presetConfig.from(),
-      to: presetConfig.to(),
-    };
-
-    setRange(newRange);
-    setSelectedPreset(preset);
-    saveRangeAndSetPeriod(newRange, preset);
-  };
+  }, [storageKeyPrefix, defaultPreset, setTimePeriod, applyPreset]);
 
   // Handle range changes
   const handleRangeChange = (newRange: DateRange): void => {
@@ -341,29 +373,6 @@ const CalendarButton = ({
     setSelectedPreset(preset);
     if (preset !== "CUSTOM") {
       saveRangeAndSetPeriod(range, preset);
-    }
-  };
-
-  // Save to localStorage and set period
-  const saveRangeAndSetPeriod = (rangeToSave: DateRange, presetToSave: string): void => {
-    if (!rangeToSave.from && !rangeToSave.to) return;
-
-    // Save to localStorage
-    try {
-      localStorage.setItem(`${storageKeyPrefix}Range`, safeJSONStringify(rangeToSave));
-      localStorage.setItem(`${storageKeyPrefix}Preset`, safeJSONStringify(presetToSave));
-
-      // Set time period
-      const timePeriod: IRange<Time> = {
-        from: (rangeToSave.from ? rangeToSave.from.valueOf() : 0) as UTCTimestamp,
-        to: (rangeToSave.to ? rangeToSave.to.valueOf() : Date.now()) as UTCTimestamp,
-      };
-
-      // TODO(pp): Troubleshoot why this isnt being called on initial mount
-      setTimePeriod(timePeriod);
-      localStorage.setItem(`${storageKeyPrefix}TimePeriod`, safeJSONStringify(timePeriod));
-    } catch (error) {
-      console.error("Error saving date range to localStorage", error);
     }
   };
 

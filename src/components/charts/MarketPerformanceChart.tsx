@@ -3,17 +3,17 @@ import { chartFormatters as f, formatDate } from "@/utils/format";
 import { getChainTokenMap } from "@/utils/token";
 import { SeasonalMarketPerformanceChartData, Token } from "@/utils/types";
 import { cn } from "@/utils/utils";
+import { subMonths, subWeeks } from "date-fns";
+import { IRange, Time } from "lightweight-charts";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useChainId } from "wagmi";
+import CalendarButton, { DatePresetConfig } from "../CalendarButton";
 import { CloseIconAlt } from "../Icons";
 import FrameAnimator from "../LoadingSpinner";
 import TooltipSimple from "../TooltipSimple";
 import IconImage from "../ui/IconImage";
 import LineChart, { LineChartData } from "./LineChart";
 import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
-import CalendarButton, { DatePresetConfig } from "../CalendarButton";
-import { IRange, Time } from "lightweight-charts";
-import { subMonths, subWeeks } from "date-fns";
 
 // Predefined date ranges
 const DATE_PRESETS: Record<Exclude<string, "CUSTOM">, DatePresetConfig> = {
