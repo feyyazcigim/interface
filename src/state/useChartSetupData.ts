@@ -6,8 +6,9 @@ import { formatNum, formatPct, formatUSD } from "@/utils/format";
 import { Token } from "@/utils/types";
 import { useMemo } from "react";
 import useTokenData from "./useTokenData";
+import { CBBTC_TOKEN, CBETH_TOKEN, WETH_TOKEN, WSOL_TOKEN } from "@/constants/tokens";
 
-type ChartType = "Pinto" | "Field" | "Silo" | "Tractor" | "Exchange" | "Inflow";
+type ChartType = "Pinto" | "Field" | "Silo" | "Tractor" | "Exchange" | "Inflow" | "Market";
 interface ChartSetupBase {
   /**
    * Chart ID
@@ -964,6 +965,140 @@ const createInflowCharts = (mainToken: Token): ChartSetupBase[] => {
   ];
 };
 
+const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
+  const marketEntry = ({
+    id,
+    name,
+    icon,
+    tooltipTitle,
+    description,
+    valueAxis = id,
+  }: {
+    id: string;
+    name: string;
+    icon: string;
+    tooltipTitle: string;
+    description: string;
+    valueAxis?: string;
+  }) => {
+    return {
+      id,
+      type: "Market" as ChartType,
+      name,
+      tooltipTitle,
+      tooltipHoverText: description,
+      shortDescription: description,
+      icon,
+      timeScaleKey: "timestamp",
+      priceScaleKey: id,
+      valueAxisType: valueAxis,
+      valueFormatter: (v: number) => v,
+      tickFormatter: usdFormatter,
+      shortTickFormatter: usdFormatter,
+    };
+  };
+  return [
+    marketEntry({
+      id: "priceWeth",
+      name: "WETH Price",
+      icon: WETH_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "WETH Price",
+      description: "WETH Price",
+    }),
+    marketEntry({
+      id: "priceCbeth",
+      name: "cbETH Price",
+      icon: CBETH_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "cbETH Price",
+      description: "cbETH Price",
+    }),
+    marketEntry({
+      id: "priceCbbtc",
+      name: "cbBTC Price",
+      icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "cbBTC Price",
+      description: "cbBTC Price",
+    }),
+    marketEntry({
+      id: "priceWsol",
+      name: "WSOL Price",
+      icon: WSOL_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "WSOL Price",
+      description: "WSOL Price",
+    }),
+    marketEntry({
+      id: "deltaNonPintoUsd",
+      name: "Protocol Non-Pinto Value Change (USD)",
+      icon: mainToken.logoURI,
+      tooltipTitle: "Protocol Non-Pinto Value Change (USD)",
+      description: "Change of non-Pinto liquidity USD value since the starting season.",
+    }),
+    marketEntry({
+      id: "deltaWethUsd",
+      name: "Protocol WETH Value Change (USD)",
+      icon: WETH_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "Protocol WETH Value Change (USD)",
+      description: "Change of WETH liquidity USD value since the starting season.",
+    }),
+    marketEntry({
+      id: "deltaCbethUsd",
+      name: "Protocol cbETH Value Change (USD)",
+      icon: CBETH_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "Protocol cbETH Value Change (USD)",
+      description: "Change of cbETH liquidity USD value since the starting season.",
+    }),
+    marketEntry({
+      id: "deltaCbbtcUsd",
+      name: "Protocol cbBTC Value Change (USD)",
+      icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "Protocol cbBTC Value Change (USD)",
+      description: "Change of cbBTC liquidity USD value since the starting season.",
+    }),
+    marketEntry({
+      id: "deltaWsolUsd",
+      name: "Protocol WSOL Value Change (USD)",
+      icon: WSOL_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "Protocol WSOL Value Change (USD)",
+      description: "Change of WSOL liquidity USD value since the starting season.",
+    }),
+    marketEntry({
+      id: "deltaNonPintoPercent",
+      name: "Protocol Non-Pinto Value Change (%)",
+      icon: mainToken.logoURI,
+      tooltipTitle: "Protocol Non-Pinto Value Change (%)",
+      description: "Percentage change of Non-Pinto liquidity value since the starting season.",
+    }),
+    marketEntry({
+      id: "deltaWethPercent",
+      name: "Protocol WETH Value Change (%)",
+      icon: WETH_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "Protocol WETH Value Change (%)",
+      description: "Percentage change of WETH liquidity value since the starting season.",
+    }),
+    marketEntry({
+      id: "deltaCbethPercent",
+      name: "Protocol cbETH Value Change (%)",
+      icon: CBETH_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "Protocol cbETH Value Change (%)",
+      description: "Percentage change of cbETH liquidity value since the starting season.",
+    }),
+    marketEntry({
+      id: "deltaCbbtcPercent",
+      name: "Protocol cbBTC Value Change (%)",
+      icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "Protocol cbBTC Value Change (%)",
+      description: "Percentage change of cbBTC liquidity value since the starting season.",
+    }),
+    marketEntry({
+      id: "deltaWsolPercent",
+      name: "Protocol WSOL Value Change (%)",
+      icon: WSOL_TOKEN[mainToken.chainId].logoURI,
+      tooltipTitle: "Protocol WSOL Value Change (%)",
+      description: "Percentage change of WSOL liquidity value since the starting season.",
+    }),
+  ];
+};
+
 export function useChartSetupData() {
   const { mainToken } = useTokenData();
 
@@ -975,6 +1110,7 @@ export function useChartSetupData() {
     const exchangeCharts = createExchangeCharts(mainToken);
     const tractorCharts = createTractorCharts(mainToken);
     const inflowCharts = createInflowCharts(mainToken);
+    const marketCharts = createMarketCharts(mainToken);
 
     const output: ChartSetup[] = [
       ...pintoCharts,
@@ -983,6 +1119,7 @@ export function useChartSetupData() {
       ...exchangeCharts,
       ...tractorCharts,
       ...inflowCharts,
+      ...marketCharts,
     ].map((setupData, index) => ({
       ...setupData,
       index: index,
