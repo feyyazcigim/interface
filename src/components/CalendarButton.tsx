@@ -1,8 +1,8 @@
 import { safeJSONStringify } from "@/utils/utils";
 import { format, isValid, parse, set, startOfYear, subHours, subMonths, subWeeks, subYears } from "date-fns";
 import { IRange, Time, UTCTimestamp } from "lightweight-charts";
-import { useCallback, useEffect, useState } from "react";
-import { ClassNames, DayPicker, DeprecatedUI, DateRange as DayPickerDateRange } from "react-day-picker";
+import { useCallback, useEffect, useState, useRef } from "react";
+import { ClassNames, DayPicker, DateRange as DayPickerDateRange, DeprecatedUI } from "react-day-picker";
 import { CalendarIcon, ClockIcon } from "./Icons";
 import { Input } from "./ui/Input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
@@ -140,6 +140,10 @@ const CalendarContent = ({ datePresets, range, selectedPreset, onChange }: Calen
   const [dateInputs, setDateInputs] = useState<DateTimeInputs>({ from: "", to: "" });
   const [timeInputs, setTimeInputs] = useState<DateTimeInputs>({ from: "", to: "" });
 
+  const DEBOUNCE_DELAY = 500;
+  const timeChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dateChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Update inputs when range changes
   useEffect(() => {
     setDateInputs({
@@ -171,42 +175,68 @@ const CalendarContent = ({ datePresets, range, selectedPreset, onChange }: Calen
     [onChange, timeInputs],
   );
 
-  // Handle date input change
+  // Handle date input change with debouncing
   const handleDateChange = useCallback(
     (type: "from" | "to", value: string): void => {
       setDateInputs((prev) => ({ ...prev, [type]: value }));
 
-      const newDate = parseDate(value, timeInputs[type]);
-      if (newDate) {
-        const newRange: DateRange = { ...range, [type]: newDate };
-        onChange(newRange, "CUSTOM");
-        setMonth(newDate);
+      if (dateChangeTimeoutRef.current) {
+        clearTimeout(dateChangeTimeoutRef.current);
       }
+
+      // Set new timeout for debounced execution
+      dateChangeTimeoutRef.current = setTimeout(() => {
+        const newDate = parseDate(value, timeInputs[type]);
+        if (newDate) {
+          const newRange: DateRange = { ...range, [type]: newDate };
+          onChange(newRange, "CUSTOM");
+          setMonth(newDate);
+        }
+      }, DEBOUNCE_DELAY);
     },
     [onChange, range, timeInputs],
   );
 
-  // Handle time input change
+  // Handle time input change with debouncing
   const handleTimeChange = useCallback(
     (type: "from" | "to", value: string): void => {
       setTimeInputs((prev) => ({ ...prev, [type]: value }));
 
-      if (range[type] && value) {
-        try {
-          const [hours, minutes] = value.split(":").map(Number);
-          const newDate = set(range[type] as Date, {
-            hours: Number.isNaN(hours) ? 0 : hours,
-            minutes: Number.isNaN(minutes) ? 0 : minutes,
-          });
-          const newRange: DateRange = { ...range, [type]: newDate };
-          onChange(newRange, "CUSTOM");
-        } catch (e) {
-          // Invalid time format
-        }
+      if (timeChangeTimeoutRef.current) {
+        clearTimeout(timeChangeTimeoutRef.current);
       }
+
+      // Set new timeout for debounced execution
+      timeChangeTimeoutRef.current = setTimeout(() => {
+        if (range[type] && value) {
+          try {
+            const [hours, minutes] = value.split(":").map(Number);
+            const newDate = set(range[type] as Date, {
+              hours: Number.isNaN(hours) ? 0 : hours,
+              minutes: Number.isNaN(minutes) ? 0 : minutes,
+            });
+            const newRange: DateRange = { ...range, [type]: newDate };
+            onChange(newRange, "CUSTOM");
+          } catch (e) {
+            // Invalid time format
+          }
+        }
+      }, DEBOUNCE_DELAY);
     },
     [onChange, range],
   );
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (timeChangeTimeoutRef.current) {
+        clearTimeout(timeChangeTimeoutRef.current);
+      }
+      if (dateChangeTimeoutRef.current) {
+        clearTimeout(dateChangeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Mobile preset buttons
   const renderMobilePresets = useCallback(

@@ -101,9 +101,6 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     return [Math.max(0, season - 168), season];
   }, [timePeriod, season]);
 
-  // TODO(pp): fix utc (it works on the all chart)
-  console.log(timePeriod, "fromSeason", fromSeason, "toSeason", toSeason);
-
   const seasonalPerformance = useSeasonalMarketPerformance(fromSeason, toSeason, getDataTypeInfo(dataType).chartType);
   const data = !seasonalPerformance.isLoading && seasonalPerformance.data;
 
