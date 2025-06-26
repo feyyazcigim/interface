@@ -41,10 +41,10 @@ export const useSharedTimeTab = (
   const setContextTab = useSetAtom(contextTimeTabFamily(contextKey));
 
   // Set registered overrides for the given contextKey
-  const setContextOverrides = useSetAtom(useMemo(() => contextOverridesFamily(contextKey), [contextKey]));
+  const setContextOverrides = useSetAtom(contextOverridesFamily(contextKey));
 
   // Get the chart tab for the given chartId and contextKey
-  const contextChartTab = useAtomValue(useMemo(() => chartTabFamily({ chartId, contextKey }), [chartId, contextKey]));
+  const contextChartTab = useAtomValue(chartTabFamily({ chartId, contextKey }));
 
   // Set the default override for the given chartId only if it's not already set
   useEffect(() => {
