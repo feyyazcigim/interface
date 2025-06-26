@@ -38,7 +38,7 @@ export interface MultiAxisTickConfig {
 export interface MultiAxisLineChartProps {
   /** All datasets to render. Each one points at a particular Y-axis by `yAxisID`. */
   datasets: MultiAxisDataset[];
-  /** Labels for the X-axis. Should match the length of each dataset’s `values` array. */
+  /** Labels for the X-axis. Should match the length of each dataset's `values` array. */
   labels: (string | number | Date)[];
   /** Array of unique Y-axis IDs, each with a config specifying axis properties, position, etc. */
   yAxisConfigs: MultiAxisYAxisConfig[];
@@ -49,6 +49,7 @@ export interface MultiAxisLineChartProps {
   onMouseOver?: (index: number | undefined) => void;
   makeLineGradients: (MakeGradientFunction | string)[];
   makeAreaGradients?: (MakeGradientFunction | string)[];
+  logoURIs?: (string | null | undefined)[];
 }
 
 const MultiAxisLineChart = React.memo(
@@ -63,6 +64,7 @@ const MultiAxisLineChart = React.memo(
     makeLineGradients,
     makeAreaGradients,
     size = "large",
+    logoURIs,
   }: MultiAxisLineChartProps) => {
     const chartRef = useRef<Chart<"line"> | null>(null);
     const activeIndexRef = useRef<number | undefined>(activeIndex);
@@ -197,7 +199,10 @@ const MultiAxisLineChart = React.memo(
       [makeLineGradients, makeAreaGradients],
     );
     const verticalLinePlugin = useMemo<Plugin<"line">>(() => plugins.verticalLine(activeIndexRef, false), []);
-    const selectionPointPlugin = useMemo<Plugin<"line">>(() => plugins.selectionPoint(activeIndexRef, false), []);
+    const selectionPointPlugin = useMemo<Plugin<"line">>(
+      () => plugins.selectionPoint(activeIndexRef, false, logoURIs),
+      [logoURIs],
+    );
     const selectionCallbackPlugin: Plugin = useMemo<Plugin>(
       () => plugins.selectionCallback(onMouseOver),
       [onMouseOver],

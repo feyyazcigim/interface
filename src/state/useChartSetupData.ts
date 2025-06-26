@@ -2,11 +2,11 @@ import pintoExchangeLogo from "@/assets/misc/pinto-exchange-logo.svg";
 import podIcon from "@/assets/protocol/Pod.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
 import { TokenValue } from "@/classes/TokenValue";
+import { CBBTC_TOKEN, CBETH_TOKEN, WETH_TOKEN, WSOL_TOKEN } from "@/constants/tokens";
 import { formatNum, formatPct, formatUSD } from "@/utils/format";
 import { Token } from "@/utils/types";
 import { useMemo } from "react";
 import useTokenData from "./useTokenData";
-import { CBBTC_TOKEN, CBETH_TOKEN, WETH_TOKEN, WSOL_TOKEN } from "@/constants/tokens";
 
 type ChartType = "Pinto" | "Field" | "Silo" | "Tractor" | "Exchange" | "Inflow" | "Market";
 interface ChartSetupBase {

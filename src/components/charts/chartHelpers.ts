@@ -268,64 +268,127 @@ const getVerticalLinePlugin = (
 const getSelectionPointPlugin = (
   activeIndexRef: MutableRefObject<number | undefined>,
   fillArea: boolean = false,
-): Plugin => ({
-  id: "customSelectPoint",
-  afterDraw: (chart: Chart) => {
-    const ctx = chart.ctx;
-    const activeIndex = activeIndexRef.current;
-    if (!ctx) return;
-
-    // Define the function to draw the selection point
-    const drawSelectionPoint = (x: number, y: number) => {
-      ctx.save();
-      ctx.fillStyle = fillArea ? "#D9AD0F" : "#246645";
-      ctx.strokeStyle = fillArea ? "#D9AD0F" : "#246645";
-      ctx.lineWidth = 1;
-
-      const rectWidth = 6;
-      const rectHeight = 6;
-      const cornerRadius = 4;
-
-      ctx.beginPath();
-      ctx.moveTo(x - rectWidth / 2 + cornerRadius, y - rectHeight / 2);
-      ctx.lineTo(x + rectWidth / 2 - cornerRadius, y - rectHeight / 2);
-      ctx.quadraticCurveTo(x + rectWidth / 2, y - rectHeight / 2, x + rectWidth / 2, y - rectHeight / 2 + cornerRadius);
-      ctx.lineTo(x + rectWidth / 2, y + rectHeight / 2 - cornerRadius);
-      ctx.quadraticCurveTo(x + rectWidth / 2, y + rectHeight / 2, x + rectWidth / 2 - cornerRadius, y + rectHeight / 2);
-      ctx.lineTo(x - rectWidth / 2 + cornerRadius, y + rectHeight / 2);
-      ctx.quadraticCurveTo(x - rectWidth / 2, y + rectHeight / 2, x - rectWidth / 2, y + rectHeight / 2 - cornerRadius);
-      ctx.lineTo(x - rectWidth / 2, y - rectHeight / 2 + cornerRadius);
-      ctx.quadraticCurveTo(x - rectWidth / 2, y - rectHeight / 2, x - rectWidth / 2 + cornerRadius, y - rectHeight / 2);
-      ctx.closePath();
-
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    };
-
-    // Draw selection point for the hovered data point
-    const activeElements = chart.getActiveElements();
-    for (const activeElement of activeElements) {
-      const datasetIndex = activeElement.datasetIndex;
-      const index = activeElement.index;
-      const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];
-
-      if (dataPoint) {
-        const { x, y } = dataPoint.getProps(["x", "y"], true);
-        drawSelectionPoint(x, y);
-      }
+  selectionImages?: (string | null | undefined)[],
+): Plugin => {
+  // Cache already loaded images
+  const imageCache = new Map<string, HTMLImageElement>();
+  const loadImage = (src: string): Promise<HTMLImageElement> => {
+    const cached = imageCache.get(src);
+    if (cached) {
+      return Promise.resolve(cached);
     }
 
-    // Draw selection point for the morningIndex
-    if (typeof activeIndex === "number") {
-      const dataPoint = chart.getDatasetMeta(0).data[activeIndex];
-      if (dataPoint) {
-        const { x, y } = dataPoint.getProps(["x", "y"], true);
-        drawSelectionPoint(x, y);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        imageCache.set(src, img);
+        resolve(img);
+      };
+      img.onerror = reject;
+      img.src = src;
+    });
+  };
+
+  return {
+    id: "customSelectPoint",
+    afterDraw: (chart: Chart) => {
+      const ctx = chart.ctx;
+      const activeIndex = activeIndexRef.current;
+      if (!ctx) {
+        return;
       }
-    }
-  },
-});
+
+      // Define the function to draw the selection point
+      const drawSelectionPoint = async (x: number, y: number, datasetIndex: number) => {
+        const selectionURI = selectionImages?.[datasetIndex];
+        if (selectionURI && typeof selectionURI === "string") {
+          try {
+            // Use cached image or load it
+            const img = await loadImage(selectionURI);
+            const size = 20; // Size of the image
+            const halfSize = size / 2;
+
+            ctx.drawImage(img, x - halfSize, y - halfSize, size, size);
+          } catch (error) {
+            // Fallback to rectangular shape if image loading fails
+            console.warn("Failed to load image for selection point:", error);
+            drawRectangularPoint(x, y);
+          }
+        } else {
+          drawRectangularPoint(x, y);
+        }
+      };
+
+      // Helper function for drawing rectangular points
+      const drawRectangularPoint = (x: number, y: number) => {
+        ctx.fillStyle = fillArea ? "#D9AD0F" : "#246645";
+        ctx.strokeStyle = fillArea ? "#D9AD0F" : "#246645";
+        ctx.lineWidth = 1;
+
+        const rectWidth = 6;
+        const rectHeight = 6;
+        const cornerRadius = 4;
+
+        ctx.beginPath();
+        ctx.moveTo(x - rectWidth / 2 + cornerRadius, y - rectHeight / 2);
+        ctx.lineTo(x + rectWidth / 2 - cornerRadius, y - rectHeight / 2);
+        ctx.quadraticCurveTo(
+          x + rectWidth / 2,
+          y - rectHeight / 2,
+          x + rectWidth / 2,
+          y - rectHeight / 2 + cornerRadius,
+        );
+        ctx.lineTo(x + rectWidth / 2, y + rectHeight / 2 - cornerRadius);
+        ctx.quadraticCurveTo(
+          x + rectWidth / 2,
+          y + rectHeight / 2,
+          x + rectWidth / 2 - cornerRadius,
+          y + rectHeight / 2,
+        );
+        ctx.lineTo(x - rectWidth / 2 + cornerRadius, y + rectHeight / 2);
+        ctx.quadraticCurveTo(
+          x - rectWidth / 2,
+          y + rectHeight / 2,
+          x - rectWidth / 2,
+          y + rectHeight / 2 - cornerRadius,
+        );
+        ctx.lineTo(x - rectWidth / 2, y - rectHeight / 2 + cornerRadius);
+        ctx.quadraticCurveTo(
+          x - rectWidth / 2,
+          y - rectHeight / 2,
+          x - rectWidth / 2 + cornerRadius,
+          y - rectHeight / 2,
+        );
+        ctx.closePath();
+
+        ctx.fill();
+        ctx.stroke();
+      };
+
+      // Draw selection point for the hovered data point
+      const activeElements = chart.getActiveElements();
+      for (const activeElement of activeElements) {
+        const datasetIndex = activeElement.datasetIndex;
+        const index = activeElement.index;
+        const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];
+
+        if (dataPoint) {
+          const { x, y } = dataPoint.getProps(["x", "y"], true);
+          drawSelectionPoint(x, y, datasetIndex);
+        }
+      }
+
+      // Draw selection point for the morningIndex
+      if (typeof activeIndex === "number") {
+        const dataPoint = chart.getDatasetMeta(0).data[activeIndex];
+        if (dataPoint) {
+          const { x, y } = dataPoint.getProps(["x", "y"], true);
+          drawSelectionPoint(x, y, 0);
+        }
+      }
+    },
+  };
+};
 
 const getSelectionCallbackPlugin = (onMouseOver?: (index: number) => void): Plugin => ({
   id: "selectionCallback",

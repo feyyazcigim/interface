@@ -14,6 +14,7 @@ import TooltipSimple from "../TooltipSimple";
 import IconImage from "../ui/IconImage";
 import LineChart, { LineChartData } from "./LineChart";
 import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
+import useTokenData from "@/state/useTokenData";
 
 // Predefined date ranges
 const DATE_PRESETS: Record<Exclude<string, "CUSTOM">, DatePresetConfig> = {
@@ -76,6 +77,7 @@ const transformValue = (v: number, min: number, max: number, range: [number, num
 
 const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceChartProps) => {
   const chainId = useChainId();
+  const mainToken = useTokenData().mainToken;
   const [allData, setAllData] = useState<SeasonalMarketPerformanceChartData | null>(null);
   const [displayIndex, setDisplayIndex] = useState<number | null>(null);
   const [dataType, setDataType] = useState<DataType>(DataType.PRICE);
@@ -223,6 +225,10 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
         ? f.price0dFormatter
         : f.percent0dFormatter;
 
+  const hoverPointIcons = useMemo(() => {
+    return [mainToken.logoURI, ...chartDataset.tokens.map((t) => t?.logoURI).slice(1)];
+  }, [mainToken.logoURI, chartDataset.tokens]);
+
   return (
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
       <div className="flex justify-between pt-4 px-4 mb-3 sm:pt-6 sm:px-6">
@@ -327,6 +333,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                   valueFormatter={chartValueFormatter}
                   onMouseOver={handleMouseOver}
                   hideYAxis={dataType === DataType.PRICE}
+                  hoverPointImages={hoverPointIcons}
                   {...(dataType === DataType.PRICE && { yAxisMin: 0, yAxisMax: 1 })}
                 />
               </div>

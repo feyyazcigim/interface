@@ -55,6 +55,7 @@ export interface LineChartProps {
   yAxisMax?: number;
   customValueTransform?: CustomChartValueTransform;
   hideYAxis?: boolean;
+  hoverPointImages?: (string | null | undefined)[];
 }
 
 // provide a stable reference to the horizontal reference lines to avoid re-rendering the chart when some other prop changes
@@ -76,6 +77,7 @@ const LineChart = React.memo(
     yAxisMax,
     customValueTransform,
     hideYAxis = false,
+    hoverPointImages,
   }: LineChartProps) => {
     const chartRef = useRef<Chart | null>(null);
     const activeIndexRef = useRef<number | undefined>(activeIndex);
@@ -176,8 +178,8 @@ const LineChart = React.memo(
     }, [horizontalReferenceLines]);
 
     const selectionPointPlugin = useMemo(() => {
-      return plugins.selectionPoint(activeIndexRef, fillArea);
-    }, [fillArea]);
+      return plugins.selectionPoint(activeIndexRef, fillArea, hoverPointImages);
+    }, [fillArea, hoverPointImages]);
 
     const selectionCallbackPlugin: Plugin = useMemo(() => {
       return plugins.selectionCallback(onMouseOver);
