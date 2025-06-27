@@ -106,5 +106,11 @@
     "vite": "^5.4.19",
     "vitest": "^3.2.4"
   },
+  "resolutions": {
+    "@babel/runtime": "^7.26.10",
+    "brace-expansion": "^2.0.2",
+    "micromatch": "^4.0.8",
+    "cross-spawn": "7.0.6"
+  },
   "packageManager": "yarn@4.5.0"
 }
