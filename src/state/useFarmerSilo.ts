@@ -69,11 +69,6 @@ const QUERY_SETTINGS_NO_SHARING = {
   structuralSharing: false,
 } as const;
 
-const QUERY_SETTINGS_WITH_SHARING = {
-  ...QUERY_SETTINGS,
-  structuralSharing: false, // Disable for complex data structures
-} as const;
-
 // Create stable selector functions outside the component
 const createSelectGrownStalkPerToken = (whitelist: Token[]) => (data: readonly bigint[]) => {
   const map = new Map<Token, TokenValue>();
