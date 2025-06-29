@@ -69,6 +69,7 @@ interface ReviewTractorOrderProps {
   blueprint: Blueprint;
   isViewOnly?: boolean;
   executionHistory?: PublisherTractorExecution[];
+  includesDepositOptimization?: boolean;
 }
 
 export default function ReviewTractorOrderDialog({
@@ -82,7 +83,9 @@ export default function ReviewTractorOrderDialog({
   blueprint,
   isViewOnly = false,
   executionHistory = [], // Default to empty array
+  includesDepositOptimization = false,
 }: ReviewTractorOrderProps) {
+  console.debug("=== REVIEW TRACTOR ORDER DIALOG MOUNTED ===", { includesDepositOptimization });
   const { address } = useAccount();
   const signRequisition = useSignRequisition();
   const [signing, setSigning] = useState(false);
@@ -635,11 +638,21 @@ export default function ReviewTractorOrderDialog({
             {/* Footer */}
             {!isViewOnly ? (
               <Row className="justify-between items-center border-t p-6">
-                <p className="pinto-sm-light text-pinto-light">
-                  Your Order will remain active until you've Sown {orderData.totalAmount} Pinto under the specified
-                  conditions or until Order cancellation
-                </p>
-                <Row className="flex flex-row gap-2 shrink-0 smaller-button-text">
+                <div className="flex flex-col gap-2">
+                  <p className="pinto-sm-light text-pinto-light">
+                    Your Order will remain active until you've Sown {orderData.totalAmount} Pinto under the specified
+                    conditions or until Order cancellation
+                  </p>
+                  {(() => {
+                    console.debug("ReviewTractorOrderDialog: includesDepositOptimization =", includesDepositOptimization);
+                    return includesDepositOptimization && (
+                      <p className="text-xs text-gray-500">
+                        Deposits are being optimized to be suitable to use with Tractor
+                      </p>
+                    );
+                  })()}
+                </div>
+                <div className="flex flex-row gap-2 shrink-0 smaller-button-text">
                   {signedRequisitionData ? (
                     <div className="flex items-center gap-2 text-pinto-green-4 font-medium px-6">
                       <CheckIcon width={24} height={24} />
@@ -663,7 +676,7 @@ export default function ReviewTractorOrderDialog({
                     className="w-min"
                     style={!signedRequisitionData ? { opacity: 0.15 } : undefined}
                   />
-                </Row>
+                </div>
               </Row>
             ) : null}
           </div>

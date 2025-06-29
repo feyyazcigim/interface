@@ -14,7 +14,9 @@ import { FarmFromMode, MinimumViableBlock } from "@/utils/types";
 import { MayArray } from "@/utils/types.generic";
 import { arrayify } from "@/utils/utils";
 import { BlockTag, SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
+import { needsCombining, generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
 import { PublicClient } from "viem";
+import { Token, TokenDepositData } from "@/utils/types";
 import { Requisition, SowOrderTokenStrategy } from "./types";
 
 // Block number at which Tractor was deployed - use this as starting point for event queries
@@ -73,6 +75,8 @@ export async function createSowTractorData({
   whitelistedOperators,
   tokenStrategy,
   publicClient, // Add this parameter
+  farmerDeposits,
+  userAddress,
 }: {
   totalAmountToSow: string;
   temperature: string;
@@ -85,6 +89,9 @@ export async function createSowTractorData({
   whitelistedOperators: `0x${string}`[];
   tokenStrategy: SowOrderTokenStrategy;
   publicClient: PublicClient;
+  farmerDeposits?: Map<Token, TokenDepositData>;
+  userAddress?: `0x${string}`;
+  protocolAddress?: `0x${string}`;
 }): Promise<{ data: `0x${string}`; operatorPasteInstrs: `0x${string}`[]; rawCall: `0x${string}` }> {
   // Add more detailed debug logs
   console.debug("tokenStrategy received:", tokenStrategy);
@@ -195,18 +202,47 @@ export async function createSowTractorData({
     ],
   });
 
-  // Step 2: Wrap the advancedPipe call in an advancedFarm call
+  // Step 2: Check if deposits need optimization and add combining calls if needed
+  const farmCalls: { callData: `0x${string}`; clipboard: `0x${string}` }[] = [];
+  
+  // Add deposit optimization calls if needed
+  if (farmerDeposits && userAddress && needsCombining(farmerDeposits)) {
+    console.debug("Deposits need combining, adding optimization calls to farm transaction");
+    
+    try {
+      const optimizationCalls = await generateBatchSortDepositsCallData(
+        userAddress,
+        farmerDeposits,
+        publicClient,
+        protocolAddress || "0x" as `0x${string}`, // Use provided protocol address
+      );
+      
+      // Add each optimization call as a farm call
+      optimizationCalls.forEach(callData => {
+        farmCalls.push({
+          callData,
+          clipboard: "0x" as `0x${string}`,
+        });
+      });
+      
+      console.debug(`Added ${optimizationCalls.length} deposit optimization calls`);
+    } catch (error) {
+      console.warn("Failed to generate deposit optimization calls:", error);
+      // Continue without optimization calls - don't fail the entire transaction
+    }
+  }
+  
+  // Add the sow call
+  farmCalls.push({
+    callData: pipeCall,
+    clipboard: "0x" as `0x${string}`, // Empty clipboard
+  });
+  
+  // Step 3: Wrap all calls in an advancedFarm call
   const data = encodeFunctionData({
     abi: beanstalkAbi,
     functionName: "advancedFarm",
-    args: [
-      [
-        {
-          callData: pipeCall,
-          clipboard: "0x" as `0x${string}`, // Empty clipboard
-        },
-      ],
-    ],
+    args: [farmCalls],
   });
 
   console.debug("Raw sowBlueprintv0 call:", sowBlueprintCall);
