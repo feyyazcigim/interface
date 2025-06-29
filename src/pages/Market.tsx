@@ -248,9 +248,9 @@ export function Market() {
       </div>
       <div className="hidden sm:block">
         <div className={`flex flex-col`}>
-          <div className="flex flex-row gap-4 border-t border-pinto-gray-2 mt-4 h-[calc(100vh-7.75rem)] lg:h-[calc(100vh-11rem)] overflow-hidden">
-            <div className="flex flex-col flex-grow ml-4">
-              <div className="w-full h-[28rem] mb-8 relative">
+          <div className="flex flex-row border-t border-pinto-gray-2 mt-4 ">
+            <div className="flex flex-col flex-grow ml-4 border-r border-pinto-gray-2 pr-4">
+              <div className="w-full h-[28rem] relative">
                 {!isLoaded && (
                   <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
                     <FrameAnimator className="-mt-5 -mb-12" size={80} />
@@ -264,7 +264,7 @@ export function Market() {
                   toolTipOptions={toolTipOptions}
                 />
               </div>
-              <div className="flex gap-10 ml-2.5 mt-8 mb-[1.625rem]">
+              <div className="flex gap-10 ml-2.5 mt-4 mb-[1.625rem]">
                 {TABLE_SLUGS.map((s, idx) => (
                   <p
                     key={s}
@@ -276,14 +276,14 @@ export function Market() {
                 ))}
               </div>
               <Separator />
-              <div className="flex-grow overflow-auto scrollbar-none -ml-4 -mr-4">
+              <div className="flex-grow overflow-auto scrollbar-none -ml-4 -mr-4 max-h-[40rem] overscroll-auto">
                 {tab === TABLE_SLUGS[0] && <AllActivityTable />}
                 {tab === TABLE_SLUGS[1] && <PodListingsTable />}
                 {tab === TABLE_SLUGS[2] && <PodOrdersTable />}
                 {tab === TABLE_SLUGS[3] && <FarmerActivityTable />}
               </div>
             </div>
-            <div className="flex flex-col gap-4 self-start px-4 py-4 border-l border-pinto-gray-2 h-full w-[384px] min-w-[384px] 3xl:w-[540px] 3xl:min-w-[540px] flex-shrink-0 overflow-auto scrollbar-none">
+            <div className="flex flex-col gap-4 self-start px-4 py-4 h-full w-[384px] min-w-[384px] 3xl:w-[540px] 3xl:min-w-[540px] flex-shrink-0 overflow-auto scrollbar-none">
               <div>
                 <MarketModeSelect onSecondarySelectionChange={handleSecondaryTabClick} />
                 {viewMode === "buy" && !fillView && <CreateOrder />}
