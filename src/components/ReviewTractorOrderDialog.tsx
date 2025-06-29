@@ -556,9 +556,9 @@ export default function ReviewTractorOrderDialog({
                       )} */}
 
                     {/* Existing Table */}
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
+                    <div className="overflow-x-auto max-h-[39rem] overflow-y-auto">
+                      <table className="relative w-full border-collapse">
+                        <thead className="sticky top-0">
                           <tr className="bg-gray-50">
                             <th className="px-4 py-3 text-left text-gray-600 border-b">Execution</th>
                             <th className="px-4 py-3 text-right text-gray-600 border-b">PINTO Sown</th>

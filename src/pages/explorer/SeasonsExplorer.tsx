@@ -65,6 +65,7 @@ const SeasonsExplorer = () => {
     basinData: false,
     apyData: false,
     tractorData: false,
+    inflowData: false,
   });
 
   const calculateSeasonPageToJump = (season: number) => {

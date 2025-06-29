@@ -1,5 +1,6 @@
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
+import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
 import {
   useFarmerSeasonalClaimedGrownStalkBalance,
   useFarmerSeasonalPlantedPinto,
@@ -8,12 +9,17 @@ import {
 import { useSunData } from "@/state/useSunData";
 import { chartFormatters as f } from "@/utils/format";
 import { useState } from "react";
+import { useAccount } from "wagmi";
+
+const NO_DATA_MESSAGE = "No silo interactions from connected wallet";
 
 const FarmerExplorer = () => {
-  const [plantedTab, setPlantedTab] = useState(TimeTab.AllTime);
-  const [grownStalkTab, setGrownStalkTab] = useState(TimeTab.AllTime);
-  const [stalkOwnershipTab, setStalkOwnershipTab] = useState(TimeTab.AllTime);
+  const [plantedTab, setPlantedTab] = useSharedTimeTab("farmerPlanted");
+  const [grownStalkTab, setGrownStalkTab] = useSharedTimeTab("farmerGrownStalk");
+  const [stalkOwnershipTab, setStalkOwnershipTab] = useSharedTimeTab("farmerStalkOwnership");
   const season = useSunData().current;
+
+  const { address, isConnecting } = useAccount();
 
   const plantedData = useFarmerSeasonalPlantedPinto(Math.max(0, season - tabToSeasonalLookback(plantedTab)), season);
   const grownStalkData = useFarmerSeasonalClaimedGrownStalkBalance(
@@ -24,11 +30,13 @@ const FarmerExplorer = () => {
     Math.max(0, season - tabToSeasonalLookback(stalkOwnershipTab)),
     season,
   );
-  console.log(
+  console.debug(
     "🚀 ~ FarmerExplorer ~ Math.max(0, season - tabToSeasonalLookback(stalkOwnershipTab)), season:",
     Math.max(0, season - tabToSeasonalLookback(stalkOwnershipTab)),
     season,
   );
+
+  const dataNotFetching = !address && !isConnecting;
 
   return (
     <>
@@ -40,8 +48,10 @@ const FarmerExplorer = () => {
         activeTab={plantedTab}
         onChangeTab={setPlantedTab}
         useSeasonalResult={plantedData}
+        dataNotFetching={dataNotFetching}
         valueFormatter={f.number0dFormatter}
         tickValueFormatter={f.largeNumberFormatter}
+        noDataMessage={NO_DATA_MESSAGE}
       />
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/2">
@@ -52,8 +62,10 @@ const FarmerExplorer = () => {
             activeTab={grownStalkTab}
             onChangeTab={setGrownStalkTab}
             useSeasonalResult={grownStalkData}
+            dataNotFetching={dataNotFetching}
             valueFormatter={f.number0dFormatter}
             tickValueFormatter={f.largeNumberFormatter}
+            noDataMessage={NO_DATA_MESSAGE}
           />
         </div>
         <div className="w-full sm:w-1/2">
@@ -64,8 +76,10 @@ const FarmerExplorer = () => {
             activeTab={stalkOwnershipTab}
             onChangeTab={setStalkOwnershipTab}
             useSeasonalResult={stalkOwnershipData}
+            dataNotFetching={dataNotFetching}
             valueFormatter={f.percent3dFormatter}
             tickValueFormatter={f.percent0dFormatter}
+            noDataMessage={NO_DATA_MESSAGE}
           />
         </div>
       </div>

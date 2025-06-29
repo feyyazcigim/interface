@@ -17,6 +17,7 @@ import { Duration } from "luxon";
 import { useCallback, useMemo } from "react";
 import { useChainId } from "wagmi";
 import { APYWindow, useSeasonalAPYs } from "./seasonal/queries/useSeasonalAPY";
+import useSeasonalInflowSnapshots from "./seasonal/queries/useSeasonalInflowSnapshots";
 import useSeasonalQueries, {
   SeasonalQueryVars,
   useMultiSeasonalQueries,
@@ -59,11 +60,26 @@ export interface SeasonsTableData {
   numberOfSows: number;
   numberOfSowers: number;
   stalk: TokenValue;
-  cumulativeVolume: number;
-  cumulativeConverts: number;
-  deltaBuysNet: number;
-  deltaConvertsUpNet: number;
-  liquidity: number;
+  cumulativeVolumeNet: number;
+  cumulativeBuyVolumeUSD: number;
+  cumulativeSellVolumeUSD: number;
+  cumulativeVolumeUSD: number;
+  deltaVolumeNet: number;
+  deltaBuyVolumeUSD: number;
+  deltaSellVolumeUSD: number;
+  deltaVolumeUSD: number;
+  cumulativeConvertVolumeNet: number;
+  cumulativeConvertUpVolumeUSD: number;
+  cumulativeConvertDownVolumeUSD: number;
+  cumulativeConvertVolumeUSD: number;
+  cumulativeConvertNeutralTransferVolumeUSD: number;
+  deltaConvertVolumeNet: number;
+  deltaConvertUpVolumeUSD: number;
+  deltaConvertDownVolumeUSD: number;
+  deltaConvertVolumeUSD: number;
+  deltaConvertNeutralTransferVolumeUSD: number;
+  liquidityUSD: number;
+  deltaLiquidityUSD: number;
   pinto30d: number;
   pinto7d: number;
   pinto24h: number;
@@ -75,6 +91,30 @@ export interface SeasonsTableData {
   tractorMaxActiveTip: TokenValue;
   tractorExecutions: number;
   tractorPublishers: number;
+  inflowAllCumulativeNet: number;
+  inflowAllCumulativeIn: number;
+  inflowAllCumulativeOut: number;
+  inflowAllCumulativeVolume: number;
+  inflowAllDeltaNet: number;
+  inflowAllDeltaIn: number;
+  inflowAllDeltaOut: number;
+  inflowAllDeltaVolume: number;
+  inflowSiloCumulativeNet: number;
+  inflowSiloCumulativeIn: number;
+  inflowSiloCumulativeOut: number;
+  inflowSiloCumulativeVolume: number;
+  inflowSiloDeltaNet: number;
+  inflowSiloDeltaIn: number;
+  inflowSiloDeltaOut: number;
+  inflowSiloDeltaVolume: number;
+  inflowFieldCumulativeNet: number;
+  inflowFieldCumulativeIn: number;
+  inflowFieldCumulativeOut: number;
+  inflowFieldCumulativeVolume: number;
+  inflowFieldDeltaNet: number;
+  inflowFieldDeltaIn: number;
+  inflowFieldDeltaOut: number;
+  inflowFieldDeltaVolume: number;
 }
 
 const stalkPaginateSettings: PaginationSettings<
@@ -131,10 +171,22 @@ const basinPaginateSettings: PaginationSettings<
 export default function useSeasonsData(
   fromSeason: number,
   toSeason: number,
-  { beanstalkData = true, beanData = true, basinData = true, apyData = true, tractorData = true } = {},
+  {
+    // If true, syncs subgraph snapshot seasons with api snapshot seasons. In practice this means all datapoints
+    // are formatted to indicate the value at the start of the season, not anything during the season.
+    seasonSync = false,
+    // Controls whether each of these datapoints are fetched from their respective sources
+    beanstalkData = true,
+    beanData = true,
+    basinData = true,
+    apyData = true,
+    tractorData = true,
+    inflowData = true,
+  } = {},
 ) {
   const chainId = useChainId();
   const tokenData = useTokenData();
+  const syncOffset = seasonSync ? 1 : 0;
 
   const stalkQueryFnFactory = useCallback(
     (vars: SeasonalQueryVars) => async () => {
@@ -163,7 +215,7 @@ export default function useSeasonsData(
   );
 
   const useStalkQuery = useMultiSeasonalQueries("all_seasonsTableStalk", {
-    fromSeason,
+    fromSeason: fromSeason - syncOffset,
     toSeason,
     queryVars: {},
     historicalQueryFnFactory: stalkQueryFnFactory as any, // TODO: better type support
@@ -179,8 +231,8 @@ export default function useSeasonsData(
   }) as any;
 
   const useBeanQuery = useSeasonalQueries("all_seasonsTableBean", {
-    fromSeason: fromSeason,
-    toSeason: toSeason,
+    fromSeason: fromSeason - syncOffset,
+    toSeason,
     queryVars: {},
     historicalQueryFnFactory: beanQueryFnFactory,
     currentQueryFnFactory: beanQueryFnFactory,
@@ -195,8 +247,8 @@ export default function useSeasonsData(
   });
 
   const useBasinQuery = useSeasonalQueries("all_seasonsTableBasin", {
-    fromSeason: fromSeason,
-    toSeason: toSeason,
+    fromSeason: fromSeason - syncOffset,
+    toSeason,
     queryVars: {},
     historicalQueryFnFactory: basinQueryFnFactory,
     currentQueryFnFactory: basinQueryFnFactory,
@@ -214,7 +266,12 @@ export default function useSeasonsData(
 
   const useTractorQuery = useSeasonalTractorSnapshots("SOW_V0", fromSeason, toSeason, (e: any) => e, {
     orderBy: "desc",
-    enabled: apyData,
+    enabled: tractorData,
+  });
+
+  const useInflowQuery = useSeasonalInflowSnapshots(fromSeason, toSeason, (e: any) => e, {
+    orderBy: "desc",
+    enabled: inflowData,
   });
 
   const transformedData = useMemo(() => {
@@ -223,7 +280,8 @@ export default function useSeasonsData(
       (beanData && Object.keys(useBeanQuery.data || {}).length === 0) ||
       (basinData && Object.keys(useBasinQuery.data || {}).length === 0) ||
       (apyData && Object.keys(useAPYQuery.data || {}).length === 0) ||
-      (tractorData && Object.keys(useTractorQuery.data || {}).length === 0)
+      (tractorData && Object.keys(useTractorQuery.data || {}).length === 0) ||
+      (inflowData && Object.keys(useInflowQuery.data || {}).length === 0)
     ) {
       return [];
     }
@@ -236,23 +294,28 @@ export default function useSeasonsData(
       [APYWindow.DAILY]: apy24h,
     } = useAPYQuery?.data || {};
     const tractorSnapshots = useTractorQuery?.data || ([] as any);
+    const inflowSnapshots = useInflowQuery?.data || ([] as any);
 
     const maxLength = Math.max(
-      beanResults.length,
-      stalkResults.fieldHourlySnapshots.length,
-      basinResults.length,
-      tractorSnapshots.length,
+      beanResults.length - syncOffset,
+      stalkResults.fieldHourlySnapshots.length - syncOffset,
+      basinResults.length - syncOffset,
       apy24h?.length || 0,
+      tractorSnapshots.length,
+      inflowSnapshots.length,
     );
 
     const transformedData: SeasonsTableData[] = [];
     for (let idx = 0; idx < maxLength; ++idx) {
       const allData: Partial<SeasonsTableData> = {};
+      const countSubgraphSeasons = stalkResults.seasons.length;
 
-      if (beanstalkData) {
-        const currFieldHourlySnapshots = stalkResults.fieldHourlySnapshots[idx];
-        const currSiloHourlySnapshots = stalkResults.siloHourlySnapshots[idx];
-        const currStalkSeasons = stalkResults.seasons[idx];
+      // Subgraph data optionally has a +1 season offset applied to the datapoints, such that
+      // the result indicates the value at the start rather than end of the season.
+      if (beanstalkData && idx + syncOffset < countSubgraphSeasons) {
+        const currFieldHourlySnapshots = stalkResults.fieldHourlySnapshots[idx + syncOffset];
+        const currSiloHourlySnapshots = stalkResults.siloHourlySnapshots[idx + syncOffset];
+        const currStalkSeasons = stalkResults.seasons[idx + syncOffset];
         const timeSown = currFieldHourlySnapshots.blocksToSoldOutSoil
           ? Duration.fromMillis(currFieldHourlySnapshots.blocksToSoldOutSoil * 2 * 1000).toFormat("mm:ss")
           : "-";
@@ -296,14 +359,15 @@ export default function useSeasonsData(
         }
 
         if (!allData.season) {
-          allData.season = currStalkSeasons.season;
-          allData.timestamp = Number(currStalkSeasons.createdAt || 0);
-          allData.sunriseBlock = Number(currStalkSeasons.sunriseBlock || 0);
+          const season = stalkResults.seasons[idx];
+          allData.season = season.season;
+          allData.timestamp = Number(season.createdAt || 0);
+          allData.sunriseBlock = Number(season.sunriseBlock || 0);
         }
       }
 
-      if (beanData) {
-        const beanHourly = beanResults[idx].beanHourlySnapshot;
+      if (beanData && idx + syncOffset < countSubgraphSeasons) {
+        const beanHourly = beanResults[idx + syncOffset].beanHourlySnapshot;
         allData.crosses = beanHourly.crosses;
         allData.marketCap = Number(beanHourly.marketCap);
         allData.supply = TokenValue.fromBlockchain(beanHourly.supply, tokenData.mainToken.decimals);
@@ -315,23 +379,44 @@ export default function useSeasonsData(
         allData.twaPrice = TokenValue.fromHuman(beanHourly.twaPrice, 4);
 
         if (!allData.season) {
-          allData.season = beanHourly.season.season;
-          allData.timestamp = Number(beanHourly.season.timestamp || 0);
+          const season = beanResults[idx].season;
+          allData.season = season.season;
+          allData.timestamp = Number(season.timestamp || 0);
         }
       }
 
-      if (basinData) {
-        const currBasinSeason = basinResults[idx];
-        allData.cumulativeVolume = Number(currBasinSeason.cumulativeTradeVolumeUSD);
-        allData.cumulativeConverts = Number(currBasinSeason.cumulativeConvertVolumeUSD);
-        allData.deltaBuysNet = Number(currBasinSeason.deltaBuyVolumeUSD) - Number(currBasinSeason.deltaSellVolumeUSD);
-        allData.deltaConvertsUpNet =
+      if (basinData && idx + syncOffset < countSubgraphSeasons) {
+        const currBasinSeason = basinResults[idx + syncOffset];
+        allData.cumulativeVolumeNet =
+          Number(currBasinSeason.cumulativeBuyVolumeUSD) - Number(currBasinSeason.cumulativeSellVolumeUSD);
+        allData.cumulativeBuyVolumeUSD = Number(currBasinSeason.cumulativeBuyVolumeUSD);
+        allData.cumulativeSellVolumeUSD = Number(currBasinSeason.cumulativeSellVolumeUSD);
+        allData.cumulativeVolumeUSD = Number(currBasinSeason.cumulativeTradeVolumeUSD);
+        allData.deltaVolumeNet = Number(currBasinSeason.deltaBuyVolumeUSD) - Number(currBasinSeason.deltaSellVolumeUSD);
+        allData.deltaBuyVolumeUSD = Number(currBasinSeason.deltaBuyVolumeUSD);
+        allData.deltaSellVolumeUSD = Number(currBasinSeason.deltaSellVolumeUSD);
+        allData.deltaVolumeUSD = Number(currBasinSeason.deltaTradeVolumeUSD);
+        allData.cumulativeConvertVolumeNet =
+          Number(currBasinSeason.cumulativeConvertUpVolumeUSD) - Number(currBasinSeason.cumulativeConvertDownVolumeUSD);
+        allData.cumulativeConvertUpVolumeUSD = Number(currBasinSeason.cumulativeConvertUpVolumeUSD);
+        allData.cumulativeConvertDownVolumeUSD = Number(currBasinSeason.cumulativeConvertDownVolumeUSD);
+        allData.cumulativeConvertVolumeUSD = Number(currBasinSeason.cumulativeConvertVolumeUSD);
+        allData.cumulativeConvertNeutralTransferVolumeUSD = Number(
+          currBasinSeason.cumulativeConvertNeutralTransferVolumeUSD,
+        );
+        allData.deltaConvertVolumeNet =
           Number(currBasinSeason.deltaConvertUpVolumeUSD) - Number(currBasinSeason.deltaConvertDownVolumeUSD);
-        allData.liquidity = Number(currBasinSeason.totalLiquidityUSD);
+        allData.deltaConvertUpVolumeUSD = Number(currBasinSeason.deltaConvertUpVolumeUSD);
+        allData.deltaConvertDownVolumeUSD = Number(currBasinSeason.deltaConvertDownVolumeUSD);
+        allData.deltaConvertVolumeUSD = Number(currBasinSeason.deltaConvertVolumeUSD);
+        allData.deltaConvertNeutralTransferVolumeUSD = Number(currBasinSeason.deltaConvertNeutralTransferVolumeUSD);
+        allData.liquidityUSD = Number(currBasinSeason.totalLiquidityUSD);
+        allData.deltaLiquidityUSD = Number(currBasinSeason.deltaLiquidityUSD);
 
         if (!allData.season) {
-          allData.season = currBasinSeason.season.season;
-          allData.timestamp = Number(currBasinSeason.createdTimestamp);
+          const season = basinResults[idx].season;
+          allData.season = season.season;
+          allData.timestamp = Number(season.createdTimestamp);
         }
       }
 
@@ -348,7 +433,7 @@ export default function useSeasonsData(
 
       if (tractorData) {
         // Ensure tractor api response is fully caught up/in sync
-        if (tractorSnapshots[idx]?.season === allData.season) {
+        if (!allData.season || tractorSnapshots[idx]?.season === allData.season) {
           allData.tractorSownPinto = TokenValue.fromBlockchain(
             tractorSnapshots[idx]?.totalPintoSown || 0n,
             PODS.decimals,
@@ -375,11 +460,47 @@ export default function useSeasonsData(
           );
           allData.tractorExecutions = tractorSnapshots[idx]?.totalExecutions || 0;
           allData.tractorPublishers = tractorSnapshots[idx]?.uniquePublishers || 0;
-        }
 
-        if (!allData.season) {
-          allData.season = tractorSnapshots[idx]?.season;
-          allData.timestamp = new Date(tractorSnapshots[idx]?.snapshotTimestamp).getTime() / 1000;
+          if (!allData.season) {
+            allData.season = tractorSnapshots[idx]?.season;
+            allData.timestamp = new Date(tractorSnapshots[idx]?.snapshotTimestamp).getTime() / 1000;
+          }
+        }
+      }
+
+      if (inflowData) {
+        // Ensure api response is fully caught up/in sync
+        const currInflow = inflowSnapshots[idx];
+        if (!allData.season || currInflow?.season === allData.season) {
+          allData.inflowAllCumulativeNet = currInflow.all.cumulative.net;
+          allData.inflowAllCumulativeIn = currInflow.all.cumulative.in;
+          allData.inflowAllCumulativeOut = currInflow.all.cumulative.out;
+          allData.inflowAllCumulativeVolume = currInflow.all.cumulative.volume;
+          allData.inflowAllDeltaNet = currInflow.all.delta.net;
+          allData.inflowAllDeltaIn = currInflow.all.delta.in;
+          allData.inflowAllDeltaOut = currInflow.all.delta.out;
+          allData.inflowAllDeltaVolume = currInflow.all.delta.volume;
+          allData.inflowSiloCumulativeNet = currInflow.silo.cumulative.net;
+          allData.inflowSiloCumulativeIn = currInflow.silo.cumulative.in;
+          allData.inflowSiloCumulativeOut = currInflow.silo.cumulative.out;
+          allData.inflowSiloCumulativeVolume = currInflow.silo.cumulative.volume;
+          allData.inflowSiloDeltaNet = currInflow.silo.delta.net;
+          allData.inflowSiloDeltaIn = currInflow.silo.delta.in;
+          allData.inflowSiloDeltaOut = currInflow.silo.delta.out;
+          allData.inflowSiloDeltaVolume = currInflow.silo.delta.volume;
+          allData.inflowFieldCumulativeNet = currInflow.field.cumulative.net;
+          allData.inflowFieldCumulativeIn = currInflow.field.cumulative.in;
+          allData.inflowFieldCumulativeOut = currInflow.field.cumulative.out;
+          allData.inflowFieldCumulativeVolume = currInflow.field.cumulative.volume;
+          allData.inflowFieldDeltaNet = currInflow.field.delta.net;
+          allData.inflowFieldDeltaIn = currInflow.field.delta.in;
+          allData.inflowFieldDeltaOut = currInflow.field.delta.out;
+          allData.inflowFieldDeltaVolume = currInflow.field.delta.volume;
+
+          if (!allData.season) {
+            allData.season = currInflow.season;
+            allData.timestamp = new Date(currInflow.snapshotTimestamp).getTime() / 1000;
+          }
         }
       }
       transformedData.push(allData as SeasonsTableData);
@@ -392,6 +513,7 @@ export default function useSeasonsData(
     useAPYQuery.data,
     useTractorQuery.data,
     tokenData.mainToken.decimals,
+    seasonSync,
     beanstalkData,
     beanData,
     basinData,

@@ -13,6 +13,7 @@ import {
 } from "chart.js";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ReactChart } from "../ReactChart";
+import { LineChartHorizontalReferenceLine, plugins } from "./chartHelpers";
 
 Chart.register(LineController, LineElement, LinearScale, LogarithmicScale, CategoryScale, PointElement, Filler);
 
@@ -48,17 +49,15 @@ export interface LineChartProps {
   onMouseOver?: (index: number) => void;
   activeIndex?: number;
   useLogarithmicScale?: boolean;
-  horizontalReferenceLines?: {
-    value: number;
-    color: string;
-    dash?: number[];
-    label?: string;
-  }[];
+  horizontalReferenceLines?: LineChartHorizontalReferenceLine[];
   // Props for custom y-axis range
   yAxisMin?: number;
   yAxisMax?: number;
   customValueTransform?: CustomChartValueTransform;
 }
+
+// provide a stable reference to the horizontal reference lines to avoid re-rendering the chart when some other prop changes
+const stableHorizontalReferenceLines: LineChartHorizontalReferenceLine[] = [];
 
 const LineChart = React.memo(
   ({
@@ -71,7 +70,7 @@ const LineChart = React.memo(
     onMouseOver,
     activeIndex,
     useLogarithmicScale = false,
-    horizontalReferenceLines = [],
+    horizontalReferenceLines = stableHorizontalReferenceLines,
     yAxisMin,
     yAxisMax,
     customValueTransform,
@@ -82,39 +81,12 @@ const LineChart = React.memo(
     useEffect(() => {
       activeIndexRef.current = activeIndex;
       if (chartRef.current) {
-        chartRef.current.update("none"); // Disable animations during update
+        // prevent animation on update
+        chartRef.current.update("none");
       }
     }, [activeIndex]);
 
     const [yTickMin, yTickMax] = useMemo(() => {
-      // If custom min/max are provided, use those
-      if (yAxisMin !== undefined && yAxisMax !== undefined) {
-        // Even with custom ranges, ensure 1.0 is visible if showReferenceLineAtOne is true
-        if (horizontalReferenceLines.some((line) => line.value === 1)) {
-          const hasOne = yAxisMin <= 1 && yAxisMax >= 1;
-          if (!hasOne) {
-            // If 1.0 is not in range, adjust the range to include it
-            if (useLogarithmicScale) {
-              // For logarithmic scale, we need to ensure we maintain the ratio
-              // but include 1.0 in the range
-              if (yAxisMin > 1) {
-                return [0.7, Math.max(yAxisMax, 1.5)]; // Include 1.0 with padding below
-              } else if (yAxisMax < 1) {
-                return [Math.min(yAxisMin, 0.7), 1.5]; // Include 1.0 with padding above
-              }
-            } else {
-              // For linear scale, just expand the range to include 1.0
-              if (yAxisMin > 1) {
-                return [0.9, Math.max(yAxisMax, 1.1)]; // Include 1.0 with padding
-              } else if (yAxisMax < 1) {
-                return [Math.min(yAxisMin, 0.9), 1.1]; // Include 1.0 with padding
-              }
-            }
-          }
-        }
-        return [yAxisMin, yAxisMax];
-      }
-
       // Otherwise calculate based on data
       const maxData = data.reduce((acc, next) => Math.max(acc, ...next.values), Number.MIN_SAFE_INTEGER);
       const minData = data.reduce((acc, next) => Math.min(acc, ...next.values), Number.MAX_SAFE_INTEGER);
@@ -183,264 +155,28 @@ const LineChart = React.memo(
       [data, makeLineGradients, makeAreaGradients, xKey],
     );
 
-    const gradientPlugin = useMemo(() => {
-      return {
-        id: "customGradientShift",
-        beforeUpdate: (chart) => {
-          const ctx = chart.ctx;
-          const activeIndex = activeIndexRef.current;
-          if (ctx && typeof activeIndex === "number") {
-            const grayColor = "rgba(128, 128, 128, 0.1)"; // Define your gray color here
+    // ---------- PLUGINS ----------
 
-            for (let i = 0; i < chart.data.datasets.length; ++i) {
-              const dataset = chart.data.datasets[i];
-              const lineGradient = makeLineGradients[i](ctx, 1);
-              const areaGradient = makeAreaGradients ? makeAreaGradients[i](ctx, 1) : null;
-
-              // Apply gradients to the entire dataset
-              dataset.borderColor = lineGradient;
-              dataset.backgroundColor = areaGradient;
-
-              // Use segment configuration for conditional coloring
-              dataset.segment = {
-                borderColor: (ctx) => {
-                  const dataIndex = ctx.p0DataIndex;
-                  const isAfterActiveIndex = dataIndex >= activeIndex;
-                  return isAfterActiveIndex ? grayColor : undefined;
-                },
-                backgroundColor: (ctx) => {
-                  const dataIndex = ctx.p0DataIndex;
-                  const isAfterActiveIndex = dataIndex >= activeIndex;
-                  return isAfterActiveIndex ? grayColor : undefined;
-                },
-              };
-            }
-          }
-        },
-      };
-    }, [makeLineGradients, makeAreaGradients]); // Removed morningIndex from dependencies
+    const gradientPlugin = useMemo(
+      () => plugins.gradientShift(activeIndexRef, makeLineGradients, makeAreaGradients),
+      [makeLineGradients, makeAreaGradients],
+    ); // Removed morningIndex from dependencies
 
     const fillArea = !!makeAreaGradients && !!makeAreaGradients.length;
 
-    // const referenceDotPlugin: Plugin = useMemo<Plugin>(() => {}, []);
+    const verticalLinePlugin: Plugin = useMemo(() => plugins.verticalLine(activeIndexRef, fillArea), [fillArea]);
 
-    const verticalLinePlugin: Plugin = useMemo<Plugin>(
-      () => ({
-        id: "customVerticalLine",
-        afterDraw: (chart: Chart) => {
-          const ctx = chart.ctx;
-          const activeIndex = activeIndexRef.current;
-          if (ctx) {
-            ctx.save();
-            ctx.setLineDash([4, 4]);
+    const horizontalReferenceLinePlugin: Plugin = useMemo(() => {
+      return plugins.horizontalReferenceLine(horizontalReferenceLines);
+    }, [horizontalReferenceLines]);
 
-            // Draw the vertical line at morningIndex
-            if (typeof activeIndex === "number") {
-              const morningDataPoint = chart.getDatasetMeta(0).data[activeIndex];
-              if (morningDataPoint) {
-                const { x } = morningDataPoint.getProps(["x"], true);
-                ctx.beginPath();
-                ctx.moveTo(x, chart.chartArea.top);
-                ctx.lineTo(x, chart.chartArea.bottom);
-                ctx.strokeStyle = "#D9AD0F"; // Use a different color for the morning line
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-              }
-            }
+    const selectionPointPlugin = useMemo(() => {
+      return plugins.selectionPoint(activeIndexRef, fillArea);
+    }, [fillArea]);
 
-            // Draw the vertical line for the active element (hovered point)
-            const activeElements = chart.getActiveElements();
-            if (activeElements.length > 0) {
-              const activeElement = activeElements[0];
-              const datasetIndex = activeElement.datasetIndex;
-              const index = activeElement.index;
-              const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];
-
-              if (dataPoint) {
-                const { x } = dataPoint.getProps(["x"], true);
-                ctx.beginPath();
-                ctx.moveTo(x, chart.chartArea.top);
-                ctx.lineTo(x, chart.chartArea.bottom);
-                ctx.strokeStyle = fillArea ? "#D9AD0F" : "#246645";
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-              }
-            }
-
-            ctx.restore();
-          }
-        },
-      }),
-      [fillArea], // Removed morningIndex from dependencies
-    );
-
-    const horizontalReferenceLinePlugin: Plugin = useMemo<Plugin>(
-      () => ({
-        id: "horizontalReferenceLine",
-        afterDraw: (chart: Chart) => {
-          const ctx = chart.ctx;
-          if (!ctx || horizontalReferenceLines.length === 0) return;
-
-          ctx.save();
-
-          // Draw each horizontal reference line
-          horizontalReferenceLines.forEach((line) => {
-            const yScale = chart.scales.y;
-            const y = yScale.getPixelForValue(line.value);
-
-            // Only draw if within chart area
-            if (y >= chart.chartArea.top && y <= chart.chartArea.bottom) {
-              ctx.beginPath();
-              if (line.dash) {
-                ctx.setLineDash(line.dash);
-              } else {
-                ctx.setLineDash([4, 4]); // Default dash pattern
-              }
-              ctx.moveTo(chart.chartArea.left, y);
-              ctx.lineTo(chart.chartArea.right, y);
-              ctx.strokeStyle = line.color;
-              ctx.lineWidth = 1;
-              ctx.stroke();
-
-              // Reset dash pattern
-              ctx.setLineDash([]);
-
-              // Add label if provided
-              if (line.label) {
-                ctx.font = "12px Arial";
-                ctx.fillStyle = line.color;
-
-                // Measure text width to ensure it doesn't get cut off
-                const textWidth = ctx.measureText(line.label).width;
-                const rightPadding = 10; // Padding from right edge
-
-                // Position the label at the right side of the chart with padding
-                const labelX = chart.chartArea.right - textWidth - rightPadding;
-                const labelPadding = 5; // Padding between line and text
-                const textHeight = 12; // Approximate height of the text
-
-                // Check if the line is too close to the top of the chart
-                const isNearTop = y - textHeight - labelPadding < chart.chartArea.top;
-
-                // Check if the line is too close to the bottom of the chart
-                const isNearBottom = y + textHeight + labelPadding > chart.chartArea.bottom;
-
-                // Set text alignment
-                ctx.textAlign = "left";
-
-                // Position the label based on proximity to chart edges
-                // biome-ignore lint/suspicious/noExplicitAny:
-                let labelY: any;
-                ctx.textBaseline = "bottom";
-                labelY = y - labelPadding;
-                if (isNearTop) {
-                  ctx.textBaseline = "top";
-                  labelY = y + labelPadding;
-                } else if (isNearBottom) {
-                  labelY = y - labelPadding;
-                }
-                ctx.fillText(line.label, labelX, labelY);
-              }
-            }
-          });
-
-          ctx.restore();
-        },
-      }),
-      [horizontalReferenceLines],
-    );
-
-    const selectionPointPlugin: Plugin = useMemo<Plugin>(
-      () => ({
-        id: "customSelectPoint",
-        afterDraw: (chart: Chart) => {
-          const ctx = chart.ctx;
-          const activeIndex = activeIndexRef.current;
-          if (!ctx) return;
-
-          // Define the function to draw the selection point
-          const drawSelectionPoint = (x: number, y: number) => {
-            ctx.save();
-            ctx.fillStyle = fillArea ? "#D9AD0F" : "#246645";
-            ctx.strokeStyle = fillArea ? "#D9AD0F" : "#246645";
-            ctx.lineWidth = 1;
-
-            const rectWidth = 6;
-            const rectHeight = 6;
-            const cornerRadius = 4;
-
-            ctx.beginPath();
-            ctx.moveTo(x - rectWidth / 2 + cornerRadius, y - rectHeight / 2);
-            ctx.lineTo(x + rectWidth / 2 - cornerRadius, y - rectHeight / 2);
-            ctx.quadraticCurveTo(
-              x + rectWidth / 2,
-              y - rectHeight / 2,
-              x + rectWidth / 2,
-              y - rectHeight / 2 + cornerRadius,
-            );
-            ctx.lineTo(x + rectWidth / 2, y + rectHeight / 2 - cornerRadius);
-            ctx.quadraticCurveTo(
-              x + rectWidth / 2,
-              y + rectHeight / 2,
-              x + rectWidth / 2 - cornerRadius,
-              y + rectHeight / 2,
-            );
-            ctx.lineTo(x - rectWidth / 2 + cornerRadius, y + rectHeight / 2);
-            ctx.quadraticCurveTo(
-              x - rectWidth / 2,
-              y + rectHeight / 2,
-              x - rectWidth / 2,
-              y + rectHeight / 2 - cornerRadius,
-            );
-            ctx.lineTo(x - rectWidth / 2, y - rectHeight / 2 + cornerRadius);
-            ctx.quadraticCurveTo(
-              x - rectWidth / 2,
-              y - rectHeight / 2,
-              x - rectWidth / 2 + cornerRadius,
-              y - rectHeight / 2,
-            );
-            ctx.closePath();
-
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-          };
-
-          // Draw selection point for the hovered data point
-          const activeElements = chart.getActiveElements();
-          for (const activeElement of activeElements) {
-            const datasetIndex = activeElement.datasetIndex;
-            const index = activeElement.index;
-            const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];
-
-            if (dataPoint) {
-              const { x, y } = dataPoint.getProps(["x", "y"], true);
-              drawSelectionPoint(x, y);
-            }
-          }
-
-          // Draw selection point for the morningIndex
-          if (typeof activeIndex === "number") {
-            const dataPoint = chart.getDatasetMeta(0).data[activeIndex];
-            if (dataPoint) {
-              const { x, y } = dataPoint.getProps(["x", "y"], true);
-              drawSelectionPoint(x, y);
-            }
-          }
-        },
-      }),
-      [fillArea], // Removed morningIndex from dependencies
-    );
-
-    const selectionCallbackPlugin: Plugin = useMemo<Plugin>(
-      () => ({
-        id: "selectionCallback",
-        afterDraw: (chart: Chart) => {
-          onMouseOver?.(chart.getActiveElements()[0]?.index);
-        },
-      }),
-      [],
-    );
+    const selectionCallbackPlugin: Plugin = useMemo(() => {
+      return plugins.selectionCallback(onMouseOver);
+    }, [onMouseOver]);
 
     const chartOptions: ChartOptions = useMemo(() => {
       return {
@@ -473,8 +209,8 @@ const LineChart = React.memo(
             grid: {
               display: true,
               color: (context) => {
-                const tickLabel = context.tick && context.tick.label;
-                if (typeof activeIndex === "number") {
+                const tickLabel = context.tick?.label;
+                if (typeof activeIndexRef.current === "number") {
                   if (tickLabel && tickLabel !== "") {
                     return "rgba(0, 0, 0, 0.1)";
                   } else {
@@ -492,8 +228,8 @@ const LineChart = React.memo(
               padding: 0,
               minRotation: 0,
               maxRotation: 0,
-              autoSkip: typeof activeIndex !== "number",
-              maxTicksLimit: typeof activeIndex !== "number" ? 6 : undefined,
+              autoSkip: typeof activeIndexRef.current !== "number",
+              maxTicksLimit: typeof activeIndexRef.current !== "number" ? 6 : undefined,
               callback: (_value, index, values) => {
                 const xValue = data[index][xKey];
 
@@ -503,7 +239,7 @@ const LineChart = React.memo(
 
                 const tickLabel = xValue instanceof Date ? `${xValue.getMonth() + 1}/${xValue.getDate()}` : xValue;
 
-                if (typeof activeIndex === "number") {
+                if (typeof activeIndexRef.current === "number") {
                   if (index === 0 || index === values.length - 1) {
                     return tickLabel;
                   }
@@ -542,7 +278,8 @@ const LineChart = React.memo(
             }),
             ticks: {
               padding: 0,
-              maxTicksLimit: 3,
+              maxTicksLimit: 4,
+              includeBounds: true,
               callback: (value) => {
                 let num = typeof value === "string" ? Number(value) : value;
                 // If there is custom scaling for this chart, reverse it to get the original value
@@ -557,10 +294,13 @@ const LineChart = React.memo(
       };
     }, [data, xKey, yTickMin, yTickMax, valueFormatter, useLogarithmicScale, customValueTransform]);
 
+    const activeIndexVerticalLinePlugin: Plugin = useMemo(() => plugins.activeIndexVerticalLine(activeIndexRef), []);
+
     const allPlugins = useMemo<Plugin[]>(
       () => [
         gradientPlugin,
         verticalLinePlugin,
+        activeIndexVerticalLinePlugin,
         horizontalReferenceLinePlugin,
         selectionPointPlugin,
         selectionCallbackPlugin,
@@ -570,6 +310,7 @@ const LineChart = React.memo(
         verticalLinePlugin,
         horizontalReferenceLinePlugin,
         selectionPointPlugin,
+        activeIndexVerticalLinePlugin,
         selectionCallbackPlugin,
       ],
     );

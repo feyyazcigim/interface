@@ -42,7 +42,7 @@ export default function useSeasonalTractorSnapshots(
         body: JSON.stringify({
           orderType,
           betweenSeasons: [fromSeason, toSeason],
-          limit: 25000,
+          limit: 50000,
         }),
       });
       if (!res.ok) {

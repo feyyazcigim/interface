@@ -34,3 +34,6 @@ export type ChainLookup<T> = { [chainId: number]: T };
 export type AddressLookup<T> = Lookup<T>;
 
 export type MayArray<T> = T | T[];
+
+// biome-ignore lint/suspicious/noExplicitAny: any record
+export type AnyRecord = Record<string, any>;

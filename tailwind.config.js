@@ -113,6 +113,7 @@ module.exports = {
           "gray-3": "#B9B9B9",
           "gray-4": "#9C9C9C",
           "gray-5": "#404040",
+          "gray-6": "#6E6E6E", // Not in figma
           "gray-blue": "#E9F0F6",
           "off-white": "#FCFCFC",
           "morning-yellow-0": "#E9E7E0",
@@ -128,6 +129,7 @@ module.exports = {
           "morning-orange": "#FBE39B",
           primary: "#000000", // black clsx("text-black"),
           secondary: "#404040", // pinto-gray-5 clsx("text-pinto-gray-5"),
+          "med-light": "#6E6E6E",  // pinto-gray-6 clsx("text-pinto-gray-6"),
           light: "#9C9C9C", // pinto-gray-4 clsx("text-pinto-gray-4"),
           lighter: "#B9B9B9", // pinto-gray-3 clsx("text-pinto-gray-3"),
           success: "#00C767", // pinto-green-2 clsx("text-pinto-green-2"),
@@ -158,10 +160,10 @@ module.exports = {
         "dot-grid": "radial-gradient(#D9D9D9 2px, transparent 2px)",
       },
       borderRadius: {
-        xl: "calc(var(--radius) + 8px)", // 20px
+        xl: "calc(var(--radius) + 0.5rem)", // 20px
         lg: `var(--radius)`, //12px
-        md: `calc(var(--radius) - 2px)`, //10px
-        sm: "calc(var(--radius) - 4px)", //8px
+        md: `calc(var(--radius) - 0.125rem)`, //10px
+        sm: "calc(var(--radius) - 0.25rem)", //8px
       },
       dropShadow: {
         "pinto-token-select": "0px 1px 8px 0px rgba(233, 240, 246, 1)",

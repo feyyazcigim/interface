@@ -5,7 +5,7 @@ import { useSeason } from "@/state/useSunData";
 import { cn, safeJSONParse, safeJSONStringify } from "@/utils/utils";
 import { atom, useAtom } from "jotai";
 import { IRange, Time, UTCTimestamp } from "lightweight-charts";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CalendarButton from "../CalendarButton";
 import { PlusIcon } from "../Icons";
 import LoadingSpinner from "../LoadingSpinner";
@@ -50,10 +50,42 @@ export const AdvancedChart = () => {
   const [panelState, setPanelState] = useAtom(navbarPanelAtom);
 
   useEffect(() => {
+    saveChartsToStorage(selectedCharts, chartSetupData);
+  }, [selectedCharts, chartSetupData]);
+
+  // By adjusting fromSeason here, we can avoid fetching data
+  // that might break the chart
+  const seasonsData = useSeasonsData(7, currentSeason, { seasonSync: true });
+
+  useEffect(() => {
     if (storedSelectedCharts && storedSelectedCharts.length > 0) {
       setSelectedCharts(storedSelectedCharts);
     }
   }, [storedSelectedCharts, setSelectedCharts]);
+
+  const [collapseChartButtons, setCollapseChartButtons] = useState(false);
+  const selectedChartsRef = useRef<HTMLDivElement>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Width is recalculated upon selectedCharts changing
+  useEffect(() => {
+    if (!selectedChartsRef.current) {
+      return;
+    }
+
+    // Check for cumulative button width exceeding its container
+    const observer = new ResizeObserver((entries) => {
+      const maxWidth = entries[0].contentRect.width;
+      const buttonsWidth = Array.from(selectedChartsRef.current?.children || []).reduce(
+        (total, button) => total + button.getBoundingClientRect().width,
+        0,
+      );
+      setCollapseChartButtons(buttonsWidth > maxWidth * 0.95);
+    });
+    observer.observe(selectedChartsRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [selectedCharts, collapseChartButtons, seasonsData.isFetching]);
 
   function handleDeselectChart(selectionIndex: number) {
     const newSelection = [...selectedCharts];
@@ -87,14 +119,6 @@ export const AdvancedChart = () => {
       });
     }
   };
-
-  useEffect(() => {
-    saveChartsToStorage(selectedCharts, chartSetupData);
-  }, [selectedCharts, chartSetupData]);
-
-  // By adjusting fromSeason here, we can avoid fetching data
-  // that might break the chart
-  const seasonsData = useSeasonsData(7, currentSeason);
 
   const filtered = useMemo(() => {
     const output: TVChartFormattedData[][] = [];
@@ -153,32 +177,36 @@ export const AdvancedChart = () => {
   return (
     <div className="flex flex-col -mb-8 gap-4 sm:-mb-20 sm:gap-6">
       <div className="flex flex-row gap-4 justify-between">
-        <div className="flex flex-row">
-          <div className="hidden sm:flex flex-row">
+        <div ref={selectedChartsRef} className="flex flex-row flex-1">
+          <div
+            className={cn(
+              "hidden sm:flex flex-row",
+              // Container is made invisible but not removed, so its width can still be calculated
+              collapseChartButtons && "invisible absolute pointer-events-none h-0 overflow-hidden",
+            )}
+          >
             {
               /*
-               * When the user has more than 4 charts selected, we hide the
-               * individual deselect buttons for a single button that says
-               * "4/5/6 Selected" in order to prevent the buttons from
-               * overflowing the page
+               * ResizeObserver replaces the individual deselect buttons with a single button that says
+               * "4/5/6 Selected" in order to prevent the buttons from overflowing the page
                */
-              selectedCharts.length < 5 &&
-                selectedCharts.map(
-                  (selection, index) =>
-                    chartSetupData[selection] && (
-                      <Button
-                        variant="outline"
-                        size="default"
-                        rounded="full"
-                        key={`selectedChart${selection}`}
-                        className="flex flex-row gap-2 mr-4 shadow-none bg-white text-pinto-gray-5 hover:text-pinto-gray-5"
-                        onClick={() => handleDeselectChart(index)}
-                      >
-                        <span>{chartSetupData[selection].name}</span>
-                        <span className="w-4 h-4">×</span>
-                      </Button>
-                    ),
-                )
+
+              selectedCharts.map(
+                (selection, index) =>
+                  chartSetupData[selection] && (
+                    <Button
+                      variant="outline"
+                      size="default"
+                      rounded="full"
+                      key={`selectedChart${selection}`}
+                      className="flex flex-row gap-2 mr-4 shadow-none bg-white text-pinto-gray-5 hover:text-pinto-gray-5"
+                      onClick={() => handleDeselectChart(index)}
+                    >
+                      <span>{chartSetupData[selection].name}</span>
+                      <span className="w-4 h-4">×</span>
+                    </Button>
+                  ),
+              )
             }
           </div>
           <Button
@@ -191,14 +219,8 @@ export const AdvancedChart = () => {
               `flex flex-row gap-2 bg-pinto-green-1 text-pinto-green-3 border-pinto-green-3 hover:bg-pinto-green-2/30 shadow-none hover:text-pinto-green-3`,
             )}
           >
-            {/*
-             * When the user has more than 4 charts selected, we hide the
-             * individual deselect buttons for a single button that says
-             * "4/5/6 Selected" in order to prevent the buttons from
-             * overflowing the page
-             */}
             <span className="hidden sm:inline-block">
-              {selectedCharts.length < 5 ? "Add Chart" : `${selectedCharts.length} Selected`}
+              {!collapseChartButtons ? "Add Chart" : `${selectedCharts.length} Selected`}
             </span>
             <span className="sm:hidden">
               {selectedCharts.length === 0 ? "Add Chart" : `${selectedCharts.length} Selected`}

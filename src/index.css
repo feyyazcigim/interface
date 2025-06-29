@@ -203,6 +203,14 @@ body {
   min-width: 0px;
   font-size: 100%;
   overflow-x: hidden;
+
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+  overscroll-behavior-x: auto; /* allow navigation swiping */
+}
+
+body::-webkit-scrollbar {
+  display: none;
 }
 
 /* Set 75% font size between 768px and 1600px */
