@@ -1,348 +1,429 @@
-import pintoTokenVanilla from "@/assets/tokens/PINTO_VANILLA.png";
-import FrameAnimator from "@/components/LoadingSpinner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { formatter } from "@/utils/format";
-import { Chart, Legend, LinearScale, Plugin, PointElement, ScatterController, Title, Tooltip } from "chart.js";
-import zoomPlugin from "chartjs-plugin-zoom";
-import { useEffect, useMemo, useRef } from "react";
+import {
+  ActiveElement,
+  CategoryScale,
+  Chart,
+  ChartData,
+  ChartEvent,
+  ChartOptions,
+  Filler,
+  LineController,
+  LineElement,
+  LinearScale,
+  LogarithmicScale,
+  Plugin,
+  Point,
+  PointElement,
+  PointStyle,
+  TooltipOptions,
+} from "chart.js";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ReactChart } from "../ReactChart";
 
-Chart.register(ScatterController, PointElement, LinearScale, Title, Tooltip, Legend, zoomPlugin);
+Chart.register(LineController, LineElement, LinearScale, LogarithmicScale, CategoryScale, PointElement, Filler);
 
-interface ScatterPlotData {
-  x: number;
-  y: number;
-  r: number;
-  amount: number;
-  status: string;
-  originalEvent: any;
-  id: string;
-  type: string;
-  index: number;
-  interactable: boolean;
-}
+export type MakeGradientFunction = (
+  ctx: CanvasRenderingContext2D | null,
+  position: number,
+) => CanvasGradient | undefined;
+
+export type LineChartReferenceDotProps = {
+  x: any;
+  y: any;
+};
+
+// For providing custom scaling other than logarithmic.
+export type CustomChartValueTransform = {
+  to: (value: number) => number;
+  from: (value: number) => number;
+};
+
+export type ScatterChartData = {
+  label: string;
+  data: Point[];
+  color: string;
+  pointStyle: PointStyle;
+}[];
+
+export type ScatterChartAxisOptions = {
+  label: string;
+  min: number;
+  max: number;
+};
 
 export interface ScatterChartProps {
-  title?: string;
-  data: ScatterPlotData[];
-  isLoading: boolean;
-  xYMinMax?: {
-    x?: {
-      min?: number;
-      max?: number;
-    };
-    y?: {
-      min?: number;
-      max?: number;
-    };
-  };
-  xLabel?: string;
-  yLabel?: string;
-  onPointClick?: (point: any) => void;
+  data: ScatterChartData;
+  size?: "small" | "large";
+  referenceDot?: LineChartReferenceDotProps;
+  valueFormatter?: (value: number) => string;
+  onMouseOver?: (index: number) => void;
+  activeIndex?: number;
+  useLogarithmicScale?: boolean;
+  horizontalReferenceLines?: {
+    value: number;
+    color: string;
+    dash?: number[];
+    label?: string;
+  }[];
+  onPointClick?: (event: ChartEvent, activeElements: ActiveElement[], chart: Chart) => void;
+  xOptions: ScatterChartAxisOptions;
+  yOptions: ScatterChartAxisOptions;
+  customValueTransform?: CustomChartValueTransform;
+  toolTipOptions?: TooltipOptions;
 }
 
-export function ScatterChart({
-  title,
-  data,
-  isLoading,
-  xYMinMax,
-  onPointClick,
-  xLabel,
-  yLabel,
-}: Readonly<ScatterChartProps>) {
-  const hasInitializedRef = useRef(false);
+const ScatterChartV2 = React.memo(
+  ({
+    data,
+    size,
+    valueFormatter,
+    onMouseOver,
+    activeIndex,
+    useLogarithmicScale = false,
+    horizontalReferenceLines = [],
+    xOptions,
+    yOptions,
+    customValueTransform,
+    onPointClick,
+    toolTipOptions,
+  }: ScatterChartProps) => {
+    const chartRef = useRef<Chart | null>(null);
+    const activeIndexRef = useRef<number | undefined>(activeIndex);
+    const selectedPointRef = useRef<[number, number] | null>(null);
 
-  const selectedPointRef = useRef<any>(null);
-  const isPointSelectedRef = useRef(false);
-  const initialMaxX = useRef<number>(xYMinMax?.x?.max || 10);
-  const initialMaxY = useRef<number>(xYMinMax?.y?.max || 1);
-  const isZoomedRef = useRef(false);
-  const isPanningRef = useRef(false);
+    useEffect(() => {
+      activeIndexRef.current = activeIndex;
+      if (chartRef.current) {
+        chartRef.current.update("none"); // Disable animations during update
+      }
+    }, [activeIndex]);
 
-  const chartRef = useRef<Chart<"scatter"> | null>(null);
-
-  const crosshairPlugin: Plugin = useMemo<Plugin>(
-    () => ({
-      id: "crosshairPlugin",
-      afterDraw(chart: Chart) {
-        const ctx = chart.ctx;
-        if (!ctx) return;
-        if (!selectedPointRef.current) return;
-        const point = selectedPointRef.current;
-        const x = chart.scales.x.getPixelForValue(point.x);
-        const y = chart.scales.y.getPixelForValue(point.y);
-        const chartArea = chart.chartArea;
-        ctx.save();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = "gray";
-        ctx.setLineDash([3, 3]);
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x, chartArea.bottom);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(chartArea.left, y);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = "black";
-        ctx.font = "12px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(formatter.twoDec(point.x) + "M", x, chartArea.bottom - 5);
-        ctx.textAlign = "right";
-        ctx.fillText(formatter.twoDec(point.y), chartArea.left + 25, y);
-        ctx.restore();
-      },
-    }),
-    [selectedPointRef],
-  );
-
-  const pulsingEffectPlugin: Plugin = useMemo<Plugin>(
-    () => ({
-      id: "pulsingEffect",
-      afterDraw(chart: Chart) {
-        const ctx = chart.ctx;
-        if (!ctx) return;
-        if (selectedPointRef.current && isPointSelectedRef.current) {
-          const point = selectedPointRef.current;
-          const pulse = Math.abs(Math.sin(Date.now() / 500)) * 3;
-          const radius = (point.r || 4) + pulse;
-          const x = chart.scales.x.getPixelForValue(point.x);
-          const y = chart.scales.y.getPixelForValue(point.y);
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(x, y, radius, 0, 2 * Math.PI);
-          ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-          ctx.fill();
-          ctx.restore();
-          requestAnimationFrame(() => chart.draw());
-        }
-      },
-    }),
-    [selectedPointRef],
-  );
-
-  const zoomInfoPlugin: Plugin = useMemo<Plugin>(
-    () => ({
-      id: "zoomInfo",
-      afterDraw(chart: Chart) {
-        const ctx = chart.ctx;
-        if (!ctx) return;
-        const isZoomed =
-          chart.scales.x.min !== 0 ||
-          chart.scales.x.max !== initialMaxX.current ||
-          chart.scales.y.min !== 0 ||
-          chart.scales.y.max !== initialMaxY.current;
-
-        isZoomedRef.current = isZoomed;
-        const canvasEl = chart.canvas;
-
-        if (isZoomed && !isPointSelectedRef.current) {
-          canvasEl.style.cursor = isPanningRef.current ? "grabbing" : "grab";
-        } else if (!isPointSelectedRef.current) {
-          canvasEl.style.cursor = "default";
-        }
-
-        const chartArea = chart.chartArea;
-        const buttonX = chartArea.right - 80;
-        const buttonY = chartArea.top - 10;
-        const buttonWidth = 70;
-        const buttonHeight = 20;
-
-        if (isZoomed) {
-          ctx.save();
-          ctx.fillStyle = isPointSelectedRef.current ? "rgba(200, 200, 200, 0.5)" : "rgba(240, 240, 240, 0.8)";
-          ctx.beginPath();
-          ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 4);
-          ctx.fill();
-          ctx.fillStyle = "#333";
-          ctx.font = "10px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("Reset Zoom", buttonX + buttonWidth / 2, buttonY + buttonHeight / 2);
-          ctx.restore();
-
-          canvasEl.onclick = (event) => {
-            if (isPointSelectedRef.current) return;
-            const rect = canvasEl.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            if (x >= buttonX && x <= buttonX + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight) {
-              chart.resetZoom();
-              sessionStorage.removeItem("chartZoomState");
+    const [yTickMin, yTickMax] = useMemo(() => {
+      // If custom min/max are provided, use those
+      if (yOptions.min !== undefined && yOptions.max !== undefined) {
+        // Even with custom ranges, ensure 1.0 is visible if showReferenceLineAtOne is true
+        if (horizontalReferenceLines.some((line) => line.value === 1)) {
+          const hasOne = yOptions.min <= 1 && yOptions.max >= 1;
+          if (!hasOne) {
+            // If 1.0 is not in range, adjust the range to include it
+            if (useLogarithmicScale) {
+              // For logarithmic scale, we need to ensure we maintain the ratio
+              // but include 1.0 in the range
+              if (yOptions.min > 1) {
+                return [0.7, Math.max(yOptions.max, 1.5)]; // Include 1.0 with padding below
+              } else if (yOptions.max < 1) {
+                return [Math.min(yOptions.min, 0.7), 1.5]; // Include 1.0 with padding above
+              }
+            } else {
+              // For linear scale, just expand the range to include 1.0
+              if (yOptions.min > 1) {
+                return [0.9, Math.max(yOptions.max, 1.1)]; // Include 1.0 with padding
+              } else if (yOptions.max < 1) {
+                return [Math.min(yOptions.min, 0.9), 1.1]; // Include 1.0 with padding
+              }
             }
-          };
-        } else {
-          canvasEl.onclick = null;
+          }
         }
+        return [yOptions.min, yOptions.max];
+      }
+
+      // Otherwise calculate based on data
+      const maxData = Number.MIN_SAFE_INTEGER; //data.reduce((acc, next) => Math.max(acc, next.y), Number.MIN_SAFE_INTEGER);
+      const minData = Number.MAX_SAFE_INTEGER; //data.reduce((acc, next) => Math.min(acc, next.y), Number.MAX_SAFE_INTEGER);
+
+      const maxTick = maxData === minData && maxData === 0 ? 1 : maxData;
+      let minTick = Math.max(0, minData - (maxData - minData) * 0.1);
+      if (minTick === maxData) {
+        minTick = maxData * 0.99;
+      }
+
+      // For logarithmic scale, ensure minTick is positive
+      if (useLogarithmicScale && minTick <= 0) {
+        minTick = 0.000001; // Small positive value
+      }
+
+      // Use custom min/max if provided
+      let finalMin = yOptions.min !== undefined ? yOptions.min : minTick;
+      let finalMax = yOptions.max !== undefined ? yOptions.max : maxTick;
+
+      // Ensure 1.0 is visible if there's a reference line at 1.0
+      if (horizontalReferenceLines.some((line) => line.value === 1)) {
+        if (finalMin > 1 || finalMax < 1) {
+          if (useLogarithmicScale) {
+            // For logarithmic scale, we need to ensure we maintain the ratio
+            if (finalMin > 1) {
+              finalMin = 0.7; // Include 1.0 with padding below
+              finalMax = Math.max(finalMax, 1.5);
+            } else if (finalMax < 1) {
+              finalMin = Math.min(finalMin, 0.7);
+              finalMax = 1.5; // Include 1.0 with padding above
+            }
+          } else {
+            // For linear scale, just expand the range to include 1.0
+            if (finalMin > 1) {
+              finalMin = 0.9; // Include 1.0 with padding
+              finalMax = Math.max(finalMax, 1.1);
+            } else if (finalMax < 1) {
+              finalMin = Math.min(finalMin, 0.9);
+              finalMax = 1.1; // Include 1.0 with padding
+            }
+          }
+        }
+      }
+
+      return [finalMin, finalMax];
+    }, [data, useLogarithmicScale, yOptions.min, yOptions.max, horizontalReferenceLines]);
+
+    const chartData = useCallback(
+      (ctx: CanvasRenderingContext2D | null): ChartData => {
+        return {
+          datasets: data.map(({ label, data, color, pointStyle }) => ({
+            label,
+            data,
+            backgroundColor: color,
+            pointStyle,
+          })),
+        };
       },
-    }),
-    [initialMaxX, initialMaxY],
-  );
+      [data],
+    );
 
-  const plugins = [crosshairPlugin, pulsingEffectPlugin, zoomInfoPlugin];
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        title: {
-          display: !!xLabel,
-          text: xLabel,
+    const verticalLinePlugin: Plugin = useMemo<Plugin>(
+      () => ({
+        id: "customVerticalLine",
+        afterDraw: (chart: Chart) => {
+          const ctx = chart.ctx;
+          const activeIndex = activeIndexRef.current;
+          if (ctx) {
+            ctx.save();
+            ctx.setLineDash([4, 4]);
+
+            // Draw the vertical line for the active element (hovered point)
+            const activeElements = chart.getActiveElements();
+            if (activeElements.length > 0) {
+              const activeElement = activeElements[0];
+              const datasetIndex = activeElement.datasetIndex;
+              const index = activeElement.index;
+              const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];
+
+              if (dataPoint) {
+                const { x } = dataPoint.getProps(["x"], true);
+                ctx.beginPath();
+                ctx.moveTo(x, chart.chartArea.top);
+                ctx.lineTo(x, chart.chartArea.bottom);
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+              }
+            }
+
+            ctx.restore();
+          }
         },
-        type: "linear",
-        position: "bottom",
-        min: xYMinMax?.x?.min || 0,
-        max: xYMinMax?.x?.max || initialMaxX.current,
-        ticks: {
-          stepSize: 50,
-          callback: (val) => `${Number(val).toFixed(2)}M`,
+      }),
+      [],
+    );
+
+    const horizontalReferenceLinePlugin: Plugin = useMemo<Plugin>(
+      () => ({
+        id: "horizontalReferenceLine",
+        afterDraw: (chart: Chart) => {
+          const ctx = chart.ctx;
+          if (!ctx || horizontalReferenceLines.length === 0) return;
+
+          ctx.save();
+
+          // Draw each horizontal reference line
+          horizontalReferenceLines.forEach((line) => {
+            const yScale = chart.scales.y;
+            const y = yScale.getPixelForValue(line.value);
+
+            // Only draw if within chart area
+            if (y >= chart.chartArea.top && y <= chart.chartArea.bottom) {
+              ctx.beginPath();
+              if (line.dash) {
+                ctx.setLineDash(line.dash);
+              } else {
+                ctx.setLineDash([4, 4]); // Default dash pattern
+              }
+              ctx.moveTo(chart.chartArea.left, y);
+              ctx.lineTo(chart.chartArea.right, y);
+              ctx.strokeStyle = line.color;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+
+              // Reset dash pattern
+              ctx.setLineDash([]);
+
+              // Add label if provided
+              if (line.label) {
+                ctx.font = "12px Arial";
+                ctx.fillStyle = line.color;
+
+                // Measure text width to ensure it doesn't get cut off
+                const textWidth = ctx.measureText(line.label).width;
+                const rightPadding = 10; // Padding from right edge
+
+                // Position the label at the right side of the chart with padding
+                const labelX = chart.chartArea.right - textWidth - rightPadding;
+                const labelPadding = 5; // Padding between line and text
+                const textHeight = 12; // Approximate height of the text
+
+                // Check if the line is too close to the top of the chart
+                const isNearTop = y - textHeight - labelPadding < chart.chartArea.top;
+
+                // Check if the line is too close to the bottom of the chart
+                const isNearBottom = y + textHeight + labelPadding > chart.chartArea.bottom;
+
+                // Set text alignment
+                ctx.textAlign = "left";
+
+                // Position the label based on proximity to chart edges
+                // biome-ignore lint/suspicious/noExplicitAny:
+                let labelY: any;
+                ctx.textBaseline = "bottom";
+                labelY = y - labelPadding;
+                if (isNearTop) {
+                  ctx.textBaseline = "top";
+                  labelY = y + labelPadding;
+                } else if (isNearBottom) {
+                  labelY = y - labelPadding;
+                }
+                ctx.fillText(line.label, labelX, labelY);
+              }
+            }
+          });
+
+          ctx.restore();
         },
-      },
-      y: {
-        title: {
-          display: !!yLabel,
-          text: yLabel,
+      }),
+      [horizontalReferenceLines],
+    );
+
+    const selectionPointPlugin: Plugin = useMemo<Plugin>(
+      () => ({
+        id: "customSelectPoint",
+        afterDraw: (chart: Chart) => {
+          const ctx = chart.ctx;
+          if (!ctx) return;
+
+          // Define the function to draw the selection point
+          const drawSelectionPoint = (x: number, y: number, color?: string) => {
+            ctx.save();
+            ctx.fillStyle = "transparent";
+            ctx.strokeStyle = color || "black";
+            ctx.lineWidth = !!color ? 2 : 1;
+
+            const rectWidth = 10;
+            const rectHeight = 10;
+            const cornerRadius = 5;
+
+            ctx.beginPath();
+            ctx.moveTo(x - rectWidth / 2 + cornerRadius, y - rectHeight / 2);
+            ctx.lineTo(x + rectWidth / 2 - cornerRadius, y - rectHeight / 2);
+            ctx.quadraticCurveTo(
+              x + rectWidth / 2,
+              y - rectHeight / 2,
+              x + rectWidth / 2,
+              y - rectHeight / 2 + cornerRadius,
+            );
+            ctx.lineTo(x + rectWidth / 2, y + rectHeight / 2 - cornerRadius);
+            ctx.quadraticCurveTo(
+              x + rectWidth / 2,
+              y + rectHeight / 2,
+              x + rectWidth / 2 - cornerRadius,
+              y + rectHeight / 2,
+            );
+            ctx.lineTo(x - rectWidth / 2 + cornerRadius, y + rectHeight / 2);
+            ctx.quadraticCurveTo(
+              x - rectWidth / 2,
+              y + rectHeight / 2,
+              x - rectWidth / 2,
+              y + rectHeight / 2 - cornerRadius,
+            );
+            ctx.lineTo(x - rectWidth / 2, y - rectHeight / 2 + cornerRadius);
+            ctx.quadraticCurveTo(
+              x - rectWidth / 2,
+              y - rectHeight / 2,
+              x - rectWidth / 2 + cornerRadius,
+              y - rectHeight / 2,
+            );
+            ctx.closePath();
+
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          };
+
+          // Draw selection point for the hovered data point
+          const activeElements = chart.getActiveElements();
+          for (const activeElement of activeElements) {
+            const datasetIndex = activeElement.datasetIndex;
+            const index = activeElement.index;
+            const dataPoint = chart.getDatasetMeta(datasetIndex).data[index];
+
+            if (dataPoint) {
+              const { x, y } = dataPoint.getProps(["x", "y"], true);
+              drawSelectionPoint(x, y);
+            }
+          }
+
+          // Draw the circle around currently selected element (i.e. clicked)
+          const [selectedPointDatasetIndex, selectedPointIndex] = selectedPointRef.current || [];
+          if (selectedPointDatasetIndex !== undefined && selectedPointIndex !== undefined) {
+            const dataPoint = chart.getDatasetMeta(selectedPointDatasetIndex).data[selectedPointIndex];
+            if (dataPoint) {
+              const { x, y } = dataPoint.getProps(["x", "y"], true);
+              drawSelectionPoint(x, y, "#387F5C");
+            }
+          }
         },
-        min: xYMinMax?.y?.min || 0,
-        max: xYMinMax?.y?.max || initialMaxY.current,
-        ticks: {
-          stepSize: 0.2,
-          callback: (val) => formatter.twoDec(val),
+      }),
+      [selectedPointRef.current],
+    );
+
+    const selectionCallbackPlugin: Plugin = useMemo<Plugin>(
+      () => ({
+        id: "selectionCallback",
+        afterDraw: (chart: Chart) => {
+          onMouseOver?.(chart.getActiveElements()[0]?.index);
         },
-      },
-    },
-    plugins: {
-      tooltip: {
-        displayColors: false,
-        callbacks: {
-          label: (ctx) => [`${formatter.noDec((ctx.raw as { amount: number | null }).amount || 0)} pods`],
-          labelPointStyle: () => ({ pointStyle: "rect", rotation: 0 }),
-        },
-      },
-      legend: { display: false },
-      zoom: {
-        zoom: {
-          wheel: { enabled: !isPointSelectedRef.current },
-          pinch: { enabled: !isPointSelectedRef.current },
-          mode: "xy",
-        },
-        pan: {
-          enabled: true,
-          mode: "xy",
-        },
-        limits: {
-          x: { min: 0, max: initialMaxX.current, minRange: 1 },
-          y: { min: 0, max: initialMaxY.current, minRange: 0.1 },
-        },
-      },
-    },
-    // onClick(event, elements) {
-    //   if (elements.length > 0) {
-    //     const element = elements[0];
-    //     const dataPoint = newChartInstance.data.datasets[element.datasetIndex].data[element.index] as any;
-    //     if (dataPoint.interactable) {
-    //       selectedPointRef.current = dataPoint;
-    //       isPointSelectedRef.current = true;
+      }),
+      [],
+    );
 
-    //       // if (newChartInstance.options.plugins?.zoom?.zoom?.wheel && newChartInstance.options.plugins.zoom.pan) {
-    //       //   newChartInstance.options.plugins.zoom.zoom.wheel.enabled = false;
-    //       //   newChartInstance.options.plugins.zoom.pan.enabled = false;
-    //       // }
-    //       newChartInstance.update();
-
-    //       onPointClick?.(dataPoint);
-    //     }
-    //   } else {
-    //     selectedPointRef.current = null;
-    //     isPointSelectedRef.current = false;
-
-    //     // if (newChartInstance.options.plugins?.zoom?.zoom?.wheel && newChartInstance.options.plugins.zoom.pan) {
-    //     //   newChartInstance.options.plugins.zoom.zoom.wheel.enabled = true;
-    //     //   newChartInstance.options.plugins.zoom.pan.enabled = true;
-    //     // }
-    //     newChartInstance.update();
-    //   }
-    // },
-
-    // onHover(event, elements) {
-    //   if (elements.length > 0) {
-    //     const element = elements[0];
-    //     const dataPoint = newChartInstance.data.datasets[element.datasetIndex].data[element.index] as any;
-
-    //     if (dataPoint?.interactable) {
-    //       selectedPointRef.current = dataPoint;
-    //       canvas.style.cursor = "pointer";
-    //     } else {
-    //       selectedPointRef.current = null;
-    //       canvas.style.cursor = isZoomedRef.current ? "grab" : "default";
-    //     }
-    //   } else {
-    //     if (!isPointSelectedRef.current) {
-    //       selectedPointRef.current = null;
-    //       canvas.style.cursor = isZoomedRef.current ? "grab" : "default";
-    //     }
-    //   }
-
-    //   newChartInstance.update();
-    // },
-  };
-
-  useEffect(() => {
-    if (isLoading || !data || !data.length || hasInitializedRef.current) {
-      console.info("early returning");
-      return;
-    }
-    console.info("not early returning, running the use effect");
-    hasInitializedRef.current = true;
-
-    const maxXValue = data.reduce((max, point) => Math.max(max, point?.x || 0), 10);
-    initialMaxX.current = xYMinMax?.x?.max || Math.ceil(maxXValue || 10);
-
-    const canvas = document.getElementById("marketScatterChart") as HTMLCanvasElement;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const img = new Image();
-    img.src = pintoTokenVanilla;
-
-    const newChartInstance = new Chart(ctx, {
-      type: "scatter",
-      data: {
-        datasets: [
-          {
-            label: "Listings",
-            data: data.filter((d) => d !== null && d.status === "ACTIVE" && d.type === "LISTING"),
-            backgroundColor: "#00C767",
-            borderColor: "#00C767",
-            pointRadius: 3,
-            pointHoverRadius: 4,
-          },
-          {
-            label: "Orders",
-            data: data.filter((d) => d !== null && d.status === "ACTIVE" && d.type === "ORDER"),
-            backgroundColor: "#D3B567",
-            borderColor: "#D3B567",
-            pointRadius: 4,
-            pointHoverRadius: 5,
-            pointStyle: "rect",
-          },
-        ],
-      },
-      options: {
-        responsive: true,
+    const chartOptions: ChartOptions = useMemo(() => {
+      return {
         maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+          tooltip: toolTipOptions || {},
+          legend: {
+            display: false,
+          },
+        },
+        layout: {
+          // Tick padding must be uniform, undo it here
+          padding: {
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+          },
+        },
+        interaction: {
+          mode: "nearest",
+          intersect: false,
+        },
         scales: {
           x: {
             title: {
-              display: !!xLabel,
-              text: xLabel,
+              display: true,
+              text: xOptions.label || "",
             },
             type: "linear",
             position: "bottom",
-            min: xYMinMax?.x?.min || 0,
-            max: xYMinMax?.x?.max || initialMaxX.current,
+            min: xOptions.min,
+            max: xOptions.max,
             ticks: {
               stepSize: 50,
               callback: (val) => `${Number(val).toFixed(2)}M`,
@@ -350,173 +431,54 @@ export function ScatterChart({
           },
           y: {
             title: {
-              display: !!yLabel,
-              text: yLabel,
+              display: true,
+              text: yOptions.label || "",
             },
-            min: xYMinMax?.y?.min || 0,
-            max: xYMinMax?.y?.max || initialMaxY.current,
-            ticks: {
-              stepSize: 0.2,
-              callback: (val) => formatter.twoDec(val),
-            },
+            // min: xYMinMax?.y?.min || 0,
+            // max: xYMinMax?.y?.max || initialMaxY.current,
+            // ticks: {
+            //   stepSize: 0.2,
+            //   callback: (val) => formatter.twoDec(val),
+            // },
           },
         },
-        plugins: {
-          tooltip: {
-            displayColors: false,
-            callbacks: {
-              label: (ctx) => [`${formatter.noDec((ctx.raw as { amount: number | null }).amount || 0)} pods`],
-              labelPointStyle: () => ({ pointStyle: "rect", rotation: 0 }),
-            },
-          },
-          legend: { display: false },
-          zoom: {
-            zoom: {
-              wheel: { enabled: !isPointSelectedRef.current },
-              pinch: { enabled: !isPointSelectedRef.current },
-              mode: "xy",
-            },
-            pan: {
-              enabled: true,
-              mode: "xy",
-            },
-            limits: {
-              x: { min: 0, max: initialMaxX.current, minRange: 1 },
-              y: { min: 0, max: initialMaxY.current, minRange: 0.1 },
-            },
-          },
+        onClick: (event, activeElements, chart) => {
+          const activeElement = activeElements[0];
+          selectedPointRef.current = [activeElement.datasetIndex, activeElement.index];
+          onPointClick?.(event, activeElements, chart);
         },
-        onClick(event, elements) {
-          if (elements.length > 0) {
-            const element = elements[0];
-            const dataPoint = newChartInstance.data.datasets[element.datasetIndex].data[element.index] as any;
-            if (dataPoint.interactable) {
-              selectedPointRef.current = dataPoint;
-              isPointSelectedRef.current = true;
+      };
+    }, [data, yTickMin, yTickMax, valueFormatter, useLogarithmicScale, customValueTransform]);
 
-              // if (newChartInstance.options.plugins?.zoom?.zoom?.wheel && newChartInstance.options.plugins.zoom.pan) {
-              //   newChartInstance.options.plugins.zoom.zoom.wheel.enabled = false;
-              //   newChartInstance.options.plugins.zoom.pan.enabled = false;
-              // }
-              newChartInstance.update();
+    const allPlugins = useMemo<Plugin[]>(
+      () => [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
+      [verticalLinePlugin, horizontalReferenceLinePlugin, selectionPointPlugin, selectionCallbackPlugin],
+    );
 
-              onPointClick?.(dataPoint);
-            }
-          } else {
-            selectedPointRef.current = null;
-            isPointSelectedRef.current = false;
-
-            // if (newChartInstance.options.plugins?.zoom?.zoom?.wheel && newChartInstance.options.plugins.zoom.pan) {
-            //   newChartInstance.options.plugins.zoom.zoom.wheel.enabled = true;
-            //   newChartInstance.options.plugins.zoom.pan.enabled = true;
-            // }
-            newChartInstance.update();
-          }
-        },
-
-        onHover(event, elements) {
-          if (elements.length > 0) {
-            const element = elements[0];
-            const dataPoint = newChartInstance.data.datasets[element.datasetIndex].data[element.index] as any;
-
-            if (dataPoint?.interactable) {
-              selectedPointRef.current = dataPoint;
-              canvas.style.cursor = "pointer";
-            } else {
-              selectedPointRef.current = null;
-              canvas.style.cursor = isZoomedRef.current ? "grab" : "default";
-            }
-          } else {
-            if (!isPointSelectedRef.current) {
-              selectedPointRef.current = null;
-              canvas.style.cursor = isZoomedRef.current ? "grab" : "default";
-            }
-          }
-
-          newChartInstance.update();
-        },
-      },
-      plugins: [crosshairPlugin, pulsingEffectPlugin, zoomInfoPlugin],
-    });
-
-    // Restore zoom function
-    // try {
-    //   const zoomState = JSON.parse(sessionStorage.getItem("chartZoomState") || "{}");
-    //   if (zoomState.xMin != null) {
-    //     if (newChartInstance.options.scales?.x) {
-    //       newChartInstance.options.scales.x.min = zoomState.xMin;
-    //       newChartInstance.options.scales.x.max = zoomState.xMax;
-    //     }
-    //     if (newChartInstance.options.scales?.y) {
-    //       newChartInstance.options.scales.y.min = zoomState.yMin;
-    //       newChartInstance.options.scales.y.max = zoomState.yMax;
-    //     }
-    //     newChartInstance.update();
-    //   }
-    // } catch { }
-
-    canvas.addEventListener("mousedown", () => {
-      if (isZoomedRef.current) {
-        isPanningRef.current = true;
-        canvas.style.cursor = "grabbing";
+    const chartDimensions = useMemo(() => {
+      if (size === "small") {
+        return {
+          w: 3,
+          h: 1,
+        };
+      } else {
+        return {
+          w: 6,
+          h: 2,
+        };
       }
-    });
-    canvas.addEventListener("mouseup", () => {
-      if (isZoomedRef.current) {
-        isPanningRef.current = false;
-        canvas.style.cursor = "grab";
-      }
-    });
-    canvas.addEventListener("mouseleave", () => {
-      isPanningRef.current = false;
-      if (isZoomedRef.current && !isPointSelectedRef.current) {
-        canvas.style.cursor = "grab";
-      }
-    });
-
-    return () => {
-      if (selectedPointRef.current) {
-        sessionStorage.setItem("selectedChartPoint", JSON.stringify(selectedPointRef.current));
-        sessionStorage.setItem("isPointSelected", String(isPointSelectedRef.current));
-      }
-      if (newChartInstance) {
-        try {
-          const { min: xMin, max: xMax } = newChartInstance.scales.x;
-          const { min: yMin, max: yMax } = newChartInstance.scales.y;
-          sessionStorage.setItem("chartZoomState", JSON.stringify({ xMin, xMax, yMin, yMax }));
-        } catch {}
-        newChartInstance.destroy();
-        hasInitializedRef.current = false;
-      }
-    };
-  }, [isLoading, data, onPointClick]);
-
-  return (
-    <Card className="h-full w-full mt-4">
-      <CardHeader>
-        <div className="flex justify-between items-center w-full">
-          <div className="flex space-x-2">
-            {title && <CardTitle className="pinto-body-light text-pinto-light ml-2.5">{title}</CardTitle>}
-            {isLoading && !hasInitializedRef.current && <FrameAnimator className="-mt-5 -mb-12" size={80} />}
-          </div>
-        </div>
-      </CardHeader>
-      {/* <CardContent className="h-[25rem]">
-        <div className="w-full h-full">
-          <canvas id="marketScatterChart" />
-        </div>
-      </CardContent> */}
+    }, [size]);
+    return (
       <ReactChart
         ref={chartRef}
         type="scatter"
-        data={data}
+        data={chartData}
         options={chartOptions}
-        plugins={plugins}
-        width={300}
-        height={300}
+        plugins={allPlugins}
+        width={chartDimensions.w}
+        height={500}
       />
-    </Card>
-  );
-}
-
-export default ScatterChart;
+    );
+  },
+);
+export default ScatterChartV2;

@@ -1,7 +1,7 @@
 import { TokenValue } from "@/classes/TokenValue";
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 import FrameAnimator from "@/components/LoadingSpinner";
-import ScatterChartV2, { ScatterChartData } from "@/components/charts/ScatterChartv2";
+import ScatterChartV2, { ScatterChartData } from "@/components/charts/ScatterChart";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Separator } from "@/components/ui/Separator";
 import { useAllMarket } from "@/state/market/useAllMarket";
@@ -120,7 +120,6 @@ export function Market() {
   const toolTipOptions: any = {
     enabled: false,
     external: (context) => {
-      console.info("🚀 ~ Market ~ context:", context);
       const tooltipEl = document.getElementById("chartjs-tooltip");
 
       // Create element on first render
