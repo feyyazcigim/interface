@@ -215,43 +215,41 @@ const Navbar = () => {
           styles.navGrid,
         )}
       >
-
         {!isHome ? (
-        <div className="flex flex-row">
-          <div className={`transition-all duration-100 ${panelState.openPanel === "price" && "z-[51]"} mr-4`}>
-            <PriceButton
-              isOpen={panelState.openPanel === "price"}
-              togglePanel={togglePrice}
-              onMouseEnter={refetchPriceData}
-            />
+          <div className="flex flex-row">
+            <div className={`transition-all duration-100 ${panelState.openPanel === "price" && "z-[51]"} mr-4`}>
+              <PriceButton
+                isOpen={panelState.openPanel === "price"}
+                togglePanel={togglePrice}
+                onMouseEnter={refetchPriceData}
+              />
+            </div>
+            <div className={`transition-all duration-100 ${panelState.openPanel === "seasons" && "z-[51]"}`}>
+              <SeasonsButton
+                isOpen={panelState.openPanel === "seasons"}
+                togglePanel={toggleSeasons}
+                onMouseEnter={handleInvalidateSeasons}
+              />
+            </div>
+            <Panel
+              isOpen={panelState.openPanel === "chart-select"}
+              side="left"
+              panelProps={{
+                className: cn("max-w-panel-price w-panel-price", "mt-14"),
+              }}
+              screenReaderTitle="Chart Select Panel"
+              trigger={<></>}
+              toggle={handleTogglePanel}
+            >
+              <ChartSelectPanel />
+            </Panel>
           </div>
-          <div className={`transition-all duration-100 ${panelState.openPanel === "seasons" && "z-[51]"}`}>
-            <SeasonsButton
-              isOpen={panelState.openPanel === "seasons"}
-              togglePanel={toggleSeasons}
-              onMouseEnter={handleInvalidateSeasons}
-            />
-          </div>
-          <Panel
-            isOpen={panelState.openPanel === "chart-select"}
-            side="left"
-            panelProps={{
-              className: cn("max-w-panel-price w-panel-price", "mt-14"),
-            }}
-            screenReaderTitle="Chart Select Panel"
-            trigger={<></>}
-            toggle={handleTogglePanel}
-          >
-            <ChartSelectPanel />
-          </Panel>
-        </div>
-                    ) : (
+        ) : (
           <div className="flex flex-row gap-2 items-center">
             <img src={PintoLogo} alt="Pinto Logo" className="h-6" />
             <img src={PintoLogoText} alt="Pinto Logo" className="h-6" />
           </div>
         )}
-
         <div className="hidden lg:flex lg:justify-center pr-[208px]">
           <Navi />
         </div>
