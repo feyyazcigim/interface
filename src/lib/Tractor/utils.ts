@@ -77,6 +77,7 @@ export async function createSowTractorData({
   publicClient, // Add this parameter
   farmerDeposits,
   userAddress,
+  protocolAddress,
 }: {
   totalAmountToSow: string;
   temperature: string;
