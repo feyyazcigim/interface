@@ -13,7 +13,6 @@ import { getTokenIndex } from "@/utils/token";
 import { Token } from "@/utils/types";
 import { cn } from "@/utils/utils";
 import { HTMLAttributes, memo, useEffect, useMemo, useState } from "react";
-import React from "react";
 import { Link } from "react-router-dom";
 import { useChainId } from "wagmi";
 import { InlineCenterSpan } from "../Container";
