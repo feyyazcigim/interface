@@ -154,12 +154,28 @@ export default function LandingChart() {
             cx={measurementX}
             cy={currentY}
             r="4"
+            fill="#387F5C"
+            stroke="#387F5C"
+            strokeWidth="0"
+            filter="drop-shadow(0px 0px 2.16px #387F5C) drop-shadow(0px 0px 4.32px #387F5C) drop-shadow(0px 0px 10px #387F5C)"
+            animate={{
+              r: [4, 6, 4],
+              opacity: [0.9, 1, 0.9],
+            }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          <motion.circle
+            cx={measurementX}
+            cy={currentY}
+            r="4"
             fill="#FFF"
             stroke="#387F5C"
             strokeWidth="4"
-            filter="drop-shadow(0px 0px 2.16px #387F5C) drop-shadow(0px 0px 4.32px #387F5C) drop-shadow(0px 0px 10px #387F5C)"
             animate={{
-              r: [4, 5, 4],
               opacity: [0.9, 1, 0.9],
             }}
             transition={{
