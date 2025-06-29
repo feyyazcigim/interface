@@ -48,7 +48,7 @@ export function Market() {
   const { mode, id } = useParams();
   const [tab, handleChangeTab] = useState(TABLE_SLUGS[0]);
   const navigate = useNavigate();
-  const { data, isLoaded, isFetching } = useAllMarket();
+  const { data, isLoaded } = useAllMarket();
   const podLine = usePodLine();
   const podLineAsNumber = podLine.toNumber() / 1000000;
   const harvestableIndex = useHarvestableIndex();
