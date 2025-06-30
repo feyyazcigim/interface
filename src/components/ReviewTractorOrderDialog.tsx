@@ -85,7 +85,6 @@ export default function ReviewTractorOrderDialog({
   executionHistory = [], // Default to empty array
   includesDepositOptimization = false,
 }: ReviewTractorOrderProps) {
-  console.debug("=== REVIEW TRACTOR ORDER DIALOG MOUNTED ===", { includesDepositOptimization });
   const { address } = useAccount();
   const signRequisition = useSignRequisition();
   const [signing, setSigning] = useState(false);
@@ -643,14 +642,11 @@ export default function ReviewTractorOrderDialog({
                     Your Order will remain active until you've Sown {orderData.totalAmount} Pinto under the specified
                     conditions or until Order cancellation
                   </p>
-                  {(() => {
-                    console.debug("ReviewTractorOrderDialog: includesDepositOptimization =", includesDepositOptimization);
-                    return includesDepositOptimization && (
-                      <p className="text-xs text-gray-500">
-                        Deposits are being optimized to be suitable to use with Tractor
-                      </p>
-                    );
-                  })()}
+                  {includesDepositOptimization && (
+                    <p className="text-xs text-gray-500">
+                      Your Deposits will be optimized to be usable with Tractor
+                    </p>
+                  )}
                 </div>
                 <div className="flex flex-row gap-2 shrink-0 smaller-button-text">
                   {signedRequisitionData ? (

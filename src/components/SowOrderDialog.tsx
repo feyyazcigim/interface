@@ -52,7 +52,6 @@ interface SowOrderDialogProps {
 const minInput = TokenValue.fromHuman(0.000001, 6);
 
 export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }: SowOrderDialogProps) {
-  console.debug("=== SOW ORDER DIALOG MOUNTED ===", { open });
   const podLine = usePodLine();
   const currentTemperature = useTemperature();
   const [podLineLength, setPodLineLength] = useState("");
@@ -60,26 +59,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const podLineLengthTimeoutRef = useRef<NodeJS.Timeout | null>(null); // For debounce
   const farmerSilo = useFarmerSilo();
   const farmerDeposits = farmerSilo.deposits;
-  
-  // Debug farmer deposits
-  useEffect(() => {
-    console.debug("=== FARMER DEPOSITS DEBUG ===");
-    console.debug("farmerDeposits:", farmerDeposits);
-    console.debug("farmerDeposits size:", farmerDeposits?.size || 0);
-    
-    if (farmerDeposits && farmerDeposits.size > 0) {
-      Array.from(farmerDeposits.entries()).forEach(([token, depositData]) => {
-        console.debug(`Token ${token.symbol}:`, {
-          depositCount: depositData.deposits?.length || 0,
-          deposits: depositData.deposits?.map(d => ({
-            stem: d.stem.toString(),
-            amount: d.amount.toString(),
-          })) || [],
-        });
-      });
-    }
-    console.debug("=== END FARMER DEPOSITS DEBUG ===");
-  }, [farmerDeposits]);
   const { whitelistedTokens, mainToken } = useTokenData();
   const priceData = usePriceData();
   const [minSoil, setMinSoil] = useState("");
@@ -220,7 +199,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   // Function to check if deposits are sorted from low stem to high stem
   const areDepositsSorted = (deposits: DepositData[]): boolean => {
     if (!deposits || deposits.length <= 1) {
-      console.debug("areDepositsSorted: deposits empty or single item, returning true");
       return true;
     }
 
@@ -229,60 +207,35 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       const previousStem = deposits[i - 1].stem.toBigInt();
 
       if (currentStem <= previousStem) {
-        console.debug("areDepositsSorted: found unsorted deposits", {
-          index: i,
-          currentStem: currentStem.toString(),
-          previousStem: previousStem.toString(),
-        });
         return false;
       }
     }
 
-    console.debug("areDepositsSorted: all deposits are sorted");
     return true;
   };
 
   // Check if all tokens have sorted deposits
   const allTokensSorted = useMemo(() => {
     if (!farmerDeposits || farmerDeposits.size === 0) {
-      console.debug("allTokensSorted: no farmer deposits, returning true");
       return true;
     }
-
-    console.debug("allTokensSorted: checking", farmerDeposits.size, "tokens");
     
-    const result = Array.from(farmerDeposits.entries()).every(([token, depositData]) => {
-      const sorted = areDepositsSorted(depositData.deposits || []);
-      console.debug(`allTokensSorted: ${token.symbol} has ${depositData.deposits?.length || 0} deposits, sorted: ${sorted}`);
-      return sorted;
+    return Array.from(farmerDeposits.entries()).every(([token, depositData]) => {
+      return areDepositsSorted(depositData.deposits || []);
     });
-    
-    console.debug("allTokensSorted: final result", result);
-    return result;
   }, [farmerDeposits]);
 
   // Determine if deposits need to be optimized (either combined or sorted)
   const needsOptimization = useMemo(() => {
+    if (!farmerDeposits || farmerDeposits.size === 0) return false;
+    
     const needsCombiningResult = needsCombining(farmerDeposits);
     const needsSortingResult = !allTokensSorted;
     const finalResult = needsCombiningResult || needsSortingResult;
     
-    console.debug("needsOptimization calculation:", {
-      needsCombining: needsCombiningResult,
-      needsSorting: needsSortingResult,
-      allTokensSorted: allTokensSorted,
-      finalResult: finalResult,
-    });
-    
     return finalResult;
   }, [farmerDeposits, allTokensSorted]);
 
-  // Debug the needsOptimization value
-  useEffect(() => {
-    console.debug("=== NEEDS OPTIMIZATION DEBUG ===");
-    console.debug("needsOptimization:", needsOptimization);
-    console.debug("=== END NEEDS OPTIMIZATION DEBUG ===");
-  }, [needsOptimization]);
 
   const [formStep, setFormStep] = useState(1);
 
@@ -555,7 +508,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         whitelistedOperators: [],
         tokenStrategy: selectedTokenStrategy,
         publicClient,
-        farmerDeposits: needsCombining(farmerDeposits) ? farmerDeposits : undefined,
+        farmerDeposits: farmerDeposits,
         userAddress: address,
         protocolAddress: protocolAddress,
       });
@@ -919,7 +872,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     setActiveTipButton(activeButton);
   };
 
-  console.debug("=== SOW ORDER DIALOG RENDER ===", { open });
   if (!open) return null;
 
   return (
@@ -1514,12 +1466,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           encodedData={encodedData}
           operatorPasteInstrs={operatorPasteInstructions}
           blueprint={blueprint}
-          includesDepositOptimization={(() => {
-            console.debug("=== PASSING TO REVIEW DIALOG ===");
-            console.debug("needsOptimization value being passed:", needsOptimization);
-            console.debug("=== END PASSING TO REVIEW DIALOG ===");
-            return needsOptimization;
-          })()}
+          includesDepositOptimization={needsOptimization}
         />
       )}
     </>

@@ -207,7 +207,7 @@ export async function createSowTractorData({
   const farmCalls: { callData: `0x${string}`; clipboard: `0x${string}` }[] = [];
   
   // Add deposit optimization calls if needed
-  if (farmerDeposits && userAddress && needsCombining(farmerDeposits)) {
+  if (farmerDeposits && userAddress && protocolAddress) {
     console.debug("Deposits need combining, adding optimization calls to farm transaction");
     
     try {
@@ -215,7 +215,7 @@ export async function createSowTractorData({
         userAddress,
         farmerDeposits,
         publicClient,
-        protocolAddress || "0x" as `0x${string}`, // Use provided protocol address
+        protocolAddress,
       );
       
       // Add each optimization call as a farm call
