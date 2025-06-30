@@ -93,7 +93,7 @@ export async function createSowTractorData({
   farmerDeposits?: Map<Token, TokenDepositData>;
   userAddress?: `0x${string}`;
   protocolAddress?: `0x${string}`;
-}): Promise<{ data: `0x${string}`; operatorPasteInstrs: `0x${string}`[]; rawCall: `0x${string}` }> {
+}): Promise<{ data: `0x${string}`; operatorPasteInstrs: `0x${string}`[]; rawCall: `0x${string}`; depositOptimizationCalls?: `0x${string}`[] }> {
   // Add more detailed debug logs
   console.debug("tokenStrategy received:", tokenStrategy);
   console.debug("tokenStrategy.type:", tokenStrategy.type);
@@ -203,57 +203,39 @@ export async function createSowTractorData({
     ],
   });
 
-  // Step 2: Check if deposits need optimization and add combining calls if needed
-  const farmCalls: { callData: `0x${string}`; clipboard: `0x${string}` }[] = [];
+  // Step 2: Generate deposit optimization calls separately (for the user transaction)
+  let depositOptimizationCalls: `0x${string}`[] | undefined;
   
-  // Add deposit optimization calls if needed
   if (farmerDeposits && userAddress && protocolAddress) {
-    console.debug("Deposits need combining, adding optimization calls to farm transaction");
+    console.debug("Generating deposit optimization calls for user transaction");
     
     try {
-      const optimizationCalls = await generateBatchSortDepositsCallData(
+      depositOptimizationCalls = await generateBatchSortDepositsCallData(
         userAddress,
         farmerDeposits,
         publicClient,
         protocolAddress,
       );
       
-      // Add each optimization call as a farm call
-      optimizationCalls.forEach(callData => {
-        farmCalls.push({
-          callData,
-          clipboard: "0x" as `0x${string}`,
-        });
-      });
-      
-      console.debug(`Added ${optimizationCalls.length} deposit optimization calls`);
+      console.debug(`Generated ${depositOptimizationCalls.length} deposit optimization calls for user transaction`);
     } catch (error) {
       console.warn("Failed to generate deposit optimization calls:", error);
       // Continue without optimization calls - don't fail the entire transaction
     }
   }
-  
-  // Add the sow call
-  farmCalls.push({
-    callData: pipeCall,
-    clipboard: "0x" as `0x${string}`, // Empty clipboard
-  });
-  
-  // Step 3: Wrap all calls in an advancedFarm call
-  const data = encodeFunctionData({
-    abi: beanstalkAbi,
-    functionName: "advancedFarm",
-    args: [farmCalls],
-  });
+
+  // Step 3: The blueprint data should ONLY contain the sow order (like before)
+  const data = pipeCall;
 
   console.debug("Raw sowBlueprintv0 call:", sowBlueprintCall);
   console.debug("advancedPipe call:", pipeCall);
-  console.debug("Final advancedFarm call:", data);
+  console.debug("Final blueprint data:", data);
 
   return {
     data,
     operatorPasteInstrs: [], // TODO: Update if needed
     rawCall: sowBlueprintCall, // Return the raw call data
+    depositOptimizationCalls, // Return optimization calls for user transaction
   };
 }
 

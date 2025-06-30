@@ -242,6 +242,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [encodedData, setEncodedData] = useState<`0x${string}` | null>(null);
   const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
+  const [depositOptimizationCalls, setDepositOptimizationCalls] = useState<`0x${string}`[] | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
   const [activeTipButton, setActiveTipButton] = useState<"down5" | "down1" | "average" | "up1" | "up5" | null>(
@@ -496,7 +497,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         return;
       }
 
-      const { data, operatorPasteInstrs, rawCall } = await createSowTractorData({
+      const { data, operatorPasteInstrs, rawCall, depositOptimizationCalls } = await createSowTractorData({
         totalAmountToSow: totalAmount || "0",
         temperature: temperature || "0",
         minAmountPerSeason: minSoil || "0",
@@ -538,6 +539,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       setBlueprint(newBlueprint);
       setEncodedData(rawCall);
       setOperatorPasteInstructions(operatorPasteInstrs);
+      setDepositOptimizationCalls(depositOptimizationCalls);
       setShowReview(true);
       setIsLoading(false);
 
@@ -1467,6 +1469,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           operatorPasteInstrs={operatorPasteInstructions}
           blueprint={blueprint}
           includesDepositOptimization={needsOptimization}
+          depositOptimizationCalls={depositOptimizationCalls}
         />
       )}
     </>

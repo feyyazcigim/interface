@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { encodeFunctionData } from "viem";
 import { useAccount } from "wagmi";
 import { Col, Row } from "./Container";
 import { HighlightedCallData } from "./Tractor/HighlightedCallData";
@@ -70,6 +71,7 @@ interface ReviewTractorOrderProps {
   isViewOnly?: boolean;
   executionHistory?: PublisherTractorExecution[];
   includesDepositOptimization?: boolean;
+  depositOptimizationCalls?: `0x${string}`[];
 }
 
 export default function ReviewTractorOrderDialog({
@@ -84,6 +86,7 @@ export default function ReviewTractorOrderDialog({
   isViewOnly = false,
   executionHistory = [], // Default to empty array
   includesDepositOptimization = false,
+  depositOptimizationCalls,
 }: ReviewTractorOrderProps) {
   const { address } = useAccount();
   const signRequisition = useSignRequisition();
@@ -136,13 +139,38 @@ export default function ReviewTractorOrderDialog({
     }
 
     try {
-      // Call publish requisition
-      await writeWithEstimateGas({
-        address: protocolAddress,
-        abi: diamondABI,
-        functionName: "publishRequisition",
-        args: [signedRequisitionData],
-      });
+      // Check if we need to include deposit optimization calls
+      if (depositOptimizationCalls && depositOptimizationCalls.length > 0) {
+        console.debug(`Publishing requisition with ${depositOptimizationCalls.length} deposit optimization calls`);
+        
+        // Create publish requisition call
+        const publishRequisitionCall = encodeFunctionData({
+          abi: diamondABI,
+          functionName: "publishRequisition",
+          args: [signedRequisitionData],
+        });
+
+        // Combine optimization calls with publish requisition call
+        const farmCalls = [...depositOptimizationCalls, publishRequisitionCall];
+
+        // Execute as farm call
+        await writeWithEstimateGas({
+          address: protocolAddress,
+          abi: diamondABI,
+          functionName: "farm",
+          args: [farmCalls],
+        });
+      } else {
+        console.debug("Publishing requisition without deposit optimization");
+        
+        // Call publish requisition directly (like before)
+        await writeWithEstimateGas({
+          address: protocolAddress,
+          abi: diamondABI,
+          functionName: "publishRequisition",
+          args: [signedRequisitionData],
+        });
+      }
 
       // Success handling
       toast.success("Order published successfully");
