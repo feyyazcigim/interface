@@ -244,7 +244,7 @@ const LineChart = React.memo(
                     return tickLabel;
                   }
 
-                  const indicesToShowTicks = [4, 9, 14, 19];
+                  const indicesToShowTicks = [4, 9, 14, 19, 24];
 
                   if (indicesToShowTicks.includes(index)) {
                     return tickLabel;

@@ -495,7 +495,7 @@ const getXScaleTick = (
     if (index === 0 || index === ticks.length - 1) {
       return tickLabel;
     }
-    const indicesToShowTicks = [4, 9, 14, 19];
+    const indicesToShowTicks = [4, 9, 14, 19, 24];
     return indicesToShowTicks.includes(index) ? tickLabel : "";
   }
 
