@@ -19,7 +19,7 @@ export type MorningTemperatureLookup = {
   [blockNumber: string]: MorningBlockTemperature;
 };
 
-const intervalBlocks = Array.from({ length: INTERVALS_PER_MORNING }, (_, i) => i);
+const intervalBlocks = Array.from({ length: INTERVALS_PER_MORNING + 1 }, (_, i) => i);
 
 export default function useCalculateTemperature(): {
   generate: () => MorningTemperatureLookup;
