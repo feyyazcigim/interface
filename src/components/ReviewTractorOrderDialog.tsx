@@ -142,7 +142,7 @@ export default function ReviewTractorOrderDialog({
       // Check if we need to include deposit optimization calls
       if (depositOptimizationCalls && depositOptimizationCalls.length > 0) {
         console.debug(`Publishing requisition with ${depositOptimizationCalls.length} deposit optimization calls`);
-        
+
         // Create publish requisition call
         const publishRequisitionCall = encodeFunctionData({
           abi: diamondABI,
@@ -162,7 +162,7 @@ export default function ReviewTractorOrderDialog({
         });
       } else {
         console.debug("Publishing requisition without deposit optimization");
-        
+
         // Call publish requisition directly (like before)
         await writeWithEstimateGas({
           address: protocolAddress,
@@ -671,9 +671,7 @@ export default function ReviewTractorOrderDialog({
                     conditions or until Order cancellation
                   </p>
                   {includesDepositOptimization && (
-                    <p className="text-xs text-gray-500">
-                      Your Deposits will be optimized to be usable with Tractor
-                    </p>
+                    <p className="text-xs text-gray-500">Your Deposits will be optimized to be usable with Tractor</p>
                   )}
                 </div>
                 <div className="flex flex-row gap-2 shrink-0 smaller-button-text">

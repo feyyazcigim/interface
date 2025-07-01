@@ -5,13 +5,10 @@ import pintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import { InfoOutlinedIcon, WarningIcon } from "@/components/Icons";
 import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
-import SmartSubmitButton from "@/components/SmartSubmitButton";
 import IconImage from "@/components/ui/IconImage";
-import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
 import { PINTO } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useSwapMany } from "@/hooks/swap/useSwap";
-import useTransaction from "@/hooks/useTransaction";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
 import { Blueprint, SowOrderTokenStrategy } from "@/lib/Tractor/types";
 import { createSowTractorData } from "@/lib/Tractor/utils";
@@ -219,7 +216,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     if (!farmerDeposits || farmerDeposits.size === 0) {
       return true;
     }
-    
+
     return Array.from(farmerDeposits.entries()).every(([token, depositData]) => {
       return areDepositsSorted(depositData.deposits || []);
     });
@@ -228,14 +225,13 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   // Determine if deposits need to be optimized (either combined or sorted)
   const needsOptimization = useMemo(() => {
     if (!farmerDeposits || farmerDeposits.size === 0) return false;
-    
+
     const needsCombiningResult = needsCombining(farmerDeposits);
     const needsSortingResult = !allTokensSorted;
     const finalResult = needsCombiningResult || needsSortingResult;
-    
+
     return finalResult;
   }, [farmerDeposits, allTokensSorted]);
-
 
   const [formStep, setFormStep] = useState(1);
 
@@ -252,8 +248,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
   const publicClient = usePublicClient();
   const protocolAddress = useProtocolAddress();
-
-
 
   // Form
   const cleanedValues = useMemo(() => {
@@ -550,7 +544,6 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       setIsLoading(false);
     }
   };
-
 
   // Add handle back function
   const handleBack = () => {
@@ -1249,57 +1242,51 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 >
                   ← Back
                 </Button>
-                {(
-                  <TooltipSimple
-                    content={
-                      formStep === 1 && (!areRequiredFieldsFilled() || !!error) ? (
-                        <div className="p-1">
-                          <div className="font-medium mb-1">Please fill in the following fields:</div>
-                          <ul className="list-disc pl-4 text-sm">
-                            {getMissingFields(
-                              temperature,
-                              minSoil,
-                              maxPerSeason,
-                              totalAmount,
-                              isPodLineLengthValid,
-                            ).map((field) => (
+                <TooltipSimple
+                  content={
+                    formStep === 1 && (!areRequiredFieldsFilled() || !!error) ? (
+                      <div className="p-1">
+                        <div className="font-medium mb-1">Please fill in the following fields:</div>
+                        <ul className="list-disc pl-4 text-sm">
+                          {getMissingFields(temperature, minSoil, maxPerSeason, totalAmount, isPodLineLengthValid).map(
+                            (field) => (
                               <li key={field}>{field}</li>
-                            ))}
-                            {error && <li className="text-red-500 mt-1">{error}</li>}
-                          </ul>
+                            ),
+                          )}
+                          {error && <li className="text-red-500 mt-1">{error}</li>}
+                        </ul>
+                      </div>
+                    ) : null
+                  }
+                  side="top"
+                  align="center"
+                  // Only show tooltip when there are missing fields or errors
+                  disabled={!(formStep === 1 && (!areRequiredFieldsFilled() || !!error))}
+                >
+                  <div className="flex-1">
+                    <Button
+                      size="xlargest"
+                      rounded="full"
+                      className={`w-full ${
+                        (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
+                          ? "bg-pinto-gray-2 text-[#9C9C9C]"
+                          : "bg-[#387F5C] text-white"
+                      }`}
+                      disabled={(formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading}
+                      onClick={handleNext}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
                         </div>
-                      ) : null
-                    }
-                    side="top"
-                    align="center"
-                    // Only show tooltip when there are missing fields or errors
-                    disabled={!(formStep === 1 && (!areRequiredFieldsFilled() || !!error))}
-                  >
-                    <div className="flex-1">
-                      <Button
-                        size="xlargest"
-                        rounded="full"
-                        className={`w-full ${
-                          (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
-                            ? "bg-pinto-gray-2 text-[#9C9C9C]"
-                            : "bg-[#387F5C] text-white"
-                        }`}
-                        disabled={(formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading}
-                        onClick={handleNext}
-                      >
-                        {isLoading ? (
-                          <div className="flex items-center gap-2">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
-                          </div>
-                        ) : formStep === 1 ? (
-                          "Next"
-                        ) : (
-                          "Review"
-                        )}
-                      </Button>
-                    </div>
-                  </TooltipSimple>
-                )}
+                      ) : formStep === 1 ? (
+                        "Next"
+                      ) : (
+                        "Review"
+                      )}
+                    </Button>
+                  </div>
+                </TooltipSimple>
               </Row>
             </div>
           </div>

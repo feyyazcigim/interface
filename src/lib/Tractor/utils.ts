@@ -7,16 +7,16 @@ import { TIME_TO_BLOCKS } from "@/constants/blocks";
 import { PODS } from "@/constants/internalTokens";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { beanstalkAbi } from "@/generated/contractHooks";
+import { generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
 import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { getChainConstant } from "@/utils/chain";
 import { resolveChainId } from "@/utils/chain";
 import { FarmFromMode, MinimumViableBlock } from "@/utils/types";
+import { Token, TokenDepositData } from "@/utils/types";
 import { MayArray } from "@/utils/types.generic";
 import { arrayify } from "@/utils/utils";
-import { BlockTag, SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
-import { needsCombining, generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
+import { SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
-import { Token, TokenDepositData } from "@/utils/types";
 import { Requisition, SowOrderTokenStrategy } from "./types";
 
 // Block number at which Tractor was deployed - use this as starting point for event queries
@@ -93,7 +93,12 @@ export async function createSowTractorData({
   farmerDeposits?: Map<Token, TokenDepositData>;
   userAddress?: `0x${string}`;
   protocolAddress?: `0x${string}`;
-}): Promise<{ data: `0x${string}`; operatorPasteInstrs: `0x${string}`[]; rawCall: `0x${string}`; depositOptimizationCalls?: `0x${string}`[] }> {
+}): Promise<{
+  data: `0x${string}`;
+  operatorPasteInstrs: `0x${string}`[];
+  rawCall: `0x${string}`;
+  depositOptimizationCalls?: `0x${string}`[];
+}> {
   // Add more detailed debug logs
   console.debug("tokenStrategy received:", tokenStrategy);
   console.debug("tokenStrategy.type:", tokenStrategy.type);
@@ -205,10 +210,10 @@ export async function createSowTractorData({
 
   // Step 2: Generate deposit optimization calls separately (for the user transaction)
   let depositOptimizationCalls: `0x${string}`[] | undefined;
-  
+
   if (farmerDeposits && userAddress && protocolAddress) {
     console.debug("Generating deposit optimization calls for user transaction");
-    
+
     try {
       depositOptimizationCalls = await generateBatchSortDepositsCallData(
         userAddress,
@@ -216,7 +221,7 @@ export async function createSowTractorData({
         publicClient,
         protocolAddress,
       );
-      
+
       console.debug(`Generated ${depositOptimizationCalls.length} deposit optimization calls for user transaction`);
     } catch (error) {
       console.warn("Failed to generate deposit optimization calls:", error);
