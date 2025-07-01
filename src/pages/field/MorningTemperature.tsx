@@ -83,7 +83,7 @@ const Stat = ({
 
   return (
     <div className="flex flex-col w-full gap-1">
-      <div className="pinto-sm">Current Temperature {clampedIndex + 1}/26</div>
+      <div className="pinto-sm">Current Temperature {clampedIndex}/25</div>
       <div className="flex flex-col gap-2">
         <div className="pinto-sm-thin text-pinto-light">
           <MorningIntervalCountdown prefix={"Increasing in"} />
