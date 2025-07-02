@@ -1,4 +1,3 @@
-import { mockAddressAtom } from "@/Web3Provider";
 import arrowDown from "@/assets/misc/ChevronDown.svg";
 import seedIcon from "@/assets/protocol/Seed.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
@@ -6,34 +5,25 @@ import pintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import { InfoOutlinedIcon, WarningIcon } from "@/components/Icons";
 import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
-import SmartSubmitButton from "@/components/SmartSubmitButton";
 import IconImage from "@/components/ui/IconImage";
-import { diamondABI as beanstalkAbi } from "@/constants/abi/diamondABI";
 import { PINTO } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useSwapMany } from "@/hooks/swap/useSwap";
-import { useClaimRewards } from "@/hooks/useClaimRewards";
-import useTransaction from "@/hooks/useTransaction";
 import { createBlueprint } from "@/lib/Tractor/blueprint";
 import { Blueprint, SowOrderTokenStrategy } from "@/lib/Tractor/types";
 import { createSowTractorData } from "@/lib/Tractor/utils";
-import { generateBatchSortDepositsCallData, needsCombining } from "@/lib/claim/depositUtils";
+import { needsCombining } from "@/lib/claim/depositUtils";
 import useTractorOperatorAverageTipPaid from "@/state/tractor/useTractorOperatorAverageTipPaid";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePodLine, useTemperature } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { isValidAddress } from "@/utils/string";
 import { DepositData } from "@/utils/types";
-import { isLocalhost } from "@/utils/utils";
-import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { useAtom } from "jotai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { encodeFunctionData } from "viem";
-import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 import { Col, Row } from "./Container";
 import TooltipSimple from "./TooltipSimple";
 import { Button } from "./ui/Button";
@@ -205,7 +195,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
   // Function to check if deposits are sorted from low stem to high stem
   const areDepositsSorted = (deposits: DepositData[]): boolean => {
-    if (!deposits || deposits.length <= 1) return true;
+    if (!deposits || deposits.length <= 1) {
+      return true;
+    }
 
     for (let i = 1; i < deposits.length; i++) {
       const currentStem = deposits[i].stem.toBigInt();
@@ -221,50 +213,32 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
   // Check if all tokens have sorted deposits
   const allTokensSorted = useMemo(() => {
-    if (!farmerDeposits || farmerDeposits.size === 0) return true;
+    if (!farmerDeposits || farmerDeposits.size === 0) {
+      return true;
+    }
 
-    return Array.from(farmerDeposits.entries()).every(([_, depositData]) =>
-      areDepositsSorted(depositData.deposits || []),
-    );
-  }, [farmerDeposits]);
-
-  // Get a list of unsorted tokens and their deposit counts
-  const unsortedTokensInfo = useMemo(() => {
-    if (!farmerDeposits || farmerDeposits.size === 0) return [];
-
-    return Array.from(farmerDeposits.entries())
-      .filter(([_, depositData]) => !areDepositsSorted(depositData.deposits || []) && depositData.deposits.length > 1)
-      .map(([token, depositData]) => ({
-        token,
-        depositCount: depositData.deposits.length,
-      }));
-  }, [farmerDeposits]);
-
-  // Get a list of tokens that need combining
-  const tokensThatNeedCombining = useMemo(() => {
-    if (!farmerDeposits || farmerDeposits.size === 0) return [];
-
-    return Array.from(farmerDeposits.entries())
-      .filter(([_, depositData]) => depositData.deposits.length >= 25) // MIN_DEPOSITS_FOR_COMBINING
-      .map(([token, depositData]) => ({
-        token,
-        depositCount: depositData.deposits.length,
-      }));
+    return Array.from(farmerDeposits.entries()).every(([token, depositData]) => {
+      return areDepositsSorted(depositData.deposits || []);
+    });
   }, [farmerDeposits]);
 
   // Determine if deposits need to be optimized (either combined or sorted)
   const needsOptimization = useMemo(() => {
-    return needsCombining(farmerDeposits) || !allTokensSorted;
+    if (!farmerDeposits || farmerDeposits.size === 0) return false;
+
+    const needsCombiningResult = needsCombining(farmerDeposits);
+    const needsSortingResult = !allTokensSorted;
+    const finalResult = needsCombiningResult || needsSortingResult;
+
+    return finalResult;
   }, [farmerDeposits, allTokensSorted]);
 
-  const [formStep, setFormStep] = useState(() => {
-    // If deposits need combining OR are not sorted, start at step 0, otherwise normal flow
-    return needsOptimization ? 0 : 1;
-  });
+  const [formStep, setFormStep] = useState(1);
 
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [encodedData, setEncodedData] = useState<`0x${string}` | null>(null);
   const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
+  const [depositOptimizationCalls, setDepositOptimizationCalls] = useState<`0x${string}`[] | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
   const [activeTipButton, setActiveTipButton] = useState<"down5" | "down1" | "average" | "up1" | "up5" | null>(
@@ -272,37 +246,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   );
   const temperatureInputRef = useRef<HTMLInputElement>(null);
 
-  // Add these new declarations for combine and sort functionality
-  const [sortingAllTokens, setSortingAllTokens] = useState(false);
   const publicClient = usePublicClient();
   const protocolAddress = useProtocolAddress();
-  const queryClient = useQueryClient();
-  const { data: walletClient } = useWalletClient();
-  const [mockAddress] = useAtom(mockAddressAtom);
-  const isLocal = isLocalhost();
-  const { writeWithEstimateGas, isConfirming, submitting, setSubmitting } = useTransaction({
-    successMessage: "Combine & Sort successful",
-    errorMessage: "Combine & Sort failed",
-    successCallback: () => {
-      queryClient.invalidateQueries();
-      // If combining is successful, advance to the next step
-      setFormStep(1);
-    },
-  });
-
-  // Claim rewards necessary if deposits have not been combined
-  const { submitClaimRewards, isSubmitting: isClaimSubmitting } = useClaimRewards();
-
-  // Recheck the need for optimization whenever deposits change
-  useEffect(() => {
-    // Only auto-update if we're on step 0
-    if (formStep === 0) {
-      // If no longer needs optimization, advance to step 1
-      if (!needsOptimization) {
-        setFormStep(1);
-      }
-    }
-  }, [needsOptimization, formStep]);
 
   // Form
   const cleanedValues = useMemo(() => {
@@ -524,105 +469,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   };
 
   // New function to handle combine and sort all deposits
-  const handleCombineAndSortAll = async () => {
-    if (!address || !publicClient || !protocolAddress || !farmerDeposits) return;
-
-    const effectiveAddress = isLocal && isValidAddress(mockAddress) ? mockAddress : address;
-    console.debug("Combine & Sort All - Using address:", effectiveAddress);
-
-    setSortingAllTokens(true);
-    setSubmitting(true);
-
-    try {
-      toast.info("Preparing to combine and sort all deposits...");
-
-      console.debug(`Processing ${farmerDeposits.size} tokens for sorting`);
-
-      // Use the utility function to generate batch sort deposits call data
-      const callData = await generateBatchSortDepositsCallData(
-        effectiveAddress as `0x${string}`,
-        farmerDeposits,
-        publicClient,
-        protocolAddress,
-      );
-
-      if (!callData || callData.length === 0) {
-        toast.warning("No sort deposit calls were generated");
-        return;
-      }
-
-      // Output raw calldata for simulator debugging
-      const rawCalldata = encodeFunctionData({
-        abi: beanstalkAbi,
-        functionName: "farm",
-        args: [callData],
-      });
-
-      console.debug(`=== Raw Farm Calldata for All Tokens ===`);
-      console.debug(rawCalldata);
-      console.debug(`Number of calls: ${callData.length}`);
-      console.debug("======================================");
-
-      toast.info(`Executing ${callData.length} operations for all tokens (combines + sort updates)...`);
-
-      // Execute the farm transaction using writeWithEstimateGas with higher gas limit
-      // const simulateFirst = await publicClient
-      //   .simulateContract({
-      //     address: protocolAddress,
-      //     abi: beanstalkAbi,
-      //     functionName: "farm",
-      //     args: [callData],
-      //     account: effectiveAddress,
-      //   })
-      //   .catch((e) => {
-      //     console.debug("Simulation failed:", e);
-      //     return { error: e };
-      //   });
-
-      // if ("error" in simulateFirst) {
-      //   // console.error("Transaction would fail in simulation, not submitting");
-      //   toast.error("Transaction would fail: " + (simulateFirst.error as any)?.shortMessage || "unknown error");
-      //   setSubmitting(false);
-      //   setSortingAllTokens(false);
-      //   return;
-      // }
-
-      // Execute with higher gas limit to prevent running out of gas
-      await writeWithEstimateGas({
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "farm",
-        args: [callData],
-      });
-    } catch (error) {
-      console.error("Error processing all tokens:", error);
-
-      // Extract error details for debugging
-      const errorObj = error as any;
-
-      if (errorObj.cause) console.debug("Error cause:", errorObj.cause);
-      if (errorObj.details) console.debug("Error details:", errorObj.details);
-      if (errorObj.data) console.debug("Error data:", errorObj.data);
-      if (errorObj.reason) console.debug("Error reason:", errorObj.reason);
-      if (errorObj.shortMessage) console.debug("Short message:", errorObj.shortMessage);
-
-      // Display toast with specific error information
-      const errorMessage =
-        errorObj.shortMessage || errorObj.reason || errorObj.cause?.message || (error as Error).message;
-
-      toast.error(`Failed to process all tokens: ${errorMessage}`);
-
-      setSubmitting(false);
-      setSortingAllTokens(false);
-    }
-  };
 
   // Update handleNext to remove formSubmitAttempted
   const handleNext = async () => {
-    // Step 0 does nothing on Next since we handle the claim button separately
-    if (formStep === 0) {
-      return;
-    }
     // First step just moves to the next form view if validation passes
     if (formStep === 1) {
       if (areRequiredFieldsFilled() && !error) {
@@ -642,7 +491,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         return;
       }
 
-      const { data, operatorPasteInstrs, rawCall } = await createSowTractorData({
+      const { data, operatorPasteInstrs, rawCall, depositOptimizationCalls } = await createSowTractorData({
         totalAmountToSow: totalAmount || "0",
         temperature: temperature || "0",
         minAmountPerSeason: minSoil || "0",
@@ -654,6 +503,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         whitelistedOperators: [],
         tokenStrategy: selectedTokenStrategy,
         publicClient,
+        farmerDeposits: farmerDeposits,
+        userAddress: address,
+        protocolAddress: protocolAddress,
       });
 
       console.debug("createSowTractorData, data:", data);
@@ -681,6 +533,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       setBlueprint(newBlueprint);
       setEncodedData(rawCall);
       setOperatorPasteInstructions(operatorPasteInstrs);
+      setDepositOptimizationCalls(depositOptimizationCalls);
       setShowReview(true);
       setIsLoading(false);
 
@@ -692,26 +545,10 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     }
   };
 
-  // Handle claim button click in step 0
-  const handleClaim = async () => {
-    try {
-      await submitClaimRewards();
-      // We don't need to manually advance to the next step
-      // The useEffect will detect the change in needsDepositCombining
-      // and automatically advance when appropriate
-    } catch (e) {
-      console.error("Failed to claim rewards:", e);
-      toast.error("Failed to claim rewards");
-    }
-  };
-
   // Add handle back function
   const handleBack = () => {
     if (formStep === 2) {
       setFormStep(1);
-    } else if (formStep === 1) {
-      // Can't go back from step 1 to step 0 as step 0 is conditional
-      onOpenChange(false);
     } else {
       onOpenChange(false);
     }
@@ -1039,54 +876,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           <div className="flex flex-col gap-6">
             {/* Form Fields */}
             <div className="flex flex-col gap-6">
-              {formStep === 0 ? (
-                // Step 0 - Deposits need combining or sorting
-                <div className="flex flex-col gap-4 py-2 min-h-[320px]">
-                  <div className="flex items-center justify-center">
-                    <WarningIcon color="#DC2626" width={40} height={40} />
-                  </div>
-                  <h3 className="text-center pinto-h3 mt-4 mb-2">Fragmented Silo Deposits</h3>
-                  <p className="text-center pinto-body text-gray-700 mb-2">
-                    Pinto does not combine and sort deposits by default, due to gas costs. A one-time claim and combine
-                    will optimize your deposits and allow you to create Tractor orders.
-                  </p>
-
-                  {/* Display tokens needing optimization */}
-                  <div className="mt-2 p-3 bg-gray-50 rounded-md max-h-[180px] overflow-y-auto">
-                    {unsortedTokensInfo.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-sm font-medium text-pinto-warning-orange mb-2">
-                          Tokens with unsorted deposits:
-                        </p>
-                        <ul className="text-xs text-gray-600 ml-4 list-disc">
-                          {unsortedTokensInfo.map(({ token, depositCount }) => (
-                            <li key={token.address} className="mb-1">
-                              <span className="font-medium">{token.symbol}</span>: {depositCount} deposits
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {tokensThatNeedCombining.length > 0 && (
-                      <div>
-                        <p className="text-sm font-medium text-pinto-warning-orange mb-2">
-                          Tokens with too many deposits:
-                        </p>
-                        <ul className="text-xs text-gray-600 ml-4 list-disc">
-                          {tokensThatNeedCombining.map(({ token, depositCount }) => (
-                            <li key={token.address} className="mb-1">
-                              <span className="font-medium">{token.symbol}</span>: {depositCount} deposits
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* The Claim & Combine button has been moved to the footer (replacing the Next button) */}
-                </div>
-              ) : formStep === 1 ? (
+              {formStep === 1 ? (
                 // Step 1 - Main Form
                 <Col className="gap-6 pinto-sm-light text-pinto-light">
                   {/* Title and separator */}
@@ -1452,67 +1242,51 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                 >
                   ← Back
                 </Button>
-                {formStep === 0 ? (
-                  <SmartSubmitButton
-                    size="xlargest"
-                    rounded="full"
-                    variant="gradient"
-                    submitFunction={handleCombineAndSortAll}
-                    disabled={sortingAllTokens || submitting}
-                    submitButtonText={sortingAllTokens || submitting ? "Optimizing..." : "Combine & Sort"}
-                    className="flex-1 rounded-full text-2xl font-medium"
-                  />
-                ) : (
-                  <TooltipSimple
-                    content={
-                      formStep === 1 && (!areRequiredFieldsFilled() || !!error) ? (
-                        <div className="p-1">
-                          <div className="font-medium mb-1">Please fill in the following fields:</div>
-                          <ul className="list-disc pl-4 text-sm">
-                            {getMissingFields(
-                              temperature,
-                              minSoil,
-                              maxPerSeason,
-                              totalAmount,
-                              isPodLineLengthValid,
-                            ).map((field) => (
+                <TooltipSimple
+                  content={
+                    formStep === 1 && (!areRequiredFieldsFilled() || !!error) ? (
+                      <div className="p-1">
+                        <div className="font-medium mb-1">Please fill in the following fields:</div>
+                        <ul className="list-disc pl-4 text-sm">
+                          {getMissingFields(temperature, minSoil, maxPerSeason, totalAmount, isPodLineLengthValid).map(
+                            (field) => (
                               <li key={field}>{field}</li>
-                            ))}
-                            {error && <li className="text-red-500 mt-1">{error}</li>}
-                          </ul>
+                            ),
+                          )}
+                          {error && <li className="text-red-500 mt-1">{error}</li>}
+                        </ul>
+                      </div>
+                    ) : null
+                  }
+                  side="top"
+                  align="center"
+                  // Only show tooltip when there are missing fields or errors
+                  disabled={!(formStep === 1 && (!areRequiredFieldsFilled() || !!error))}
+                >
+                  <div className="flex-1">
+                    <Button
+                      size="xlargest"
+                      rounded="full"
+                      className={`w-full ${
+                        (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
+                          ? "bg-pinto-gray-2 text-[#9C9C9C]"
+                          : "bg-[#387F5C] text-white"
+                      }`}
+                      disabled={(formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading}
+                      onClick={handleNext}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
                         </div>
-                      ) : null
-                    }
-                    side="top"
-                    align="center"
-                    // Only show tooltip when there are missing fields or errors
-                    disabled={!(formStep === 1 && (!areRequiredFieldsFilled() || !!error))}
-                  >
-                    <div className="flex-1">
-                      <Button
-                        size="xlargest"
-                        rounded="full"
-                        className={`w-full ${
-                          (formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading
-                            ? "bg-pinto-gray-2 text-[#9C9C9C]"
-                            : "bg-[#387F5C] text-white"
-                        }`}
-                        disabled={(formStep === 1 && (!areRequiredFieldsFilled() || !!error)) || isLoading}
-                        onClick={handleNext}
-                      >
-                        {isLoading ? (
-                          <div className="flex items-center gap-2">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
-                          </div>
-                        ) : formStep === 1 ? (
-                          "Next"
-                        ) : (
-                          "Review"
-                        )}
-                      </Button>
-                    </div>
-                  </TooltipSimple>
-                )}
+                      ) : formStep === 1 ? (
+                        "Next"
+                      ) : (
+                        "Review"
+                      )}
+                    </Button>
+                  </div>
+                </TooltipSimple>
               </Row>
             </div>
           </div>
@@ -1681,6 +1455,8 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           encodedData={encodedData}
           operatorPasteInstrs={operatorPasteInstructions}
           blueprint={blueprint}
+          includesDepositOptimization={needsOptimization}
+          depositOptimizationCalls={depositOptimizationCalls}
         />
       )}
     </>
