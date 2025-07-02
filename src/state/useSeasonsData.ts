@@ -309,6 +309,7 @@ export default function useSeasonsData(
     enabled: marketPerformanceData,
   });
   const marketPrices = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.TOKEN_PRICES);
+  // TODO(pp): the cumulative ones need to accept the starting season
   const marketUsdCumulative = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.USD_CUMULATIVE);
   const marketUsdSeasonal = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.USD_SEASONAL);
   const marketPercentCumulative = useMarketPerformanceCalc(
@@ -561,7 +562,36 @@ export default function useSeasonsData(
         allData.marketPriceCbeth = marketPrices.cbETH[marketPrices.cbETH.length - 1 - idx].value;
         allData.marketPriceCbbtc = marketPrices.cbBTC[marketPrices.cbBTC.length - 1 - idx].value;
         allData.marketPriceWsol = marketPrices.WSOL[marketPrices.WSOL.length - 1 - idx].value;
-        // TODO(pp)
+        allData.marketCumulativeNonPintoUsd = marketUsdCumulative.NET[marketUsdCumulative.NET.length - 1 - idx]?.value;
+        allData.marketCumulativeWethUsd = marketUsdCumulative.WETH[marketUsdCumulative.WETH.length - 1 - idx]?.value;
+        allData.marketCumulativeCbethUsd = marketUsdCumulative.cbETH[marketUsdCumulative.cbETH.length - 1 - idx]?.value;
+        allData.marketCumulativeCbbtcUsd = marketUsdCumulative.cbBTC[marketUsdCumulative.cbBTC.length - 1 - idx]?.value;
+        allData.marketCumulativeWsolUsd = marketUsdCumulative.WSOL[marketUsdCumulative.WSOL.length - 1 - idx]?.value;
+        allData.marketSeasonalNonPintoUsd = marketUsdSeasonal.NET[marketUsdSeasonal.NET.length - 1 - idx]?.value;
+        allData.marketSeasonalWethUsd = marketUsdSeasonal.WETH[marketUsdSeasonal.WETH.length - 1 - idx]?.value;
+        allData.marketSeasonalCbethUsd = marketUsdSeasonal.cbETH[marketUsdSeasonal.cbETH.length - 1 - idx]?.value;
+        allData.marketSeasonalCbbtcUsd = marketUsdSeasonal.cbBTC[marketUsdSeasonal.cbBTC.length - 1 - idx]?.value;
+        allData.marketSeasonalWsolUsd = marketUsdSeasonal.WSOL[marketUsdSeasonal.WSOL.length - 1 - idx]?.value;
+        allData.marketCumulativeNonPintoPercent =
+          marketPercentCumulative.NET[marketPercentCumulative.NET.length - 1 - idx]?.value;
+        allData.marketCumulativeWethPercent =
+          marketPercentCumulative.WETH[marketPercentCumulative.WETH.length - 1 - idx]?.value;
+        allData.marketCumulativeCbethPercent =
+          marketPercentCumulative.cbETH[marketPercentCumulative.cbETH.length - 1 - idx]?.value;
+        allData.marketCumulativeCbbtcPercent =
+          marketPercentCumulative.cbBTC[marketPercentCumulative.cbBTC.length - 1 - idx]?.value;
+        allData.marketCumulativeWsolPercent =
+          marketPercentCumulative.WSOL[marketPercentCumulative.WSOL.length - 1 - idx]?.value;
+        allData.marketSeasonalNonPintoPercent =
+          marketPercentSeasonal.NET[marketPercentSeasonal.NET.length - 1 - idx]?.value;
+        allData.marketSeasonalWethPercent =
+          marketPercentSeasonal.WETH[marketPercentSeasonal.WETH.length - 1 - idx]?.value;
+        allData.marketSeasonalCbethPercent =
+          marketPercentSeasonal.cbETH[marketPercentSeasonal.cbETH.length - 1 - idx]?.value;
+        allData.marketSeasonalCbbtcPercent =
+          marketPercentSeasonal.cbBTC[marketPercentSeasonal.cbBTC.length - 1 - idx]?.value;
+        allData.marketSeasonalWsolPercent =
+          marketPercentSeasonal.WSOL[marketPercentSeasonal.WSOL.length - 1 - idx]?.value;
       }
       transformedData.push(allData as SeasonsTableData);
     }

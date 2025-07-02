@@ -3,7 +3,7 @@ import podIcon from "@/assets/protocol/Pod.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
 import { TokenValue } from "@/classes/TokenValue";
 import { CBBTC_TOKEN, CBETH_TOKEN, WETH_TOKEN, WSOL_TOKEN } from "@/constants/tokens";
-import { formatNum, formatPct, formatUSD } from "@/utils/format";
+import { chartFormatters, formatNum, formatPct, formatUSD } from "@/utils/format";
 import { Token } from "@/utils/types";
 import { useMemo } from "react";
 import useTokenData from "./useTokenData";
@@ -977,6 +977,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
     icon,
     tooltipTitle,
     description,
+    formatter,
     valueAxis = id,
     inputOptions = undefined,
   }: {
@@ -985,6 +986,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
     icon: string;
     tooltipTitle: string;
     description: string;
+    formatter: (v: number) => string;
     valueAxis?: string;
     inputOptions?: "SEASON";
   }) => {
@@ -1000,8 +1002,8 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       priceScaleKey: id,
       valueAxisType: valueAxis,
       valueFormatter: (v: number) => v,
-      tickFormatter: usdFormatter,
-      shortTickFormatter: usdFormatter,
+      tickFormatter: formatter,
+      shortTickFormatter: formatter,
       inputOptions,
     };
   };
@@ -1012,6 +1014,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "WETH Price",
       description: "WETH Price",
+      formatter: usdFormatter,
     }),
     marketEntry({
       id: "marketPriceCbeth",
@@ -1019,6 +1022,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "cbETH Price",
       description: "cbETH Price",
+      formatter: usdFormatter,
     }),
     marketEntry({
       id: "marketPriceCbbtc",
@@ -1026,6 +1030,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "cbBTC Price",
       description: "cbBTC Price",
+      formatter: usdFormatter,
     }),
     marketEntry({
       id: "marketPriceWsol",
@@ -1033,156 +1038,177 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       icon: WSOL_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "WSOL Price",
       description: "WSOL Price",
+      formatter: usdFormatter,
     }),
     marketEntry({
       id: "marketCumulativeNonPintoUsd",
       name: "Protocol Cumulative Non-Pinto Value Change (USD)",
       icon: mainToken.logoURI,
-      tooltipTitle: "Protocol Cumulative Non-Pinto Value Change (USD)",
+      tooltipTitle: "Market: Cumulative Non-Pinto Value Change",
       description: "Change of non-Pinto liquidity USD value since a selectable starting season.",
+      formatter: usdFormatter,
       inputOptions: "SEASON",
     }),
     marketEntry({
       id: "marketCumulativeWethUsd",
       name: "Protocol Cumulative WETH Value Change (USD)",
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Protocol Cumulative WETH Value Change (USD)",
+      tooltipTitle: "Market: Cumulative WETH Value Change",
       description: "Change of WETH liquidity USD value since a selectable starting season.",
+      formatter: usdFormatter,
       inputOptions: "SEASON",
     }),
     marketEntry({
       id: "marketCumulativeCbethUsd",
       name: "Protocol Cumulative cbETH Value Change (USD)",
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Protocol Cumulative cbETH Value Change (USD)",
+      tooltipTitle: "Market: Cumulative cbETH Value Change",
       description: "Change of cbETH liquidity USD value since a selectable starting season.",
+      formatter: usdFormatter,
       inputOptions: "SEASON",
     }),
     marketEntry({
       id: "marketCumulativeCbbtcUsd",
       name: "Protocol Cumulative cbBTC Value Change (USD)",
       icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Protocol Cumulative cbBTC Value Change (USD)",
+      tooltipTitle: "Market: Cumulative cbBTC Value Change",
       description: "Change of cbBTC liquidity USD value since a selectable starting season.",
+      formatter: usdFormatter,
       inputOptions: "SEASON",
     }),
     marketEntry({
       id: "marketCumulativeWsolUsd",
       name: "Protocol Cumulative WSOL Value Change (USD)",
       icon: WSOL_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Protocol Cumulative WSOL Value Change (USD)",
+      tooltipTitle: "Market: Cumulative WSOL Value Change",
       description: "Change of WSOL liquidity USD value since a selectable starting season.",
+      formatter: usdFormatter,
       inputOptions: "SEASON",
     }),
     marketEntry({
       id: "marketSeasonalNonPintoUsd",
       name: "Protocol Seasonal Non-Pinto Value Change (USD)",
       icon: mainToken.logoURI,
-      tooltipTitle: "Market: Seasonal Non-Pinto Value Change (USD)",
+      tooltipTitle: "Market: Seasonal Non-Pinto Value Change",
       description: "Change of non-Pinto liquidity USD value by season.",
+      formatter: usdFormatter,
     }),
     marketEntry({
       id: "marketSeasonalWethUsd",
       name: "Protocol Seasonal WETH Value Change (USD)",
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Market: Seasonal WETH Value Change (USD)",
+      tooltipTitle: "Market: Seasonal WETH Value Change",
       description: "Change of WETH liquidity USD value by season.",
+      formatter: usdFormatter,
     }),
     marketEntry({
       id: "marketSeasonalCbethUsd",
       name: "Protocol Seasonal cbETH Value Change (USD)",
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Market: Seasonal cbETH Value Change (USD)",
+      tooltipTitle: "Market: Seasonal cbETH Value Change",
       description: "Change of cbETH liquidity USD value by season.",
+      formatter: usdFormatter,
     }),
     marketEntry({
       id: "marketSeasonalCbbtcUsd",
       name: "Protocol Seasonal cbBTC Value Change (USD)",
       icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Market: Seasonal cbBTC Value Change (USD)",
+      tooltipTitle: "Market: Seasonal cbBTC Value Change",
       description: "Change of cbBTC liquidity USD value by season.",
+      formatter: usdFormatter,
     }),
     marketEntry({
       id: "marketSeasonalWsolUsd",
       name: "Protocol Seasonal WSOL Value Change (USD)",
       icon: WSOL_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Market: Seasonal WSOL Value Change (USD)",
+      tooltipTitle: "Market: Seasonal WSOL Value Change",
       description: "Change of WSOL liquidity USD value by season.",
+      formatter: usdFormatter,
     }),
     marketEntry({
       id: "marketCumulativeNonPintoPercent",
       name: "Protocol Cumulative Non-Pinto Value Change (%)",
       icon: mainToken.logoURI,
-      tooltipTitle: "Protocol Cumulative Non-Pinto Value Change (%)",
+      tooltipTitle: "Market: Cumulative Non-Pinto Value Change",
       description: "Percentage change of Non-Pinto liquidity value since a selectable starting season.",
+      formatter: chartFormatters.percentFormatter(4),
       inputOptions: "SEASON",
     }),
     marketEntry({
       id: "marketCumulativeWethPercent",
       name: "Protocol Cumulative WETH Value Change (%)",
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Protocol Cumulative WETH Value Change (%)",
+      tooltipTitle: "Market: Cumulative WETH Value Change",
       description: "Percentage change of WETH liquidity value since a selectable starting season.",
+      formatter: chartFormatters.percentFormatter(4),
       inputOptions: "SEASON",
     }),
     marketEntry({
       id: "marketCumulativeCbethPercent",
       name: "Protocol Cumulative cbETH Value Change (%)",
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Protocol Cumulative cbETH Value Change (%)",
+      tooltipTitle: "Market: Cumulative cbETH Value Change",
       description: "Percentage change of cbETH liquidity value since a selectable starting season.",
+      formatter: chartFormatters.percentFormatter(4),
       inputOptions: "SEASON",
     }),
     marketEntry({
       id: "marketCumulativeCbbtcPercent",
       name: "Protocol Cumulative cbBTC Value Change (%)",
       icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Protocol Cumulative cbBTC Value Change (%)",
+      tooltipTitle: "Market: Cumulative cbBTC Value Change",
       description: "Percentage change of cbBTC liquidity value since a selectable starting season.",
+      formatter: chartFormatters.percentFormatter(4),
       inputOptions: "SEASON",
     }),
     marketEntry({
       id: "marketCumulativeWsolPercent",
       name: "Protocol Cumulative WSOL Value Change (%)",
       icon: WSOL_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Protocol Cumulative WSOL Value Change (%)",
+      tooltipTitle: "Market: Cumulative WSOL Value Change",
       description: "Percentage change of WSOL liquidity value since a selectable starting season.",
+      formatter: chartFormatters.percentFormatter(4),
       inputOptions: "SEASON",
     }),
     marketEntry({
       id: "marketSeasonalNonPintoPercent",
       name: "Protocol Seasonal Non-Pinto Value Change (%)",
       icon: mainToken.logoURI,
-      tooltipTitle: "Market: Seasonal Non-Pinto Value Change (%)",
+      tooltipTitle: "Market: Seasonal Non-Pinto Value Change",
       description: "Percentage change of Non-Pinto liquidity value by season.",
+      formatter: chartFormatters.percentFormatter(4),
     }),
     marketEntry({
       id: "marketSeasonalWethPercent",
       name: "Protocol Seasonal WETH Value Change (%)",
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Market: Seasonal WETH Value Change (%)",
+      tooltipTitle: "Market: Seasonal WETH Value Change",
       description: "Percentage change of WETH liquidity value by season.",
+      formatter: chartFormatters.percentFormatter(4),
     }),
     marketEntry({
       id: "marketSeasonalCbethPercent",
       name: "Protocol Seasonal cbETH Value Change (%)",
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Market: Seasonal cbETH Value Change (%)",
+      tooltipTitle: "Market: Seasonal cbETH Value Change",
       description: "Percentage change of cbETH liquidity value by season.",
+      formatter: chartFormatters.percentFormatter(4),
     }),
     marketEntry({
       id: "marketSeasonalCbbtcPercent",
       name: "Protocol Seasonal cbBTC Value Change (%)",
       icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Market: Seasonal cbBTC Value Change (%)",
+      tooltipTitle: "Market: Seasonal cbBTC Value Change",
       description: "Percentage change of cbBTC liquidity value by season.",
+      formatter: chartFormatters.percentFormatter(4),
     }),
     marketEntry({
       id: "marketSeasonalWsolPercent",
       name: "Protocol Seasonal WSOL Value Change (%)",
       icon: WSOL_TOKEN[mainToken.chainId].logoURI,
-      tooltipTitle: "Market: Seasonal WSOL Value Change (%)",
+      tooltipTitle: "Market: Seasonal WSOL Value Change",
       description: "Percentage change of WSOL liquidity value by season.",
+      formatter: chartFormatters.percentFormatter(4),
     }),
   ];
 };
