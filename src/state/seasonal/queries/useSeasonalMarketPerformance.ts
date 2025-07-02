@@ -64,11 +64,11 @@ const paginateSettings: PaginationSettings<
   },
 };
 
-export function useSeasonalMarketPerformanceRaw(
+export function useSeasonalMarketPerformanceData(
   fromSeason: number,
   toSeason: number,
   { enabled = true } = {},
-): UseSeasonalResult {
+): UseSeasonalResult<MarketPerformanceSeasonal[]> {
   const chainId = useChainId();
 
   const queryFnFactory = (vars: SeasonalQueryVars) => async () => {
@@ -80,7 +80,7 @@ export function useSeasonalMarketPerformanceRaw(
     );
   };
 
-  return useSeasonalQueries("BeanstalkSeasonalMarketPerformanceQuery", {
+  return useSeasonalQueries<MarketPerformanceSeasonal>("BeanstalkSeasonalMarketPerformanceQuery", {
     fromSeason,
     toSeason,
     queryVars: {},
@@ -99,8 +99,8 @@ export function useSeasonalMarketPerformanceRaw(
 
 // Returns chart data for the given seasons data.
 // Performs accumulations if a cumultaive type, using the first available season as the reference point.
-export function useMarketPerformanceFormatted(
-  seasonalData: MarketPerformanceSeasonal[],
+export function useMarketPerformanceCalc(
+  seasonalData: MarketPerformanceSeasonal[] | undefined,
   chartType: SMPChartType,
 ): SeasonalMarketPerformanceChartData {
   const mainToken = useTokenData().mainToken;
@@ -191,15 +191,15 @@ export function useSeasonalMarketPerformance(
 ): UseSeasonalMarketPerformanceResult {
   // Price query is invalid before season 6
   const actualFromSeason = chartType === SMPChartType.TOKEN_PRICES ? Math.max(fromSeason, 6) : fromSeason;
-  const result = useSeasonalMarketPerformanceRaw(actualFromSeason, toSeason, { enabled });
+  const result = useSeasonalMarketPerformanceData(actualFromSeason, toSeason, { enabled });
 
   const needsPrice = chartType === SMPChartType.TOKEN_PRICES;
   const pintoPriceResult = useSeasonalPrice(actualFromSeason, toSeason, enabled && needsPrice);
   const priceReady = !needsPrice || !!pintoPriceResult.data;
 
   // Expand results by token
-  const sgData = result.data as unknown as MarketPerformanceSeasonal[];
-  const responseData = useMarketPerformanceFormatted(sgData, chartType);
+  const sgData = result.data;
+  const responseData = useMarketPerformanceCalc(sgData, chartType);
   // Add net price data
   if (sgData && priceReady && chartType === SMPChartType.TOKEN_PRICES) {
     for (let i = 0; i < sgData.length; ++i) {

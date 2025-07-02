@@ -24,8 +24,8 @@ import useSeasonalQueries, {
 } from "./seasonal/queries/useSeasonalInternalQueries";
 import {
   SMPChartType,
-  useMarketPerformanceFormatted,
-  useSeasonalMarketPerformanceRaw,
+  useMarketPerformanceCalc,
+  useSeasonalMarketPerformanceData,
 } from "./seasonal/queries/useSeasonalMarketPerformance";
 import useSeasonalTractorSnapshots from "./seasonal/queries/useSeasonalTractorSnapshots";
 import useTokenData from "./useTokenData";
@@ -296,20 +296,14 @@ export default function useSeasonsData(
     enabled: inflowData,
   });
 
-  const useMarketPerformanceQuery = useSeasonalMarketPerformanceRaw(fromSeason, toSeason, {
+  const useMarketPerformanceQuery = useSeasonalMarketPerformanceData(fromSeason, toSeason, {
     enabled: marketPerformanceData,
   });
-  const marketPrices = useMarketPerformanceFormatted(useMarketPerformanceQuery.data, SMPChartType.TOKEN_PRICES);
-  const marketUsdSeasonal = useMarketPerformanceFormatted(useMarketPerformanceQuery.data, SMPChartType.USD_SEASONAL);
-  const marketPercentSeasonal = useMarketPerformanceFormatted(
-    useMarketPerformanceQuery.data,
-    SMPChartType.PERCENT_SEASONAL,
-  );
-  const marketUsdCumulative = useMarketPerformanceFormatted(
-    useMarketPerformanceQuery.data,
-    SMPChartType.USD_CUMULATIVE,
-  );
-  const marketPercentCumulative = useMarketPerformanceFormatted(
+  const marketPrices = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.TOKEN_PRICES);
+  const marketUsdSeasonal = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.USD_SEASONAL);
+  const marketPercentSeasonal = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.PERCENT_SEASONAL);
+  const marketUsdCumulative = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.USD_CUMULATIVE);
+  const marketPercentCumulative = useMarketPerformanceCalc(
     useMarketPerformanceQuery.data,
     SMPChartType.PERCENT_CUMULATIVE,
   );
