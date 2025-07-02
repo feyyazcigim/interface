@@ -70,6 +70,11 @@ interface ChartSetupBase {
    * for aestethic purposes
    */
   shortTickFormatter: (value: number) => string;
+  /**
+   * Optinal extra required inputs when using this chart.
+   * START_SEASON: numeric entry for a season number
+   */
+  inputOptions?: "SEASON";
 }
 
 export type ChartSetup = ChartSetupBase & {
@@ -995,6 +1000,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       valueFormatter: (v: number) => v,
       tickFormatter: usdFormatter,
       shortTickFormatter: usdFormatter,
+      inputOptions: "SEASON" as const,
     };
   };
   return [

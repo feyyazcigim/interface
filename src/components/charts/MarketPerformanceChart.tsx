@@ -1,4 +1,5 @@
 import { SMPChartType, useSeasonalMarketPerformance } from "@/state/seasonal/queries/useSeasonalMarketPerformance";
+import useTokenData from "@/state/useTokenData";
 import { chartFormatters as f, formatDate } from "@/utils/format";
 import { getChainTokenMap } from "@/utils/token";
 import { SeasonalMarketPerformanceChartData, Token } from "@/utils/types";
@@ -14,7 +15,6 @@ import TooltipSimple from "../TooltipSimple";
 import IconImage from "../ui/IconImage";
 import LineChart, { LineChartData } from "./LineChart";
 import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
-import useTokenData from "@/state/useTokenData";
 
 // Predefined date ranges
 const DATE_PRESETS: Record<Exclude<string, "CUSTOM">, DatePresetConfig> = {

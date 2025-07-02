@@ -12,11 +12,18 @@ import LoadingSpinner from "../LoadingSpinner";
 import { Button } from "../ui/Button";
 import TVChart, { TVChartFormattedData } from "./TVChart";
 
+// Stores selected charts
 export const selectedChartsAtom = atom<number[]>([0]);
+// Stores season inputs for market performance charts
+export const chartSeasonInputsAtom = atom<Record<string, number>>({});
 
 function saveChartsToStorage(selection: number[], chartSetupData: ChartSetup[]) {
   const selectedIds = selection.map((selectedChartIndex) => chartSetupData[selectedChartIndex].id);
   localStorage.setItem("advancedChartSelectedCharts", safeJSONStringify(selectedIds));
+}
+
+function saveChartInputDataToStorage(chartSeasonInputs: Record<string, number>) {
+  localStorage.setItem("advancedChartSeasonInputs", safeJSONStringify(chartSeasonInputs));
 }
 
 function loadChartsFromStorage(chartSetupData: ChartSetup[]) {
@@ -34,6 +41,11 @@ function loadChartsFromStorage(chartSetupData: ChartSetup[]) {
   return result;
 }
 
+function loadChartInputDataFromStorage() {
+  const stored = localStorage.getItem("advancedChartSeasonInputs");
+  return { seasons: safeJSONParse<Record<string, number>, Record<string, number>>(stored, {}) };
+}
+
 export const AdvancedChart = () => {
   const { data: chartSetupData } = useChartSetupData();
   const currentSeason = useSeason();
@@ -41,27 +53,40 @@ export const AdvancedChart = () => {
   const storedSetting1 = localStorage.getItem("advancedChartTimePeriod");
   const storedTimePeriod = safeJSONParse<IRange<Time>, undefined>(storedSetting1, undefined);
 
-  const storedSelectedCharts = useMemo(() => {
-    return loadChartsFromStorage(chartSetupData);
-  }, [chartSetupData]);
-
   const [timePeriod, setTimePeriod] = useState<IRange<Time> | undefined>(storedTimePeriod);
   const [selectedCharts, setSelectedCharts] = useAtom(selectedChartsAtom);
+  const [chartSeasonInputs, setChartSeasonInputs] = useAtom(chartSeasonInputsAtom);
   const [panelState, setPanelState] = useAtom(navbarPanelAtom);
 
   useEffect(() => {
     saveChartsToStorage(selectedCharts, chartSetupData);
-  }, [selectedCharts, chartSetupData]);
+    saveChartInputDataToStorage(chartSeasonInputs);
+  }, [selectedCharts, chartSetupData, chartSeasonInputs]);
 
   // By adjusting fromSeason here, we can avoid fetching data
   // that might break the chart
   const seasonsData = useSeasonsData(7, currentSeason, { seasonSync: true });
 
+  const storedSelectedCharts = useMemo(() => {
+    return loadChartsFromStorage(chartSetupData);
+  }, [chartSetupData]);
+
+  const storedChartInputData = useMemo(() => {
+    return loadChartInputDataFromStorage();
+  }, []);
+
+  // Set values from storage on initial load
   useEffect(() => {
     if (storedSelectedCharts && storedSelectedCharts.length > 0) {
       setSelectedCharts(storedSelectedCharts);
     }
   }, [storedSelectedCharts, setSelectedCharts]);
+
+  useEffect(() => {
+    if (storedChartInputData.seasons) {
+      setChartSeasonInputs(storedChartInputData.seasons);
+    }
+  }, [storedChartInputData.seasons, setChartSeasonInputs]);
 
   const [collapseChartButtons, setCollapseChartButtons] = useState(false);
   const selectedChartsRef = useRef<HTMLDivElement>(null);
