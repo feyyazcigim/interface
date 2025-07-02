@@ -1,17 +1,37 @@
+import { animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 
 export default function MainCTA() {
+  const revealAnimation = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+  };
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4 self-stretch items-center">
-        <h2 className="text-[4rem] leading-[1.1] font-thin text-black">Fair Fiat Money</h2>
-        <span className="text-2xl leading-[1.4] font-thin text-pinto-gray-4">
+        <motion.h2
+          className="text-[4rem] leading-[1.1] font-thin text-black"
+          transition={{ duration: 0.5, ease: "easeInOut", delay: 1 }}
+          {...revealAnimation}
+        >
+          Fair Fiat Money
+        </motion.h2>
+        <motion.span
+          className="text-2xl leading-[1.4] font-thin text-pinto-gray-4"
+          transition={{ duration: 0.5, ease: "easeInOut", delay: 1.25 }}
+          {...revealAnimation}
+        >
           Printed directly to the people. Founded on decentralized credit.
-        </span>
+        </motion.span>
       </div>
-      <div className="flex flex-row gap-4 mx-auto">
+      <motion.div
+        className="flex flex-row gap-4 mx-auto"
+        transition={{ duration: 0.5, ease: "easeInOut", delay: 1.5 }}
+        {...revealAnimation}
+      >
         <Link to={navLinks.overview}>
           <Button rounded="full">Come Seed the Trustless Economy →</Button>
         </Link>
@@ -20,7 +40,7 @@ export default function MainCTA() {
             Read the Docs
           </Button>
         </Link>
-      </div>
+      </motion.div>
     </div>
   );
 }
