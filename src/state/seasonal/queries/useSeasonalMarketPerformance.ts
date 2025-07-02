@@ -7,7 +7,11 @@ import {
 import { useLPTokenToNonPintoUnderlyingMap } from "@/hooks/pinto/useTokenMap";
 import useTokenData from "@/state/useTokenData";
 import { PaginationSettings, paginateSubgraph } from "@/utils/paginateSubgraph";
-import { SeasonalMarketPerformanceChartData, UseSeasonalMarketPerformanceResult } from "@/utils/types";
+import {
+  SeasonalMarketPerformanceChartData,
+  UseSeasonalMarketPerformanceResult,
+  UseSeasonalResult,
+} from "@/utils/types";
 import { useChainId } from "wagmi";
 import { useSeasonalPrice } from "../seasonalDataHooks";
 import useSeasonalQueries, { SeasonalQueryVars } from "./useSeasonalInternalQueries";
@@ -60,17 +64,12 @@ const paginateSettings: PaginationSettings<
   },
 };
 
-export function useSeasonalMarketPerformance(
+export function useSeasonalMarketPerformanceRaw(
   fromSeason: number,
   toSeason: number,
-  chartType: SMPChartType,
-): UseSeasonalMarketPerformanceResult {
+  { enabled = true } = {},
+): UseSeasonalResult {
   const chainId = useChainId();
-  const mainToken = useTokenData().mainToken;
-  const lpToUnderlyingMap = useLPTokenToNonPintoUnderlyingMap();
-
-  // Price query is invalid before season 6
-  const actualFromSeason = chartType === SMPChartType.TOKEN_PRICES ? Math.max(fromSeason, 6) : fromSeason;
 
   const queryFnFactory = (vars: SeasonalQueryVars) => async () => {
     return await paginateSubgraph(
@@ -81,8 +80,8 @@ export function useSeasonalMarketPerformance(
     );
   };
 
-  const result = useSeasonalQueries("BeanstalkSeasonalMarketPerformanceQuery", {
-    fromSeason: actualFromSeason,
+  return useSeasonalQueries("BeanstalkSeasonalMarketPerformanceQuery", {
+    fromSeason,
     toSeason,
     queryVars: {},
     historicalQueryFnFactory: queryFnFactory,
@@ -94,10 +93,25 @@ export function useSeasonalMarketPerformance(
     convertResult: (entry: any) => {
       return entry;
     },
+    enabled,
   });
+}
 
-  const pintoPriceResult = useSeasonalPrice(actualFromSeason, toSeason);
+export function useSeasonalMarketPerformance(
+  fromSeason: number,
+  toSeason: number,
+  chartType: SMPChartType,
+  { enabled = true } = {},
+): UseSeasonalMarketPerformanceResult {
+  const mainToken = useTokenData().mainToken;
+  const lpToUnderlyingMap = useLPTokenToNonPintoUnderlyingMap();
+
+  // Price query is invalid before season 6
+  const actualFromSeason = chartType === SMPChartType.TOKEN_PRICES ? Math.max(fromSeason, 6) : fromSeason;
+  const result = useSeasonalMarketPerformanceRaw(actualFromSeason, toSeason, { enabled });
+
   const needsPrice = chartType === SMPChartType.TOKEN_PRICES;
+  const pintoPriceResult = useSeasonalPrice(actualFromSeason, toSeason, enabled && needsPrice);
   const priceReady = !needsPrice || !!pintoPriceResult.data;
 
   // Expand results by token

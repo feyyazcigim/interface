@@ -12,6 +12,8 @@ import LoadingSpinner from "../LoadingSpinner";
 import { Button } from "../ui/Button";
 import TVChart, { TVChartFormattedData } from "./TVChart";
 
+export const MIN_ADV_SEASON = 7;
+
 // Stores selected charts
 export const selectedChartsAtom = atom<number[]>([0]);
 // Stores season inputs for market performance charts
@@ -65,7 +67,10 @@ export const AdvancedChart = () => {
 
   // By adjusting fromSeason here, we can avoid fetching data
   // that might break the chart
-  const seasonsData = useSeasonsData(7, currentSeason, { seasonSync: true });
+  const seasonsData = useSeasonsData(MIN_ADV_SEASON, currentSeason, {
+    seasonSync: true,
+    marketPerformanceStartSeasons: chartSeasonInputs,
+  });
 
   const storedSelectedCharts = useMemo(() => {
     return loadChartsFromStorage(chartSetupData);

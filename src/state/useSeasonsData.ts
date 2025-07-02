@@ -22,6 +22,7 @@ import useSeasonalQueries, {
   SeasonalQueryVars,
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
+import { useSeasonalMarketPerformanceRaw } from "./seasonal/queries/useSeasonalMarketPerformance";
 import useSeasonalTractorSnapshots from "./seasonal/queries/useSeasonalTractorSnapshots";
 import useTokenData from "./useTokenData";
 
@@ -182,6 +183,8 @@ export default function useSeasonsData(
     apyData = true,
     tractorData = true,
     inflowData = true,
+    marketPerformanceData = true,
+    marketPerformanceStartSeasons = {} as Record<string, number>,
   } = {},
 ) {
   const chainId = useChainId();
@@ -274,6 +277,10 @@ export default function useSeasonsData(
     enabled: inflowData,
   });
 
+  const useMarketPerformanceQuery = useSeasonalMarketPerformanceRaw(fromSeason, toSeason, {
+    enabled: marketPerformanceData,
+  });
+
   const transformedData = useMemo(() => {
     if (
       (beanstalkData && Object.keys(useStalkQuery.data || {}).length === 0) ||
@@ -281,7 +288,8 @@ export default function useSeasonsData(
       (basinData && Object.keys(useBasinQuery.data || {}).length === 0) ||
       (apyData && Object.keys(useAPYQuery.data || {}).length === 0) ||
       (tractorData && Object.keys(useTractorQuery.data || {}).length === 0) ||
-      (inflowData && Object.keys(useInflowQuery.data || {}).length === 0)
+      (inflowData && Object.keys(useInflowQuery.data || {}).length === 0) ||
+      (marketPerformanceData && (useMarketPerformanceQuery.data?.length ?? 0) === 0)
     ) {
       return [];
     }
@@ -295,15 +303,23 @@ export default function useSeasonsData(
     } = useAPYQuery?.data || {};
     const tractorSnapshots = useTractorQuery?.data || ([] as any);
     const inflowSnapshots = useInflowQuery?.data || ([] as any);
+    const marketPerformanceResults = useMarketPerformanceQuery?.data || ([] as any);
 
-    const maxLength = Math.max(
+    let maxLength = Math.max(
       beanResults.length - syncOffset,
       stalkResults.fieldHourlySnapshots.length - syncOffset,
       basinResults.length - syncOffset,
       apy24h?.length || 0,
       tractorSnapshots.length,
       inflowSnapshots.length,
+      marketPerformanceResults.length,
     );
+
+    // Special length handling for market performance data which has variable starting seasons
+    if (Object.keys(marketPerformanceStartSeasons).length > 0) {
+      const minPerfStartSeason = Math.min(...Object.values(marketPerformanceStartSeasons));
+      maxLength = Math.max(maxLength, toSeason - minPerfStartSeason + 1);
+    }
 
     const transformedData: SeasonsTableData[] = [];
     for (let idx = 0; idx < maxLength; ++idx) {
@@ -503,6 +519,10 @@ export default function useSeasonsData(
           }
         }
       }
+
+      if (marketPerformanceData) {
+        // TODO(pp)
+      }
       transformedData.push(allData as SeasonsTableData);
     }
     return transformedData;
@@ -512,6 +532,8 @@ export default function useSeasonsData(
     useBasinQuery.data,
     useAPYQuery.data,
     useTractorQuery.data,
+    useInflowQuery.data,
+    useMarketPerformanceQuery.data,
     tokenData.mainToken.decimals,
     seasonSync,
     beanstalkData,
@@ -519,6 +541,8 @@ export default function useSeasonsData(
     basinData,
     apyData,
     tractorData,
+    inflowData,
+    marketPerformanceData,
   ]);
 
   return {

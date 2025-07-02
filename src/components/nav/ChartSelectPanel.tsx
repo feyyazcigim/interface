@@ -6,7 +6,7 @@ import { cn } from "@/utils/utils";
 import { useAtom } from "jotai";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDownIcon, SearchIcon } from "../Icons";
-import { chartSeasonInputsAtom, selectedChartsAtom } from "../charts/AdvancedChart";
+import { MIN_ADV_SEASON, chartSeasonInputsAtom, selectedChartsAtom } from "../charts/AdvancedChart";
 import { Input } from "../ui/Input";
 import { ScrollArea } from "../ui/ScrollArea";
 import { Separator } from "../ui/Separator";
@@ -110,6 +110,18 @@ const ChartSelectPanel = memo(() => {
         }
         selectedItems.splice(indexInSelection, 1);
       } else {
+        // When selecting, initialize season input to min value
+        const chartData = chartSetupData.find((chart) => chart.index === selection);
+        if (chartData && chartData.inputOptions === "SEASON") {
+          setInternalSeasonInputs((prev) => ({
+            ...prev,
+            [chartData.id]: MIN_ADV_SEASON,
+          }));
+          setRawSeasonInputs((prev) => ({
+            ...prev,
+            [chartData.id]: MIN_ADV_SEASON.toString(),
+          }));
+        }
         selectedItems.push(selection);
       }
 
@@ -159,7 +171,7 @@ const ChartSelectPanel = memo(() => {
       validationTimeouts.current[chartId] = setTimeout(() => {
         const numValue = parseInt(value, 10);
         if (!Number.isNaN(numValue) && value.trim() !== "") {
-          const clampedValue = Math.max(7, Math.min(currentSeason, numValue));
+          const clampedValue = Math.max(MIN_ADV_SEASON, Math.min(currentSeason, numValue));
           setInternalSeasonInputs((prev) => ({
             ...prev,
             [chartId]: clampedValue,
@@ -170,12 +182,15 @@ const ChartSelectPanel = memo(() => {
             [chartId]: clampedValue.toString(),
           }));
         } else if (value.trim() === "") {
-          // Remove the entry if input is empty
-          setInternalSeasonInputs((prev) => {
-            const updated = { ...prev };
-            delete updated[chartId];
-            return updated;
-          });
+          // Don't allow empty values - revert to minimum value
+          setInternalSeasonInputs((prev) => ({
+            ...prev,
+            [chartId]: MIN_ADV_SEASON,
+          }));
+          setRawSeasonInputs((prev) => ({
+            ...prev,
+            [chartId]: MIN_ADV_SEASON.toString(),
+          }));
         }
         delete validationTimeouts.current[chartId];
       }, 500);
@@ -265,7 +280,7 @@ const ChartSelectPanel = memo(() => {
                               </label>
                               <Input
                                 type="number"
-                                min={7}
+                                min={MIN_ADV_SEASON}
                                 max={currentSeason}
                                 value={rawSeasonInputs[data.id] || ""}
                                 onChange={(e) => handleSeasonInputChange(data.id, e.target.value)}
