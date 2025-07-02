@@ -120,21 +120,30 @@ export interface SeasonsTableData {
   inflowFieldDeltaIn: number;
   inflowFieldDeltaOut: number;
   inflowFieldDeltaVolume: number;
-  // TODO(pp): Add seasonal deltas vs cumulative deltas
   marketPriceWeth: number;
   marketPriceCbeth: number;
   marketPriceCbbtc: number;
   marketPriceWsol: number;
-  marketDeltaNonPintoUsd: number;
-  marketDeltaWethUsd: number;
-  marketDeltaCbethUsd: number;
-  marketDeltaCbbtcUsd: number;
-  marketDeltaWsolUsd: number;
-  marketDeltaNonPintoPercent: number;
-  marketDeltaWethPercent: number;
-  marketDeltaCbethPercent: number;
-  marketDeltaCbbtcPercent: number;
-  marketDeltaWsolPercent: number;
+  marketCumulativeNonPintoUsd: number;
+  marketCumulativeWethUsd: number;
+  marketCumulativeCbethUsd: number;
+  marketCumulativeCbbtcUsd: number;
+  marketCumulativeWsolUsd: number;
+  marketSeasonalNonPintoUsd: number;
+  marketSeasonalWethUsd: number;
+  marketSeasonalCbethUsd: number;
+  marketSeasonalCbbtcUsd: number;
+  marketSeasonalWsolUsd: number;
+  marketCumulativeNonPintoPercent: number;
+  marketCumulativeWethPercent: number;
+  marketCumulativeCbethPercent: number;
+  marketCumulativeCbbtcPercent: number;
+  marketCumulativeWsolPercent: number;
+  marketSeasonalNonPintoPercent: number;
+  marketSeasonalWethPercent: number;
+  marketSeasonalCbethPercent: number;
+  marketSeasonalCbbtcPercent: number;
+  marketSeasonalWsolPercent: number;
 }
 
 const stalkPaginateSettings: PaginationSettings<
@@ -300,13 +309,13 @@ export default function useSeasonsData(
     enabled: marketPerformanceData,
   });
   const marketPrices = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.TOKEN_PRICES);
-  const marketUsdSeasonal = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.USD_SEASONAL);
-  const marketPercentSeasonal = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.PERCENT_SEASONAL);
   const marketUsdCumulative = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.USD_CUMULATIVE);
+  const marketUsdSeasonal = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.USD_SEASONAL);
   const marketPercentCumulative = useMarketPerformanceCalc(
     useMarketPerformanceQuery.data,
     SMPChartType.PERCENT_CUMULATIVE,
   );
+  const marketPercentSeasonal = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.PERCENT_SEASONAL);
 
   const transformedData = useMemo(() => {
     if (
