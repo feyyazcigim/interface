@@ -1007,35 +1007,35 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
   };
   return [
     marketEntry({
-      id: "priceWeth",
+      id: "marketPriceWeth",
       name: "WETH Price",
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "WETH Price",
       description: "WETH Price",
     }),
     marketEntry({
-      id: "priceCbeth",
+      id: "marketPriceCbeth",
       name: "cbETH Price",
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "cbETH Price",
       description: "cbETH Price",
     }),
     marketEntry({
-      id: "priceCbbtc",
+      id: "marketPriceCbbtc",
       name: "cbBTC Price",
       icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "cbBTC Price",
       description: "cbBTC Price",
     }),
     marketEntry({
-      id: "priceWsol",
+      id: "marketPriceWsol",
       name: "WSOL Price",
       icon: WSOL_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "WSOL Price",
       description: "WSOL Price",
     }),
     marketEntry({
-      id: "deltaNonPintoUsd",
+      id: "marketDeltaNonPintoUsd",
       name: "Protocol Non-Pinto Value Change (USD)",
       icon: mainToken.logoURI,
       tooltipTitle: "Protocol Non-Pinto Value Change (USD)",
@@ -1043,7 +1043,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       inputOptions: "SEASON",
     }),
     marketEntry({
-      id: "deltaWethUsd",
+      id: "marketDeltaWethUsd",
       name: "Protocol WETH Value Change (USD)",
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol WETH Value Change (USD)",
@@ -1051,7 +1051,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       inputOptions: "SEASON",
     }),
     marketEntry({
-      id: "deltaCbethUsd",
+      id: "marketDeltaCbethUsd",
       name: "Protocol cbETH Value Change (USD)",
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol cbETH Value Change (USD)",
@@ -1059,7 +1059,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       inputOptions: "SEASON",
     }),
     marketEntry({
-      id: "deltaCbbtcUsd",
+      id: "marketDeltaCbbtcUsd",
       name: "Protocol cbBTC Value Change (USD)",
       icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol cbBTC Value Change (USD)",
@@ -1067,7 +1067,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       inputOptions: "SEASON",
     }),
     marketEntry({
-      id: "deltaWsolUsd",
+      id: "marketDeltaWsolUsd",
       name: "Protocol WSOL Value Change (USD)",
       icon: WSOL_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol WSOL Value Change (USD)",
@@ -1075,7 +1075,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       inputOptions: "SEASON",
     }),
     marketEntry({
-      id: "deltaNonPintoPercent",
+      id: "marketDeltaNonPintoPercent",
       name: "Protocol Non-Pinto Value Change (%)",
       icon: mainToken.logoURI,
       tooltipTitle: "Protocol Non-Pinto Value Change (%)",
@@ -1083,7 +1083,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       inputOptions: "SEASON",
     }),
     marketEntry({
-      id: "deltaWethPercent",
+      id: "marketDeltaWethPercent",
       name: "Protocol WETH Value Change (%)",
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol WETH Value Change (%)",
@@ -1091,7 +1091,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       inputOptions: "SEASON",
     }),
     marketEntry({
-      id: "deltaCbethPercent",
+      id: "marketDeltaCbethPercent",
       name: "Protocol cbETH Value Change (%)",
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol cbETH Value Change (%)",
@@ -1099,7 +1099,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       inputOptions: "SEASON",
     }),
     marketEntry({
-      id: "deltaCbbtcPercent",
+      id: "marketDeltaCbbtcPercent",
       name: "Protocol cbBTC Value Change (%)",
       icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol cbBTC Value Change (%)",
@@ -1107,7 +1107,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       inputOptions: "SEASON",
     }),
     marketEntry({
-      id: "deltaWsolPercent",
+      id: "marketDeltaWsolPercent",
       name: "Protocol WSOL Value Change (%)",
       icon: WSOL_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol WSOL Value Change (%)",

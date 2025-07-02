@@ -97,29 +97,19 @@ export function useSeasonalMarketPerformanceRaw(
   });
 }
 
-export function useSeasonalMarketPerformance(
-  fromSeason: number,
-  toSeason: number,
+// Returns chart data for the given seasons data.
+// Performs accumulations if a cumultaive type, using the first available season as the reference point.
+export function useMarketPerformanceFormatted(
+  seasonalData: MarketPerformanceSeasonal[],
   chartType: SMPChartType,
-  { enabled = true } = {},
-): UseSeasonalMarketPerformanceResult {
+): SeasonalMarketPerformanceChartData {
   const mainToken = useTokenData().mainToken;
   const lpToUnderlyingMap = useLPTokenToNonPintoUnderlyingMap();
 
-  // Price query is invalid before season 6
-  const actualFromSeason = chartType === SMPChartType.TOKEN_PRICES ? Math.max(fromSeason, 6) : fromSeason;
-  const result = useSeasonalMarketPerformanceRaw(actualFromSeason, toSeason, { enabled });
-
-  const needsPrice = chartType === SMPChartType.TOKEN_PRICES;
-  const pintoPriceResult = useSeasonalPrice(actualFromSeason, toSeason, enabled && needsPrice);
-  const priceReady = !needsPrice || !!pintoPriceResult.data;
-
-  // Expand results by token
-  const sgData = result.data as unknown as MarketPerformanceSeasonal[];
   const responseData: SeasonalMarketPerformanceChartData = {};
-  if (sgData && priceReady) {
-    for (let i = 0; i < sgData.length; ++i) {
-      const season = sgData[i];
+  if (seasonalData) {
+    for (let i = 0; i < seasonalData.length; ++i) {
+      const season = seasonalData[i];
       if (chartType !== SMPChartType.TOKEN_PRICES) {
         responseData.NET ??= [
           {
@@ -139,15 +129,6 @@ export function useSeasonalMarketPerformance(
         responseData.NET.push({
           season: season.season,
           value,
-          timestamp: new Date(Number(season.timestamp) * 1000),
-        });
-      } else {
-        responseData.NET ??= [];
-        responseData.NET.push({
-          season: season.season,
-          // Assumption is that the season numbers are lining up 1:1 between price/marketPerformance data
-          // biome-ignore lint/style/noNonNullAssertion: can't be null given priceReady check
-          value: pintoPriceResult.data![i].value,
           timestamp: new Date(Number(season.timestamp) * 1000),
         });
       }
@@ -190,14 +171,47 @@ export function useSeasonalMarketPerformance(
           responseData[underlyingToken.symbol] ??= [];
           responseData[underlyingToken.symbol].push({
             season: season.season,
-            // biome-ignore lint/style/noNonNullAssertion: can't be null given only valid=true is retrieved.
+            // biome-ignore lint/style/noNonNullAssertion: can't be null given only valid=true is retrieved from sg.
             value: Number(season.thisSeasonTokenUsdPrices![tokenIdx]),
             timestamp: new Date(Number(season.timestamp) * 1000),
           });
         }
-
         ++tokenIdx;
       }
+    }
+  }
+  return responseData;
+}
+
+export function useSeasonalMarketPerformance(
+  fromSeason: number,
+  toSeason: number,
+  chartType: SMPChartType,
+  { enabled = true } = {},
+): UseSeasonalMarketPerformanceResult {
+  // Price query is invalid before season 6
+  const actualFromSeason = chartType === SMPChartType.TOKEN_PRICES ? Math.max(fromSeason, 6) : fromSeason;
+  const result = useSeasonalMarketPerformanceRaw(actualFromSeason, toSeason, { enabled });
+
+  const needsPrice = chartType === SMPChartType.TOKEN_PRICES;
+  const pintoPriceResult = useSeasonalPrice(actualFromSeason, toSeason, enabled && needsPrice);
+  const priceReady = !needsPrice || !!pintoPriceResult.data;
+
+  // Expand results by token
+  const sgData = result.data as unknown as MarketPerformanceSeasonal[];
+  const responseData = useMarketPerformanceFormatted(sgData, chartType);
+  // Add net price data
+  if (sgData && priceReady && chartType === SMPChartType.TOKEN_PRICES) {
+    for (let i = 0; i < sgData.length; ++i) {
+      const season = sgData[i];
+      responseData.NET ??= [];
+      responseData.NET.push({
+        season: season.season,
+        // Assumption is that the season numbers are lining up 1:1 between price/marketPerformance data
+        // biome-ignore lint/style/noNonNullAssertion: can't be null given priceReady check
+        value: pintoPriceResult.data![i].value,
+        timestamp: new Date(Number(season.timestamp) * 1000),
+      });
     }
   }
 

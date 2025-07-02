@@ -22,7 +22,11 @@ import useSeasonalQueries, {
   SeasonalQueryVars,
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
-import { useSeasonalMarketPerformanceRaw } from "./seasonal/queries/useSeasonalMarketPerformance";
+import {
+  SMPChartType,
+  useMarketPerformanceFormatted,
+  useSeasonalMarketPerformanceRaw,
+} from "./seasonal/queries/useSeasonalMarketPerformance";
 import useSeasonalTractorSnapshots from "./seasonal/queries/useSeasonalTractorSnapshots";
 import useTokenData from "./useTokenData";
 
@@ -116,6 +120,21 @@ export interface SeasonsTableData {
   inflowFieldDeltaIn: number;
   inflowFieldDeltaOut: number;
   inflowFieldDeltaVolume: number;
+  // TODO(pp): Add seasonal deltas vs cumulative deltas
+  marketPriceWeth: number;
+  marketPriceCbeth: number;
+  marketPriceCbbtc: number;
+  marketPriceWsol: number;
+  marketDeltaNonPintoUsd: number;
+  marketDeltaWethUsd: number;
+  marketDeltaCbethUsd: number;
+  marketDeltaCbbtcUsd: number;
+  marketDeltaWsolUsd: number;
+  marketDeltaNonPintoPercent: number;
+  marketDeltaWethPercent: number;
+  marketDeltaCbethPercent: number;
+  marketDeltaCbbtcPercent: number;
+  marketDeltaWsolPercent: number;
 }
 
 const stalkPaginateSettings: PaginationSettings<
@@ -280,6 +299,20 @@ export default function useSeasonsData(
   const useMarketPerformanceQuery = useSeasonalMarketPerformanceRaw(fromSeason, toSeason, {
     enabled: marketPerformanceData,
   });
+  const marketPrices = useMarketPerformanceFormatted(useMarketPerformanceQuery.data, SMPChartType.TOKEN_PRICES);
+  const marketUsdSeasonal = useMarketPerformanceFormatted(useMarketPerformanceQuery.data, SMPChartType.USD_SEASONAL);
+  const marketPercentSeasonal = useMarketPerformanceFormatted(
+    useMarketPerformanceQuery.data,
+    SMPChartType.PERCENT_SEASONAL,
+  );
+  const marketUsdCumulative = useMarketPerformanceFormatted(
+    useMarketPerformanceQuery.data,
+    SMPChartType.USD_CUMULATIVE,
+  );
+  const marketPercentCumulative = useMarketPerformanceFormatted(
+    useMarketPerformanceQuery.data,
+    SMPChartType.PERCENT_CUMULATIVE,
+  );
 
   const transformedData = useMemo(() => {
     if (
@@ -521,6 +554,10 @@ export default function useSeasonsData(
       }
 
       if (marketPerformanceData) {
+        allData.marketPriceWeth = marketPrices.WETH[marketPrices.WETH.length - 1 - idx].value;
+        allData.marketPriceCbeth = marketPrices.cbETH[marketPrices.cbETH.length - 1 - idx].value;
+        allData.marketPriceCbbtc = marketPrices.cbBTC[marketPrices.cbBTC.length - 1 - idx].value;
+        allData.marketPriceWsol = marketPrices.WSOL[marketPrices.WSOL.length - 1 - idx].value;
         // TODO(pp)
       }
       transformedData.push(allData as SeasonsTableData);
