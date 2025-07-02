@@ -88,11 +88,35 @@ const ChartSelectPanel = memo(() => {
       const selectedItems = [...internalSelected];
       const indexInSelection = selectedItems.findIndex((selectionIndex) => selection === selectionIndex);
       const isSelected = indexInSelection > -1;
-      isSelected ? selectedItems.splice(indexInSelection, 1) : selectedItems.push(selection);
+
+      if (isSelected) {
+        // When deselecting, also clear the season input for this chart
+        const chartData = chartSetupData.find((chart) => chart.index === selection);
+        if (chartData) {
+          if (validationTimeouts.current[chartData.id]) {
+            clearTimeout(validationTimeouts.current[chartData.id]);
+            delete validationTimeouts.current[chartData.id];
+          }
+          setInternalSeasonInputs((prev) => {
+            const updated = { ...prev };
+            delete updated[chartData.id];
+            return updated;
+          });
+          setRawSeasonInputs((prev) => {
+            const updated = { ...prev };
+            delete updated[chartData.id];
+            return updated;
+          });
+        }
+        selectedItems.splice(indexInSelection, 1);
+      } else {
+        selectedItems.push(selection);
+      }
+
       if (selectedItems.length > maxChartsSelected) return;
       setInternalSelected(selectedItems);
     },
-    [internalSelected, maxChartsSelected],
+    [internalSelected, maxChartsSelected, chartSetupData],
   );
 
   // Update internal selection when panel opens
@@ -235,7 +259,7 @@ const ChartSelectPanel = memo(() => {
                             </div>
                           </div>
                           {isSelected && data.inputOptions === "SEASON" && (
-                            <div className="mt-2 pl-2 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="mt-2 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                               <label className="pinto-sm-light text-pinto-primary whitespace-nowrap">
                                 Starting Season:
                               </label>
@@ -245,7 +269,7 @@ const ChartSelectPanel = memo(() => {
                                 max={currentSeason}
                                 value={rawSeasonInputs[data.id] || ""}
                                 onChange={(e) => handleSeasonInputChange(data.id, e.target.value)}
-                                className="w-[100px] rounded-[0.5rem] bg-pinto-gray-1 border-pinto-gray-2 text-sm px-2 py-0"
+                                className="w-[70px] rounded-[0.5rem] bg-pinto-gray-1 border-pinto-gray-2 text-sm px-2 py-0 h-8"
                               />
                             </div>
                           )}

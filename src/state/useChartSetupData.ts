@@ -978,6 +978,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
     tooltipTitle,
     description,
     valueAxis = id,
+    inputOptions = undefined,
   }: {
     id: string;
     name: string;
@@ -985,6 +986,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
     tooltipTitle: string;
     description: string;
     valueAxis?: string;
+    inputOptions?: "SEASON";
   }) => {
     return {
       id,
@@ -1000,7 +1002,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       valueFormatter: (v: number) => v,
       tickFormatter: usdFormatter,
       shortTickFormatter: usdFormatter,
-      inputOptions: "SEASON" as const,
+      inputOptions,
     };
   };
   return [
@@ -1037,70 +1039,80 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       name: "Protocol Non-Pinto Value Change (USD)",
       icon: mainToken.logoURI,
       tooltipTitle: "Protocol Non-Pinto Value Change (USD)",
-      description: "Change of non-Pinto liquidity USD value since the starting season.",
+      description: "Change of non-Pinto liquidity USD value since a selectable starting season.",
+      inputOptions: "SEASON",
     }),
     marketEntry({
       id: "deltaWethUsd",
       name: "Protocol WETH Value Change (USD)",
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol WETH Value Change (USD)",
-      description: "Change of WETH liquidity USD value since the starting season.",
+      description: "Change of WETH liquidity USD value since a selectable starting season.",
+      inputOptions: "SEASON",
     }),
     marketEntry({
       id: "deltaCbethUsd",
       name: "Protocol cbETH Value Change (USD)",
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol cbETH Value Change (USD)",
-      description: "Change of cbETH liquidity USD value since the starting season.",
+      description: "Change of cbETH liquidity USD value since a selectable starting season.",
+      inputOptions: "SEASON",
     }),
     marketEntry({
       id: "deltaCbbtcUsd",
       name: "Protocol cbBTC Value Change (USD)",
       icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol cbBTC Value Change (USD)",
-      description: "Change of cbBTC liquidity USD value since the starting season.",
+      description: "Change of cbBTC liquidity USD value since a selectable starting season.",
+      inputOptions: "SEASON",
     }),
     marketEntry({
       id: "deltaWsolUsd",
       name: "Protocol WSOL Value Change (USD)",
       icon: WSOL_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol WSOL Value Change (USD)",
-      description: "Change of WSOL liquidity USD value since the starting season.",
+      description: "Change of WSOL liquidity USD value since a selectable starting season.",
+      inputOptions: "SEASON",
     }),
     marketEntry({
       id: "deltaNonPintoPercent",
       name: "Protocol Non-Pinto Value Change (%)",
       icon: mainToken.logoURI,
       tooltipTitle: "Protocol Non-Pinto Value Change (%)",
-      description: "Percentage change of Non-Pinto liquidity value since the starting season.",
+      description: "Percentage change of Non-Pinto liquidity value since a selectable starting season.",
+      inputOptions: "SEASON",
     }),
     marketEntry({
       id: "deltaWethPercent",
       name: "Protocol WETH Value Change (%)",
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol WETH Value Change (%)",
-      description: "Percentage change of WETH liquidity value since the starting season.",
+      description: "Percentage change of WETH liquidity value since a selectable starting season.",
+      inputOptions: "SEASON",
     }),
     marketEntry({
       id: "deltaCbethPercent",
       name: "Protocol cbETH Value Change (%)",
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol cbETH Value Change (%)",
-      description: "Percentage change of cbETH liquidity value since the starting season.",
+      description: "Percentage change of cbETH liquidity value since a selectable starting season.",
+      inputOptions: "SEASON",
     }),
     marketEntry({
       id: "deltaCbbtcPercent",
       name: "Protocol cbBTC Value Change (%)",
       icon: CBBTC_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol cbBTC Value Change (%)",
-      description: "Percentage change of cbBTC liquidity value since the starting season.",
+      description: "Percentage change of cbBTC liquidity value since a selectable starting season.",
+      inputOptions: "SEASON",
     }),
     marketEntry({
       id: "deltaWsolPercent",
       name: "Protocol WSOL Value Change (%)",
       icon: WSOL_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "Protocol WSOL Value Change (%)",
-      description: "Percentage change of WSOL liquidity value since the starting season.",
+      description: "Percentage change of WSOL liquidity value since a selectable starting season.",
+      inputOptions: "SEASON",
     }),
   ];
 };
