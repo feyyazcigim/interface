@@ -6,6 +6,7 @@ import { MAIN_TOKEN } from "@/constants/tokens";
 import { PriceContractPriceResult, decodePriceResult } from "@/encoders/ecosystem/price";
 import { beanstalkPriceAddress } from "@/generated/contractHooks";
 import { AdvancedPipeWorkflow } from "@/lib/farm/workflow";
+import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExchangeWell } from "@/lib/well/ExchangeWell";
 import { PoolData } from "@/state/usePriceData";
 import { resolveChainId } from "@/utils/chain";
@@ -14,17 +15,6 @@ import { tokensEqual } from "@/utils/token";
 import { Token } from "@/utils/types";
 import { AddressLookup } from "@/utils/types.generic";
 import { Address, decodeFunctionResult, encodeFunctionData } from "viem";
-import { SiloConvertContext } from "./SiloConvert";
-
-/**
- * SiloConvertCache is a class that caches the price struct data, well data to assist in quoting conversions.
- *
- * We opt to cache this data separately from what is managed by Wagmi's hooks to have greater control over when
- * the cache is updated.
- *
- * Refetching price & well data via the hooks causes re-renders throughout the app that could cause performance bottlenecks,
- * so we introduce a degree of redundancy to ensure we have the most up to date data.
- */
 
 /**
  * Extended pool data for the SiloConvertCache.
@@ -53,25 +43,50 @@ export type ExtendedPriceResult = PriceContractPriceResult<TV, Token, ExtendedPo
  */
 const REFETCH_INTERVAL = 1000 * 15; // 15 seconds
 
-export class SiloConvertCache {
+/**
+ * SiloConvertCache
+ *
+ * Architecture notes:
+ *
+ * The SiloConvertCache manages all cached data required for conversion quotations,
+ * including price data, well information, and pool states.
+ *
+ * [Cache Strategy]
+ * The cache uses a 15-second refresh interval for price-sensitive data.
+ * We opt to cache this data separately from what is managed by Wagmi's hooks to have greater control over when the cache is updated.
+ *
+ * Refetching price & well data via the hooks causes re-renders throughout the app that could cause performance bottlenecks,
+ * so we introduce a degree of redundancy to ensure we have the most up to date data.
+ *
+ * [Data Sources]
+ * The cache aggregates data from multiple sources:
+ * 1. Price contract for real-time token pricing
+ * 2. Well contracts for liquidity pool states
+ *
+ * [Extended Well Data]
+ * The cache enriches basic well data with:
+ * - Pair token information and metadata
+ * - Current ΔP (delta B) calculations
+ */
+export class SiloConvertPriceCache {
   /** Shared context */
-  #context: SiloConvertContext;
+  private context: SiloConvertContext;
 
   /** Mapping of LP tokens to their pair token */
-  #lp2Pair: AddressLookup<Token>;
+  private lp2Pair: AddressLookup<Token>;
 
   /** The cached price contract Price() result */
-  #priceStruct: ExtendedPriceResult | undefined = undefined;
+  private priceStruct: ExtendedPriceResult | undefined = undefined;
 
   /** A map of well addresses to their raw well data. */
-  #rawWellData: Awaited<ReturnType<typeof ExchangeWell.loadWells>> = {};
+  private rawWellData: Awaited<ReturnType<typeof ExchangeWell.loadWells>> = {};
 
   /** The last time the cache was updated. */
-  #lastUpdateTimestamp: number = 0;
+  lastUpdateTimestamp: number = 0;
 
   constructor(context: SiloConvertContext) {
-    this.#context = context;
-    this.#lp2Pair = getLpTokensToPairs(context.chainId);
+    this.context = context;
+    this.lp2Pair = getLpTokensToPairs(context.chainId);
   }
 
   /**
@@ -79,41 +94,41 @@ export class SiloConvertCache {
    */
   clear() {
     // rawWellData doesn't need to be cleared as it doesn't change.
-    this.#priceStruct = undefined;
-    this.#lastUpdateTimestamp = 0;
+    this.priceStruct = undefined;
+    this.lastUpdateTimestamp = 0;
   }
 
   /**
    * Returns the cached price struct.
    */
   getPriceStruct() {
-    if (!this.#priceStruct) {
+    if (!this.priceStruct) {
       throw new Error("Price data not found. Run update() first.");
     }
 
-    return this.#priceStruct;
+    return this.priceStruct;
   }
 
   /**
    * Returns the cached deltaB.
    */
   getDeltaB() {
-    if (!this.#priceStruct) {
+    if (!this.priceStruct) {
       throw new Error("Cannot get deltaB as price data not found. Run update() first.");
     }
 
-    return this.#priceStruct.deltaB;
+    return this.priceStruct.deltaB;
   }
 
   /**
    * Returns the USD price of a token.
    */
   getTokenPrice(address: Address, wellAddress?: Address) {
-    if (!this.#priceStruct) {
+    if (!this.priceStruct) {
       throw new Error("Cannot get token price as price data not found. Run update() first.");
     }
 
-    const tokenMap = getChainTokenMap(this.#context.chainId);
+    const tokenMap = getChainTokenMap(this.context.chainId);
     const token = tokenMap[getTokenIndex(address)];
 
     if (!token) {
@@ -122,7 +137,7 @@ export class SiloConvertCache {
 
     // If the token is a main token and no well address is provided, return the price of BEAN
     if (token.isMain && !wellAddress) {
-      return this.#priceStruct.price;
+      return this.priceStruct.price;
     }
     // Return the Well BEAN price
     if (token.isMain && wellAddress) {
@@ -139,7 +154,7 @@ export class SiloConvertCache {
       return well.pair.price;
     }
     // If well address is not provided, loop through all wells and find the Well that contains the token
-    const well = Object.values(this.#priceStruct.pools).find((data) => tokensEqual(data.pair.token, token));
+    const well = Object.values(this.priceStruct.pools).find((data) => tokensEqual(data.pair.token, token));
     if (!well) {
       throw new Error(`Could not determine Well where ${address} is a reserve token`);
     }
@@ -151,11 +166,11 @@ export class SiloConvertCache {
    * Returns the Extended Well data for a given Well address.
    */
   getWell(address: Address) {
-    if (!this.#priceStruct) {
+    if (!this.priceStruct) {
       throw new Error("Cannot get Well as price data not found. Run update() first.");
     }
 
-    const well = this.#priceStruct.pools[getTokenIndex(address)];
+    const well = this.priceStruct.pools[getTokenIndex(address)];
 
     if (!well) {
       throw new Error(`Well for ${address} not found`);
@@ -169,12 +184,12 @@ export class SiloConvertCache {
    * @param force - Whether to force the update.
    */
   async update(force: boolean = false) {
-    const diff = Date.now() - this.#lastUpdateTimestamp;
+    const diff = Date.now() - this.lastUpdateTimestamp;
 
-    if (force || this.#lastUpdateTimestamp === 0 || diff > REFETCH_INTERVAL) {
-      const priceResult = await this.#fetch();
-      this.#priceStruct = priceResult;
-      this.#lastUpdateTimestamp = Date.now();
+    if (force || this.lastUpdateTimestamp === 0 || diff > REFETCH_INTERVAL) {
+      const priceResult = await this.fetch();
+      this.priceStruct = priceResult;
+      this.lastUpdateTimestamp = Date.now();
       console.debug("[PipelineConvert/Cache/update]: ", this);
     }
   }
@@ -183,17 +198,17 @@ export class SiloConvertCache {
    * Loads raw well data from on chain.
    */
   async loadWellData() {
-    const hasRawWellData = !!Object.keys(this.#rawWellData).length;
+    const hasRawWellData = !!Object.keys(this.rawWellData).length;
 
     if (!hasRawWellData) {
-      this.#rawWellData = await ExchangeWell.loadWells(
-        getLPTokens(this.#context.chainId).map((pool) => pool.address),
-        this.#context.wagmiConfig,
+      this.rawWellData = await ExchangeWell.loadWells(
+        getLPTokens(this.context.chainId).map((pool) => pool.address),
+        this.context.wagmiConfig,
       );
-      console.debug("[SiloConvertCache/loadWellData]: ", this.#rawWellData);
+      console.debug("[SiloConvertCache/loadWellData]: ", this.rawWellData);
     }
 
-    return this.#rawWellData;
+    return this.rawWellData;
   }
 
   /**
@@ -215,10 +230,10 @@ export class SiloConvertCache {
    * Constructs an AdvancedPipeWorkflow for fetching the price data.
    */
   constructPriceAdvPipe(options?: { noTokenPrices?: boolean }) {
-    const advPipe = new AdvancedPipeWorkflow(this.#context.chainId, this.#context.wagmiConfig);
+    const advPipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
     advPipe.add({
-      target: beanstalkPriceAddress[this.#context.chainId],
+      target: beanstalkPriceAddress[this.context.chainId],
       callData: encodeFunctionData({
         abi: diamondPriceABI,
         functionName: "price",
@@ -231,9 +246,9 @@ export class SiloConvertCache {
       return advPipe;
     }
 
-    Object.values(this.#lp2Pair).forEach((data) => {
+    Object.values(this.lp2Pair).forEach((data) => {
       advPipe.add({
-        target: this.#context.diamond,
+        target: this.context.diamond,
         callData: encodeFunctionData({
           abi: abiSnippets.price.getTokenUsdPrice,
           functionName: "getTokenUsdPrice",
@@ -249,9 +264,9 @@ export class SiloConvertCache {
   /**
    * Fetches the relevant pool data from on chain
    */
-  async #fetch(): Promise<ExtendedPriceResult> {
-    const tokenMap = getChainTokenMap(this.#context.chainId);
-    const mainToken = MAIN_TOKEN[resolveChainId(this.#context.chainId)];
+  async fetch(): Promise<ExtendedPriceResult> {
+    const tokenMap = getChainTokenMap(this.context.chainId);
+    const mainToken = MAIN_TOKEN[resolveChainId(this.context.chainId)];
 
     const advPipe = this.constructPriceAdvPipe();
 
@@ -262,7 +277,7 @@ export class SiloConvertCache {
 
     const map: AddressLookup<ExtendedPoolData> = {};
 
-    for (const [index, [lpTokenIndex, pairToken]] of Object.entries(this.#lp2Pair).entries()) {
+    for (const [index, [lpTokenIndex, pairToken]] of Object.entries(this.lp2Pair).entries()) {
       const pairPriceBigInt = decodeFunctionResult({
         abi: abiSnippets.price.getTokenUsdPrice,
         functionName: "getTokenUsdPrice",
@@ -270,7 +285,7 @@ export class SiloConvertCache {
       });
 
       const poolResult = priceResult.pools[lpTokenIndex];
-      const wellTokens = poolResult?.tokens.map((t) => getChainToken(this.#context.chainId, t));
+      const wellTokens = poolResult?.tokens.map((t) => getChainToken(this.context.chainId, t));
 
       if (!poolResult) {
         throw new Error(`Pool result not found for ${lpTokenIndex}`);

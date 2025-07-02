@@ -10,10 +10,6 @@ interface ImportMetaEnv {
    */
   readonly VITE_ALCHEMY_API_KEY: string;
   /**
-   * ZeroEx API Key
-   */
-  readonly VITE_ZEROEX_API_KEY: string;
-  /**
    * enabled chains
    */
   readonly VITE_CHAINS: string;

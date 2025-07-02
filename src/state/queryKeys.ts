@@ -7,9 +7,12 @@ import { HashString } from "@/utils/types.generic";
 // ────────────────────────────────────────────────────────────────────────────────
 
 const BASE_QKS = {
-  tractor: ["TRACTOR"] as const,
-  events: ["EVENTS"] as const,
-  network: ["NETWORK"] as const,
+  tractor: ["TRACTOR"],
+  events: ["EVENTS"],
+  network: ["NETWORK"],
+  silo: {
+    convert: ["SILO-CONVERT"],
+  },
 } as const;
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -77,12 +80,48 @@ const networkQueryKeys = {
   latestBlock: (key: string = "default") => [BASE_QKS.network, "latestBlock", key] as const,
 } as const;
 
+const siloQueryKeys = {
+  convert: {
+    quote: (
+      account: HashString | undefined,
+      source: HashString | undefined,
+      target: HashString | undefined,
+      amountIn: string,
+      slippage: number,
+    ) => {
+      return [
+        BASE_QKS.silo.convert,
+        "quote",
+        `account=${account ?? "no-account"}`,
+        `source=${source ?? "no-source"}`,
+        `target=${target ?? "no-target"}`,
+        `amount=${amountIn}`,
+        `slippage=${slippage}`,
+      ] as const;
+    },
+    maxConvert: (
+      source: HashString | undefined,
+      target: HashString | undefined,
+      farmerMaxConvertible: string | undefined,
+    ) =>
+      [
+        BASE_QKS.silo.convert,
+        "max-convert",
+        `source=${source ?? "no-source"}`,
+        `target=${target ?? "no-target"}`,
+        `farmerMaxConvertible=${farmerMaxConvertible ?? "none"}`,
+      ] as const,
+  },
+} as const;
+
 // ────────────────────────────────────────────────────────────────────────────────
 // AGGREGATE QUERY KEYS
 // ────────────────────────────────────────────────────────────────────────────────
 
 export const queryKeys = {
+  base: BASE_QKS,
   tractor: tractorQueryKeys,
   events: eventsQueryKeys,
   network: networkQueryKeys,
+  silo: siloQueryKeys,
 } as const;

@@ -311,7 +311,6 @@ const convert = [
 ] as const;
 
 export const abiSnippets = {
-  pipelineConvert,
   advancedPipe,
   advancedFarm,
   wells: {
@@ -331,6 +330,7 @@ export const abiSnippets = {
     poolDeltaBNoCap,
   },
   silo: {
+    pipelineConvert,
     getMaxAmountIn,
     calculateDeltaBFromReserves,
     getAmountOut,
