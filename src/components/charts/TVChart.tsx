@@ -48,6 +48,10 @@ export type TVChartProps = {
    * Height in pixels
    */
   height?: number;
+  /**
+   * Inputted season number relevant to certain datapoints
+   */
+  seasonInputs?: Record<string, number>;
 };
 
 function getTimezoneCorrectedTime(utcTime: Date, tickMarkType: TickMarkType) {
@@ -130,7 +134,7 @@ function setTimePeriod(chart: MutableRefObject<IChartApi | undefined>, timePerio
 
 const headerOffset = 200;
 
-const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartProps) => {
+const TVChart = ({ formattedData, height = 500, timePeriod, selected, seasonInputs }: TVChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi>();
 
@@ -482,6 +486,7 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
           >
             {selected.map((chartId, index) => {
               if (!chartSetupData[chartId]) return;
+              const property = chartSetupData[chartId].id;
               const tooltipTitle = chartSetupData[chartId].tooltipTitle;
               const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
               const beforeFirstSeason =
@@ -508,9 +513,13 @@ const TVChart = ({ formattedData, height = 500, timePeriod, selected }: TVChartP
                           {tooltipHoverText && <TooltipSimple variant={"gray"} content={tooltipHoverText} />}
                         </div>
                       </div>
-                      <div className="pinto-h3 text-black">
+
+                      <div className="pinto-h3 text-black mt-0.5">
                         {value !== null && value !== undefined ? chartSetupData[chartId].tickFormatter(value) : "-"}
                       </div>
+                      {!!seasonInputs?.[property] && (
+                        <p className="pinto-sm text-pinto-gray-4">Since season {seasonInputs[property]}</p>
+                      )}
                     </div>
                     {index === 0 && (
                       <>

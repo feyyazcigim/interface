@@ -261,7 +261,13 @@ export const AdvancedChart = () => {
         <CalendarButton setTimePeriod={setTimePeriod} />
       </div>
       {selectedCharts.length > 0 ? (
-        <TVChart selected={selectedCharts} formattedData={filtered} height={height} timePeriod={timePeriod} />
+        <TVChart
+          selected={selectedCharts}
+          formattedData={filtered}
+          height={height}
+          timePeriod={timePeriod}
+          seasonInputs={chartSeasonInputs}
+        />
       ) : (
         <div className="flex justify-center items-center h-[200px] w-full">Click the Add Chart button to begin</div>
       )}
