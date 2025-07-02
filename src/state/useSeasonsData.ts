@@ -284,11 +284,11 @@ export default function useSeasonsData(
   const transformedData = useMemo(() => {
     if (
       (beanstalkData && Object.keys(useStalkQuery.data || {}).length === 0) ||
-      (beanData && Object.keys(useBeanQuery.data || {}).length === 0) ||
-      (basinData && Object.keys(useBasinQuery.data || {}).length === 0) ||
+      (beanData && (useBeanQuery.data?.length ?? 0) === 0) ||
+      (basinData && (useBasinQuery.data?.length ?? 0) === 0) ||
       (apyData && Object.keys(useAPYQuery.data || {}).length === 0) ||
-      (tractorData && Object.keys(useTractorQuery.data || {}).length === 0) ||
-      (inflowData && Object.keys(useInflowQuery.data || {}).length === 0) ||
+      (tractorData && (useTractorQuery.data?.length ?? 0) === 0) ||
+      (inflowData && (useInflowQuery.data?.length ?? 0) === 0) ||
       (marketPerformanceData && (useMarketPerformanceQuery.data?.length ?? 0) === 0)
     ) {
       return [];
@@ -543,6 +543,8 @@ export default function useSeasonsData(
     tractorData,
     inflowData,
     marketPerformanceData,
+    marketPerformanceStartSeasons,
+    toSeason,
   ]);
 
   return {
