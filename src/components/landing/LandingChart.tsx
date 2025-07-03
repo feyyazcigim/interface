@@ -1,5 +1,5 @@
 import { animate, motion, useMotionValue, useTransform } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import TxFloater from "./TxFloater";
 
 const height = 577;
@@ -57,16 +57,16 @@ function FarmerProfile({ icon, bg }) {
 }
 
 // Convert price to Y coordinate (inverted because SVG Y increases downward)
-const priceToY = (price) => {
+function priceToY(price: number) {
   const minPrice = 0.99;
   const maxPrice = 1.01;
   const minY = height - 0; // Bottom margin
   const maxY = 0; // Top margin
   return minY - ((price - minPrice) / (maxPrice - minPrice)) * (minY - maxY);
-};
+}
 
 // Generate complete line path with multiple repetitions (Bezier smoothing)
-const generateCompletePath = (pointSpacing: number) => {
+function generateCompletePath(pointSpacing: number) {
   const repetitions = 10; // Number of times to repeat the pattern
   const totalLength = priceData.length * repetitions;
   const totalWidth = totalLength * pointSpacing;
@@ -105,10 +105,10 @@ const generateCompletePath = (pointSpacing: number) => {
   }
 
   return { path, points, totalWidth, beziers };
-};
+}
 
 // Helper: cubic Bezier at t
-function cubicBezier(p0, c1, c2, p1, t) {
+function cubicBezier(p0: number, c1: number, c2: number, p1: number, t: number) {
   const mt = 1 - t;
   return mt ** 3 * p0 + 3 * mt ** 2 * t * c1 + 3 * mt * t ** 2 * c2 + t ** 3 * p1;
 }
@@ -145,32 +145,35 @@ export default function LandingChart() {
   const { path, beziers } = generateCompletePath(pointSpacing);
 
   // Get Y on Bezier curve for a given X (measurementX)
-  function getYOnBezierCurve(xVal) {
-    for (const seg of beziers) {
-      if (xVal >= seg.p0.x && xVal <= seg.p1.x) {
-        // Find t for xVal in [p0.x, p1.x] using binary search
-        let t0 = 0;
-        let t1 = 1;
-        let t = 0.5;
-        let x = 0;
-        for (let i = 0; i < 10; i++) {
-          x = cubicBezier(seg.p0.x, seg.c1.x, seg.c2.x, seg.p1.x, t);
-          if (Math.abs(x - xVal) < 0.5) break;
-          if (x < xVal) t0 = t;
-          else t1 = t;
-          t = (t0 + t1) / 2;
+  const getYOnBezierCurve = useCallback(
+    (xVal: number) => {
+      for (const seg of beziers) {
+        if (xVal >= seg.p0.x && xVal <= seg.p1.x) {
+          // Find t for xVal in [p0.x, p1.x] using binary search
+          let t0 = 0;
+          let t1 = 1;
+          let t = 0.5;
+          let x = 0;
+          for (let i = 0; i < 10; i++) {
+            x = cubicBezier(seg.p0.x, seg.c1.x, seg.c2.x, seg.p1.x, t);
+            if (Math.abs(x - xVal) < 0.5) break;
+            if (x < xVal) t0 = t;
+            else t1 = t;
+            t = (t0 + t1) / 2;
+          }
+          // Now get y at t
+          return cubicBezier(seg.p0.y, seg.c1.y, seg.c2.y, seg.p1.y, t);
         }
-        // Now get y at t
-        return cubicBezier(seg.p0.y, seg.c1.y, seg.c2.y, seg.p1.y, t);
       }
-    }
-    // Fallback: clamp to ends
-    if (beziers.length > 0) {
-      if (xVal < beziers[0].p0.x) return beziers[0].p0.y;
-      if (xVal > beziers[beziers.length - 1].p1.x) return beziers[beziers.length - 1].p1.y;
-    }
-    return 0;
-  }
+      // Fallback: clamp to ends
+      if (beziers.length > 0) {
+        if (xVal < beziers[0].p0.x) return beziers[0].p0.y;
+        if (xVal > beziers[beziers.length - 1].p1.x) return beziers[beziers.length - 1].p1.y;
+      }
+      return 0;
+    },
+    [beziers],
+  );
 
   // Use Bezier curve for indicator Y
   const currentY = useTransform(scrollOffset, (currentOffset) => {
