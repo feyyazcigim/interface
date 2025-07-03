@@ -207,7 +207,7 @@ const SoilSupplyChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setSoilSupplyTab}
       useSeasonalResult={soilSupplyData}
       valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.largeNumberFormatter}
+      tickValueFormatter={f.largeNumber1dFormatter}
     />
   );
 });
