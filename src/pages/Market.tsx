@@ -10,7 +10,7 @@ import { useAllMarket } from "@/state/market/useAllMarket";
 import { useHarvestableIndex, usePodLine } from "@/state/useFieldData";
 import { ActiveElement, ChartEvent, PointStyle } from "chart.js";
 import { Chart } from "chart.js";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { AllActivityTable } from "./market/AllActivityTable";
@@ -46,16 +46,8 @@ const getPointBottomOffset = () => {
   }
 };
 
-export function Market() {
-  const { mode, id } = useParams();
-  const [tab, handleChangeTab] = useState(TABLE_SLUGS[0]);
-  const navigate = useNavigate();
-  const { data, isLoaded } = useAllMarket();
-  const podLine = usePodLine();
-  const podLineAsNumber = podLine.toNumber() / 1000000;
-  const harvestableIndex = useHarvestableIndex();
-
-  const scatterChartData: ScatterChartData =
+const shapeScatterChartData = (data: any[], harvestableIndex: any) => {
+  return (
     data?.reduce(
       (acc, event) => {
         // Skip Fill Orders
@@ -117,7 +109,23 @@ export function Market() {
         { label: "Orders", data: [] as any, color: "#D3B567", pointStyle: "circle" as PointStyle },
         { label: "Listings", data: [] as any, color: "#00C767", pointStyle: "rect" as PointStyle },
       ],
-    ) || [];
+    ) || []
+  );
+};
+
+export function Market() {
+  const { mode, id } = useParams();
+  const [tab, handleChangeTab] = useState(TABLE_SLUGS[0]);
+  const navigate = useNavigate();
+  const { data, isLoaded } = useAllMarket();
+  const podLine = usePodLine();
+  const podLineAsNumber = podLine.toNumber() / 1000000;
+  const harvestableIndex = useHarvestableIndex();
+
+  const scatterChartData: ScatterChartData = useMemo(
+    () => shapeScatterChartData(data || [], harvestableIndex),
+    [data, harvestableIndex],
+  );
 
   const toolTipOptions: any = {
     enabled: false,
