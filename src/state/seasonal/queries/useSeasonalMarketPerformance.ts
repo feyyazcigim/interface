@@ -98,10 +98,11 @@ export function useSeasonalMarketPerformanceData(
 }
 
 // Returns chart data for the given seasons data.
-// Performs accumulations if a cumultaive type, using the first available season as the reference point.
+// Performs accumulations if a cumulative type, using the first available season as the reference point.
 export function useMarketPerformanceCalc(
   seasonalData: MarketPerformanceSeasonal[] | undefined,
   chartType: SMPChartType,
+  startSeasons: Record<string, number> = {},
 ): SeasonalMarketPerformanceChartData {
   const mainToken = useTokenData().mainToken;
   const lpToUnderlyingMap = useLPTokenToNonPintoUnderlyingMap();
@@ -111,6 +112,10 @@ export function useMarketPerformanceCalc(
     for (let i = 0; i < seasonalData.length; ++i) {
       const season = seasonalData[i];
       if (chartType !== SMPChartType.TOKEN_PRICES) {
+        if (season.season <= (startSeasons.NET ?? 0)) {
+          continue;
+        }
+
         responseData.NET ??= [
           {
             season: season.season - 1,
@@ -145,15 +150,20 @@ export function useMarketPerformanceCalc(
           continue;
         }
 
+        const symbol = underlyingToken.symbol;
+        if (season.season <= (startSeasons[symbol] ?? 0)) {
+          continue;
+        }
+
         if (chartType !== SMPChartType.TOKEN_PRICES) {
-          responseData[underlyingToken.symbol] ??= [
+          responseData[symbol] ??= [
             {
               season: season.season - 1,
               value: 0,
               timestamp: new Date((Number(season.timestamp) - 60 * 60) * 1000),
             },
           ];
-          const arr = responseData[underlyingToken.symbol];
+          const arr = responseData[symbol];
 
           const value =
             chartType < SMPChartType.USD_CUMULATIVE
@@ -168,8 +178,8 @@ export function useMarketPerformanceCalc(
             timestamp: new Date(Number(season.timestamp) * 1000),
           });
         } else {
-          responseData[underlyingToken.symbol] ??= [];
-          responseData[underlyingToken.symbol].push({
+          responseData[symbol] ??= [];
+          responseData[symbol].push({
             season: season.season,
             // biome-ignore lint/style/noNonNullAssertion: can't be null given only valid=true is retrieved from sg.
             value: Number(season.thisSeasonTokenUsdPrices![tokenIdx]),
