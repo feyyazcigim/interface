@@ -3,6 +3,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import TxFloater from "./TxFloater";
 
 const height = 577;
+const repetitions = 10; // Number of times to repeat the pattern
+const pointSpacing = 20; // pixels between each data point
+const scrollSpeed = 0.5;
 
 // Price data with more baseline points to space out peaks and dips
 // Define the type for priceData
@@ -16,7 +19,7 @@ interface PricePoint {
   farmer?: Farmer;
 }
 
-const priceData: PricePoint[] = [
+const unstablePriceData: PricePoint[] = [
   { txType: null, value: 1.0 },
   { txType: null, value: 1.0 },
   { txType: null, value: 1.0 },
@@ -32,6 +35,29 @@ const priceData: PricePoint[] = [
   { txType: "deposit", value: 0.9994 },
   { txType: "convert", value: 1.0002 },
   { txType: null, value: 1.0 },
+];
+
+const stablePriceData: PricePoint[] = [
+  { txType: null, value: 1.0 },
+  { txType: null, value: 1.0 },
+  { txType: null, value: 1.0 },
+  { txType: null, value: 1.0 },
+  { txType: "withdraw", value: 1.0 },
+  { txType: "sow", value: 0.9994 },
+  { txType: "harvest", value: 1.0004 },
+  { txType: "deposit", value: 0.9994 },
+  { txType: "yield", value: 1.003 },
+  { txType: "convert", value: 0.997 },
+  { txType: "withdraw", value: 1.0004 },
+  { txType: "deposit", value: 0.9994 },
+  { txType: "convert", value: 1.0002 },
+  { txType: null, value: 1.0 },
+];
+
+// Combine unstablePriceData once, then stablePriceData repeated for seamless looping
+const fullPriceData: PricePoint[] = [
+  ...unstablePriceData,
+  ...Array.from({ length: repetitions }).flatMap(() => stablePriceData),
 ];
 
 // Array of person icons with different color backgrounds
@@ -68,8 +94,7 @@ function priceToY(price: number) {
 
 // Generate complete line path with multiple repetitions (Bezier smoothing)
 function generateCompletePath(pointSpacing: number) {
-  const repetitions = 10; // Number of times to repeat the pattern
-  const totalLength = priceData.length * repetitions;
+  const totalLength = fullPriceData.length;
   const totalWidth = totalLength * pointSpacing;
   const points: { x: number; y: number; price: number }[] = [];
   const beziers: {
@@ -80,16 +105,13 @@ function generateCompletePath(pointSpacing: number) {
   }[] = [];
   const transactionMarkers: { x: number; y: number; txType: string; farmer?: Farmer }[] = [];
 
-  // Create points from repeated price data
-  for (let rep = 0; rep < repetitions; rep++) {
-    for (let i = 0; i < priceData.length; i++) {
-      const x = (rep * priceData.length + i) * pointSpacing;
-      const y = priceToY(priceData[i].value);
-      points.push({ x, y, price: priceData[i].value });
-      if (priceData[i].txType) {
-        const txType = priceData[i].txType as string;
-        transactionMarkers.push({ x, y, txType, farmer: priceData[i].farmer });
-      }
+  for (let i = 0; i < fullPriceData.length; i++) {
+    const x = i * pointSpacing;
+    const y = priceToY(fullPriceData[i].value);
+    points.push({ x, y, price: fullPriceData[i].value });
+    if (fullPriceData[i].txType) {
+      const txType = fullPriceData[i].txType as string;
+      transactionMarkers.push({ x, y, txType, farmer: fullPriceData[i].farmer });
     }
   }
 
@@ -119,9 +141,6 @@ function cubicBezier(p0: number, c1: number, c2: number, p1: number, t: number) 
   return mt ** 3 * p0 + 3 * mt ** 2 * t * c1 + 3 * mt * t ** 2 * c2 + t ** 3 * p1;
 }
 
-const pointSpacing = 20; // pixels between each data point
-const scrollSpeed = 0.5;
-
 export default function LandingChart() {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
   const containerRef = useRef<HTMLDivElement>(null);
@@ -146,7 +165,8 @@ export default function LandingChart() {
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const singlePatternWidth = priceData.length * pointSpacing;
+  const initialPhaseWidth = unstablePriceData.length * pointSpacing;
+  const singlePatternWidth = stablePriceData.length * pointSpacing;
 
   // Memoize generateCompletePath result, only recalculating if pointSpacing or priceData changes
   const { path, beziers, transactionMarkers } = useMemo(() => generateCompletePath(pointSpacing), []);
@@ -186,15 +206,16 @@ export default function LandingChart() {
   );
 
   // Use Bezier curve for indicator Y
+  const totalDataWidth = fullPriceData.length * pointSpacing;
   const currentY = useTransform(scrollOffset, (currentOffset) => {
     const measurementX = viewportWidth * 0.75;
-    const xVal = (measurementX + currentOffset) % singlePatternWidth;
+    const xVal = (measurementX + currentOffset) % totalDataWidth;
     return getYOnBezierCurve(xVal);
   });
 
   // Get current price and txType at the 75% position
   const currentIndex = useTransform(scrollOffset, (currentOffset) => {
-    const positionInPattern = (measurementX + currentOffset) % singlePatternWidth;
+    const positionInPattern = (measurementX + currentOffset) % totalDataWidth;
     const exactIndex = positionInPattern / pointSpacing;
     return Math.round(exactIndex);
   });
@@ -204,23 +225,41 @@ export default function LandingChart() {
   const [currentFarmer, setCurrentFarmer] = useState<Farmer | undefined>(undefined);
   useEffect(() => {
     const unsubscribe = currentIndex.on("change", (idx) => {
-      const i = Math.max(0, Math.min(Math.round(idx), priceData.length - 1));
-      setCurrentTxType(priceData[i].txType);
-      setCurrentFarmer(priceData[i].farmer);
+      const i = Math.max(0, Math.min(Math.round(idx), fullPriceData.length - 1));
+      setCurrentTxType(fullPriceData[i].txType);
+      setCurrentFarmer(fullPriceData[i].farmer);
     });
     return unsubscribe;
   }, [currentIndex]);
 
   useEffect(() => {
-    const controls = animate(scrollOffset, singlePatternWidth, {
-      duration: singlePatternWidth / scrollSpeed / 60, // Convert to seconds based on 60fps
+    let controls: ReturnType<typeof animate> | null = null;
+    controls = animate(scrollOffset, initialPhaseWidth, {
+      duration: initialPhaseWidth / scrollSpeed / 60, // Convert to seconds based on 60fps
       ease: "linear",
-      repeat: Infinity,
-      repeatType: "loop",
+      onComplete: () => {
+        // Start infinite loop after initial phase
+        controls = animate(scrollOffset, singlePatternWidth + initialPhaseWidth, {
+          duration: singlePatternWidth / scrollSpeed / 60,
+          ease: "linear",
+          repeat: Infinity,
+          repeatType: "loop",
+        });
+      },
     });
+    return () => {
+      controls?.stop();
+    };
+  }, [scrollOffset, initialPhaseWidth, singlePatternWidth]);
 
-    return () => controls.stop();
-  }, [scrollOffset, singlePatternWidth]);
+  // Set initial scrollOffset so the price line starts at 60% of the viewport
+  useEffect(() => {
+    if (viewportWidth && singlePatternWidth) {
+      scrollOffset.set(viewportWidth * 0.75 * -1);
+    }
+    // Only run on mount or when viewportWidth changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewportWidth, singlePatternWidth, scrollOffset.set]);
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full">
@@ -330,9 +369,9 @@ export default function LandingChart() {
 // Assign a unique farmer icon to each non-null txType price point
 const assignedFarmers = personIcons.slice();
 let farmerIdx = 0;
-for (let i = 0; i < priceData.length; i++) {
-  if (priceData[i].txType) {
-    priceData[i].farmer = assignedFarmers[farmerIdx % assignedFarmers.length];
+for (let i = 0; i < fullPriceData.length; i++) {
+  if (fullPriceData[i].txType) {
+    fullPriceData[i].farmer = assignedFarmers[farmerIdx % assignedFarmers.length];
     farmerIdx++;
   }
 }
