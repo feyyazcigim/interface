@@ -253,7 +253,7 @@ export default function LandingChart() {
     controls = animate(scrollOffset, initialPhaseWidth, {
       duration: initialPhaseWidth / pxPerSecond,
       ease: "linear",
-      delay: 10,
+      delay: 5.5,
       onComplete: () => {
         // Start infinite loop after initial phase, same px/sec speed
         controls = animate(scrollOffset, singlePatternWidth + initialPhaseWidth, {
@@ -272,7 +272,7 @@ export default function LandingChart() {
   // Set initial scrollOffset so the price line starts at 60% of the viewport
   useEffect(() => {
     if (viewportWidth && singlePatternWidth) {
-      scrollOffset.set(viewportWidth * 0.75 * -1);
+      scrollOffset.set(viewportWidth * -1);
     }
     // Only run on mount or when viewportWidth changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
