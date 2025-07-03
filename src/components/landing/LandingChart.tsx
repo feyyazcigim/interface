@@ -1,5 +1,5 @@
-import { animate, motion, useMotionValue, useTransform } from "framer-motion";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TxFloater from "./TxFloater";
 
 const height = 577;
@@ -48,13 +48,14 @@ const personIcons = [
   { icon: "🧑‍🦲", bg: "#F5DEB3" }, // wheat
 ];
 
-function FarmerProfile({ icon, bg }) {
+// Memoize FarmerProfile to avoid unnecessary re-renders
+const FarmerProfile = React.memo(function FarmerProfile({ icon, bg }: { icon: string; bg: string }) {
   return (
     <div className="w-8 h-8 flex items-center justify-center rounded-full" style={{ backgroundColor: bg }}>
       <span className="text-2xl">{icon}</span>
     </div>
   );
-}
+});
 
 // Convert price to Y coordinate (inverted because SVG Y increases downward)
 function priceToY(price: number) {
@@ -77,6 +78,7 @@ function generateCompletePath(pointSpacing: number) {
     c2: { x: number; y: number };
     p1: { x: number; y: number };
   }[] = [];
+  const transactionMarkers: { x: number; y: number; txType: string; farmer?: Farmer }[] = [];
 
   // Create points from repeated price data
   for (let rep = 0; rep < repetitions; rep++) {
@@ -84,10 +86,14 @@ function generateCompletePath(pointSpacing: number) {
       const x = (rep * priceData.length + i) * pointSpacing;
       const y = priceToY(priceData[i].value);
       points.push({ x, y, price: priceData[i].value });
+      if (priceData[i].txType) {
+        const txType = priceData[i].txType as string;
+        transactionMarkers.push({ x, y, txType, farmer: priceData[i].farmer });
+      }
     }
   }
 
-  if (points.length === 0) return { path: "", points: [], totalWidth: 0, beziers: [] };
+  if (points.length === 0) return { path: "", points: [], totalWidth: 0, beziers: [], transactionMarkers: [] };
 
   let path = `M ${points[0].x} ${points[0].y}`;
   for (let i = 1; i < points.length; i++) {
@@ -104,7 +110,7 @@ function generateCompletePath(pointSpacing: number) {
     beziers.push({ p0, c1: { x: c1x, y: c1y }, c2: { x: c2x, y: c2y }, p1 });
   }
 
-  return { path, points, totalWidth, beziers };
+  return { path, points, totalWidth, beziers, transactionMarkers };
 }
 
 // Helper: cubic Bezier at t
@@ -112,6 +118,9 @@ function cubicBezier(p0: number, c1: number, c2: number, p1: number, t: number) 
   const mt = 1 - t;
   return mt ** 3 * p0 + 3 * mt ** 2 * t * c1 + 3 * mt * t ** 2 * c2 + t ** 3 * p1;
 }
+
+const pointSpacing = 20; // pixels between each data point
+const scrollSpeed = 0.5;
 
 export default function LandingChart() {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
@@ -137,14 +146,15 @@ export default function LandingChart() {
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const pointSpacing = 20; // pixels between each data point
-  const scrollSpeed = 0.5;
-
   const singlePatternWidth = priceData.length * pointSpacing;
 
-  const { path, beziers } = generateCompletePath(pointSpacing);
+  // Memoize generateCompletePath result, only recalculating if pointSpacing or priceData changes
+  const { path, beziers, transactionMarkers } = useMemo(() => generateCompletePath(pointSpacing), []);
 
-  // Get Y on Bezier curve for a given X (measurementX)
+  // Memoize measurementX
+  const measurementX = useMemo(() => viewportWidth * 0.75, [viewportWidth]);
+
+  // Memoize getYOnBezierCurve
   const getYOnBezierCurve = useCallback(
     (xVal: number) => {
       for (const seg of beziers) {
@@ -183,8 +193,6 @@ export default function LandingChart() {
   });
 
   // Get current price and txType at the 75% position
-  const measurementX = viewportWidth * 0.75;
-
   const currentIndex = useTransform(scrollOffset, (currentOffset) => {
     const positionInPattern = (measurementX + currentOffset) % singlePatternWidth;
     const exactIndex = positionInPattern / pointSpacing;
@@ -249,6 +257,26 @@ export default function LandingChart() {
               strokeLinejoin="round"
               style={{ x }}
             />
+            {/* Static transaction floaters */}
+            {transactionMarkers.map((marker) => (
+              <motion.foreignObject
+                key={`${marker.x}-${marker.y}-${marker.txType}`}
+                x={marker.x - 20}
+                y={marker.y - 60}
+                width={40}
+                height={40}
+                style={{ pointerEvents: "none", x }}
+              >
+                <TxFloater
+                  from={marker.farmer ? <FarmerProfile icon={marker.farmer.icon} bg={marker.farmer.bg} /> : null}
+                  txType={marker.txType}
+                  viewportWidth={viewportWidth}
+                  x={x}
+                  markerX={marker.x}
+                  isFixed={true}
+                />
+              </motion.foreignObject>
+            ))}
           </g>
         </svg>
         {/* Current measurement point */}
@@ -280,10 +308,19 @@ export default function LandingChart() {
             pointerEvents: "none",
           }}
         >
-          <TxFloater
-            from={currentFarmer ? <FarmerProfile icon={currentFarmer.icon} bg={currentFarmer.bg} /> : null}
-            txType={currentTxType}
-          />
+          <AnimatePresence>
+            {currentTxType && (
+              <TxFloater
+                key={"floater"}
+                from={currentFarmer ? <FarmerProfile icon={currentFarmer.icon} bg={currentFarmer.bg} /> : null}
+                txType={currentTxType}
+                viewportWidth={viewportWidth}
+                x={x}
+                markerX={measurementX}
+                isFixed={false}
+              />
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
     </div>
