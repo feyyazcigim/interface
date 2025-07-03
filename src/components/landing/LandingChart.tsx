@@ -22,26 +22,40 @@ interface PricePoint {
 const unstablePriceData: PricePoint[] = [
   { txType: null, value: 1.0 },
   { txType: null, value: 1.0 },
+  { txType: "deposit", value: 1.008 },
+  { txType: "harvest", value: 0.992 },
+  { txType: "deposit", value: 1.006 },
+  { txType: "withdraw", value: 0.995 },
+  { txType: "convert", value: 1.005 },
+  { txType: "convert", value: 0.997 },
+  { txType: "deposit", value: 1.004 },
+  { txType: "harvest", value: 0.998 },
+  { txType: "sow", value: 1.003 },
+  { txType: "withdraw", value: 0.999 },
+  { txType: "convert", value: 1.002 },
+  { txType: "yield", value: 1.0 },
+  { txType: null, value: 1.001 },
   { txType: null, value: 1.0 },
+  { txType: null, value: 0.999 },
+  { txType: null, value: 1.001 },
   { txType: null, value: 1.0 },
-  { txType: null, value: 1.0 },
-  { txType: "withdraw", value: 1.0 },
-  { txType: "sow", value: 0.9994 },
-  { txType: "harvest", value: 1.0004 },
-  { txType: "deposit", value: 0.9994 },
-  { txType: "yield", value: 1.0095 },
-  { txType: "convert", value: 0.9905 },
-  { txType: "withdraw", value: 1.0004 },
-  { txType: "deposit", value: 0.9994 },
-  { txType: "convert", value: 1.0002 },
-  { txType: null, value: 1.0 },
+  { txType: null, value: 1.002 },
+  { txType: "deposit", value: 1.004 },
+  { txType: "harvest", value: 0.997 },
+  { txType: "deposit", value: 1.003 },
+  { txType: "withdraw", value: 0.998 },
+  { txType: "convert", value: 1.0025 },
+  { txType: "yield", value: 1.0 },
+  { txType: null, value: 1.0005 },
+  { txType: null, value: 0.9995 },
+  { txType: null, value: 1.0002 },
+  { txType: null, value: 0.9998 },
+  { txType: null, value: 1.0003 },
+  { txType: null, value: 0.9999 },
 ];
 
 const stablePriceData: PricePoint[] = [
-  { txType: null, value: 1.0 },
-  { txType: null, value: 1.0 },
-  { txType: null, value: 1.0 },
-  { txType: null, value: 1.0 },
+  { txType: null, value: 0.9998 },
   { txType: "withdraw", value: 1.0 },
   { txType: "sow", value: 0.9994 },
   { txType: "harvest", value: 1.0004 },
@@ -51,7 +65,6 @@ const stablePriceData: PricePoint[] = [
   { txType: "withdraw", value: 1.0004 },
   { txType: "deposit", value: 0.9994 },
   { txType: "convert", value: 1.0002 },
-  { txType: null, value: 1.0 },
 ];
 
 // Combine unstablePriceData once, then stablePriceData repeated for seamless looping
@@ -103,7 +116,8 @@ function generateCompletePath(pointSpacing: number) {
     c2: { x: number; y: number };
     p1: { x: number; y: number };
   }[] = [];
-  const transactionMarkers: { x: number; y: number; txType: string; farmer?: Farmer }[] = [];
+  // Add index to each transaction marker for robust placement
+  const transactionMarkers: { x: number; y: number; txType: string; farmer?: Farmer; index: number }[] = [];
 
   for (let i = 0; i < fullPriceData.length; i++) {
     const x = i * pointSpacing;
@@ -111,7 +125,7 @@ function generateCompletePath(pointSpacing: number) {
     points.push({ x, y, price: fullPriceData[i].value });
     if (fullPriceData[i].txType) {
       const txType = fullPriceData[i].txType as string;
-      transactionMarkers.push({ x, y, txType, farmer: fullPriceData[i].farmer });
+      transactionMarkers.push({ x, y, txType, farmer: fullPriceData[i].farmer, index: i });
     }
   }
 
@@ -314,18 +328,15 @@ export default function LandingChart() {
             />
             {/* Static transaction floaters */}
             {transactionMarkers.map((marker) => {
-              // Find the index of this marker in fullPriceData
-              const markerIndex = fullPriceData.findIndex(
-                (p) => p.txType === marker.txType && p.farmer === marker.farmer,
-              );
+              // Use marker.index for robust placement
               let positionAbove = false;
-              if (markerIndex > 0) {
-                const prev = fullPriceData[markerIndex - 1];
-                const curr = fullPriceData[markerIndex];
+              if (marker.index > 0) {
+                const prev = fullPriceData[marker.index - 1];
+                const curr = fullPriceData[marker.index];
                 if (curr.value !== prev.value) {
                   positionAbove = curr.value > prev.value;
-                } else if (markerIndex < fullPriceData.length - 1) {
-                  const next = fullPriceData[markerIndex + 1];
+                } else if (marker.index < fullPriceData.length - 1) {
+                  const next = fullPriceData[marker.index + 1];
                   positionAbove = curr.value > next.value;
                 }
               }
