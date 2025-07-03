@@ -167,6 +167,9 @@ export default function LandingChart() {
     const updateWidth = () => {
       if (containerRef.current) {
         setViewportWidth(containerRef.current.clientWidth);
+        if (viewportWidth && singlePatternWidth) {
+          scrollOffset.set(viewportWidth * -1);
+        }
       }
     };
 
@@ -268,15 +271,6 @@ export default function LandingChart() {
       controls?.stop();
     };
   }, [scrollOffset, initialPhaseWidth, singlePatternWidth]);
-
-  // Set initial scrollOffset so the price line starts at 60% of the viewport
-  useEffect(() => {
-    if (viewportWidth && singlePatternWidth) {
-      scrollOffset.set(viewportWidth * -1);
-    }
-    // Only run on mount or when viewportWidth changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewportWidth, singlePatternWidth, scrollOffset.set]);
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full">
