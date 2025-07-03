@@ -22,7 +22,7 @@ import { mergeUseSeasonalQueriesResults } from "./utils";
 
 /** ==================== Bean BeanHourlySnapshot ==================== **/
 
-export function useSeasonalPrice(fromSeason: number, toSeason: number, enabled: boolean): UseSeasonalResult {
+export function useSeasonalPrice(fromSeason: number, toSeason: number, enabled = true): UseSeasonalResult {
   return useSeasonalBeanBeanSG(
     fromSeason,
     toSeason,
