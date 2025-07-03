@@ -400,17 +400,6 @@ export default function useSeasonsData(
     for (let idx = 0; idx < maxLength; ++idx) {
       const allData: Partial<SeasonsTableData> = {};
       const countSubgraphSeasons = stalkResults.seasons.length;
-      if (idx === 0) {
-        console.log(
-          maxLength,
-          countSubgraphSeasons,
-          marketPrices.WETH.length,
-          stalkResults.seasons[0].season,
-          stalkResults.seasons[stalkResults.seasons.length - 1].season,
-          marketPerformanceResults[0].season,
-          marketPerformanceResults[marketPerformanceResults.length - 1].season,
-        );
-      }
 
       // Subgraph data optionally has a +1 season offset applied to the datapoints, such that
       // the result indicates the value at the start rather than end of the season.
