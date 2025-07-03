@@ -8,7 +8,7 @@ import { navLinks } from "@/components/nav/nav/Navbar";
 import { Separator } from "@/components/ui/Separator";
 import { useAllMarket } from "@/state/market/useAllMarket";
 import { useHarvestableIndex, usePodLine } from "@/state/useFieldData";
-import { ActiveElement, ChartEvent, PointStyle } from "chart.js";
+import { ActiveElement, ChartEvent, PointStyle, TooltipOptions } from "chart.js";
 import { Chart } from "chart.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -46,7 +46,25 @@ const getPointBottomOffset = () => {
   }
 };
 
-const shapeScatterChartData = (data: any[], harvestableIndex: any) => {
+type MarketScatterChartDataPoint = {
+  x: number;
+  y: number;
+  eventId: string;
+  eventType: "ORDER" | "LISTING";
+  status: string;
+  amount: number;
+  placeInLine: number;
+  eventIndex?: number;
+};
+
+type MarketScatterChartData = {
+  label: "Orders" | "Listings";
+  data: MarketScatterChartDataPoint[];
+  color: string;
+  pointStyle: PointStyle;
+};
+
+const shapeScatterChartData = (data: any[], harvestableIndex: TokenValue): MarketScatterChartData[] => {
   return (
     data?.reduce(
       (acc, event) => {
@@ -106,8 +124,18 @@ const shapeScatterChartData = (data: any[], harvestableIndex: any) => {
         return acc;
       },
       [
-        { label: "Orders", data: [] as any, color: "#D3B567", pointStyle: "circle" as PointStyle },
-        { label: "Listings", data: [] as any, color: "#00C767", pointStyle: "rect" as PointStyle },
+        {
+          label: "Orders",
+          data: [] as MarketScatterChartDataPoint[],
+          color: "#D3B567",
+          pointStyle: "circle" as PointStyle,
+        },
+        {
+          label: "Listings",
+          data: [] as MarketScatterChartDataPoint[],
+          color: "#00C767",
+          pointStyle: "rect" as PointStyle,
+        },
       ],
     ) || []
   );
@@ -122,12 +150,12 @@ export function Market() {
   const podLineAsNumber = podLine.toNumber() / 1000000;
   const harvestableIndex = useHarvestableIndex();
 
-  const scatterChartData: ScatterChartData = useMemo(
+  const scatterChartData: MarketScatterChartData[] = useMemo(
     () => shapeScatterChartData(data || [], harvestableIndex),
     [data, harvestableIndex],
   );
 
-  const toolTipOptions: any = {
+  const toolTipOptions: Partial<TooltipOptions> = {
     enabled: false,
     external: (context) => {
       const tooltipEl = document.getElementById("chartjs-tooltip");
@@ -155,7 +183,7 @@ export function Market() {
         // Set Text
         if (context.tooltip.body) {
           const position = context.tooltip.dataPoints[0].element.getProps(["x", "y"], true);
-          const dataPoint = context.tooltip.dataPoints[0].raw;
+          const dataPoint = context.tooltip.dataPoints[0].raw as MarketScatterChartDataPoint;
           tooltipEl.style.opacity = "1";
           tooltipEl.style.width = "250px";
           tooltipEl.style.backgroundColor = "white";
@@ -270,7 +298,7 @@ export function Market() {
                   xOptions={{ label: "Place in line", min: 0, max: podLineAsNumber }}
                   yOptions={{ label: "Price per pod", min: 0, max: 100 }}
                   onPointClick={onPointClick}
-                  toolTipOptions={toolTipOptions}
+                  toolTipOptions={toolTipOptions as TooltipOptions}
                 />
               </div>
               <div className="flex gap-10 ml-2.5 mt-4 mb-[1.625rem]">
