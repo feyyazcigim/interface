@@ -1,3 +1,5 @@
+import PodIcon from "@/assets/protocol/Pod.png";
+import PintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 import FrameAnimator from "@/components/LoadingSpinner";
@@ -162,13 +164,13 @@ export function Market() {
           tooltipEl.style.padding = context.tooltip.options.padding + "px " + context.tooltip.options.padding + "px";
           const listingHeader = `
            <div class="flex items-center">
-            <img src="/src/assets/protocol/Pod.png" class="w-4 h-4 scale-110 mr-[6px]" alt="pod icon">
+            <img src="${PodIcon}" class="w-4 h-4 scale-110 mr-[6px]" alt="pod icon">
             <span>${TokenValue.fromHuman(dataPoint.amount, 0).toHuman("short")} Pods Listed</span>
           </div>
           `;
           const orderHeader = `
           <div class="flex items-center">
-           <img src="/src/assets/protocol/Pod.png" class="w-4 h-4 scale-110 mr-[6px]" alt="pod icon">
+           <img src="${PodIcon}" class="w-4 h-4 scale-110 mr-[6px]" alt="pod icon">
            <span>Order for ${TokenValue.fromHuman(dataPoint.amount, 0).toHuman("short")} Pods</span>
          </div>
          `;
@@ -178,7 +180,7 @@ export function Market() {
               <div class="flex justify-between">
                 <p>Price:</p>
                 <div class="flex items-center">
-                  <img src="/src/assets/tokens/PINTO.png" class="w-4 h-4 scale-110 mr-[6px]" alt="pinto icon">
+                  <img src="${PintoIcon}" class="w-4 h-4 scale-110 mr-[6px]" alt="pinto icon">
                   <p>${dataPoint.y}</p>
                 </div>
               </div>
