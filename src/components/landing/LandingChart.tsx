@@ -5,7 +5,7 @@ import TxFloater from "./TxFloater";
 const height = 577;
 const repetitions = 10; // Number of times to repeat the pattern
 const pointSpacing = 80; // pixels between each data point
-const scrollSpeed = 0.5;
+const scrollSpeed = 0.75;
 
 // Price data with more baseline points to space out peaks and dips
 // Define the type for priceData
