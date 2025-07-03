@@ -4,7 +4,7 @@ import TxFloater from "./TxFloater";
 
 const height = 577;
 const repetitions = 10; // Number of times to repeat the pattern
-const pointSpacing = 40; // pixels between each data point
+const pointSpacing = 80; // pixels between each data point
 const scrollSpeed = 0.5;
 
 // Price data with more baseline points to space out peaks and dips
@@ -234,14 +234,16 @@ export default function LandingChart() {
 
   useEffect(() => {
     let controls: ReturnType<typeof animate> | null = null;
+    // Calculate speed in pixels per second
+    const pxPerSecond = scrollSpeed * 60; // scrollSpeed is in px/frame, 60fps
     controls = animate(scrollOffset, initialPhaseWidth, {
-      duration: initialPhaseWidth / scrollSpeed / 60, // Convert to seconds based on 60fps
+      duration: initialPhaseWidth / pxPerSecond,
       ease: "linear",
       delay: 10,
       onComplete: () => {
-        // Start infinite loop after initial phase
+        // Start infinite loop after initial phase, same px/sec speed
         controls = animate(scrollOffset, singlePatternWidth + initialPhaseWidth, {
-          duration: singlePatternWidth / scrollSpeed / 60,
+          duration: singlePatternWidth / pxPerSecond / 2,
           ease: "linear",
           repeat: Infinity,
           repeatType: "loop",
@@ -311,25 +313,42 @@ export default function LandingChart() {
               transition={{ duration: 0.5, delay: 5.5 }}
             />
             {/* Static transaction floaters */}
-            {transactionMarkers.map((marker) => (
-              <motion.foreignObject
-                key={`${marker.x}-${marker.y}-${marker.txType}`}
-                x={marker.x - 20}
-                y={marker.y - 60}
-                width={80}
-                height={40}
-                style={{ pointerEvents: "none", x }}
-              >
-                <TxFloater
-                  from={marker.farmer ? <FarmerProfile icon={marker.farmer.icon} bg={marker.farmer.bg} /> : null}
-                  txType={marker.txType}
-                  viewportWidth={viewportWidth}
-                  x={x}
-                  markerX={marker.x}
-                  isFixed={true}
-                />
-              </motion.foreignObject>
-            ))}
+            {transactionMarkers.map((marker) => {
+              // Find the index of this marker in fullPriceData
+              const markerIndex = fullPriceData.findIndex(
+                (p) => p.txType === marker.txType && p.farmer === marker.farmer,
+              );
+              let positionAbove = false;
+              if (markerIndex > 0) {
+                const prev = fullPriceData[markerIndex - 1];
+                const curr = fullPriceData[markerIndex];
+                if (curr.value !== prev.value) {
+                  positionAbove = curr.value > prev.value;
+                } else if (markerIndex < fullPriceData.length - 1) {
+                  const next = fullPriceData[markerIndex + 1];
+                  positionAbove = curr.value > next.value;
+                }
+              }
+              return (
+                <motion.foreignObject
+                  key={`${marker.x}-${marker.y}-${marker.txType}`}
+                  x={marker.x - 20}
+                  y={positionAbove ? marker.y - 40 : marker.y + 10}
+                  width={80}
+                  height={40}
+                  style={{ pointerEvents: "none", x }}
+                >
+                  <TxFloater
+                    from={marker.farmer ? <FarmerProfile icon={marker.farmer.icon} bg={marker.farmer.bg} /> : null}
+                    txType={marker.txType}
+                    viewportWidth={viewportWidth}
+                    x={x}
+                    markerX={marker.x}
+                    isFixed={true}
+                  />
+                </motion.foreignObject>
+              );
+            })}
           </g>
         </svg>
         {/* Current measurement point */}

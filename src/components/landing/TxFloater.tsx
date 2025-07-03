@@ -10,6 +10,15 @@ const TxTypeIcons: Record<string, string> = {
   yield: "Cross_Landing.svg", // Yield transaction type icon
 };
 
+const TxIcons: Record<string, string> = {
+  deposit: "Silo_Landing.svg",
+  withdraw: "Silo_Landing.svg",
+  sow: "Sow_Landing.svg",
+  harvest: "Harvest_Landing.svg",
+  convert: "Silo_Landing.svg",
+  yield: "Silo_Landing.svg",
+};
+
 export default function TxFloater({
   from,
   txType,
@@ -23,7 +32,7 @@ export default function TxFloater({
   viewportWidth: number;
   x: MotionValue<number>; // The shared scroll position
   markerX: number; // The absolute X position of the marker
-  isFixed: boolean; // This specific marker's x position
+  isFixed: boolean; // true for static markers on the chart line, false for the floating marker at the measurement point
 }) {
   const controls = useAnimation();
 
@@ -64,7 +73,7 @@ export default function TxFloater({
       >
         <div className={`w-8 h-8 ${isFixed ? "scale-75" : "scale-100"}`}>{from}</div>
         {txType && TxTypeIcons[txType] && <img alt="Convert" src={TxTypeIcons[txType]} className="w-4 h-4" />}
-        <img alt="Stuff" src="Sow_Landing.svg" className={`w-8 h-8 ${isFixed ? "scale-[0.85] mr-0.5" : "scale-100"}`} />
+        <img alt="Stuff" src={TxIcons[txType]} className={`w-8 h-8 ${isFixed ? "scale-[0.85] mr-0.5" : "scale-100"}`} />
       </motion.div>
     )
   );
