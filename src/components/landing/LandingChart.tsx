@@ -316,7 +316,7 @@ export default function LandingChart() {
                 key={`${marker.x}-${marker.y}-${marker.txType}`}
                 x={marker.x - 20}
                 y={marker.y - 60}
-                width={40}
+                width={80}
                 height={40}
                 style={{ pointerEvents: "none", x }}
               >

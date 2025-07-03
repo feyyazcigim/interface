@@ -58,11 +58,13 @@ export default function TxFloater({
           opacity: isFixed ? opacity : 1,
         }}
         transition={{ opacity: { ease: "easeInOut", duration: 0.5 } }}
-        className="z-10 w-[7.75rem] h-[3.25rem] flex items-center justify-center bg-white border border-pinto-green-4 rounded-full px-3 py-2 gap-2"
+        className={`z-10 flex items-center justify-center bg-white border border-pinto-green-4 rounded-full ${
+          isFixed ? "h-8 py-1 gap-1" : "w-[7.75rem] h-[3.25rem] px-3 py-2 gap-2"
+        }`}
       >
-        <div className="w-8 h-8">{from}</div>
+        <div className={`w-8 h-8 ${isFixed ? "scale-75" : "scale-100"}`}>{from}</div>
         {txType && TxTypeIcons[txType] && <img alt="Convert" src={TxTypeIcons[txType]} className="w-4 h-4" />}
-        <img alt="Stuff" src="Sow_Landing.svg" className="w-8 h-8" />
+        <img alt="Stuff" src="Sow_Landing.svg" className={`w-8 h-8 ${isFixed ? "scale-[0.85] mr-0.5" : "scale-100"}`} />
       </motion.div>
     )
   );
