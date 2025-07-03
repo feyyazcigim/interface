@@ -80,7 +80,7 @@ export function useSeasonalMarketPerformanceData(
     );
   };
 
-  return useSeasonalQueries<MarketPerformanceSeasonal>("BeanstalkSeasonalMarketPerformanceQuery", {
+  const result = useSeasonalQueries("BeanstalkSeasonalMarketPerformanceQuery", {
     fromSeason,
     toSeason,
     queryVars: {},
@@ -95,6 +95,7 @@ export function useSeasonalMarketPerformanceData(
     },
     enabled,
   });
+  return result as unknown as UseSeasonalResult<MarketPerformanceSeasonal[]>;
 }
 
 // Returns chart data for the given seasons data.

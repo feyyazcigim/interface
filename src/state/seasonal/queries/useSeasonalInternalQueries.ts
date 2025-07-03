@@ -34,7 +34,7 @@ export default function useSeasonalQueries<T>(
   queryConfig: SeasonalQueryConfig<T>,
   sparseData: boolean = false,
   disabled: boolean = false,
-): UseSeasonalResult<T[]> {
+): UseSeasonalResult {
   const queryClient = useQueryClient();
   const currentSeason = useSunData().current;
   const chainId = useChainId();
