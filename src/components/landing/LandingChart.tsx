@@ -4,7 +4,7 @@ import TxFloater from "./TxFloater";
 
 const height = 577;
 const repetitions = 10; // Number of times to repeat the pattern
-const pointSpacing = 20; // pixels between each data point
+const pointSpacing = 40; // pixels between each data point
 const scrollSpeed = 0.5;
 
 // Price data with more baseline points to space out peaks and dips
@@ -237,6 +237,7 @@ export default function LandingChart() {
     controls = animate(scrollOffset, initialPhaseWidth, {
       duration: initialPhaseWidth / scrollSpeed / 60, // Convert to seconds based on 60fps
       ease: "linear",
+      delay: 10,
       onComplete: () => {
         // Start infinite loop after initial phase
         controls = animate(scrollOffset, singlePatternWidth + initialPhaseWidth, {
@@ -274,9 +275,16 @@ export default function LandingChart() {
               <rect x="0" y="0" width={viewportWidth - viewportWidth * 0.25} height={height} />
             </clipPath>
           </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
+          <motion.rect
+            width="100%"
+            height="100%"
+            fill="url(#grid)"
+            initial={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
+            animate={{ opacity: 1, clipPath: "inset(0 0 0 0)" }}
+            transition={{ duration: 3, ease: "easeInOut", delay: 2 }}
+          />
           {/* Measurement line at 75% */}
-          <line
+          <motion.line
             x1={measurementX}
             y1={0}
             x2={measurementX}
@@ -284,6 +292,9 @@ export default function LandingChart() {
             stroke="#387F5C"
             strokeWidth="2"
             strokeDasharray="3,3"
+            initial={{ clipPath: "inset(0 0 100% 0)" }}
+            animate={{ clipPath: "inset(0 0 0 0)" }}
+            transition={{ duration: 0.5, ease: "easeInOut", delay: 4.5 }}
           />
           {/* Scrolling price line */}
           <g clipPath="url(#viewport)">
@@ -295,6 +306,9 @@ export default function LandingChart() {
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{ x }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 5.5 }}
             />
             {/* Static transaction floaters */}
             {transactionMarkers.map((marker) => (
@@ -327,13 +341,11 @@ export default function LandingChart() {
             pointerEvents: "none",
             boxShadow: "0 0 10px #387F5C, 0 0 4.32px #387F5C, 0 0 2.16px #387F5C",
           }}
-          animate={{
-            scale: [1, 1.1, 1],
-          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, scale: [1, 1.1, 1] }}
           transition={{
-            duration: 1,
-            repeat: Infinity,
-            ease: "easeInOut",
+            opacity: { duration: 0.25, delay: 5.75 },
+            scale: { duration: 1, repeat: Infinity, ease: "easeInOut" },
           }}
         >
           <div className="w-full h-full rounded-full bg-white border-pinto-green-4" />
