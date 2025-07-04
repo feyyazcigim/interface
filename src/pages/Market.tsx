@@ -287,7 +287,7 @@ export function Market() {
         <div className={`flex flex-col`}>
           <div className="flex flex-row border-t border-pinto-gray-2 mt-4 ">
             <div className="flex flex-col flex-grow ml-4 border-r border-pinto-gray-2 pr-4">
-              <div className="w-full h-[28rem] relative">
+              <div className="w-full h-[28rem] relative mt-4">
                 {!isLoaded && (
                   <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
                     <FrameAnimator className="-mt-5 -mb-12" size={80} />
