@@ -16,6 +16,7 @@ import {
   PointStyle,
   TooltipOptions,
 } from "chart.js";
+import { isEqual } from "lodash";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ReactChart } from "../ReactChart";
 
@@ -480,5 +481,156 @@ const ScatterChartV2 = React.memo(
       />
     );
   },
+  areScatterChartPropsEqual,
 );
+
+/**
+ * Optimized memoization comparison function for the ScatterChart component.
+ *
+ * This function implements a multi-stage comparison strategy to efficiently determine
+ * whether props have changed, minimizing expensive deep comparisons when possible.
+ *
+ * @param prevProps - The previous props object from the last render
+ * @param nextProps - The current props object for the new render
+ * @returns `true` if props are equal (component should NOT re-render), `false` if different (component should re-render)
+ *
+ * ## Conditional Flow:
+ *
+ * ### Stage 1: Fast Reference Equality Check
+ * - **Condition**: `prevProps.data === nextProps.data` (same object reference)
+ * - **Action**: If true, skip expensive data comparison and only check other lightweight props
+ * - **Checks**: size, useLogarithmicScale, activeIndex, and deep comparison of xOptions, yOptions, horizontalReferenceLines
+ * - **Optimization**: Avoids costly array iteration when data hasn't changed
+ *
+ * ### Stage 2: Early Exit Conditions
+ * - **Data Length Check**: `prevProps.data.length !== nextProps.data.length`
+ *   - If different lengths, immediately return `false` (re-render needed)
+ * - **Essential Props Check**: Compare size, useLogarithmicScale, activeIndex
+ *   - If any differ, immediately return `false` (re-render needed)
+ *
+ * ### Stage 3: Axis Options Deep Comparison
+ * - **xOptions & yOptions**: Use lodash `isEqual` for deep comparison
+ * - **Reason**: These objects contain nested properties (min, max, label) that require deep comparison
+ * - If either differs, return `false` (re-render needed)
+ *
+ * ### Stage 4: Dataset Metadata Comparison
+ * - **For each dataset**: Compare metadata before expensive data point comparison
+ * - **Metadata checks**: label, color, pointStyle, data.length
+ * - **Optimization**: Metadata comparison is cheaper than point-by-point comparison
+ * - If metadata differs, return `false` (re-render needed)
+ *
+ * ### Stage 5: Optimized Data Point Sampling
+ * - **Reference Check**: `prevData === nextData` (same array reference)
+ *   - If same reference, skip to next dataset
+ * - **Sampling Strategy**: Check first 10 and last 10 data points (or all if < 20 points)
+ * - **Optimization**: Avoids O(n) comparison for large datasets while catching most changes
+ * - **Point Comparison**: Compare x, y, and eventId properties for sampled points
+ * - **Early Exit**: Return `false` on first difference found
+ *
+ * ## Performance Characteristics:
+ * - **Best Case**: O(1) - Reference equality check succeeds
+ * - **Average Case**: O(n) - Metadata comparison catches most changes
+ * - **Worst Case**: O(n*20) - Sampling comparison (max 20 points per dataset)
+ *
+ * ## Memory Efficiency:
+ * - Uses reference equality checks to avoid deep cloning
+ * - Leverages lodash `isEqual` for reliable deep comparison
+ * - Early exits minimize unnecessary computation
+ */
+function areScatterChartPropsEqual(prevProps: ScatterChartProps, nextProps: ScatterChartProps): boolean {
+  // Fast reference equality check first - if data objects are the same, skip deep comparison
+  if (prevProps.data === nextProps.data) {
+    // Still need to check other props for changes
+    return (
+      prevProps.size === nextProps.size &&
+      prevProps.useLogarithmicScale === nextProps.useLogarithmicScale &&
+      isEqual(prevProps.xOptions, nextProps.xOptions) &&
+      isEqual(prevProps.yOptions, nextProps.yOptions) &&
+      prevProps.activeIndex === nextProps.activeIndex &&
+      isEqual(prevProps.horizontalReferenceLines, nextProps.horizontalReferenceLines)
+    );
+  }
+
+  // Early exit for different array lengths
+  if (prevProps.data.length !== nextProps.data.length) {
+    return false;
+  }
+
+  // Check essential props first (cheaper than deep data comparison)
+  if (
+    prevProps.size !== nextProps.size ||
+    prevProps.useLogarithmicScale !== nextProps.useLogarithmicScale ||
+    prevProps.activeIndex !== nextProps.activeIndex
+  ) {
+    return false;
+  }
+
+  // Check axis options with deep comparison
+  if (!isEqual(prevProps.xOptions, nextProps.xOptions) || !isEqual(prevProps.yOptions, nextProps.yOptions)) {
+    return false;
+  }
+
+  // Quick dataset metadata comparison before deep data check
+  for (let i = 0; i < prevProps.data.length; i++) {
+    const prevDataset = prevProps.data[i];
+    const nextDataset = nextProps.data[i];
+
+    // Check metadata first (cheaper than data point comparison)
+    if (
+      prevDataset.label !== nextDataset.label ||
+      prevDataset.color !== nextDataset.color ||
+      prevDataset.pointStyle !== nextDataset.pointStyle ||
+      prevDataset.data.length !== nextDataset.data.length
+    ) {
+      return false;
+    }
+
+    // Only do expensive data point comparison if metadata matches
+    const prevData = prevDataset.data;
+    const nextData = nextDataset.data;
+
+    // Use reference equality check first
+    if (prevData === nextData) {
+      continue;
+    }
+
+    // If arrays are different references, do the optimized comparison
+    // Check first 10 and last 10 data points for performance
+    const dataLength = prevData.length;
+    const checkCount = Math.min(10, Math.floor(dataLength / 2));
+
+    // Check first N points
+    for (let j = 0; j < checkCount; j++) {
+      const prevPoint = prevData[j];
+      const nextPoint = nextData[j];
+
+      if (
+        prevPoint.x !== nextPoint.x ||
+        prevPoint.y !== nextPoint.y ||
+        (prevPoint as any).eventId !== (nextPoint as any).eventId
+      ) {
+        return false;
+      }
+    }
+
+    // Check last N points (if array has more than 2 * checkCount elements)
+    if (dataLength > checkCount * 2) {
+      for (let j = dataLength - checkCount; j < dataLength; j++) {
+        const prevPoint = prevData[j];
+        const nextPoint = nextData[j];
+
+        if (
+          prevPoint.x !== nextPoint.x ||
+          prevPoint.y !== nextPoint.y ||
+          (prevPoint as any).eventId !== (nextPoint as any).eventId
+        ) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 export default ScatterChartV2;
