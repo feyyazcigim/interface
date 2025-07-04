@@ -3,7 +3,7 @@ import PintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 import FrameAnimator from "@/components/LoadingSpinner";
-import ScatterChartV2, { ScatterChartData } from "@/components/charts/ScatterChart";
+import ScatterChart from "@/components/charts/ScatterChart";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Separator } from "@/components/ui/Separator";
 import { useAllMarket } from "@/state/market/useAllMarket";
@@ -293,7 +293,7 @@ export function Market() {
                     <FrameAnimator className="-mt-5 -mb-12" size={80} />
                   </div>
                 )}
-                <ScatterChartV2
+                <ScatterChart
                   data={scatterChartData}
                   xOptions={{ label: "Place in line", min: 0, max: podLineAsNumber }}
                   yOptions={{ label: "Price per pod", min: 0, max: 100 }}

@@ -72,7 +72,7 @@ export interface ScatterChartProps {
   toolTipOptions?: TooltipOptions;
 }
 
-const ScatterChartV2 = React.memo(
+const ScatterChart = React.memo(
   ({
     data,
     size,
@@ -633,4 +633,4 @@ function areScatterChartPropsEqual(prevProps: ScatterChartProps, nextProps: Scat
   return true;
 }
 
-export default ScatterChartV2;
+export default ScatterChart;
