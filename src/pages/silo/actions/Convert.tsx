@@ -92,6 +92,7 @@ function ConvertForm({
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
   const clearSiloConvertQueries = useClearSiloConvertQueries();
   const invalidateSun = useInvalidateSun();
+  const { tokenPrices } = usePriceData();
 
   const minAmountIn = convertExceptions.minAmountIn;
   const isDefaultConvert = siloToken.isMain || targetToken?.isMain;
@@ -336,11 +337,20 @@ function ConvertForm({
     exists(grownStalkPenaltyQuery.data[routeIndex]) &&
     grownStalkPenaltyQuery.data[routeIndex].isPenalty;
 
+  // USD Warning Logic
+  const tokenPrice = tokenPrices.get(siloToken);
+  const amountInTV = TV.fromHuman(amountIn, siloToken.decimals);
+  const usdValue = tokenPrice ? amountInTV.mul(tokenPrice.instant) : TV.ZERO;
+  const usdThreshold = TV.fromHuman("10000", 6); // $10,000 USD with 6 decimals
+  const renderUsdWarning = usdValue.gt(usdThreshold) && isValidAmountIn;
+  const recommendedAmountInToken = tokenPrice ? usdThreshold.div(tokenPrice.instant) : TV.ZERO;
+
   const warningRendered =
     renderGerminatingStalkWarning ||
     renderDownPenaltyWarning ||
     renderMinAmountWarning ||
-    renderGrownStalkPenaltyWarning;
+    renderGrownStalkPenaltyWarning ||
+    renderUsdWarning;
 
   const disabled =
     !targetToken ||
@@ -390,6 +400,7 @@ function ConvertForm({
       {warningRendered ? (
         <div className="flex flex-col gap-2">
           <MinAmountWarning enabled={!!renderMinAmountWarning} minAmountIn={minAmountIn} siloToken={siloToken} />
+          <UsdWarning enabled={!!renderUsdWarning} recommendedAmount={recommendedAmountInToken} siloToken={siloToken} />
           <ConvertWarning
             canConvert={!!canConvert}
             canExceedMax={canExceedMax}
@@ -920,6 +931,20 @@ const MinAmountWarning = ({
   return (
     <Warning variant="info">
       A minimum amount of {formatter.token(minAmountIn, siloToken)} {siloToken.symbol} is required to convert.
+    </Warning>
+  );
+};
+
+const UsdWarning = ({
+  enabled,
+  recommendedAmount,
+  siloToken,
+}: { enabled: boolean; recommendedAmount: TV; siloToken: Token }) => {
+  if (!enabled || recommendedAmount.lte(0)) return null;
+
+  return (
+    <Warning variant="warning">
+      Converting less than {formatter.token(recommendedAmount, siloToken)} {siloToken.symbol} recommended.
     </Warning>
   );
 };
