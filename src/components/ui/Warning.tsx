@@ -42,7 +42,7 @@ const Warning = ({ children, variant = "info", className, ...props }: WarningPro
         className,
       )}
     >
-      <div className="w-4 h-4 min-w-4 min-h-4 max-h-4 max-w-4">
+      <div className="w-4 h-4 min-w-4 min-h-4 max-h-4 max-w-4 mr-1">
         <Icon color={"currentColor"} />
       </div>
       {children}

@@ -30,3 +30,5 @@ export type SowOrderTokenStrategy =
   | { type: "LOWEST_SEEDS" }
   | { type: "LOWEST_PRICE" }
   | { type: "SPECIFIC_TOKEN"; address: `0x${string}` };
+
+export type TractorTokenStrategy = SowOrderTokenStrategy;
