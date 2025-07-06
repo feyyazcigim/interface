@@ -11,7 +11,7 @@ import { generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
 import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { getChainConstant } from "@/utils/chain";
 import { resolveChainId } from "@/utils/chain";
-import { stringEq } from "@/utils/string";
+import { sanitizeNumericInputValue, stringEq } from "@/utils/string";
 import { AdvancedPipeCall, FarmFromMode, MinimumViableBlock } from "@/utils/types";
 import { Token, TokenDepositData } from "@/utils/types";
 import { MayArray } from "@/utils/types.generic";
@@ -106,22 +106,17 @@ export async function createSowTractorData({
   console.debug("tokenStrategy.address:", tokenStrategy.type === "SPECIFIC_TOKEN" ? tokenStrategy.address : "N/A");
 
   // Convert inputs to appropriate types
-  const totalAmount = BigInt(Math.floor(parseFloat(totalAmountToSow) * 1e6));
-  const minAmount = BigInt(Math.floor(parseFloat(minAmountPerSeason) * 1e6));
-  const maxAmount = BigInt(Math.floor(parseFloat(maxAmountToSowPerSeason) * 1e6));
+  const totalAmount = sanitizeNumericInputValue(totalAmountToSow, 6).tv.toBigInt();
+  const minAmount = sanitizeNumericInputValue(minAmountPerSeason, 6).tv.toBigInt();
+  const maxAmount = sanitizeNumericInputValue(maxAmountToSowPerSeason, 6).tv.toBigInt();
 
   // Fix for maxPodlineLength - convert to a full number without truncation
   // Remove commas, parse as float, multiply by 1e6 to get the raw value without truncation
-  const cleanMaxPodlineLength = maxPodlineLength.replace(/,/g, "");
-  // Use string operations to avoid floating point precision issues
-  const [whole, decimal = ""] = cleanMaxPodlineLength.split(".");
-  const paddedDecimal = decimal.padEnd(6, "0").slice(0, 6); // Ensure 6 decimal places
-  const maxPodlineBigInt = BigInt(whole + paddedDecimal);
-
-  const maxGrownStalk = BigInt(Math.floor(parseFloat(maxGrownStalkPerBdv) * 1e6));
+  const maxPodlineBigInt = sanitizeNumericInputValue(maxPodlineLength, 6).tv.toBigInt();
+  const maxGrownStalk = sanitizeNumericInputValue(maxGrownStalkPerBdv, 6).tv.toBigInt();
   const runBlocks = BigInt(runBlocksAfterSunrise); // Direct block number value
-  const temp = BigInt(Math.floor(parseFloat(temperature) * 1e6));
-  const tip = BigInt(Math.floor(parseFloat(operatorTip) * 1e6));
+  const temp = sanitizeNumericInputValue(temperature, 6).tv.toBigInt();
+  const tip = sanitizeNumericInputValue(operatorTip, 6).tv.toBigInt();
 
   // Get source token indices based on strategy
   let sourceTokenIndices: number[];
