@@ -17,6 +17,7 @@ interface PricePoint {
   txType: string | null;
   value: number;
   farmer?: Farmer;
+  speed?: number; // Optional speed for specific transactions
 }
 
 const unstablePriceData: PricePoint[] = [
@@ -55,13 +56,11 @@ const unstablePriceData: PricePoint[] = [
 ];
 
 const stablePriceData: PricePoint[] = [
-  { txType: null, value: 0.9998 },
-  { txType: "withdraw", value: 1.0 },
   { txType: "sow", value: 0.9994 },
   { txType: "harvest", value: 1.0004 },
-  { txType: "deposit", value: 0.9994 },
-  { txType: "yield", value: 1.003 },
-  { txType: "convert", value: 0.997 },
+  { txType: "deposit", value: 0.9994, speed: 5 },
+  { txType: "yield", value: 1.005, speed: 5 },
+  { txType: "convert", value: 0.995, speed: 5 },
   { txType: "withdraw", value: 1.0004 },
   { txType: "deposit", value: 0.9994 },
   { txType: "convert", value: 1.0002 },
@@ -107,8 +106,7 @@ function priceToY(price: number) {
 
 // Generate complete line path with multiple repetitions (Bezier smoothing)
 function generateCompletePath(pointSpacing: number) {
-  const totalLength = fullPriceData.length;
-  const totalWidth = totalLength * pointSpacing;
+  // Per-segment speed compression
   const points: { x: number; y: number; price: number }[] = [];
   const beziers: {
     p0: { x: number; y: number };
@@ -116,17 +114,19 @@ function generateCompletePath(pointSpacing: number) {
     c2: { x: number; y: number };
     p1: { x: number; y: number };
   }[] = [];
-  // Add index to each transaction marker for robust placement
   const transactionMarkers: { x: number; y: number; txType: string; farmer?: Farmer; index: number }[] = [];
 
+  let x = 0;
   for (let i = 0; i < fullPriceData.length; i++) {
-    const x = i * pointSpacing;
     const y = priceToY(fullPriceData[i].value);
     points.push({ x, y, price: fullPriceData[i].value });
     if (fullPriceData[i].txType) {
       const txType = fullPriceData[i].txType as string;
       transactionMarkers.push({ x, y, txType, farmer: fullPriceData[i].farmer, index: i });
     }
+    // If this segment has a speed, compress the next segment's width
+    const segSpeed = fullPriceData[i].speed || 1;
+    x += pointSpacing / segSpeed;
   }
 
   if (points.length === 0) return { path: "", points: [], totalWidth: 0, beziers: [], transactionMarkers: [] };
@@ -146,6 +146,7 @@ function generateCompletePath(pointSpacing: number) {
     beziers.push({ p0, c1: { x: c1x, y: c1y }, c2: { x: c2x, y: c2y }, p1 });
   }
 
+  const totalWidth = points.length > 0 ? points[points.length - 1].x : 0;
   return { path, points, totalWidth, beziers, transactionMarkers };
 }
 
@@ -182,11 +183,10 @@ export default function LandingChart() {
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const initialPhaseWidth = unstablePriceData.length * pointSpacing;
   const singlePatternWidth = stablePriceData.length * pointSpacing;
 
   // Memoize generateCompletePath result, only recalculating if pointSpacing or priceData changes
-  const { path, beziers, transactionMarkers } = useMemo(() => generateCompletePath(pointSpacing), []);
+  const { path, beziers, transactionMarkers, totalWidth } = useMemo(() => generateCompletePath(pointSpacing), []);
 
   // Memoize measurementX
   const measurementX = useMemo(() => viewportWidth * 0.75, [viewportWidth]);
@@ -223,18 +223,25 @@ export default function LandingChart() {
   );
 
   // Use Bezier curve for indicator Y
-  const totalDataWidth = fullPriceData.length * pointSpacing;
   const currentY = useTransform(scrollOffset, (currentOffset) => {
-    const measurementX = viewportWidth * 0.75;
-    const xVal = (measurementX + currentOffset) % totalDataWidth;
+    const xVal = (measurementX + currentOffset) % totalWidth;
     return getYOnBezierCurve(xVal);
   });
 
   // Get current price and txType at the 75% position
   const currentIndex = useTransform(scrollOffset, (currentOffset) => {
-    const positionInPattern = (measurementX + currentOffset) % totalDataWidth;
-    const exactIndex = positionInPattern / pointSpacing;
-    return Math.round(exactIndex);
+    const xVal = (measurementX + currentOffset) % totalWidth;
+    // Find the closest point index by X
+    let minDist = Infinity;
+    let idx = 0;
+    for (let i = 0; i < beziers.length; i++) {
+      const seg = beziers[i];
+      if (Math.abs(seg.p0.x - xVal) < minDist) {
+        minDist = Math.abs(seg.p0.x - xVal);
+        idx = i;
+      }
+    }
+    return idx;
   });
 
   // Get the current txType and farmer for the floating marker
@@ -249,18 +256,19 @@ export default function LandingChart() {
     return unsubscribe;
   }, [currentIndex]);
 
+  // Use totalWidth for animation loop
   useEffect(() => {
     let controls: ReturnType<typeof animate> | null = null;
     // Calculate speed in pixels per second
     const pxPerSecond = scrollSpeed * 60; // scrollSpeed is in px/frame, 60fps
-    controls = animate(scrollOffset, initialPhaseWidth, {
-      duration: initialPhaseWidth / pxPerSecond,
+    controls = animate(scrollOffset, measurementX, {
+      duration: measurementX / pxPerSecond,
       ease: "linear",
       delay: 5.5,
       onComplete: () => {
         // Start infinite loop after initial phase, same px/sec speed
-        controls = animate(scrollOffset, singlePatternWidth + initialPhaseWidth, {
-          duration: singlePatternWidth / pxPerSecond / 2,
+        controls = animate(scrollOffset, totalWidth, {
+          duration: (totalWidth - measurementX) / pxPerSecond / 2,
           ease: "linear",
           repeat: Infinity,
           repeatType: "loop",
@@ -270,7 +278,7 @@ export default function LandingChart() {
     return () => {
       controls?.stop();
     };
-  }, [scrollOffset, initialPhaseWidth, singlePatternWidth]);
+  }, [scrollOffset, measurementX, totalWidth]);
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full">
