@@ -541,50 +541,49 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
     const latestTimestamp = Number(latestBlock.timestamp);
     const latestBlockNumber = Number(latestBlock.number);
 
-    const filteredEvents = publishEvents
-      .map((event) => {
-        const requisition = event.args?.requisition as RequisitionData;
-        if (!requisition?.blueprint || !requisition?.blueprintHash || !requisition?.signature) return null;
+    const filteredEvents = publishEvents.map((event) => {
+      const requisition = event.args?.requisition as RequisitionData;
+      if (!requisition?.blueprint || !requisition?.blueprintHash || !requisition?.signature) return null;
 
-        // Only filter by address if one is provided
-        if (stringEq(requisition.blueprint.publisher, address)) {
-          return null;
-        }
+      // Only filter by address if one is provided
+      if (!stringEq(requisition.blueprint.publisher, address)) {
+        return null;
+      }
 
-        let eventRequisitionType: RequisitionType = "unknown";
-        // Try to decode the data
-        const decodedData = decodeSowTractorData(requisition.blueprint.data);
-        if (decodedData) {
-          eventRequisitionType = "sowBlueprintv0";
-        }
+      let eventRequisitionType: RequisitionType = "unknown";
+      // Try to decode the data
+      const decodedData = decodeSowTractorData(requisition.blueprint.data);
+      if (decodedData) {
+        eventRequisitionType = "sowBlueprintv0";
+      }
 
-        // Filter by requisition type if provided
-        if (requisitionsSet?.size && !requisitionsSet.has(eventRequisitionType)) {
-          return null;
-        }
+      // Filter by requisition type if provided
+      if (requisitionsSet?.size && !requisitionsSet.has(eventRequisitionType)) {
+        return null;
+      }
 
-        // Calculate timestamp if we have the latest block info
-        let timestamp: number | undefined = undefined;
-        if (latestBlock) {
-          // Convert all BigInt values to Number before arithmetic operations
-          const eventBlockNumber = Number(event.blockNumber);
+      // Calculate timestamp if we have the latest block info
+      let timestamp: number | undefined = undefined;
+      if (latestBlock) {
+        // Convert all BigInt values to Number before arithmetic operations
+        const eventBlockNumber = Number(event.blockNumber);
 
-          // Calculate timestamp (approximately 2 seconds per block)
-          timestamp = latestTimestamp * 1000 - (latestBlockNumber - eventBlockNumber) * 2000;
-        }
+        // Calculate timestamp (approximately 2 seconds per block)
+        timestamp = latestTimestamp * 1000 - (latestBlockNumber - eventBlockNumber) * 2000;
+      }
 
-        return {
-          requisition,
-          blockNumber: Number(event.blockNumber),
-          timestamp,
-          isCancelled: cancelledHashes.has(requisition.blueprintHash),
-          requisitionType: eventRequisitionType,
-          decodedData,
-        } as RequisitionEvent;
-      })
-      .filter((event): event is NonNullable<typeof event> => event !== null);
+      return {
+        requisition,
+        blockNumber: Number(event.blockNumber),
+        timestamp,
+        isCancelled: cancelledHashes.has(requisition.blueprintHash),
+        requisitionType: eventRequisitionType,
+        decodedData,
+      } as RequisitionEvent;
+    });
 
-    return filteredEvents;
+    console.log("filteredEvents: ", filteredEvents);
+    return filteredEvents.filter((event): event is NonNullable<typeof event> => event !== null);
   };
 };
 
