@@ -600,21 +600,11 @@ export async function loadPublishedRequisitions(
 
   try {
     const data = await fetchTractorEvents(publicClient, protocolAddress, fromBlock);
-    console.log({
-      args: {
-        requisitionType,
-        fromBlock,
-        latestBlock,
-      },
-      data,
-    });
     const selectRequisitionType = getSelectRequisitionType(requisitionType, address);
-    const selected = selectRequisitionType({
+    return selectRequisitionType({
       latestBlock: { number: latestBlock?.number ?? 0n, timestamp: latestBlock?.timestamp ?? 0n },
       data,
     });
-    console.log("selected", selected);
-    return selected;
   } catch (error) {
     console.error("Error loading published requisitions:", error);
     throw new Error("Failed to load published requisitions");
