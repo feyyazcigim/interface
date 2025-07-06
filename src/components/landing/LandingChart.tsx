@@ -383,19 +383,15 @@ export default function LandingChart() {
             pointerEvents: "none",
           }}
         >
-          <AnimatePresence>
-            {currentTxType && (
-              <TxFloater
-                key={"floater"}
-                from={currentFarmer ? <FarmerProfile icon={currentFarmer.icon} bg={currentFarmer.bg} /> : null}
-                txType={currentTxType}
-                viewportWidth={viewportWidth}
-                x={x}
-                markerX={measurementX}
-                isFixed={false}
-              />
-            )}
-          </AnimatePresence>
+          <TxFloater
+            key={"floater"}
+            from={currentFarmer ? <FarmerProfile icon={currentFarmer.icon} bg={currentFarmer.bg} /> : null}
+            txType={currentTxType}
+            viewportWidth={viewportWidth}
+            x={x}
+            markerX={measurementX}
+            isFixed={false}
+          />
         </motion.div>
       </div>
     </div>
