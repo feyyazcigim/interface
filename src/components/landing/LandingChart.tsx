@@ -62,8 +62,6 @@ const stablePriceData: PricePoint[] = [
   { txType: "yield", value: 1.005, speed: 5 },
   { txType: "convert", value: 0.995, speed: 5 },
   { txType: "withdraw", value: 1.0004 },
-  { txType: "deposit", value: 0.9994 },
-  { txType: "convert", value: 1.0002 },
 ];
 
 // Combine unstablePriceData once, then stablePriceData repeated for seamless looping
@@ -156,6 +154,16 @@ function cubicBezier(p0: number, c1: number, c2: number, p1: number, t: number) 
   return mt ** 3 * p0 + 3 * mt ** 2 * t * c1 + 3 * mt * t ** 2 * c2 + t ** 3 * p1;
 }
 
+// Helper to get width of a price data segment
+function getSegmentWidth(data: PricePoint[], pointSpacing: number) {
+  let width = 0;
+  for (let i = 0; i < data.length; i++) {
+    const segSpeed = data[i].speed || 1;
+    width += pointSpacing / segSpeed;
+  }
+  return width;
+}
+
 export default function LandingChart() {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
   const containerRef = useRef<HTMLDivElement>(null);
@@ -184,6 +192,10 @@ export default function LandingChart() {
   }, []);
 
   const singlePatternWidth = stablePriceData.length * pointSpacing;
+
+  // Calculate compressed widths for unstable and stable segments
+  const unstablePhaseWidth = useMemo(() => getSegmentWidth(unstablePriceData, pointSpacing), []);
+  const stablePhaseWidth = useMemo(() => getSegmentWidth(stablePriceData, pointSpacing), []);
 
   // Memoize generateCompletePath result, only recalculating if pointSpacing or priceData changes
   const { path, beziers, transactionMarkers, totalWidth } = useMemo(() => generateCompletePath(pointSpacing), []);
@@ -224,13 +236,23 @@ export default function LandingChart() {
 
   // Use Bezier curve for indicator Y
   const currentY = useTransform(scrollOffset, (currentOffset) => {
-    const xVal = (measurementX + currentOffset) % totalWidth;
+    // Looping logic: after initial phase, loop only the stable segment
+    let xVal = measurementX + currentOffset;
+    if (xVal > unstablePhaseWidth) {
+      // Offset so the stable segment loops seamlessly
+      const stableOffset = (xVal - unstablePhaseWidth) % stablePhaseWidth;
+      xVal = unstablePhaseWidth + stableOffset;
+    }
     return getYOnBezierCurve(xVal);
   });
 
   // Get current price and txType at the 75% position
   const currentIndex = useTransform(scrollOffset, (currentOffset) => {
-    const xVal = (measurementX + currentOffset) % totalWidth;
+    let xVal = measurementX + currentOffset;
+    if (xVal > unstablePhaseWidth) {
+      const stableOffset = (xVal - unstablePhaseWidth) % stablePhaseWidth;
+      xVal = unstablePhaseWidth + stableOffset;
+    }
     // Find the closest point index by X
     let minDist = Infinity;
     let idx = 0;
@@ -259,16 +281,15 @@ export default function LandingChart() {
   // Use totalWidth for animation loop
   useEffect(() => {
     let controls: ReturnType<typeof animate> | null = null;
-    // Calculate speed in pixels per second
-    const pxPerSecond = scrollSpeed * 60; // scrollSpeed is in px/frame, 60fps
-    controls = animate(scrollOffset, measurementX, {
-      duration: measurementX / pxPerSecond,
+    const pxPerSecond = scrollSpeed * 60;
+    controls = animate(scrollOffset, unstablePhaseWidth, {
+      duration: unstablePhaseWidth / pxPerSecond,
       ease: "linear",
       delay: 5.5,
       onComplete: () => {
-        // Start infinite loop after initial phase, same px/sec speed
-        controls = animate(scrollOffset, totalWidth, {
-          duration: (totalWidth - measurementX) / pxPerSecond / 2,
+        // Loop only the stable segment
+        controls = animate(scrollOffset, unstablePhaseWidth + stablePhaseWidth, {
+          duration: stablePhaseWidth / pxPerSecond / 2,
           ease: "linear",
           repeat: Infinity,
           repeatType: "loop",
@@ -278,7 +299,7 @@ export default function LandingChart() {
     return () => {
       controls?.stop();
     };
-  }, [scrollOffset, measurementX, totalWidth]);
+  }, [scrollOffset, measurementX, unstablePhaseWidth, stablePhaseWidth]);
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full">
