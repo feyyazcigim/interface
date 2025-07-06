@@ -11,7 +11,8 @@ import { generateBatchSortDepositsCallData } from "@/lib/claim/depositUtils";
 import { TEMPERATURE_DECIMALS } from "@/state/protocol/field";
 import { getChainConstant } from "@/utils/chain";
 import { resolveChainId } from "@/utils/chain";
-import { FarmFromMode, MinimumViableBlock } from "@/utils/types";
+import { stringEq } from "@/utils/string";
+import { AdvancedPipeCall, FarmFromMode, MinimumViableBlock } from "@/utils/types";
 import { Token, TokenDepositData } from "@/utils/types";
 import { MayArray } from "@/utils/types.generic";
 import { arrayify } from "@/utils/utils";
@@ -290,143 +291,138 @@ export interface SowBlueprintData {
 // Decode Sow Tractor Data
 // ────────────────────────────────────────────────────────────────────────────────
 
+type DecodedSowParams = {
+  sowParams: {
+    sourceTokenIndices: readonly number[];
+    sowAmounts: {
+      totalAmountToSow: bigint;
+      minAmountToSowPerSeason: bigint;
+      maxAmountToSowPerSeason: bigint;
+    };
+    minTemp: bigint;
+    maxPodlineLength: bigint;
+    maxGrownStalkPerBdv: bigint;
+    runBlocksAfterSunrise: bigint;
+    slippageRatio: bigint;
+  };
+  opParams: {
+    whitelistedOperators: readonly `0x${string}`[];
+    tipAddress: `0x${string}`;
+    operatorTipAmount: bigint;
+  };
+};
+
+function shallowCheckIsSowParams(data: unknown): data is DecodedSowParams {
+  return typeof data === "object" && data !== null && "sowParams" in data && "opParams" in data;
+}
+
+function handleDecodeSowV0BlueprintFromAdvancedPipe(
+  calls: readonly AdvancedPipeCall[] | undefined,
+): SowBlueprintData | null {
+  if (!calls?.length) {
+    console.debug("[Tractor/handleDecodeBlueprintFromAdvancedPipe] No calls provided. Returning null.");
+    return null;
+  }
+
+  const sowBlueprintData = calls[0].callData;
+
+  try {
+    const sowDecoded = decodeFunctionData({
+      abi: sowBlueprintv0ABI,
+      data: sowBlueprintData,
+    });
+
+    const params = sowDecoded.args?.[0];
+
+    if (!shallowCheckIsSowParams(params)) {
+      console.debug("[Tractor/handleDecodeBlueprintFromAdvancedPipe] Invalid sow params. Returning null.");
+      return null;
+    }
+
+    return {
+      sourceTokenIndices: params.sowParams.sourceTokenIndices,
+      sowAmounts: {
+        totalAmountToSow: params.sowParams.sowAmounts.totalAmountToSow,
+        totalAmountToSowAsString: TokenValue.fromBlockchain(params.sowParams.sowAmounts.totalAmountToSow, 6).toHuman(),
+        minAmountToSowPerSeason: params.sowParams.sowAmounts.minAmountToSowPerSeason,
+        minAmountToSowPerSeasonAsString: TokenValue.fromBlockchain(
+          params.sowParams.sowAmounts.minAmountToSowPerSeason,
+          6,
+        ).toHuman(),
+        maxAmountToSowPerSeason: params.sowParams.sowAmounts.maxAmountToSowPerSeason,
+        maxAmountToSowPerSeasonAsString: TokenValue.fromBlockchain(
+          params.sowParams.sowAmounts.maxAmountToSowPerSeason,
+          6,
+        ).toHuman(),
+      },
+      minTemp: params.sowParams.minTemp,
+      minTempAsString: TokenValue.fromBlockchain(params.sowParams.minTemp, 6).toHuman(),
+      maxPodlineLength: params.sowParams.maxPodlineLength,
+      maxPodlineLengthAsString: TokenValue.fromBlockchain(params.sowParams.maxPodlineLength, 6).toHuman(),
+      maxGrownStalkPerBdv: params.sowParams.maxGrownStalkPerBdv,
+      maxGrownStalkPerBdvAsString: TokenValue.fromBlockchain(params.sowParams.maxGrownStalkPerBdv, 6).toHuman(),
+      runBlocksAfterSunrise: params.sowParams.runBlocksAfterSunrise,
+      runBlocksAfterSunriseAsString: params.sowParams.runBlocksAfterSunrise.toString(),
+      slippageRatio: params.sowParams.slippageRatio,
+      slippageRatioAsString: TokenValue.fromBlockchain(params.sowParams.slippageRatio, 18).toHuman(),
+      operatorParams: {
+        whitelistedOperators: params.opParams.whitelistedOperators,
+        tipAddress: params.opParams.tipAddress,
+        operatorTipAmount: params.opParams.operatorTipAmount,
+        operatorTipAmountAsString: TokenValue.fromBlockchain(params.opParams.operatorTipAmount, 6).toHuman(),
+      },
+      fromMode: FarmFromMode.INTERNAL,
+    };
+  } catch (error) {
+    console.error("Failed to decode sowBlueprintv0 data:", error);
+  }
+
+  return null;
+}
+
 /**
  * Decodes sow data from encoded function call
  */
 export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintData | null {
   try {
-    // console.debug("Decoding data:", encodedData);
-    let sowBlueprintData: `0x${string}` | null = null;
+    // Step 1: Attempt to decode.
+    const calls = decodeFunctionData({
+      abi: beanstalkAbi,
+      data: encodedData,
+    });
 
-    // Step 1: Try to decode as advancedFarm call first
-    try {
-      const advancedFarmDecoded = decodeFunctionData({
-        abi: beanstalkAbi,
-        data: encodedData,
-      });
-
-      // console.debug("Advanced Farm decoded:", advancedFarmDecoded);
-
-      if (advancedFarmDecoded.functionName === "advancedFarm" && advancedFarmDecoded.args[0]) {
-        const farmCalls = advancedFarmDecoded.args[0] as { callData: `0x${string}`; clipboard: `0x${string}` }[];
-
-        if (farmCalls.length > 0) {
-          // Step 2: Try to decode the inner call as advancedPipe
-          try {
-            const pipeCallData = farmCalls[0].callData;
-            const advancedPipeDecoded = decodeFunctionData({
-              abi: beanstalkAbi,
-              data: pipeCallData,
-            });
-
-            if (advancedPipeDecoded.functionName === "advancedPipe" && advancedPipeDecoded.args[0]) {
-              const pipeCalls = advancedPipeDecoded.args[0] as {
-                target: `0x${string}`;
-                callData: `0x${string}`;
-                clipboard: `0x${string}`;
-              }[];
-
-              if (pipeCalls.length > 0) {
-                // Step 3: Get the sowBlueprintv0 call data
-                sowBlueprintData = pipeCalls[0].callData;
-                // console.debug("Found sowBlueprintData in advancedPipe:", sowBlueprintData);
-
-                // Try to decode the sowBlueprintv0 data directly
-                try {
-                  const sowDecoded = decodeFunctionData({
-                    abi: sowBlueprintv0ABI,
-                    data: sowBlueprintData,
-                  });
-                  // console.debug("Sow Blueprint decoded:", sowDecoded);
-
-                  if (sowDecoded.args && typeof sowDecoded.args[0] === "object" && sowDecoded.args[0] !== null) {
-                    const params = sowDecoded.args[0] as {
-                      sowParams: {
-                        sourceTokenIndices: readonly number[];
-                        sowAmounts: {
-                          totalAmountToSow: bigint;
-                          minAmountToSowPerSeason: bigint;
-                          maxAmountToSowPerSeason: bigint;
-                        };
-                        minTemp: bigint;
-                        maxPodlineLength: bigint;
-                        maxGrownStalkPerBdv: bigint;
-                        runBlocksAfterSunrise: bigint;
-                        slippageRatio: bigint;
-                      };
-                      opParams: {
-                        whitelistedOperators: readonly `0x${string}`[];
-                        tipAddress: `0x${string}`;
-                        operatorTipAmount: bigint;
-                      };
-                    };
-
-                    return {
-                      sourceTokenIndices: params.sowParams.sourceTokenIndices,
-                      sowAmounts: {
-                        totalAmountToSow: params.sowParams.sowAmounts.totalAmountToSow,
-                        totalAmountToSowAsString: TokenValue.fromBlockchain(
-                          params.sowParams.sowAmounts.totalAmountToSow,
-                          6,
-                        ).toHuman(),
-                        minAmountToSowPerSeason: params.sowParams.sowAmounts.minAmountToSowPerSeason,
-                        minAmountToSowPerSeasonAsString: TokenValue.fromBlockchain(
-                          params.sowParams.sowAmounts.minAmountToSowPerSeason,
-                          6,
-                        ).toHuman(),
-                        maxAmountToSowPerSeason: params.sowParams.sowAmounts.maxAmountToSowPerSeason,
-                        maxAmountToSowPerSeasonAsString: TokenValue.fromBlockchain(
-                          params.sowParams.sowAmounts.maxAmountToSowPerSeason,
-                          6,
-                        ).toHuman(),
-                      },
-                      minTemp: params.sowParams.minTemp,
-                      minTempAsString: TokenValue.fromBlockchain(params.sowParams.minTemp, 6).toHuman(),
-                      maxPodlineLength: params.sowParams.maxPodlineLength,
-                      maxPodlineLengthAsString: TokenValue.fromBlockchain(
-                        params.sowParams.maxPodlineLength,
-                        6,
-                      ).toHuman(),
-                      maxGrownStalkPerBdv: params.sowParams.maxGrownStalkPerBdv,
-                      maxGrownStalkPerBdvAsString: TokenValue.fromBlockchain(
-                        params.sowParams.maxGrownStalkPerBdv,
-                        6,
-                      ).toHuman(),
-                      runBlocksAfterSunrise: params.sowParams.runBlocksAfterSunrise,
-                      runBlocksAfterSunriseAsString: params.sowParams.runBlocksAfterSunrise.toString(),
-                      slippageRatio: params.sowParams.slippageRatio,
-                      slippageRatioAsString: TokenValue.fromBlockchain(params.sowParams.slippageRatio, 18).toHuman(),
-                      operatorParams: {
-                        whitelistedOperators: params.opParams.whitelistedOperators,
-                        tipAddress: params.opParams.tipAddress,
-                        operatorTipAmount: params.opParams.operatorTipAmount,
-                        operatorTipAmountAsString: TokenValue.fromBlockchain(
-                          params.opParams.operatorTipAmount,
-                          6,
-                        ).toHuman(),
-                      },
-                      fromMode: FarmFromMode.INTERNAL,
-                    };
-                  }
-                } catch (error) {
-                  console.error("Failed to decode sowBlueprintv0 data:", error);
-                }
-              }
-            }
-          } catch (error) {
-            console.debug("Failed to decode as advancedPipe:", error);
-          }
-        }
-      }
-    } catch (error) {
-      console.debug("Failed to decode as advancedFarm:", error);
+    // Step 2: If the encoded data is an advancedPipe call, return the decoded data.
+    if (calls.functionName === "advancedPipe" && calls.args?.[0]) {
+      return handleDecodeSowV0BlueprintFromAdvancedPipe(calls.args[0]);
     }
+    // Step 3: If the encoded data is an advancedFarm call, decode again.
+    else if (calls.functionName === "advancedFarm" && calls.args[0]) {
+      const farmCalls = calls.args[0];
 
-    return null;
+      if (!farmCalls.length) {
+        console.debug("[Tractor/decodeSowTractorData] No farm calls provided. Returning null.");
+        return null;
+      }
+      // Step 4: Try to decode the inner call as advancedPipe
+      try {
+        const pipeCallData = farmCalls[0].callData;
+        const advancedPipeDecoded = decodeFunctionData({
+          abi: beanstalkAbi,
+          data: pipeCallData,
+        });
+
+        if (advancedPipeDecoded.functionName === "advancedPipe" && advancedPipeDecoded.args?.[0]) {
+          return handleDecodeSowV0BlueprintFromAdvancedPipe(advancedPipeDecoded.args[0]);
+        }
+      } catch (error) {
+        console.debug("Failed to decode as advancedPipe:", error);
+      }
+    }
   } catch (error) {
-    console.error("Failed to decode sow data:", error);
-    return null;
+    console.error("Failed to decode SowV0 Tractor Data:", error);
   }
+  // If we get here, we didn't find a valid sow blueprint.
+  return null;
 }
 
 /**
@@ -551,7 +547,7 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
         if (!requisition?.blueprint || !requisition?.blueprintHash || !requisition?.signature) return null;
 
         // Only filter by address if one is provided
-        if (address && requisition.blueprint.publisher.toLowerCase() !== address.toLowerCase()) {
+        if (stringEq(requisition.blueprint.publisher, address)) {
           return null;
         }
 
@@ -563,8 +559,8 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
         }
 
         // Filter by requisition type if provided
-        if (!!requisitionsSet?.size) {
-          if (!requisitionsSet.has(eventRequisitionType)) return null;
+        if (requisitionsSet?.size && !requisitionsSet.has(eventRequisitionType)) {
+          return null;
         }
 
         // Calculate timestamp if we have the latest block info
@@ -604,11 +600,21 @@ export async function loadPublishedRequisitions(
 
   try {
     const data = await fetchTractorEvents(publicClient, protocolAddress, fromBlock);
+    console.log({
+      args: {
+        requisitionType,
+        fromBlock,
+        latestBlock,
+      },
+      data,
+    });
     const selectRequisitionType = getSelectRequisitionType(requisitionType, address);
-    return selectRequisitionType({
+    const selected = selectRequisitionType({
       latestBlock: { number: latestBlock?.number ?? 0n, timestamp: latestBlock?.timestamp ?? 0n },
       data,
     });
+    console.log("selected", selected);
+    return selected;
   } catch (error) {
     console.error("Error loading published requisitions:", error);
     throw new Error("Failed to load published requisitions");
@@ -982,8 +988,6 @@ export async function loadOrderbookData(
     activeApiEntries?.map((order) => order.requisition.blueprintHash.toLowerCase()) ?? [],
   );
 
-  console.debug("[TRACTOR/loadOrderbookData] knownBlueprintHashes:", knownBlueprintHashes);
-
   const fromBlock =
     lookbackBlocks && latestBlock?.number ? latestBlock.number - lookbackBlocks : TRACTOR_DEPLOYMENT_BLOCK;
 
@@ -1011,6 +1015,8 @@ export async function loadOrderbookData(
       }),
       loadPublishedRequisitions(address, protocolAddress, publicClient, latestBlock, "sowBlueprintv0", fromBlock),
     ]);
+
+    console.log("requisitions", requisitions);
 
     if (podIndexResult && harvestableIndexResult) {
       // Pod line is podIndex - harvestableIndex
