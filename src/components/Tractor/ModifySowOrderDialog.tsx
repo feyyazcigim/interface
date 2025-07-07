@@ -445,7 +445,7 @@ function ModifyTractorOrderReviewDialog({
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 backdrop-blur-[2px] bg-white/50" />
         <DialogContent className="max-w-[40rem]">
-          <Col className="gap-3 pb-3">
+          <Col className="gap-3">
             <DialogHeader className="">
               <DialogTitle>
                 <div className="pinto-body font-medium text-pinto-secondary">Review Order Modification</div>
