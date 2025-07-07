@@ -36,7 +36,7 @@ export default function useSowOrderV0Calculations() {
   const swapResults = useMemo(() => {
     const results = new Map<string, TokenValue>();
     lpTokens.forEach((token, i) => {
-      const buyAmount = swapQuotes[i]?.data?.buyAmount;
+      const buyAmount = swapQuotes?.data?.[i]?.buyAmount;
       if (buyAmount) {
         results.set(token.address, buyAmount);
       }
@@ -112,11 +112,15 @@ export default function useSowOrderV0Calculations() {
     return needsCombiningResult || needsSortingResult;
   }, [farmerDeposits, allTokensSorted]);
 
-  return {
-    tokenWithHighestValue,
-    swapResults,
-    priceData, // return price data for convenience
-    needsOptimization,
-    allTokensSorted,
-  };
+  return useMemo(
+    () => ({
+      tokenWithHighestValue,
+      swapResults,
+      priceData, // return price data for convenience
+      needsOptimization,
+      allTokensSorted,
+      isLoading: swapQuotes.isLoading,
+    }),
+    [allTokensSorted, needsOptimization, tokenWithHighestValue, swapResults, priceData, swapQuotes.isLoading],
+  );
 }

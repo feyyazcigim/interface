@@ -1,23 +1,23 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { Form } from "@/components/Form";
 import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
-import { sowOrderSchemaErrors, useSowOrderV0Form } from "@/components/Tractor/form/SowOrderV0Schema";
+import {
+  SowOrderV0FormSchema,
+  sowOrderSchemaErrors,
+  useSowOrderV0Form,
+} from "@/components/Tractor/form/SowOrderV0Schema";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useSowOrderV0Calculations from "@/hooks/tractor/useSowOrderV0Calculations";
-import {
-  Blueprint,
-  SowOrderTokenStrategy,
-  TractorTokenStrategy,
-  createBlueprint,
-  createSowTractorData,
-} from "@/lib/Tractor";
+import { Blueprint, TractorTokenStrategy, createBlueprint, createSowTractorData } from "@/lib/Tractor";
 import useTractorOperatorAverageTipPaid from "@/state/tractor/useTractorOperatorAverageTipPaid";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePodLine } from "@/state/useFieldData";
 import useTokenData from "@/state/useTokenData";
-import { formatter } from "@/utils/format";
+import { stringEq } from "@/utils/string";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import React from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { useAccount, usePublicClient } from "wagmi";
 import { Col, Row } from "./Container";
@@ -39,24 +39,25 @@ enum FormStep {
   OPERATOR_TIP = 2,
 }
 
-interface SowOrderDialogState {
-  formStep: FormStep;
-  isLoading: boolean;
-  showTokenSelectionDialog: boolean;
-  showReview: boolean;
-  didInitOperatorTip: boolean;
-  didInitTokenStrategy: boolean;
-}
+type OrderData = {
+  totalAmount: string;
+  temperature: string;
+  podLineLength: string;
+  minSoil: string;
+  operatorTip: string;
+  morningAuction: boolean;
+  tokenStrategy: TractorTokenStrategy["type"];
+  tokenSymbol: string | undefined;
+};
 
 export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }: SowOrderDialogProps) {
   // External hooks
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const protocolAddress = useProtocolAddress();
-  const podLine = usePodLine();
   const { whitelistedTokens } = useTokenData();
   const farmerSilo = useFarmerSilo();
-  const { data: averageTipPaid = 1, isLoading: isLoadingAverageTipPaid } = useTractorOperatorAverageTipPaid();
+  const { data: averageTipPaid = 1 } = useTractorOperatorAverageTipPaid();
 
   // Local state
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
@@ -67,8 +68,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const [isLoading, setIsLoading] = useState(false);
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
   const [showReview, setShowReview] = useState(false);
-  const [didInitOperatorTip, setDidInitOperatorTip] = useState(false);
-  const [didInitTokenStrategy, setDidInitTokenStrategy] = useState(false);
+  const [orderData, setOrderData] = useState<OrderData | undefined>(undefined);
 
   const farmerDeposits = farmerSilo.deposits;
 
@@ -77,36 +77,30 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const calculations = useSowOrderV0Calculations();
 
   // Initialize operator tip
+  const [didInitOperatorTip, setDidInitOperatorTip] = useState(false);
   useEffect(() => {
-    if (open && !didInitOperatorTip && !isLoadingAverageTipPaid) {
-      form.setValue("operatorTip", averageTipPaid.toFixed(2));
-      setDidInitOperatorTip(true);
-    } else if (!open) {
-      // Reset initialization flags when dialog closes
-      setDidInitOperatorTip(false);
-    }
+    if (didInitOperatorTip || averageTipPaid === 1) return;
+    form.setValue("operatorTip", averageTipPaid.toFixed(2));
+    setDidInitOperatorTip(true);
   }, [averageTipPaid, didInitOperatorTip, form.setValue]);
 
+  const { tokenWithHighestValue, isLoading: isCalculationsLoading } = calculations;
   // Initialize token strategy only once when dialog opens
+  const [didInitTokenStrategy, setDidInitTokenStrategy] = useState(false);
   useEffect(() => {
-    if (open && !didInitTokenStrategy) {
-      // Only auto-set if user hasn't made a selection and it's still the default
-      const currentStrategy = form.getValues("selectedTokenStrategy");
-      if (!currentStrategy || currentStrategy.type === "LOWEST_SEEDS") {
-        form.setValue("selectedTokenStrategy", calculations.tokenWithHighestValue);
-      }
-      setDidInitTokenStrategy(true);
-    } else if (!open) {
-      // Reset initialization flags when dialog closes
-      setDidInitTokenStrategy(false);
+    if (didInitTokenStrategy || isCalculationsLoading) return;
+    // Only auto-set if user hasn't made a selection and it's still the default
+    const currentStrategy = form.getValues("selectedTokenStrategy");
+    if (!currentStrategy || currentStrategy.type === "LOWEST_SEEDS") {
+      form.setValue("selectedTokenStrategy", calculations.tokenWithHighestValue);
     }
-  }, [open, calculations.tokenWithHighestValue, form, didInitTokenStrategy]);
+    setDidInitTokenStrategy(true);
+    return;
+  }, [tokenWithHighestValue, isCalculationsLoading, form.setValue, didInitTokenStrategy]);
 
   const handleOpenTokenSelectionDialog = () => {
     setShowTokenSelectionDialog(true);
   };
-
-  const watchedValues = form.watch();
 
   // Main handlers
   const handleNext = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -135,16 +129,16 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
       const formData = form.getValues();
       const { data, operatorPasteInstrs, rawCall, depositOptimizationCalls } = await createSowTractorData({
-        totalAmountToSow: formData.totalAmount || "0",
-        temperature: formData.temperature?.replace("%", "") || "0",
-        minAmountPerSeason: formData.minSoil || "0",
-        maxAmountToSowPerSeason: formData.maxPerSeason || "0",
-        maxPodlineLength: formData.podLineLength || formatter.number(podLine).replace(/,/g, ""),
+        totalAmountToSow: formData.totalAmount,
+        temperature: formData.temperature,
+        minAmountPerSeason: formData.minSoil,
+        maxAmountToSowPerSeason: formData.maxPerSeason,
+        maxPodlineLength: formData.podLineLength,
         maxGrownStalkPerBdv: "10000000000000000",
         runBlocksAfterSunrise: formData.morningAuction ? "0" : "300",
-        operatorTip: formData.operatorTip || "0",
+        operatorTip: formData.operatorTip,
         whitelistedOperators: [],
-        tokenStrategy: formData.selectedTokenStrategy as SowOrderTokenStrategy,
+        tokenStrategy: formData.selectedTokenStrategy as TractorTokenStrategy,
         publicClient,
         farmerDeposits: farmerDeposits,
         userAddress: address,
@@ -156,6 +150,22 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         data,
         operatorPasteInstrs,
         maxNonce: TokenValue.MAX_UINT256.toBigInt(),
+      });
+
+      const tokenSymbol =
+        formData.selectedTokenStrategy?.type === "SPECIFIC_TOKEN"
+          ? whitelistedTokens.find((t) => stringEq(t.address, formData.selectedTokenStrategy?.address))?.symbol
+          : undefined;
+
+      setOrderData({
+        totalAmount: formData.totalAmount || "",
+        temperature: formData.temperature || "",
+        podLineLength: formData.podLineLength || "",
+        minSoil: formData.minSoil || "",
+        operatorTip: formData.operatorTip || "",
+        morningAuction: formData.morningAuction || false,
+        tokenStrategy: formData.selectedTokenStrategy.type,
+        tokenSymbol: tokenSymbol,
       });
 
       setBlueprint(newBlueprint);
@@ -184,6 +194,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   if (!open) return null;
 
   const missingFields = getMissingFields();
+
   const allFieldsValid = getAreAllFieldsValid();
 
   const isMissingFields = missingFields.length > 0;
@@ -305,40 +316,25 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
             </div>
           </div>
         </Col>
+        {/*
+         * Token Selection Dialog
+         */}
+        {showTokenSelectionDialog && (
+          <SowOrderV0TokenStrategyDialog
+            open={showTokenSelectionDialog}
+            onOpenChange={setShowTokenSelectionDialog}
+            farmerDeposits={farmerDeposits}
+            calculations={calculations}
+          />
+        )}
       </Form>
-      <TractorTokenStrategyDialog
-        open={showTokenSelectionDialog}
-        onOpenChange={(open) => setShowTokenSelectionDialog(open)}
-        onTokenStrategySelected={(tokenStrategy) => {
-          form.setValue("selectedTokenStrategy", tokenStrategy);
-          setShowTokenSelectionDialog(false);
-        }}
-        selectedTokenStrategy={watchedValues.selectedTokenStrategy as TractorTokenStrategy}
-        farmerDeposits={farmerDeposits}
-        {...calculations}
-      />
-
-      {/* Token Selection Dialog */}
-
-      {showReview && encodedData && operatorPasteInstructions && blueprint && (
+      {showReview && encodedData && operatorPasteInstructions && blueprint && orderData && (
         <ReviewTractorOrderDialog
           open={showReview}
           onOpenChange={(open) => setShowReview(open)}
           onSuccess={() => onOpenChange(false)}
           onOrderPublished={onOrderPublished}
-          orderData={{
-            totalAmount: watchedValues.totalAmount || "",
-            temperature: watchedValues.temperature || "",
-            podLineLength: watchedValues.podLineLength || "",
-            minSoil: watchedValues.minSoil || "",
-            operatorTip: watchedValues.operatorTip || "",
-            tokenStrategy: watchedValues.selectedTokenStrategy?.type || "LOWEST_SEEDS",
-            tokenSymbol:
-              watchedValues.selectedTokenStrategy?.type === "SPECIFIC_TOKEN"
-                ? whitelistedTokens.find((t) => t.address === watchedValues.selectedTokenStrategy?.address)?.symbol
-                : undefined,
-            morningAuction: watchedValues.morningAuction || false,
-          }}
+          orderData={orderData}
           encodedData={encodedData}
           operatorPasteInstrs={operatorPasteInstructions}
           blueprint={blueprint}
@@ -351,6 +347,43 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 }
 
 const errorsToShow = new Set<string>(Object.values(sowOrderSchemaErrors));
+
+const SowOrderV0TokenStrategyDialog = ({
+  open,
+  onOpenChange,
+  farmerDeposits,
+  calculations,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  farmerDeposits: ReturnType<typeof useFarmerSilo>["deposits"];
+  calculations: ReturnType<typeof useSowOrderV0Calculations>;
+}) => {
+  const ctx = useFormContext<SowOrderV0FormSchema>();
+
+  // Use useWatch instead of ctx.watch to only watch this specific field
+  const selectedTokenStrategy = useWatch({
+    control: ctx.control,
+    name: "selectedTokenStrategy",
+  });
+
+  // Memoize the callback to prevent recreating on every render
+  const handleTokenStrategySelected = (tokenStrategy: TractorTokenStrategy) => {
+    ctx.setValue("selectedTokenStrategy", tokenStrategy);
+    onOpenChange(false);
+  };
+
+  return (
+    <TractorTokenStrategyDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onTokenStrategySelected={handleTokenStrategySelected}
+      selectedTokenStrategy={selectedTokenStrategy as TractorTokenStrategy}
+      farmerDeposits={farmerDeposits}
+      {...calculations}
+    />
+  );
+};
 
 const FormErrors = ({ errors }: { errors: ReturnType<typeof useSowOrderV0Form>["form"]["formState"]["errors"] }) => {
   const deduplicate = () => {

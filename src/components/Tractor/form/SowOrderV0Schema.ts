@@ -1,3 +1,4 @@
+import { validateFormLte } from "@/utils/number";
 import { isValidAddress, postSanitizedSanitizedValue } from "@/utils/string";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback } from "react";
@@ -58,19 +59,19 @@ export const sowOrderDialogSchema = z
   })
   .superRefine((data, ctx) => {
     // Cross-field validation: minSoil <= maxPerSeason
-    if (!validateLte(data.minSoil, data.maxPerSeason, 6, 6)) {
+    if (!validateFormLte(data.minSoil, data.maxPerSeason, 6, 6)) {
       addCTXErrors(ctx, sowOrderSchemaErrors.minLteMax, ["minSoil", "maxPerSeason"]);
     }
   })
   .superRefine((data, ctx) => {
     // Cross-field validation: minSoil <= totalAmount
-    if (!validateLte(data.minSoil, data.totalAmount, 6, 6)) {
+    if (!validateFormLte(data.minSoil, data.totalAmount, 6, 6)) {
       addCTXErrors(ctx, sowOrderSchemaErrors.minLteTotal, ["minSoil", "totalAmount"]);
     }
   })
   .superRefine((data, ctx) => {
     // Cross-field validation: maxPerSeason <= totalAmount
-    if (!validateLte(data.maxPerSeason, data.totalAmount, 6, 6)) {
+    if (!validateFormLte(data.maxPerSeason, data.totalAmount, 6, 6)) {
       addCTXErrors(ctx, sowOrderSchemaErrors.maxLteTotal, ["maxPerSeason", "totalAmount"]);
     }
   });
@@ -89,20 +90,6 @@ export const defaultSowOrderDialogValues: Partial<SowOrderV0FormSchema> = {
   operatorTip: "1",
   selectedTokenStrategy: { type: "LOWEST_SEEDS" },
 };
-
-function validateLte(left: string, right: string, leftDecimals: number, rightDecimals: number) {
-  const leftSanitized = postSanitizedSanitizedValue(left, leftDecimals);
-  if (leftSanitized.nonAmount) {
-    return true;
-  }
-
-  const rightSanitized = postSanitizedSanitizedValue(right, rightDecimals);
-  if (rightSanitized.nonAmount) {
-    return true;
-  }
-
-  return leftSanitized.tv.lte(rightSanitized.tv);
-}
 
 export type SowOrderV0Form = {
   form: ReturnType<typeof useForm<SowOrderV0FormSchema>>;
@@ -127,7 +114,10 @@ export const useSowOrderV0Form = (): SowOrderV0Form => {
   );
 
   const getAreAllFieldsFilled = useCallback(() => {
-    return Object.values(form.getValues()).every(Boolean);
+    return Object.values(form.getValues()).every((v) => {
+      if (typeof v === "string") return Boolean(v.trim());
+      return true;
+    });
   }, [form.getValues]);
 
   const getAreAllFieldsValid = useCallback(() => {

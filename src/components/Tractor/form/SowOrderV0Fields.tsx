@@ -6,25 +6,26 @@ import { Input } from "@/components/ui/Input";
 import { MAIN_TOKEN } from "@/constants/tokens";
 import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import { usePodLine, useTemperature } from "@/state/useFieldData";
-import useTokenData from "@/state/useTokenData";
 import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
-import { sanitizeNumericInputValue } from "@/utils/string";
+import { postSanitizedSanitizedValue, sanitizeNumericInputValue, stringEq } from "@/utils/string";
 import { getTokenIndex } from "@/utils/token";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { SowOrderV0FormSchema } from "./SowOrderV0Schema";
 
 import { Prettify } from "@/utils/types.generic";
 import { createContext } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
+interface BaseIFormContextHandlers {
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => ReturnType<typeof sanitizeNumericInputValue>;
+  onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onFocus: (e: React.FocusEvent<HTMLInputElement>) => void;
+}
+
 export interface BaseIFormContext {
   ctx: ReturnType<typeof useFormContext<SowOrderV0FormSchema>>;
-  handlers: (name: keyof SowOrderV0FormSchema) => {
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
-    onFocus: (e: React.FocusEvent<HTMLInputElement>) => void;
-  };
+  handlers: (name: keyof SowOrderV0FormSchema) => BaseIFormContextHandlers;
 }
 
 const SowOrderV0CTX = createContext<Prettify<BaseIFormContext> | null>(null);
@@ -40,13 +41,13 @@ function SowOrderV0Fields({ children }: { children: React.ReactNode }) {
 
         if (cleaned.nonAmount) {
           ctx.setValue(name, cleaned.str, { shouldValidate: true });
-          return;
+        } else {
+          ctx.setValue(name, cleaned.str, { shouldValidate: true });
         }
-
-        ctx.setValue(name, cleaned.str, { shouldValidate: true });
+        return cleaned;
       };
     },
-    [ctx, mainToken.decimals],
+    [ctx.setValue, mainToken.decimals],
   );
 
   const handleNumericInputBlur = useCallback(
@@ -57,10 +58,11 @@ function SowOrderV0Fields({ children }: { children: React.ReactNode }) {
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         const joined = parts.join(".");
 
-        ctx.setValue(name, joined, { shouldValidate: true });
+        // only validate if the value is not empty
+        ctx.setValue(name, joined, { shouldValidate: cleanValue !== "" });
       };
     },
-    [ctx],
+    [ctx.setValue],
   );
 
   const handleNumericInputFocus = useCallback(
@@ -70,7 +72,7 @@ function SowOrderV0Fields({ children }: { children: React.ReactNode }) {
         ctx.setValue(name, cleanValue, { shouldValidate: false });
       };
     },
-    [ctx],
+    [ctx.setValue],
   );
 
   const handlers = useCallback(
@@ -82,7 +84,9 @@ function SowOrderV0Fields({ children }: { children: React.ReactNode }) {
     [handleNumericInputChange, handleNumericInputBlur, handleNumericInputFocus],
   );
 
-  return <SowOrderV0CTX.Provider value={{ ctx, handlers }}>{children}</SowOrderV0CTX.Provider>;
+  const contextValue = useMemo(() => ({ ctx, handlers }), [ctx, handlers]);
+
+  return <SowOrderV0CTX.Provider value={contextValue}>{children}</SowOrderV0CTX.Provider>;
 }
 
 const useSowV0Context = () => {
@@ -109,6 +113,22 @@ const MainTokenAdornment = () => {
 SowOrderV0Fields.TotalAmount = function TotalAmount() {
   const { ctx, handlers } = useSowV0Context();
 
+  const decimals = useChainConstant(MAIN_TOKEN).decimals;
+
+  const getHandlers = (): BaseIFormContextHandlers => {
+    const inputProps = handlers("totalAmount");
+
+    return {
+      ...inputProps,
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+        const cleaned = inputProps.onChange(e);
+        handleCrossValidate(ctx, cleaned, "minSoil", decimals, "gte");
+        handleCrossValidate(ctx, cleaned, "maxPerSeason", decimals, "lte");
+        return cleaned;
+      },
+    };
+  };
+
   return (
     <FormField
       control={ctx.control}
@@ -122,7 +142,7 @@ SowOrderV0Fields.TotalAmount = function TotalAmount() {
               placeholder="0.00"
               type="text"
               outlined
-              {...handlers("totalAmount")}
+              {...getHandlers()}
               isError={!!fieldState.error}
               endIcon={<MainTokenAdornment />}
             />
@@ -135,6 +155,21 @@ SowOrderV0Fields.TotalAmount = function TotalAmount() {
 
 SowOrderV0Fields.MinSoil = function MinSoil() {
   const { ctx, handlers } = useSowV0Context();
+  const decimals = useChainConstant(MAIN_TOKEN).decimals;
+
+  const getHandlers = (): BaseIFormContextHandlers => {
+    const inputProps = handlers("minSoil");
+
+    return {
+      ...inputProps,
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+        const cleaned = inputProps.onChange(e);
+        handleCrossValidate(ctx, cleaned, "maxPerSeason", decimals, "lte");
+        handleCrossValidate(ctx, cleaned, "totalAmount", decimals, "lte");
+        return cleaned;
+      },
+    };
+  };
 
   return (
     <FormField
@@ -150,7 +185,7 @@ SowOrderV0Fields.MinSoil = function MinSoil() {
                 placeholder="0.00"
                 type="text"
                 outlined
-                {...handlers("minSoil")}
+                {...getHandlers()}
                 isError={!!fieldState.error}
                 endIcon={<MainTokenAdornment />}
               />
@@ -165,6 +200,22 @@ SowOrderV0Fields.MinSoil = function MinSoil() {
 SowOrderV0Fields.MaxPerSeason = function MaxPerSeason() {
   const { ctx, handlers } = useSowV0Context();
 
+  const decimals = useChainConstant(MAIN_TOKEN).decimals;
+
+  const getHandlers = (): BaseIFormContextHandlers => {
+    const inputProps = handlers("maxPerSeason");
+
+    return {
+      ...inputProps,
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+        const cleaned = inputProps.onChange(e);
+        handleCrossValidate(ctx, cleaned, "minSoil", decimals, "gte");
+        handleCrossValidate(ctx, cleaned, "totalAmount", decimals, "lte");
+        return cleaned;
+      },
+    };
+  };
+
   return (
     <FormField
       control={ctx.control}
@@ -178,7 +229,7 @@ SowOrderV0Fields.MaxPerSeason = function MaxPerSeason() {
               placeholder="0.00"
               outlined
               type="text"
-              {...handlers("maxPerSeason")}
+              {...getHandlers()}
               isError={!!fieldState.error}
               endIcon={<MainTokenAdornment />}
             />
@@ -189,10 +240,54 @@ SowOrderV0Fields.MaxPerSeason = function MaxPerSeason() {
   );
 };
 
+/**
+ * 
+ * Handle cross validation between two fields.
+
+ * @param ctx - The form context.
+ * @param left - The left field value.
+ * @param rightName - The right field name.
+ * @param rightDecimals - The right field decimals.
+ * @param operation - The operation to perform (lte, gte).
+ * 
+ * @note There is somewhat some duplicated logic in the schema; however, because individual fields
+ * do not re-render when the other field changes, we need to handle cross validation manually.
+ * 
+ * This function will trigger the right field's validation if:
+ * 1. the condition is not met
+ * 2. OR if the right field has an error but the condition is valid.
+ */
+const handleCrossValidate = (
+  ctx: ReturnType<typeof useFormContext<SowOrderV0FormSchema>>,
+  left: ReturnType<typeof sanitizeNumericInputValue>,
+  rightName: keyof SowOrderV0FormSchema,
+  rightDecimals: number,
+  operation: "lte" | "gte",
+) => {
+  const value = ctx.getValues(rightName);
+
+  if (typeof value !== "string") {
+    throw new Error("Unexpected value type");
+  }
+
+  const rightValue = postSanitizedSanitizedValue(value, rightDecimals);
+
+  if (left.nonAmount || rightValue.nonAmount) {
+    return;
+  }
+
+  const valid = left.tv[operation]?.(rightValue.tv);
+
+  const rightError = ctx.formState.errors?.[rightName];
+
+  if (!valid || (valid && rightError)) {
+    ctx.trigger(rightName);
+  }
+};
+
 SowOrderV0Fields.TokenStrategy = function TokenStrategy(props: {
   openDialog: () => void;
 }) {
-  const { whitelistedTokens } = useTokenData();
   const { ctx } = useSowV0Context();
   const tokenMap = useTokenMap();
 
@@ -207,8 +302,7 @@ SowOrderV0Fields.TokenStrategy = function TokenStrategy(props: {
     } else if (strategy?.type === "LOWEST_PRICE") {
       return "Token with Best Price";
     } else if (strategy?.type === "SPECIFIC_TOKEN") {
-      const token = whitelistedTokens.find((t) => t.address === strategy.address);
-      return token?.symbol || "Select Token";
+      return selectedToken?.symbol || "Select Token";
     }
     return "Select Deposited Silo Token";
   };
@@ -286,6 +380,7 @@ SowOrderV0Fields.PodLineLength = function PodLineLength() {
 
   const handlePodLineSelect = useCallback(
     (increment: number) => {
+      // if the button is active, set the value to empty
       if (isButtonActive(increment)) {
         ctx.setValue("podLineLength", "");
         return;
@@ -293,12 +388,12 @@ SowOrderV0Fields.PodLineLength = function PodLineLength() {
 
       if (increment === 0) {
         const formattedValue = formatter.number(podLine);
-        ctx.setValue("podLineLength", formattedValue);
+        ctx.setValue("podLineLength", formattedValue, { shouldValidate: true });
       } else {
         const increase = podLine.mul(increment).div(100);
         const newValue = podLine.add(increase);
         const formattedValue = formatter.number(newValue);
-        ctx.setValue("podLineLength", formattedValue);
+        ctx.setValue("podLineLength", formattedValue, { shouldValidate: true });
       }
     },
     [ctx, podLine, isButtonActive],
@@ -361,7 +456,7 @@ const MorningAuctionButton = ({
           ? "bg-pinto-green-1 border border-pinto-green-4 text-pinto-green-4 hover:bg-pinto-green-1 hover:text-pinto-green-4 hover:border-pinto-green-4"
           : "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50"
       } flex-1`}
-      onClick={() => onChange(!value)}
+      onClick={() => onChange(value)}
       type="button"
     >
       {label}
@@ -404,7 +499,7 @@ const TIP_PRESET_LABELS: Record<ActiveTipButton, string> = {
 SowOrderV0Fields.OperatorTip = function OperatorTip({ averageTipPaid }: { averageTipPaid: number }) {
   const { ctx, handlers } = useSowV0Context();
 
-  const [activeTipButton, setActiveTipButton] = useState<ActiveTipButton | null>(null);
+  const [activeTipButton, setActiveTipButton] = useState<ActiveTipButton>("average");
 
   // Helper functions for UI
   const getTipValue = (type: ActiveTipButton) => {
@@ -493,26 +588,28 @@ SowOrderV0Fields.ExecutionsAndTip = function ExecutionsAndTip() {
 
   const mainToken = useChainConstant(MAIN_TOKEN);
 
-  const watched = ctx.watch(["totalAmount", "minSoil", "maxPerSeason", "operatorTip"]);
-  const watchedValues = {
-    totalAmount: watched[0],
-    minSoil: watched[1],
-    maxPerSeason: watched[2],
-    operatorTip: watched[3],
-  };
+  // Use selective watching instead of watching all fields
+  const [totalAmount, minSoil, maxPerSeason, operatorTip] = useWatch({
+    control: ctx.control,
+    name: ["totalAmount", "minSoil", "maxPerSeason", "operatorTip"],
+  }) as [string, string, string, string];
 
-  const getCleanedValues = () => {
+  const calculationFields = { totalAmount, minSoil, maxPerSeason, operatorTip };
+
+  // Memoize cleaned values calculation
+  const cleanedValues = useMemo(() => {
     return {
-      min: sanitizeNumericInputValue(watchedValues.minSoil || "", mainToken.decimals).tv,
-      max: sanitizeNumericInputValue(watchedValues.maxPerSeason || "", mainToken.decimals).tv,
-      total: sanitizeNumericInputValue(watchedValues.totalAmount || "", mainToken.decimals).tv,
+      min: sanitizeNumericInputValue(calculationFields.minSoil || "", mainToken.decimals).tv,
+      max: sanitizeNumericInputValue(calculationFields.maxPerSeason || "", mainToken.decimals).tv,
+      total: sanitizeNumericInputValue(calculationFields.totalAmount || "", mainToken.decimals).tv,
     };
-  };
+  }, [calculationFields.minSoil, calculationFields.maxPerSeason, calculationFields.totalAmount, mainToken.decimals]);
 
-  const calculateEstimatedExecutions = () => {
-    const { total, min, max } = getCleanedValues();
+  // Memoize estimated executions calculation
+  const estimatedExecutions = useMemo(() => {
+    const { total, min, max } = cleanedValues;
 
-    if (!watchedValues.totalAmount || !watchedValues.maxPerSeason) {
+    if (!calculationFields.totalAmount || !calculationFields.maxPerSeason) {
       return "~0";
     }
 
@@ -542,17 +639,18 @@ SowOrderV0Fields.ExecutionsAndTip = function ExecutionsAndTip() {
       console.error("Error calculating executions:", e);
       return "~0";
     }
-  };
+  }, [cleanedValues, calculationFields.totalAmount, calculationFields.maxPerSeason]);
 
-  const calculateEstimatedTotalTip = () => {
-    if (!watchedValues.operatorTip || !watchedValues.totalAmount || !watchedValues.maxPerSeason) {
+  // Memoize estimated total tip calculation
+  const estimatedTotalTip = useMemo(() => {
+    if (!calculationFields.operatorTip || !calculationFields.totalAmount || !calculationFields.maxPerSeason) {
       return "~0";
     }
 
-    const { total, min, max } = getCleanedValues();
+    const { total, min, max } = cleanedValues;
 
     try {
-      const tipValue = parseFloat(watchedValues.operatorTip);
+      const tipValue = parseFloat(calculationFields.operatorTip);
 
       if (total.eq(0) || max.eq(0) || Number.isNaN(tipValue)) {
         return "~0";
@@ -579,7 +677,13 @@ SowOrderV0Fields.ExecutionsAndTip = function ExecutionsAndTip() {
       console.error("Error calculating total tip:", e);
       return "~0";
     }
-  };
+  }, [
+    cleanedValues,
+    calculationFields.operatorTip,
+    calculationFields.totalAmount,
+    calculationFields.maxPerSeason,
+    calculationFields.minSoil,
+  ]);
 
   return (
     <>
@@ -587,12 +691,12 @@ SowOrderV0Fields.ExecutionsAndTip = function ExecutionsAndTip() {
       <div className="flex flex-col gap-2">
         <div className="flex justify-between">
           <div className="text-pinto-gray-4 text-base font-light">Estimated total number of executions</div>
-          <div className="text-black text-base font-light">{calculateEstimatedExecutions()}</div>
+          <div className="text-black text-base font-light">{estimatedExecutions}</div>
         </div>
         <div className="flex justify-between items-center">
           <div className="text-pinto-gray-4 text-base font-light">Estimated total tip</div>
           <div className="flex items-center text-black text-base font-light">
-            {calculateEstimatedTotalTip()}
+            {estimatedTotalTip}
             <IconImage src={mainToken.logoURI} alt="PINTO" size={5} className="rounded-full mx-1" />
             {mainToken.symbol}
           </div>

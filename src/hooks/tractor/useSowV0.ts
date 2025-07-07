@@ -7,12 +7,10 @@ import { useAccount } from "wagmi";
 import { useProtocolAddress } from "../pinto/useProtocolAddress";
 import useTransaction from "../useTransaction";
 
-export default function useSowV0({
-  depositOptimizationCalls,
+export default function useSowOrderV0({
   onSuccess,
   onOrderPublished,
 }: {
-  depositOptimizationCalls?: `0x${string}`[];
   onSuccess?: () => void;
   onOrderPublished?: () => void;
 }) {
@@ -22,6 +20,7 @@ export default function useSowV0({
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [blueprintHash, setBlueprintHash] = useState<`0x${string}` | null>(null);
   const [signedRequisitionData, setSignedRequisitionData] = useState<Requisition | null>(null);
+  const [depositOptimizationCalls, setDepositOptimizationCalls] = useState<`0x${string}`[]>([]);
 
   const signRequisition = useSignRequisition();
 
@@ -60,7 +59,11 @@ export default function useSowV0({
     }
   };
 
-  const handlePublishRequisition = async () => {
+  const handlePublishRequisition = async (before?: () => Promise<void>, after?: () => Promise<void>) => {
+    if (!address) {
+      throw new Error("Signer not found");
+    }
+
     const signature = signedRequisitionData?.signature;
     if (!signature) {
       toast.error("Please sign the blueprint first");
@@ -68,6 +71,8 @@ export default function useSowV0({
     }
 
     setSubmitting(true);
+
+    await before?.();
 
     try {
       // Check if we need to include deposit optimization calls
