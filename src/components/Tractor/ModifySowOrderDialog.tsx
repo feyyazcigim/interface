@@ -6,6 +6,7 @@ import { diamondABI } from "@/constants/abi/diamondABI";
 
 import { TokenValue } from "@/classes/TokenValue";
 import { Col, Row } from "@/components/Container";
+import { Form } from "@/components/Form";
 import TooltipSimple from "@/components/TooltipSimple";
 import { Button } from "@/components/ui/Button";
 import {
@@ -18,30 +19,29 @@ import {
   DialogTitle,
 } from "@/components/ui/Dialog";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import { useGetTractorTokenStrategyWithBlueprint } from "@/hooks/tractor/useGetTractorTokenStrategy";
+import useSignTractorBlueprint from "@/hooks/tractor/useSignTractorBlueprint";
 import useSowOrderV0Calculations from "@/hooks/tractor/useSowOrderV0Calculations";
 import useTransaction from "@/hooks/useTransaction";
-import { createBlueprint, createRequisition, useGetBlueprintHash, useSignRequisition } from "@/lib/Tractor/blueprint";
-import { Blueprint, TractorTokenStrategy } from "@/lib/Tractor/types";
-import { RequisitionEvent, createSowTractorData, getSowOrderTokenStrategy } from "@/lib/Tractor/utils";
+import { createRequisition, useGetBlueprintHash, useSignRequisition } from "@/lib/Tractor/blueprint";
+import { Blueprint, ExtendedTractorTokenStrategy, Requisition, TractorTokenStrategy } from "@/lib/Tractor/types";
+import { RequisitionEvent } from "@/lib/Tractor/utils";
 import useTractorOperatorAverageTipPaid from "@/state/tractor/useTractorOperatorAverageTipPaid";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
-import { usePodLine, useTemperature } from "@/state/useFieldData";
-import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { isValidAddress, stringEq } from "@/utils/string";
-import { isLocalhost } from "@/utils/utils";
+import { postSanitizedSanitizedValue, stringEq } from "@/utils/string";
+import { tokensEqual } from "@/utils/token";
+import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAtom } from "jotai";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { encodeFunctionData } from "viem";
-import { useAccount, usePublicClient, useWalletClient } from "wagmi";
-import { Form } from "../Form";
+import { useAccount, useWalletClient } from "wagmi";
 import TractorTokenStrategyDialog from "./TractorTokenStrategyDialog";
 import SowOrderV0Fields from "./form/SowOrderV0Fields";
-import { SowOrderV0FormSchema, useSowOrderV0Form } from "./form/SowOrderV0Schema";
+import { SowOrderV0FormSchema, useSowOrderV0Form, useSowOrderV0State } from "./form/SowOrderV0Schema";
 
 interface ModifyTractorOrderDialogProps {
   open: boolean;
@@ -51,17 +51,6 @@ interface ModifyTractorOrderDialogProps {
   // pass in as a prop to ensure data is loaded before the dialog is opened
   getStrategyProps: ReturnType<typeof useGetTractorTokenStrategyWithBlueprint>;
 }
-
-type OrderData = {
-  totalAmount: string;
-  temperature: string;
-  podLineLength: string;
-  minSoil: string;
-  operatorTip: string;
-  morningAuction: boolean;
-  tokenStrategy: TractorTokenStrategy["type"];
-  tokenSymbol: string | undefined;
-};
 
 function ModifySowV0Form({
   handleOpenTokenSelectionDialog,
@@ -101,21 +90,18 @@ export default function ModifyTractorOrderDialog({
   existingOrder,
   getStrategyProps,
 }: ModifyTractorOrderDialogProps) {
-  const podLine = usePodLine();
-  const currentTemperature = useTemperature();
-  const { address } = useAccount();
-  const protocolAddress = useProtocolAddress();
+  // Data Hooks
+  const farmerSilo = useFarmerSilo();
   const { data: averageTipValue = 1 } = useTractorOperatorAverageTipPaid();
-
-  // Use shared form hook
   const { form, getMissingFields, getAreAllFieldsValid, prefillValues } = useSowOrderV0Form();
-
-  // Use shared calculations hook
+  const { state, orderData, isLoading, handleCreateBlueprint } = useSowOrderV0State();
   const calculations = useSowOrderV0Calculations();
 
+  // Local State
+  const [showReview, setShowReview] = useState(false);
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
 
-  // Pre-fill form with existing order data
+  // Effects. Pre-fill form with existing order data
   const [didPrefill, setDidPrefill] = useState(false);
   useEffect(() => {
     if (didPrefill || getStrategyProps.isLoading || !existingOrder.decodedData) return;
@@ -138,34 +124,7 @@ export default function ModifyTractorOrderDialog({
     }
   }, [open, existingOrder, didPrefill, prefillValues]);
 
-  // State for dialog management
-  const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
-  const [encodedData, setEncodedData] = useState<`0x${string}` | null>(null);
-  const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showReview, setShowReview] = useState(false);
-  const [orderData, setOrderData] = useState<OrderData | undefined>(undefined);
-
-  const publicClient = usePublicClient();
-  const queryClient = useQueryClient();
-  const farmerSilo = useFarmerSilo();
-  const farmerDeposits = farmerSilo.deposits;
-
-  const { whitelistedTokens } = useTokenData();
-
-  // Transaction handling for the cancel + create flow
-  const { writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
-    successMessage: "Order modified successfully",
-    errorMessage: "Failed to modify order",
-    successCallback: () => {
-      queryClient.invalidateQueries();
-      onOpenChange(false);
-      if (onOrderModified) {
-        onOrderModified();
-      }
-    },
-  });
-
+  // Callbacks
   // Handle creating the modified order
   const handleNext = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -176,73 +135,14 @@ export default function ModifyTractorOrderDialog({
       return;
     }
 
-    try {
-      console.time("handleNext total");
-      setIsLoading(true);
-
-      if (!publicClient) {
-        throw new Error("No public client available");
-      }
-
-      if (!address) {
-        throw new Error("Please connect your wallet");
-      }
-
-      const formState = form.getValues();
-
-      const { data, operatorPasteInstrs, rawCall } = await createSowTractorData({
-        totalAmountToSow: formState.totalAmount || "0",
-        temperature: formState.temperature || "0",
-        minAmountPerSeason: formState.minSoil || "0",
-        maxAmountToSowPerSeason: formState.maxPerSeason || "0",
-        maxPodlineLength: formState.podLineLength || formatter.number(podLine).replace(/,/g, ""),
-        maxGrownStalkPerBdv: "10000000000000000",
-        runBlocksAfterSunrise: formState.morningAuction ? "0" : "300",
-        operatorTip: formState.operatorTip || "0",
-        whitelistedOperators: [],
-        tokenStrategy: formState.selectedTokenStrategy as TractorTokenStrategy,
-        publicClient,
-      });
-
-      const newBlueprint = createBlueprint({
-        publisher: address,
-        data,
-        operatorPasteInstrs,
-        maxNonce: TokenValue.MAX_UINT256.toBigInt(),
-      });
-
-      const tokenSymbol =
-        formState.selectedTokenStrategy?.type === "SPECIFIC_TOKEN"
-          ? whitelistedTokens.find((t) => stringEq(t.address, formState.selectedTokenStrategy?.address))?.symbol
-          : undefined;
-
-      setOrderData({
-        totalAmount: formState.totalAmount,
-        temperature: formState.temperature,
-        podLineLength: formState.podLineLength,
-        minSoil: formState.minSoil,
-        operatorTip: formState.operatorTip,
-        morningAuction: formState.morningAuction,
-        tokenStrategy: formState.selectedTokenStrategy.type,
-        tokenSymbol: tokenSymbol,
-      });
-
-      console.log({
-        newBlueprint,
-        rawCall,
-        operatorPasteInstrs,
-      });
-      setBlueprint(newBlueprint);
-      setEncodedData(rawCall);
-      setOperatorPasteInstructions(operatorPasteInstrs);
-      setShowReview(true);
-      console.timeEnd("handleNext total");
-    } catch (e) {
-      console.error("Error creating sow tractor data:", e);
-      toast.error("Failed to create order");
-    } finally {
-      setIsLoading(false);
-    }
+    await handleCreateBlueprint(form, undefined, {
+      onSuccess: () => {
+        setShowReview(true);
+      },
+      onFailure: () => {
+        toast.error(e instanceof Error ? e.message : "Failed to create order");
+      },
+    });
   };
 
   // Handle back button
@@ -251,6 +151,8 @@ export default function ModifyTractorOrderDialog({
   };
 
   if (!open) return null;
+
+  const farmerDeposits = farmerSilo.deposits;
 
   const missingFields = getMissingFields();
 
@@ -268,8 +170,12 @@ export default function ModifyTractorOrderDialog({
           <DialogContent className="max-w-[35rem] p-6 max-h-[80vh] overflow-y-auto">
             <Col className="gap-6">
               <DialogHeader>
-                <DialogTitle className="font-normal text-[1.25rem] tracking-normal">Modify Tractor Order</DialogTitle>
-                <DialogDescription className="pinto-sm-light text-pinto-light">
+                <DialogTitle>
+                  <div className="pinto-body font-medium text-pinto-secondary">
+                    🚜 Update Conditions for automated Sowing
+                  </div>
+                </DialogTitle>
+                <DialogDescription className="pinto-sm-light text-pinto-light pt-2">
                   <p>
                     Update your existing Tractor Order. The current order will be cancelled and a new one will be
                     created with your updated conditions.
@@ -277,18 +183,30 @@ export default function ModifyTractorOrderDialog({
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
+                <div className="h-[1px] w-full bg-pinto-gray-2" />
                 <div className="flex flex-col gap-6">
                   {/* Main Form */}
-                  <div className="flex flex-col gap-2">
-                    <div className="pinto-body font-medium text-pinto-secondary mb-4">
-                      🚜 Update Conditions for automated Sowing
+                  <SowOrderV0Fields>
+                    {/* I want to Sow up to */}
+                    <SowOrderV0Fields.TotalAmount />
+                    {/* Min and Max per Season - combined in a single row */}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-4">
+                        <SowOrderV0Fields.MinSoil />
+                        <SowOrderV0Fields.MaxPerSeason />
+                      </div>
                     </div>
-                    <div className="h-[1px] w-full bg-pinto-gray-2" />
-                  </div>
-                  <ModifySowV0Form
-                    handleOpenTokenSelectionDialog={() => setShowTokenSelectionDialog(true)}
-                    averageTipPaid={averageTipValue}
-                  />
+                    {/* Fund order using */}
+                    <SowOrderV0Fields.TokenStrategy openDialog={() => setShowTokenSelectionDialog(true)} />
+                    {/* Execute when Temperature is at least */}
+                    <SowOrderV0Fields.Temperature />
+                    {/* Execute when the length of the Pod Line is at most */}
+                    <SowOrderV0Fields.PodLineLength />
+                    {/* Execute during the Morning Auction */}
+                    <SowOrderV0Fields.MorningAuction />
+                    <SowOrderV0Fields.OperatorTip averageTipPaid={averageTipValue} />
+                    <SowOrderV0Fields.ExecutionsAndTip />
+                  </SowOrderV0Fields>
 
                   <Row className="gap-6">
                     <Button
@@ -355,22 +273,20 @@ export default function ModifyTractorOrderDialog({
           </DialogContent>
         </DialogPortal>
       </Dialog>
-
-      {showReview && encodedData && operatorPasteInstructions && blueprint && orderData && (
+      {showReview && state && orderData && (
         <ModifyTractorOrderReviewDialog
           open={showReview}
           onOpenChange={setShowReview}
           onSuccess={() => {
             onOpenChange(false);
-            if (onOrderModified) {
-              onOrderModified();
-            }
+            onOrderModified?.();
           }}
           existingOrder={existingOrder}
           orderData={orderData}
-          encodedData={encodedData}
-          operatorPasteInstrs={operatorPasteInstructions}
-          blueprint={blueprint}
+          encodedData={state.encodedData}
+          operatorPasteInstrs={state.operatorPasteInstructions}
+          blueprint={state.blueprint}
+          getStrategyProps={getStrategyProps}
         />
       )}
     </>
@@ -414,6 +330,8 @@ const SowOrderV0TokenStrategyDialog = ({
   );
 };
 
+type OrderData = NonNullable<NonNullable<ReturnType<typeof useSowOrderV0State>>["orderData"]>;
+
 // Create a specialized review dialog for modify operations
 interface ModifyTractorOrderReviewDialogProps {
   open: boolean;
@@ -424,6 +342,7 @@ interface ModifyTractorOrderReviewDialogProps {
   encodedData: `0x${string}`;
   operatorPasteInstrs: `0x${string}`[];
   blueprint: Blueprint;
+  getStrategyProps: ReturnType<typeof useGetTractorTokenStrategyWithBlueprint>;
 }
 
 function ModifyTractorOrderReviewDialog({
@@ -432,20 +351,20 @@ function ModifyTractorOrderReviewDialog({
   onSuccess,
   existingOrder,
   orderData,
-  encodedData,
-  operatorPasteInstrs,
+  getStrategyProps,
   blueprint,
 }: ModifyTractorOrderReviewDialogProps) {
   const { address } = useAccount();
   const protocolAddress = useProtocolAddress();
   const queryClient = useQueryClient();
-  const { data: walletClient } = useWalletClient();
-  const [isLoading, setIsLoading] = useState(false);
-  const [signedRequisitionData, setSignedRequisitionData] = useState<any>(null);
+
+  const valueDiffs = useMemo(
+    () => getDiffs(getMapping(existingOrder, orderData, getStrategyProps)),
+    [existingOrder, orderData, getStrategyProps],
+  );
 
   // Use the imported Tractor utilities
   const { data: blueprintHash } = useGetBlueprintHash(blueprint);
-  const signRequisition = useSignRequisition();
 
   // Transaction handling for the cancel + create flow
   const { writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
@@ -460,29 +379,15 @@ function ModifyTractorOrderReviewDialog({
     },
   });
 
-  const handleSignBlueprint = async () => {
-    if (!address) return;
+  const { signBlueprint, signedRequisition, isSigning } = useSignTractorBlueprint();
 
+  const handleSignBlueprint = async () => {
     if (!blueprintHash) {
       toast.error("Blueprint hash not ready yet, please try again in a moment");
       return;
     }
 
-    try {
-      setIsLoading(true);
-      // Create and sign the requisition using the hash
-      const requisition = createRequisition(blueprint, blueprintHash);
-      const signedRequisition = await signRequisition(requisition);
-
-      // Store the signed requisition data
-      setSignedRequisitionData(signedRequisition);
-      toast.success("Blueprint signed successfully");
-    } catch (error) {
-      console.error("Error signing blueprint:", error);
-      toast.error("Failed to sign blueprint");
-    } finally {
-      setIsLoading(false);
-    }
+    await signBlueprint(blueprint, blueprintHash);
   };
 
   const handleModifyOrder = async () => {
@@ -491,7 +396,7 @@ function ModifyTractorOrderReviewDialog({
       return;
     }
 
-    if (!signedRequisitionData?.signature) {
+    if (!signedRequisition?.signature) {
       toast.error("Please sign the blueprint first");
       return;
     }
@@ -512,7 +417,10 @@ function ModifyTractorOrderReviewDialog({
         encodeFunctionData({
           abi: diamondABI,
           functionName: "publishRequisition",
-          args: [signedRequisitionData],
+          args: [
+            // Type cast is okay here since we check signature above
+            signedRequisition as Required<Requisition>,
+          ],
         }),
       ];
 
@@ -536,71 +444,70 @@ function ModifyTractorOrderReviewDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 backdrop-blur-[2px] bg-white/50" />
-        <DialogContent className="max-w-[98rem] w-[95vw] sm:max-w-[600px] p-0 sm:p-0">
+        <DialogContent className="max-w-[40rem]">
           <Col className="gap-3 pb-3">
-            <DialogHeader>
-              <DialogTitle className="font-normal text-[1.25rem] tracking-normal px-6 pt-6">
-                Review Order Modification
+            <DialogHeader className="">
+              <DialogTitle>
+                <div className="pinto-body font-medium text-pinto-secondary">Review Order Modification</div>
               </DialogTitle>
-              <DialogDescription className="px-6 pinto-sm-light text-pinto-light">
-                <p>
+              <DialogDescription className="pinto-sm-light text-pinto-light pt-2">
+                <div>
                   Your existing Tractor Order will be cancelled and replaced with this new order. This happens in a
                   single transaction to ensure atomicity.
-                </p>
+                </div>
               </DialogDescription>
             </DialogHeader>
-
-            <div className="px-6">
+            <div>
               {/* Show a comparison of old vs new */}
+              {/* <h3 className="pinto-body mb-2 text-pinto-secondary">Order Changes</h3> */}
               <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <h3 className="font-medium mb-2">Order Changes</h3>
                 <div className="space-y-2 text-sm">
                   {/* Show differences between old and new order */}
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      Total Amount: {existingOrder.decodedData?.sowAmounts.totalAmountToSowAsString}{" "}
-                      {(existingOrder.decodedData?.sowAmounts.totalAmountToSowAsString?.replace(/,/g, "") || "") !==
-                        (orderData.totalAmount?.replace(/,/g, "") || "") && "→"}{" "}
-                      {(existingOrder.decodedData?.sowAmounts.totalAmountToSowAsString?.replace(/,/g, "") || "") !==
-                        (orderData.totalAmount?.replace(/,/g, "") || "") && `${orderData.totalAmount} Pinto`}
+                  {valueDiffs.length ? (
+                    <Col className="gap-2 pinto-sm-light">
+                      {valueDiffs.map(([key, value]) => {
+                        return <RenderValueDiff key={`sow-v0-diff-${key}`} {...value} />;
+                      })}
+                    </Col>
+                  ) : (
+                    <div className="pinto-body text-pinto-light text-center h-[2rem] flex items-center justify-center">
+                      No changes
                     </div>
-                    <div>
-                      Pod Line Length: {existingOrder.decodedData?.maxPodlineLengthAsString}{" "}
-                      {(existingOrder.decodedData?.maxPodlineLengthAsString?.replace(/,/g, "") || "") !==
-                        (orderData.podLineLength?.replace(/,/g, "") || "") && "→"}{" "}
-                      {(existingOrder.decodedData?.maxPodlineLengthAsString?.replace(/,/g, "") || "") !==
-                        (orderData.podLineLength?.replace(/,/g, "") || "") && `${orderData.podLineLength} Pods`}
-                    </div>
-                    <div>
-                      Temperature: {existingOrder.decodedData?.minTempAsString}%{" "}
-                      {(existingOrder.decodedData?.minTempAsString?.replace(/,/g, "") || "") !==
-                        (orderData.temperature?.replace(/,/g, "") || "") && "→"}{" "}
-                      {(existingOrder.decodedData?.minTempAsString?.replace(/,/g, "") || "") !==
-                        (orderData.temperature?.replace(/,/g, "") || "") && `${orderData.temperature}%`}
-                    </div>
-                    <div>
-                      Operator Tip: {existingOrder.decodedData?.operatorParams.operatorTipAmountAsString}{" "}
-                      {(existingOrder.decodedData?.operatorParams.operatorTipAmountAsString?.replace(/,/g, "") ||
-                        "") !== (orderData.operatorTip?.replace(/,/g, "") || "") && "→"}{" "}
-                      {(existingOrder.decodedData?.operatorParams.operatorTipAmountAsString?.replace(/,/g, "") ||
-                        "") !== (orderData.operatorTip?.replace(/,/g, "") || "") && `${orderData.operatorTip} Pinto`}
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
               {/* Action buttons */}
               <Row className="justify-between items-center">
-                <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 mr-2">
+                <Button
+                  variant="outline"
+                  size="xl"
+                  rounded="full"
+                  onClick={() => onOpenChange(false)}
+                  className="flex-1 mr-2"
+                >
                   Cancel
                 </Button>
-
-                {!signedRequisitionData ? (
-                  <Button variant="gradient" onClick={handleSignBlueprint} disabled={isLoading} className="flex-1 ml-2">
-                    {isLoading ? "Signing..." : "Sign New Order"}
+                {!signedRequisition ? (
+                  <Button
+                    variant="gradient"
+                    size="xl"
+                    rounded="full"
+                    onClick={handleSignBlueprint}
+                    disabled={isSigning || !valueDiffs.length}
+                    className="flex-1 ml-2"
+                  >
+                    {isSigning ? "Signing..." : "Sign New Order"}
                   </Button>
                 ) : (
-                  <Button variant="gradient" onClick={handleModifyOrder} disabled={submitting} className="flex-1 ml-2">
+                  <Button
+                    variant="gradient"
+                    size="xl"
+                    rounded="full"
+                    onClick={handleModifyOrder}
+                    disabled={submitting || !valueDiffs.length}
+                    className="flex-1 ml-2"
+                  >
                     {submitting ? "Modifying..." : "Modify Order"}
                   </Button>
                 )}
@@ -612,3 +519,174 @@ function ModifyTractorOrderReviewDialog({
     </Dialog>
   );
 }
+
+const RenderValueDiff = (props: ValueDiff<unknown>) => {
+  const { label, prev, curr } = props;
+
+  return (
+    <Row key={`diff-${label}`} className="justify-between items-center">
+      <div className="text-pinto-secondary">{label}</div>
+      {typeof prev === "string" ? (
+        <RenderStringDiff prev={prev} curr={curr as string} />
+      ) : prev instanceof TokenValue ? (
+        <RenderDiffTokenValue prev={prev} curr={curr as TokenValue} />
+      ) : prev && typeof prev === "object" && "type" in prev ? (
+        <RenderTokenStrategyDiff
+          prev={prev as ExtendedTractorTokenStrategy}
+          curr={curr as ExtendedTractorTokenStrategy}
+        />
+      ) : null}
+    </Row>
+  );
+};
+
+type RenderDiffProps<T> = Omit<ValueDiff<T>, "label">;
+
+const RenderDiffTokenValue = ({ prev, curr }: RenderDiffProps<TokenValue>) => {
+  return (
+    <Row className="gap-2">
+      <div className="text-pinto-light">{formatter.number(prev)}</div>
+      <ArrowRightIcon className="w-3 h-3" />
+      <div className="text-pinto-primary">{formatter.number(curr)}</div>
+    </Row>
+  );
+};
+
+const RenderStringDiff = ({ prev, curr }: RenderDiffProps<string>) => {
+  return (
+    <Row className="gap-2">
+      <div className="text-pinto-light">{prev}</div>
+      <ArrowRightIcon className="w-3 h-3" />
+      <div className="text-pinto-primary">{curr}</div>
+    </Row>
+  );
+};
+
+const RenderTokenStrategyDiff = ({ prev, curr }: RenderDiffProps<ExtendedTractorTokenStrategy>) => {
+  const getName = (strategy: ExtendedTractorTokenStrategy) => {
+    switch (true) {
+      case strategy.type === "SPECIFIC_TOKEN":
+        return strategy.token?.symbol ?? "Unknown Token";
+      case strategy.type === "LOWEST_PRICE":
+        return "Token with lowest price";
+      default:
+        return "Token with lowest Seeds";
+    }
+  };
+
+  return (
+    <Row className="gap-2">
+      <div className="text-pinto-light">{getName(prev)}</div>
+      <ArrowRightIcon className="w-3 h-3" />
+      <div className="text-pinto-primary">{getName(curr)}</div>
+    </Row>
+  );
+};
+
+const getMapping = (
+  requisition: RequisitionEvent,
+  orderData: OrderData,
+  getStrategyProps: ReturnType<typeof useGetTractorTokenStrategyWithBlueprint>,
+) => {
+  const existing = requisition.decodedData;
+
+  console.log("existing", existing);
+  if (!existing) return undefined;
+
+  return {
+    totalAmount: {
+      label: "Total Amount",
+      prev: postSanitizedSanitizedValue(existing.sowAmounts.totalAmountToSowAsString, 6).tv,
+      curr: postSanitizedSanitizedValue(orderData.totalAmount, 6).tv,
+    },
+    minSoil: {
+      label: "Min Per Season",
+      prev: postSanitizedSanitizedValue(existing.sowAmounts.minAmountToSowPerSeasonAsString, 6).tv,
+      curr: postSanitizedSanitizedValue(orderData.minSoil, 6).tv,
+    },
+    maxPerSeason: {
+      label: "Max Per Season",
+      prev: postSanitizedSanitizedValue(existing.sowAmounts.maxAmountToSowPerSeasonAsString, 6).tv,
+      curr: postSanitizedSanitizedValue(orderData.maxPerSeason, 6).tv,
+    },
+    temperature: {
+      label: "Min Temperature",
+      prev: postSanitizedSanitizedValue(existing.minTempAsString, 6).tv,
+      curr: postSanitizedSanitizedValue(orderData.temperature, 6).tv,
+    },
+    podLineLength: {
+      label: "Max PodLine Length",
+      prev: postSanitizedSanitizedValue(existing.maxPodlineLengthAsString, 6).tv,
+      curr: postSanitizedSanitizedValue(orderData.podLineLength, 6).tv,
+    },
+    morningAuction: {
+      label: "Morning Auction",
+      prev: existing.runBlocksAfterSunrise === 0n,
+      curr: orderData.morningAuction,
+    },
+    strategy: {
+      label: "Funding Source",
+      prev: getStrategyProps.getTokenStrategy(existing),
+      curr: {
+        type: orderData.tokenStrategy,
+        ...(orderData.tokenStrategy === "SPECIFIC_TOKEN"
+          ? {
+              address: orderData.token?.address,
+              token: orderData.token,
+            }
+          : {}),
+      } as TractorTokenStrategy,
+    },
+    operatorTip: {
+      label: "Operator Tip",
+      prev: postSanitizedSanitizedValue(existing.operatorParams.operatorTipAmountAsString, 6).tv,
+      curr: postSanitizedSanitizedValue(orderData.operatorTip, 6).tv,
+    },
+  };
+};
+
+type ValueDiff<T = unknown> = {
+  label: string;
+  prev: T;
+  curr: T;
+};
+
+const getDiffs = (mapping: ReturnType<typeof getMapping>) => {
+  const diffs: Record<string, ValueDiff> = {};
+
+  console.log("mapping", mapping);
+
+  for (const [key, { label, prev, curr }] of Object.entries(mapping ?? {})) {
+    if (prev instanceof TokenValue && curr instanceof TokenValue) {
+      if (!prev.eq(curr)) {
+        diffs[key] = {
+          label,
+          prev: prev,
+          curr: curr,
+        };
+      }
+    } else if (typeof prev === "boolean" && typeof curr === "boolean") {
+      if (prev !== curr) {
+        diffs[key] = {
+          label,
+          prev: prev ? "Yes" : "No",
+          curr: curr ? "Yes" : "No",
+        };
+      }
+    } else if (typeof prev === "object" && "type" in prev) {
+      const current = curr as ExtendedTractorTokenStrategy;
+      if (
+        prev.type !== current.type ||
+        (prev.type === "SPECIFIC_TOKEN" && current.type === "SPECIFIC_TOKEN" && !tokensEqual(prev.token, current.token))
+      ) {
+        diffs[key] = {
+          label,
+          prev: prev,
+          curr: current,
+        };
+      }
+    }
+  }
+
+  return Object.entries(diffs);
+};

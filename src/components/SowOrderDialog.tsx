@@ -193,7 +193,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                     </Col>
                   </Col>
                 )}
-                <FormErrors errors={form.formState.errors} />
+                <SowOrderV0FormErrors errors={form.formState.errors} />
                 <Row className="gap-6">
                   <Button
                     variant="outline"
@@ -269,7 +269,10 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           onOpenChange={(open) => setShowReview(open)}
           onSuccess={() => onOpenChange(false)}
           onOrderPublished={onOrderPublished}
-          orderData={orderData}
+          orderData={{
+            ...orderData,
+            tokenSymbol: orderData.token?.symbol,
+          }}
           encodedData={state.encodedData}
           operatorPasteInstrs={state.operatorPasteInstructions}
           blueprint={state.blueprint}
@@ -283,7 +286,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
 const errorsToShow = new Set<string>(Object.values(sowOrderSchemaErrors));
 
-const SowOrderV0TokenStrategyDialog = ({
+export const SowOrderV0TokenStrategyDialog = ({
   open,
   onOpenChange,
   farmerDeposits,
@@ -320,7 +323,9 @@ const SowOrderV0TokenStrategyDialog = ({
   );
 };
 
-const FormErrors = ({ errors }: { errors: ReturnType<typeof useSowOrderV0Form>["form"]["formState"]["errors"] }) => {
+const SowOrderV0FormErrors = ({
+  errors,
+}: { errors: ReturnType<typeof useSowOrderV0Form>["form"]["formState"]["errors"] }) => {
   const deduplicate = () => {
     const set = new Set<string>();
     for (const err of Object.values(errors)) {

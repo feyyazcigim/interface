@@ -2,6 +2,7 @@ import { diamondABI } from "@/constants/abi/diamondABI";
 import { defaultQuerySettingsNoRefetch } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { ExtendedTractorTokenStrategy, getSowOrderTokenStrategy } from "@/lib/Tractor";
+import { getTokenIndex } from "@/utils/token";
 import { useCallback } from "react";
 import { useReadContract } from "wagmi";
 import { useTokenMap } from "../pinto/useTokenMap";
@@ -56,7 +57,7 @@ const useGetTractorTokenStrategyWithBlueprint = () => {
         return {
           address: wlStatuses[index]?.token,
           type: "SPECIFIC_TOKEN",
-          token: tokenMap[index] ?? undefined,
+          token: tokenMap[getTokenIndex(wlStatuses[index]?.token)] ?? undefined,
         };
       }
 

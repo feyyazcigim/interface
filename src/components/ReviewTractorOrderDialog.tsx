@@ -98,7 +98,7 @@ export default function ReviewTractorOrderDialog({
   const protocolAddress = useProtocolAddress();
   const navigate = useNavigate();
 
-  const { writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
+  const { writeWithEstimateGas, submitting, isConfirming, setSubmitting } = useTransaction({
     successMessage: "Order published successfully",
     errorMessage: "Failed to publish order",
     successCallback: () => {
@@ -139,6 +139,7 @@ export default function ReviewTractorOrderDialog({
     }
 
     try {
+      setSubmitting(true);
       // Check if we need to include deposit optimization calls
       if (depositOptimizationCalls && depositOptimizationCalls.length > 0) {
         console.debug(`Publishing requisition with ${depositOptimizationCalls.length} deposit optimization calls`);
@@ -192,6 +193,8 @@ export default function ReviewTractorOrderDialog({
       }
     } catch (error) {
       console.error("Error publishing requisition:", error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -357,11 +360,11 @@ export default function ReviewTractorOrderDialog({
                         <div className="flex items-center gap-1">
                           <CornerBottomLeftIcon className="text-gray-300 ml-4" />
                           <span className="font-light text-[#9C9C9C]">
-                            Withdraw Deposited Tokens from the Silo with the{" "}
+                            Withdraw Deposited Tokens from the Silo with{" "}
                             {orderData.tokenStrategy === "LOWEST_SEEDS"
-                              ? "Lowest Seeds"
+                              ? "with the Lowest Seeds"
                               : orderData.tokenStrategy === "LOWEST_PRICE"
-                                ? "Best Price"
+                                ? "with the Best Price"
                                 : orderData.tokenSymbol || "Selected Token"}
                           </span>
                         </div>
@@ -692,9 +695,9 @@ export default function ReviewTractorOrderDialog({
 
                   <SmartSubmitButton
                     variant="gradient"
-                    disabled={submitting || !signedRequisitionData}
+                    disabled={submitting || isConfirming || !signedRequisitionData}
                     submitFunction={handlePublishRequisition}
-                    submitButtonText={submitting ? "Publishing..." : "Publish Order"}
+                    submitButtonText={submitting || isConfirming ? "Publishing..." : "Publish Order"}
                     className="w-min"
                     style={!signedRequisitionData ? { opacity: 0.15 } : undefined}
                   />

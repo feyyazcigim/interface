@@ -165,6 +165,7 @@ export type SowV0FormOrderData = {
   temperature: string;
   podLineLength: string;
   minSoil: string;
+  maxPerSeason: string;
   operatorTip: string;
   morningAuction: boolean;
   tokenStrategy: TractorTokenStrategy["type"];
@@ -241,13 +242,14 @@ export const useSowOrderV0State = () => {
 
         setOrderData({
           totalAmount: formData.totalAmount || "",
+          minSoil: formData.minSoil || "",
+          maxPerSeason: formData.maxPerSeason || "",
           temperature: formData.temperature || "",
           podLineLength: formData.podLineLength || "",
-          minSoil: formData.minSoil || "",
-          operatorTip: formData.operatorTip || "",
           morningAuction: formData.morningAuction || false,
           tokenStrategy: formData.selectedTokenStrategy.type,
           token: tokenInstance,
+          operatorTip: formData.operatorTip || "",
         });
 
         setState({
