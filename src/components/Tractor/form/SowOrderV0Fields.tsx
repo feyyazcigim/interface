@@ -10,29 +10,19 @@ import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
 import { postSanitizedSanitizedValue, sanitizeNumericInputValue, stringEq } from "@/utils/string";
 import { getTokenIndex } from "@/utils/token";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SowOrderV0FormSchema } from "./SowOrderV0Schema";
 
 import { Col, Row } from "@/components/Container";
 import { Label } from "@/components/ui/Label";
-import { Prettify } from "@/utils/types.generic";
 import { cn } from "@/utils/utils";
-import { createContext } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
-import { ClassNameValue } from "tailwind-merge";
 
 interface BaseIFormContextHandlers {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => ReturnType<typeof sanitizeNumericInputValue>;
   onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
   onFocus: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
-
-export interface BaseIFormContext {
-  ctx: ReturnType<typeof useFormContext<SowOrderV0FormSchema>>;
-  handlers: (name: keyof SowOrderV0FormSchema) => BaseIFormContextHandlers;
-}
-
-const SowOrderV0CTX = createContext<Prettify<BaseIFormContext> | null>(null);
 
 const useSharedInputHandlers = (
   ctx: ReturnType<typeof useFormContext<SowOrderV0FormSchema>>,

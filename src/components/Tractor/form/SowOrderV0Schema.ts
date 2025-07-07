@@ -3,7 +3,6 @@ import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import { Blueprint, TractorTokenStrategy, createBlueprint, createSowTractorData } from "@/lib/Tractor";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
-import useTokenData from "@/state/useTokenData";
 import { validateFormLte } from "@/utils/number";
 import { isValidAddress, postSanitizedSanitizedValue } from "@/utils/string";
 import { getTokenIndex } from "@/utils/token";
