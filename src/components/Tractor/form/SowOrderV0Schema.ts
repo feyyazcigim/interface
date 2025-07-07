@@ -127,8 +127,8 @@ export const useSowOrderV0Form = (): SowOrderV0Form => {
   );
 
   const getAreAllFieldsFilled = useCallback(() => {
-    return Object.values(form.formState.dirtyFields).every((value) => value);
-  }, [form.formState.dirtyFields]);
+    return Object.values(form.getValues()).every(Boolean);
+  }, [form.getValues]);
 
   const getAreAllFieldsValid = useCallback(() => {
     return Object.values(form.formState.errors).every((value) => !value) && getAreAllFieldsFilled();

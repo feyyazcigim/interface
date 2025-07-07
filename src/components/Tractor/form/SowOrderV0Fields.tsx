@@ -268,15 +268,21 @@ SowOrderV0Fields.PodLineLength = function PodLineLength() {
 
   const value = useWatch({ control: ctx.control, name: "podLineLength" });
 
-  const calculatePodLineValue = (increment: number) => {
-    const increase = podLine.mul(increment).div(100);
-    const newValue = podLine.add(increase);
-    return formatter.number(newValue);
-  };
+  const calculatePodLineValue = useCallback(
+    (increment: number) => {
+      const increase = podLine.mul(increment).div(100);
+      const newValue = podLine.add(increase);
+      return formatter.number(newValue);
+    },
+    [podLine.toBigInt()],
+  );
 
-  const isButtonActive = (increment: number) => {
-    return value === calculatePodLineValue(increment);
-  };
+  const isButtonActive = useCallback(
+    (increment: number) => {
+      return value === calculatePodLineValue(increment);
+    },
+    [value],
+  );
 
   const handlePodLineSelect = useCallback(
     (increment: number) => {
@@ -288,13 +294,11 @@ SowOrderV0Fields.PodLineLength = function PodLineLength() {
       if (increment === 0) {
         const formattedValue = formatter.number(podLine);
         ctx.setValue("podLineLength", formattedValue);
-        // setState((prev) => ({ ...prev, rawPodLineLength: formattedValue.replace(/,/g, "") }));
       } else {
         const increase = podLine.mul(increment).div(100);
         const newValue = podLine.add(increase);
         const formattedValue = formatter.number(newValue);
         ctx.setValue("podLineLength", formattedValue);
-        // setState((prev) => ({ ...prev, rawPodLineLength: formattedValue.replace(/,/g, "") }));
       }
     },
     [ctx, podLine, isButtonActive],

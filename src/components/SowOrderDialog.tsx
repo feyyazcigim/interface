@@ -1,3 +1,4 @@
+import { TokenValue } from "@/classes/TokenValue";
 import { Form } from "@/components/Form";
 import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
 import { sowOrderSchemaErrors, useSowOrderV0Form } from "@/components/Tractor/form/SowOrderV0Schema";
@@ -62,51 +63,47 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const [encodedData, setEncodedData] = useState<`0x${string}` | null>(null);
   const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
   const [depositOptimizationCalls, setDepositOptimizationCalls] = useState<`0x${string}`[] | undefined>(undefined);
+  const [formStep, setFormStep] = useState(FormStep.MAIN_FORM);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
+  const [showReview, setShowReview] = useState(false);
+  const [didInitOperatorTip, setDidInitOperatorTip] = useState(false);
+  const [didInitTokenStrategy, setDidInitTokenStrategy] = useState(false);
 
   const farmerDeposits = farmerSilo.deposits;
 
+  // Form state
   const { form, getMissingFields, getAreAllFieldsValid } = useSowOrderV0Form();
   const calculations = useSowOrderV0Calculations();
 
-  // Local state
-  const [state, setState] = useState<SowOrderDialogState>({
-    formStep: FormStep.MAIN_FORM,
-    isLoading: false,
-    showTokenSelectionDialog: false,
-    showReview: false,
-    didInitOperatorTip: false,
-    didInitTokenStrategy: false,
-  });
-
   // Initialize operator tip
   useEffect(() => {
-    if (!state.didInitOperatorTip && !isLoadingAverageTipPaid) {
+    if (open && !didInitOperatorTip && !isLoadingAverageTipPaid) {
       form.setValue("operatorTip", averageTipPaid.toFixed(2));
-      setState((prev) => ({ ...prev, didInitOperatorTip: true }));
+      setDidInitOperatorTip(true);
+    } else if (!open) {
+      // Reset initialization flags when dialog closes
+      setDidInitOperatorTip(false);
     }
-  }, [averageTipPaid, state.didInitOperatorTip, form.setValue]);
+  }, [averageTipPaid, didInitOperatorTip, form.setValue]);
 
   // Initialize token strategy only once when dialog opens
   useEffect(() => {
-    if (open && !state.didInitTokenStrategy) {
+    if (open && !didInitTokenStrategy) {
       // Only auto-set if user hasn't made a selection and it's still the default
       const currentStrategy = form.getValues("selectedTokenStrategy");
       if (!currentStrategy || currentStrategy.type === "LOWEST_SEEDS") {
         form.setValue("selectedTokenStrategy", calculations.tokenWithHighestValue);
       }
-      setState((prev) => ({ ...prev, didInitTokenStrategy: true }));
+      setDidInitTokenStrategy(true);
     } else if (!open) {
       // Reset initialization flags when dialog closes
-      setState((prev) => ({
-        ...prev,
-        didInitTokenStrategy: false,
-        didInitOperatorTip: false,
-      }));
+      setDidInitTokenStrategy(false);
     }
-  }, [open, calculations.tokenWithHighestValue, form, state.didInitTokenStrategy]);
+  }, [open, calculations.tokenWithHighestValue, form, didInitTokenStrategy]);
 
   const handleOpenTokenSelectionDialog = () => {
-    setState((prev) => ({ ...prev, showTokenSelectionDialog: true }));
+    setShowTokenSelectionDialog(true);
   };
 
   const watchedValues = form.watch();
@@ -115,22 +112,25 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
   const handleNext = async (e: React.MouseEvent<HTMLButtonElement>) => {
     // prevent default to avoid form submission
     e.preventDefault();
-    if (state.formStep === FormStep.MAIN_FORM) {
+
+    if (formStep === FormStep.MAIN_FORM) {
       const isValid = await form.trigger();
       if (isValid) {
-        setState((prev) => ({ ...prev, formStep: FormStep.OPERATOR_TIP }));
+        setFormStep(FormStep.OPERATOR_TIP);
       }
       return;
     }
 
     // Second step - submit form
     try {
-      setState((prev) => ({ ...prev, isLoading: true }));
+      setIsLoading(true);
 
       if (!publicClient) {
-        toast.error("No public client available");
-        setState((prev) => ({ ...prev, isLoading: false }));
-        return;
+        throw new Error("No public client available");
+      }
+
+      if (!address) {
+        throw new Error("Signer not found");
       }
 
       const formData = form.getValues();
@@ -151,37 +151,31 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         protocolAddress: protocolAddress,
       });
 
-      if (!address) {
-        toast.error("Please connect your wallet");
-        setState((prev) => ({ ...prev, isLoading: false }));
-        return;
-      }
-
-      const UINT256_MAX = BigInt(2) ** BigInt(256) - BigInt(1);
       const newBlueprint = createBlueprint({
         publisher: address,
         data,
         operatorPasteInstrs,
-        maxNonce: UINT256_MAX,
+        maxNonce: TokenValue.MAX_UINT256.toBigInt(),
       });
 
       setBlueprint(newBlueprint);
       setEncodedData(rawCall);
       setOperatorPasteInstructions(operatorPasteInstrs);
       setDepositOptimizationCalls(depositOptimizationCalls);
-      setState((prev) => ({ ...prev, showReview: true, isLoading: false }));
+      setShowReview(true);
     } catch (e) {
       console.error("Error creating sow tractor data:", e);
-      toast.error("Failed to create order");
-      setState((prev) => ({ ...prev, isLoading: false }));
+      toast.error(e instanceof Error ? e.message : "Failed to create order");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleBack = (e: React.MouseEvent<HTMLButtonElement>) => {
     // prevent default to avoid form submission
     e.preventDefault();
-    if (state.formStep === FormStep.OPERATOR_TIP) {
-      setState((prev) => ({ ...prev, formStep: FormStep.MAIN_FORM }));
+    if (formStep === FormStep.OPERATOR_TIP) {
+      setFormStep(FormStep.MAIN_FORM);
     } else {
       onOpenChange(false);
     }
@@ -194,11 +188,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
   const isMissingFields = missingFields.length > 0;
 
-  const isStep1 = state.formStep === FormStep.MAIN_FORM;
+  const isStep1 = formStep === FormStep.MAIN_FORM;
 
-  const nextDisabled = (state.isLoading || isMissingFields || !allFieldsValid) && isStep1;
-
-  console.log("form values", watchedValues);
+  const nextDisabled = (isLoading || isMissingFields || !allFieldsValid) && isStep1;
 
   return (
     <>
@@ -208,7 +200,7 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
             <div className="flex flex-col gap-6">
               {/* Form Fields */}
               <div className="flex flex-col gap-6">
-                {state.formStep === FormStep.MAIN_FORM ? (
+                {formStep === FormStep.MAIN_FORM ? (
                   // Step 1 - Main Form
                   <Col className="gap-6 pinto-sm-light text-pinto-light">
                     {/* Title and separator */}
@@ -290,17 +282,17 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         size="xlargest"
                         rounded="full"
                         className={`w-full ${
-                          state.isLoading ? "bg-pinto-gray-2 text-pinto-light" : "bg-pinto-green-4 text-white"
+                          isLoading ? "bg-pinto-gray-2 text-pinto-light" : "bg-pinto-green-4 text-white"
                         }`}
                         disabled={nextDisabled}
                         onClick={handleNext}
                         type="button"
                       >
-                        {state.isLoading ? (
+                        {isLoading ? (
                           <div className="flex items-center gap-2">
                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
                           </div>
-                        ) : state.formStep === FormStep.MAIN_FORM ? (
+                        ) : formStep === FormStep.MAIN_FORM ? (
                           "Next"
                         ) : (
                           "Review"
@@ -315,11 +307,11 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
         </Col>
       </Form>
       <TractorTokenStrategyDialog
-        open={state.showTokenSelectionDialog}
-        onOpenChange={(open) => setState((prev) => ({ ...prev, showTokenSelectionDialog: open }))}
+        open={showTokenSelectionDialog}
+        onOpenChange={(open) => setShowTokenSelectionDialog(open)}
         onTokenStrategySelected={(tokenStrategy) => {
           form.setValue("selectedTokenStrategy", tokenStrategy);
-          setState((prev) => ({ ...prev, showTokenSelectionDialog: false }));
+          setShowTokenSelectionDialog(false);
         }}
         selectedTokenStrategy={watchedValues.selectedTokenStrategy as TractorTokenStrategy}
         farmerDeposits={farmerDeposits}
@@ -328,10 +320,10 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
 
       {/* Token Selection Dialog */}
 
-      {state.showReview && encodedData && operatorPasteInstructions && blueprint && (
+      {showReview && encodedData && operatorPasteInstructions && blueprint && (
         <ReviewTractorOrderDialog
-          open={state.showReview}
-          onOpenChange={(open) => setState((prev) => ({ ...prev, showReview: open }))}
+          open={showReview}
+          onOpenChange={(open) => setShowReview(open)}
           onSuccess={() => onOpenChange(false)}
           onOrderPublished={onOrderPublished}
           orderData={{
