@@ -233,7 +233,7 @@ function Field() {
             </Button>
           )}
           {showInfos && <Separator />}
-          {/* <MorningPanel />
+          <MorningPanel />
           <FieldStats />
           <FieldCharts show={showInfos} />
           {showInfos && (
@@ -254,8 +254,7 @@ function Field() {
                 <Link to="/explorer/field">View Data</Link>
               </Button>
             </div>
-          )} */}
-
+          )}
           {showInfos && (
             <>
               <div className="flex flex-row justify-between items-center overflow-x-auto scrollbar-none">
