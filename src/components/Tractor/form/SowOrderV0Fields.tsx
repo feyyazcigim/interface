@@ -13,9 +13,13 @@ import { getTokenIndex } from "@/utils/token";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { SowOrderV0FormSchema } from "./SowOrderV0Schema";
 
+import { Col, Row } from "@/components/Container";
+import { Label } from "@/components/ui/Label";
 import { Prettify } from "@/utils/types.generic";
+import { cn } from "@/utils/utils";
 import { createContext } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
+import { ClassNameValue } from "tailwind-merge";
 
 interface BaseIFormContextHandlers {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => ReturnType<typeof sanitizeNumericInputValue>;
@@ -30,74 +34,57 @@ export interface BaseIFormContext {
 
 const SowOrderV0CTX = createContext<Prettify<BaseIFormContext> | null>(null);
 
-function SowOrderV0Fields({ children }: { children: React.ReactNode }) {
-  const ctx = useFormContext<SowOrderV0FormSchema>();
+const useSharedInputHandlers = (
+  ctx: ReturnType<typeof useFormContext<SowOrderV0FormSchema>>,
+  name: Exclude<keyof SowOrderV0FormSchema, "selectedTokenStrategy" | "morningAuction">,
+) => {
   const mainToken = useChainConstant(MAIN_TOKEN);
 
   const handleNumericInputChange = useCallback(
-    (name: keyof SowOrderV0FormSchema) => {
-      return (e: React.ChangeEvent<HTMLInputElement>) => {
-        const cleaned = sanitizeNumericInputValue(e.target.value, mainToken.decimals);
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const cleaned = sanitizeNumericInputValue(e.target.value, mainToken.decimals);
 
-        if (cleaned.nonAmount) {
-          ctx.setValue(name, cleaned.str, { shouldValidate: true });
-        } else {
-          ctx.setValue(name, cleaned.str, { shouldValidate: true });
-        }
-        return cleaned;
-      };
+      if (cleaned.nonAmount) {
+        ctx.setValue(name, cleaned.str, { shouldValidate: true });
+      } else {
+        ctx.setValue(name, cleaned.str, { shouldValidate: true });
+      }
+      return cleaned;
     },
-    [ctx.setValue, mainToken.decimals],
+    [ctx.setValue, mainToken.decimals, name],
   );
 
   const handleNumericInputBlur = useCallback(
-    (name: keyof SowOrderV0FormSchema) => {
-      return (e: React.FocusEvent<HTMLInputElement>) => {
-        const cleanValue = e.target.value.replace(/,/g, "");
-        const parts = cleanValue.split(".");
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        const joined = parts.join(".");
+    (e: React.FocusEvent<HTMLInputElement>) => {
+      const cleanValue = e.target.value.replace(/,/g, "");
+      const parts = cleanValue.split(".");
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      const joined = parts.join(".");
 
-        // only validate if the value is not empty
-        ctx.setValue(name, joined, { shouldValidate: cleanValue !== "" });
-      };
+      // only validate if the value is not empty
+      ctx.setValue(name, joined, { shouldValidate: cleanValue !== "" });
     },
-    [ctx.setValue],
+    [ctx.setValue, name],
   );
 
   const handleNumericInputFocus = useCallback(
-    (name: keyof SowOrderV0FormSchema) => {
-      return (e: React.FocusEvent<HTMLInputElement>) => {
-        const cleanValue = e.target.value.replace(/,/g, "");
-        ctx.setValue(name, cleanValue, { shouldValidate: false });
-      };
+    (e: React.FocusEvent<HTMLInputElement>) => {
+      const cleanValue = e.target.value.replace(/,/g, "");
+      ctx.setValue(name, cleanValue, { shouldValidate: false });
     },
-    [ctx.setValue],
+    [ctx.setValue, name],
   );
 
-  const handlers = useCallback(
-    (name: keyof SowOrderV0FormSchema) => ({
-      onChange: handleNumericInputChange(name),
-      onBlur: handleNumericInputBlur(name),
-      onFocus: handleNumericInputFocus(name),
-    }),
-    [handleNumericInputChange, handleNumericInputBlur, handleNumericInputFocus],
-  );
-
-  const contextValue = useMemo(() => ({ ctx, handlers }), [ctx, handlers]);
-
-  return <SowOrderV0CTX.Provider value={contextValue}>{children}</SowOrderV0CTX.Provider>;
-}
-
-const useSowV0Context = () => {
-  const ctx = useContext(SowOrderV0CTX);
-
-  if (!ctx) {
-    throw new Error("useSowV0Context must be used within a SowOrderV0Fields component");
-  }
-
-  return ctx;
+  return {
+    onChange: handleNumericInputChange,
+    onBlur: handleNumericInputBlur,
+    onFocus: handleNumericInputFocus,
+  };
 };
+
+function SowOrderV0Fields({ children }: { children: React.ReactNode }) {
+  return children;
+}
 
 const MainTokenAdornment = () => {
   const mainToken = useChainConstant(MAIN_TOKEN);
@@ -105,23 +92,22 @@ const MainTokenAdornment = () => {
   return (
     <div className="flex items-center gap-2 px-4 bg-white">
       <IconImage src={mainToken.logoURI} alt="PINTO" size={6} className="rounded-full" />
-      <span className="text-black">{mainToken.symbol}</span>
+      <span className="text-black pinto-sm-light">{mainToken.symbol}</span>
     </div>
   );
 };
 
 SowOrderV0Fields.TotalAmount = function TotalAmount() {
-  const { ctx, handlers } = useSowV0Context();
+  const ctx = useFormContext<SowOrderV0FormSchema>();
+  const handlers = useSharedInputHandlers(ctx, "totalAmount");
 
   const decimals = useChainConstant(MAIN_TOKEN).decimals;
 
   const getHandlers = (): BaseIFormContextHandlers => {
-    const inputProps = handlers("totalAmount");
-
     return {
-      ...inputProps,
+      ...handlers,
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-        const cleaned = inputProps.onChange(e);
+        const cleaned = handlers.onChange(e);
         handleCrossValidate(ctx, cleaned, "minSoil", decimals, "gte");
         handleCrossValidate(ctx, cleaned, "maxPerSeason", decimals, "lte");
         return cleaned;
@@ -154,16 +140,15 @@ SowOrderV0Fields.TotalAmount = function TotalAmount() {
 };
 
 SowOrderV0Fields.MinSoil = function MinSoil() {
-  const { ctx, handlers } = useSowV0Context();
+  const ctx = useFormContext<SowOrderV0FormSchema>();
+  const handlers = useSharedInputHandlers(ctx, "minSoil");
   const decimals = useChainConstant(MAIN_TOKEN).decimals;
 
   const getHandlers = (): BaseIFormContextHandlers => {
-    const inputProps = handlers("minSoil");
-
     return {
-      ...inputProps,
+      ...handlers,
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-        const cleaned = inputProps.onChange(e);
+        const cleaned = handlers.onChange(e);
         handleCrossValidate(ctx, cleaned, "maxPerSeason", decimals, "lte");
         handleCrossValidate(ctx, cleaned, "totalAmount", decimals, "lte");
         return cleaned;
@@ -198,17 +183,16 @@ SowOrderV0Fields.MinSoil = function MinSoil() {
 };
 
 SowOrderV0Fields.MaxPerSeason = function MaxPerSeason() {
-  const { ctx, handlers } = useSowV0Context();
+  const ctx = useFormContext<SowOrderV0FormSchema>();
+  const handlers = useSharedInputHandlers(ctx, "maxPerSeason");
 
   const decimals = useChainConstant(MAIN_TOKEN).decimals;
 
   const getHandlers = (): BaseIFormContextHandlers => {
-    const inputProps = handlers("maxPerSeason");
-
     return {
-      ...inputProps,
+      ...handlers,
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-        const cleaned = inputProps.onChange(e);
+        const cleaned = handlers.onChange(e);
         handleCrossValidate(ctx, cleaned, "minSoil", decimals, "gte");
         handleCrossValidate(ctx, cleaned, "totalAmount", decimals, "lte");
         return cleaned;
@@ -285,10 +269,12 @@ const handleCrossValidate = (
   }
 };
 
-SowOrderV0Fields.TokenStrategy = function TokenStrategy(props: {
+SowOrderV0Fields.TokenStrategy = function TokenStrategy({
+  openDialog,
+}: {
   openDialog: () => void;
 }) {
-  const { ctx } = useSowV0Context();
+  const ctx = useFormContext<SowOrderV0FormSchema>();
   const tokenMap = useTokenMap();
 
   const strategy = useWatch({ control: ctx.control, name: "selectedTokenStrategy" });
@@ -310,8 +296,8 @@ SowOrderV0Fields.TokenStrategy = function TokenStrategy(props: {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-between items-center">
-        <div>Fund order using</div>
-        <Button variant="outline-gray-shadow" size="xl" rounded="full" onClick={props.openDialog}>
+        <Label variant="form">Fund order using</Label>
+        <Button variant="outline-gray-shadow" size="xl" rounded="full" onClick={openDialog}>
           <div className="flex items-center gap-2">
             {selectedToken && <IconImage src={selectedToken.logoURI} alt="token" size={6} className="rounded-full" />}
             <div className="pinto-body-light">{getSelectedTokenDisplay()}</div>
@@ -324,7 +310,8 @@ SowOrderV0Fields.TokenStrategy = function TokenStrategy(props: {
 };
 
 SowOrderV0Fields.Temperature = function Temperature() {
-  const { ctx, handlers } = useSowV0Context();
+  const ctx = useFormContext<SowOrderV0FormSchema>();
+  const handlers = useSharedInputHandlers(ctx, "temperature");
 
   const currTemp = useTemperature();
   return (
@@ -342,7 +329,7 @@ SowOrderV0Fields.Temperature = function Temperature() {
                 placeholder={`${Math.max(10, Math.floor(currTemp.scaled?.toNumber() || 0) + 1)}`}
                 type="text"
                 outlined
-                {...handlers("temperature")}
+                {...handlers}
                 isError={!!fieldState.error}
                 endIcon={<div className="mr-2 text-pinto-primary pinto-body-bold">%</div>}
               />
@@ -356,7 +343,8 @@ SowOrderV0Fields.Temperature = function Temperature() {
 
 const POD_LINE_INCREMENTS = [5, 10, 25, 50, 100] as const;
 SowOrderV0Fields.PodLineLength = function PodLineLength() {
-  const { ctx, handlers } = useSowV0Context();
+  const ctx = useFormContext<SowOrderV0FormSchema>();
+  const handlers = useSharedInputHandlers(ctx, "podLineLength");
 
   const podLine = usePodLine();
 
@@ -413,7 +401,7 @@ SowOrderV0Fields.PodLineLength = function PodLineLength() {
               outlined
               type="text"
               isError={!!fieldState.error}
-              {...handlers("podLineLength")}
+              {...handlers}
             />
           </FormControl>
           <div className="flex justify-between gap-2 mt-1 w-full">
@@ -465,7 +453,7 @@ const MorningAuctionButton = ({
 };
 
 SowOrderV0Fields.MorningAuction = function MorningAuction() {
-  const { ctx } = useSowV0Context();
+  const ctx = useFormContext<SowOrderV0FormSchema>();
 
   return (
     <FormField
@@ -497,7 +485,8 @@ const TIP_PRESET_LABELS: Record<ActiveTipButton, string> = {
 };
 
 SowOrderV0Fields.OperatorTip = function OperatorTip({ averageTipPaid }: { averageTipPaid: number }) {
-  const { ctx, handlers } = useSowV0Context();
+  const ctx = useFormContext<SowOrderV0FormSchema>();
+  const handlers = useSharedInputHandlers(ctx, "operatorTip");
 
   const [activeTipButton, setActiveTipButton] = useState<ActiveTipButton>("average");
 
@@ -538,41 +527,45 @@ SowOrderV0Fields.OperatorTip = function OperatorTip({ averageTipPaid }: { averag
   }, [averageTipPaid, activeTipButton, ctx.setValue]);
 
   return (
-    <FormField
-      control={ctx.control}
-      name="operatorTip"
-      render={({ field, fieldState }) => (
-        <FormItem>
-          <FormControl>
-            <Input
-              {...field}
-              outlined
-              placeholder="0.00"
-              type="text"
-              {...handlers("operatorTip")}
-              isError={!!fieldState.error}
-              endIcon={<MainTokenAdornment />}
-            />
-          </FormControl>
-          <div className="flex justify-between gap-2 mb-2">
-            {TIP_PRESETS.map((type) => (
-              <Button
-                key={type}
-                variant="outline"
-                size="sm"
-                className={`${activeTipButtonStyles.base} ${
-                  activeTipButton === type ? activeTipButtonStyles.active : activeTipButtonStyles.inactive
-                }`}
-                onClick={() => handleTipButtonClick(type)}
-                type="button"
-              >
-                {TIP_PRESET_LABELS[type]}
-              </Button>
-            ))}
-          </div>
-        </FormItem>
-      )}
-    />
+    <Col className="gap-2">
+      <Label variant="form">I'm willing to pay someone</Label>
+      <FormField
+        control={ctx.control}
+        name="operatorTip"
+        render={({ field, fieldState }) => (
+          <FormItem>
+            <FormControl>
+              <Input
+                {...field}
+                outlined
+                placeholder="0.00"
+                type="text"
+                {...handlers}
+                isError={!!fieldState.error}
+                endIcon={<MainTokenAdornment />}
+              />
+            </FormControl>
+            <div className="flex justify-between gap-2 mb-2">
+              {TIP_PRESETS.map((type) => (
+                <Button
+                  key={type}
+                  variant="outline"
+                  size="sm"
+                  className={`${activeTipButtonStyles.base} ${
+                    activeTipButton === type ? activeTipButtonStyles.active : activeTipButtonStyles.inactive
+                  }`}
+                  onClick={() => handleTipButtonClick(type)}
+                  type="button"
+                >
+                  {TIP_PRESET_LABELS[type]}
+                </Button>
+              ))}
+            </div>
+          </FormItem>
+        )}
+      />
+      <div className="pinto-sm-light text-pinto-gray-4">each time they Sow part of my Tractor Order.</div>
+    </Col>
   );
 };
 
@@ -583,8 +576,8 @@ const activeTipButtonStyles = {
   inactive: "bg-white border-pinto-gray-2 text-pinto-gray-4 hover:bg-pinto-green-1/50 hover:border-pinto-green-2/50",
 } as const;
 
-SowOrderV0Fields.ExecutionsAndTip = function ExecutionsAndTip() {
-  const { ctx } = useSowV0Context();
+SowOrderV0Fields.ExecutionsAndTip = function ExecutionsAndTip({ className }: { className?: string }) {
+  const ctx = useFormContext<SowOrderV0FormSchema>();
 
   const mainToken = useChainConstant(MAIN_TOKEN);
 
@@ -686,23 +679,20 @@ SowOrderV0Fields.ExecutionsAndTip = function ExecutionsAndTip() {
   ]);
 
   return (
-    <>
-      <div className="text-pinto-gray-4 text-base font-light mb-32">each time they Sow part of my Tractor Order.</div>
-      <div className="flex flex-col gap-2">
-        <div className="flex justify-between">
-          <div className="text-pinto-gray-4 text-base font-light">Estimated total number of executions</div>
-          <div className="text-black text-base font-light">{estimatedExecutions}</div>
+    <Col className={cn("gap-2", className)}>
+      <Row className=" justify-between pinto-sm-light">
+        <div className="text-pinto-light">Estimated total number of executions</div>
+        <div className="text-pinto-primary">{estimatedExecutions}</div>
+      </Row>
+      <Row className="justify-between pinto-sm-light">
+        <div className="text-pinto-light">Estimated total tip</div>
+        <div className="flex items-center text-pinto-primary">
+          {estimatedTotalTip}
+          <IconImage src={mainToken.logoURI} alt="PINTO" size={5} className="rounded-full mx-1" />
+          {mainToken.symbol}
         </div>
-        <div className="flex justify-between items-center">
-          <div className="text-pinto-gray-4 text-base font-light">Estimated total tip</div>
-          <div className="flex items-center text-black text-base font-light">
-            {estimatedTotalTip}
-            <IconImage src={mainToken.logoURI} alt="PINTO" size={5} className="rounded-full mx-1" />
-            {mainToken.symbol}
-          </div>
-        </div>
-      </div>
-    </>
+      </Row>
+    </Col>
   );
 };
 
