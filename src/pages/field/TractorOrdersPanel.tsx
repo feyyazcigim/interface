@@ -3,6 +3,7 @@ import { TokenValue } from "@/classes/TokenValue";
 import { Col, Row } from "@/components/Container";
 import EmptyTable from "@/components/EmptyTable";
 import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
+import ModifyTractorOrderDialog from "@/components/Tractor/ModifySowOrderDialog";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import IconImage from "@/components/ui/IconImage";
@@ -10,6 +11,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import { useGetTractorTokenStrategyWithBlueprint } from "@/hooks/tractor/useGetTractorTokenStrategy";
 import useTransaction from "@/hooks/useTransaction";
 import { Blueprint } from "@/lib/Tractor/types";
 import {
@@ -26,7 +28,7 @@ import { formatter } from "@/utils/format";
 import { stringEq } from "@/utils/string";
 import { getTokenNameByIndex } from "@/utils/token";
 import { AdvancedFarmCall, AdvancedPipeCall } from "@/utils/types";
-import { CalendarIcon, ClockIcon, CornerBottomLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
+import { CalendarIcon, ClockIcon, CornerBottomLeftIcon, Cross1Icon, Pencil1Icon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -42,9 +44,11 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   const { address } = useAccount();
   const protocolAddress = useProtocolAddress();
 
+  const getStrategyProps = useGetTractorTokenStrategyWithBlueprint();
+
   // State for the dialog
   const [selectedOrder, setSelectedOrder] = useState<RequisitionEvent | null>(null);
-  const [showDialog, setShowDialog] = useState(false);
+  const [showDialog, setShowDialog] = useState<"review" | "modify" | undefined>(undefined);
   const [rawSowBlueprintCall, setRawSowBlueprintCall] = useState<`0x${string}` | null>(null);
 
   // Fetch executions for the farmer's orders
@@ -150,7 +154,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
       setRawSowBlueprintCall(null);
     }
 
-    setShowDialog(true);
+    setShowDialog("review");
   };
 
   if (!address) {
@@ -356,6 +360,18 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
               </Row>
               <Button
                 variant="ghost"
+                className="text-sm"
+                onClick={() => {
+                  setSelectedOrder(req);
+                  setShowDialog("modify");
+                }}
+                disabled={submitting || isConfirming}
+              >
+                <Pencil1Icon className="h-4 w-4" />
+                <span className="inline ml-1">Modify</span>
+              </Button>
+              <Button
+                variant="ghost"
                 className="text-sm text-pinto-red-2 hover:bg-pinto-red-1"
                 onClick={(e) => handleCancelBlueprint(req, e)}
                 disabled={submitting || isConfirming}
@@ -371,8 +387,8 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
       {/* Dialog for order details */}
       {selectedOrder?.decodedData && (
         <ReviewTractorOrderDialog
-          open={showDialog}
-          onOpenChange={setShowDialog}
+          open={showDialog === "review"}
+          onOpenChange={(val) => setShowDialog(val ? "review" : undefined)}
           orderData={{
             totalAmount: selectedOrder.decodedData.sowAmounts.totalAmountToSowAsString,
             temperature: selectedOrder.decodedData.minTempAsString,
@@ -388,6 +404,15 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
           executionHistory={(executions ?? []).filter((exec) =>
             stringEq(exec.blueprintHash, selectedOrder.requisition.blueprintHash),
           )}
+        />
+      )}
+
+      {selectedOrder?.decodedData && showDialog === "modify" && (
+        <ModifyTractorOrderDialog
+          open={showDialog === "modify"}
+          onOpenChange={(val) => setShowDialog(val ? "modify" : undefined)}
+          existingOrder={selectedOrder}
+          getStrategyProps={getStrategyProps}
         />
       )}
     </div>

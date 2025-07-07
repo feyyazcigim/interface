@@ -5,6 +5,7 @@ import {
   SowOrderV0FormSchema,
   sowOrderSchemaErrors,
   useSowOrderV0Form,
+  useSowOrderV0State,
 } from "@/components/Tractor/form/SowOrderV0Schema";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useSowOrderV0Calculations from "@/hooks/tractor/useSowOrderV0Calculations";
@@ -52,28 +53,19 @@ type OrderData = {
 
 export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }: SowOrderDialogProps) {
   // External hooks
-  const { address } = useAccount();
-  const publicClient = usePublicClient();
-  const protocolAddress = useProtocolAddress();
-  const { whitelistedTokens } = useTokenData();
   const farmerSilo = useFarmerSilo();
   const { data: averageTipPaid = 1 } = useTractorOperatorAverageTipPaid();
 
   // Local state
-  const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
-  const [encodedData, setEncodedData] = useState<`0x${string}` | null>(null);
-  const [operatorPasteInstructions, setOperatorPasteInstructions] = useState<`0x${string}`[] | null>(null);
-  const [depositOptimizationCalls, setDepositOptimizationCalls] = useState<`0x${string}`[] | undefined>(undefined);
   const [formStep, setFormStep] = useState(FormStep.MAIN_FORM);
-  const [isLoading, setIsLoading] = useState(false);
   const [showTokenSelectionDialog, setShowTokenSelectionDialog] = useState(false);
   const [showReview, setShowReview] = useState(false);
-  const [orderData, setOrderData] = useState<OrderData | undefined>(undefined);
 
   const farmerDeposits = farmerSilo.deposits;
 
   // Form state
   const { form, getMissingFields, getAreAllFieldsValid } = useSowOrderV0Form();
+  const { state, orderData, isLoading, handleCreateBlueprint } = useSowOrderV0State();
   const calculations = useSowOrderV0Calculations();
 
   // Initialize operator tip
@@ -115,70 +107,14 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
       return;
     }
 
-    // Second step - submit form
-    try {
-      setIsLoading(true);
-
-      if (!publicClient) {
-        throw new Error("No public client available");
-      }
-
-      if (!address) {
-        throw new Error("Signer not found");
-      }
-
-      const formData = form.getValues();
-      const { data, operatorPasteInstrs, rawCall, depositOptimizationCalls } = await createSowTractorData({
-        totalAmountToSow: formData.totalAmount,
-        temperature: formData.temperature,
-        minAmountPerSeason: formData.minSoil,
-        maxAmountToSowPerSeason: formData.maxPerSeason,
-        maxPodlineLength: formData.podLineLength,
-        maxGrownStalkPerBdv: "10000000000000000",
-        runBlocksAfterSunrise: formData.morningAuction ? "0" : "300",
-        operatorTip: formData.operatorTip,
-        whitelistedOperators: [],
-        tokenStrategy: formData.selectedTokenStrategy as TractorTokenStrategy,
-        publicClient,
-        farmerDeposits: farmerDeposits,
-        userAddress: address,
-        protocolAddress: protocolAddress,
-      });
-
-      const newBlueprint = createBlueprint({
-        publisher: address,
-        data,
-        operatorPasteInstrs,
-        maxNonce: TokenValue.MAX_UINT256.toBigInt(),
-      });
-
-      const tokenSymbol =
-        formData.selectedTokenStrategy?.type === "SPECIFIC_TOKEN"
-          ? whitelistedTokens.find((t) => stringEq(t.address, formData.selectedTokenStrategy?.address))?.symbol
-          : undefined;
-
-      setOrderData({
-        totalAmount: formData.totalAmount || "",
-        temperature: formData.temperature || "",
-        podLineLength: formData.podLineLength || "",
-        minSoil: formData.minSoil || "",
-        operatorTip: formData.operatorTip || "",
-        morningAuction: formData.morningAuction || false,
-        tokenStrategy: formData.selectedTokenStrategy.type,
-        tokenSymbol: tokenSymbol,
-      });
-
-      setBlueprint(newBlueprint);
-      setEncodedData(rawCall);
-      setOperatorPasteInstructions(operatorPasteInstrs);
-      setDepositOptimizationCalls(depositOptimizationCalls);
-      setShowReview(true);
-    } catch (e) {
-      console.error("Error creating sow tractor data:", e);
-      toast.error(e instanceof Error ? e.message : "Failed to create order");
-    } finally {
-      setIsLoading(false);
-    }
+    await handleCreateBlueprint(form, farmerDeposits, {
+      onSuccess: () => {
+        setShowReview(true);
+      },
+      onFailure: () => {
+        toast.error(e instanceof Error ? e.message : "Failed to create order");
+      },
+    });
   };
 
   const handleBack = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -250,10 +186,9 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
                         <div className="pinto-body font-medium text-pinto-secondary mb-4">🚜 Tip per Execution</div>
                         <div className="h-[1px] w-full bg-pinto-gray-2 mb-6" />
                       </div>
-                      <div className="pinto-sm-light text-pinto-light gap-2 mb-4">I'm willing to pay someone</div>
                       <SowOrderV0Fields>
                         <SowOrderV0Fields.OperatorTip averageTipPaid={averageTipPaid} />
-                        <SowOrderV0Fields.ExecutionsAndTip />
+                        <SowOrderV0Fields.ExecutionsAndTip className="mt-32" />
                       </SowOrderV0Fields>
                     </Col>
                   </Col>
@@ -328,18 +263,18 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
           />
         )}
       </Form>
-      {showReview && encodedData && operatorPasteInstructions && blueprint && orderData && (
+      {showReview && state && orderData && (
         <ReviewTractorOrderDialog
           open={showReview}
           onOpenChange={(open) => setShowReview(open)}
           onSuccess={() => onOpenChange(false)}
           onOrderPublished={onOrderPublished}
           orderData={orderData}
-          encodedData={encodedData}
-          operatorPasteInstrs={operatorPasteInstructions}
-          blueprint={blueprint}
+          encodedData={state.encodedData}
+          operatorPasteInstrs={state.operatorPasteInstructions}
+          blueprint={state.blueprint}
           includesDepositOptimization={calculations.needsOptimization}
-          depositOptimizationCalls={depositOptimizationCalls}
+          depositOptimizationCalls={state.depositOptimizationCalls}
         />
       )}
     </>

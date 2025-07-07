@@ -1,8 +1,17 @@
+import { TokenValue } from "@/classes/TokenValue";
+import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { Blueprint, TractorTokenStrategy, createBlueprint, createSowTractorData } from "@/lib/Tractor";
+import { useFarmerSilo } from "@/state/useFarmerSilo";
+import useTokenData from "@/state/useTokenData";
 import { validateFormLte } from "@/utils/number";
 import { isValidAddress, postSanitizedSanitizedValue } from "@/utils/string";
+import { getTokenIndex } from "@/utils/token";
+import { Token } from "@/utils/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useAccount, usePublicClient } from "wagmi";
 import { z } from "zod";
 
 // Helper function to validate positive numbers
@@ -151,4 +160,116 @@ export const useSowOrderV0Form = (): SowOrderV0Form => {
   } as const;
 };
 
-export const useSowOrderV0State = () => {};
+export type SowV0FormOrderData = {
+  totalAmount: string;
+  temperature: string;
+  podLineLength: string;
+  minSoil: string;
+  operatorTip: string;
+  morningAuction: boolean;
+  tokenStrategy: TractorTokenStrategy["type"];
+  token: Token | undefined;
+};
+
+export type SowOrderV0State = {
+  blueprint: Blueprint;
+  encodedData: `0x${string}`;
+  operatorPasteInstructions: `0x${string}`[];
+  depositOptimizationCalls: `0x${string}`[];
+};
+
+export const useSowOrderV0State = () => {
+  const client = usePublicClient();
+  const { address } = useAccount();
+  const protocolAddress = useProtocolAddress();
+
+  const tokenMap = useTokenMap();
+
+  const [state, setState] = useState<SowOrderV0State | undefined>(undefined);
+  const [orderData, setOrderData] = useState<SowV0FormOrderData | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleCreateBlueprint = useCallback(
+    async (
+      form: ReturnType<typeof useForm<SowOrderV0FormSchema>>,
+      deposits?: ReturnType<typeof useFarmerSilo>["deposits"],
+      options?: {
+        onFailure?: () => void;
+        onSuccess?: () => void;
+      },
+    ) => {
+      if (!client) {
+        throw new Error("No public client available.");
+      }
+      if (!address) {
+        throw new Error("Signer not found.");
+      }
+
+      setIsLoading(true);
+
+      try {
+        const formData = form.getValues();
+
+        const { data, operatorPasteInstrs, rawCall, depositOptimizationCalls } = await createSowTractorData({
+          totalAmountToSow: formData.totalAmount,
+          temperature: formData.temperature,
+          minAmountPerSeason: formData.minSoil,
+          maxAmountToSowPerSeason: formData.maxPerSeason,
+          maxPodlineLength: formData.podLineLength,
+          maxGrownStalkPerBdv: "10000000000000000",
+          runBlocksAfterSunrise: formData.morningAuction ? "0" : "300",
+          operatorTip: formData.operatorTip,
+          whitelistedOperators: [],
+          tokenStrategy: formData.selectedTokenStrategy as TractorTokenStrategy,
+          publicClient: client,
+          farmerDeposits: deposits,
+          userAddress: deposits ? address : undefined,
+          protocolAddress: deposits ? protocolAddress : undefined,
+        });
+
+        const newBlueprint = createBlueprint({
+          publisher: address,
+          data,
+          operatorPasteInstrs,
+          maxNonce: TokenValue.MAX_UINT256.toBigInt(),
+        });
+
+        const tokenInstance =
+          formData.selectedTokenStrategy?.type === "SPECIFIC_TOKEN"
+            ? tokenMap[getTokenIndex(formData.selectedTokenStrategy.address ?? "")]
+            : undefined;
+
+        setOrderData({
+          totalAmount: formData.totalAmount || "",
+          temperature: formData.temperature || "",
+          podLineLength: formData.podLineLength || "",
+          minSoil: formData.minSoil || "",
+          operatorTip: formData.operatorTip || "",
+          morningAuction: formData.morningAuction || false,
+          tokenStrategy: formData.selectedTokenStrategy.type,
+          token: tokenInstance,
+        });
+
+        setState({
+          blueprint: newBlueprint,
+          encodedData: rawCall,
+          operatorPasteInstructions: operatorPasteInstrs,
+          depositOptimizationCalls: depositOptimizationCalls ?? [],
+        });
+        options?.onSuccess?.();
+      } catch (e) {
+        options?.onFailure?.();
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [client, address, protocolAddress, tokenMap],
+  );
+
+  return {
+    state,
+    orderData,
+    isLoading,
+    handleCreateBlueprint,
+  } as const;
+};
