@@ -1435,7 +1435,12 @@ export const getSowOrderTokenStrategy = (indicies: readonly number[]) => {
   }
 };
 
-// Type guard function for TractorTokenStrategy
+/**
+ * Type guard function that validates if a value is a valid TractorTokenStrategy.
+ *
+ * @param value - The value to validate
+ * @returns True if the value is a valid TractorTokenStrategy, false otherwise
+ */
 export const isTractorTokenStrategy = (value: unknown): value is TractorTokenStrategy => {
   if (!value || typeof value !== "object") return false;
 
