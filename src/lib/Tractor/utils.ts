@@ -18,7 +18,7 @@ import { MayArray } from "@/utils/types.generic";
 import { arrayify } from "@/utils/utils";
 import { SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
-import { Requisition, SowOrderTokenStrategy } from "./types";
+import { Requisition, SowOrderTokenStrategy, TractorTokenStrategy } from "./types";
 
 // Block number at which Tractor was deployed - use this as starting point for event queries
 export const TRACTOR_DEPLOYMENT_BLOCK = 28930876n;
@@ -1432,5 +1432,25 @@ export const getSowOrderTokenStrategy = (indicies: readonly number[]) => {
     return "LOWEST_PRICE";
   } else {
     return "SPECIFIC_TOKEN";
+  }
+};
+
+// Type guard function for TractorTokenStrategy
+export const isTractorTokenStrategy = (value: unknown): value is TractorTokenStrategy => {
+  if (!value || typeof value !== "object") return false;
+
+  const strategy = value as Record<string, unknown>;
+
+  if (typeof strategy.type !== "string") return false;
+
+  switch (strategy.type) {
+    case "LOWEST_SEEDS":
+      return true;
+    case "LOWEST_PRICE":
+      return true;
+    case "SPECIFIC_TOKEN":
+      return typeof strategy.address === "string" && strategy.address.startsWith("0x");
+    default:
+      return false;
   }
 };

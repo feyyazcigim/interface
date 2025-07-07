@@ -589,8 +589,6 @@ const getMapping = (
   getStrategyProps: ReturnType<typeof useGetTractorTokenStrategyWithBlueprint>,
 ) => {
   const existing = requisition.decodedData;
-
-  console.log("existing", existing);
   if (!existing) return undefined;
 
   return {
@@ -653,8 +651,6 @@ type ValueDiff<T = unknown> = {
 
 const getDiffs = (mapping: ReturnType<typeof getMapping>) => {
   const diffs: Record<string, ValueDiff> = {};
-
-  console.log("mapping", mapping);
 
   for (const [key, { label, prev, curr }] of Object.entries(mapping ?? {})) {
     if (prev instanceof TokenValue && curr instanceof TokenValue) {

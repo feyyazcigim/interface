@@ -7,20 +7,15 @@ import {
   useSowOrderV0Form,
   useSowOrderV0State,
 } from "@/components/Tractor/form/SowOrderV0Schema";
-import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useSowOrderV0Calculations from "@/hooks/tractor/useSowOrderV0Calculations";
-import { Blueprint, TractorTokenStrategy, createBlueprint, createSowTractorData } from "@/lib/Tractor";
+import { TractorTokenStrategy, isTractorTokenStrategy } from "@/lib/Tractor";
 import useTractorOperatorAverageTipPaid from "@/state/tractor/useTractorOperatorAverageTipPaid";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
-import { usePodLine } from "@/state/useFieldData";
-import useTokenData from "@/state/useTokenData";
-import { stringEq } from "@/utils/string";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import React from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { toast } from "sonner";
-import { useAccount, usePublicClient } from "wagmi";
 import { Col, Row } from "./Container";
 import TooltipSimple from "./TooltipSimple";
 import TractorTokenStrategyDialog from "./Tractor/TractorTokenStrategyDialog";
@@ -39,17 +34,6 @@ enum FormStep {
   MAIN_FORM = 1,
   OPERATOR_TIP = 2,
 }
-
-type OrderData = {
-  totalAmount: string;
-  temperature: string;
-  podLineLength: string;
-  minSoil: string;
-  operatorTip: string;
-  morningAuction: boolean;
-  tokenStrategy: TractorTokenStrategy["type"];
-  tokenSymbol: string | undefined;
-};
 
 export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }: SowOrderDialogProps) {
   // External hooks
@@ -311,12 +295,16 @@ export const SowOrderV0TokenStrategyDialog = ({
     onOpenChange(false);
   };
 
+  if (!isTractorTokenStrategy(selectedTokenStrategy)) {
+    return null;
+  }
+
   return (
     <TractorTokenStrategyDialog
       open={open}
       onOpenChange={onOpenChange}
       onTokenStrategySelected={handleTokenStrategySelected}
-      selectedTokenStrategy={selectedTokenStrategy as TractorTokenStrategy}
+      selectedTokenStrategy={selectedTokenStrategy}
       farmerDeposits={farmerDeposits}
       {...calculations}
     />

@@ -111,7 +111,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   });
 
   const handleCancelBlueprint = async (req: RequisitionEvent, e: React.MouseEvent) => {
-    console.log("req", req.requisition.blueprintHash);
+    console.debug("Cancelling blueprint...'", req.requisition.blueprintHash);
     setSubmitting(true);
     e.stopPropagation(); // Prevent opening the order dialog
 

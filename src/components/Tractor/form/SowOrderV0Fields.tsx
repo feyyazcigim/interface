@@ -346,7 +346,7 @@ SowOrderV0Fields.PodLineLength = function PodLineLength() {
       const newValue = podLine.add(increase);
       return formatter.number(newValue);
     },
-    [podLine.toBigInt()],
+    [podLine],
   );
 
   const isButtonActive = useCallback(
