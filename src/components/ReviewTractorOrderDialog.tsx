@@ -362,9 +362,9 @@ export default function ReviewTractorOrderDialog({
                           <span className="font-light text-[#9C9C9C]">
                             Withdraw Deposited Tokens from the Silo with{" "}
                             {orderData.tokenStrategy === "LOWEST_SEEDS"
-                              ? "with the Lowest Seeds"
+                              ? "the Lowest Seeds"
                               : orderData.tokenStrategy === "LOWEST_PRICE"
-                                ? "with the Best Price"
+                                ? "the Best Price"
                                 : orderData.tokenSymbol || "Selected Token"}
                           </span>
                         </div>
