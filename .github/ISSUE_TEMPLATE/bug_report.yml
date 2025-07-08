@@ -68,5 +68,5 @@ body:
       label: AI Assistant
       description: Would you like Claude to automatically attempt to fix this bug?
       options:
-        - label: "🤖 @claude please fix this bug"
+        - label: "🤖 Yes, I would like Claude to fix this bug"
           required: false
