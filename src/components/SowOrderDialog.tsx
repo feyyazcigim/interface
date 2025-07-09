@@ -1,4 +1,3 @@
-import { TokenValue } from "@/classes/TokenValue";
 import { Form } from "@/components/Form";
 import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
 import {
@@ -12,7 +11,7 @@ import { TractorTokenStrategy, isTractorTokenStrategy } from "@/lib/Tractor";
 import useTractorOperatorAverageTipPaid from "@/state/tractor/useTractorOperatorAverageTipPaid";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import React from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -290,10 +289,13 @@ export const SowOrderV0TokenStrategyDialog = ({
   });
 
   // Memoize the callback to prevent recreating on every render
-  const handleTokenStrategySelected = (tokenStrategy: TractorTokenStrategy) => {
-    ctx.setValue("selectedTokenStrategy", tokenStrategy);
-    onOpenChange(false);
-  };
+  const handleTokenStrategySelected = useCallback(
+    (tokenStrategy: TractorTokenStrategy) => {
+      ctx.setValue("selectedTokenStrategy", tokenStrategy);
+      onOpenChange(false);
+    },
+    [ctx, onOpenChange],
+  );
 
   if (!isTractorTokenStrategy(selectedTokenStrategy)) {
     return null;

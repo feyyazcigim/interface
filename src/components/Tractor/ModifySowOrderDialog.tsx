@@ -1,7 +1,3 @@
-import { mockAddressAtom } from "@/Web3Provider";
-import pintoIcon from "@/assets/tokens/PINTO.png";
-import { WarningIcon } from "@/components/Icons";
-import ReviewTractorOrderDialog from "@/components/ReviewTractorOrderDialog";
 import { diamondABI } from "@/constants/abi/diamondABI";
 
 import { TokenValue } from "@/classes/TokenValue";
@@ -19,29 +15,27 @@ import {
   DialogTitle,
 } from "@/components/ui/Dialog";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import { useGetTractorTokenStrategyWithBlueprint } from "@/hooks/tractor/useGetTractorTokenStrategy";
 import useSignTractorBlueprint from "@/hooks/tractor/useSignTractorBlueprint";
 import useSowOrderV0Calculations from "@/hooks/tractor/useSowOrderV0Calculations";
 import useTransaction from "@/hooks/useTransaction";
-import { createRequisition, useGetBlueprintHash, useSignRequisition } from "@/lib/Tractor/blueprint";
+import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { Blueprint, ExtendedTractorTokenStrategy, Requisition, TractorTokenStrategy } from "@/lib/Tractor/types";
 import { RequisitionEvent } from "@/lib/Tractor/utils";
 import useTractorOperatorAverageTipPaid from "@/state/tractor/useTractorOperatorAverageTipPaid";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { formatter } from "@/utils/format";
-import { postSanitizedSanitizedValue, stringEq } from "@/utils/string";
+import { postSanitizedSanitizedValue } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { useFormContext, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { encodeFunctionData } from "viem";
-import { useAccount, useWalletClient } from "wagmi";
-import TractorTokenStrategyDialog from "./TractorTokenStrategyDialog";
+import { useAccount } from "wagmi";
+import { SowOrderV0TokenStrategyDialog } from "../SowOrderDialog";
 import SowOrderV0Fields from "./form/SowOrderV0Fields";
-import { SowOrderV0FormSchema, useSowOrderV0Form, useSowOrderV0State } from "./form/SowOrderV0Schema";
+import { useSowOrderV0Form, useSowOrderV0State } from "./form/SowOrderV0Schema";
 
 interface ModifyTractorOrderDialogProps {
   open: boolean;
@@ -50,37 +44,6 @@ interface ModifyTractorOrderDialogProps {
   existingOrder: RequisitionEvent;
   // pass in as a prop to ensure data is loaded before the dialog is opened
   getStrategyProps: ReturnType<typeof useGetTractorTokenStrategyWithBlueprint>;
-}
-
-function ModifySowV0Form({
-  handleOpenTokenSelectionDialog,
-  averageTipPaid,
-}: { handleOpenTokenSelectionDialog: () => void; averageTipPaid: number }) {
-  return (
-    <>
-      <SowOrderV0Fields>
-        {/* I want to Sow up to */}
-        <SowOrderV0Fields.TotalAmount />
-        {/* Min and Max per Season - combined in a single row */}
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-4">
-            <SowOrderV0Fields.MinSoil />
-            <SowOrderV0Fields.MaxPerSeason />
-          </div>
-        </div>
-        {/* Fund order using */}
-        <SowOrderV0Fields.TokenStrategy openDialog={handleOpenTokenSelectionDialog} />
-        {/* Execute when Temperature is at least */}
-        <SowOrderV0Fields.Temperature />
-        {/* Execute when the length of the Pod Line is at most */}
-        <SowOrderV0Fields.PodLineLength />
-        {/* Execute during the Morning Auction */}
-        <SowOrderV0Fields.MorningAuction />
-        <SowOrderV0Fields.OperatorTip averageTipPaid={averageTipPaid} />
-        <SowOrderV0Fields.ExecutionsAndTip />
-      </SowOrderV0Fields>
-    </>
-  );
 }
 
 export default function ModifyTractorOrderDialog({
@@ -122,7 +85,7 @@ export default function ModifyTractorOrderDialog({
       });
       setDidPrefill(true);
     }
-  }, [open, existingOrder, didPrefill, prefillValues]);
+  }, [open, existingOrder, didPrefill, prefillValues, getStrategyProps]);
 
   // Callbacks
   // Handle creating the modified order
@@ -292,43 +255,6 @@ export default function ModifyTractorOrderDialog({
     </>
   );
 }
-
-const SowOrderV0TokenStrategyDialog = ({
-  open,
-  onOpenChange,
-  farmerDeposits,
-  calculations,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  farmerDeposits: ReturnType<typeof useFarmerSilo>["deposits"];
-  calculations: ReturnType<typeof useSowOrderV0Calculations>;
-}) => {
-  const ctx = useFormContext<SowOrderV0FormSchema>();
-
-  // Use useWatch instead of ctx.watch to only watch this specific field
-  const selectedTokenStrategy = useWatch({
-    control: ctx.control,
-    name: "selectedTokenStrategy",
-  });
-
-  // Memoize the callback to prevent recreating on every render
-  const handleTokenStrategySelected = (tokenStrategy: TractorTokenStrategy) => {
-    ctx.setValue("selectedTokenStrategy", tokenStrategy);
-    onOpenChange(false);
-  };
-
-  return (
-    <TractorTokenStrategyDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      onTokenStrategySelected={handleTokenStrategySelected}
-      selectedTokenStrategy={selectedTokenStrategy as TractorTokenStrategy}
-      farmerDeposits={farmerDeposits}
-      {...calculations}
-    />
-  );
-};
 
 type OrderData = NonNullable<NonNullable<ReturnType<typeof useSowOrderV0State>>["orderData"]>;
 
