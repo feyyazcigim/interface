@@ -42,7 +42,7 @@ export default function Landing() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-20 mt-9 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
+      <div className="flex flex-col gap-20 mt-9 overflow-clip">
         <div className="mx-auto">
           <MainCTA />
         </div>
