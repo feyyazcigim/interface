@@ -1,6 +1,5 @@
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { useDebouncedEffect } from "@/utils/useDebounce";
-import { safeJSONStringify } from "@/utils/utils";
 import { format, isValid, parse, set, startOfYear, subHours, subMonths, subWeeks, subYears } from "date-fns";
 import { IRange, Time, UTCTimestamp } from "lightweight-charts";
 import { useCallback, useEffect, useState } from "react";
@@ -155,6 +154,36 @@ const PresetButton = ({ preset, isSelected, onClick }: PresetButtonProps) => (
   </button>
 );
 
+// MobilePresets component - handles mobile preset buttons
+interface MobilePresetsProps {
+  datePresets: typeof DATE_PRESETS;
+  selectedPreset: string;
+  onChange: (range: DateRange, preset: string) => void;
+}
+
+const MobilePresets = ({ datePresets, selectedPreset, onChange }: MobilePresetsProps) => (
+  <div className="flex flex-row justify-between mt-4 lg:hidden">
+    {Object.keys(datePresets).map((preset) => (
+      <button
+        key={`mobile-preset-${preset}`}
+        type="button"
+        className={`rounded py-1 text-sm min-w-fit w-8 pinto-body-light ${
+          selectedPreset === preset ? "bg-pinto-green text-white" : "border border-pinto-gray-2 text-pinto-gray-5"
+        }`}
+        onClick={() => {
+          const newRange = {
+            from: datePresets[preset].from(),
+            to: datePresets[preset].to(),
+          };
+          onChange(newRange, preset);
+        }}
+      >
+        {preset}
+      </button>
+    ))}
+  </div>
+);
+
 // CalendarContent component - handles the popover content
 interface CalendarContentProps {
   datePresets: typeof DATE_PRESETS;
@@ -233,33 +262,6 @@ const CalendarContent = ({ datePresets, range, selectedPreset, onChange }: Calen
     [onChange, range],
   );
 
-  // Mobile preset buttons
-  const renderMobilePresets = useCallback(
-    () => (
-      <div className="flex flex-row justify-between mt-4">
-        {Object.keys(datePresets).map((preset) => (
-          <button
-            key={`mobile-preset-${preset}`}
-            type="button"
-            className={`rounded py-1 text-sm min-w-fit w-8 pinto-body-light ${
-              selectedPreset === preset ? "bg-pinto-green text-white" : "border border-pinto-gray-2 text-pinto-gray-5"
-            }`}
-            onClick={() => {
-              const newRange = {
-                from: datePresets[preset].from(),
-                to: datePresets[preset].to(),
-              };
-              onChange(newRange, preset);
-            }}
-          >
-            {preset}
-          </button>
-        ))}
-      </div>
-    ),
-    [datePresets, onChange, selectedPreset],
-  );
-
   return (
     <div className="flex flex-col gap-4 p-0">
       <div className="pinto-body-light font-medium">Custom Date Range</div>
@@ -291,7 +293,7 @@ const CalendarContent = ({ datePresets, range, selectedPreset, onChange }: Calen
           fixedWeeks
           classNames={CALENDAR_STYLES}
         />
-        <div className="lg:hidden">{renderMobilePresets()}</div>
+        <MobilePresets datePresets={datePresets} selectedPreset={selectedPreset} onChange={onChange} />
       </div>
     </div>
   );
