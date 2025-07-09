@@ -154,11 +154,7 @@ export default function TractorTokenStrategyDialog({
                         </div>
                       </div>
                       <div className="flex flex-col items-end">
-                        <div className="text-right text-xl font-medium">
-                          {amount.toNumber() > 0 && amount.toNumber() < 0.01
-                            ? formatter.number(amount, { minDecimals: 4, maxDecimals: 8 })
-                            : formatter.number(amount)}
-                        </div>
+                        <div className="text-right text-xl font-medium">{formatter.token(amount, token)}</div>
                         <div className="text-right text-gray-500 text-sm">${formatter.twoDec(pintoAmount)}</div>
                       </div>
                     </div>

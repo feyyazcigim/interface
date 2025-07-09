@@ -358,27 +358,29 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
                   Executed {executionCount} time{executionCount !== 1 ? "s" : ""}
                 </span>
               </Row>
-              <Button
-                variant="ghost"
-                className="text-sm"
-                onClick={() => {
-                  setSelectedOrder(req);
-                  setShowDialog("modify");
-                }}
-                disabled={submitting || isConfirming}
-              >
-                <Pencil1Icon className="h-4 w-4" />
-                <span className="inline ml-1">Modify</span>
-              </Button>
-              <Button
-                variant="ghost"
-                className="text-sm text-pinto-red-2 hover:bg-pinto-red-1"
-                onClick={(e) => handleCancelBlueprint(req, e)}
-                disabled={submitting || isConfirming}
-              >
-                <Cross1Icon className="h-4 w-4" />
-                <span className="inline ml-1">Cancel</span>
-              </Button>
+              <Row className="items-center gap-0">
+                <Button
+                  variant="ghost"
+                  className="text-sm"
+                  onClick={() => {
+                    setSelectedOrder(req);
+                    setShowDialog("modify");
+                  }}
+                  disabled={submitting || isConfirming}
+                >
+                  <Pencil1Icon className="h-4 w-4" />
+                  <span className="inline ml-1">Modify</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-sm text-pinto-red-2 hover:bg-pinto-red-1"
+                  onClick={(e) => handleCancelBlueprint(req, e)}
+                  disabled={submitting || isConfirming}
+                >
+                  <Cross1Icon className="h-4 w-4" />
+                  <span className="inline ml-1">Cancel</span>
+                </Button>
+              </Row>
             </Row>
           </Col>
         );
