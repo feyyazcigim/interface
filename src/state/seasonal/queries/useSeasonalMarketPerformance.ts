@@ -12,6 +12,7 @@ import {
   UseSeasonalMarketPerformanceResult,
   UseSeasonalResult,
 } from "@/utils/types";
+import { useMemo } from "react";
 import { useChainId } from "wagmi";
 import { useSeasonalPrice } from "../seasonalDataHooks";
 import useSeasonalQueries, { SeasonalQueryVars } from "./useSeasonalInternalQueries";
@@ -108,89 +109,92 @@ export function useMarketPerformanceCalc(
   const mainToken = useTokenData().mainToken;
   const lpToUnderlyingMap = useLPTokenToNonPintoUnderlyingMap();
 
-  const responseData: SeasonalMarketPerformanceChartData = {};
-  if (seasonalData) {
-    for (let i = 0; i < seasonalData.length; ++i) {
-      const season = seasonalData[i];
-      if (chartType !== SMPChartType.TOKEN_PRICES) {
-        if (season.season <= (startSeasons.NET ?? 0)) {
-          continue;
-        }
-
-        responseData.NET ??= [
-          {
-            season: season.season - 1,
-            value: 0,
-            timestamp: new Date((Number(season.timestamp) - 60 * 60) * 1000),
-          },
-        ];
-
-        const value =
-          chartType < SMPChartType.USD_CUMULATIVE
-            ? Number(season[CHART_FIELDS[chartType % 2][1]])
-            : accumulator(chartType)(
-                responseData.NET[responseData.NET.length - 1].value,
-                Number(season[CHART_FIELDS[chartType % 2][1]]),
-              );
-        responseData.NET.push({
-          season: season.season,
-          value,
-          timestamp: new Date(Number(season.timestamp) * 1000),
-        });
-      }
-
-      let tokenIdx = 0;
-      for (const token of season.silo.whitelistedTokens) {
-        // Skip Pinto token
-        if (token === mainToken.address) {
-          continue;
-        }
-
-        const underlyingToken = lpToUnderlyingMap[token];
-        if (!underlyingToken) {
-          continue;
-        }
-
-        const symbol = underlyingToken.symbol;
-        if (season.season <= (startSeasons[symbol] ?? 0)) {
-          continue;
-        }
-
+  const responseData = useMemo(() => {
+    const result: SeasonalMarketPerformanceChartData = {};
+    if (seasonalData) {
+      for (let i = 0; i < seasonalData.length; ++i) {
+        const season = seasonalData[i];
         if (chartType !== SMPChartType.TOKEN_PRICES) {
-          responseData[symbol] ??= [
+          if (season.season <= (startSeasons.NET ?? 0)) {
+            continue;
+          }
+
+          result.NET ??= [
             {
               season: season.season - 1,
               value: 0,
               timestamp: new Date((Number(season.timestamp) - 60 * 60) * 1000),
             },
           ];
-          const arr = responseData[symbol];
 
           const value =
             chartType < SMPChartType.USD_CUMULATIVE
-              ? Number(season[CHART_FIELDS[chartType % 2][0]][tokenIdx])
+              ? Number(season[CHART_FIELDS[chartType % 2][1]])
               : accumulator(chartType)(
-                  arr[arr.length - 1].value,
-                  Number(season[CHART_FIELDS[chartType % 2][0]][tokenIdx]),
+                  result.NET[result.NET.length - 1].value,
+                  Number(season[CHART_FIELDS[chartType % 2][1]]),
                 );
-          arr.push({
+          result.NET.push({
             season: season.season,
             value,
             timestamp: new Date(Number(season.timestamp) * 1000),
           });
-        } else {
-          responseData[symbol] ??= [];
-          responseData[symbol].push({
-            season: season.season,
-            // biome-ignore lint/style/noNonNullAssertion: can't be null given only valid=true is retrieved from sg.
-            value: Number(season.thisSeasonTokenUsdPrices![tokenIdx]),
-            timestamp: new Date(Number(season.timestamp) * 1000),
-          });
         }
-        ++tokenIdx;
+
+        let tokenIdx = 0;
+        for (const token of season.silo.whitelistedTokens) {
+          // Skip Pinto token
+          if (token === mainToken.address) {
+            continue;
+          }
+
+          const underlyingToken = lpToUnderlyingMap[token];
+          if (!underlyingToken) {
+            continue;
+          }
+
+          const symbol = underlyingToken.symbol;
+          if (season.season <= (startSeasons[symbol] ?? 0)) {
+            continue;
+          }
+
+          if (chartType !== SMPChartType.TOKEN_PRICES) {
+            result[symbol] ??= [
+              {
+                season: season.season - 1,
+                value: 0,
+                timestamp: new Date((Number(season.timestamp) - 60 * 60) * 1000),
+              },
+            ];
+            const arr = result[symbol];
+
+            const value =
+              chartType < SMPChartType.USD_CUMULATIVE
+                ? Number(season[CHART_FIELDS[chartType % 2][0]][tokenIdx])
+                : accumulator(chartType)(
+                    arr[arr.length - 1].value,
+                    Number(season[CHART_FIELDS[chartType % 2][0]][tokenIdx]),
+                  );
+            arr.push({
+              season: season.season,
+              value,
+              timestamp: new Date(Number(season.timestamp) * 1000),
+            });
+          } else {
+            result[symbol] ??= [];
+            result[symbol].push({
+              season: season.season,
+              // biome-ignore lint/style/noNonNullAssertion: can't be null given only valid=true is retrieved from sg.
+              value: Number(season.thisSeasonTokenUsdPrices![tokenIdx]),
+              timestamp: new Date(Number(season.timestamp) * 1000),
+            });
+          }
+          ++tokenIdx;
+        }
       }
     }
-  }
+    return result;
+  }, [seasonalData, chartType, startSeasons, mainToken.address, lpToUnderlyingMap]);
   return responseData;
 }
 
@@ -210,13 +214,23 @@ export function useSeasonalMarketPerformance(
 
   // Expand results by token
   const sgData = result.data;
-  const responseData = useMarketPerformanceCalc(sgData, chartType);
-  // Add net price data
-  if (sgData && priceReady && chartType === SMPChartType.TOKEN_PRICES) {
+  const performanceData = useMarketPerformanceCalc(sgData, chartType);
+
+  const finalData = useMemo(() => {
+    if (!sgData || !priceReady || chartType !== SMPChartType.TOKEN_PRICES) {
+      return performanceData;
+    }
+
+    // Copy performanceData to avoid mutating the original
+    const dataWithPrices: SeasonalMarketPerformanceChartData = {};
+    for (const [key, value] of Object.entries(performanceData)) {
+      dataWithPrices[key] = [...value];
+    }
+
     for (let i = 0; i < sgData.length; ++i) {
       const season = sgData[i];
-      responseData.NET ??= [];
-      responseData.NET.push({
+      dataWithPrices.NET ??= [];
+      dataWithPrices.NET.push({
         season: season.season,
         // Assumption is that the season numbers are lining up 1:1 between price/marketPerformance data
         // biome-ignore lint/style/noNonNullAssertion: can't be null given priceReady check
@@ -224,10 +238,11 @@ export function useSeasonalMarketPerformance(
         timestamp: new Date(Number(season.timestamp) * 1000),
       });
     }
-  }
+    return dataWithPrices;
+  }, [sgData, priceReady, chartType, performanceData, pintoPriceResult.data]);
 
   return {
-    data: !!sgData ? responseData : undefined,
+    data: !!sgData ? finalData : undefined,
     isLoading: result.isLoading || (needsPrice && pintoPriceResult.isLoading),
     isError: result.isError || (needsPrice && pintoPriceResult.isError),
   };
