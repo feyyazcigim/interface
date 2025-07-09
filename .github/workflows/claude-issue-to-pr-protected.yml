@@ -74,11 +74,11 @@ jobs:
                 isFeature = featureKeywords.some(keyword => title.includes(keyword) || body.includes(keyword));
               }
               
-              // Check for @claude mention in checkbox format or direct mention
+              // Check for checked checkbox (using the new checkbox labels)
               shouldRun = (isBug || isFeature) && (
-                body.includes('@claude please fix this bug') ||
-                body.includes('@claude please implement this feature') ||
-                body.includes('@claude')
+                body.includes('- [x] 🤖 yes, i would like claude to fix this bug') ||
+                body.includes('- [x] 🤖 yes, i would like claude to implement this feature') ||
+                body.includes('@claude')  // Keep @claude as fallback for direct mentions
               );
             }
             
@@ -259,8 +259,8 @@ jobs:
             const message = `🚫 Sorry @${context.actor}, you need write permissions to this repository to trigger Claude bug fixes and feature implementations. Please contact a repository maintainer for access.
             
             **How to use this workflow:**
-            - Use the 🐛 Bug Report template and check "🤖 @claude please fix this bug"
-            - Use the ✨ Feature Request template and check "🤖 @claude please implement this feature"
+            - Use the 🐛 Bug Report template and check "🤖 Yes, I would like Claude to fix this bug"
+            - Use the ✨ Feature Request template and check "🤖 Yes, I would like Claude to implement this feature"
             - Or manually add \`@claude\` to any bug/feature issue`;
             
             if (context.eventName === 'issues') {
@@ -298,8 +298,8 @@ jobs:
             const message = `👋 Hi @${context.actor}! I can help with bug fixes and feature implementations, but I need to understand what type of issue this is.
             
             **Please use the issue templates:**
-            - 🐛 **Bug Report** template for bugs and issues
-            - ✨ **Feature Request** template for new features and enhancements
+            - 🐛 **Bug Report** template for bugs and issues (check the checkbox to enable Claude)
+            - ✨ **Feature Request** template for new features and enhancements (check the checkbox to enable Claude)
             
             **Or manually add:**
             - A \`bug\` label for bug fixes

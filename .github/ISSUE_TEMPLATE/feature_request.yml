@@ -72,5 +72,5 @@ body:
       label: AI Assistant
       description: Would you like Claude to automatically attempt to implement this feature?
       options:
-        - label: "🤖 @claude please implement this feature"
+        - label: "🤖 Yes, I would like Claude to implement this feature"
           required: false
