@@ -11,6 +11,7 @@ const labelVariants = cva(
       variant: {
         default: "",
         section: "pinto-sm-light sm:pinto-body-light text-pinto-light sm:text-pinto-light",
+        form: "text-sm sm:text-sm text-pinto-gray-4",
       },
       expanded: {
         true: "flex h-10 items-center",
