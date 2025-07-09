@@ -236,12 +236,6 @@ VITE_BASE_ENDPOINT=""       # Base domain for the application
 
 This project represents a sophisticated DeFi frontend with complex state management, multi-chain support, and integration with various DeFi protocols and services.
 
-
-### Coding Rules ###
-1. **DRY** - Stick with DRY principles.
-2. **useReadContract / useQuery**
-   - If a select function is required to transform data, always create a stable reference to the select function to prevent unnecessary calculations.
-
 ## AI Agent Workflow Rules
 
 ### Pull Request Management
@@ -262,3 +256,170 @@ When working on code changes that result in commits, AI agents must:
 - Include the Claude Code attribution footer
 - Group related changes into logical commits
 - Ensure commits are atomic and focused on single concerns
+
+## Coding Guidelines & Best Practices
+
+### State Management Guidelines
+
+#### Global State (Jotai)
+Use Jotai atoms for:
+- App-wide state that needs to persist
+- User preferences and settings
+- Authentication state
+
+#### Server State (TanStack Query)
+Use TanStack Query for:
+- Blockchain data (Wagmi's useReadContract / useReadContracts)
+- API responses
+- Cached data with invalidation
+
+#### Local State (useState)
+Use useState for:
+- Component-specific state
+- UI state (modals, toggles)
+
+#### Context (Context.Provider)
+Try to avoid using createContext UNLESS State-machine logic is required.
+
+#### When to Use React Hook Form
+Use `react-hook-form` with `zod` schemas for:
+- Complex forms with multiple validation rules
+- Forms with conditional fields or complex interactions
+- Forms that need to persist state across multiple steps
+- Forms with real-time validation and error handling
+
+### Code Quality Standards
+
+**DRY** - Stick with DRY principles.
+
+#### Naming Conventions
+- Use descriptive names for functions and variables
+- Use PascalCase for components and types
+- Use camelCase for functions and variables
+- Use UPPER_SNAKE_CASE for constants
+
+#### Code Comments
+- Add JSDoc comments for complex functions
+- Comment non-obvious business logic & avoid obvious comments
+
+#### File Size & Component Architecture
+- Keep components under 300-600 lines
+- Split large components into smaller ones
+- Extract complex logic into custom hooks
+- Each component should handle a single concern
+- Components should be reusable across different contexts
+
+#### Shared Logic Extraction
+Extract common logic into custom hooks:
+
+```typescript
+// Good: Shared hook for form logic
+const { formState, handlers, validation } = useTractorOrderForm({
+  averageTipValue,
+});
+
+// Avoid: Duplicating logic across components
+```
+
+### TypeScript Best Practices
+
+#### Strict Type Safety
+Always use proper TypeScript types and interfaces:
+
+```typescript
+// Good: Proper interface definition
+interface TractorOrderFormState {
+  totalAmount: string;
+  temperature: string;
+  selectedTokenStrategy: TractorTokenStrategy;
+  error: string | null;
+}
+
+// Avoid: Using 'any' or loose types
+```
+
+### Performance Optimization
+
+#### Memoization Patterns
+Use `useCallback` and `useMemo` for expensive operations:
+
+```typescript
+// Good: Memoized callback
+const handleTokenStrategySelected = useCallback(
+  (tokenStrategy: TractorTokenStrategy) => {
+    setValue("selectedTokenStrategy", tokenStrategy);
+    onOpenChange(false);
+  },
+  [setValue, onOpenChange],
+);
+```
+
+### Performance Monitoring
+
+#### Memory Usage
+- Clean up event listeners and subscriptions
+- Avoid memory leaks in useEffect hooks
+- Use proper dependency arrays
+
+#### Render Performance
+- Use React Developer Tools to identify performance bottlenecks
+- Optimize expensive calculations with memoization
+- Always opt to create a stable reference if an object is an object instance
+
+#### Data Transformation & Component Composition
+
+**Type Guards:**
+- Use proper type guards for complex types
+- Validate data structures at runtime
+- Handle edge cases gracefully
+
+**Hook Composition:**
+- Create focused hooks for specific concerns
+- Combine hooks for complex functionality
+- Use proper dependency management
+
+**Component Prop Patterns:**
+- Use discriminated unions for variant props
+- Provide sensible defaults
+- Use render props for flexible composition
+
+```typescript
+// Good: Flexible component API
+interface ReviewDialogProps {
+  isViewOnly?: boolean;
+  executionHistory?: PublisherTractorExecution[];
+  includesDepositOptimization?: boolean;
+  depositOptimizationCalls?: `0x${string}`[];
+}
+```
+
+### Anti-Patterns to Avoid
+
+#### Common Mistakes
+1. **Loose Type Checking**: Don't use `any` or overly permissive types
+2. **Direct State Mutation**: Always use proper state setters
+
+#### Performance Anti-Patterns
+1. **Unstable References**: Creating new objects/functions in render
+2. **Missing Dependencies**: Incomplete dependency arrays in useEffect
+3. **Excessive Re-renders**: Not memoizing expensive calculations
+4. **Memory Leaks**: Not cleaning up subscriptions and timers
+
+#### UI/UX Anti-Patterns
+1. **Generic Error Messages**: Providing non-actionable error messages
+2. **Missing Loading States**: Not showing loading indicators
+3. **Inconsistent Styling**: Not following the design system
+
+### Code Review Checklist
+
+When reviewing code, ensure:
+- [ ] Forms use appropriate validation patterns
+- [ ] Components follow the established architecture
+- [ ] TypeScript types are properly defined
+- [ ] Error handling is comprehensive
+- [ ] Performance optimizations are applied
+- [ ] Code follows naming conventions
+- [ ] Tests are written for complex logic
+- [ ] Documentation is updated for new patterns
+- [ ] Accessibility considerations are addressed
+- [ ] Mobile responsiveness is maintained
