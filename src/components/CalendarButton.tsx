@@ -1,3 +1,4 @@
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { safeJSONStringify } from "@/utils/utils";
 import { format, isValid, parse, set, startOfYear, subHours, subMonths, subWeeks, subYears } from "date-fns";
@@ -310,8 +311,17 @@ const CalendarButton = ({
   datePresets = DATE_PRESETS,
   defaultPreset = "1W",
 }: CalendarButtonProps) => {
-  const [selectedPreset, setSelectedPreset] = useState<string>(defaultPreset);
   const [range, setRange] = useState<DateRange>({ from: undefined, to: undefined });
+  const [selectedPreset, setSelectedPreset] = useState<string>(defaultPreset);
+
+  const [storageRange, setStorageRange] = useLocalStorage<DateRange | undefined>(`${storageKeyPrefix}Range`, {
+    from: undefined,
+    to: undefined,
+  });
+  const [storagePreset, setStoragePreset] = useLocalStorage<string | undefined>(
+    `${storageKeyPrefix}Preset`,
+    defaultPreset,
+  );
 
   // Save to localStorage and set period
   const saveRangeAndSetPeriod = useCallback(
@@ -320,8 +330,8 @@ const CalendarButton = ({
 
       // Save to localStorage
       try {
-        localStorage.setItem(`${storageKeyPrefix}Range`, safeJSONStringify(rangeToSave));
-        localStorage.setItem(`${storageKeyPrefix}Preset`, safeJSONStringify(presetToSave));
+        setStorageRange(rangeToSave);
+        setStoragePreset(presetToSave);
 
         // Set time period
         const timePeriod: IRange<Time> = {
@@ -334,7 +344,7 @@ const CalendarButton = ({
         console.error("Error saving date range to localStorage", error);
       }
     },
-    [storageKeyPrefix, setTimePeriod],
+    [setTimePeriod, setStorageRange, setStoragePreset],
   );
 
   // Apply preset range
@@ -358,32 +368,28 @@ const CalendarButton = ({
   // Initialize from localStorage if available
   useEffect(() => {
     try {
-      const storedRange = localStorage.getItem(`${storageKeyPrefix}Range`);
-      const storedPreset = localStorage.getItem(`${storageKeyPrefix}Preset`);
-
-      if (storedRange) {
-        const parsedRange = JSON.parse(storedRange);
+      if (storageRange) {
         // Convert stored timestamps back to Date objects
         setRange({
-          from: parsedRange.from ? new Date(parsedRange.from) : undefined,
-          to: parsedRange.to ? new Date(parsedRange.to) : undefined,
+          from: storageRange.from ? new Date(storageRange.from) : undefined,
+          to: storageRange.to ? new Date(storageRange.to) : undefined,
         });
         setTimePeriod({
-          from: (parsedRange.from ? parsedRange.from.valueOf() : 0) as UTCTimestamp,
-          to: (parsedRange.to ? parsedRange.to.valueOf() : Date.now()) as UTCTimestamp,
+          from: (storageRange.from ? storageRange.from.valueOf() : 0) as UTCTimestamp,
+          to: (storageRange.to ? storageRange.to.valueOf() : Date.now()) as UTCTimestamp,
         });
       } else {
         applyPreset(defaultPreset);
       }
 
-      if (storedPreset) {
-        setSelectedPreset(JSON.parse(storedPreset));
+      if (storagePreset) {
+        setSelectedPreset(storagePreset);
       }
     } catch (e) {
       console.error("Error loading saved date range", e);
       applyPreset(defaultPreset);
     }
-  }, [storageKeyPrefix, defaultPreset, setTimePeriod, applyPreset]);
+  }, [defaultPreset, setTimePeriod, applyPreset, storageRange, storagePreset]);
 
   const handleCalendarInteraction = (newRange: DateRange, preset: string): void => {
     setRange(newRange);
