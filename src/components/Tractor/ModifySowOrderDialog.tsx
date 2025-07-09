@@ -74,12 +74,12 @@ export default function ModifyTractorOrderDialog({
       const tokenStrategy = getStrategyProps.getTokenStrategy(data);
 
       prefillValues({
-        totalAmount: data.sowAmounts.totalAmountToSowAsString,
-        minSoil: data.sowAmounts.minAmountToSowPerSeasonAsString,
-        maxPerSeason: data.sowAmounts.maxAmountToSowPerSeasonAsString,
-        temperature: data.minTempAsString,
-        podLineLength: data.maxPodlineLengthAsString,
-        operatorTip: data.operatorParams.operatorTipAmountAsString,
+        totalAmount: formatter.noDecTrunc(data.sowAmounts.totalAmountToSowAsString),
+        minSoil: formatter.noDecTrunc(data.sowAmounts.minAmountToSowPerSeasonAsString),
+        maxPerSeason: formatter.noDecTrunc(data.sowAmounts.maxAmountToSowPerSeasonAsString),
+        temperature: formatter.noDecTrunc(data.minTempAsString),
+        podLineLength: formatter.noDecTrunc(data.maxPodlineLengthAsString),
+        operatorTip: formatter.noDecTrunc(data.operatorParams.operatorTipAmountAsString),
         morningAuction: data.runBlocksAfterSunrise === 0n,
         selectedTokenStrategy: tokenStrategy ?? { type: "LOWEST_SEEDS" as const },
       });
@@ -167,7 +167,7 @@ export default function ModifyTractorOrderDialog({
                     <SowOrderV0Fields.PodLineLength />
                     {/* Execute during the Morning Auction */}
                     <SowOrderV0Fields.MorningAuction />
-                    <SowOrderV0Fields.OperatorTip averageTipPaid={averageTipValue} />
+                    <SowOrderV0Fields.OperatorTip averageTipPaid={averageTipValue} noInitToAverageTipPaid />
                     <SowOrderV0Fields.ExecutionsAndTip />
                   </SowOrderV0Fields>
 

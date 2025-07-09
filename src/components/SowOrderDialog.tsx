@@ -59,19 +59,18 @@ export default function SowOrderDialog({ open, onOpenChange, onOrderPublished }:
     setDidInitOperatorTip(true);
   }, [averageTipPaid, didInitOperatorTip, form.setValue]);
 
-  const { tokenWithHighestValue, isLoading: isCalculationsLoading } = calculations;
   // Initialize token strategy only once when dialog opens
   const [didInitTokenStrategy, setDidInitTokenStrategy] = useState(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Form will be rendered more often than calculations
   useEffect(() => {
-    if (didInitTokenStrategy || isCalculationsLoading) return;
+    if (didInitTokenStrategy || calculations.isLoading) return;
     // Only auto-set if user hasn't made a selection and it's still the default
     const currentStrategy = form.getValues("selectedTokenStrategy");
-    if (!currentStrategy || currentStrategy.type === "LOWEST_SEEDS") {
+    if (!currentStrategy) {
       form.setValue("selectedTokenStrategy", calculations.tokenWithHighestValue);
     }
     setDidInitTokenStrategy(true);
-    return;
-  }, [tokenWithHighestValue, isCalculationsLoading, form.setValue, didInitTokenStrategy]);
+  }, [calculations.tokenWithHighestValue, calculations.isLoading, didInitTokenStrategy]);
 
   const handleOpenTokenSelectionDialog = () => {
     setShowTokenSelectionDialog(true);

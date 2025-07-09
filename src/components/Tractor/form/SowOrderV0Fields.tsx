@@ -353,7 +353,7 @@ SowOrderV0Fields.PodLineLength = function PodLineLength() {
     (increment: number) => {
       return value === calculatePodLineValue(increment);
     },
-    [value],
+    [value, calculatePodLineValue],
   );
 
   const handlePodLineSelect = useCallback(
@@ -387,7 +387,7 @@ SowOrderV0Fields.PodLineLength = function PodLineLength() {
           <FormControl>
             <Input
               {...field}
-              placeholder={formatter.number(podLine)}
+              placeholder={podLine.gt(0) ? formatter.number(podLine) : "0.00"}
               outlined
               type="text"
               isError={!!fieldState.error}
@@ -474,39 +474,47 @@ const TIP_PRESET_LABELS: Record<ActiveTipButton, string> = {
   up5: "5% ↑",
 };
 
-SowOrderV0Fields.OperatorTip = function OperatorTip({ averageTipPaid }: { averageTipPaid: number }) {
+SowOrderV0Fields.OperatorTip = function OperatorTip({
+  averageTipPaid,
+  noInitToAverageTipPaid = false,
+}: {
+  averageTipPaid: number;
+  noInitToAverageTipPaid?: boolean;
+}) {
   const ctx = useFormContext<SowOrderV0FormSchema>();
   const handlers = useSharedInputHandlers(ctx, "operatorTip");
 
-  const [activeTipButton, setActiveTipButton] = useState<ActiveTipButton>("average");
-
-  // Helper functions for UI
-  const getTipValue = (type: ActiveTipButton) => {
-    if (!type) return "0";
-    const baseValue = averageTipPaid;
-    switch (type) {
-      case "down5":
-        return (baseValue * 0.95).toFixed(2);
-      case "down1":
-        return (baseValue * 0.99).toFixed(2);
-      case "average":
-        return baseValue.toFixed(2);
-      case "up1":
-        return (baseValue * 1.01).toFixed(2);
-      case "up5":
-        return (baseValue * 1.05).toFixed(2);
-      default:
-        return "0";
-    }
-  };
+  const [activeTipButton, setActiveTipButton] = useState<ActiveTipButton | undefined>(
+    noInitToAverageTipPaid ? undefined : "average",
+  );
 
   const handleTipButtonClick = useCallback(
     (type: ActiveTipButton) => {
+      // Helper functions for UI
+      const getTipValue = (type: ActiveTipButton) => {
+        if (!type) return "0";
+        const baseValue = averageTipPaid;
+        switch (type) {
+          case "down5":
+            return (baseValue * 0.95).toFixed(2);
+          case "down1":
+            return (baseValue * 0.99).toFixed(2);
+          case "average":
+            return baseValue.toFixed(2);
+          case "up1":
+            return (baseValue * 1.01).toFixed(2);
+          case "up5":
+            return (baseValue * 1.05).toFixed(2);
+          default:
+            return "0";
+        }
+      };
+
       setActiveTipButton(type);
       const newValue = getTipValue(type);
       ctx.setValue("operatorTip", newValue);
     },
-    [ctx, getTipValue],
+    [ctx.setValue, averageTipPaid],
   );
 
   // Update operator tip when average changes and button is active
@@ -660,13 +668,7 @@ SowOrderV0Fields.ExecutionsAndTip = function ExecutionsAndTip({ className }: { c
       console.error("Error calculating total tip:", e);
       return "~0";
     }
-  }, [
-    cleanedValues,
-    calculationFields.operatorTip,
-    calculationFields.totalAmount,
-    calculationFields.maxPerSeason,
-    calculationFields.minSoil,
-  ]);
+  }, [cleanedValues, calculationFields.operatorTip, calculationFields.totalAmount, calculationFields.maxPerSeason]);
 
   return (
     <Col className={cn("gap-2", className)}>

@@ -148,7 +148,7 @@ export const useSowOrderV0Form = (): SowOrderV0Form => {
     });
 
     return missingFields;
-  }, [form.formState.errors]);
+  }, [form.getValues]);
 
   return {
     form,
@@ -258,7 +258,7 @@ export const useSowOrderV0State = () => {
           depositOptimizationCalls: depositOptimizationCalls ?? [],
         });
         options?.onSuccess?.();
-      } catch (e) {
+      } catch (_) {
         options?.onFailure?.();
       } finally {
         setIsLoading(false);
