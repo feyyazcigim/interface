@@ -5,14 +5,9 @@ import SmartSubmitButton from "@/components/SmartSubmitButton";
 import IconImage from "@/components/ui/IconImage";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import useSignTractorBlueprint from "@/hooks/tractor/useSignTractorBlueprint";
 import useTransaction from "@/hooks/useTransaction";
-import {
-  Blueprint,
-  PublisherTractorExecution,
-  createRequisition,
-  useGetBlueprintHash,
-  useSignRequisition,
-} from "@/lib/Tractor";
+import { Blueprint, PublisherTractorExecution, Requisition, useGetBlueprintHash } from "@/lib/Tractor";
 import { formatter } from "@/utils/format";
 import { CheckIcon, CornerBottomLeftIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
@@ -89,16 +84,15 @@ export default function ReviewTractorOrderDialog({
   depositOptimizationCalls,
 }: ReviewTractorOrderProps) {
   const { address } = useAccount();
-  const signRequisition = useSignRequisition();
-  const [signing, setSigning] = useState(false);
   const { data: blueprintHash } = useGetBlueprintHash(blueprint);
   const [activeTab, setActiveTab] = useState<"order" | "blueprint" | "executions">("order");
   const [decodeAbi, setDecodeAbi] = useState(false);
-  const [signedRequisitionData, setSignedRequisitionData] = useState<any>(null);
   const protocolAddress = useProtocolAddress();
   const navigate = useNavigate();
 
-  const { writeWithEstimateGas, submitting, setSubmitting } = useTransaction({
+  const { signBlueprint, signedRequisition, isSigning: signing } = useSignTractorBlueprint();
+
+  const { writeWithEstimateGas, submitting, isConfirming, setSubmitting } = useTransaction({
     successMessage: "Order published successfully",
     errorMessage: "Failed to publish order",
     successCallback: () => {
@@ -115,30 +109,19 @@ export default function ReviewTractorOrderDialog({
       return;
     }
 
-    try {
-      setSigning(true);
-      // Create and sign the requisition using the hash
-      const requisition = createRequisition(blueprint, blueprintHash);
-      const signedRequisition = await signRequisition(requisition);
-
-      // Store the signed requisition data
-      setSignedRequisitionData(signedRequisition);
-      toast.success("Blueprint signed successfully");
-    } catch (error) {
-      console.error("Error signing blueprint:", error);
-      toast.error("Failed to sign blueprint");
-    } finally {
-      setSigning(false);
-    }
+    await signBlueprint(blueprint, blueprintHash);
   };
 
   const handlePublishRequisition = async () => {
-    if (!signedRequisitionData?.signature) {
+    if (!signedRequisition?.signature) {
       toast.error("Please sign the blueprint first");
       return;
     }
 
+    const signedReq = signedRequisition as Required<Requisition>;
+
     try {
+      setSubmitting(true);
       // Check if we need to include deposit optimization calls
       if (depositOptimizationCalls && depositOptimizationCalls.length > 0) {
         console.debug(`Publishing requisition with ${depositOptimizationCalls.length} deposit optimization calls`);
@@ -147,7 +130,8 @@ export default function ReviewTractorOrderDialog({
         const publishRequisitionCall = encodeFunctionData({
           abi: diamondABI,
           functionName: "publishRequisition",
-          args: [signedRequisitionData],
+          // Type cast is okay here since we check signature above
+          args: [signedReq],
         });
 
         // Combine optimization calls with publish requisition call
@@ -168,7 +152,7 @@ export default function ReviewTractorOrderDialog({
           address: protocolAddress,
           abi: diamondABI,
           functionName: "publishRequisition",
-          args: [signedRequisitionData],
+          args: [signedRequisition],
         });
       }
 
@@ -192,6 +176,8 @@ export default function ReviewTractorOrderDialog({
       }
     } catch (error) {
       console.error("Error publishing requisition:", error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -357,11 +343,11 @@ export default function ReviewTractorOrderDialog({
                         <div className="flex items-center gap-1">
                           <CornerBottomLeftIcon className="text-gray-300 ml-4" />
                           <span className="font-light text-[#9C9C9C]">
-                            Withdraw Deposited Tokens from the Silo with the{" "}
+                            Withdraw Deposited Tokens from the Silo with{" "}
                             {orderData.tokenStrategy === "LOWEST_SEEDS"
-                              ? "Lowest Seeds"
+                              ? "the Lowest Seeds"
                               : orderData.tokenStrategy === "LOWEST_PRICE"
-                                ? "Best Price"
+                                ? "the Best Price"
                                 : orderData.tokenSymbol || "Selected Token"}
                           </span>
                         </div>
@@ -675,7 +661,7 @@ export default function ReviewTractorOrderDialog({
                   )}
                 </div>
                 <div className="flex flex-row gap-2 shrink-0 smaller-button-text">
-                  {signedRequisitionData ? (
+                  {signedRequisition ? (
                     <div className="flex items-center gap-2 text-pinto-green-4 font-medium px-6">
                       <CheckIcon width={24} height={24} />
                       <span>Signed</span>
@@ -692,11 +678,11 @@ export default function ReviewTractorOrderDialog({
 
                   <SmartSubmitButton
                     variant="gradient"
-                    disabled={submitting || !signedRequisitionData}
+                    disabled={submitting || isConfirming || !signedRequisition}
                     submitFunction={handlePublishRequisition}
-                    submitButtonText={submitting ? "Publishing..." : "Publish Order"}
+                    submitButtonText={submitting || isConfirming ? "Publishing..." : "Publish Order"}
                     className="w-min"
-                    style={!signedRequisitionData ? { opacity: 0.15 } : undefined}
+                    style={!signedRequisition ? { opacity: 0.15 } : undefined}
                   />
                 </div>
               </Row>
