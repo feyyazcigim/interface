@@ -30,10 +30,10 @@
 - **GraphQL Code Generation** - Generated queries from multiple subgraphs
 - **React Hook Form** - Form handling with validation
 
-### Styling & UI
-- **Radix UI** - Headless component primitives
+### Styling & U
+- **Shadcn & Radix UI** - Headless component primitives
 - **Framer Motion** - Animation library
-- **Custom Design System** - Pinto-branded components
+- **Custom Design System** - Pinto-branded components.
 - **Responsive Design** - Mobile-first approach
 
 ### Development Tools
@@ -115,7 +115,7 @@ src/
 ### Data Flow
 1. **Subgraph Data**: GraphQL queries to protocol subgraphs
 2. **On-chain Data**: Direct contract calls for real-time data
-3. **Price Data**: External APIs for price feeds
+3. **API Data**: Data retrieved form pinto api.
 4. **State Updates**: Automated updaters refresh global state
 
 ## Development Workflow
@@ -235,6 +235,12 @@ VITE_BASE_ENDPOINT=""       # Base domain for the application
 - **Environment Variables**: Ensure all required VITE_ variables are set
 
 This project represents a sophisticated DeFi frontend with complex state management, multi-chain support, and integration with various DeFi protocols and services.
+
+
+### Coding Rules ###
+1. **DRY** - Stick with DRY principles.
+2. **useReadContract / useQuery**
+   - If a select function is required to transform data, always create a stable reference to the select function to prevent unnecessary calculations.
 
 ## AI Agent Workflow Rules
 

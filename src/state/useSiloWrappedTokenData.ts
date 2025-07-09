@@ -4,7 +4,7 @@ import { defaultQuerySettings } from "@/constants/query";
 import { S_MAIN_TOKEN } from "@/constants/tokens";
 import { useChainConstant } from "@/utils/chain";
 import { Token } from "@/utils/types";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useReadContract } from "wagmi";
 import { usePriceData } from "./usePriceData";
 import useTokenData from "./useTokenData";
@@ -21,6 +21,11 @@ const getExchangeRate = (mainToken: Token, siloWrappedToken: Token, amount: bigi
 export const useSiloWrappedTokenExchangeRateQuery = () => {
   const { mainToken, siloWrappedToken } = useTokenData();
 
+  const handleSelectExchangeRate = useCallback(
+    (data: bigint) => getExchangeRate(mainToken, siloWrappedToken, data),
+    [mainToken, siloWrappedToken],
+  );
+
   return useReadContract({
     address: siloWrappedToken.address,
     abi: siloedPintoABI,
@@ -28,9 +33,7 @@ export const useSiloWrappedTokenExchangeRateQuery = () => {
     args: [BigInt(10 ** mainToken.decimals)],
     query: {
       ...defaultQuerySettings,
-      select: (data) => {
-        return getExchangeRate(mainToken, siloWrappedToken, data);
-      },
+      select: handleSelectExchangeRate,
     },
   });
 };
@@ -56,11 +59,11 @@ export const useSiloWrappedTokenExchangeRate = () => {
 };
 
 export const useSiloWrappedTokenToUSD = (amount: TV | undefined) => {
-  const { data: exchangeRate = TV.ZERO, usd, ...query } = useSiloWrappedTokenExchangeRate();
+  const { usd, ...query } = useSiloWrappedTokenExchangeRate();
 
   const totalUSD = useMemo(() => {
     return amount?.mul(usd) ?? TV.ZERO;
-  }, [amount, exchangeRate, usd]);
+  }, [amount, usd]);
 
   return {
     isLoading: query.isLoading,
