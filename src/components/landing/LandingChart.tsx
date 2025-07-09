@@ -85,10 +85,17 @@ const personIcons = [
 ];
 
 // Memoize FarmerProfile to avoid unnecessary re-renders
-const FarmerProfile = React.memo(function FarmerProfile({ icon, bg }: { icon: string; bg: string }) {
+const FarmerProfile = React.memo(function FarmerProfile({
+  icon,
+  bg,
+  size = 32,
+}: { icon: string; bg: string; size?: number }) {
   return (
-    <div className="w-8 h-8 flex items-center justify-center rounded-full" style={{ backgroundColor: bg }}>
-      <span className="text-2xl">{icon}</span>
+    <div
+      className="flex items-center justify-center rounded-full border"
+      style={{ backgroundColor: bg, width: size, height: size }}
+    >
+      <span style={{ fontSize: size * 0.75 }}>{icon}</span>
     </div>
   );
 });
@@ -299,7 +306,23 @@ export default function LandingChart() {
     return () => {
       controls?.stop();
     };
-  }, [scrollOffset, measurementX, unstablePhaseWidth, stablePhaseWidth]);
+  }, [scrollOffset, unstablePhaseWidth, stablePhaseWidth]);
+
+  const [showAnimation, setShowAnimation] = useState<(string | undefined)[]>(() => personIcons.map(() => undefined));
+
+  useEffect(() => {
+    personIcons.forEach((data, index) => {
+      const isCurrent =
+        currentFarmer && data.icon === currentFarmer.icon && data.bg === currentFarmer.bg && currentTxType;
+      if (isCurrent) {
+        setShowAnimation((prev) => {
+          const next = [...prev];
+          next[index] = currentTxType || undefined;
+          return next;
+        });
+      }
+    });
+  }, [currentFarmer, currentTxType]);
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full">
@@ -422,6 +445,61 @@ export default function LandingChart() {
             isFixed={false}
           />
         </motion.div>
+      </div>
+      <div className="flex flex-row justify-between w-full px-14 mt-5 mb-5">
+        {personIcons.map((data, index) => {
+          // Use a unique key for each profile
+          const key = `${data.icon}-${data.bg}`;
+          return (
+            <div key={key} className="flex flex-col items-center relative">
+              <div className="px-[0.8125rem] py-2 absolute top-0 border-t border-l border-r rounded-t-3xl border-transparent">
+                <FarmerProfile icon={data.icon} bg={data.bg} size={36} />
+              </div>
+              <motion.div
+                animate={{ opacity: showAnimation[index] ? 1 : 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                onAnimationComplete={() => {
+                  if (!showAnimation[index]) return;
+                  setShowAnimation((prev) => {
+                    const next = [...prev];
+                    next[index] = undefined;
+                    return next;
+                  });
+                }}
+              >
+                <div className="px-[0.8125rem] py-2 border-t border-l border-r rounded-t-3xl">
+                  <FarmerProfile icon={data.icon} bg={data.bg} size={36} />
+                </div>
+                <div className="flex flex-row border p-2 gap-0.5">
+                  <div className="h-20 w-6 rounded bg-pinto-green basis-1/2" />
+                  <div className="flex flex-col gap-0.5 basis-1/2 items-center">
+                    <div className="w-5 rounded basis-1/4" style={{ backgroundColor: "#2775CA" }} />
+                    <div className="w-5 rounded basis-1/4" style={{ backgroundColor: "#9945FF" }} />
+                    <div className="w-5 rounded basis-1/4" style={{ backgroundColor: "#F7931A" }} />
+                    <div className="w-5 rounded basis-1/4" style={{ backgroundColor: "#0052FF" }} />
+                    <div className="w-5 rounded basis-1/4" style={{ backgroundColor: "#8C8C8C" }} />
+                  </div>
+                </div>
+              </motion.div>
+              {/* 
+              <motion.div
+                initial={false}
+                animate={{
+                  opacity: isCurrent ? 1 : 0,
+                  y: isCurrent ? 0 : 10,
+                }}
+                transition={{ duration: 0.3 }}
+                className="text-green-700 font-semibold text-xs mt-1"
+                style={{ minHeight: 18 }}
+              >
+                {isCurrent && typeof currentTxType === "string"
+                  ? `${currentTxType.charAt(0).toUpperCase() + currentTxType.slice(1)} complete!`
+                  : ""}
+              </motion.div>
+            */}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
