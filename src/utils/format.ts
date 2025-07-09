@@ -75,6 +75,19 @@ export const formatNum = (val: NumberPrimitive, options?: FormatNumOptions) => {
   return formatted;
 };
 
+const formatNumNoDecimalTruncation = (val: NumberPrimitive, options?: IDefaultValue) => {
+  if (val === undefined || val === null) return options?.defaultValue || "0.00";
+
+  const numStr = val instanceof TokenValue ? val.toHuman() : val.toString();
+
+  const cleanValue = numStr.replace(/,/g, "");
+  const parts = cleanValue.split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const joined = parts.join(".");
+
+  return joined;
+};
+
 export const formatUSD = (val: NumberPrimitive, options?: FormatUSDOptions) => {
   const formatted = formatNum(val || TokenValue.ZERO, {
     minDecimals: options?.decimals ?? 2,
@@ -247,6 +260,7 @@ export const formatter = {
   xDec: formatXDecimals,
   date: formatDate,
   token: formatTokenAmount,
+  noDecTrunc: formatNumNoDecimalTruncation,
 };
 
 const numberFormatter = (d: number) => (v: number) => `${formatter.number(v, { minDecimals: d, maxDecimals: d })}`;

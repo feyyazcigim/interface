@@ -63,3 +63,68 @@ export const isValidAddress = (address: string | HashString | undefined) => {
   if (!address) return false;
   return isAddress(address);
 };
+
+const nonAmounts = new Set<string>([".", ""]);
+const cleanAmount = (value: string) => value.replace(/[^0-9.]/g, "");
+
+export const sanitizeNumericInputValue = (value: string, valueDecimals: number) => {
+  const obj = {
+    str: value,
+    strValue: "0",
+    tv: TokenValue.fromHuman("0", valueDecimals),
+    nonAmount: true,
+  };
+
+  if (nonAmounts.has(value)) {
+    return obj;
+  }
+
+  const cleaned = cleanAmount(value);
+  if (!cleaned) {
+    return obj;
+  }
+
+  const [pre, ...post] = cleaned.split(".");
+  const decimals = post.join("");
+
+  const endsWithDot = cleaned.endsWith(".") && !post.length;
+  const startsWithDot = cleaned.startsWith(".") && !pre.length;
+
+  const mayDot = !!post.length || endsWithDot ? "." : "";
+  const back = decimals.slice(0, valueDecimals);
+
+  if (startsWithDot) {
+    obj.str = `.${back}`;
+    obj.strValue = `0.${back}`;
+  } else if (endsWithDot) {
+    obj.str = `${pre}.`;
+    obj.strValue = `${pre}.0`;
+  } else {
+    obj.strValue = `${pre}${mayDot}${back}`;
+    obj.str = obj.strValue;
+  }
+
+  obj.tv = TokenValue.fromHuman(obj.strValue, valueDecimals);
+  obj.nonAmount = false;
+
+  return obj;
+};
+
+export const postSanitizedSanitizedValue = (value: string, valueDecimals: number) => {
+  const obj = {
+    str: value,
+    strValue: value,
+    tv: TokenValue.fromHuman("0", valueDecimals),
+    nonAmount: true,
+  };
+
+  if (nonAmounts.has(value)) return obj;
+
+  const cleaned = cleanAmount(value);
+  if (!cleaned) return obj;
+
+  obj.tv = TokenValue.fromHuman(cleaned, valueDecimals);
+  obj.nonAmount = false;
+
+  return obj;
+};
