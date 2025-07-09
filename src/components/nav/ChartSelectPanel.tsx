@@ -2,8 +2,10 @@ import IconImage from "@/components/ui/IconImage";
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { useChartSetupData } from "@/state/useChartSetupData";
 import { useSeason } from "@/state/useSunData";
+import { useDebouncedEffect } from "@/utils/useDebounce";
 import { cn } from "@/utils/utils";
 import { useAtom } from "jotai";
+import { isEqual } from "lodash";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDownIcon, SearchIcon } from "../Icons";
 import { MIN_ADV_SEASON, chartSeasonInputsAtom, selectedChartsAtom } from "../charts/AdvancedChart";
@@ -23,9 +25,8 @@ const ChartSelectPanel = memo(() => {
   const [searchInput, setSearchInput] = useState("");
   const [internalSelected, setInternalSelected] = useState(selectedCharts);
   const [internalSeasonInputs, setInternalSeasonInputs] = useState(chartSeasonInputs);
-  const [rawSeasonInputs, setRawSeasonInputs] = useState<Record<string, string>>({});
+  const [rawSeasonInputs, setRawSeasonInputs] = useState<Record<string, number>>({});
   const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set());
-  const validationTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
 
   const currentlySelected = internalSelected.length;
   const maxChartsSelected = chartColors.length;
@@ -93,16 +94,7 @@ const ChartSelectPanel = memo(() => {
         // When deselecting, also clear the season input for this chart
         const chartData = chartSetupData.find((chart) => chart.index === selection);
         if (chartData) {
-          if (validationTimeouts.current[chartData.id]) {
-            clearTimeout(validationTimeouts.current[chartData.id]);
-            delete validationTimeouts.current[chartData.id];
-          }
           setInternalSeasonInputs((prev) => {
-            const updated = { ...prev };
-            delete updated[chartData.id];
-            return updated;
-          });
-          setRawSeasonInputs((prev) => {
             const updated = { ...prev };
             delete updated[chartData.id];
             return updated;
@@ -116,10 +108,6 @@ const ChartSelectPanel = memo(() => {
           setInternalSeasonInputs((prev) => ({
             ...prev,
             [chartData.id]: MIN_ADV_SEASON,
-          }));
-          setRawSeasonInputs((prev) => ({
-            ...prev,
-            [chartData.id]: MIN_ADV_SEASON.toString(),
           }));
         }
         selectedItems.push(selection);
@@ -136,14 +124,20 @@ const ChartSelectPanel = memo(() => {
     if (isOpen) {
       setInternalSelected([...selectedCharts]);
       setInternalSeasonInputs({ ...chartSeasonInputs });
+    }
+  }, [isOpen, selectedCharts, chartSeasonInputs]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only rerun on internal input change
+  useEffect(() => {
+    if (!isEqual(internalSeasonInputs, rawSeasonInputs)) {
       // Initialize raw inputs from the stored values
-      const rawInputs: Record<string, string> = {};
-      Object.entries(chartSeasonInputs).forEach(([chartId, value]) => {
-        rawInputs[chartId] = value.toString();
+      const rawInputs: Record<string, number> = {};
+      Object.entries(internalSeasonInputs).forEach(([chartId, value]) => {
+        rawInputs[chartId] = value;
       });
       setRawSeasonInputs(rawInputs);
     }
-  }, [isOpen, selectedCharts, chartSeasonInputs]);
+  }, [internalSeasonInputs]);
 
   // Save selections and season inputs when panel closes
   useEffect(() => {
@@ -153,65 +147,24 @@ const ChartSelectPanel = memo(() => {
     }
   }, [isOpen, internalSelected, internalSeasonInputs, setSelected, setChartSeasonInputs]);
 
-  // Handle raw season input changes with debounced validation
-  const handleSeasonInputChange = useCallback(
-    (chartId: string, value: string) => {
-      // Clear existing timeout for this specific chart
-      if (validationTimeouts.current[chartId]) {
-        clearTimeout(validationTimeouts.current[chartId]);
-      }
-
-      // Update raw input immediately
-      setRawSeasonInputs((prev) => ({
-        ...prev,
-        [chartId]: value,
-      }));
-
-      // Set new timeout only for this chart
-      validationTimeouts.current[chartId] = setTimeout(() => {
-        const numValue = parseInt(value, 10);
-        if (!Number.isNaN(numValue) && value.trim() !== "") {
-          const clampedValue = Math.max(MIN_ADV_SEASON, Math.min(currentSeason, numValue));
-          setInternalSeasonInputs((prev) => ({
-            ...prev,
-            [chartId]: clampedValue,
-          }));
-          // Update raw input to show the clamped value
-          setRawSeasonInputs((prev) => ({
-            ...prev,
-            [chartId]: clampedValue.toString(),
-          }));
-        } else if (value.trim() === "") {
-          // Don't allow empty values - revert to minimum value
-          setInternalSeasonInputs((prev) => ({
-            ...prev,
-            [chartId]: MIN_ADV_SEASON,
-          }));
-          setRawSeasonInputs((prev) => ({
-            ...prev,
-            [chartId]: MIN_ADV_SEASON.toString(),
-          }));
-        }
-        delete validationTimeouts.current[chartId];
-      }, 500);
-    },
-    [currentSeason],
-  );
-
-  useEffect(() => {
-    if (!isOpen) {
-      // Clear all pending timeouts when panel closes
-      Object.values(validationTimeouts.current).forEach(clearTimeout);
-      validationTimeouts.current = {};
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    // Cleanup on unmount
-    return () => {
-      Object.values(validationTimeouts.current).forEach(clearTimeout);
-    };
+  const handleSeasonInputChange = useCallback((chartId: string, value: string) => {
+    setRawSeasonInputs((prev) => ({
+      ...prev,
+      [chartId]: Number(value),
+    }));
   }, []);
+
+  useDebouncedEffect(
+    () => {
+      const clampedInputs = {};
+      for (const chartId in rawSeasonInputs) {
+        clampedInputs[chartId] = Math.max(MIN_ADV_SEASON, Math.min(currentSeason, rawSeasonInputs[chartId]));
+      }
+      setInternalSeasonInputs(clampedInputs);
+    },
+    [rawSeasonInputs, currentSeason],
+    500,
+  );
 
   return (
     <>
