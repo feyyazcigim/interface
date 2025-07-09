@@ -15,6 +15,10 @@ const creamABISnippet = [
   },
 ] as const;
 
+const select = (token: bigint) => {
+  return TokenValue.fromBigInt(token, 28);
+};
+
 export const useCreamSiloWrappedTokenExchangeRate = () => {
   const token = useChainConstant(CREAM_S_MAIN_TOKEN);
   return useReadContract({
@@ -22,9 +26,7 @@ export const useCreamSiloWrappedTokenExchangeRate = () => {
     abi: creamABISnippet,
     functionName: "exchangeRateStored",
     query: {
-      select: (data) => {
-        return TokenValue.fromBigInt(data, 28);
-      },
+      select: select,
     },
   });
 };
