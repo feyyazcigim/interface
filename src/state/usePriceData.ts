@@ -94,7 +94,10 @@ export function useTwaDeltaBLPQuery() {
 
 export function useInstantTWATokenPricesQuery() {
   const tokenData = useTokenData();
-  const tokensToFetch = tokenData.preferredTokens.filter((token) => !token.isMain);
+  const tokensToFetch = useMemo(
+    () => tokenData.preferredTokens.filter((token) => !token.isMain),
+    [tokenData.preferredTokens],
+  );
   const protocolAddress = useProtocolAddress();
 
   const selectPriceData = useCallback(

@@ -41,7 +41,7 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { PoolData, usePriceData } from "@/state/usePriceData";
 import { useSiloData } from "@/state/useSiloData";
 import { useInvalidateSun } from "@/state/useSunData";
-import { useChainConstant } from "@/utils/chain";
+import { getChainConstant, useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
 import { stringEq, stringToNumber } from "@/utils/string";
 import { getTokenIndex, tokensEqual } from "@/utils/token";
@@ -88,6 +88,7 @@ function ConvertForm({
   const [maxConvert, setMaxConvert] = useState(TV.ZERO);
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
   const [showMinAmountWarning, setShowMinAmountWarning] = useState(false);
+  const pintoWSOL = useChainConstant(PINTO_WSOL_TOKEN);
 
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
   const clearSiloConvertQueries = useClearSiloConvertQueries();
@@ -295,21 +296,30 @@ function ConvertForm({
       ? TV.min(deltaPEnabled ? maxConvertQueryData : TV.ZERO, farmerConvertibleAmount)
       : farmerConvertibleAmount;
 
-    // Cap at $10k USD when converting PINTOWSOL to PINTO
-    const isPintoWsolToPinto = siloToken.address.toLowerCase() === PINTO_WSOL_TOKEN[siloToken.chainId]?.address.toLowerCase() && targetToken.isMain;
     let finalMaxAmount = maxAmount;
-    
-    if (isPintoWsolToPinto) {
-      const tokenPrice = tokenPrices.get(siloToken);
-      if (tokenPrice) {
+
+    // Cap at $10k USD when converting PINTOWSOL to PINTO
+    const pintowsol = getChainConstant(siloToken.chainId, PINTO_WSOL_TOKEN);
+    if (tokensEqual(siloToken, pintowsol) && targetToken.isMain) {
+      const tokenPriceBigInt = tokenPrices.get(siloToken)?.instant?.toBigInt();
+      if (tokenPriceBigInt) {
         const usdThreshold = TV.fromHuman("10000", 6); // $10,000 USD
-        const maxAmountInToken = usdThreshold.div(tokenPrice.instant);
+        const maxAmountInToken = usdThreshold.div(TV.fromBigInt(tokenPriceBigInt, 6));
         finalMaxAmount = TV.min(maxAmount, maxAmountInToken);
       }
     }
 
     setMaxConvert(minAmountIn?.gt(finalMaxAmount) ? TV.ZERO : finalMaxAmount);
-  }, [targetToken, minAmountIn, isDefaultConvert, deltaPEnabled, maxConvertQueryData, farmerConvertibleAmount, siloToken, tokenPrices]);
+  }, [
+    targetToken,
+    minAmountIn,
+    isDefaultConvert,
+    deltaPEnabled,
+    maxConvertQueryData,
+    farmerConvertibleAmount,
+    siloToken,
+    tokenPrices,
+  ]);
 
   // Show warning if amount is less than min amount
   useEffect(() => {
@@ -937,7 +947,6 @@ const MinAmountWarning = ({
     </Warning>
   );
 };
-
 
 const LP2LPMinConvertWarning = ({
   enabled,
