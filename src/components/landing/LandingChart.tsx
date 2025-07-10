@@ -595,8 +595,8 @@ export default function LandingChart() {
                 )}
                 {showAnimation[index] === "yield" && (
                   <div className="flex flex-row h-[6rem] overflow-hidden">
-                    <div className="border p-2 h-16">
-                      <img src={"Yield_Landing.svg"} alt="Yield" className="h-12 w-12" />
+                    <div className="border py-2 px-[0.9375rem] h-12">
+                      <img src={"Yield_Landing.svg"} alt="Yield" className="h-8 w-8" />
                     </div>
                   </div>
                 )}
