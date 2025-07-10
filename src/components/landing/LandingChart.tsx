@@ -479,118 +479,127 @@ export default function LandingChart() {
                 <div className="px-[0.8125rem] py-2 border-t border-l border-r rounded-t-3xl">
                   <FarmerProfile icon={data.icon} bg={data.bg} size={36} />
                 </div>
-                <div className="flex flex-row border h-[6rem] p-2 gap-0.5 overflow-hidden">
-                  <motion.div
-                    className="h-20 w-6 rounded bg-pinto-green self-end"
-                    variants={{
-                      deposit: { width: "30%" },
-                      convert: { width: "70%" },
-                      withdraw: { width: "50%", transform: "translateX(-150%)" },
-                      harvest: {
-                        width: "50%",
-                        height: ["25%", "100%"],
-                        transition: { duration: 0.75, ease: "easeInOut" },
-                      },
-                      sow: { width: "50%" },
-                      yield: { width: "50%" },
-                      default: { width: "50%" },
-                    }}
-                    animate={showAnimation[index] || "default"}
-                    transition={{ duration: 0.25, ease: "easeIn" }}
-                    style={{ minWidth: 0 }}
-                  />
-                  <motion.div
-                    className="flex flex-col gap-0.5 items-center"
-                    variants={{
-                      deposit: { width: "70%" },
-                      convert: { width: "30%" },
-                      withdraw: { width: "50%", transform: "translateX(150%)" },
-                      harvest: { width: "50%" },
-                      sow: { width: "50%" },
-                      yield: { width: "50%" },
-                      default: { width: "50%" },
-                    }}
-                    animate={showAnimation[index] || "default"}
-                    transition={{ duration: 0.25, ease: "easeIn" }}
-                    style={{ minWidth: 0 }}
-                  >
+                {showAnimation[index] !== "yield" && (
+                  <div className="flex flex-row border h-[6rem] p-2 gap-0.5 overflow-hidden">
                     <motion.div
-                      className="w-full rounded basis-1/4"
+                      className="h-20 w-6 rounded bg-pinto-green self-end"
                       variants={{
-                        deposit: { height: "20%" },
-                        convert: { height: "20%" },
-                        withdraw: { height: "20%" },
-                        harvest: { height: "20%" },
-                        sow: { height: "20%" },
-                        yield: { height: "20%" },
-                        default: { height: "20%" },
+                        deposit: { width: "30%" },
+                        convert: { width: "70%" },
+                        withdraw: { width: "50%", transform: "translateX(-150%)" },
+                        harvest: {
+                          width: "50%",
+                          height: ["25%", "100%"],
+                          transition: { duration: 0.75, ease: "easeInOut" },
+                        },
+                        sow: { width: "50%" },
+                        yield: { width: "50%" },
+                        default: { width: "50%" },
                       }}
                       animate={showAnimation[index] || "default"}
                       transition={{ duration: 0.25, ease: "easeIn" }}
-                      style={{ backgroundColor: "#2775CA" }}
+                      style={{ minWidth: 0 }}
                     />
                     <motion.div
-                      className="w-full rounded basis-1/4"
+                      className="flex flex-col gap-0.5 items-center"
                       variants={{
-                        deposit: { height: "20%" },
-                        convert: { height: "20%" },
-                        withdraw: { height: "20%" },
-                        harvest: { height: "20%" },
-                        sow: { height: "20%" },
-                        yield: { height: "20%" },
-                        default: { height: "20%" },
+                        deposit: { width: "70%" },
+                        convert: { width: "30%" },
+                        withdraw: { width: "50%", transform: "translateX(150%)" },
+                        harvest: { width: "50%" },
+                        sow: { width: "50%" },
+                        yield: { width: "50%" },
+                        default: { width: "50%" },
                       }}
                       animate={showAnimation[index] || "default"}
                       transition={{ duration: 0.25, ease: "easeIn" }}
-                      style={{ backgroundColor: "#9945FF" }}
-                    />
-                    <motion.div
-                      className="w-full rounded basis-1/4"
-                      variants={{
-                        deposit: { height: "20%" },
-                        convert: { height: "20%" },
-                        withdraw: { height: "20%" },
-                        harvest: { height: "20%" },
-                        sow: { height: "20%" },
-                        yield: { height: "20%" },
-                        default: { height: "20%" },
-                      }}
-                      animate={showAnimation[index] || "default"}
-                      transition={{ duration: 0.25, ease: "easeIn" }}
-                      style={{ backgroundColor: "#F7931A" }}
-                    />
-                    <motion.div
-                      className="w-full rounded basis-1/4"
-                      variants={{
-                        deposit: { height: "20%" },
-                        convert: { height: "20%" },
-                        withdraw: { height: "20%" },
-                        harvest: { height: "20%" },
-                        sow: { height: "20%" },
-                        yield: { height: "20%" },
-                        default: { height: "20%" },
-                      }}
-                      animate={showAnimation[index] || "default"}
-                      transition={{ duration: 0.25, ease: "easeIn" }}
-                      style={{ backgroundColor: "#0052FF" }}
-                    />
-                    <motion.div
-                      className="w-full rounded basis-1/4"
-                      variants={{
-                        deposit: { height: "20%" },
-                        convert: { height: "20%" },
-                        withdraw: { height: "20%" },
-                        harvest: { height: "20%" },
-                        sow: { height: "20%" },
-                        yield: { height: "20%" },
-                        default: { height: "20%" },
-                      }}
-                      animate={showAnimation[index] || "default"}
-                      transition={{ duration: 0.25, ease: "easeIn" }}
-                      style={{ backgroundColor: "#8C8C8C" }}
-                    />
-                  </motion.div>
-                </div>
+                      style={{ minWidth: 0 }}
+                    >
+                      <motion.div
+                        className="w-full rounded basis-1/4"
+                        variants={{
+                          deposit: { height: "20%" },
+                          convert: { height: "20%" },
+                          withdraw: { height: "20%" },
+                          harvest: { height: "20%" },
+                          sow: { height: "20%" },
+                          yield: { height: "20%" },
+                          default: { height: "20%" },
+                        }}
+                        animate={showAnimation[index] || "default"}
+                        transition={{ duration: 0.25, ease: "easeIn" }}
+                        style={{ backgroundColor: "#2775CA" }}
+                      />
+                      <motion.div
+                        className="w-full rounded basis-1/4"
+                        variants={{
+                          deposit: { height: "20%" },
+                          convert: { height: "20%" },
+                          withdraw: { height: "20%" },
+                          harvest: { height: "20%" },
+                          sow: { height: "20%" },
+                          yield: { height: "20%" },
+                          default: { height: "20%" },
+                        }}
+                        animate={showAnimation[index] || "default"}
+                        transition={{ duration: 0.25, ease: "easeIn" }}
+                        style={{ backgroundColor: "#9945FF" }}
+                      />
+                      <motion.div
+                        className="w-full rounded basis-1/4"
+                        variants={{
+                          deposit: { height: "20%" },
+                          convert: { height: "20%" },
+                          withdraw: { height: "20%" },
+                          harvest: { height: "20%" },
+                          sow: { height: "20%" },
+                          yield: { height: "20%" },
+                          default: { height: "20%" },
+                        }}
+                        animate={showAnimation[index] || "default"}
+                        transition={{ duration: 0.25, ease: "easeIn" }}
+                        style={{ backgroundColor: "#F7931A" }}
+                      />
+                      <motion.div
+                        className="w-full rounded basis-1/4"
+                        variants={{
+                          deposit: { height: "20%" },
+                          convert: { height: "20%" },
+                          withdraw: { height: "20%" },
+                          harvest: { height: "20%" },
+                          sow: { height: "20%" },
+                          yield: { height: "20%" },
+                          default: { height: "20%" },
+                        }}
+                        animate={showAnimation[index] || "default"}
+                        transition={{ duration: 0.25, ease: "easeIn" }}
+                        style={{ backgroundColor: "#0052FF" }}
+                      />
+                      <motion.div
+                        className="w-full rounded basis-1/4"
+                        variants={{
+                          deposit: { height: "20%" },
+                          convert: { height: "20%" },
+                          withdraw: { height: "20%" },
+                          harvest: { height: "20%" },
+                          sow: { height: "20%" },
+                          yield: { height: "20%" },
+                          default: { height: "20%" },
+                        }}
+                        animate={showAnimation[index] || "default"}
+                        transition={{ duration: 0.25, ease: "easeIn" }}
+                        style={{ backgroundColor: "#8C8C8C" }}
+                      />
+                    </motion.div>
+                  </div>
+                )}
+                {showAnimation[index] === "yield" && (
+                  <div className="flex flex-row h-[6rem] overflow-hidden">
+                    <div className="border p-2 h-16">
+                      <img src={"Yield_Landing.svg"} alt="Yield" className="h-12 w-12" />
+                    </div>
+                  </div>
+                )}
               </motion.div>
               {/* 
               <motion.div
