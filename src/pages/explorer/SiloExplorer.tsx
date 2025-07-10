@@ -72,7 +72,7 @@ const TotalLiquidityChart = React.memo(({ season }: ISeason) => {
 const L2SRChart = React.memo(({ season }: ISeason) => {
   const [l2srTab, setL2srTab] = useTimeTabs("l2sr");
 
-  const l2srData = useSeasonalL2SR(Math.max(7, season - tabToSeasonalLookback(l2srTab)), season);
+  const l2srData = useSeasonalL2SR(Math.max(9, season - tabToSeasonalLookback(l2srTab)), season);
 
   return (
     <SeasonalChart
