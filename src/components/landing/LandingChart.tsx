@@ -607,22 +607,6 @@ export default function LandingChart() {
                   </div>
                 )}
               </motion.div>
-              {/* 
-              <motion.div
-                initial={false}
-                animate={{
-                  opacity: isCurrent ? 1 : 0,
-                  y: isCurrent ? 0 : 10,
-                }}
-                transition={{ duration: 0.3 }}
-                className="text-green-700 font-semibold text-xs mt-1"
-                style={{ minHeight: 18 }}
-              >
-                {isCurrent && typeof currentTxType === "string"
-                  ? `${currentTxType.charAt(0).toUpperCase() + currentTxType.slice(1)} complete!`
-                  : ""}
-              </motion.div>
-            */}
             </div>
           );
         })}
