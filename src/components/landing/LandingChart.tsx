@@ -282,11 +282,24 @@ export default function LandingChart() {
   // Get the current txType and farmer for the floating marker
   const [currentTxType, setCurrentTxType] = useState<string | null>(null);
   const [currentFarmer, setCurrentFarmer] = useState<Farmer | undefined>(undefined);
+
+  const lineStrokeColor = useMotionValue("#387F5C");
+
   useEffect(() => {
     const unsubscribe = currentIndex.on("change", (idx) => {
       const i = Math.max(0, Math.min(Math.round(idx), fullPriceData.length - 1));
-      setCurrentTxType(fullPriceData[i].txType);
-      setCurrentFarmer(fullPriceData[i].farmer);
+      const newTxType = fullPriceData[i].txType;
+      const newFarmer = fullPriceData[i].farmer;
+
+      // Trigger flash effect when txType changes and is not null
+      if (newTxType !== currentTxType && newTxType !== null) {
+        animate(lineStrokeColor, "#00C767", { duration: 0.25, ease: "easeInOut" }).then(() => {
+          animate(lineStrokeColor, "#387F5C", { duration: 0.25, ease: "easeInOut" });
+        });
+      }
+
+      setCurrentTxType(newTxType);
+      setCurrentFarmer(newFarmer);
     });
     return unsubscribe;
   }, [currentIndex]);
@@ -369,7 +382,7 @@ export default function LandingChart() {
             <motion.path
               d={path}
               fill="none"
-              stroke="#387F5C"
+              stroke={lineStrokeColor}
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -416,12 +429,19 @@ export default function LandingChart() {
         </svg>
         {/* Current measurement point */}
         <motion.div
-          className="absolute -ml-[0.625rem] -mt-[0.625rem] z-10 rounded-full border-4 w-5 h-5 border-pinto-green-4 bg-pinto-green-4 shadow-lg "
+          className="absolute -ml-[0.625rem] -mt-[0.625rem] z-10 rounded-full w-5 h-5 shadow-lg"
           style={{
             left: measurementX,
             top: currentY,
             pointerEvents: "none",
-            boxShadow: "0 0 10px #387F5C, 0 0 4.32px #387F5C, 0 0 2.16px #387F5C",
+            borderWidth: "4px",
+            borderStyle: "solid",
+            borderColor: lineStrokeColor,
+            backgroundColor: lineStrokeColor,
+            boxShadow: useTransform(
+              lineStrokeColor,
+              (color) => `0 0 10px ${color}, 0 0 4.32px ${color}, 0 0 2.16px ${color}`,
+            ),
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, scale: [1, 1.1, 1] }}
@@ -430,7 +450,7 @@ export default function LandingChart() {
             scale: { duration: 1, repeat: Infinity, ease: "easeInOut" },
           }}
         >
-          <div className="w-full h-full rounded-full bg-white border-pinto-green-4" />
+          <div className="w-full h-full rounded-full bg-white" />
         </motion.div>
         {/* Floating emoji + image marker above the animated circle */}
         <motion.div
