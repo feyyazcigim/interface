@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import TxFloater from "./TxFloater";
 
 const height = 577;
-const repetitions = 10; // Number of times to repeat the pattern
+const repetitions = 4; // Number of times to repeat the pattern
 const pointSpacing = 80; // pixels between each data point
 const scrollSpeed = 0.75;
 
@@ -58,10 +58,16 @@ const unstablePriceData: PricePoint[] = [
 const stablePriceData: PricePoint[] = [
   { txType: "sow", value: 0.9994 },
   { txType: "harvest", value: 1.0004 },
-  { txType: "deposit", value: 0.9994, speed: 5 },
-  { txType: "yield", value: 1.005, speed: 5 },
-  { txType: "convert", value: 0.995, speed: 5 },
+  { txType: null, value: 0.9994, speed: 3 },
+  { txType: "yield", value: 1.005, speed: 3 },
+  { txType: "convert", value: 0.995, speed: 1 },
+  { txType: null, value: 1.0004 },
+  { txType: "deposit", value: 0.9994 },
   { txType: "withdraw", value: 1.0004 },
+  { txType: null, value: 0.9994, speed: 3 },
+  { txType: "yield", value: 1.005, speed: 3 },
+  { txType: "convert", value: 0.995, speed: 1 },
+  { txType: null, value: 1.0004 },
 ];
 
 // Combine unstablePriceData once, then stablePriceData repeated for seamless looping
