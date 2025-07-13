@@ -1,5 +1,5 @@
-import { MotionValue, motion, useAnimation, useTransform } from "framer-motion";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { AnimationDefinition, MotionValue, motion, useAnimation, useTransform } from "framer-motion";
+import { ReactNode, useEffect, useRef } from "react";
 
 const TxTypeIcons: Record<string, string> = {
   deposit: "DoubleCaret_Landing.svg", // Deposit transaction type icon
@@ -19,6 +19,27 @@ const TxIcons: Record<string, string> = {
   yield: "Silo_Landing.svg",
 };
 
+const bounceInAnimation: AnimationDefinition = {
+  scale: [0, 1, 0.7, 1, 0.84, 1, 0.95, 1],
+  opacity: [0, 1, 1, 1, 1, 1, 1, 1],
+  transition: {
+    duration: 1,
+    times: [0, 0.38, 0.55, 0.72, 0.81, 0.89, 0.95, 1],
+    ease: "easeInOut",
+    repeat: 0, // Ensure no looping
+  },
+};
+
+const shortBounceInAnimation: AnimationDefinition = {
+  scale: [0, 1, 0.9, 1, 1, 0],
+  opacity: [0, 1, 1, 1, 1, 0],
+  transition: {
+    duration: 1,
+    times: [0, 0.25, 0.35, 0.45, 0.95, 1],
+    ease: "easeInOut",
+  },
+};
+
 export default function TxFloater({
   from,
   txType,
@@ -36,50 +57,109 @@ export default function TxFloater({
 }) {
   // Compute the floater's current screen X position
   const screenX = useTransform(x, (scrollX) => markerX + scrollX);
-  // Fade in as the floater crosses 65% of the viewport and stays visible
-  const fadeStart = viewportWidth * 0.67;
-  const fadeEnd = viewportWidth * 0.65;
-  const fixedOpacity = useTransform(screenX, [fadeStart, fadeEnd, fadeEnd + 1], [0, 1, 1]);
-  const finalFixedOpacity = useTransform(fixedOpacity, (o) => (from && txType ? o : 0));
 
-  // For floating floater, use local opacity state
-  const [floatOpacity, setFloatOpacity] = useState(0);
-  const prevFrom = useRef<ReactNode>(null);
-  const prevTxType = useRef<string | null>(null);
+  // Use animation controls for better control
+  const controls = useAnimation();
+  const lastValidFromRef = useRef<ReactNode>(null);
+  const lastValidTxTypeRef = useRef<string | null>(null);
+  const hasInitialized = useRef(false);
+  const hasAnimated = useRef(false);
 
+  // Pop in as the floater crosses 65% of the viewport and stays visible
+  const popInStart = viewportWidth * 0.67;
+  const popInEnd = viewportWidth * 0.65;
+  const fixedOpacity = useTransform(screenX, [popInStart, popInEnd], [0, 1]);
+  const showFixedTx = useTransform(fixedOpacity, (o) => (from && txType ? o : 0));
+
+  // For fixed floaters, listen to screenX changes directly
   useEffect(() => {
-    if (!isFixed) {
-      if (from && txType && (from !== prevFrom.current || txType !== prevTxType.current)) {
-        setFloatOpacity(0);
-        // Fade in
-        setTimeout(() => setFloatOpacity(1), 10);
-        // Fade out after 600ms
-        setTimeout(() => setFloatOpacity(0), 600);
+    if (!isFixed) return;
+
+    const unsubscribe = showFixedTx.on("change", (showTx) => {
+      if (showTx === 1 && !hasAnimated.current) {
+        controls.start(bounceInAnimation);
+        hasAnimated.current = true;
+      } else if (showTx < 1 && hasAnimated.current) {
+        controls.stop();
+        controls.set({ scale: 0, opacity: 0 });
+        hasAnimated.current = false;
       }
-      prevFrom.current = from;
-      prevTxType.current = txType;
+    });
+
+    return unsubscribe;
+  }, [isFixed, showFixedTx, controls]);
+
+  // Effect for floating floater data changes
+  useEffect(() => {
+    if (isFixed) return;
+
+    // Only update and animate if we have a valid txType
+    if (!from || !txType) {
+      // Hide immediately if no valid data
+      if (!hasInitialized.current) {
+        controls.set({ opacity: 0, scale: 0 });
+        hasInitialized.current = true;
+      }
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [from, txType, isFixed]);
+
+    // Create a combined key for comparison using only valid values
+    const currentValidKey = `${from}-${txType}`;
+    const lastValidKey = `${lastValidFromRef.current}-${lastValidTxTypeRef.current}`;
+
+    // Skip on first mount to set initial values
+    if (!hasInitialized.current) {
+      lastValidFromRef.current = from;
+      lastValidTxTypeRef.current = txType;
+      hasInitialized.current = true;
+      return;
+    }
+
+    // Only trigger animation if the valid state actually changed
+    if (currentValidKey !== lastValidKey) {
+      // Cancel any existing animation before starting new one
+      controls.stop();
+      controls.start(shortBounceInAnimation);
+
+      // Update last valid values
+      lastValidFromRef.current = from;
+      lastValidTxTypeRef.current = txType;
+    }
+  }, [from, txType, isFixed, controls]);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: isFixed ? undefined : floatOpacity }}
-      exit={isFixed ? undefined : { opacity: 0 }}
-      style={{
-        opacity: isFixed ? finalFixedOpacity : floatOpacity,
-      }}
-      transition={{ opacity: { ease: "easeInOut", duration: 0.2 } }}
+      animate={controls}
       className={`z-10 flex items-center justify-center bg-white border border-pinto-green-4 rounded-full ${
         isFixed ? "h-8 py-1 gap-1" : "w-[7.75rem] h-[3.25rem] px-3 py-2 gap-2"
       }`}
     >
-      <div className={`w-8 h-8 ${isFixed ? "scale-75" : "scale-100"}`}>{from}</div>
-      {txType && TxTypeIcons[txType] && <img alt="Convert" src={TxTypeIcons[txType]} className="w-4 h-4" />}
+      <div className={`w-8 h-8 ${isFixed ? "scale-75" : "scale-100"}`}>{isFixed ? from : lastValidFromRef.current}</div>
       <img
-        alt="Stuff"
-        src={txType ? TxIcons[txType] : undefined}
+        alt={lastValidTxTypeRef.current || "Transaction Type Icon"}
+        src={
+          isFixed
+            ? txType
+              ? TxTypeIcons[txType]
+              : undefined
+            : lastValidTxTypeRef.current
+              ? TxTypeIcons[lastValidTxTypeRef.current]
+              : undefined
+        }
+        className="w-4 h-4"
+      />
+      <img
+        alt={lastValidTxTypeRef.current || "Transaction Icon"}
+        src={
+          isFixed
+            ? txType
+              ? TxIcons[txType]
+              : undefined
+            : lastValidTxTypeRef.current
+              ? TxIcons[lastValidTxTypeRef.current]
+              : undefined
+        }
         className={`w-8 h-8 ${isFixed ? "scale-[0.85] mr-0.5" : "scale-100"}`}
       />
     </motion.div>
