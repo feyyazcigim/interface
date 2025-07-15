@@ -206,8 +206,11 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
                 <MobileNavLink variant="h4" nested external href={navLinks.docs} onClick={unmountAndClose}>
                   Docs
                 </MobileNavLink>
-                <MobileNavLink variant="h4" nested href={navLinks.blog} onClick={unmountAndClose}>
-                  Blog
+                <MobileNavLink variant="h4" nested external href={navLinks.blog} onClick={unmountAndClose}>
+                  Official Blog
+                </MobileNavLink>
+                <MobileNavLink variant="h4" nested external href={navLinks.communityBlog} onClick={unmountAndClose}>
+                  Community Blog
                 </MobileNavLink>
                 <MobileNavLink variant="h4" nested external href={navLinks.whitepaper} onClick={unmountAndClose}>
                   Whitepaper
