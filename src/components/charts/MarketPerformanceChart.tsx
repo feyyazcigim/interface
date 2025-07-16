@@ -3,7 +3,7 @@ import useTokenData from "@/state/useTokenData";
 import { chartFormatters as f, formatDate } from "@/utils/format";
 import { getChainTokenMap } from "@/utils/token";
 import { SeasonalMarketPerformanceChartData, Token } from "@/utils/types";
-import { cn } from "@/utils/utils";
+import { cn, truncSeconds } from "@/utils/utils";
 import { subMonths, subWeeks } from "date-fns";
 import { IRange, Time } from "lightweight-charts";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -18,9 +18,9 @@ import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
 
 // Predefined date ranges
 const DATE_PRESETS: Record<Exclude<string, "CUSTOM">, DatePresetConfig> = {
-  Week: { from: () => subWeeks(new Date(), 1), to: () => new Date() },
-  Month: { from: () => subMonths(new Date(), 1), to: () => new Date() },
-  All: { from: () => new Date("2024-11-01"), to: () => new Date() },
+  Week: { from: () => truncSeconds(subWeeks(new Date(), 1)), to: () => truncSeconds(new Date()) },
+  Month: { from: () => truncSeconds(subMonths(new Date(), 1)), to: () => truncSeconds(new Date()) },
+  All: { from: () => truncSeconds(new Date("2024-11-01")), to: () => truncSeconds(new Date()) },
 };
 
 enum DataType {

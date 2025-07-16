@@ -1,5 +1,6 @@
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { useDebouncedEffect } from "@/utils/useDebounce";
+import { truncSeconds } from "@/utils/utils";
 import { format, isValid, parse, set, startOfYear, subHours, subMonths, subWeeks, subYears } from "date-fns";
 import { IRange, Time, UTCTimestamp } from "lightweight-charts";
 import { useCallback, useEffect, useState } from "react";
@@ -21,15 +22,15 @@ export interface DatePresetConfig {
 
 // Predefined date ranges
 const DATE_PRESETS: Record<Exclude<string, "CUSTOM">, DatePresetConfig> = {
-  "1D": { from: () => subHours(new Date(), 24), to: () => new Date() },
-  "1W": { from: () => subWeeks(new Date(), 1), to: () => new Date() },
-  "1M": { from: () => subMonths(new Date(), 1), to: () => new Date() },
-  "3M": { from: () => subMonths(new Date(), 3), to: () => new Date() },
-  "6M": { from: () => subMonths(new Date(), 6), to: () => new Date() },
-  YTD: { from: () => startOfYear(new Date()), to: () => new Date() },
-  "1Y": { from: () => subYears(new Date(), 1), to: () => new Date() },
-  "2Y": { from: () => subYears(new Date(), 2), to: () => new Date() },
-  ALL: { from: () => new Date("2024-11-01"), to: () => new Date() },
+  "1D": { from: () => truncSeconds(subHours(new Date(), 24)), to: () => truncSeconds(new Date()) },
+  "1W": { from: () => truncSeconds(subWeeks(new Date(), 1)), to: () => truncSeconds(new Date()) },
+  "1M": { from: () => truncSeconds(subMonths(new Date(), 1)), to: () => truncSeconds(new Date()) },
+  "3M": { from: () => truncSeconds(subMonths(new Date(), 3)), to: () => truncSeconds(new Date()) },
+  "6M": { from: () => truncSeconds(subMonths(new Date(), 6)), to: () => truncSeconds(new Date()) },
+  YTD: { from: () => truncSeconds(startOfYear(new Date())), to: () => truncSeconds(new Date()) },
+  "1Y": { from: () => truncSeconds(subYears(new Date(), 1)), to: () => truncSeconds(new Date()) },
+  "2Y": { from: () => truncSeconds(subYears(new Date(), 2)), to: () => truncSeconds(new Date()) },
+  ALL: { from: () => truncSeconds(new Date("2024-11-01")), to: () => truncSeconds(new Date()) },
 };
 
 // Calendar styling classes
@@ -307,6 +308,13 @@ interface CalendarButtonProps<T extends Record<string, DatePresetConfig> = typeo
   defaultPreset?: keyof T;
 }
 
+const isCalRangeDifferent = (range1: DateRange, range2: DateRange): boolean => {
+  return (
+    (range1.from?.getTime() ?? 0) !== (range2.from?.getTime() ?? 0) ||
+    (range1.to?.getTime() ?? 0) !== (range2.to?.getTime() ?? 0)
+  );
+};
+
 const CalendarButton = ({
   setTimePeriod,
   storageKeyPrefix = "advancedChart",
@@ -328,7 +336,9 @@ const CalendarButton = ({
   // Save to localStorage and set period
   const saveRangeAndSetPeriod = useCallback(
     (rangeToSave: DateRange, presetToSave: string): void => {
-      if (!rangeToSave.from && !rangeToSave.to) return;
+      if (!rangeToSave.from && !rangeToSave.to) {
+        return;
+      }
 
       // Save to localStorage
       try {
@@ -360,14 +370,20 @@ const CalendarButton = ({
         to: presetConfig.to(),
       };
 
-      setRange(newRange);
-      setSelectedPreset(preset);
-      saveRangeAndSetPeriod(newRange, preset);
+      if (isCalRangeDifferent(newRange, range)) {
+        setRange(newRange);
+        setSelectedPreset(preset);
+        console.log("setting in location 5", newRange);
+        saveRangeAndSetPeriod(newRange, preset);
+      } else {
+        setStoragePreset(preset);
+      }
     },
-    [datePresets, saveRangeAndSetPeriod],
+    [datePresets, range, saveRangeAndSetPeriod, setStoragePreset],
   );
 
   // Initialize from localStorage if available
+  // biome-ignore lint/correctness/useExhaustiveDependencies: One time initialization
   useEffect(() => {
     try {
       if (storageRange) {
@@ -376,10 +392,11 @@ const CalendarButton = ({
           from: storageRange.from ? new Date(storageRange.from) : undefined,
           to: storageRange.to ? new Date(storageRange.to) : undefined,
         });
-        setTimePeriod({
+        const timePeriod = {
           from: (storageRange.from ? storageRange.from.valueOf() : 0) as UTCTimestamp,
           to: (storageRange.to ? storageRange.to.valueOf() : Date.now()) as UTCTimestamp,
-        });
+        };
+        setTimePeriod(timePeriod);
       } else {
         applyPreset(defaultPreset);
       }
@@ -391,12 +408,16 @@ const CalendarButton = ({
       console.error("Error loading saved date range", e);
       applyPreset(defaultPreset);
     }
-  }, [defaultPreset, setTimePeriod, applyPreset, storageRange, storagePreset]);
+  }, []);
 
   const handleCalendarInteraction = (newRange: DateRange, preset: string): void => {
-    setRange(newRange);
-    setSelectedPreset(preset);
-    saveRangeAndSetPeriod(newRange, preset);
+    if (isCalRangeDifferent(newRange, range)) {
+      setRange(newRange);
+      setSelectedPreset(preset);
+      saveRangeAndSetPeriod(newRange, preset);
+    } else {
+      setStoragePreset(preset);
+    }
   };
 
   return (
