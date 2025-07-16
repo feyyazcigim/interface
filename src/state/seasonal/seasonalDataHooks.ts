@@ -299,6 +299,14 @@ export function useSeasonalCultivationFactor(fromSeason: number, toSeason: numbe
   }));
 }
 
+export function useSeasonalCultivationTemperature(fromSeason: number, toSeason: number): UseSeasonalResult {
+  return useSeasonalBeanstalkFieldSG(fromSeason, toSeason, (fieldHourly, timestamp) => ({
+    season: Number(fieldHourly.season),
+    value: TV.fromHuman(fieldHourly.cultivationTemperature || 0, 2).toNumber() / 100,
+    timestamp,
+  }));
+}
+
 export function useSeasonalSoilSupply(fromSeason: number, toSeason: number): UseSeasonalResult {
   return useSeasonalBeanstalkFieldSG(fromSeason, toSeason, (fieldHourly, timestamp) => ({
     season: Number(fieldHourly.season),
