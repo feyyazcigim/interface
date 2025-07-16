@@ -144,7 +144,7 @@ const LearnNavi = ({ setNaviTab }) => {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link href={navLinks.blog} rel="noopener noreferrer" target="_blank">
-              Official Blog
+              Blog
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
