@@ -38,6 +38,7 @@ export interface SeasonsTableData {
   instPrice: TokenValue;
   issuedSoil: TokenValue;
   cultivationFactor: TokenValue;
+  cultivationTemperature: TokenValue;
   l2sr: TokenValue;
   podRate: TokenValue;
   price: TokenValue;
@@ -356,6 +357,9 @@ export default function useSeasonsData(
 
         if (currFieldHourlySnapshots.cultivationFactor !== null) {
           allData.cultivationFactor = TokenValue.fromHuman(currFieldHourlySnapshots.cultivationFactor, 2);
+        }
+        if (currFieldHourlySnapshots.cultivationTemperature !== null) {
+          allData.cultivationTemperature = TokenValue.fromHuman(currFieldHourlySnapshots.cultivationTemperature, 2);
         }
 
         if (!allData.season) {

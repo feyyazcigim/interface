@@ -291,6 +291,22 @@ const createFieldCharts = (mainToken: Token): ChartSetupBase[] => [
     shortTickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
   },
   {
+    id: "cultivationTemperature",
+    type: "Field",
+    name: "Cultivation Temperature",
+    tooltipTitle: "Cultivation Temperature",
+    tooltipHoverText:
+      "The Max Temperature when Soil is selling out and demand for Soil is increasing. This value doesn't start affecting the Cultivation Factor until Season 5067.",
+    shortDescription: "The Max Temperature when Soil is selling out and demand for Soil is increasing.",
+    icon: podIcon,
+    timeScaleKey: "timestamp",
+    priceScaleKey: "cultivationTemperature",
+    valueAxisType: "cultivationTemperature",
+    valueFormatter: (v: TokenValue) => v.toNumber(),
+    tickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
+    shortTickFormatter: (v: number) => formatPct(v, { minDecimals: 2, maxDecimals: 2 }),
+  },
+  {
     id: "podRate",
     type: "Field",
     name: "Pod Rate",

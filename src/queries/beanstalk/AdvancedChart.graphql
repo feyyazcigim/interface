@@ -27,6 +27,7 @@ query BeanstalkAdvancedChart($from: Int, $to: Int) {
     deltaTemperature
     season
     cultivationFactor
+    cultivationTemperature
     harvestableIndex
     harvestablePods
     harvestedPods
