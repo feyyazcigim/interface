@@ -27,7 +27,7 @@ export const stringEq = (a: Stringable, b: Stringable) => {
 const invalidNumInputs = new Set([".", "e", "nan", "-", "+"]);
 
 export const toValidStringNumInput = (val: string): string => {
-  if (!val) return "0";
+  if (!val) return "";
   const valid = val.replace(/[e\-\+]/g, "");
   return valid;
 };

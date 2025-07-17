@@ -65,6 +65,9 @@ export interface ComboInputProps extends InputHTMLAttributes<HTMLInputElement> {
 
   // Token select props
   transformTokenLabels?: TransformTokenLabelsFunction;
+  
+  // Input placeholder
+  placeholder?: string;
 }
 
 function ComboInputField({
@@ -101,6 +104,7 @@ function ComboInputField({
   filterTokens,
   selectKey,
   transformTokenLabels,
+  placeholder,
 }: ComboInputProps) {
   const tokenData = useTokenData();
   const { balances } = useFarmerBalances();
@@ -322,6 +326,7 @@ function ComboInputField({
                 min={0}
                 type="number"
                 disabled={disableInput}
+                placeholder={placeholder || "0"}
                 className={
                   "flex w-full pr-1 text-[2rem] h-[2.2rem] leading-[2.2rem] text-black font-[400] align-middle focus-visible:outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:bg-transparent"
                 }
