@@ -373,7 +373,6 @@ const CalendarButton = ({
       if (isCalRangeDifferent(newRange, range)) {
         setRange(newRange);
         setSelectedPreset(preset);
-        console.log("setting in location 5", newRange);
         saveRangeAndSetPeriod(newRange, preset);
       } else {
         setStoragePreset(preset);
@@ -386,15 +385,14 @@ const CalendarButton = ({
   // biome-ignore lint/correctness/useExhaustiveDependencies: One time initialization
   useEffect(() => {
     try {
-      if (storageRange) {
-        // Convert stored timestamps back to Date objects
-        setRange({
-          from: storageRange.from ? new Date(storageRange.from) : undefined,
-          to: storageRange.to ? new Date(storageRange.to) : undefined,
-        });
+      if (storagePreset && storagePreset !== "CUSTOM") {
+        applyPreset(storagePreset);
+      } else if (storageRange?.from && storageRange?.to) {
+        // Convert stored timestamp strings back to Date objects
+        setRange({ from: new Date(storageRange.from), to: new Date(storageRange.to) });
         const timePeriod = {
-          from: (storageRange.from ? storageRange.from.valueOf() : 0) as UTCTimestamp,
-          to: (storageRange.to ? storageRange.to.valueOf() : Date.now()) as UTCTimestamp,
+          from: storageRange.from.valueOf() as UTCTimestamp,
+          to: storageRange.to.valueOf() as UTCTimestamp,
         };
         setTimePeriod(timePeriod);
       } else {
