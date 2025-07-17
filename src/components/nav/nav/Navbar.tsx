@@ -334,5 +334,6 @@ export const navLinks = {
   github: "https://github.com/pinto-org",
   disclosures: "https://docs.pinto.money/disclosures",
   exchange: "https://pinto.exchange/",
-  blog: "https://mirror.xyz/0xEA13D1fB14934E41Ee7074198af8F089a6d956B5",
+  blog: "https://mirror.xyz/0x8F02813a0AC20affC2C7568e0CB9a7cE5288Ab27",
+  communityBlog: "https://mirror.xyz/0xe7731147bBe1BEBe5CF1Ab101C6EceD384dAbD07",
 } as const;
