@@ -4,7 +4,7 @@ const config: CodegenConfig = {
   ignoreNoDocuments: true,
   generates: {
     "src/generated/gql/pintostalk/": {
-      schema: "https://graph.pinto.money/pintostalk-dev",
+      schema: "https://graph.pinto.money/pintostalk",
       documents: ["src/queries/beanstalk/**/*.graphql"],
       preset: "client",
       presetConfig: {
