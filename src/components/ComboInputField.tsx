@@ -264,6 +264,14 @@ function ComboInputField({
     setDisplayValue(value);
 
     if (disableClamping) {
+      // Don't convert incomplete decimal inputs to TokenValue yet
+      const isIncompleteDecimal = value.endsWith(".") || (value.includes(".") && value.split(".")[1] === "");
+
+      if (isIncompleteDecimal) {
+        // For incomplete decimals, don't update internal amount or error state yet
+        return;
+      }
+
       const tokenValue = TokenValue.fromHuman(value || "0", getDecimals());
       setInternalAmount(tokenValue);
 
@@ -279,6 +287,16 @@ function ComboInputField({
     if (!value || value === "") {
       setInternalAmount(TokenValue.ZERO);
       setError?.(false);
+      return;
+    }
+
+    // Don't convert incomplete decimal inputs (like "0." or "0.0") to TokenValue yet
+    // Let the user finish typing the decimal number
+    const isIncompleteDecimal = value.endsWith(".") || (value.includes(".") && value.split(".")[1] === "");
+
+    if (isIncompleteDecimal) {
+      // For incomplete decimals, don't update internal amount or error state yet
+      // Just keep the display value as-is
       return;
     }
 
