@@ -259,14 +259,7 @@ function ComboInputField({
   function changeValue(_value: string) {
     const value = toValidStringNumInput(_value);
     setIsUserInput(true);
-
-    // Handle empty value vs "0" logic - show empty string for display when value is "0" or empty
-    // But allow "0" when it's part of a decimal number (like "0." or "0.5")
-    const isDecimalZero = value === "0." || (value.startsWith("0.") && value.length > 2);
-    const shouldShowEmpty = !value || value === "" || (value === "0" && !isDecimalZero);
-    const displayValueToSet = shouldShowEmpty ? "" : value;
-
-    setDisplayValue(displayValueToSet);
+    setDisplayValue(value);
 
     if (disableClamping) {
       const tokenValue = TokenValue.fromHuman(value || "0", getDecimals());
@@ -353,7 +346,7 @@ function ComboInputField({
                 className={
                   "flex w-full pr-1 text-[2rem] h-[2.2rem] leading-[2.2rem] text-black font-[400] align-middle focus-visible:outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:bg-transparent"
                 }
-                value={disableInput ? (amount === "0" ? "" : amount) : displayValue}
+                value={disableInput ? (amount === "0" ? "" : amount) : displayValue === "0" ? "" : displayValue}
                 onChange={(e) => changeValue(e.target.value)}
               />
             </TextSkeleton>
