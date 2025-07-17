@@ -409,6 +409,7 @@ function ConvertForm({
           {...getAltTextProps()}
           mode="balance"
           disableButton
+          disableClamping={true}
         />
       </div>
       {warningRendered ? (

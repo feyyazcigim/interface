@@ -297,6 +297,7 @@ export default function FillListing() {
                     }
                     filterTokens={filterTokens}
                     altText={balanceExceedsMax ? "Usable balance:" : undefined}
+                    disableClamping={true}
                   />
                   {!isUsingMain && stringToNumber(amountIn) > 0 && (
                     <RoutingAndSlippageInfo

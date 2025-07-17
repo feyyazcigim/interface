@@ -251,6 +251,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
           balanceFrom={balanceFrom}
           tokenSelectLoading={!didSetPreferred || preferredLoading}
           filterTokens={filterSet}
+          disableClamping={true}
         />
 
         {(!depositOutput && stringToNumber(amountIn) > 0) || swapQuery.isLoading ? (

@@ -283,7 +283,6 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
           setError={setInputError}
           selectedToken={siloToken}
           tokenAndBalanceMap={convertData}
-          disableClamping={true}
           disableButton
         />
       </div>

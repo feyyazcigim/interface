@@ -267,6 +267,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
           filterTokens={filterTokens}
           isLoading={!didInitBalanceSource}
           disableInput={txnType !== "redeemToSilo" && !tokenOut}
+          disableClamping={true}
         />
         <div className="flex flex-row w-full justify-between items-center mt-4">
           <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">
