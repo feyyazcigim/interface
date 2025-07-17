@@ -118,7 +118,7 @@ function handleNoBalances(
   chainId: number,
   lp2Underlying: Lookup<Token>,
 ): Token {
-  if (!args?.token) return NATIVE_TOKEN[chainId]; // if no balances & no token provided, return ETH
+  if (!args?.token) return MAIN_TOKEN[chainId]; // if no balances & no token provided, return PINTO
 
   const npu = args?.token.isLP && lp2Underlying[getTokenIndex(args.token)];
   if (npu) return npu;
