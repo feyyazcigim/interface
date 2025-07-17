@@ -65,7 +65,7 @@ export interface ComboInputProps extends InputHTMLAttributes<HTMLInputElement> {
 
   // Token select props
   transformTokenLabels?: TransformTokenLabelsFunction;
-  
+
   // Input placeholder
   placeholder?: string;
 }
