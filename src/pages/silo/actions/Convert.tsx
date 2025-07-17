@@ -397,7 +397,7 @@ function ConvertForm({
           <SlippageButton slippage={slippage} setSlippage={setSlippage} />
         </div>
         <ComboInputField
-          disableInput={!canConvert || !account.address || !farmerConvertibleAmount?.gt(0)}
+          disableInput={!account.address || !farmerConvertibleAmount?.gt(0)}
           disableInlineBalance={!targetToken}
           disableClampMinOn0={true}
           amount={amountIn}
