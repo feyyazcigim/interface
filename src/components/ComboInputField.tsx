@@ -259,6 +259,8 @@ function ComboInputField({
   function changeValue(_value: string) {
     const value = toValidStringNumInput(_value);
     setIsUserInput(true);
+
+    // Show what the user is typing, including "0" for decimal numbers
     setDisplayValue(value);
 
     if (disableClamping) {
@@ -346,7 +348,15 @@ function ComboInputField({
                 className={
                   "flex w-full pr-1 text-[2rem] h-[2.2rem] leading-[2.2rem] text-black font-[400] align-middle focus-visible:outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:bg-transparent"
                 }
-                value={disableInput ? (amount === "0" ? "" : amount) : displayValue === "0" ? "" : displayValue}
+                value={
+                  disableInput
+                    ? amount === "0"
+                      ? ""
+                      : amount
+                    : displayValue === "0" && !isUserInput
+                      ? ""
+                      : displayValue
+                }
                 onChange={(e) => changeValue(e.target.value)}
               />
             </TextSkeleton>
