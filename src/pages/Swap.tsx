@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/Separator";
 import { NATIVE_TOKEN, WSOL_TOKEN } from "@/constants/tokens";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useIsWSOL, useTokenMap, useWSOL } from "@/hooks/pinto/useTokenMap";
+import { useTokenMap, useWSOL } from "@/hooks/pinto/useTokenMap";
 import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
@@ -47,10 +47,10 @@ const getInitTokenIn = ({ preferredToken, loading }: ReturnType<typeof usePrefer
   const chainId = preferredToken.chainId;
 
   const ETH = getChainConstant(chainId, NATIVE_TOKEN);
-
   const WSOL = getChainConstant(chainId, WSOL_TOKEN);
 
   // prevent main token from being selected as input since default output token is BEAN.
+  // prevent WSOL from being selected as default input.
   if (loading || preferredToken.isMain || tokensEqual(preferredToken, WSOL)) {
     return ETH;
   }
@@ -89,6 +89,10 @@ export default function Swap() {
     return s;
   }, [tokenMap, siloWrappedToken, siloWrappedToken3p]);
 
+  const amountInTV = useMemo(() => {
+    return TokenValue.fromHuman(stringToStringNum(amountIn), tokenIn.decimals);
+  }, [amountIn, tokenIn]);
+
   const {
     data: swapData,
     resetSwap,
@@ -97,7 +101,7 @@ export default function Swap() {
     tokenIn,
     tokenOut,
     slippage,
-    amountIn: TokenValue.fromHuman(stringToStringNum(amountIn), tokenIn.decimals),
+    amountIn: amountInTV,
   });
 
   // const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
