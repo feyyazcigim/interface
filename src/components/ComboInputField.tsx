@@ -4,12 +4,12 @@ import seedIcon from "@/assets/protocol/Seed.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
 import { TokenValue } from "@/classes/TokenValue";
 import { PODS } from "@/constants/internalTokens";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter, truncateHex } from "@/utils/format";
-import { toSafeTVFromHuman } from "@/utils/number";
 import { sanitizeNumericInputValue, stringEq, stringToNumber } from "@/utils/string";
 import { FarmFromMode, Plot, Token } from "@/utils/types";
 import { useDebouncedEffect } from "@/utils/useDebounce";
@@ -127,9 +127,7 @@ function ComboInputField({
     return selectedToken?.decimals ?? 18;
   }, [mode, selectedToken]);
 
-  const amountAsTokenValue = useMemo(() => {
-    return toSafeTVFromHuman(amount, getDecimals());
-  }, [amount, getDecimals]);
+  const amountAsTokenValue = useSafeTokenValue(amount, getDecimals());
 
   // Internal state uses TokenValue
   const [internalAmount, setInternalAmount] = useState<TokenValue>(amountAsTokenValue);
