@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import { NATIVE_TOKEN, WSOL_TOKEN } from "@/constants/tokens";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useIsWSOL, useTokenMap, useWSOL } from "@/hooks/pinto/useTokenMap";
@@ -21,7 +22,8 @@ import useTransaction from "@/hooks/useTransaction";
 import { useDestinationBalance } from "@/state/useDestinationBalance";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import useTokenData from "@/state/useTokenData";
-import { stringToNumber } from "@/utils/string";
+import { getChainConstant } from "@/utils/chain";
+import { stringToNumber, stringToStringNum } from "@/utils/string";
 import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { FarmFromMode, Token } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -41,24 +43,36 @@ const handleOnError = (e: any) => {
   return false;
 };
 
+const getInitTokenIn = ({ preferredToken, loading }: ReturnType<typeof usePreferredInputToken>) => {
+  const chainId = preferredToken.chainId;
+
+  const ETH = getChainConstant(chainId, NATIVE_TOKEN);
+
+  const WSOL = getChainConstant(chainId, WSOL_TOKEN);
+
+  // prevent main token from being selected as input since default output token is BEAN.
+  if (loading || preferredToken.isMain || tokensEqual(preferredToken, WSOL)) {
+    return ETH;
+  }
+
+  return preferredToken;
+};
+
 export default function Swap() {
   const queryClient = useQueryClient();
   const { queryKeys } = useFarmerBalances();
-  const { mainToken: BEAN, nativeToken: ETH, siloWrappedToken, siloWrappedToken3p } = useTokenData();
+  const { mainToken: BEAN, siloWrappedToken, siloWrappedToken3p } = useTokenData();
   const diamond = useProtocolAddress();
 
-  const isWSOL = useIsWSOL();
   const wsol = useWSOL();
   const account = useAccount();
   const tokenMap = useTokenMap();
 
   const filter = useMemo(() => [wsol], [wsol]);
-  const { preferredToken } = usePreferredInputToken({ filterLP: true, filter });
+  const preferredInput = usePreferredInputToken({ filterLP: true, filter });
 
-  const initToken = isWSOL(preferredToken) ? ETH : preferredToken;
-
-  const [amountIn, setAmountIn] = useState("0");
-  const [tokenIn, setTokenIn] = useState(initToken);
+  const [amountIn, setAmountIn] = useState("");
+  const [tokenIn, setTokenIn] = useState(getInitTokenIn(preferredInput));
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [inputError, setInputError] = useState(false);
   const [amountOut, setAmountOut] = useState("0");
@@ -83,7 +97,7 @@ export default function Swap() {
     tokenIn,
     tokenOut,
     slippage,
-    amountIn: TokenValue.fromHuman(amountIn, tokenIn.decimals),
+    amountIn: TokenValue.fromHuman(stringToStringNum(amountIn), tokenIn.decimals),
   });
 
   // const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
