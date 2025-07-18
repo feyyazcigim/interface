@@ -22,6 +22,7 @@ import { useHarvestableIndex, usePodIndex } from "@/state/useFieldData";
 import { useQueryKeys } from "@/state/useQueryKeys";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { stringToNumber } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
@@ -77,12 +78,14 @@ export default function CreateOrder() {
   });
 
   const [didSetPreferred, setDidSetPreferred] = useState(false);
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [tokenIn, setTokenIn] = useState(preferredToken);
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [slippage, setSlippage] = useState(0.1);
 
   const shouldSwap = !tokensEqual(tokenIn, mainToken);
+
+  const amountInTV = useMemo(() => toSafeTVFromHuman(amountIn, tokenIn.decimals), [amountIn, tokenIn.decimals]);
 
   const {
     data: swapData,
@@ -92,7 +95,7 @@ export default function CreateOrder() {
     tokenIn,
     tokenOut: mainToken,
     slippage,
-    amountIn: TokenValue.fromHuman(amountIn, tokenIn.decimals),
+    amountIn: amountInTV,
     disabled: !shouldSwap || inputError,
   });
 
@@ -102,7 +105,7 @@ export default function CreateOrder() {
     ? TokenValue.fromHuman(amountIn, tokenIn.decimals)
     : swapSummary?.swap.routes[swapSummary?.swap.routes.length - 1].amountOut ?? TV.ZERO;
 
-  const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
+  const value = tokenIn.isNative ? amountInTV : undefined;
 
   const priceImpactQuery = usePriceImpactSummary(swapBuild?.advFarm, tokenIn, value);
   const priceImpactSummary = priceImpactQuery?.get(mainToken);
@@ -132,7 +135,7 @@ export default function CreateOrder() {
 
   // invalidate pod orders query
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     setMaxPlaceInLine(undefined);
     setPricePerPod(undefined);
     allQK.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));

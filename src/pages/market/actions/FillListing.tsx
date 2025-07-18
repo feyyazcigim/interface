@@ -26,7 +26,8 @@ import { useHarvestableIndex } from "@/state/useFieldData";
 import { useQueryKeys } from "@/state/useQueryKeys";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { stringToNumber } from "@/utils/string";
+import { toSafeTVFromHuman } from "@/utils/number";
+import { stringToNumber, stringToStringNum } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { getBalanceFromMode } from "@/utils/utils";
@@ -84,22 +85,24 @@ export default function FillListing() {
   const listing = allListings?.podListings.find((listing) => listing.index === id);
 
   const [didSetPreferred, setDidSetPreferred] = useState(false);
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [tokenIn, setTokenIn] = useState(mainToken);
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [slippage, setSlippage] = useState(0.1);
 
   const isUsingMain = tokensEqual(tokenIn, mainToken);
 
+  const amountInTV = useMemo(() => toSafeTVFromHuman(amountIn, tokenIn.decimals), [amountIn, tokenIn.decimals]);
+
   const { data: swapData, resetSwap } = useSwap({
     tokenIn,
     tokenOut: mainToken,
     slippage,
-    amountIn: TokenValue.fromHuman(amountIn, tokenIn.decimals),
+    amountIn: amountInTV,
     disabled: isUsingMain,
   });
 
-  const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
+  const value = tokenIn.isNative ? amountInTV : undefined;
 
   const swapBuild = useBuildSwapQuote(swapData, balanceFrom, FarmToMode.INTERNAL);
   const swapSummary = useSwapSummary(swapData);
@@ -124,7 +127,7 @@ export default function FillListing() {
   // reset form and invalidate pod listings/farmer plot queries
   const onSuccess = useCallback(() => {
     navigate(`/market/pods/buy/fill`);
-    setAmountIn("0");
+    setAmountIn("");
     resetSwap();
     allQK.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));
   }, [navigate, resetSwap, queryClient, allQK]);

@@ -23,6 +23,7 @@ import { useDestinationBalance } from "@/state/useDestinationBalance";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import useTokenData from "@/state/useTokenData";
 import { getChainConstant } from "@/utils/chain";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { stringToNumber, stringToStringNum } from "@/utils/string";
 import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { FarmFromMode, Token } from "@/utils/types";
@@ -75,7 +76,7 @@ export default function Swap() {
   const [tokenIn, setTokenIn] = useState(getInitTokenIn(preferredInput));
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [inputError, setInputError] = useState(false);
-  const [amountOut, setAmountOut] = useState("0");
+  const [amountOut, setAmountOut] = useState("");
   const [tokenOut, setTokenOut] = useState(BEAN);
   const [slippage, setSlippage] = useState(0.1);
   const { balanceTo, setBalanceTo } = useDestinationBalance();
@@ -89,9 +90,7 @@ export default function Swap() {
     return s;
   }, [tokenMap, siloWrappedToken, siloWrappedToken3p]);
 
-  const amountInTV = useMemo(() => {
-    return TokenValue.fromHuman(stringToStringNum(amountIn), tokenIn.decimals);
-  }, [amountIn, tokenIn]);
+  const amountInTV = useMemo(() => toSafeTVFromHuman(amountIn, tokenIn.decimals), [amountIn, tokenIn]);
 
   const {
     data: swapData,
@@ -129,13 +128,13 @@ export default function Swap() {
   // reset the amountout if the amountin is 0
   useEffect(() => {
     if (stringToNumber(amountIn) <= 0) {
-      setAmountOut("0");
+      setAmountOut("");
     }
   }, [amountIn]);
 
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
-    setAmountOut("0");
+    setAmountIn("");
+    setAmountOut("");
     queryKeys.forEach((query) => queryClient.invalidateQueries({ queryKey: query }));
     resetSwap();
   }, [queryClient, queryKeys, resetSwap]);
@@ -151,7 +150,7 @@ export default function Swap() {
   const invertTokens = useCallback(() => {
     const newTokenIn = tokenMap[getTokenIndex(tokenOut)];
     const newAmountIn = amountIn.toString();
-    setAmountOut("0");
+    setAmountOut("");
     setTokenOut(tokenIn);
     setAmountIn(newAmountIn);
     setTokenIn(newTokenIn);

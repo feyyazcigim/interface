@@ -28,6 +28,7 @@ import { useChainConstant } from "@/utils/chain";
 import { extractStemsAndAmountsFromCrates, sortAndPickCrates } from "@/utils/convert";
 import { tryExtractErrorMessage } from "@/utils/error";
 import { formatter } from "@/utils/format";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { isValidAddress, stringToStringNum } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
@@ -53,7 +54,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
   const depositedAmount = deposits?.amount;
 
   const [slippage, setSlippage] = useState<number>(0.1);
-  const [amountIn, setAmountIn] = useState<string>("0");
+  const [amountIn, setAmountIn] = useState<string>("");
   const [inputError, setInputError] = useState<boolean>(false);
   const [balanceFrom, setBalanceFrom] = useState<FarmFromMode>(FarmFromMode.INTERNAL_EXTERNAL);
   const [mode, setMode] = useState<FarmToMode | undefined>(FarmToMode.EXTERNAL);
@@ -68,7 +69,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
   const farmerTokenBalance = farmerBalances.balances.get(token);
   const balance = getBalanceFromMode(farmerTokenBalance, balanceFrom);
   const usingDeposits = source === "deposits";
-  const amountInTV = TV.fromHuman(amountIn, mainToken.decimals);
+  const amountInTV = useMemo(() => toSafeTVFromHuman(amountIn, mainToken.decimals), [amountIn, mainToken.decimals]);
 
   const amountExceedsDeposits = usingDeposits && amountInTV.gt(0) && amountInTV.gt(depositedAmount ?? 0n);
   const amountExceedsBalance = !usingDeposits && amountInTV.gt(0) && amountInTV.gt(balance ?? 0n);
@@ -95,7 +96,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     tokenIn: token,
     tokenOut: siloToken,
     slippage: slippage,
-    amountIn: TV.fromHuman(stringToStringNum(amountIn), token.decimals),
+    amountIn: toSafeTVFromHuman(amountIn, token.decimals),
     disabled: usingDeposits,
   });
   const swapSummary = useSwapSummary(swap.data);
@@ -107,7 +108,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
 
   // Transaction hooks
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     swap.resetSwap();
     const keys = [
       allowanceQueryKey,
@@ -295,7 +296,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
             <Switch
               checked={source === "deposits"}
               onCheckedChange={() => {
-                setAmountIn("0");
+                setAmountIn("");
                 setSource((prev) => (prev === "deposits" ? "balances" : "deposits"));
               }}
             />

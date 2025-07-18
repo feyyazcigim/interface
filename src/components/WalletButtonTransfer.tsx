@@ -42,7 +42,7 @@ export default function WalletButtonTransfer() {
 
   const mainToken = useTokenData().mainToken;
   const filteredTokens = useFilterTokens(balances);
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [tokenIn, setTokenIn] = useState(mainToken);
   const [balanceFrom, setBalanceFrom] = useState<FarmFromMode>(FarmFromMode.EXTERNAL);
 

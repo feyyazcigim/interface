@@ -19,6 +19,7 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import { useSiloData } from "@/state/useSiloData";
 import { useInvalidateSun } from "@/state/useSunData";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { stringEq, stringToNumber } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
@@ -63,7 +64,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
   const siloData = useSiloData();
 
   const [didSetPreferred, setDidSetPreferred] = useState(false);
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [tokenIn, setTokenIn] = useState(preferredToken);
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [slippage, setSlippage] = useState(0.5);
@@ -80,6 +81,8 @@ function Deposit({ siloToken }: { siloToken: Token }) {
 
   const shouldSwap = !tokensEqual(tokenIn, siloToken);
 
+  const amountInTV = useMemo(() => toSafeTVFromHuman(amountIn, tokenIn.decimals), [amountIn, tokenIn.decimals]);
+
   const {
     data: swapData,
     resetSwap,
@@ -88,11 +91,11 @@ function Deposit({ siloToken }: { siloToken: Token }) {
     tokenIn,
     tokenOut: siloToken,
     slippage,
-    amountIn: TokenValue.fromHuman(amountIn, tokenIn.decimals),
+    amountIn: amountInTV,
     disabled: !shouldSwap,
   });
 
-  const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
+  const value = tokenIn.isNative ? amountInTV : undefined;
 
   const swapBuild = useBuildSwapQuote(swapData, balanceFrom, FarmToMode.INTERNAL);
   const swapSummary = useSwapSummary(swapData);
@@ -106,7 +109,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
   });
 
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     const allQueryKeys = [...farmerSilo.queryKeys, ...farmerBalances.queryKeys, ...priceQueryKeys];
     allQueryKeys.forEach((query) => qc.invalidateQueries({ queryKey: query }));
     invalidateSun("all", { refetchType: "active" });
@@ -131,7 +134,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
   const handleSetTokenIn = useCallback(
     (newToken: Token) => {
       if (tokensEqual(newToken, tokenIn)) return;
-      setAmountIn("0");
+      setAmountIn("");
       setTokenIn(newToken);
     },
     [tokenIn],

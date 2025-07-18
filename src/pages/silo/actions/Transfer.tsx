@@ -1,4 +1,3 @@
-import { TokenValue } from "@/classes/TokenValue";
 import { ComboInputField } from "@/components/ComboInputField";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -8,6 +7,8 @@ import { beanstalkAbi, beanstalkAddress } from "@/generated/contractHooks";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import useTokenData from "@/state/useTokenData";
 import { sortAndPickCrates } from "@/utils/convert";
+import { toSafeTVFromHuman } from "@/utils/number";
+import { stringToNumber } from "@/utils/string";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -22,7 +23,7 @@ function Transfer() {
   const farmerDeposits = farmerSilo.deposits;
   const BEAN = useTokenData().mainToken;
   const [fromToken, setFromToken] = useState(BEAN);
-  const [amount, setAmount] = useState("0");
+  const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState<string | undefined>();
   const queryClient = useQueryClient();
 
@@ -37,13 +38,13 @@ function Transfer() {
 
   async function onSubmit() {
     const userAddress = account.address;
-    if (!amount || Number(amount) <= 0 || !recipient || !isAddress(recipient) || !userAddress) return;
+    if (!amount || stringToNumber(amount) <= 0 || !recipient || !isAddress(recipient) || !userAddress) return;
 
     const deposits = farmerDeposits.get(fromToken);
 
     const transferData = sortAndPickCrates(
       "transfer",
-      TokenValue.fromHuman(amount || 0, fromToken.decimals),
+      toSafeTVFromHuman(amount, fromToken.decimals),
       deposits?.deposits ?? [],
     );
 
