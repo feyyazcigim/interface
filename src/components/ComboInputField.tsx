@@ -9,11 +9,21 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter, truncateHex } from "@/utils/format";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { sanitizeNumericInputValue, stringEq, stringToNumber } from "@/utils/string";
 import { FarmFromMode, Plot, Token } from "@/utils/types";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { cn } from "@/utils/utils";
-import { Dispatch, InputHTMLAttributes, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Dispatch,
+  InputHTMLAttributes,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import PlotSelect from "./PlotSelect";
 import TextSkeleton from "./TextSkeleton";
 import TokenSelectWithBalances, { TransformTokenLabelsFunction } from "./TokenSelectWithBalances";
@@ -22,41 +32,22 @@ import { Skeleton } from "./ui/Skeleton";
 
 const ETH_GAS_RESERVE = TokenValue.fromHuman("0.0003333333333", 18); // Reserve $1 of gas if eth is $3k
 
-type ComboInputType = "deposits" | "plots" | "balance";
-
 export interface ComboInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  /**
-   * Token mode props
-   */
-  /** Set Token callback */
+  // Token mode props
   setToken?: Dispatch<SetStateAction<Token>> | ((token: Token) => void);
-  /** The token that is currently selected */
   selectedToken?: Token;
-  /** Override the token name in the token select component */
   tokenNameOverride?: string;
-  /** Map of tokens to their balances */
   tokenAndBalanceMap?: Map<Token, TokenValue>;
-  /** Function to set the balance from */
   setBalanceFrom?: Dispatch<SetStateAction<FarmFromMode>>;
-  /** Balance from */
   balanceFrom?: FarmFromMode;
-  /** Function to set the error boolean state */
   setError?: Dispatch<SetStateAction<boolean>>;
-  /** Error boolean state */
   error?: boolean;
-  /** Balances to show in the token select component */
   balancesToShow?: FarmFromMode[];
-  /** Whether the token select is loading */
   tokenSelectLoading?: boolean;
-  /** Function to filter tokens */
   filterTokens?: Set<Token> | undefined;
 
-  /**
-   * Amount props
-   */
-  /** The amount of the token to display */
+  // Amount props
   amount: string;
-  /** setAmount callback */
   setAmount?: Dispatch<SetStateAction<string>> | ((value: string) => void);
 
   // Common optional props
@@ -84,25 +75,7 @@ export interface ComboInputProps extends InputHTMLAttributes<HTMLInputElement> {
 
   // Token select props
   transformTokenLabels?: TransformTokenLabelsFunction;
-
-  // Input placeholder
-  placeholder?: string;
 }
-
-const initValues = (
-  amount: string,
-  selectedToken: Token | undefined,
-  placeholder: string | undefined,
-  mode: "deposits" | "plots" | "balance" | undefined,
-) => {
-  const decimals = mode === "plots" ? PODS.decimals : selectedToken?.decimals;
-
-  if (!decimals) {
-    throw new Error("Cannot get decimals for ComboInputField: selectedToken is required");
-  }
-
-  // const sanitizeAmount = sanitizeNumericInputValue(, decimals);
-};
 
 function ComboInputField({
   setToken,
@@ -155,13 +128,16 @@ function ComboInputField({
   }, [mode, selectedToken]);
 
   const amountAsTokenValue = useMemo(() => {
-    return TokenValue.fromHuman(amount || "0", getDecimals());
+    return toSafeTVFromHuman(amount, getDecimals());
   }, [amount, getDecimals]);
 
   // Internal state uses TokenValue
   const [internalAmount, setInternalAmount] = useState<TokenValue>(amountAsTokenValue);
-  const [displayValue, setDisplayValue] = useState(amount === "0" ? "" : amount);
+  const [displayValue, setDisplayValue] = useState(amount);
   const [isUserInput, setIsUserInput] = useState(false);
+
+  // Track the last amount we set internally to detect external changes
+  const lastInternalAmountRef = useRef<string>(amount);
 
   const tokenPrices = usePriceData();
   const selectedTokenPrice = selectedToken
@@ -276,6 +252,7 @@ function ComboInputField({
    * Clamp the internal amount to the max amount
    * - ONLY when the selected token changes
    * - ONLY when the max amount changes
+   * - ONLY when the amount has been changed by the user
    *
    * Input clamping is handled in changeValue()
    */
@@ -288,19 +265,19 @@ function ComboInputField({
   }, [selectedToken, maxAmount, getClamped]);
 
   /**
-   * Handle external changes to the amount
+   * Handle changes to the amount from outside the component
    *
-   * - If the amount is changed from outside the component, set the internal amount to the amount
+   * - If the amount is changed from outside the component, sync the internal and display states
    * - Set the error state if the amount exceeds the max amount
    */
   useEffect(() => {
-    if (!isUserInput) {
-      setInternalAmount(amountAsTokenValue);
-      setDisplayValue(amount);
-    }
+    // Only react to external changes (not changes we made internally)
+    if (isUserInput || amount === lastInternalAmountRef.current) return;
 
+    setInternalAmount((prev) => (prev.eq(amountAsTokenValue) ? prev : amountAsTokenValue));
+    setDisplayValue((prev) => (stringEq(prev, amount) ? prev : amount));
     handleSetError(amountAsTokenValue.gt(maxAmount));
-  }, [amount, amountAsTokenValue, connectedAccount]);
+  }, [amount, amountAsTokenValue, handleSetError]);
 
   /**
    * If the amount is < customMinAmount, set the internal amount to customMinAmount
@@ -323,10 +300,12 @@ function ComboInputField({
   useEffect(() => {
     if (mode === "plots" && selectedPlots?.length) {
       const plotAmount = selectedPlots.reduce((total, plot) => total.add(plot.pods), TokenValue.ZERO);
+      const newAmount = plotAmount.toHuman();
       setInternalAmount(plotAmount);
-      setDisplayValue(plotAmount.toHuman());
+      setDisplayValue(newAmount);
       if (setAmount) {
-        setAmount(plotAmount.toHuman());
+        setAmount(newAmount);
+        lastInternalAmountRef.current = newAmount;
       }
     }
   }, [mode, selectedPlots, setAmount]);
@@ -341,7 +320,9 @@ function ComboInputField({
     () => {
       if (isUserInput) {
         if (setAmount) {
-          setAmount(internalAmount.toHuman());
+          const newAmount = internalAmount.toHuman();
+          setAmount(newAmount);
+          lastInternalAmountRef.current = newAmount;
         }
         setIsUserInput(false);
       }
@@ -372,14 +353,13 @@ function ComboInputField({
 
       // Sanitize the input value
       const cleaned = sanitizeNumericInputValue(event.target.value, getDecimals());
-
-      // Set the display value to the sanitized string value
-      setDisplayValue((prev) => (stringEq(prev, cleaned.str) ? prev : cleaned.str));
-
       const clamped = getClamped(cleaned.tv, maxAmount);
 
+      // Set the display value to the sanitized string value
+      setDisplayValue(clamped.didClamp ? clamped.amount.toHuman() : cleaned.str);
+
       // Set the internal amount returned from getClamped()
-      setInternalAmount((prev) => (prev.eq(clamped.amount) ? prev : clamped.amount));
+      setInternalAmount(clamped.didClamp ? clamped.amount : cleaned.tv);
 
       // Set error state for immediate feedback on insufficient balance
       handleSetError(clamped.exceedsMax);
@@ -397,13 +377,17 @@ function ComboInputField({
     if (selectedToken?.isNative) {
       // For ETH, subtract gas reserve from max amount
       const maxWithGasReserve = maxAmount.gt(ETH_GAS_RESERVE) ? maxAmount.sub(ETH_GAS_RESERVE) : TokenValue.ZERO;
+      const newAmount = maxWithGasReserve.toHuman();
       setInternalAmount(maxWithGasReserve);
-      setDisplayValue(maxWithGasReserve.toHuman());
-      setAmount?.(maxWithGasReserve.toHuman());
+      setDisplayValue(newAmount);
+      setAmount?.(newAmount);
+      lastInternalAmountRef.current = newAmount;
     } else {
+      const newAmount = maxAmount.toHuman();
       setInternalAmount(maxAmount);
-      setDisplayValue(maxAmount.toHuman());
-      setAmount?.(maxAmount.toHuman());
+      setDisplayValue(newAmount);
+      setAmount?.(newAmount);
+      lastInternalAmountRef.current = newAmount;
     }
   };
 
@@ -434,7 +418,7 @@ function ComboInputField({
                 disabled={disableInput}
                 placeholder={placeholder || "0"}
                 className={
-                  "flex w-full pr-1 text-[2rem] h-[2.2rem] leading-[2.2rem] text-black font-[400] align-middle focus-visible:outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:bg-transparent"
+                  "flex w-full pr-1 text-[2rem] h-[2.2rem] leading-[2.2rem] text-black font-[400] align-middle focus-visible:outline-none placeholder:text-pinto-light disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:bg-transparent cursor-text"
                 }
                 value={disableInput ? amount : displayValue}
                 onChange={changeValue}
