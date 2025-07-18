@@ -18,13 +18,13 @@ import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import { useDestinationBalance } from "@/state/useDestinationBalance";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import useTokenData from "@/state/useTokenData";
 import { getChainConstant } from "@/utils/chain";
-import { toSafeTVFromHuman } from "@/utils/number";
-import { stringToNumber, stringToStringNum } from "@/utils/string";
+import { stringToNumber } from "@/utils/string";
 import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { FarmFromMode, Token } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -90,7 +90,7 @@ export default function Swap() {
     return s;
   }, [tokenMap, siloWrappedToken, siloWrappedToken3p]);
 
-  const amountInTV = useMemo(() => toSafeTVFromHuman(amountIn, tokenIn.decimals), [amountIn, tokenIn]);
+  const amountInTV = useSafeTokenValue(amountIn, tokenIn);
 
   const {
     data: swapData,
@@ -127,10 +127,10 @@ export default function Swap() {
 
   // reset the amountout if the amountin is 0
   useEffect(() => {
-    if (stringToNumber(amountIn) <= 0) {
+    if (amountInTV.lte(0)) {
       setAmountOut("");
     }
-  }, [amountIn]);
+  }, [amountInTV]);
 
   const onSuccess = useCallback(() => {
     setAmountIn("");
@@ -196,7 +196,7 @@ export default function Swap() {
         abi: beanstalkAbi,
         functionName: "advancedFarm",
         args: [swapBuild.advancedFarm],
-        value: tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals).toBigInt() : 0n,
+        value: tokenIn.isNative ? amountInTV.toBigInt() : 0n,
       });
     } catch (e: any) {
       console.error("Error submitting swap: ", e);

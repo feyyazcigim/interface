@@ -41,6 +41,7 @@ import useMaxBuy from "@/hooks/swap/useMaxBuy";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputSiloDepositToken, usePreferredInputToken } from "@/hooks/usePreferredInputToken";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { sortAndPickCrates } from "@/utils/convert";
 import { toSafeTVFromHuman } from "@/utils/number";
@@ -107,14 +108,14 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
   const maxBuyQuery = useMaxBuy(tokenIn, slippage, totalSoil);
   const maxBuy = totalSoilLoading ? TV.ZERO : maxBuyQuery.data;
 
-  const amountInTV = useMemo(() => toSafeTVFromHuman(amountIn, tokenIn.decimals), [tokenIn.decimals, amountIn]);
+  const amountInTV = useSafeTokenValue(amountIn, tokenIn);
 
   const swap = useSwap({
     tokenIn: tokenIn,
     tokenOut: mainToken,
     amountIn: tokenIn.isMain ? TV.ZERO : amountInTV,
     slippage,
-    disabled: tokenIn.isMain || stringToNumber(amountIn) <= 0 || maxBuy?.lte(0),
+    disabled: tokenIn.isMain || amountInTV.lte(0) || maxBuy?.lte(0),
   });
 
   const swapSummary = useSwapSummary(swap.data);
@@ -161,20 +162,19 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
   );
 
   const pods = useMemo(() => {
-    const amount = stringToNumber(amountIn);
-    if (amount <= 0) return;
+    if (amountInTV.lte(0)) return;
 
     const multiplier = currentTemperature.add(100).div(100);
 
     if (isUsingMain) {
-      return multiplier.mul(amount);
+      return multiplier.mul(amountInTV);
     } else if (swap?.data?.buyAmount) {
       const numPinto = swap.data.buyAmount;
       return multiplier.mul(numPinto);
     }
 
     return TV.ZERO;
-  }, [amountIn, currentTemperature, isUsingMain, swap.data?.buyAmount]);
+  }, [amountInTV, currentTemperature, isUsingMain, swap.data?.buyAmount]);
 
   const onSubmit = useCallback(async () => {
     try {

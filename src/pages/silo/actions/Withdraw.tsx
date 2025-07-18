@@ -17,6 +17,7 @@ import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import usePriceImpactSummary from "@/hooks/wells/usePriceImpactSummary";
 import { AdvancedFarmWorkflow } from "@/lib/farm/workflow";
@@ -71,7 +72,7 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
   const [destination, setDestination] = useState(FarmToMode.EXTERNAL);
   const [amount, setAmount] = useState("");
 
-  const amountTV = useMemo(() => toSafeTVFromHuman(amount, siloToken.decimals), [amount, siloToken.decimals]);
+  const amountTV = useSafeTokenValue(amount, siloToken);
 
   const [tokenOut, setTokenOut] = useState(getInitialWithdrawToken(siloToken, tokenMap));
   const [slippage, setSlippage] = useState(0.5);
@@ -96,9 +97,7 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
     return data;
   }, [siloToken, farmerDepositData]);
 
-  const exceedsBalance = farmerDepositData?.amount.lt(
-    TokenValue.fromHuman(stringToStringNum(amount), siloToken.decimals),
-  );
+  const exceedsBalance = farmerDepositData?.amount.lt(amountTV);
 
   const shouldSwap = !tokensEqual(siloToken, tokenOut) && !siloToken.isMain;
 
@@ -131,7 +130,7 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
       advFarm.add(node);
     });
     return advFarm;
-  }, [shouldSwap, amount, siloToken, deposits, chainId, config, swapBuild, exceedsBalance, inputError]);
+  }, [shouldSwap, amountTV, siloToken, deposits, chainId, config, swapBuild, exceedsBalance, inputError]);
 
   const priceImpactQuery = usePriceImpactSummary(withdrawFarm, undefined, undefined, swapDisabled);
   const priceImpactSummary = priceImpactQuery?.get(siloToken);
@@ -238,17 +237,17 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
 
     const siloTokenToRemove = TokenValue.fromHuman(amount, siloToken.decimals);
 
-    const amountTV = shouldSwap
+    const amountAsTV = shouldSwap
       ? swapData?.buyAmount?.gt(0)
         ? swapData.buyAmount
         : undefined
       : TokenValue.fromHuman(amount, siloToken.decimals);
 
-    if (!amountTV) return undefined;
+    if (!amountAsTV) return undefined;
     const transferData = sortAndPickCrates("withdraw", siloTokenToRemove, deposits);
 
     return {
-      amount: amountTV,
+      amount: amountAsTV,
       stalkLost: transferData.stalk,
       seedsLost: transferData.seeds,
     };

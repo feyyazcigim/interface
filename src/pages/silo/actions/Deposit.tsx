@@ -12,6 +12,7 @@ import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import usePriceImpactSummary from "@/hooks/wells/usePriceImpactSummary";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
@@ -81,7 +82,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
 
   const shouldSwap = !tokensEqual(tokenIn, siloToken);
 
-  const amountInTV = useMemo(() => toSafeTVFromHuman(amountIn, tokenIn.decimals), [amountIn, tokenIn.decimals]);
+  const amountInTV = useSafeTokenValue(amountIn, tokenIn);
 
   const {
     data: swapData,
@@ -144,7 +145,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
     const sData = siloData.tokenData.get(siloToken);
     if (stringToNumber(amountIn) <= 0 || !sData) return undefined;
     if (tokensEqual(siloToken, tokenIn)) {
-      const amount = TokenValue.fromHuman(amountIn, siloToken.decimals);
+      const amount = toSafeTVFromHuman(amountIn, siloToken.decimals);
 
       return {
         amount,
@@ -168,7 +169,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
         throw new Error("No account connected");
       }
 
-      const buyAmount = shouldSwap ? swapData?.buyAmount : TokenValue.fromHuman(amountIn, tokenIn.decimals);
+      const buyAmount = shouldSwap ? swapData?.buyAmount : toSafeTVFromHuman(amountIn, tokenIn.decimals);
 
       if (!shouldSwap && buyAmount) {
         setSubmitting(true);
@@ -185,7 +186,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
       if (!swapData || !swapBuild?.advancedFarm?.length) {
         throw new Error("No quote");
       }
-      const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
+      const value = tokenIn.isNative ? toSafeTVFromHuman(amountIn, tokenIn.decimals) : undefined;
 
       const advFarm = [...swapBuild.advFarm.getSteps()];
       const { clipboard } = await swapBuild.deriveClipboardWithOutputToken(siloToken, 1, account.address, {

@@ -17,6 +17,7 @@ import useMaxBuy from "@/hooks/swap/useMaxBuy";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import usePriceImpactSummary from "@/hooks/wells/usePriceImpactSummary";
 import usePodListings from "@/state/market/usePodListings";
@@ -92,7 +93,7 @@ export default function FillListing() {
 
   const isUsingMain = tokensEqual(tokenIn, mainToken);
 
-  const amountInTV = useMemo(() => toSafeTVFromHuman(amountIn, tokenIn.decimals), [amountIn, tokenIn.decimals]);
+  const amountInTV = useSafeTokenValue(amountIn, tokenIn);
 
   const { data: swapData, resetSwap } = useSwap({
     tokenIn,
@@ -142,7 +143,7 @@ export default function FillListing() {
   const podsAvailable = TokenValue.fromBlockchain(listing?.amount || 0n, PODS.decimals);
   const pricePerPod = TokenValue.fromBlockchain(listing?.pricePerPod || 0n, mainToken.decimals);
   const mainTokensToFill = podsAvailable.mul(pricePerPod);
-  const mainTokensIn = isUsingMain ? TokenValue.fromHuman(amountIn, mainToken.decimals) : swapData?.buyAmount;
+  const mainTokensIn = isUsingMain ? toSafeTVFromHuman(amountIn, mainToken.decimals) : swapData?.buyAmount;
 
   const tokenInBalance = farmerBalances.balances.get(tokenIn);
   const { data: maxFillAmount } = useMaxBuy(tokenIn, slippage, mainTokensToFill);
@@ -176,7 +177,7 @@ export default function FillListing() {
               minFillAmount: TokenValue.fromBlockchain(listing.minFillAmount, mainToken.decimals).toBigInt(), // minFillAmount, measured in Beans
               mode: Number(listing.mode), // mode
             },
-            TokenValue.fromHuman(amountIn, mainToken.decimals).toBigInt(), // amountIn
+            toSafeTVFromHuman(amountIn, mainToken.decimals).toBigInt(), // amountIn
             Number(balanceFrom), // fromMode
           ],
         });

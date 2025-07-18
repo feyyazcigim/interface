@@ -19,6 +19,7 @@ import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import useFarmerDepositAllowance from "@/state/useFarmerDepositAllowance";
@@ -69,7 +70,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
   const farmerTokenBalance = farmerBalances.balances.get(token);
   const balance = getBalanceFromMode(farmerTokenBalance, balanceFrom);
   const usingDeposits = source === "deposits";
-  const amountInTV = useMemo(() => toSafeTVFromHuman(amountIn, mainToken.decimals), [amountIn, mainToken.decimals]);
+  const amountInTV = useSafeTokenValue(amountIn, mainToken);
 
   const amountExceedsDeposits = usingDeposits && amountInTV.gt(0) && amountInTV.gt(depositedAmount ?? 0n);
   const amountExceedsBalance = !usingDeposits && amountInTV.gt(0) && amountInTV.gt(balance ?? 0n);
@@ -91,12 +92,13 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
 
   const needsDepositAllowanceIncrease = usingDeposits && !allowanceLoading && amountInTV.gt(allowance ?? 0n);
 
+  const swapAmountInTV = useSafeTokenValue(amountIn, token);
   // Swap / Quote
   const swap = useSwap({
     tokenIn: token,
     tokenOut: siloToken,
     slippage: slippage,
-    amountIn: toSafeTVFromHuman(amountIn, token.decimals),
+    amountIn: swapAmountInTV,
     disabled: usingDeposits,
   });
   const swapSummary = useSwapSummary(swap.data);
@@ -147,7 +149,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
         throw new Error("Insufficient deposits");
       }
       if (source === "deposits") {
-        const amount = TV.fromHuman(amountIn, mainToken.decimals);
+        const amount = toSafeTVFromHuman(amountIn, mainToken);
         if (!deposits || !deposits.deposits.length) {
           throw new Error("No deposits found");
         }
@@ -166,7 +168,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
         });
       }
 
-      const tokenAmount = TV.fromHuman(amountIn, token.decimals);
+      const tokenAmount = toSafeTVFromHuman(amountIn, token);
       if (tokenAmount.lte(0)) {
         throw new Error("Invalid amount");
       }

@@ -19,6 +19,7 @@ import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import { FarmerBalance, useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -71,7 +72,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
 
   // Derived
   const balance = getBalanceFromMode(farmerBalance, balanceSource) ?? TV.ZERO;
-  const amountTV = useMemo(() => toSafeTVFromHuman(amountIn, siloToken.decimals), [amountIn, siloToken.decimals]);
+  const amountTV = useSafeTokenValue(amountIn, siloToken);
   const validAmountIn = amountTV.gt(0);
 
   const txnType = useTxnType(toSilo, tokenOut);
