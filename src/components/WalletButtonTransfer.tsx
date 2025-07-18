@@ -4,6 +4,7 @@ import useTransaction from "@/hooks/useTransaction";
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import useTokenData from "@/state/useTokenData";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { stringToNumber } from "@/utils/string";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -54,7 +55,7 @@ export default function WalletButtonTransfer() {
           queryKey: query,
         }),
       );
-      setAmountIn("0");
+      setAmountIn("");
     },
     successMessage: "Transfer success",
     errorMessage: "Transfer failed",
@@ -67,7 +68,8 @@ export default function WalletButtonTransfer() {
       if (!account.address) {
         throw new Error("Signer required");
       }
-      if (!stringToNumber(amountIn)) {
+      const amount = toSafeTVFromHuman(amountIn, tokenIn.decimals);
+      if (amount.lte(0)) {
         throw new Error("Invalid amount");
       }
       if (!chainId) {
@@ -76,7 +78,6 @@ export default function WalletButtonTransfer() {
 
       const fromMode = balanceFrom;
       const toMode = balanceFrom === FarmFromMode.EXTERNAL ? FarmToMode.INTERNAL : FarmToMode.EXTERNAL;
-      const amount = TokenValue.fromHuman(amountIn, tokenIn.decimals);
 
       return writeWithEstimateGas({
         address: beanstalkAddress[chainId as keyof typeof beanstalkAddress] as Address,
