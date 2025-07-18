@@ -9,10 +9,10 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter, truncateHex } from "@/utils/format";
-import { stringToNumber, toValidStringNumInput } from "@/utils/string";
+import { sanitizeNumericInputValue, stringEq, stringToNumber, toValidStringNumInput } from "@/utils/string";
 import { FarmFromMode, Plot, Token } from "@/utils/types";
 import { useDebouncedEffect } from "@/utils/useDebounce";
-import { cn } from "@/utils/utils";
+import { cn, exists } from "@/utils/utils";
 import { Dispatch, InputHTMLAttributes, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
 import PlotSelect from "./PlotSelect";
 import TextSkeleton from "./TextSkeleton";
@@ -22,22 +22,41 @@ import { Skeleton } from "./ui/Skeleton";
 
 const ETH_GAS_RESERVE = TokenValue.fromHuman("0.0003333333333", 18); // Reserve $1 of gas if eth is $3k
 
+type ComboInputType = "deposits" | "plots" | "balance";
+
 export interface ComboInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  // Token mode props
+  /**
+   * Token mode props
+   */
+  /** Set Token callback */
   setToken?: Dispatch<SetStateAction<Token>> | ((token: Token) => void);
+  /** The token that is currently selected */
   selectedToken?: Token;
+  /** Override the token name in the token select component */
   tokenNameOverride?: string;
+  /** Map of tokens to their balances */
   tokenAndBalanceMap?: Map<Token, TokenValue>;
+  /** Function to set the balance from */
   setBalanceFrom?: Dispatch<SetStateAction<FarmFromMode>>;
+  /** Balance from */
   balanceFrom?: FarmFromMode;
+  /** Function to set the error boolean state */
   setError?: Dispatch<SetStateAction<boolean>>;
+  /** Error boolean state */
   error?: boolean;
+  /** Balances to show in the token select component */
   balancesToShow?: FarmFromMode[];
+  /** Whether the token select is loading */
   tokenSelectLoading?: boolean;
+  /** Function to filter tokens */
   filterTokens?: Set<Token> | undefined;
 
-  // Amount props
+  /**
+   * Amount props
+   */
+  /** The amount of the token to display */
   amount: string;
+  /** setAmount callback */
   setAmount?: Dispatch<SetStateAction<string>> | ((value: string) => void);
 
   // Common optional props
@@ -69,6 +88,21 @@ export interface ComboInputProps extends InputHTMLAttributes<HTMLInputElement> {
   // Input placeholder
   placeholder?: string;
 }
+
+const initValues = (
+  amount: string,
+  selectedToken: Token | undefined,
+  placeholder: string | undefined,
+  mode: "deposits" | "plots" | "balance" | undefined,
+) => {
+  const decimals = mode === "plots" ? PODS.decimals : selectedToken?.decimals;
+
+  if (!decimals) {
+    throw new Error("Cannot get decimals for ComboInputField: selectedToken is required");
+  }
+
+  // const sanitizeAmount = sanitizeNumericInputValue(, decimals);
+};
 
 function ComboInputField({
   setToken,
@@ -116,6 +150,7 @@ function ComboInputField({
   // Convert input string amount to TokenValue
   const getDecimals = useCallback(() => {
     if (mode === "plots") return PODS.decimals;
+
     return selectedToken?.decimals ?? 18;
   }, [mode, selectedToken]);
 
@@ -125,7 +160,7 @@ function ComboInputField({
 
   // Internal state uses TokenValue
   const [internalAmount, setInternalAmount] = useState<TokenValue>(amountAsTokenValue);
-  const [displayValue, setDisplayValue] = useState(amount);
+  const [displayValue, setDisplayValue] = useState(amount === "0" ? "" : amount);
   const [isUserInput, setIsUserInput] = useState(false);
 
   const tokenPrices = usePriceData();
@@ -193,25 +228,78 @@ function ComboInputField({
     return maxAmount;
   }, [mode, selectedPlots, tokenAndBalanceMap, selectedToken, maxAmount]);
 
-  // clamp the internal amount to the max amount
-  useEffect(() => {
-    if (internalAmount.gt(maxAmount) && !disableClamping) {
-      setInternalAmount(maxAmount);
-      setDisplayValue(maxAmount.toHuman());
-    }
-  }, [selectedToken, maxAmount, disableClamping]);
+  /**
+   * Clamp the input amount to the max amount ONLY IF clamping is enabled
+   * @returns
+   * - the clamped amount
+   * - whether it was clamped
+   * - whether it exceeds the max amount
+   */
+  const getClamped = useCallback(
+    (
+      inputAmount: TokenValue,
+      maxInputAmount: TokenValue,
+    ): {
+      amount: TokenValue;
+      didClamp: boolean;
+      exceedsMax: boolean;
+    } => {
+      const obj = {
+        amount: inputAmount,
+        didClamp: false,
+        exceedsMax: inputAmount.gt(maxInputAmount),
+      };
 
+      if (!disableClamping && obj.exceedsMax) {
+        obj.amount = maxInputAmount;
+        obj.didClamp = true;
+      }
+
+      return obj;
+    },
+    [disableClamping],
+  );
+
+  /**
+   * Set the error state
+   * - ONLY when the condition & connectedAccount are truthy
+   */
+  const handleSetError = useCallback(
+    (condition: boolean) => {
+      if (!connectedAccount) return;
+      setError?.(Boolean(condition && connectedAccount));
+    },
+    [connectedAccount, setError],
+  );
+
+  /**
+   * Clamp the internal amount to the max amount
+   * - ONLY when the selected token changes
+   * - ONLY when the max amount changes
+   *
+   * Input clamping is handled in changeValue()
+   */
+  useEffect(() => {
+    const clamped = getClamped(internalAmount, maxAmount);
+    if (!clamped.didClamp) return;
+
+    setInternalAmount(clamped.amount);
+    setDisplayValue(clamped.amount.toHuman());
+  }, [selectedToken, maxAmount, getClamped]);
+
+  /**
+   * Handle external changes to the amount
+   *
+   * - If the amount is changed from outside the component, set the internal amount to the amount
+   * - Set the error state if the amount exceeds the max amount
+   */
   useEffect(() => {
     if (!isUserInput) {
       setInternalAmount(amountAsTokenValue);
       setDisplayValue(amount);
     }
 
-    if (connectedAccount && amountAsTokenValue.gt(maxAmount)) {
-      setError?.(true);
-    } else {
-      setError?.(false);
-    }
+    handleSetError(amountAsTokenValue.gt(maxAmount));
   }, [amount, amountAsTokenValue, connectedAccount]);
 
   /**
@@ -243,6 +331,12 @@ function ComboInputField({
     }
   }, [mode, selectedPlots, setAmount]);
 
+  /**
+   * Handle setting the amount from the internal amount
+   *
+   * - If the amount is changed from inside the component, set the amount to the internal amount
+   * - Set the isUserInput state to false
+   */
   useDebouncedEffect(
     () => {
       if (isUserInput) {
@@ -256,66 +350,42 @@ function ComboInputField({
     disableDebounce ? 0 : 500,
   );
 
-  function changeValue(_value: string) {
-    const value = toValidStringNumInput(_value);
-    setIsUserInput(true);
-
-    // Show what the user is typing, including "0" for decimal numbers
-    setDisplayValue(value);
-
-    if (disableClamping) {
-      // Don't convert incomplete decimal inputs to TokenValue yet
-      const isIncompleteDecimal = value.endsWith(".") || (value.includes(".") && value.split(".")[1] === "");
-
-      if (isIncompleteDecimal) {
-        // For incomplete decimals, don't update internal amount or error state yet
+  /**
+   * Handle user input
+   *
+   * - If the input is disabled, return
+   * - Set the isUserInput state to true
+   * - Sanitize the input value
+   * - Clamp the input value to the max amount if clamping is enabled
+   * - Set the internal amount to the clamped amount
+   * - Set the error state for immediate feedback on insufficient balance
+   */
+  const changeValue = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      // If the input is disabled, early return
+      if (disableInput) {
         return;
       }
 
-      const tokenValue = TokenValue.fromHuman(value || "0", getDecimals());
-      setInternalAmount(tokenValue);
+      // Toggle isUserInput to true
+      setIsUserInput(true);
+
+      // Sanitize the input value
+      const cleaned = sanitizeNumericInputValue(event.target.value, getDecimals());
+
+      // Set the display value to the sanitized string value
+      setDisplayValue((prev) => (stringEq(prev, cleaned.str) ? prev : cleaned.str));
+
+      const clamped = getClamped(cleaned.tv, maxAmount);
+
+      // Set the internal amount returned from getClamped()
+      setInternalAmount((prev) => (prev.eq(clamped.amount) ? prev : clamped.amount));
 
       // Set error state for immediate feedback on insufficient balance
-      if (connectedAccount && tokenValue.gt(maxAmount)) {
-        setError?.(true);
-      } else {
-        setError?.(false);
-      }
-      return;
-    }
-
-    if (!value || value === "") {
-      setInternalAmount(TokenValue.ZERO);
-      setError?.(false);
-      return;
-    }
-
-    // Don't convert incomplete decimal inputs (like "0." or "0.0") to TokenValue yet
-    // Let the user finish typing the decimal number
-    const isIncompleteDecimal = value.endsWith(".") || (value.includes(".") && value.split(".")[1] === "");
-
-    if (isIncompleteDecimal) {
-      // For incomplete decimals, don't update internal amount or error state yet
-      // Just keep the display value as-is
-      return;
-    }
-
-    const inputTV = TokenValue.fromHuman(value, getDecimals());
-
-    // Set error state immediately for insufficient balance
-    if (connectedAccount && inputTV.gt(maxAmount)) {
-      setError?.(true);
-    } else {
-      setError?.(false);
-    }
-
-    if (inputTV.gt(maxAmount)) {
-      setInternalAmount(maxAmount);
-      setDisplayValue(maxAmount.toHuman());
-    } else {
-      setInternalAmount(inputTV);
-    }
-  }
+      handleSetError(clamped.exceedsMax);
+    },
+    [disableInput, isUserInput, getDecimals, maxAmount, handleSetError],
+  );
 
   const shouldShowAdditionalInfo = () => {
     const currentAmount = disableInput ? amountAsTokenValue : internalAmount;
@@ -351,7 +421,7 @@ function ComboInputField({
           "border",
           error ? "border-pinto-error" : "border-pinto-gray-blue",
           "content-center transition-colors p-3 sm:p-4 rounded-[0.75rem] focus-within:outline-none focus-within:ring-1",
-          error ? "focus-within:ring-errorRing" : "focus-within:ring-ring",
+          error ? "focus-within:ring-errorRing" : disableInput ? "focus-within:ring-0" : "focus-within:ring-ring",
           inputFrameColor === "off-white" ? "bg-pinto-off-white" : "bg-white",
         )}
       >
@@ -366,16 +436,8 @@ function ComboInputField({
                 className={
                   "flex w-full pr-1 text-[2rem] h-[2.2rem] leading-[2.2rem] text-black font-[400] align-middle focus-visible:outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:bg-transparent"
                 }
-                value={
-                  disableInput
-                    ? amount === "0"
-                      ? ""
-                      : amount
-                    : displayValue === "0" && !isUserInput
-                      ? ""
-                      : displayValue
-                }
-                onChange={(e) => changeValue(e.target.value)}
+                value={disableInput ? amount : displayValue}
+                onChange={changeValue}
               />
             </TextSkeleton>
             {mode === "plots"
