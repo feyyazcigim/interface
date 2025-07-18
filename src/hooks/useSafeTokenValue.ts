@@ -1,15 +1,10 @@
 import { TV } from "@/classes/TokenValue";
+import { DecimalIsh, decimalsIshToNumber } from "@/utils/number";
 import { stringToStringNum } from "@/utils/string";
 import { useMemo } from "react";
 
-type DecimalIsh =
-  | {
-      decimals: number;
-    }
-  | number;
-
 export default function useSafeTokenValue(amount: string, mayDecimals: DecimalIsh) {
-  const decimals = typeof mayDecimals === "number" ? mayDecimals : mayDecimals.decimals;
+  const decimals = decimalsIshToNumber(mayDecimals);
 
   /**
    * Create stable reference to the string value
