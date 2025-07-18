@@ -9,7 +9,7 @@ export default function useSafeTokenValue(amount: string, mayDecimals: DecimalIs
   /**
    * Create stable reference to the string value
    *
-   * Values such as '', '.', '0.0', '0' are all treated as 0
+   * Values such as '', '.', & '0' are all treated as 0
    */
   const value = stringToStringNum(amount);
 
