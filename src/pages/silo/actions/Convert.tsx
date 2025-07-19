@@ -83,12 +83,11 @@ function ConvertForm({
   const diamond = useProtocolAddress();
   const pintoToken = useChainConstant(MAIN_TOKEN);
   const account = useAccount();
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [slippage, setSlippage] = useState(0.25);
   const [maxConvert, setMaxConvert] = useState(TV.ZERO);
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
   const [showMinAmountWarning, setShowMinAmountWarning] = useState(false);
-  const pintoWSOL = useChainConstant(PINTO_WSOL_TOKEN);
 
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
   const clearSiloConvertQueries = useClearSiloConvertQueries();
@@ -188,7 +187,7 @@ function ConvertForm({
   // ------------------------------ TXN SUBMISSION ------------------------------
 
   const successCallback = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     setTargetToken(undefined);
     setRouteIndex(undefined);
     siloConvert.clear();
@@ -274,7 +273,7 @@ function ConvertForm({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: Reset amount in when target token changes
   useEffect(() => {
-    setAmountIn("0");
+    setAmountIn("");
     setMaxConvert(TV.ZERO);
     setRouteIndex(undefined);
     setShowMinAmountWarning(false);
@@ -397,7 +396,7 @@ function ConvertForm({
           <SlippageButton slippage={slippage} setSlippage={setSlippage} />
         </div>
         <ComboInputField
-          disableInput={!account.address || !farmerConvertibleAmount?.gt(0)}
+          disableInput={!canConvert || !account.address || !farmerConvertibleAmount?.gt(0)}
           disableInlineBalance={!targetToken}
           disableClampMinOn0={true}
           amount={amountIn}

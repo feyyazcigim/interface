@@ -24,3 +24,29 @@ export function validateFormLte(left: string, right: string, leftDecimals: numbe
 
   return leftSanitized.tv.lte(rightSanitized.tv);
 }
+
+export type DecimalIsh =
+  | {
+      decimals: number;
+    }
+  | number;
+
+export const decimalsIshToNumber = (decimals: DecimalIsh) => {
+  return typeof decimals === "number" ? decimals : decimals.decimals;
+};
+
+/**
+ * Converts a string to a TokenValue, ensuring that the string is a valid number.
+ * @param val - The string to convert.
+ * @param decimals - The number of decimals to use.
+ * @returns The TokenValue.
+ */
+export const toSafeTVFromHuman = (val: string, decimals: DecimalIsh): TV => {
+  if (typeof val !== "string") {
+    throw new Error("Invalid value parameter");
+  }
+
+  const value = val === "" || val === "." ? "0" : val;
+
+  return TV.fromHuman(value, decimalsIshToNumber(decimals));
+};

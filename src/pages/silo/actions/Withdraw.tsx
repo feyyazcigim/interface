@@ -17,6 +17,7 @@ import { useTokenMap } from "@/hooks/pinto/useTokenMap";
 import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import usePriceImpactSummary from "@/hooks/wells/usePriceImpactSummary";
 import { AdvancedFarmWorkflow } from "@/lib/farm/workflow";
@@ -28,7 +29,7 @@ import useSiloSnapshots from "@/state/useSiloSnapshots";
 import { useInvalidateSun } from "@/state/useSunData";
 import { sortAndPickCrates } from "@/utils/convert";
 import { formatter } from "@/utils/format";
-import { stringToNumber, stringToStringNum } from "@/utils/string";
+import { stringToNumber } from "@/utils/string";
 import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { AddressLookup } from "@/utils/types.generic";
@@ -68,10 +69,12 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
   const prices = usePriceData();
 
   const [destination, setDestination] = useState(FarmToMode.EXTERNAL);
-  const [amount, setAmount] = useState("0");
+  const [amount, setAmount] = useState("");
+
+  const amountTV = useSafeTokenValue(amount, siloToken);
 
   const [tokenOut, setTokenOut] = useState(getInitialWithdrawToken(siloToken, tokenMap));
-  const [slippage, setSlippage] = useState(0.5);
+  const [slippage, setSlippage] = useState(0.1);
   const [inputError, setInputError] = useState(false);
 
   const queryClient = useQueryClient();
@@ -93,18 +96,16 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
     return data;
   }, [siloToken, farmerDepositData]);
 
-  const exceedsBalance = farmerDepositData?.amount.lt(
-    TokenValue.fromHuman(stringToStringNum(amount), siloToken.decimals),
-  );
+  const exceedsBalance = farmerDepositData?.amount.lt(amountTV);
 
   const shouldSwap = !tokensEqual(siloToken, tokenOut) && !siloToken.isMain;
 
-  const swapDisabled = stringToNumber(amount) <= 0 || !account.address || !shouldSwap || inputError;
+  const swapDisabled = amountTV.lte(0) || !account.address || !shouldSwap || inputError;
 
   const { data: swapData, resetSwap } = useSwap({
     tokenIn: siloToken,
     tokenOut,
-    amountIn: TokenValue.fromHuman(amount, siloToken.decimals),
+    amountIn: amountTV,
     slippage,
     disabled: swapDisabled,
   });
@@ -115,7 +116,6 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
   // have to do the withdraw step first
   const withdrawFarm = useMemo(() => {
     if (!shouldSwap || !swapBuild?.advFarm?.length || inputError || exceedsBalance) return undefined;
-    const amountTV = TokenValue.fromHuman(amount || 0, siloToken.decimals);
     if (!deposits || amountTV.lte(0)) return undefined;
 
     const transferData = sortAndPickCrates("withdraw", amountTV, deposits);
@@ -129,7 +129,7 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
       advFarm.add(node);
     });
     return advFarm;
-  }, [shouldSwap, amount, siloToken, deposits, chainId, config, swapBuild, exceedsBalance, inputError]);
+  }, [shouldSwap, amountTV, siloToken, deposits, chainId, config, swapBuild, exceedsBalance, inputError]);
 
   const priceImpactQuery = usePriceImpactSummary(withdrawFarm, undefined, undefined, swapDisabled);
   const priceImpactSummary = priceImpactQuery?.get(siloToken);
@@ -141,7 +141,7 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
   });
 
   const onSuccess = useCallback(() => {
-    setAmount("0");
+    setAmount("");
     const allQueryKeys = [
       ...farmerSilo.queryKeys,
       fieldSnapshots.queryKey,
@@ -170,11 +170,10 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
   });
 
   const onSubmit = async () => {
-    if (!amount || Number(amount) <= 0 || !destination || !account.address || !deposits || inputError) return;
+    if (amountTV.lte(0) || !destination || !account.address || !deposits || inputError) return;
 
     try {
       setSubmitting(true);
-      const amountTV = TokenValue.fromHuman(amount || 0, siloToken.decimals);
       toast.loading(`Withdrawing...`);
       const transferData = sortAndPickCrates("withdraw", amountTV, deposits);
 
@@ -237,17 +236,13 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
 
     const siloTokenToRemove = TokenValue.fromHuman(amount, siloToken.decimals);
 
-    const amountTV = shouldSwap
-      ? swapData?.buyAmount?.gt(0)
-        ? swapData.buyAmount
-        : undefined
-      : TokenValue.fromHuman(amount, siloToken.decimals);
+    const amountAsTV = shouldSwap ? (swapData?.buyAmount?.gt(0) ? swapData.buyAmount : undefined) : amountTV;
 
-    if (!amountTV) return undefined;
+    if (!amountAsTV) return undefined;
     const transferData = sortAndPickCrates("withdraw", siloTokenToRemove, deposits);
 
     return {
-      amount: amountTV,
+      amount: amountAsTV,
       stalkLost: transferData.stalk,
       seedsLost: transferData.seeds,
     };

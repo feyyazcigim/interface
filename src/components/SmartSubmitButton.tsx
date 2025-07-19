@@ -4,6 +4,7 @@ import { ZERO_ADDRESS } from "@/constants/address";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useTransaction from "@/hooks/useTransaction";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { FarmFromMode, Token } from "@/utils/types";
 import { exists } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -97,7 +98,7 @@ export default function SmartSubmitButton({
     }
 
     // Convert amount to TokenValue for comparison
-    const inputAmount = TokenValue.fromHuman(amount || 0, token.decimals);
+    const inputAmount = toSafeTVFromHuman(amount ?? "", token);
 
     // Get internal balance
     const tokenBalances = farmerBalances.get(token);
@@ -125,7 +126,7 @@ export default function SmartSubmitButton({
           return false;
       }
     }
-  }, [allowance, farmerBalances, amount, token, balanceFrom]);
+  }, [allowance, farmerBalances, amount, token, balanceFrom, requiresDiamondAllowance]);
 
   async function approveOrRun() {
     if (needsApproval) {
@@ -134,7 +135,7 @@ export default function SmartSubmitButton({
         setSubmittingApproval(true);
         toast.loading("Approving...");
 
-        const inputAmount = TokenValue.fromHuman(amount, token?.decimals);
+        const inputAmount = toSafeTVFromHuman(amount, token.decimals);
 
         if (requiresDiamondAllowance) {
           if (!spender) throw new Error("Spender required");

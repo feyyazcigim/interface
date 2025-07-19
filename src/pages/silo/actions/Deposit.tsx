@@ -12,6 +12,7 @@ import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import usePriceImpactSummary from "@/hooks/wells/usePriceImpactSummary";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
@@ -19,6 +20,7 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import { useSiloData } from "@/state/useSiloData";
 import { useInvalidateSun } from "@/state/useSunData";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { stringEq, stringToNumber } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
@@ -63,7 +65,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
   const siloData = useSiloData();
 
   const [didSetPreferred, setDidSetPreferred] = useState(false);
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [tokenIn, setTokenIn] = useState(preferredToken);
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [slippage, setSlippage] = useState(0.5);
@@ -80,6 +82,8 @@ function Deposit({ siloToken }: { siloToken: Token }) {
 
   const shouldSwap = !tokensEqual(tokenIn, siloToken);
 
+  const amountInTV = useSafeTokenValue(amountIn, tokenIn);
+
   const {
     data: swapData,
     resetSwap,
@@ -88,11 +92,11 @@ function Deposit({ siloToken }: { siloToken: Token }) {
     tokenIn,
     tokenOut: siloToken,
     slippage,
-    amountIn: TokenValue.fromHuman(amountIn, tokenIn.decimals),
+    amountIn: amountInTV,
     disabled: !shouldSwap,
   });
 
-  const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
+  const value = tokenIn.isNative ? amountInTV : undefined;
 
   const swapBuild = useBuildSwapQuote(swapData, balanceFrom, FarmToMode.INTERNAL);
   const swapSummary = useSwapSummary(swapData);
@@ -106,7 +110,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
   });
 
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     const allQueryKeys = [...farmerSilo.queryKeys, ...farmerBalances.queryKeys, ...priceQueryKeys];
     allQueryKeys.forEach((query) => qc.invalidateQueries({ queryKey: query }));
     invalidateSun("all", { refetchType: "active" });
@@ -131,7 +135,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
   const handleSetTokenIn = useCallback(
     (newToken: Token) => {
       if (tokensEqual(newToken, tokenIn)) return;
-      setAmountIn("0");
+      setAmountIn("");
       setTokenIn(newToken);
     },
     [tokenIn],
@@ -139,14 +143,12 @@ function Deposit({ siloToken }: { siloToken: Token }) {
 
   const depositOutput = useMemo(() => {
     const sData = siloData.tokenData.get(siloToken);
-    if (stringToNumber(amountIn) <= 0 || !sData) return undefined;
+    if (amountInTV.lte(0) || !sData) return undefined;
     if (tokensEqual(siloToken, tokenIn)) {
-      const amount = TokenValue.fromHuman(amountIn, siloToken.decimals);
-
       return {
-        amount,
-        stalkGain: amount.mul(sData.rewards.stalk).mul(sData.tokenBDV),
-        seedGain: amount.mul(sData.rewards.seeds).mul(sData.tokenBDV),
+        amount: amountInTV,
+        stalkGain: amountInTV.mul(sData.rewards.stalk).mul(sData.tokenBDV),
+        seedGain: amountInTV.mul(sData.rewards.seeds).mul(sData.tokenBDV),
       };
     } else if (swapData?.buyAmount.gt(0)) {
       return {
@@ -157,7 +159,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
     }
 
     return undefined;
-  }, [siloData, swapData, siloToken, tokenIn, amountIn]);
+  }, [siloData, swapData, siloToken, tokenIn, amountInTV]);
 
   const onSubmit = useCallback(async () => {
     try {
@@ -165,7 +167,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
         throw new Error("No account connected");
       }
 
-      const buyAmount = shouldSwap ? swapData?.buyAmount : TokenValue.fromHuman(amountIn, tokenIn.decimals);
+      const buyAmount = shouldSwap ? swapData?.buyAmount : amountInTV;
 
       if (!shouldSwap && buyAmount) {
         setSubmitting(true);
@@ -182,7 +184,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
       if (!swapData || !swapBuild?.advancedFarm?.length) {
         throw new Error("No quote");
       }
-      const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
+      const value = tokenIn.isNative ? amountInTV : undefined;
 
       const advFarm = [...swapBuild.advFarm.getSteps()];
       const { clipboard } = await swapBuild.deriveClipboardWithOutputToken(siloToken, 1, account.address, {
@@ -218,7 +220,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
     swapBuild,
     siloToken,
     tokenIn,
-    amountIn,
+    amountInTV,
     balanceFrom,
     swapData,
     shouldSwap,
@@ -254,7 +256,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
           disableClamping={true}
         />
 
-        {(!depositOutput && stringToNumber(amountIn) > 0) || swapQuery.isLoading ? (
+        {(!depositOutput && amountInTV.gt(0)) || swapQuery.isLoading ? (
           <div
             className={cn(
               `flex flex-col w-full items-center justify-center`,
@@ -273,7 +275,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
             />
           </div>
         ) : null}
-        {!depositingSiloToken && stringToNumber(amountIn) > 0 && (
+        {!depositingSiloToken && amountInTV.gt(0) && (
           <RoutingAndSlippageInfo
             title="Total Deposit Slippage"
             swapSummary={swapSummary}
