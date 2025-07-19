@@ -67,19 +67,20 @@ export const isValidAddress = (address: string | HashString | undefined) => {
 const nonAmounts = new Set<string>([".", ""]);
 const cleanAmount = (value: string) => value.replace(/[^0-9.]/g, "");
 
-export const sanitizeNumericInputValue = (value: string, valueDecimals: number) => {
+export const sanitizeNumericInputValue = (val: string, valueDecimals: number) => {
+  const cleaned = cleanAmount(val);
+
   const obj = {
-    str: value,
+    str: cleaned,
     strValue: "0",
     tv: TokenValue.fromHuman("0", valueDecimals),
     nonAmount: true,
   };
 
-  if (nonAmounts.has(value)) {
+  if (nonAmounts.has(cleaned)) {
     return obj;
   }
 
-  const cleaned = cleanAmount(value);
   if (!cleaned) {
     return obj;
   }

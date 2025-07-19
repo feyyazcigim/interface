@@ -126,7 +126,7 @@ export default function SmartSubmitButton({
           return false;
       }
     }
-  }, [allowance, farmerBalances, amount, token, balanceFrom]);
+  }, [allowance, farmerBalances, amount, token, balanceFrom, requiresDiamondAllowance]);
 
   async function approveOrRun() {
     if (needsApproval) {

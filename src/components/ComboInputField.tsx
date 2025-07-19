@@ -10,7 +10,7 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter, truncateHex } from "@/utils/format";
-import { sanitizeNumericInputValue, stringEq, stringToNumber } from "@/utils/string";
+import { sanitizeNumericInputValue, stringEq, stringToNumber, toValidStringNumInput } from "@/utils/string";
 import { FarmFromMode, Plot, Token } from "@/utils/types";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { cn } from "@/utils/utils";
@@ -340,7 +340,7 @@ function ComboInputField({
    * - Set the error state for immediate feedback on insufficient balance
    */
   const changeValue = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (value: string) => {
       // If the input is disabled, early return
       if (disableInput) {
         return;
@@ -350,7 +350,7 @@ function ComboInputField({
       setIsUserInput(true);
 
       // Sanitize the input value
-      const cleaned = sanitizeNumericInputValue(event.target.value, getDecimals());
+      const cleaned = sanitizeNumericInputValue(value, getDecimals());
       const clamped = getClamped(cleaned.tv, maxAmount);
 
       // Set the display value to the sanitized string value
@@ -362,7 +362,7 @@ function ComboInputField({
       // Set error state for immediate feedback on insufficient balance
       handleSetError(clamped.exceedsMax);
     },
-    [disableInput, isUserInput, getDecimals, maxAmount, handleSetError],
+    [disableInput, getDecimals, maxAmount, handleSetError],
   );
 
   const shouldShowAdditionalInfo = () => {
@@ -412,14 +412,16 @@ function ComboInputField({
             <TextSkeleton loading={isLoading} className="flex flex-col w-full h-8">
               <input
                 min={0}
-                type="number"
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*\.?[0-9]*"
                 disabled={disableInput}
                 placeholder={placeholder || "0"}
                 className={
                   "flex w-full pr-1 text-[2rem] h-[2.2rem] leading-[2.2rem] text-black font-[400] align-middle focus-visible:outline-none placeholder:text-pinto-light disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:bg-transparent cursor-text"
                 }
                 value={disableInput ? amount : displayValue}
-                onChange={changeValue}
+                onChange={(e) => changeValue(e.target.value)}
               />
             </TextSkeleton>
             {mode === "plots"
