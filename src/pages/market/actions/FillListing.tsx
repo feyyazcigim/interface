@@ -28,7 +28,6 @@ import { useQueryKeys } from "@/state/useQueryKeys";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { toSafeTVFromHuman } from "@/utils/number";
-import { stringToNumber, stringToStringNum } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { getBalanceFromMode } from "@/utils/utils";
@@ -303,7 +302,7 @@ export default function FillListing() {
                     altText={balanceExceedsMax ? "Usable balance:" : undefined}
                     disableClamping={true}
                   />
-                  {!isUsingMain && stringToNumber(amountIn) > 0 && (
+                  {!isUsingMain && amountInTV.gt(0) && (
                     <RoutingAndSlippageInfo
                       title="Total Swap Slippage"
                       swapSummary={swapSummary}

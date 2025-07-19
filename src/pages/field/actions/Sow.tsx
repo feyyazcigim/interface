@@ -139,7 +139,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
 
   // Transaction
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     resetSwap();
     invalidateField("all");
     farmerField.refetch();
@@ -299,7 +299,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
 
   // Callbacks
   const handleOnCheckedChange = (checked: boolean) => {
-    setAmountIn("0");
+    setAmountIn("");
     const newTokenSource = checked ? "deposits" : "balances";
     if (newTokenSource === "deposits") {
       setTokenIn(preferredSiloDepositToken.preferredToken);

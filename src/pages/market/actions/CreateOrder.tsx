@@ -23,7 +23,6 @@ import { useHarvestableIndex, usePodIndex } from "@/state/useFieldData";
 import { useQueryKeys } from "@/state/useQueryKeys";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { stringToNumber } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -102,7 +101,7 @@ export default function CreateOrder() {
   const swapBuild = useBuildSwapQuote(swapData, balanceFrom, FarmToMode.INTERNAL);
   const swapSummary = useSwapSummary(swapData);
   const beansInOrder = !shouldSwap
-    ? TokenValue.fromHuman(amountIn, tokenIn.decimals)
+    ? amountInTV
     : swapSummary?.swap.routes[swapSummary?.swap.routes.length - 1].amountOut ?? TV.ZERO;
 
   const value = tokenIn.isNative ? amountInTV : undefined;
@@ -157,9 +156,13 @@ export default function CreateOrder() {
       throw new Error("No quote");
     }
 
+    if (amountInTV.isZero) {
+      throw new Error("Amount required");
+    }
+
     const advFarm = shouldSwap && swapBuild ? [...swapBuild.advancedFarm] : [];
 
-    const _amount = shouldSwap ? TV.ZERO : TokenValue.fromHuman(amountIn, tokenIn.decimals);
+    const _amount = shouldSwap ? TV.ZERO : amountInTV;
     const fromMode = shouldSwap ? FarmFromMode.INTERNAL : balanceFrom;
     const orderClipboard =
       shouldSwap && swapBuild
@@ -206,8 +209,7 @@ export default function CreateOrder() {
     account,
     shouldSwap,
     swapData,
-    amountIn,
-    tokenIn,
+    amountInTV,
     value,
     maxPlaceInLine,
     pricePerPod,
@@ -222,7 +224,7 @@ export default function CreateOrder() {
   const swapDataNotReady = (shouldSwap && (!swapData || !swapBuild)) || !!swapQuery.error;
 
   // ui state
-  const formIsFilled = !!pricePerPod && !!maxPlaceInLine && !!account && !!stringToNumber(amountIn);
+  const formIsFilled = !!pricePerPod && !!maxPlaceInLine && !!account && amountInTV.gt(0);
   const disabled = !formIsFilled || swapDataNotReady;
 
   return (
@@ -266,7 +268,7 @@ export default function CreateOrder() {
           tokenSelectLoading={preferredLoading || !didSetPreferred}
           disableClamping={true}
         />
-        {shouldSwap && stringToNumber(amountIn) > 0 && (
+        {shouldSwap && amountInTV.gt(0) && (
           <RoutingAndSlippageInfo
             title="Total Swap Slippage"
             swapSummary={swapSummary}

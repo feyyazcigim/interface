@@ -29,8 +29,7 @@ import useSiloSnapshots from "@/state/useSiloSnapshots";
 import { useInvalidateSun } from "@/state/useSunData";
 import { sortAndPickCrates } from "@/utils/convert";
 import { formatter } from "@/utils/format";
-import { toSafeTVFromHuman } from "@/utils/number";
-import { stringToNumber, stringToStringNum } from "@/utils/string";
+import { stringToNumber } from "@/utils/string";
 import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { AddressLookup } from "@/utils/types.generic";
@@ -75,7 +74,7 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
   const amountTV = useSafeTokenValue(amount, siloToken);
 
   const [tokenOut, setTokenOut] = useState(getInitialWithdrawToken(siloToken, tokenMap));
-  const [slippage, setSlippage] = useState(0.5);
+  const [slippage, setSlippage] = useState(0.1);
   const [inputError, setInputError] = useState(false);
 
   const queryClient = useQueryClient();
@@ -237,11 +236,7 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
 
     const siloTokenToRemove = TokenValue.fromHuman(amount, siloToken.decimals);
 
-    const amountAsTV = shouldSwap
-      ? swapData?.buyAmount?.gt(0)
-        ? swapData.buyAmount
-        : undefined
-      : TokenValue.fromHuman(amount, siloToken.decimals);
+    const amountAsTV = shouldSwap ? (swapData?.buyAmount?.gt(0) ? swapData.buyAmount : undefined) : amountTV;
 
     if (!amountAsTV) return undefined;
     const transferData = sortAndPickCrates("withdraw", siloTokenToRemove, deposits);

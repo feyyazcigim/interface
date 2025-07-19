@@ -88,7 +88,6 @@ function ConvertForm({
   const [maxConvert, setMaxConvert] = useState(TV.ZERO);
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
   const [showMinAmountWarning, setShowMinAmountWarning] = useState(false);
-  const pintoWSOL = useChainConstant(PINTO_WSOL_TOKEN);
 
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
   const clearSiloConvertQueries = useClearSiloConvertQueries();

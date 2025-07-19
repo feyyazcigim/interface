@@ -70,11 +70,11 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
   const farmerTokenBalance = farmerBalances.balances.get(token);
   const balance = getBalanceFromMode(farmerTokenBalance, balanceFrom);
   const usingDeposits = source === "deposits";
-  const amountInTV = useSafeTokenValue(amountIn, mainToken);
+  const amountInTV = useSafeTokenValue(amountIn, token);
 
   const amountExceedsDeposits = usingDeposits && amountInTV.gt(0) && amountInTV.gt(depositedAmount ?? 0n);
   const amountExceedsBalance = !usingDeposits && amountInTV.gt(0) && amountInTV.gt(balance ?? 0n);
-  const exceedsBalance = usingDeposits ? amountExceedsBalance : amountExceedsDeposits;
+  const exceedsBalance = usingDeposits ? amountExceedsDeposits : amountExceedsBalance;
 
   // Allowance. If wrapping deposits, we need to approve usage of silo deposits.
   const {
@@ -92,13 +92,12 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
 
   const needsDepositAllowanceIncrease = usingDeposits && !allowanceLoading && amountInTV.gt(allowance ?? 0n);
 
-  const swapAmountInTV = useSafeTokenValue(amountIn, token);
   // Swap / Quote
   const swap = useSwap({
     tokenIn: token,
     tokenOut: siloToken,
     slippage: slippage,
-    amountIn: swapAmountInTV,
+    amountIn: amountInTV,
     disabled: usingDeposits,
   });
   const swapSummary = useSwapSummary(swap.data);

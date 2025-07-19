@@ -143,14 +143,12 @@ function Deposit({ siloToken }: { siloToken: Token }) {
 
   const depositOutput = useMemo(() => {
     const sData = siloData.tokenData.get(siloToken);
-    if (stringToNumber(amountIn) <= 0 || !sData) return undefined;
+    if (amountInTV.lte(0) || !sData) return undefined;
     if (tokensEqual(siloToken, tokenIn)) {
-      const amount = toSafeTVFromHuman(amountIn, siloToken.decimals);
-
       return {
-        amount,
-        stalkGain: amount.mul(sData.rewards.stalk).mul(sData.tokenBDV),
-        seedGain: amount.mul(sData.rewards.seeds).mul(sData.tokenBDV),
+        amount: amountInTV,
+        stalkGain: amountInTV.mul(sData.rewards.stalk).mul(sData.tokenBDV),
+        seedGain: amountInTV.mul(sData.rewards.seeds).mul(sData.tokenBDV),
       };
     } else if (swapData?.buyAmount.gt(0)) {
       return {
@@ -161,7 +159,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
     }
 
     return undefined;
-  }, [siloData, swapData, siloToken, tokenIn, amountIn]);
+  }, [siloData, swapData, siloToken, tokenIn, amountInTV]);
 
   const onSubmit = useCallback(async () => {
     try {
@@ -169,7 +167,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
         throw new Error("No account connected");
       }
 
-      const buyAmount = shouldSwap ? swapData?.buyAmount : toSafeTVFromHuman(amountIn, tokenIn.decimals);
+      const buyAmount = shouldSwap ? swapData?.buyAmount : amountInTV;
 
       if (!shouldSwap && buyAmount) {
         setSubmitting(true);
@@ -186,7 +184,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
       if (!swapData || !swapBuild?.advancedFarm?.length) {
         throw new Error("No quote");
       }
-      const value = tokenIn.isNative ? toSafeTVFromHuman(amountIn, tokenIn.decimals) : undefined;
+      const value = tokenIn.isNative ? amountInTV : undefined;
 
       const advFarm = [...swapBuild.advFarm.getSteps()];
       const { clipboard } = await swapBuild.deriveClipboardWithOutputToken(siloToken, 1, account.address, {
@@ -222,7 +220,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
     swapBuild,
     siloToken,
     tokenIn,
-    amountIn,
+    amountInTV,
     balanceFrom,
     swapData,
     shouldSwap,
@@ -258,7 +256,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
           disableClamping={true}
         />
 
-        {(!depositOutput && stringToNumber(amountIn) > 0) || swapQuery.isLoading ? (
+        {(!depositOutput && amountInTV.gt(0)) || swapQuery.isLoading ? (
           <div
             className={cn(
               `flex flex-col w-full items-center justify-center`,
@@ -277,7 +275,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
             />
           </div>
         ) : null}
-        {!depositingSiloToken && stringToNumber(amountIn) > 0 && (
+        {!depositingSiloToken && amountInTV.gt(0) && (
           <RoutingAndSlippageInfo
             title="Total Deposit Slippage"
             swapSummary={swapSummary}

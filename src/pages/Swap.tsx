@@ -62,7 +62,7 @@ const getInitTokenIn = ({ preferredToken, loading }: ReturnType<typeof usePrefer
 export default function Swap() {
   const queryClient = useQueryClient();
   const { queryKeys } = useFarmerBalances();
-  const { mainToken: BEAN, siloWrappedToken, siloWrappedToken3p } = useTokenData();
+  const { mainToken: BEAN } = useTokenData();
   const diamond = useProtocolAddress();
 
   const wsol = useWSOL();
@@ -88,7 +88,7 @@ export default function Swap() {
       }),
     );
     return s;
-  }, [tokenMap, siloWrappedToken, siloWrappedToken3p]);
+  }, [tokenMap]);
 
   const amountInTV = useSafeTokenValue(amountIn, tokenIn);
 
@@ -206,7 +206,7 @@ export default function Swap() {
     } finally {
       setSubmitting(false);
     }
-  }, [swapData, amountIn, tokenIn, account.address, diamond, writeWithEstimateGas, setSubmitting, buildSwap]);
+  }, [swapData, amountInTV, tokenIn, account.address, diamond, writeWithEstimateGas, setSubmitting, buildSwap]);
 
   const swapNotReady = !swapData || !!swapQuery.error;
 
