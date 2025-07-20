@@ -24,7 +24,7 @@ import { toSafeTVFromHuman } from "@/utils/number";
 import { stringEq, stringToNumber } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
-import { cn } from "@/utils/utils";
+import { cn, getBalanceFromMode } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -83,6 +83,10 @@ function Deposit({ siloToken }: { siloToken: Token }) {
   const shouldSwap = !tokensEqual(tokenIn, siloToken);
 
   const amountInTV = useSafeTokenValue(amountIn, tokenIn);
+
+  const tokenInBalance = farmerBalances.balances.get(tokenIn);
+  const balanceFromMode = getBalanceFromMode(tokenInBalance, balanceFrom);
+  const exceedsBalance = balanceFromMode.lt(amountInTV);
 
   const {
     data: swapData,
@@ -233,7 +237,10 @@ function Deposit({ siloToken }: { siloToken: Token }) {
   const depositingSiloToken = tokensEqual(siloToken, tokenIn);
   // need to define types for routers
 
-  const disabled = !stringToNumber(amountIn) || !account.address || submitting || isConfirming || swapDataNotReady;
+  const disabled =
+    !stringToNumber(amountIn) || !account.address || submitting || isConfirming || swapDataNotReady || exceedsBalance;
+
+  const buttonText = exceedsBalance ? "Insufficient Funds" : "Deposit";
 
   return (
     <div className="flex flex-col gap-4">
@@ -297,7 +304,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
           amount={amountIn}
           balanceFrom={balanceFrom}
           submitFunction={onSubmit}
-          submitButtonText="Deposit"
+          submitButtonText={buttonText}
         />
       </div>
       <MobileActionBar>
@@ -309,7 +316,7 @@ function Deposit({ siloToken }: { siloToken: Token }) {
           amount={amountIn}
           balanceFrom={balanceFrom}
           submitFunction={onSubmit}
-          submitButtonText="Deposit"
+          submitButtonText={buttonText}
           className="h-full"
         />
       </MobileActionBar>
