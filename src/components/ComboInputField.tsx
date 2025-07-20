@@ -116,6 +116,7 @@ function ComboInputField({
   const tokenData = useTokenData();
   const { balances } = useFarmerBalances();
   const farmerTokenBalance = selectedToken ? balances.get(selectedToken) : undefined;
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const depositedBalances = useFarmerSilo().deposits;
   const farmerDepositedTokenBalance = selectedToken ? depositedBalances.get(selectedToken) : undefined;
@@ -329,6 +330,16 @@ function ComboInputField({
     disableDebounce ? 0 : 500,
   );
 
+  const [shouldRefocus, setShouldRefocus] = useState(false);
+
+  useEffect(() => {
+    if (shouldRefocus && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(0, 0);
+      setShouldRefocus(false);
+    }
+  }, [shouldRefocus]);
+
   /**
    * Handle user input
    *
@@ -358,6 +369,11 @@ function ComboInputField({
 
       // Set the internal amount returned from getClamped()
       setInternalAmount(clamped.didClamp ? clamped.amount : cleaned.tv);
+
+      // If the input was clamped, set the shouldRefocus state to true
+      if (clamped.didClamp) {
+        setShouldRefocus(true);
+      }
 
       // Set error state for immediate feedback on insufficient balance
       handleSetError(clamped.exceedsMax);
@@ -411,6 +427,7 @@ function ComboInputField({
           <div className={cn("flex flex-row items-center", isLoading && "justify-between gap-2")}>
             <TextSkeleton loading={isLoading} className="flex flex-col w-full h-8">
               <input
+                ref={inputRef}
                 min={0}
                 type="text"
                 inputMode="decimal"
