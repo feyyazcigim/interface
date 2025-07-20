@@ -3,6 +3,7 @@ import BugBounty from "@/components/landing/BugBounty";
 import FarmToTable from "@/components/landing/FarmToTable";
 import LandingChart from "@/components/landing/LandingChart";
 import MainCTA from "@/components/landing/MainCTA";
+import ProjectStats from "@/components/landing/ProjectStats";
 import Resources from "@/components/landing/Resources";
 import SecondaryCTA from "@/components/landing/SecondaryCTA";
 import SecondaryCTAProperties from "@/components/landing/SecondaryCTAProperties";
@@ -56,7 +57,7 @@ export default function Landing() {
         <SecondaryCTAProperties />
       </div>
       <div className="flex flex-col gap-12 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
-        <FarmToTable height={initialHeightPx} />
+        <ProjectStats />
       </div>
       <div className="flex flex-col gap-4 overflow-clip mb-8" style={{ height: `${initialHeightRem + 8}rem` }}>
         <BugBounty />
