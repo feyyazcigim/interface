@@ -96,6 +96,8 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
     return data;
   }, [siloToken, farmerDepositData]);
 
+  const hasBalance = farmerDepositData?.amount.gt(0);
+
   const exceedsBalance = farmerDepositData?.amount.lt(amountTV);
 
   const shouldSwap = !tokensEqual(siloToken, tokenOut) && !siloToken.isMain;
@@ -272,7 +274,7 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
         <ComboInputField
           amount={amount}
           error={inputError}
-          disableInput={isConfirming}
+          disableInput={isConfirming || !hasBalance}
           setAmount={setAmount}
           setToken={noop}
           setError={setInputError}
