@@ -1,5 +1,5 @@
 import { DebouncedFunc, debounce, isEqual } from "lodash";
-import { DependencyList, useEffect, useMemo, useRef, useState } from "react";
+import { DependencyList, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnyFn } from "./types.generic";
 
 export function useDebouncedEffect(effect: () => void, dependencies: DependencyList, delay: number = 250) {
@@ -61,16 +61,19 @@ const empty = {};
 /**
  * Debounces a function, updating the debounced function when the input value changes.
  * @param func - The function to debounce.
+ * @param dependencies - The dependencies to watch for changes.
  * @param wait - The delay in milliseconds.
  * @param options - Options for the debounce function.
  * @returns The debounced function.
  */
 export function useDebounceCallback<T, Func extends AnyFn>(
   func: Func,
+  dependencies: DependencyList,
   wait = 250,
   options: DebounceOptions<T> = empty,
 ): DebouncedFunc<Func> {
-  const debouncedFunc = useMemo(() => debounce(func, wait, options), [func, wait, options]);
+  const memoizedFunc = useCallback(func, dependencies);
+  const debouncedFunc = useMemo(() => debounce(memoizedFunc, wait, options), [memoizedFunc, wait, options]);
 
   useEffect(() => {
     return () => {

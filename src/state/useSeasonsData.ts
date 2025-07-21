@@ -22,6 +22,11 @@ import useSeasonalQueries, {
   SeasonalQueryVars,
   useMultiSeasonalQueries,
 } from "./seasonal/queries/useSeasonalInternalQueries";
+import {
+  SMPChartType,
+  useMarketPerformanceCalc,
+  useSeasonalMarketPerformanceData,
+} from "./seasonal/queries/useSeasonalMarketPerformance";
 import useSeasonalTractorSnapshots from "./seasonal/queries/useSeasonalTractorSnapshots";
 import useTokenData from "./useTokenData";
 
@@ -115,7 +120,47 @@ export interface SeasonsTableData {
   inflowFieldDeltaIn: number;
   inflowFieldDeltaOut: number;
   inflowFieldDeltaVolume: number;
+  marketPriceWeth: number;
+  marketPriceCbeth: number;
+  marketPriceCbbtc: number;
+  marketPriceWsol: number;
+  marketCumulativeNonPintoUsd: number;
+  marketCumulativeWethUsd: number;
+  marketCumulativeCbethUsd: number;
+  marketCumulativeCbbtcUsd: number;
+  marketCumulativeWsolUsd: number;
+  marketSeasonalNonPintoUsd: number;
+  marketSeasonalWethUsd: number;
+  marketSeasonalCbethUsd: number;
+  marketSeasonalCbbtcUsd: number;
+  marketSeasonalWsolUsd: number;
+  marketCumulativeNonPintoPercent: number;
+  marketCumulativeWethPercent: number;
+  marketCumulativeCbethPercent: number;
+  marketCumulativeCbbtcPercent: number;
+  marketCumulativeWsolPercent: number;
+  marketSeasonalNonPintoPercent: number;
+  marketSeasonalWethPercent: number;
+  marketSeasonalCbethPercent: number;
+  marketSeasonalCbbtcPercent: number;
+  marketSeasonalWsolPercent: number;
 }
+
+const marketStartSeasonToSymbolMappingUsd = {
+  marketCumulativeNonPintoUsd: "NET",
+  marketCumulativeWethUsd: "WETH",
+  marketCumulativeCbethUsd: "cbETH",
+  marketCumulativeCbbtcUsd: "cbBTC",
+  marketCumulativeWsolUsd: "WSOL",
+};
+
+const marketStartSeasonToSymbolMappingPercent = {
+  marketCumulativeNonPintoPercent: "NET",
+  marketCumulativeWethPercent: "WETH",
+  marketCumulativeCbethPercent: "cbETH",
+  marketCumulativeCbbtcPercent: "cbBTC",
+  marketCumulativeWsolPercent: "WSOL",
+};
 
 const stalkPaginateSettings: PaginationSettings<
   BeanstalkSeason,
@@ -182,6 +227,8 @@ export default function useSeasonsData(
     apyData = true,
     tractorData = true,
     inflowData = true,
+    marketPerformanceData = true,
+    marketPerformanceStartSeasons = {} as Record<string, number>,
   } = {},
 ) {
   const chainId = useChainId();
@@ -274,14 +321,50 @@ export default function useSeasonsData(
     enabled: inflowData,
   });
 
+  const useMarketPerformanceQuery = useSeasonalMarketPerformanceData(fromSeason - syncOffset, toSeason, {
+    enabled: marketPerformanceData,
+  });
+
+  // Determines what season to begin the cumulative charts at
+  const [startSeasonsUsd, startSeasonsPercent] = useMemo(() => {
+    const startSeasonsUsd: Record<string, number> = {};
+    const startSeasonsPercent: Record<string, number> = {};
+    for (const property in marketPerformanceStartSeasons) {
+      const season = marketPerformanceStartSeasons[property];
+      if (property in marketStartSeasonToSymbolMappingUsd) {
+        startSeasonsUsd[marketStartSeasonToSymbolMappingUsd[property]] = season - syncOffset;
+      } else if (property in marketStartSeasonToSymbolMappingPercent) {
+        startSeasonsPercent[marketStartSeasonToSymbolMappingPercent[property]] = season - syncOffset;
+      } else {
+        console.warn(`Unknown property provided: ${property}`);
+      }
+    }
+    return [startSeasonsUsd, startSeasonsPercent];
+  }, [marketPerformanceStartSeasons, syncOffset]);
+
+  const marketPrices = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.TOKEN_PRICES);
+  const marketUsdCumulative = useMarketPerformanceCalc(
+    useMarketPerformanceQuery.data,
+    SMPChartType.USD_CUMULATIVE,
+    startSeasonsUsd,
+  );
+  const marketUsdSeasonal = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.USD_SEASONAL);
+  const marketPercentCumulative = useMarketPerformanceCalc(
+    useMarketPerformanceQuery.data,
+    SMPChartType.PERCENT_CUMULATIVE,
+    startSeasonsPercent,
+  );
+  const marketPercentSeasonal = useMarketPerformanceCalc(useMarketPerformanceQuery.data, SMPChartType.PERCENT_SEASONAL);
+
   const transformedData = useMemo(() => {
     if (
       (beanstalkData && Object.keys(useStalkQuery.data || {}).length === 0) ||
-      (beanData && Object.keys(useBeanQuery.data || {}).length === 0) ||
-      (basinData && Object.keys(useBasinQuery.data || {}).length === 0) ||
+      (beanData && (useBeanQuery.data?.length ?? 0) === 0) ||
+      (basinData && (useBasinQuery.data?.length ?? 0) === 0) ||
       (apyData && Object.keys(useAPYQuery.data || {}).length === 0) ||
-      (tractorData && Object.keys(useTractorQuery.data || {}).length === 0) ||
-      (inflowData && Object.keys(useInflowQuery.data || {}).length === 0)
+      (tractorData && (useTractorQuery.data?.length ?? 0) === 0) ||
+      (inflowData && (useInflowQuery.data?.length ?? 0) === 0) ||
+      (marketPerformanceData && (useMarketPerformanceQuery.data?.length ?? 0) === 0)
     ) {
       return [];
     }
@@ -295,15 +378,23 @@ export default function useSeasonsData(
     } = useAPYQuery?.data || {};
     const tractorSnapshots = useTractorQuery?.data || ([] as any);
     const inflowSnapshots = useInflowQuery?.data || ([] as any);
+    const marketPerformanceResults = useMarketPerformanceQuery?.data || ([] as any);
 
-    const maxLength = Math.max(
+    let maxLength = Math.max(
       beanResults.length - syncOffset,
       stalkResults.fieldHourlySnapshots.length - syncOffset,
       basinResults.length - syncOffset,
       apy24h?.length || 0,
       tractorSnapshots.length,
       inflowSnapshots.length,
+      marketPerformanceResults.length - syncOffset,
     );
+
+    // Special length handling for market performance data which has variable starting seasons
+    if (Object.keys(marketPerformanceStartSeasons).length > 0) {
+      const minPerfStartSeason = Math.min(...Object.values(startSeasonsUsd), ...Object.values(startSeasonsPercent));
+      maxLength = Math.max(maxLength, toSeason - minPerfStartSeason + 1 - syncOffset);
+    }
 
     const transformedData: SeasonsTableData[] = [];
     for (let idx = 0; idx < maxLength; ++idx) {
@@ -503,6 +594,59 @@ export default function useSeasonsData(
           }
         }
       }
+
+      if (marketPerformanceData && idx + syncOffset < countSubgraphSeasons) {
+        allData.marketPriceWeth = marketPrices.WETH[marketPrices.WETH.length - 1 - idx - syncOffset].value;
+        allData.marketPriceCbeth = marketPrices.cbETH[marketPrices.cbETH.length - 1 - idx - syncOffset].value;
+        allData.marketPriceCbbtc = marketPrices.cbBTC[marketPrices.cbBTC.length - 1 - idx - syncOffset].value;
+        allData.marketPriceWsol = marketPrices.WSOL[marketPrices.WSOL.length - 1 - idx - syncOffset].value;
+        allData.marketCumulativeNonPintoUsd =
+          marketUsdCumulative.NET?.[marketUsdCumulative.NET.length - 1 - idx - syncOffset]?.value;
+        allData.marketCumulativeWethUsd =
+          marketUsdCumulative.WETH?.[marketUsdCumulative.WETH.length - 1 - idx - syncOffset]?.value;
+        allData.marketCumulativeCbethUsd =
+          marketUsdCumulative.cbETH?.[marketUsdCumulative.cbETH.length - 1 - idx - syncOffset]?.value;
+        allData.marketCumulativeCbbtcUsd =
+          marketUsdCumulative.cbBTC?.[marketUsdCumulative.cbBTC.length - 1 - idx - syncOffset]?.value;
+        allData.marketCumulativeWsolUsd =
+          marketUsdCumulative.WSOL?.[marketUsdCumulative.WSOL.length - 1 - idx - syncOffset]?.value;
+        allData.marketSeasonalNonPintoUsd =
+          marketUsdSeasonal.NET[marketUsdSeasonal.NET.length - 1 - idx - syncOffset]?.value;
+        allData.marketSeasonalWethUsd =
+          marketUsdSeasonal.WETH[marketUsdSeasonal.WETH.length - 1 - idx - syncOffset]?.value;
+        allData.marketSeasonalCbethUsd =
+          marketUsdSeasonal.cbETH[marketUsdSeasonal.cbETH.length - 1 - idx - syncOffset]?.value;
+        allData.marketSeasonalCbbtcUsd =
+          marketUsdSeasonal.cbBTC[marketUsdSeasonal.cbBTC.length - 1 - idx - syncOffset]?.value;
+        allData.marketSeasonalWsolUsd =
+          marketUsdSeasonal.WSOL[marketUsdSeasonal.WSOL.length - 1 - idx - syncOffset]?.value;
+        allData.marketCumulativeNonPintoPercent =
+          marketPercentCumulative.NET?.[marketPercentCumulative.NET.length - 1 - idx - syncOffset]?.value;
+        allData.marketCumulativeWethPercent =
+          marketPercentCumulative.WETH?.[marketPercentCumulative.WETH.length - 1 - idx - syncOffset]?.value;
+        allData.marketCumulativeCbethPercent =
+          marketPercentCumulative.cbETH?.[marketPercentCumulative.cbETH.length - 1 - idx - syncOffset]?.value;
+        allData.marketCumulativeCbbtcPercent =
+          marketPercentCumulative.cbBTC?.[marketPercentCumulative.cbBTC.length - 1 - idx - syncOffset]?.value;
+        allData.marketCumulativeWsolPercent =
+          marketPercentCumulative.WSOL?.[marketPercentCumulative.WSOL.length - 1 - idx - syncOffset]?.value;
+        allData.marketSeasonalNonPintoPercent =
+          marketPercentSeasonal.NET[marketPercentSeasonal.NET.length - 1 - idx - syncOffset]?.value;
+        allData.marketSeasonalWethPercent =
+          marketPercentSeasonal.WETH[marketPercentSeasonal.WETH.length - 1 - idx - syncOffset]?.value;
+        allData.marketSeasonalCbethPercent =
+          marketPercentSeasonal.cbETH[marketPercentSeasonal.cbETH.length - 1 - idx - syncOffset]?.value;
+        allData.marketSeasonalCbbtcPercent =
+          marketPercentSeasonal.cbBTC[marketPercentSeasonal.cbBTC.length - 1 - idx - syncOffset]?.value;
+        allData.marketSeasonalWsolPercent =
+          marketPercentSeasonal.WSOL[marketPercentSeasonal.WSOL.length - 1 - idx - syncOffset]?.value;
+
+        if (!allData.season) {
+          const season = marketPerformanceResults[marketPerformanceResults.length - 1 - idx].season;
+          allData.season = season.season;
+          allData.timestamp = Number(season.createdTimestamp);
+        }
+      }
       transformedData.push(allData as SeasonsTableData);
     }
     return transformedData;
@@ -512,6 +656,8 @@ export default function useSeasonsData(
     useBasinQuery.data,
     useAPYQuery.data,
     useTractorQuery.data,
+    useInflowQuery.data,
+    useMarketPerformanceQuery.data,
     tokenData.mainToken.decimals,
     seasonSync,
     beanstalkData,
@@ -519,6 +665,10 @@ export default function useSeasonsData(
     basinData,
     apyData,
     tractorData,
+    inflowData,
+    marketPerformanceData,
+    marketPerformanceStartSeasons,
+    toSeason,
   ]);
 
   return {

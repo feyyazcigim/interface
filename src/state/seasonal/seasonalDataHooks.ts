@@ -22,12 +22,17 @@ import { mergeUseSeasonalQueriesResults } from "./utils";
 
 /** ==================== Bean BeanHourlySnapshot ==================== **/
 
-export function useSeasonalPrice(fromSeason: number, toSeason: number): UseSeasonalResult {
-  return useSeasonalBeanBeanSG(fromSeason, toSeason, (beanHourly, _timestamp) => ({
-    season: Number(beanHourly.season.season),
-    value: Number(beanHourly.instPrice),
-    timestamp: new Date(Number(beanHourly.createdTimestamp) * 1000),
-  }));
+export function useSeasonalPrice(fromSeason: number, toSeason: number, enabled = true): UseSeasonalResult {
+  return useSeasonalBeanBeanSG(
+    fromSeason,
+    toSeason,
+    (beanHourly, _timestamp) => ({
+      season: Number(beanHourly.season.season),
+      value: Number(beanHourly.instPrice),
+      timestamp: new Date(Number(beanHourly.createdTimestamp) * 1000),
+    }),
+    { enabled },
+  );
 }
 
 export function useSeasonalSupply(fromSeason: number, toSeason: number): UseSeasonalResult {

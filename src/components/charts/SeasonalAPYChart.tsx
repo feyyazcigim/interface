@@ -20,7 +20,7 @@ interface SeasonalAPYChartProps {
   className?: string;
 }
 
-const greenStrokeGradients = [gradientFunctions.solidRed, gradientFunctions.solidBlue, gradientFunctions.solidGreen];
+const strokeGradients = [gradientFunctions.solidRed, gradientFunctions.solidBlue, gradientFunctions.solidGreen];
 
 // Custom transform to improve display around concentrated value ranges while still supporting outliers.
 const transformValue = (v: number, max: number): number => {
@@ -238,7 +238,7 @@ const SeasonalAPYChart = ({ season, size, className }: SeasonalAPYChartProps) =>
                   data={chartData}
                   xKey="timestamp"
                   size={size}
-                  makeLineGradients={greenStrokeGradients}
+                  makeLineGradients={strokeGradients}
                   valueFormatter={f.percent0dFormatter}
                   onMouseOver={handleMouseOver}
                   customValueTransform={customValueTransform}
