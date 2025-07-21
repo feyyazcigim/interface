@@ -22,12 +22,17 @@ import { mergeUseSeasonalQueriesResults } from "./utils";
 
 /** ==================== Bean BeanHourlySnapshot ==================== **/
 
-export function useSeasonalPrice(fromSeason: number, toSeason: number): UseSeasonalResult {
-  return useSeasonalBeanBeanSG(fromSeason, toSeason, (beanHourly, _timestamp) => ({
-    season: Number(beanHourly.season.season),
-    value: Number(beanHourly.instPrice),
-    timestamp: new Date(Number(beanHourly.createdTimestamp) * 1000),
-  }));
+export function useSeasonalPrice(fromSeason: number, toSeason: number, enabled = true): UseSeasonalResult {
+  return useSeasonalBeanBeanSG(
+    fromSeason,
+    toSeason,
+    (beanHourly, _timestamp) => ({
+      season: Number(beanHourly.season.season),
+      value: Number(beanHourly.instPrice),
+      timestamp: new Date(Number(beanHourly.createdTimestamp) * 1000),
+    }),
+    { enabled },
+  );
 }
 
 export function useSeasonalSupply(fromSeason: number, toSeason: number): UseSeasonalResult {
@@ -295,6 +300,14 @@ export function useSeasonalCultivationFactor(fromSeason: number, toSeason: numbe
   return useSeasonalBeanstalkFieldSG(fromSeason, toSeason, (fieldHourly, timestamp) => ({
     season: Number(fieldHourly.season),
     value: TV.fromHuman(fieldHourly.cultivationFactor || 0, 2).toNumber() / 100,
+    timestamp,
+  }));
+}
+
+export function useSeasonalCultivationTemperature(fromSeason: number, toSeason: number): UseSeasonalResult {
+  return useSeasonalBeanstalkFieldSG(fromSeason, toSeason, (fieldHourly, timestamp) => ({
+    season: Number(fieldHourly.season),
+    value: TV.fromHuman(fieldHourly.cultivationTemperature || 0, 2).toNumber() / 100,
     timestamp,
   }));
 }

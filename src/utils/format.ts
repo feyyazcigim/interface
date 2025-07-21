@@ -229,11 +229,23 @@ const numberAbbrThresholds: [number, string][] = [
   [10 ** 3, "k"],
 ];
 
-export const numberAbbr = (num: number, decimals = 1): string => {
-  for (const threshold of numberAbbrThresholds) {
-    if (num >= threshold[0]) {
-      return `${(num / threshold[0]).toFixed(decimals)}${threshold[1]}`;
+export const numberAbbr = (
+  num: number,
+  decimals = 1,
+  min = 0,
+  uppercase = false,
+  fallback: ((num: number) => string) | undefined = undefined,
+): string => {
+  if (Math.abs(num) >= min) {
+    for (const threshold of numberAbbrThresholds) {
+      if (Math.abs(num) >= threshold[0]) {
+        const letter = uppercase ? threshold[1].toUpperCase() : threshold[1];
+        return `${(num / threshold[0]).toFixed(decimals)}${letter}`;
+      }
     }
+  }
+  if (fallback) {
+    return fallback(num);
   }
   return num.toString();
 };
@@ -251,18 +263,43 @@ export const formatter = {
   noDecTrunc: formatNumNoDecimalTruncation,
 };
 
+const numberFormatter = (d: number) => (v: number) => `${formatter.number(v, { minDecimals: d, maxDecimals: d })}`;
+const priceFormatter = (d: number) => (v: number) => {
+  const formatted = formatter.number(v, { minDecimals: d, maxDecimals: d });
+  return formatted.startsWith("-") ? `-$${formatted.slice(1)}` : `$${formatted}`;
+};
+const largeNumberFormatter =
+  ({ decimals = 1, min = 0, uppercase = false, fallback = numberFormatter(0) } = {}) =>
+  (v: number) =>
+    numberAbbr(v, decimals, min, uppercase, fallback);
+const largePriceFormatter =
+  ({ decimals = 1, min = 0, uppercase = false, fallback = numberFormatter(0) } = {}) =>
+  (v: number) => {
+    const formatted = numberAbbr(v, decimals, min, uppercase, fallback);
+    return formatted.startsWith("-") ? `-$${formatted.slice(1)}` : `$${formatted}`;
+  };
+const percentFormatter = (d: number) => (v: number) =>
+  `${formatter.number(v * 100, { minDecimals: d, maxDecimals: d })}%`;
+
 export const chartFormatters = {
-  number0dFormatter: (v: number) => `${formatter.number(v, { minDecimals: 0, maxDecimals: 0 })}`,
-  number2dFormatter: (v: number) => `${formatter.number(v, { minDecimals: 2, maxDecimals: 2 })}`,
-  number6dFormatter: (v: number) => `${formatter.number(v, { minDecimals: 6, maxDecimals: 6 })}`,
-  largeNumberFormatter: numberAbbr,
-  price0dFormatter: (v: number) => `$${formatter.number(v, { minDecimals: 0, maxDecimals: 0 })}`,
-  price2dFormatter: (v: number) => `$${formatter.number(v, { minDecimals: 2, maxDecimals: 2 })}`,
-  price6dFormatter: (v: number) => `$${formatter.number(v, { minDecimals: 6, maxDecimals: 6 })}`,
-  largePriceFormatter: (v: number) => `$${numberAbbr(v)}`,
-  percent0dFormatter: (v: number) => `${formatter.number(v * 100, { minDecimals: 0, maxDecimals: 0 })}%`,
-  percent2dFormatter: (v: number) => `${formatter.number(v * 100, { minDecimals: 2, maxDecimals: 2 })}%`,
-  percent3dFormatter: (v: number) => `${formatter.number(v * 100, { minDecimals: 3, maxDecimals: 3 })}%`,
+  // Stable references for common formatters
+  percent0dFormatter: percentFormatter(0),
+  percent2dFormatter: percentFormatter(2),
+  percent3dFormatter: percentFormatter(3),
+  number0dFormatter: numberFormatter(0),
+  number2dFormatter: numberFormatter(2),
+  number6dFormatter: numberFormatter(6),
+  price0dFormatter: priceFormatter(0),
+  price2dFormatter: priceFormatter(2),
+  price6dFormatter: priceFormatter(6),
+  largeNumber1dFormatter: largeNumberFormatter(),
+  largePrice1dFormatter: largePriceFormatter(),
+  // Factories
+  numberFormatter,
+  priceFormatter,
+  largeNumberFormatter,
+  largePriceFormatter,
+  percentFormatter,
 };
 
 export function truncateHex(hex: string, left: number = 4, right: number = 3) {

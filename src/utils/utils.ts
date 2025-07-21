@@ -261,3 +261,8 @@ interface RatioDeposit {
   stem: string;
   ratio: TokenValue;
 }
+
+export function truncSeconds(date: Date): Date {
+  date.setSeconds(0, 0);
+  return date;
+}

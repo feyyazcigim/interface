@@ -27,6 +27,7 @@ export default function useSeasonalBeanBeanSG(
   fromSeason: number,
   toSeason: number,
   convertResult: ConvertEntryFn<BeanHourlySnapshot>,
+  { enabled = true } = {},
 ): UseSeasonalResult {
   const chainId = useChainId();
   const queryFnFactory = (vars: SeasonalQueryVars) => async () => {
@@ -43,5 +44,6 @@ export default function useSeasonalBeanBeanSG(
       return new Date(Number(entry.createdTimestamp) * 1000);
     },
     convertResult,
+    enabled,
   });
 }

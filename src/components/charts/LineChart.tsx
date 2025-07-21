@@ -54,6 +54,8 @@ export interface LineChartProps {
   yAxisMin?: number;
   yAxisMax?: number;
   customValueTransform?: CustomChartValueTransform;
+  hideYAxis?: boolean;
+  hoverPointImages?: (string | null | undefined)[];
 }
 
 // provide a stable reference to the horizontal reference lines to avoid re-rendering the chart when some other prop changes
@@ -74,6 +76,8 @@ const LineChart = React.memo(
     yAxisMin,
     yAxisMax,
     customValueTransform,
+    hideYAxis = false,
+    hoverPointImages,
   }: LineChartProps) => {
     const chartRef = useRef<Chart | null>(null);
     const activeIndexRef = useRef<number | undefined>(activeIndex);
@@ -92,7 +96,10 @@ const LineChart = React.memo(
       const minData = data.reduce((acc, next) => Math.min(acc, ...next.values), Number.MAX_SAFE_INTEGER);
 
       const maxTick = maxData === minData && maxData === 0 ? 1 : maxData;
-      let minTick = Math.max(0, minData - (maxData - minData) * 0.1);
+      let minTick = minData - (maxData - minData) * 0.1;
+      if (minData >= 0) {
+        minTick = Math.max(minTick, 0);
+      }
       if (minTick === maxData) {
         minTick = maxData * 0.99;
       }
@@ -171,8 +178,8 @@ const LineChart = React.memo(
     }, [horizontalReferenceLines]);
 
     const selectionPointPlugin = useMemo(() => {
-      return plugins.selectionPoint(activeIndexRef, fillArea);
-    }, [fillArea]);
+      return plugins.selectionPoint(activeIndexRef, fillArea, hoverPointImages);
+    }, [fillArea, hoverPointImages]);
 
     const selectionCallbackPlugin: Plugin = useMemo(() => {
       return plugins.selectionCallback(onMouseOver);
@@ -277,6 +284,7 @@ const LineChart = React.memo(
               },
             }),
             ticks: {
+              display: !hideYAxis,
               padding: 0,
               maxTicksLimit: 4,
               includeBounds: true,
@@ -308,9 +316,9 @@ const LineChart = React.memo(
       [
         gradientPlugin,
         verticalLinePlugin,
+        activeIndexVerticalLinePlugin,
         horizontalReferenceLinePlugin,
         selectionPointPlugin,
-        activeIndexVerticalLinePlugin,
         selectionCallbackPlugin,
       ],
     );
