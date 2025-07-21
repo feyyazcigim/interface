@@ -3,6 +3,7 @@ import { TimeTab } from "@/components/charts/TimeTabs";
 import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
 import {
   useSeasonalCultivationFactor,
+  useSeasonalCultivationTemperature,
   useSeasonalPodLine,
   useSeasonalPodRate,
   useSeasonalPodsHarvested,
@@ -46,12 +47,13 @@ const FieldExplorer = () => {
           <PodsHarvestedChart season={season} />
         </div>
       </div>
+      <SoilSupplyChart season={season} />
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/2">
-          <SoilSupplyChart season={season} />
+          <CultivationFactorChart season={season} />
         </div>
         <div className="w-full sm:w-1/2">
-          <CultivationFactorChart season={season} />
+          <CultivationTempChart season={season} />
         </div>
       </div>
     </>
@@ -201,13 +203,35 @@ const SoilSupplyChart = React.memo(({ season }: ISeason) => {
     <SeasonalChart
       title="Soil Supply per Season"
       tooltip="The amount of Soil available for Sowing each Season."
-      size="small"
+      size="large"
       fillArea
       activeTab={soilSupplyTab}
       onChangeTab={setSoilSupplyTab}
       useSeasonalResult={soilSupplyData}
       valueFormatter={f.number0dFormatter}
       tickValueFormatter={f.largeNumber1dFormatter}
+    />
+  );
+});
+
+const CultivationTempChart = React.memo(({ season }: ISeason) => {
+  const [cultivationTempTab, setCultivationTempTab] = useTimeTabs("cultivationTemp");
+
+  const cultivationTempData = useSeasonalCultivationTemperature(
+    Math.max(0, season - tabToSeasonalLookback(cultivationTempTab)),
+    season,
+  );
+
+  return (
+    <SeasonalChart
+      title="Cultivation Temperature"
+      tooltip="The Max Temperature when Soil is selling out and demand for Soil is increasing."
+      size="small"
+      activeTab={cultivationTempTab}
+      onChangeTab={setCultivationTempTab}
+      useSeasonalResult={cultivationTempData}
+      valueFormatter={f.percent2dFormatter}
+      tickValueFormatter={f.percent0dFormatter}
     />
   );
 });
