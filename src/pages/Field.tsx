@@ -255,7 +255,6 @@ function Field() {
               </Button>
             </div>
           )}
-
           {showInfos && (
             <>
               <div className="flex flex-row justify-between items-center overflow-x-auto scrollbar-none">

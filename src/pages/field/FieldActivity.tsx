@@ -120,7 +120,7 @@ const FieldActivity = () => {
                   <Col className="items-center justify-center p-4">Loading Tractor orders...</Col>
                 </td>
               </tr>
-            ) : !!ordersWithSowableAmount ? (
+            ) : !!ordersWithSowableAmount?.length ? (
               <>
                 {ordersWithSowableAmount.map((order) => {
                   return (
@@ -137,7 +137,7 @@ const FieldActivity = () => {
               </>
             ) : (
               <>
-                <td colSpan={9} className="px-2 pt-4 text-center text-xs font-light text-pinto-gray-4">
+                <td colSpan={9} className="px-2 py-4 text-center text-xs font-light text-pinto-gray-4">
                   <Col className="items-center justify-center">No Tractor orders executable next Season</Col>
                 </td>
               </>
