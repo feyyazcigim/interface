@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/Button";
 import ImageCarousel from "./ImageCarousel";
+import ProtocolUpgrades from "./ProtocolUpgrades";
 
 type ActiveButton = "upgrades" | "contributors" | "years" | "volume" | null;
 
@@ -28,9 +29,7 @@ function StatContent({ activeButton }: StatContentProps) {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            {activeButton === "upgrades" && (
-              <p className="text-gray-700">Placeholder content for protocol upgrades...</p>
-            )}
+            {activeButton === "upgrades" && <ProtocolUpgrades activeButton={activeButton} />}
             {activeButton === "contributors" && (
               <p className="text-gray-700">Placeholder content for contributors...</p>
             )}
