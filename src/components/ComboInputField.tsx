@@ -403,6 +403,8 @@ function ComboInputField({
       setAmount?.(newAmount);
       lastInternalAmountRef.current = newAmount;
     }
+
+    setShouldRefocus(true);
   };
 
   const plotIdsToShow = useMemo(() => {
