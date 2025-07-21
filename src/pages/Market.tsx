@@ -222,7 +222,7 @@ export function Market() {
               </div>
               <div class="flex justify-between">
                 <span>Place in Line:</span>
-                <span>${TokenValue.fromHuman(dataPoint.placeInLine, 0).toHuman("short")}</span>
+                <span>${TokenValue.fromHuman(dataPoint.placeInLine, 0).toHuman("long")}</span>
               </div>
             </div>
         `;
