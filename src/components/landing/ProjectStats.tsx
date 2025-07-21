@@ -52,8 +52,7 @@ export default function ProjectStats() {
 
   return (
     <motion.div
-      className="flex flex-col items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4"
-      layout="preserve-aspect"
+      className="flex flex-col items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all"
       transition={{ duration: 0.4, ease: "easeInOut" }}
     >
       <span className="flex flex-row gap-6 items-center">
