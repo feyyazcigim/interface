@@ -127,13 +127,13 @@ const shapeScatterChartData = (data: any[], harvestableIndex: TokenValue): Marke
         {
           label: "Orders",
           data: [] as MarketScatterChartDataPoint[],
-          color: "#D3B567",
+          color: "#00C767",
           pointStyle: "circle" as PointStyle,
         },
         {
           label: "Listings",
           data: [] as MarketScatterChartDataPoint[],
-          color: "#00C767",
+          color: "#FF0000",
           pointStyle: "rect" as PointStyle,
         },
       ],
