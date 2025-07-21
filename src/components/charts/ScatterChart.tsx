@@ -392,6 +392,8 @@ const ScatterChart = React.memo(
       [],
     );
 
+    console.info("xOptions.max", xOptions.max);
+
     const chartOptions: ChartOptions = useMemo(() => {
       return {
         maintainAspectRatio: false,
@@ -424,10 +426,10 @@ const ScatterChart = React.memo(
             type: "linear",
             position: "bottom",
             min: xOptions.min,
-            max: xOptions.max,
+            max: Math.round((xOptions.max / 10) * 10), // round to nearest 10 so auto tick generation works
             ticks: {
-              stepSize: 50,
-              callback: (val) => `${Number(val).toFixed(2)}M`,
+              padding: 0,
+              callback: (val) => `${Number(val)}M`,
             },
           },
           y: {
@@ -435,12 +437,9 @@ const ScatterChart = React.memo(
               display: true,
               text: yOptions.label || "",
             },
-            // min: xYMinMax?.y?.min || 0,
-            // max: xYMinMax?.y?.max || initialMaxY.current,
-            // ticks: {
-            //   stepSize: 0.2,
-            //   callback: (val) => formatter.twoDec(val),
-            // },
+            ticks: {
+              padding: 0,
+            },
           },
         },
         onClick: (event, activeElements, chart) => {
