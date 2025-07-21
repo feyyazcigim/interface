@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/Button";
 import ImageCarousel from "./ImageCarousel";
+import LandingVolume from "./LandingVolume";
 import ProtocolUpgrades from "./ProtocolUpgrades";
 
 type ActiveButton = "upgrades" | "contributors" | "years" | "volume" | null;
@@ -34,7 +35,7 @@ function StatContent({ activeButton }: StatContentProps) {
               <p className="text-gray-700">Placeholder content for contributors...</p>
             )}
             {activeButton === "years" && <ImageCarousel />}
-            {activeButton === "volume" && <p className="text-gray-700">Placeholder content for cumulative volume...</p>}
+            {activeButton === "volume" && <LandingVolume />}
           </motion.div>
         )}
       </AnimatePresence>
