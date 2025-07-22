@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/Label";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { Token } from "@/utils/types";
+import { AnimatePresence, motion } from "framer-motion";
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
 import DepositsList from "../../DepositsList";
 import { DepositTransferData } from "../TransferDeposits";
@@ -220,7 +221,18 @@ export default function StepTwo({
         <div className="flex flex-col gap-2">
           <Label>Send deposits to</Label>
           <AddressInputField value={destination} setValue={setDestination} />
-          <PintoAssetTransferNotice transferNotice={transferNotice} setTransferNotice={setTransferNotice} />
+          <AnimatePresence>
+            {destination && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <PintoAssetTransferNotice transferNotice={transferNotice} setTransferNotice={setTransferNotice} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
