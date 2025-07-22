@@ -4,7 +4,7 @@ import { beanstalkAbi, beanstalkAddress } from "@/generated/contractHooks";
 import useTransaction from "@/hooks/useTransaction";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { FarmFromMode, FarmToMode, type Token } from "@/utils/types";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { type Address, encodeFunctionData } from "viem";
@@ -24,6 +24,12 @@ export default function TransferFarmBalance() {
 
   const [usingMax, setUsingMax] = useState<boolean>(false);
   const [transferNotice, setTransferNotice] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (balanceTo !== undefined) {
+      setTransferNotice(false);
+    }
+  }, [balanceTo]);
 
   const totalAmount = useMemo(
     () => transferData.reduce((total, tokenData) => Number(tokenData.amount) + total, 0),
