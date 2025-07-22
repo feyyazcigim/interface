@@ -18,16 +18,16 @@ export default function PintoAssetTransferNotice({
   variant = "farmBalance",
 }: PintoAssetTransferNotice) {
   return (
-    <Warning variant="warning">
+    <Warning variant="warning" className="my-2">
       <div className="flex flex-col gap-8">
         <p className="text-2xl">
           Important: Only send Pinto assets to wallets custodied by individuals. Assets sent to smart contracts{" "}
           {variant === "farmBalance" && (
             <>
               or exchange companies (for example:{" "}
-              <img src={CoinbaseLogo} alt="Coinbase" className="inline h-5 w-5 mb-1.5 mx-1" />
-              Coinbase, <img src={BinanceLogo} alt="Binance" className="inline h-5 w-5 mb-1.5 mx-1" />
-              Binance, <img src={KrakenLogo} alt="Kraken" className="inline h-5 w-5 mb-1.5 mx-1" />
+              <img src={CoinbaseLogo} alt="Coinbase" className="inline h-5 w-5 mb-1 mx-1" />
+              Coinbase, <img src={BinanceLogo} alt="Binance" className="inline h-5 w-5 mb-1 mx-1" />
+              Binance, <img src={KrakenLogo} alt="Kraken" className="inline h-5 w-5 mb-1 mx-1" />
               Kraken, etc) deposit addresses
             </>
           )}
