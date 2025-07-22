@@ -6,7 +6,7 @@ import { useFarmerField } from "@/state/useFarmerField";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { FarmFromMode, FarmToMode } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { type Address, encodeFunctionData } from "viem";
@@ -23,6 +23,7 @@ export default function TransferAll() {
   const stepDescription = step === 1 ? "Send everything, specify address" : "Confirm send";
 
   const [destination, setDestination] = useState<string | undefined>();
+  const [transferNotice, setTransferNotice] = useState<boolean>(false);
 
   const farmerBalances = useFarmerBalances();
   const balancesToSend = [...farmerBalances.balances].map(([token, balance]) => ({ token, balance }));
@@ -36,6 +37,10 @@ export default function TransferAll() {
 
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setTransferNotice(false);
+  }, [destination]);
 
   const { writeWithEstimateGas, setSubmitting } = useTransaction({
     successCallback: () => {
@@ -136,12 +141,17 @@ export default function TransferAll() {
       stepNumber={step}
       setStep={setStep}
       totalSteps={2}
-      enableNextStep={!!destination}
+      enableNextStep={!!destination && transferNotice}
       onSubmit={onSubmit}
       stepDescription={stepDescription}
     >
       {step === 1 ? (
-        <StepOne destination={destination} setDestination={setDestination} />
+        <StepOne
+          destination={destination}
+          setDestination={setDestination}
+          transferNotice={transferNotice}
+          setTransferNotice={setTransferNotice}
+        />
       ) : (
         <FinalStep destination={destination} />
       )}

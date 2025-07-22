@@ -1,11 +1,13 @@
 import { TokenValue } from "@/classes/TokenValue";
 import AddressInputField from "@/components/AddressInputField";
 import { ComboInputField } from "@/components/ComboInputField";
+import PintoAssetTransferNotice from "@/components/PintoAssetTransferNotice";
 import PodRangeSelector from "@/components/PodRangeSelector";
 import { Label } from "@/components/ui/Label";
 import { PODS } from "@/constants/internalTokens";
 import { useFarmerField } from "@/state/useFarmerField";
 import { Plot } from "@/utils/types";
+import { AnimatePresence, motion } from "framer-motion";
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
 import { PodTransferData } from "../TransferPods";
 
@@ -14,9 +16,18 @@ interface StepTwoProps {
   setTransferData: Dispatch<SetStateAction<PodTransferData[]>>;
   destination: string | undefined;
   setDestination: Dispatch<SetStateAction<string | undefined>>;
+  transferNotice: boolean;
+  setTransferNotice: Dispatch<SetStateAction<boolean>>;
 }
 
-export default function StepTwo({ transferData, setTransferData, destination, setDestination }: StepTwoProps) {
+export default function StepTwo({
+  transferData,
+  setTransferData,
+  destination,
+  setDestination,
+  transferNotice,
+  setTransferNotice,
+}: StepTwoProps) {
   const { plots } = useFarmerField();
   const [selectedPlots, setSelectedPlots] = useState<Plot[]>([]);
   const [amount, setAmount] = useState<string>("0");
@@ -122,6 +133,22 @@ export default function StepTwo({ transferData, setTransferData, destination, se
       <div className="flex flex-col gap-2">
         <Label>Send plots to</Label>
         <AddressInputField value={destination} setValue={setDestination} />
+        <AnimatePresence>
+          {destination && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <PintoAssetTransferNotice
+                transferNotice={transferNotice}
+                setTransferNotice={setTransferNotice}
+                customDestinationText="Pods"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>{" "}
       </div>
       {selectedPlots.length === 1 && (
         <PodRangeSelector plot={selectedPlots[0]} range={range} handleRangeChange={handleRangeChange} />

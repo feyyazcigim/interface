@@ -4,7 +4,7 @@ import { beanstalkAbi, beanstalkAddress } from "@/generated/contractHooks";
 import useTransaction from "@/hooks/useTransaction";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { FarmFromMode, FarmToMode, type Token } from "@/utils/types";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { type Address, encodeFunctionData } from "viem";
@@ -20,9 +20,14 @@ export default function TransferFarmBalance() {
   const [step, setStep] = useState(1);
   const [destination, setDestination] = useState<string | undefined>();
   const [transferData, setTransferData] = useState<{ token: Token; amount: string }[]>([]);
-  const [balanceTo, setBalanceTo] = useState<FarmToMode>(FarmToMode.INTERNAL);
+  const [balanceTo, setBalanceTo] = useState<FarmToMode | undefined>(undefined);
 
-  const [usingMax, setUsingMax] = useState(false);
+  const [usingMax, setUsingMax] = useState<boolean>(false);
+  const [transferNotice, setTransferNotice] = useState<boolean>(false);
+
+  useEffect(() => {
+    setTransferNotice(false);
+  }, [balanceTo, destination]);
 
   const totalAmount = useMemo(
     () => transferData.reduce((total, tokenData) => Number(tokenData.amount) + total, 0),
@@ -88,7 +93,9 @@ export default function TransferFarmBalance() {
       stepNumber={step}
       setStep={setStep}
       totalSteps={2}
-      enableNextStep={!!destination && totalAmount > 0 && !!balanceTo}
+      enableNextStep={
+        !!destination && totalAmount > 0 && !!balanceTo && (balanceTo === FarmToMode.INTERNAL ? transferNotice : true)
+      }
       onSubmit={onSubmit}
       stepDescription={stepDescription}
     >
@@ -102,6 +109,8 @@ export default function TransferFarmBalance() {
           setBalanceTo={setBalanceTo}
           usingMax={usingMax}
           setUsingMax={setUsingMax}
+          transferNotice={transferNotice}
+          setTransferNotice={setTransferNotice}
         />
       ) : (
         <FinalStep transferData={transferData} destination={destination} balanceTo={balanceTo} />
