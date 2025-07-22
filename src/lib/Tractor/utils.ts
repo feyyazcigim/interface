@@ -204,7 +204,20 @@ export async function createSowTractorData({
     ],
   });
 
-  // Step 2: Generate deposit optimization calls separately (for the user transaction)
+  const advFarmCall = encodeFunctionData({
+    abi: beanstalkAbi,
+    functionName: "advancedFarm",
+    args: [
+      [
+        {
+          callData: pipeCall,
+          clipboard: "0x" as `0x${string}`, // Empty clipboard
+        },
+      ],
+    ],
+  });
+
+  // Step 3: Generate deposit optimization calls separately (for the user transaction)
   let depositOptimizationCalls: `0x${string}`[] | undefined;
 
   if (farmerDeposits && userAddress && protocolAddress) {
@@ -225,15 +238,12 @@ export async function createSowTractorData({
     }
   }
 
-  // Step 3: The blueprint data should ONLY contain the sow order (like before)
-  const data = pipeCall;
-
   console.debug("Raw sowBlueprintv0 call:", sowBlueprintCall);
   console.debug("advancedPipe call:", pipeCall);
-  console.debug("Final blueprint data:", data);
+  console.debug("Final blueprint data:", advFarmCall);
 
   return {
-    data,
+    data: advFarmCall,
     operatorPasteInstrs: [], // TODO: Update if needed
     rawCall: sowBlueprintCall, // Return the raw call data
     depositOptimizationCalls, // Return optimization calls for user transaction
