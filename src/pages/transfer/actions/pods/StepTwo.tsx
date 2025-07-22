@@ -1,6 +1,7 @@
 import { TokenValue } from "@/classes/TokenValue";
 import AddressInputField from "@/components/AddressInputField";
 import { ComboInputField } from "@/components/ComboInputField";
+import PintoAssetTransferNotice from "@/components/PintoAssetTransferNotice";
 import PodRangeSelector from "@/components/PodRangeSelector";
 import { Label } from "@/components/ui/Label";
 import { PODS } from "@/constants/internalTokens";
@@ -14,9 +15,18 @@ interface StepTwoProps {
   setTransferData: Dispatch<SetStateAction<PodTransferData[]>>;
   destination: string | undefined;
   setDestination: Dispatch<SetStateAction<string | undefined>>;
+  transferNotice: boolean;
+  setTransferNotice: Dispatch<SetStateAction<boolean>>;
 }
 
-export default function StepTwo({ transferData, setTransferData, destination, setDestination }: StepTwoProps) {
+export default function StepTwo({
+  transferData,
+  setTransferData,
+  destination,
+  setDestination,
+  transferNotice,
+  setTransferNotice,
+}: StepTwoProps) {
   const { plots } = useFarmerField();
   const [selectedPlots, setSelectedPlots] = useState<Plot[]>([]);
   const [amount, setAmount] = useState<string>("0");
@@ -122,6 +132,7 @@ export default function StepTwo({ transferData, setTransferData, destination, se
       <div className="flex flex-col gap-2">
         <Label>Send plots to</Label>
         <AddressInputField value={destination} setValue={setDestination} />
+        <PintoAssetTransferNotice transferNotice={transferNotice} setTransferNotice={setTransferNotice} />
       </div>
       {selectedPlots.length === 1 && (
         <PodRangeSelector plot={selectedPlots[0]} range={range} handleRangeChange={handleRangeChange} />

@@ -4,6 +4,7 @@ import { ComboInputField } from "@/components/ComboInputField";
 import DestinationBalanceSelect from "@/components/DestinationBalanceSelect";
 import { MinusIcon } from "@/components/Icons";
 import MultiTokenSelectWithBalances from "@/components/MultiTokenSelectWithBalances";
+import PintoAssetTransferNotice from "@/components/PintoAssetTransferNotice";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
@@ -28,6 +29,8 @@ interface StepOneProps {
   setBalanceTo: Dispatch<SetStateAction<FarmToMode>>;
   usingMax: boolean;
   setUsingMax: Dispatch<SetStateAction<boolean>>;
+  transferNotice: boolean;
+  setTransferNotice: Dispatch<SetStateAction<boolean>>;
 }
 
 const variants = {
@@ -60,6 +63,8 @@ export default function StepOne({
   setBalanceTo,
   usingMax,
   setUsingMax,
+  transferNotice,
+  setTransferNotice,
 }: StepOneProps) {
   // Get available tokens and balances
   const { balances } = useFarmerBalances();
@@ -239,6 +244,7 @@ export default function StepOne({
       <motion.div variants={variants} initial="hidden" animate="visible" className="flex flex-col gap-2">
         <Label>Send tokens to</Label>
         <AddressInputField value={destination} setValue={setDestination} />
+        <PintoAssetTransferNotice transferNotice={transferNotice} setTransferNotice={setTransferNotice} />
       </motion.div>
 
       <motion.div variants={variants} initial="hidden" animate="visible" className="flex flex-col gap-4 items-start">

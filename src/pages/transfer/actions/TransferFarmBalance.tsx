@@ -22,7 +22,8 @@ export default function TransferFarmBalance() {
   const [transferData, setTransferData] = useState<{ token: Token; amount: string }[]>([]);
   const [balanceTo, setBalanceTo] = useState<FarmToMode>(FarmToMode.INTERNAL);
 
-  const [usingMax, setUsingMax] = useState(false);
+  const [usingMax, setUsingMax] = useState<boolean>(false);
+  const [transferNotice, setTransferNotice] = useState<boolean>(false);
 
   const totalAmount = useMemo(
     () => transferData.reduce((total, tokenData) => Number(tokenData.amount) + total, 0),
@@ -88,7 +89,7 @@ export default function TransferFarmBalance() {
       stepNumber={step}
       setStep={setStep}
       totalSteps={2}
-      enableNextStep={!!destination && totalAmount > 0 && !!balanceTo}
+      enableNextStep={!!destination && totalAmount > 0 && !!balanceTo && transferNotice}
       onSubmit={onSubmit}
       stepDescription={stepDescription}
     >
@@ -102,6 +103,8 @@ export default function TransferFarmBalance() {
           setBalanceTo={setBalanceTo}
           usingMax={usingMax}
           setUsingMax={setUsingMax}
+          transferNotice={transferNotice}
+          setTransferNotice={setTransferNotice}
         />
       ) : (
         <FinalStep transferData={transferData} destination={destination} balanceTo={balanceTo} />

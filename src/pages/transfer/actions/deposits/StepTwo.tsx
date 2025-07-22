@@ -2,6 +2,7 @@ import { TokenValue } from "@/classes/TokenValue";
 import AddressInputField from "@/components/AddressInputField";
 import { ComboInputField } from "@/components/ComboInputField";
 import DepositSelect from "@/components/DepositSelect";
+import PintoAssetTransferNotice from "@/components/PintoAssetTransferNotice";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import useIsMobile from "@/hooks/display/useIsMobile";
@@ -18,6 +19,8 @@ interface StepTwoProps {
   setDestination: Dispatch<SetStateAction<string | undefined>>;
   usingMax: boolean;
   backToFirstStep: () => void;
+  transferNotice: boolean;
+  setTransferNotice: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function StepTwo({
@@ -27,6 +30,8 @@ export default function StepTwo({
   setDestination,
   usingMax,
   backToFirstStep,
+  transferNotice,
+  setTransferNotice,
 }: StepTwoProps) {
   const farmerSilo = useFarmerSilo();
   const depositedBalances = farmerSilo.deposits;
@@ -215,6 +220,7 @@ export default function StepTwo({
         <div className="flex flex-col gap-2">
           <Label>Send deposits to</Label>
           <AddressInputField value={destination} setValue={setDestination} />
+          <PintoAssetTransferNotice transferNotice={transferNotice} setTransferNotice={setTransferNotice} />
         </div>
       </div>
     </div>

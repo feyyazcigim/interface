@@ -23,6 +23,7 @@ export default function TransferAll() {
   const stepDescription = step === 1 ? "Send everything, specify address" : "Confirm send";
 
   const [destination, setDestination] = useState<string | undefined>();
+  const [transferNotice, setTransferNotice] = useState<boolean>(false);
 
   const farmerBalances = useFarmerBalances();
   const balancesToSend = [...farmerBalances.balances].map(([token, balance]) => ({ token, balance }));
@@ -136,12 +137,17 @@ export default function TransferAll() {
       stepNumber={step}
       setStep={setStep}
       totalSteps={2}
-      enableNextStep={!!destination}
+      enableNextStep={!!destination && transferNotice}
       onSubmit={onSubmit}
       stepDescription={stepDescription}
     >
       {step === 1 ? (
-        <StepOne destination={destination} setDestination={setDestination} />
+        <StepOne
+          destination={destination}
+          setDestination={setDestination}
+          transferNotice={transferNotice}
+          setTransferNotice={setTransferNotice}
+        />
       ) : (
         <FinalStep destination={destination} />
       )}

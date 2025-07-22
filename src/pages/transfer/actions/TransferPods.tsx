@@ -26,6 +26,7 @@ export default function TransferPods() {
   const [step, setStep] = useState(1);
   const [destination, setDestination] = useState<string | undefined>();
   const [transferData, setTransferData] = useState<PodTransferData[]>([]);
+  const [transferNotice, setTransferNotice] = useState<boolean>(false);
 
   const farmerField = useFarmerField();
 
@@ -45,7 +46,7 @@ export default function TransferPods() {
       case 1:
         return transferData.length > 0;
       case 2:
-        if (!!destination) {
+        if (!!destination && transferNotice) {
           if (transferData.length === 1) {
             return transferData[0].end.gt(transferData[0].start);
           }
@@ -130,6 +131,8 @@ export default function TransferPods() {
           setTransferData={setTransferData}
           destination={destination}
           setDestination={setDestination}
+          transferNotice={transferNotice}
+          setTransferNotice={setTransferNotice}
         />
       ) : (
         <FinalStep transferData={transferData} destination={destination} />
