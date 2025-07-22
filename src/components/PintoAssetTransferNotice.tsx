@@ -18,7 +18,7 @@ export default function PintoAssetTransferNotice({
   variant = "farmBalance",
 }: PintoAssetTransferNotice) {
   return (
-    <Warning variant="warning" className="my-2">
+    <Warning variant="warning" className="mt-2">
       <div className="flex flex-col gap-8">
         <p className="text-2xl">
           Important: Only send assets to wallets custodied by individuals. Assets sent to smart contracts{" "}
