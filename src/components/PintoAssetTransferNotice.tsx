@@ -18,7 +18,7 @@ export default function PintoAssetTransferNotice({
   transferNotice,
   setTransferNotice,
   variant = "farmBalance",
-  customDestinationText = "tokens to a farm balance",
+  customDestinationText = "tokens to a Farm Balance",
 }: PintoAssetTransferNotice) {
   return (
     <Warning variant="caution" className="mt-2 text-yellow-900" showIcon={false}>
