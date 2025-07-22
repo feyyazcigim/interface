@@ -386,7 +386,7 @@ const Overview = () => {
             {hasDeposits ? (
               <div className="relative overflow-visible">
                 <FarmerDepositsTable hoveredButton={hoveredButton} setHoveredButton={setHoveredButton} />
-                {convertEnabled && convertFrom && convertTo && (
+                {/*convertEnabled && convertFrom && convertTo && (
                   <TableRowConnector
                     fromTarget={`token-row-${convertFrom.address}`}
                     toTarget={`token-row-${convertTo.address}`}
@@ -411,7 +411,7 @@ const Overview = () => {
                       </div>
                     }
                   />
-                )}
+                )*/}
                 {/*enablePintoToLPHelper && (
                   <TableRowConnector
                     toTarget={`token-row-${mainToken.address}`}

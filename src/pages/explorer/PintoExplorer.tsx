@@ -1,3 +1,4 @@
+import MarketPerformanceChart from "@/components/charts/MarketPerformanceChart";
 import SeasonalChart, { tabToSeasonalLookback } from "@/components/charts/SeasonalChart";
 import { TimeTab } from "@/components/charts/TimeTabs";
 import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
@@ -42,6 +43,7 @@ const PintoExplorer = () => {
           <MarketCapChart season={season} />
         </div>
       </div>
+      <MarketPerformanceChart season={season} size="huge" />
     </>
   );
 };
@@ -151,7 +153,7 @@ const TotalLiquidityChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setLiquidityTab}
       useSeasonalResult={liquidityData}
       valueFormatter={f.price0dFormatter}
-      tickValueFormatter={f.largePriceFormatter}
+      tickValueFormatter={f.largePrice1dFormatter}
     />
   );
 });
@@ -175,7 +177,7 @@ const TotalSupplyChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setSupplyTab}
       useSeasonalResult={supplyData}
       valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.largeNumberFormatter}
+      tickValueFormatter={f.largeNumber1dFormatter}
     />
   );
 });
@@ -199,7 +201,7 @@ const MarketCapChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setMcapTab}
       useSeasonalResult={mcapData}
       valueFormatter={f.price0dFormatter}
-      tickValueFormatter={f.largePriceFormatter}
+      tickValueFormatter={f.largePrice1dFormatter}
     />
   );
 });

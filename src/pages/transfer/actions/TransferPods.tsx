@@ -3,7 +3,7 @@ import FlowForm from "@/components/FormFlow";
 import { beanstalkAbi, beanstalkAddress } from "@/generated/contractHooks";
 import useTransaction from "@/hooks/useTransaction";
 import { useFarmerField } from "@/state/useFarmerField";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { type Address, encodeFunctionData } from "viem";
@@ -26,8 +26,13 @@ export default function TransferPods() {
   const [step, setStep] = useState(1);
   const [destination, setDestination] = useState<string | undefined>();
   const [transferData, setTransferData] = useState<PodTransferData[]>([]);
+  const [transferNotice, setTransferNotice] = useState<boolean>(false);
 
   const farmerField = useFarmerField();
+
+  useEffect(() => {
+    setTransferNotice(false);
+  }, [destination]);
 
   const stepDescription = () => {
     switch (step) {
@@ -45,7 +50,7 @@ export default function TransferPods() {
       case 1:
         return transferData.length > 0;
       case 2:
-        if (!!destination) {
+        if (!!destination && transferNotice) {
           if (transferData.length === 1) {
             return transferData[0].end.gt(transferData[0].start);
           }
@@ -130,6 +135,8 @@ export default function TransferPods() {
           setTransferData={setTransferData}
           destination={destination}
           setDestination={setDestination}
+          transferNotice={transferNotice}
+          setTransferNotice={setTransferNotice}
         />
       ) : (
         <FinalStep transferData={transferData} destination={destination} />

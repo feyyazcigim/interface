@@ -64,7 +64,7 @@ const TotalLiquidityChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setLiquidityTab}
       useSeasonalResult={liquidityData}
       valueFormatter={f.price0dFormatter}
-      tickValueFormatter={f.largePriceFormatter}
+      tickValueFormatter={f.largePrice1dFormatter}
     />
   );
 });
@@ -72,7 +72,7 @@ const TotalLiquidityChart = React.memo(({ season }: ISeason) => {
 const L2SRChart = React.memo(({ season }: ISeason) => {
   const [l2srTab, setL2srTab] = useTimeTabs("l2sr");
 
-  const l2srData = useSeasonalL2SR(Math.max(0, season - tabToSeasonalLookback(l2srTab)), season);
+  const l2srData = useSeasonalL2SR(Math.max(9, season - tabToSeasonalLookback(l2srTab)), season);
 
   return (
     <SeasonalChart
@@ -103,7 +103,7 @@ const StalkSupplyChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setStalkTab}
       useSeasonalResult={stalkData}
       valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.largeNumberFormatter}
+      tickValueFormatter={f.largeNumber1dFormatter}
     />
   );
 });
@@ -123,7 +123,7 @@ const TotalDepositedPDVChart = React.memo(({ season }: ISeason) => {
       onChangeTab={setBdvTab}
       useSeasonalResult={bdvData}
       valueFormatter={f.number0dFormatter}
-      tickValueFormatter={f.largeNumberFormatter}
+      tickValueFormatter={f.largeNumber1dFormatter}
     />
   );
 });

@@ -34,7 +34,12 @@ export default function TransferDeposits() {
   const [step, setStep] = useState(1);
   const [destination, setDestination] = useState<string | undefined>();
   const [transferData, setTransferData] = useState<DepositTransferData[]>([]);
-  const [usingMax, setUsingMax] = useState(false);
+  const [usingMax, setUsingMax] = useState<boolean>(false);
+  const [transferNotice, setTransferNotice] = useState<boolean>(false);
+
+  useEffect(() => {
+    setTransferNotice(false);
+  }, [destination]);
 
   const stepDescription = () => {
     switch (step) {
@@ -55,7 +60,7 @@ export default function TransferDeposits() {
       case 1:
         return transferData.length > 0;
       case 2:
-        return !!destination;
+        return !!destination && transferNotice;
       default:
         return true;
     }
@@ -166,6 +171,8 @@ export default function TransferDeposits() {
           setDestination={setDestination}
           usingMax={usingMax}
           backToFirstStep={backToFirstStep}
+          transferNotice={transferNotice}
+          setTransferNotice={setTransferNotice}
         />
       ) : (
         <FinalStep destination={destination} transferData={transferData} />

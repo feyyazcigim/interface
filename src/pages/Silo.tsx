@@ -40,6 +40,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SiloTable from "./silo/SiloTable";
 
+const VALUE_TARGET = 1;
+
 function Silo() {
   const farmerSilo = useFarmerSilo();
   const farmerActions = useFarmerActions();
@@ -54,8 +56,11 @@ function Silo() {
   const enableStatPanels =
     farmerSilo.depositsUSD.gt(0) || farmerSilo.activeStalkBalance.gt(0) || farmerSilo.activeSeedsBalance.gt(0);
 
+  // Only show Convert Up Helper Links
+  const isBelowValueTarget = priceData.price.lt(VALUE_TARGET);
+
   // Action states
-  const convertEnabled = farmerActions.convertDeposits.enabled;
+  const convertEnabled = farmerActions.convertDeposits.enabled && isBelowValueTarget;
   const convertFrom = farmerActions.convertDeposits.bestConversion.from;
   const convertTo = farmerActions.convertDeposits.bestConversion.to;
   const bestDeposit = farmerActions.optimalDepositToken?.token;
@@ -158,7 +163,8 @@ function Silo() {
             </div>
             <div className="relative action-container">
               <SiloTable hovering={hoveredButton === "claim"} />
-              {convertEnabled && convertFrom && convertTo && (
+
+              {/*convertEnabled && convertFrom && convertTo && (
                 <TableRowConnector
                   fromTarget={`token-row-${convertFrom.address}`}
                   toTarget={`token-row-${convertTo.address}`}
@@ -180,7 +186,7 @@ function Silo() {
                       >
                         {`Convert ${convertFrom.name}`}
                       </div>
-                      {/*
+                      {/* This should stay commented out
                       <div className="flex flex-col gap-4">
                         <Text
                           data-action-target="convert"
@@ -196,11 +202,12 @@ function Silo() {
                         >
                           {"Arbitrage the increased Seeds reward for a gain in Seeds."}
                         </Text>
-                      </div>*/}
+                      </div>*/
+              /*}
                     </div>
                   }
                 />
-              )}
+              )*/}
               {claimEnabled && (
                 <HelperLink
                   text={claimableText}
