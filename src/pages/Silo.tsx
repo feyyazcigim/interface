@@ -163,7 +163,8 @@ function Silo() {
             </div>
             <div className="relative action-container">
               <SiloTable hovering={hoveredButton === "claim"} />
-              {convertEnabled && convertFrom && convertTo && (
+
+              {/*convertEnabled && convertFrom && convertTo && (
                 <TableRowConnector
                   fromTarget={`token-row-${convertFrom.address}`}
                   toTarget={`token-row-${convertTo.address}`}
@@ -185,7 +186,7 @@ function Silo() {
                       >
                         {`Convert ${convertFrom.name}`}
                       </div>
-                      {/*
+                      {/* This should stay commented out
                       <div className="flex flex-col gap-4">
                         <Text
                           data-action-target="convert"
@@ -201,11 +202,12 @@ function Silo() {
                         >
                           {"Arbitrage the increased Seeds reward for a gain in Seeds."}
                         </Text>
-                      </div>*/}
+                      </div>*/
+              /*}
                     </div>
                   }
                 />
-              )}
+              )*/}
               {claimEnabled && (
                 <HelperLink
                   text={claimableText}
