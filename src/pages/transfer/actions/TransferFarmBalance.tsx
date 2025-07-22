@@ -93,7 +93,9 @@ export default function TransferFarmBalance() {
       stepNumber={step}
       setStep={setStep}
       totalSteps={2}
-      enableNextStep={!!destination && totalAmount > 0 && !!balanceTo && transferNotice}
+      enableNextStep={
+        !!destination && totalAmount > 0 && !!balanceTo && (balanceTo === FarmToMode.INTERNAL ? transferNotice : true)
+      }
       onSubmit={onSubmit}
       stepDescription={stepDescription}
     >
