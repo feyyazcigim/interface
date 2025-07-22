@@ -20,7 +20,7 @@ export default function TransferFarmBalance() {
   const [step, setStep] = useState(1);
   const [destination, setDestination] = useState<string | undefined>();
   const [transferData, setTransferData] = useState<{ token: Token; amount: string }[]>([]);
-  const [balanceTo, setBalanceTo] = useState<FarmToMode>(FarmToMode.INTERNAL);
+  const [balanceTo, setBalanceTo] = useState<FarmToMode | undefined>(undefined);
 
   const [usingMax, setUsingMax] = useState<boolean>(false);
   const [transferNotice, setTransferNotice] = useState<boolean>(false);

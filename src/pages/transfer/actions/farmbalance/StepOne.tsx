@@ -25,8 +25,8 @@ interface StepOneProps {
   >;
   destination: string | undefined;
   setDestination: Dispatch<SetStateAction<string | undefined>>;
-  balanceTo: FarmToMode;
-  setBalanceTo: Dispatch<SetStateAction<FarmToMode>>;
+  balanceTo: FarmToMode | undefined;
+  setBalanceTo: Dispatch<SetStateAction<FarmToMode | undefined>>;
   usingMax: boolean;
   setUsingMax: Dispatch<SetStateAction<boolean>>;
   transferNotice: boolean;
@@ -244,7 +244,11 @@ export default function StepOne({
       <motion.div variants={variants} initial="hidden" animate="visible" className="flex flex-col gap-2">
         <Label>Send tokens to</Label>
         <AddressInputField value={destination} setValue={setDestination} />
-        <PintoAssetTransferNotice transferNotice={transferNotice} setTransferNotice={setTransferNotice} />
+        <PintoAssetTransferNotice
+          transferNotice={transferNotice}
+          setTransferNotice={setTransferNotice}
+          variant={balanceTo === FarmToMode.EXTERNAL ? "walletBalance" : "farmBalance"}
+        />
       </motion.div>
 
       <motion.div variants={variants} initial="hidden" animate="visible" className="flex flex-col gap-4 items-start">
