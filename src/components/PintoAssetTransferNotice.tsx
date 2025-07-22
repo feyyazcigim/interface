@@ -21,16 +21,7 @@ export default function PintoAssetTransferNotice({ transferNotice, setTransferNo
           <img src={CoinbaseLogo} alt="Coinbase" className="inline h-5 w-5 mb-1.5 mx-1" />
           Coinbase, <img src={BinanceLogo} alt="Binance" className="inline h-5 w-5 mb-1.5 mx-1" />
           Binance, <img src={KrakenLogo} alt="Kraken" className="inline h-5 w-5 mb-1.5 mx-1" />
-          Kraken, etc) deposit addresses may be permanently lost and cannot be recovered.{" "}
-          <a
-            href="https://pinto.money"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-pinto-green-4 hover:text-pinto-green-4/65 underline"
-          >
-            Read more here
-          </a>
-          .
+          Kraken, etc) deposit addresses may be permanently lost and cannot be recovered.
         </p>
         <div className="flex flex-row gap-3 items-center">
           <Checkbox
