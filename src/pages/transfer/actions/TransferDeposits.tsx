@@ -37,6 +37,10 @@ export default function TransferDeposits() {
   const [usingMax, setUsingMax] = useState<boolean>(false);
   const [transferNotice, setTransferNotice] = useState<boolean>(false);
 
+  useEffect(() => {
+    setTransferNotice(false);
+  }, [destination]);
+
   const stepDescription = () => {
     switch (step) {
       case 1:

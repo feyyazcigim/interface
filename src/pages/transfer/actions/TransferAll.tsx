@@ -6,7 +6,7 @@ import { useFarmerField } from "@/state/useFarmerField";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { FarmFromMode, FarmToMode } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { type Address, encodeFunctionData } from "viem";
@@ -37,6 +37,10 @@ export default function TransferAll() {
 
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setTransferNotice(false);
+  }, [destination]);
 
   const { writeWithEstimateGas, setSubmitting } = useTransaction({
     successCallback: () => {

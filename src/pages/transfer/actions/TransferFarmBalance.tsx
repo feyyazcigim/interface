@@ -26,10 +26,8 @@ export default function TransferFarmBalance() {
   const [transferNotice, setTransferNotice] = useState<boolean>(false);
 
   useEffect(() => {
-    if (balanceTo !== undefined) {
-      setTransferNotice(false);
-    }
-  }, [balanceTo]);
+    setTransferNotice(false);
+  }, [balanceTo, destination]);
 
   const totalAmount = useMemo(
     () => transferData.reduce((total, tokenData) => Number(tokenData.amount) + total, 0),
