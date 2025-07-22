@@ -7,9 +7,9 @@ import { Label } from "@/components/ui/Label";
 import { PODS } from "@/constants/internalTokens";
 import { useFarmerField } from "@/state/useFarmerField";
 import { Plot } from "@/utils/types";
+import { AnimatePresence, motion } from "framer-motion";
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
 import { PodTransferData } from "../TransferPods";
-import { AnimatePresence, motion } from "framer-motion";
 
 interface StepTwoProps {
   transferData: PodTransferData[];
@@ -141,7 +141,11 @@ export default function StepTwo({
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <PintoAssetTransferNotice transferNotice={transferNotice} setTransferNotice={setTransferNotice} />
+              <PintoAssetTransferNotice
+                transferNotice={transferNotice}
+                setTransferNotice={setTransferNotice}
+                customDestinationText="Pods"
+              />
             </motion.div>
           )}
         </AnimatePresence>{" "}

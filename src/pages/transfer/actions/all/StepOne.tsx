@@ -25,7 +25,11 @@ export default function StepOne({ destination, setDestination, transferNotice, s
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <PintoAssetTransferNotice transferNotice={transferNotice} setTransferNotice={setTransferNotice} />
+              <PintoAssetTransferNotice
+                transferNotice={transferNotice}
+                setTransferNotice={setTransferNotice}
+                customDestinationText="tokens to a farm balance, Deposits or Pods"
+              />
             </motion.div>
           )}
         </AnimatePresence>{" "}
