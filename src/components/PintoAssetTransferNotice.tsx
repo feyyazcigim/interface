@@ -30,8 +30,8 @@ export default function PintoAssetTransferNotice({
               Binance, <img src={KrakenLogo} alt="Kraken" className="inline h-5 w-5 mb-1 mx-1" />
               Kraken, etc) deposit addresses
             </>
-          )}
-          {variant === "walletBalance" && " deposit addresses"} may be permanently lost and cannot be recovered.
+          )}{" "}
+          may be permanently lost and cannot be recovered.
         </p>
         <div className="flex flex-row gap-3 items-center">
           <Checkbox
