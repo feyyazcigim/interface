@@ -71,14 +71,16 @@ export default function useSeasonalQueries<T>(
     select: (data: T[]) => {
       return data
         .map((v, idx) => {
-          // Data is presented at the time of season completion.
-          // The final season is part of this result, but extraneous and reselected as the current season.
+          // Use each season's actual timestamp + 1 hour to represent season completion time instead of the next season's.
+          // This ensures consistent 1-hour season duration regardless of data sparseness.
           let seasonEnd: Date;
           if (idx < data.length - 1) {
-            seasonEnd = queryConfig.resultTimestamp(data[idx + 1]);
+            seasonEnd = queryConfig.resultTimestamp(data[idx]);
+            seasonEnd.setHours(seasonEnd.getHours() + 1);
             return queryConfig.convertResult(v, seasonEnd);
           }
-          // With sparse data, the final result may need to be included.
+          // For sparse data, include the final season with its completion timestamp.
+          // Without sparse data, the final season is excluded (becomes current season).
           if (sparseData && idx === data.length - 1) {
             seasonEnd = queryConfig.resultTimestamp(data[idx]);
             seasonEnd.setHours(seasonEnd.getHours() + 1);
@@ -111,7 +113,7 @@ export default function useSeasonalQueries<T>(
         returnData = Array.from({ length: gapSize - 1 }, (_, i) => ({
           ...lastValue,
           season: lastValue.season + i + 1,
-          timestamp: new Date(v.timestamp.getTime() + 3600 * 1000 * i),
+          timestamp: new Date(lastValue.timestamp.getTime() + 3600 * 1000 * (i + 1)),
         }));
       }
       returnData = [...returnData, v];
@@ -121,7 +123,7 @@ export default function useSeasonalQueries<T>(
         const missingData: SeasonalChartData[] = Array.from({ length: missingSize }, (_, i) => ({
           ...v,
           season: v.season + i + 1,
-          timestamp: new Date(v.timestamp.getTime() + 3600 * 1000 * i),
+          timestamp: new Date(v.timestamp.getTime() + 3600 * 1000 * (i + 1)),
         }));
         returnData = [...returnData, ...missingData];
       }
