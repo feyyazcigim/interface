@@ -188,20 +188,39 @@ export function useSiloData() {
   const chainId = useChainId();
   const protocolAddress = useProtocolAddress();
 
-  const { data: stalkTotal = 0n } = useReadContract({
-    address: protocolAddress,
-    abi: beanstalkAbi,
-    functionName: "totalStalk",
-    args: [],
-    ...settings,
-  });
-
-  const { data: earnedBeansTotal = 0n } = useReadContract({
-    address: protocolAddress,
-    abi: beanstalkAbi,
-    functionName: "totalEarnedBeans",
-    args: [],
-    ...settings,
+  const comboSiloData = useReadContracts({
+    contracts: [
+      {
+        address: protocolAddress,
+        abi: beanstalkAbi,
+        functionName: "totalStalk",
+        args: [],
+      },
+      {
+        address: protocolAddress,
+        abi: beanstalkAbi,
+        functionName: "totalEarnedBeans",
+        args: [],
+      },
+      {
+        address: protocolAddress,
+        abi: beanstalkAbi,
+        functionName: "getAverageGrownStalkPerBdvPerSeason",
+        args: [],
+      },
+    ],
+    query: {
+      ...settings.query,
+      select: (queryData) => {
+        return {
+          totalStalk: TokenValue.fromBlockchain(queryData?.[0]?.result ?? 0n, STALK.decimals),
+          totalEarnedBeans: TokenValue.fromBlockchain(queryData?.[1]?.result ?? 0n, BEAN.decimals),
+          averageGrownStalkPerBdvPerSeason: TokenValue.fromBlockchain(queryData?.[2]?.result ?? 0n, STALK.decimals).mul(
+            10 ** BEAN.decimals,
+          ),
+        };
+      },
+    },
   });
 
   const { data: yields } = useQuery({
@@ -253,8 +272,9 @@ export function useSiloData() {
 
   return {
     ...wlTokenDatas,
-    totalStalk: TokenValue.fromBlockchain(stalkTotal, STALK.decimals),
-    totalEarnedBeans: TokenValue.fromBlockchain(earnedBeansTotal, BEAN.decimals),
+    totalStalk: comboSiloData.data?.totalStalk ?? TokenValue.ZERO,
+    totalEarnedBeans: comboSiloData.data?.totalEarnedBeans ?? TokenValue.ZERO,
+    averageGrownStalkPerBdvPerSeason: comboSiloData.data?.averageGrownStalkPerBdvPerSeason ?? TokenValue.ZERO,
   };
 }
 
