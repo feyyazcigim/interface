@@ -215,9 +215,7 @@ export function useSiloData() {
         return {
           totalStalk: TokenValue.fromBlockchain(queryData?.[0]?.result ?? 0n, STALK.decimals),
           totalEarnedBeans: TokenValue.fromBlockchain(queryData?.[1]?.result ?? 0n, BEAN.decimals),
-          averageGrownStalkPerBdvPerSeason: TokenValue.fromBlockchain(queryData?.[2]?.result ?? 0n, STALK.decimals).mul(
-            10000,
-          ),
+          averageGrownStalkPerBdvPerSeason: TokenValue.fromBlockchain(queryData?.[2]?.result ?? 0n, STALK.decimals),
         };
       },
     },
