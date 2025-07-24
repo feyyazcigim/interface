@@ -58,9 +58,7 @@ export default function SiloOutputDisplay({
               It would take ~{formatter.number(grownStalkSeasons.toFixed(0))} Season
               {grownStalkSeasons > 1 && <span>s</span>}
               {grownStalkSeasons >= 168 && formatSeasonsAsTime(grownStalkSeasons)} for this much value to grow the
-              amount of Stalk being burned.
-            </span>
-            <span>
+              amount of Stalk being burned.{" "}
               <Link
                 to="https://docs.pinto.money/farm/silo#the-stalk-system"
                 target="_blank"
