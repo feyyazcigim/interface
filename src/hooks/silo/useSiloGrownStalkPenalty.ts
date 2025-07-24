@@ -2,7 +2,7 @@ import { TV } from "@/classes/TokenValue";
 import { STALK } from "@/constants/internalTokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { Token } from "@/utils/types";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useReadContracts } from "wagmi";
 import { useSiloConvertResult } from "./useSiloConvertResult";
 
@@ -69,6 +69,11 @@ export const useSiloConvertDownPenaltyQuery = (
 
   const bdvValues = useMemo(() => contractArgs?.map((r) => r.fromBdv) ?? [], [contractArgs]);
 
+  const selectData = useCallback(
+    (data: (readonly [bigint, bigint])[]) => selectGrownStalkPenaltyMultiple(data, bdvValues),
+    [bdvValues]
+  );
+
   const queries = useReadContracts({
     contracts: (contractArgs ?? [])?.map((r) => {
       return {
@@ -81,7 +86,7 @@ export const useSiloConvertDownPenaltyQuery = (
     allowFailure: false,
     query: {
       enabled: queryEnabled,
-      select: (data) => selectGrownStalkPenaltyMultiple(data, bdvValues),
+      select: selectData,
     },
   });
 
