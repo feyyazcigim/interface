@@ -72,27 +72,3 @@ const getWindowHeight = () => ({ width: window.innerWidth, height: window.innerH
 export const getIsWindowScaledDown = (windowWidth: number) => {
   return windowWidth >= breakpoints.sm && windowWidth <= breakpoints["3xl"];
 };
-
-export const useIsWindowScaledDown = () => {
-  const [isScaledDown, setIsScaledDown] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(`(min-width: ${breakpoints.sm}px) and (max-width: ${breakpoints["3xl"]}px)`);
-
-    // Handler to update state
-    const handleChange = (e: MediaQueryListEvent) => {
-      setIsScaledDown(e.matches);
-    };
-
-    // Initialize with correct value
-    setIsScaledDown(mediaQuery.matches);
-
-    // Modern Safari & browsers
-    mediaQuery.addEventListener("change", handleChange);
-
-    // Fallback for older Safari versions
-    return () => mediaQuery.removeEventListener?.("change", handleChange);
-  }, []);
-
-  return isScaledDown;
-};

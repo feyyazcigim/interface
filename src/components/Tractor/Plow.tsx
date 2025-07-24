@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import useDelayedLoading from "@/hooks/display/useDelayedLoading";
-import { useIsWindowScaledDown } from "@/hooks/display/useDimensions";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useGasPrice } from "@/hooks/useGasPrice";
 import useTransaction from "@/hooks/useTransaction";
@@ -874,13 +873,10 @@ const tableStyles = {
 } as const;
 
 const MAX_HEIGHT_REM = 30;
-const REM_TO_PX = 16;
 
 const TableBodyWrapper = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const [shouldFade, setShouldFade] = useState(false);
   const ref = useRef<HTMLTableSectionElement | null>(null);
-  const isScaledDown = useIsWindowScaledDown();
-  const scale = isScaledDown ? 0.75 : 1;
 
   useEffect(() => {
     const el = ref.current;
@@ -897,10 +893,12 @@ const TableBodyWrapper = ({ children, className }: { children: React.ReactNode; 
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const fontSize = useGlobalFontSize();
+
   const height = ref.current?.clientHeight ?? 0;
 
-  // 1px buffer
-  const enoughHeightForFade = height / REM_TO_PX > MAX_HEIGHT_REM * scale - 1;
+  // 1rem buffer
+  const enoughHeightForFade = height / fontSize > MAX_HEIGHT_REM - 1;
 
   const shouldShowFade = !height ? true : enoughHeightForFade && shouldFade;
 
@@ -914,4 +912,34 @@ const TableBodyWrapper = ({ children, className }: { children: React.ReactNode; 
       )}
     </div>
   );
+};
+
+const BASE_FONT_SIZE = 16;
+
+const useGlobalFontSize = () => {
+  const [fontSize, setFontSize] = useState(0);
+
+  useEffect(() => {
+    // Handler to update state
+    const handleChange = () => {
+      const el = window.getComputedStyle(document.documentElement);
+      const fsValue = el.getPropertyValue("font-size");
+
+      try {
+        const fs = fsValue.split("px");
+        setFontSize(Number(fs[0]));
+      } catch (_) {
+        // fallback to base font size
+        setFontSize(BASE_FONT_SIZE);
+      }
+    };
+
+    handleChange();
+
+    window.addEventListener("resize", handleChange);
+
+    return () => window.removeEventListener("resize", handleChange);
+  }, []);
+
+  return fontSize;
 };
