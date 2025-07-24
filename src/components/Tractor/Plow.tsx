@@ -856,13 +856,13 @@ const tableStyles = {
 } as const;
 
 const MAX_HEIGHT_REM = 30;
-const MAX_HEIGHT_WITH_BUFFER = MAX_HEIGHT_REM - 0.01;
 const REM_TO_PX = 16;
 
 const TableBodyWrapper = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const [shouldFade, setShouldFade] = useState(false);
   const ref = useRef<HTMLTableSectionElement | null>(null);
   const isScaledDown = useIsWindowScaledDown();
+  const scale = isScaledDown ? 0.75 : 1;
 
   useEffect(() => {
     const el = ref.current;
@@ -881,8 +881,8 @@ const TableBodyWrapper = ({ children, className }: { children: React.ReactNode; 
 
   const height = ref.current?.clientHeight ?? 0;
 
-  const scale = isScaledDown ? 0.75 : 1;
-  const enoughHeightForFade = (height * scale) / REM_TO_PX > MAX_HEIGHT_WITH_BUFFER;
+  // 1px buffer
+  const enoughHeightForFade = height / REM_TO_PX > MAX_HEIGHT_REM * scale - 1;
 
   const shouldShowFade = !height ? true : enoughHeightForFade && shouldFade;
 
