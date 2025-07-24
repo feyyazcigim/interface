@@ -3,6 +3,8 @@ import TooltipSimple from "@/components/TooltipSimple";
 import { Button } from "@/components/ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { diamondABI } from "@/constants/abi/diamondABI";
+import { useIsWindowScaledDown } from "@/hooks/display/useDimensions";
+import useIsMobile from "@/hooks/display/useIsMobile";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useGasPrice } from "@/hooks/useGasPrice";
 import useTransaction from "@/hooks/useTransaction";
@@ -860,6 +862,7 @@ const REM_TO_PX = 16;
 const TableBodyWrapper = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const [shouldFade, setShouldFade] = useState(false);
   const ref = useRef<HTMLTableSectionElement | null>(null);
+  const isScaledDown = useIsWindowScaledDown();
 
   useEffect(() => {
     const el = ref.current;
@@ -877,7 +880,9 @@ const TableBodyWrapper = ({ children, className }: { children: React.ReactNode; 
   }, []);
 
   const height = ref.current?.clientHeight ?? 0;
-  const enoughHeightForFade = height / REM_TO_PX > MAX_HEIGHT_WITH_BUFFER;
+
+  const scale = isScaledDown ? 0.75 : 1;
+  const enoughHeightForFade = (height * scale) / REM_TO_PX > MAX_HEIGHT_WITH_BUFFER;
 
   const shouldShowFade = !height ? true : enoughHeightForFade && shouldFade;
 
