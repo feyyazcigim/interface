@@ -13,12 +13,12 @@ import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
+import { cn } from "@/utils/utils";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { encodeFunctionData } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
-import LoadingSpinner from "../LoadingSpinner";
 import { PlowDetails } from "./PlowDetails";
 
 const BASESCAN_URL = "https://basescan.org/address/";
@@ -575,29 +575,18 @@ export function Plow() {
     [protocolAddress, writeWithEstimateGas, setSubmitting],
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-4 min-h-72">
-        <LoadingSpinner size={20} />
-        <span>Loading requisitions...</span>
-      </div>
-    );
-  }
-
   // Return the sorted requisitions in the table
   return (
     <div className="overflow-x-auto">
       <Table>
-        <TableHeader>
+        <TableHeader className="table w-full table-fixed">
           <TableRow className="border-b border-pinto-gray-3/20">
-            <TableHead className="px-0 text-left text-xs font-light text-pinto-gray-4">Created At</TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Publisher</TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Blueprint Hash</TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Temperature</TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4 min-w-[220px]">
-              Operator Tip
-            </TableHead>
-            <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4 min-w-[200px]">
+            <TableHead className={cn("px-0", tableStyles.headerRow)}>Created At</TableHead>
+            <TableHead className={cn("px-1.5", tableStyles.headerRow)}>Publisher</TableHead>
+            <TableHead className={cn("px-1.5", tableStyles.headerRow)}>Blueprint Hash</TableHead>
+            <TableHead className={cn("px-1.5", tableStyles.headerRow)}>Temperature</TableHead>
+            <TableHead className={cn("px-1.5", tableStyles.headerRow)}>Operator Tip</TableHead>
+            <TableHead className={cn("px-1.5 min-w-[200px]", tableStyles.headerRow)}>
               <div className="flex flex-row justify-between items-start">
                 <span>Simulate</span>
                 <div className="text-xs text-pinto-gray-4 text-right">
@@ -609,11 +598,11 @@ export function Plow() {
               </div>
             </TableHead>
             {successfulSimulations.size > 0 && (
-              <TableHead className="px-1.5 text-left text-xs font-light text-pinto-gray-4">Estimated Profit</TableHead>
+              <TableHead className={cn("px-1.5", tableStyles.headerRow)}>Estimated Profit</TableHead>
             )}
           </TableRow>
         </TableHeader>
-        <TableBody className="[&_tr:first-child]:border-t [&_tr:last-child]:border-b">
+        <TableBodyWrapper className={cn("[&_tr:first-child]:border-t [&_tr:last-child]:border-b", tableStyles.body)}>
           {sortedRequisitions.map((req, index) => {
             const dateOptions: Intl.DateTimeFormatOptions = {
               year: "2-digit",
@@ -626,8 +615,11 @@ export function Plow() {
 
             return (
               <TableRow
-                key={index}
-                className="h-[2.75rem] bg-transparent items-center hover:bg-pinto-green-1 cursor-pointer transition-colors"
+                key={`${req.requisition.blueprintHash}-${index}`}
+                className={cn(
+                  "h-[2.75rem] bg-transparent items-center hover:bg-pinto-green-1 cursor-pointer transition-colors",
+                  tableStyles.bodyRow,
+                )}
                 noHoverMute
                 onClick={() => handlePlow(req)}
               >
@@ -809,7 +801,7 @@ export function Plow() {
               </TableCell>
             </TableRow>
           )}
-        </TableBody>
+        </TableBodyWrapper>
       </Table>
       <PlowDetails
         requisition={selectedRequisition}
@@ -853,3 +845,49 @@ export function Plow() {
     </div>
   );
 }
+
+const tableStyles = {
+  headerRow: "text-left text-xs font-light text-pinto-gray-4 sticky top-0 z-10",
+  body: "block max-h-[30rem] overflow-y-auto w-full",
+  bodyRow: "table w-full table-fixed",
+} as const;
+
+const MAX_HEIGHT_REM = 30;
+const MAX_HEIGHT_WITH_BUFFER = MAX_HEIGHT_REM - 0.01;
+const REM_TO_PX = 16;
+
+const TableBodyWrapper = ({ children, className }: { children: React.ReactNode; className?: string }) => {
+  const [shouldFade, setShouldFade] = useState(false);
+  const ref = useRef<HTMLTableSectionElement | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      // use -1 to give buffer to the fade
+      const hasMore = el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+      setShouldFade(hasMore);
+    };
+
+    handleScroll();
+    el.addEventListener("scroll", handleScroll);
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const height = ref.current?.clientHeight;
+  const enoughHeightForFade = height ? height / REM_TO_PX > MAX_HEIGHT_WITH_BUFFER : false;
+
+  const shouldShowFade = enoughHeightForFade && (!height || shouldFade);
+
+  return (
+    <div className="relative">
+      <TableBody ref={ref} className={cn("block overflow-y-auto w-full", className)}>
+        {children}
+      </TableBody>
+      {shouldShowFade && (
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-50 to-transparent z-10" />
+      )}
+    </div>
+  );
+};
