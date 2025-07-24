@@ -15,6 +15,7 @@ import { formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
 import { cn } from "@/utils/utils";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
+import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { encodeFunctionData } from "viem";
@@ -847,9 +848,9 @@ export function Plow() {
 }
 
 const tableStyles = {
-  headerRow: "text-left text-xs font-light text-pinto-gray-4 sticky top-0 z-10",
-  body: "block max-h-[30rem] overflow-y-auto w-full",
-  bodyRow: "table w-full table-fixed",
+  headerRow: clsx("text-left text-xs font-light text-pinto-gray-4 sticky top-0 z-10"),
+  body: clsx("block max-h-[30rem] overflow-y-auto w-full"),
+  bodyRow: clsx("table w-full table-fixed"),
 } as const;
 
 const MAX_HEIGHT_REM = 30;
