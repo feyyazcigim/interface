@@ -797,7 +797,7 @@ const FAQ_ITEMS: IBaseAccordionContent[] = [
           rel="noopener noreferrer"
           target="_blank"
         >
-          discord
+          Discord
         </Link>{" "}
         community!
       </>
