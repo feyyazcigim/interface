@@ -11,9 +11,10 @@ export interface SiloConvertGrownStalkPenaltyBreakdown {
   lossGrownStalk: TV;
   isPenalty: boolean;
   penaltyRatio: number;
+  bdv: TV;
 }
 
-const selectGrownStalkPenalty = (result: readonly [bigint, bigint]) => {
+const selectGrownStalkPenalty = (result: readonly [bigint, bigint], bdv: TV) => {
   const newGrownStalk = TV.fromBigInt(result[0], STALK.decimals);
   const lossGrownStalk = TV.fromBigInt(result[1], STALK.decimals);
 
@@ -27,11 +28,12 @@ const selectGrownStalkPenalty = (result: readonly [bigint, bigint]) => {
     lossGrownStalk,
     isPenalty,
     penaltyRatio,
+    bdv,
   };
 };
 
-const selectGrownStalkPenaltyMultiple = (results: (readonly [bigint, bigint])[]) => {
-  return results.map(selectGrownStalkPenalty);
+const selectGrownStalkPenaltyMultiple = (results: (readonly [bigint, bigint])[], bdvValues: TV[]) => {
+  return results.map((result, index) => selectGrownStalkPenalty(result, bdvValues[index]));
 };
 
 export const useSiloConvertDownPenaltyQuery = (
@@ -65,6 +67,8 @@ export const useSiloConvertDownPenaltyQuery = (
 
   const queryEnabled = isValidArgs && !!contractArgs?.length && isConvertDown && enabled;
 
+  const bdvValues = useMemo(() => contractArgs?.map((r) => r.fromBdv) ?? [], [contractArgs]);
+
   const queries = useReadContracts({
     contracts: (contractArgs ?? [])?.map((r) => {
       return {
@@ -77,7 +81,7 @@ export const useSiloConvertDownPenaltyQuery = (
     allowFailure: false,
     query: {
       enabled: queryEnabled,
-      select: selectGrownStalkPenaltyMultiple,
+      select: (data) => selectGrownStalkPenaltyMultiple(data, bdvValues),
     },
   });
 
