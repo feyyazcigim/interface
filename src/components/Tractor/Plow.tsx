@@ -151,7 +151,7 @@ export function Plow() {
   // Add state to track if any order has been executed, requiring resimulation
   const [hasExecutedOrder, setHasExecutedOrder] = useState(false);
 
-  const { isLoading, ...requisitionsQuery } = useTractorPublishedRequisitions();
+  const { isLoading, ...requisitionsQuery } = useTractorPublishedRequisitions(undefined, "sowBlueprintv0" as const);
 
   const requisitions = useMemo(() => {
     if (!requisitionsQuery.data) return [];
@@ -875,10 +875,10 @@ const TableBodyWrapper = ({ children, className }: { children: React.ReactNode; 
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const height = ref.current?.clientHeight;
-  const enoughHeightForFade = height ? height / REM_TO_PX > MAX_HEIGHT_WITH_BUFFER : false;
+  const height = ref.current?.clientHeight ?? 0;
+  const enoughHeightForFade = height / REM_TO_PX > MAX_HEIGHT_WITH_BUFFER;
 
-  const shouldShowFade = enoughHeightForFade && (!height || shouldFade);
+  const shouldShowFade = !height ? true : enoughHeightForFade && shouldFade;
 
   return (
     <div className="relative">
