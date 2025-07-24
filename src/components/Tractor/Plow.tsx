@@ -3,8 +3,8 @@ import TooltipSimple from "@/components/TooltipSimple";
 import { Button } from "@/components/ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { diamondABI } from "@/constants/abi/diamondABI";
+import useDelayedLoading from "@/hooks/display/useDelayedLoading";
 import { useIsWindowScaledDown } from "@/hooks/display/useDimensions";
-import useIsMobile from "@/hooks/display/useIsMobile";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { useGasPrice } from "@/hooks/useGasPrice";
 import useTransaction from "@/hooks/useTransaction";
@@ -22,6 +22,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { encodeFunctionData } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
+import { Col } from "../Container";
+import LoadingSpinner from "../LoadingSpinner";
 import { PlowDetails } from "./PlowDetails";
 
 const BASESCAN_URL = "https://basescan.org/address/";
@@ -154,7 +156,10 @@ export function Plow() {
   // Add state to track if any order has been executed, requiring resimulation
   const [hasExecutedOrder, setHasExecutedOrder] = useState(false);
 
-  const { isLoading, ...requisitionsQuery } = useTractorPublishedRequisitions(undefined, "sowBlueprintv0" as const);
+  const { isLoading: requisitionsLoading, ...requisitionsQuery } = useTractorPublishedRequisitions(
+    undefined,
+    "sowBlueprintv0" as const,
+  );
 
   const requisitions = useMemo(() => {
     if (!requisitionsQuery.data) return [];
@@ -577,6 +582,19 @@ export function Plow() {
     },
     [protocolAddress, writeWithEstimateGas, setSubmitting],
   );
+
+  const { loading: isLoading, setLoading } = useDelayedLoading(500, true);
+
+  useEffect(() => setLoading(requisitionsLoading), [requisitionsLoading, setLoading]);
+
+  if (isLoading) {
+    return (
+      <Col className="items-center justify-center gap-2 py-4 min-h-72">
+        <LoadingSpinner size={40} />
+        <span>Loading requisitions...</span>
+      </Col>
+    );
+  }
 
   // Return the sorted requisitions in the table
   return (
