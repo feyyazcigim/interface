@@ -1073,7 +1073,7 @@ const GrownStalkPenaltyWarning = ({
       <div className="flex flex-col gap-2">
         <span>This conversion incurs a {formatter.pct(penaltyPct)} Grown Stalk penalty.</span>
         <span>
-          This is approximately {seasonsOfGrownStalkConverted.toFixed(0)} Season
+          This is ~{seasonsOfGrownStalkConverted.toFixed(0)} Season
           {seasonsOfGrownStalkConverted > 1 && <span>s</span>} worth of Grown Stalk.
         </span>
         <div className="flex flex-row gap-3 items-center mt-2">
