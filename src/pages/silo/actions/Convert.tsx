@@ -1066,15 +1066,15 @@ const GrownStalkPenaltyWarning = ({
   const penaltyPct = (grownStalkPenaltyRatio ?? 0) * 100;
 
   const expectedGrownStalkPerSeason = averageGrownStalkPerBdvPerSeason.mul(summary.bdv);
-  const seasonsOfGrownStalk = Math.ceil(summary.lossGrownStalk.div(expectedGrownStalkPerSeason).toNumber());
+  const seasonsOfGrownStalkConverted = Math.ceil(summary.lossGrownStalk.div(expectedGrownStalkPerSeason).toNumber());
 
   return (
     <Warning variant="warning">
       <div className="flex flex-col gap-2">
         <span>This conversion incurs a {formatter.pct(penaltyPct)} Grown Stalk penalty.</span>
         <span>
-          This is approximately {seasonsOfGrownStalk.toFixed(0)} Season{seasonsOfGrownStalk > 1 && <span>s</span>} worth
-          of Grown Stalk.
+          This is approximately {seasonsOfGrownStalkConverted.toFixed(0)} Season
+          {seasonsOfGrownStalkConverted > 1 && <span>s</span>} worth of Grown Stalk.
         </span>
         <div className="flex flex-row gap-3 items-center mt-2">
           <Checkbox
