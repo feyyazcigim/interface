@@ -71,7 +71,7 @@ export const useSiloConvertDownPenaltyQuery = (
 
   const selectData = useCallback(
     (data: (readonly [bigint, bigint])[]) => selectGrownStalkPenaltyMultiple(data, bdvValues),
-    [bdvValues]
+    [bdvValues],
   );
 
   const queries = useReadContracts({
