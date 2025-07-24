@@ -312,3 +312,40 @@ export function toFixedNumber(num: number, digits: number, base?: number) {
 }
 
 export const trulyTheBestTimeFormat = "yyyy MMM dd, t";
+
+export const formatSeasonsAsTime = (seasons: number): string => {
+  const hours = seasons;
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30.44); // Average days per month
+  const years = Math.floor(days / 365.25); // Account for leap years
+
+  if (years >= 1) {
+    const remainingMonths = Math.floor((days % 365.25) / 30.44);
+    return years === 1 && remainingMonths === 0
+      ? " (1 year)"
+      : remainingMonths === 0
+        ? ` (${years} years)`
+        : ` (${years} year${years > 1 ? "s" : ""}, ${remainingMonths} month${remainingMonths > 1 ? "s" : ""})`;
+  }
+
+  if (months >= 1) {
+    const remainingWeeks = Math.floor((days % 30.44) / 7);
+    return months === 1 && remainingWeeks === 0
+      ? " (1 month)"
+      : remainingWeeks === 0
+        ? ` (${months} months)`
+        : ` (${months} month${months > 1 ? "s" : ""}, ${remainingWeeks} week${remainingWeeks > 1 ? "s" : ""})`;
+  }
+
+  if (weeks >= 1) {
+    const remainingDays = days % 7;
+    return weeks === 1 && remainingDays === 0
+      ? " (1 week)"
+      : remainingDays === 0
+        ? ` (${weeks} weeks)`
+        : ` (${weeks} week${weeks > 1 ? "s" : ""}, ${remainingDays} day${remainingDays > 1 ? "s" : ""})`;
+  }
+
+  return ` (${days} day${days > 1 ? "s" : ""})`;
+};
