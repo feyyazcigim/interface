@@ -59,7 +59,7 @@ export function useTotalDepositedBdvPerTokenQuery() {
     query: {
       enabled: !!whitelistedTokens.length,
       ...settings.query,
-      select: (data) => select(data),
+      select,
     },
   });
 }
@@ -187,6 +187,18 @@ function useReadSiloTokenData(token: Token | undefined) {
 export function useSiloData() {
   const chainId = useChainId();
   const protocolAddress = useProtocolAddress();
+  const BEAN = useTokenData().mainToken;
+
+  const selectComboSiloData = useCallback(
+    (queryData) => {
+      return {
+        totalStalk: TokenValue.fromBlockchain(queryData?.[0]?.result ?? 0n, STALK.decimals),
+        totalEarnedBeans: TokenValue.fromBlockchain(queryData?.[1]?.result ?? 0n, BEAN.decimals),
+        averageGrownStalkPerBdvPerSeason: TokenValue.fromBlockchain(queryData?.[2]?.result ?? 0n, STALK.decimals),
+      };
+    },
+    [BEAN],
+  );
 
   const comboSiloData = useReadContracts({
     contracts: [
@@ -211,13 +223,7 @@ export function useSiloData() {
     ],
     query: {
       ...settings.query,
-      select: (queryData) => {
-        return {
-          totalStalk: TokenValue.fromBlockchain(queryData?.[0]?.result ?? 0n, STALK.decimals),
-          totalEarnedBeans: TokenValue.fromBlockchain(queryData?.[1]?.result ?? 0n, BEAN.decimals),
-          averageGrownStalkPerBdvPerSeason: TokenValue.fromBlockchain(queryData?.[2]?.result ?? 0n, STALK.decimals),
-        };
-      },
+      select: selectComboSiloData,
     },
   });
 
@@ -228,7 +234,6 @@ export function useSiloData() {
   });
 
   const SILO_WHITELIST = useTokenData().whitelistedTokens;
-  const BEAN = useTokenData().mainToken;
 
   // we have 5 whitelisted tokens
   const wlTokenData0 = useReadSiloTokenData(SILO_WHITELIST?.[0]);
