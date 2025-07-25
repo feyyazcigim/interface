@@ -1,7 +1,5 @@
 import creamFinanceLogo from "@/assets/misc/cream-finance-logo.png";
 import spectraLogo from "@/assets/misc/spectra-token-logo.svg";
-import { ProtocolIntegration } from "@/state/integrations/types";
-import { SpectraYieldSummaryResponse } from "@/state/integrations/useSpectraYieldSummary";
 import { resolveChainId } from "@/utils/chain";
 import { formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
@@ -14,31 +12,65 @@ export interface ProtocolIntegrationSummary {
   name: string;
   url: string;
   logoURI: string;
-  ctaMessage: string | ((token: Token, ...data: any[]) => string | JSX.Element);
+  ctaMessage: (token: Token, value?: number) => JSX.Element;
 }
 
-type IntegrationLookup = Partial<Record<ProtocolIntegration, ProtocolIntegrationSummary>>;
+type IntegrationLookup = Record<string, ProtocolIntegrationSummary>;
 
 const baseIntegrations: IntegrationLookup = {
-  CREAM: {
+  cream: {
     protocol: "CREAM",
     name: "CREAM Finance",
     url: "https://app.cream.finance/market-detail/base-meme-pool/0x98887ED12565cd9518f41A009d2EcE7c71ff271e",
     logoURI: creamFinanceLogo,
-    ctaMessage: (token: Token) => `Borrow against ${token.symbol} on CREAM Finance`,
+    ctaMessage: (token: Token) => {
+      return <span>Borrow against {token.symbol} on CREAM Finance</span>;
+    },
   },
-  SPECTRA: {
+  spectraPool: {
     protocol: "SPECTRA",
     name: "Spectra",
     url: "https://app.spectra.finance/pools/base:0xd8e4662ffd6b202cf85e3783fb7252ff0a423a72",
     logoURI: spectraLogo,
-    ctaMessage: (token, data: SpectraYieldSummaryResponse | undefined) => {
-      const apy = data?.apy ? `${formatter.pct(data.apy)}` : "-%";
+    ctaMessage: (token, value: number | undefined) => {
+      const formattedApy = value ? `~${formatter.pct(value)}` : "-%";
 
       return (
         <span>
-          Earn a APY of <span className={data?.apy ? "text-pinto-green-4" : ""}>{apy}</span> or trade yield with{" "}
-          {token.symbol} on Spectra
+          Earn an extra <span className={formattedApy ? "text-pinto-green-4" : ""}>{formattedApy}</span> APY on your{" "}
+          {token.symbol} with our Spectra pool
+        </span>
+      );
+    },
+  },
+  spectraFixedRate: {
+    protocol: "SPECTRA",
+    name: "Spectra",
+    url: "https://app.spectra.finance/fixed-rate/base:0xd8e4662ffd6b202cf85e3783fb7252ff0a423a72",
+    logoURI: spectraLogo,
+    ctaMessage: (token, value: number | undefined) => {
+      const formattedApy = value ? `~${formatter.pct(value)}` : "-%";
+
+      return (
+        <span>
+          Predictable {token.symbol} yield? Secure a{" "}
+          <span className={formattedApy ? "text-pinto-green-4" : ""}>{formattedApy}</span> fixed APY on Spectra
+        </span>
+      );
+    },
+  },
+  spectraTradeYield: {
+    protocol: "SPECTRA",
+    name: "Spectra",
+    url: "https://app.spectra.finance/trade-yield/base:0xd8e4662ffd6b202cf85e3783fb7252ff0a423a72",
+    logoURI: spectraLogo,
+    ctaMessage: (token, value: number | undefined) => {
+      const formattedLev = value ? `${formatter.twoDec(value)}x` : "Increase";
+
+      return (
+        <span>
+          <span className={value ? "text-pinto-green-4" : ""}>{formattedLev}</span> your exposure to {token.symbol}{" "}
+          native yield with Spectra's Yield Tokens
         </span>
       );
     },
