@@ -37,7 +37,8 @@ const baseIntegrations: IntegrationLookup = {
 
       return (
         <span>
-          Earn an extra <span className={formattedApy ? "text-pinto-green-4" : ""}>{formattedApy}</span> APY on your{" "}
+          Earn {value && <span>an</span>} extra{" "}
+          {value && <span className={value ? "text-pinto-green-4" : ""}>{formattedApy}</span>} APY on your{" "}
           {token.symbol} with our Spectra pool
         </span>
       );
@@ -53,8 +54,9 @@ const baseIntegrations: IntegrationLookup = {
 
       return (
         <span>
-          Predictable {token.symbol} yield? Secure a{" "}
-          <span className={formattedApy ? "text-pinto-green-4" : ""}>{formattedApy}</span> fixed APY on Spectra
+          Predictable {token.symbol} yield? Secure{" "}
+          {value && <span className={formattedApy ? "text-pinto-green-4" : ""}>a {formattedApy}</span>} fixed APY on
+          Spectra
         </span>
       );
     },
