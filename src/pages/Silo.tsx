@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/Card";
 import IconImage from "@/components/ui/IconImage";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import { PINTO_WETH_TOKEN, PINTO_WSOL_TOKEN } from "@/constants/tokens";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import useIsSmallDesktop from "@/hooks/display/useIsSmallDesktop";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
@@ -28,9 +29,10 @@ import { useSeedGauge } from "@/state/useSeedGauge";
 import { useSiloData } from "@/state/useSiloData";
 import { useSeason } from "@/state/useSunData";
 import useTokenData, { useWhitelistedTokens } from "@/state/useTokenData";
+import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
 import { getClaimText } from "@/utils/string";
-import { getTokenIndex } from "@/utils/token";
+import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { StatPanelData, Token } from "@/utils/types";
 import { getSiloConvertUrl } from "@/utils/url";
 import { cn } from "@/utils/utils";
@@ -51,6 +53,9 @@ function Silo() {
   const navigate = useNavigate();
   const isSmallDesktop = useIsSmallDesktop();
 
+  const pintoWETHLP = useChainConstant(PINTO_WETH_TOKEN);
+  const pintoWSOLLP = useChainConstant(PINTO_WSOL_TOKEN);
+
   const [hoveredButton, setHoveredButton] = useState("");
   const enableStatPanels =
     farmerSilo.depositsUSD.gt(0) || farmerSilo.activeStalkBalance.gt(0) || farmerSilo.activeSeedsBalance.gt(0);
@@ -62,7 +67,11 @@ function Silo() {
   const convertEnabled = farmerActions.convertDeposits.enabled && isBelowValueTarget;
   const convertFrom = farmerActions.convertDeposits.bestConversion.from;
   const convertTo = farmerActions.convertDeposits.bestConversion.to;
-  const bestDeposit = farmerActions.optimalDepositToken?.token;
+  const bestDepositToken = farmerActions.optimalDepositToken?.token;
+  const bestDeposit =
+    bestDepositToken && !tokensEqual(bestDepositToken, pintoWETHLP) && !tokensEqual(bestDepositToken, pintoWSOLLP)
+      ? bestDepositToken
+      : undefined;
 
   const claimEnabled =
     farmerActions.claimRewards.outputs.beanGain.gt(0.01) ||
