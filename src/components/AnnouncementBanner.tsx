@@ -1,13 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-export const renderAnnouncement = true;
+export const renderAnnouncement = false;
 
 const ANNOUNCEMENT_URL =
   "https://mirror.xyz/0xEA13D1fB14934E41Ee7074198af8F089a6d956B5/wdRHVI5mzDxMOp3BxKkZBS8m9BbrmWVPYd7dbPI6EMI";
 
 export default function AnnouncementBanner() {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const _location = useLocation();
+  const _navigate = useNavigate();
 
   // Hide on the overview page
   /*

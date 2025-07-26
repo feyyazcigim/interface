@@ -228,10 +228,14 @@ const ChartSelectPanel = memo(() => {
                           </div>
                           {isSelected && data.inputOptions === "SEASON" && (
                             <div className="mt-2 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              <label className="pinto-sm-light text-pinto-primary whitespace-nowrap">
+                              <label
+                                htmlFor={`season-input-${data.id}`}
+                                className="pinto-sm-light text-pinto-primary whitespace-nowrap"
+                              >
                                 Starting Season:
                               </label>
                               <Input
+                                id={`season-input-${data.id}`}
                                 type="number"
                                 min={MIN_ADV_SEASON}
                                 max={currentSeason}
