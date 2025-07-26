@@ -15,7 +15,7 @@ const FieldStats = () => {
   const soilIsLoading = totalSoilAtom.isLoading;
 
   const initialSoilAtom = useInitialSoil();
-  const initialSoil = normalizeTV(initialSoilAtom.initialSoil);
+  // const initialSoil = normalizeTV(initialSoilAtom.initialSoil);
   const initialSoilIsLoading = initialSoilAtom.isLoading;
 
   const podLine = usePodLine();
@@ -57,7 +57,7 @@ const FieldStats = () => {
         <div className="flex flex-col gap-1">
           <TextSkeleton desktopHeight="same-h3" height="body" className="w-14" loading={isLoading}>
             <div className="pinto-body sm:pinto-h3">
-              {formatter.number(soil, { minValue: 0.01 })} / {formatter.number(initialSoil, { minValue: 0.01 })}
+              {formatter.number(soil, { minValue: 0.01 })} {/* {formatter.number(initialSoil, { minValue: 0.01 })} */}
             </div>
           </TextSkeleton>
           {isMorning && abovePeg && (
