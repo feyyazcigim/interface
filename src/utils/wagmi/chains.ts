@@ -63,13 +63,15 @@ const CHAIN_ID_MAP = {
   41337: tenderlyTestnetNetwork,
 };
 
+const PROD_CHAIN_IDS = new Set<number>([baseNetwork.id]);
+
 const enabledChainIds = import.meta.env.VITE_CHAINS.split(",");
 
 if (!enabledChainIds.length) {
   throw new Error("No chains enabled");
 }
 
-export const getIsLocalhostNetwork = (chainId: number) => chainId === localhostNetwork.id;
+export const getIsProdNetwork = (chainId: number) => PROD_CHAIN_IDS.has(chainId);
 
 export const ENABLE_SWITCH_CHAINS = enabledChainIds.length > 1;
 

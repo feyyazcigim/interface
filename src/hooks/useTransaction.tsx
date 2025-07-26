@@ -3,7 +3,7 @@ import { getExplorerLink, getOverrideAllowanceStateOverride } from "@/utils/chai
 import { Token } from "@/utils/types";
 import { HashString, Prettify } from "@/utils/types.generic";
 import { exists } from "@/utils/utils";
-import { getIsLocalhostNetwork } from "@/utils/wagmi/chains";
+import { getIsProdNetwork } from "@/utils/wagmi/chains";
 import { estimateGas } from "@wagmi/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -127,8 +127,8 @@ export default function useTransaction({
 
   const receipt = useWaitForTransactionReceipt({
     hash,
-    // Only 1 confirmation on localhost
-    confirmations: getIsLocalhostNetwork(chainId) ? 1 : 2,
+    // 2 confirmation on production networks
+    confirmations: getIsProdNetwork(chainId) ? 2 : 1,
     pollingInterval: 1_000,
   });
 
