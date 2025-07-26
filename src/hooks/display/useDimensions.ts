@@ -1,5 +1,5 @@
 import { breakpoints } from "@/utils/theme/breakpoints";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 export interface Dimensions {
   width: number;

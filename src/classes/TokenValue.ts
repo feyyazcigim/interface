@@ -162,7 +162,8 @@ export class TokenValue {
     if (!format) return this.value.toString();
 
     if (format === "short") return this.friendlyFormat(this);
-    if (format === "ultraShort") return this.friendlyFormat(this, true, allowNegative);
+    if (format === "ultraShort") return this.friendlyFormat(this, format, allowNegative);
+    if (format === "long") return this.friendlyFormat(this, format, allowNegative);
 
     throw new Error(`Unsupported formatting option: ${format}`);
   }
@@ -281,10 +282,12 @@ export class TokenValue {
    * @param allowNegative allow negative numbers
    * @returns formatted string
    */
-  friendlyFormat(tv: TokenValue, ultraShort?: boolean, allowNegative?: boolean): string {
+  friendlyFormat(tv: TokenValue, format?: string, allowNegative?: boolean): string {
     const _tv = tv.abs();
     const isNegative = tv.lt(0);
     const showPlus = allowNegative && !isNegative;
+    const isUltraShort = format === "ultraShort";
+    const isLong = format === "long";
 
     if (_tv.eq(0)) return "0";
 
@@ -313,14 +316,14 @@ export class TokenValue {
 
     const hmillion = TokenValue.fromHuman(1e8, 0);
     const millions = TokenValue.fromHuman(1e6, 0);
-    if (_tv.gte(hmillion)) {
+    if (_tv.gte(hmillion) && !isLong) {
       return `${showPlus ? "+" : ""}${this.trimDecimals(tv.div(millions), 2).toHuman()}M`;
     }
-    if (_tv.gte(millions)) {
+    if (_tv.gte(millions) && !isLong) {
       return `${showPlus ? "+" : ""}${this.trimDecimals(tv.div(millions), 2).toHuman()}M`;
     }
 
-    if (ultraShort) {
+    if (format === "ultraShort") {
       const thousand = TokenValue.fromHuman(1e3, 0);
       if (_tv.gte(thousand)) {
         return `${showPlus ? "+" : ""}${this.trimDecimals(tv.div(thousand), 1).toHuman()}K`;
@@ -335,7 +338,7 @@ export class TokenValue {
       });
     }
 
-    const decimals = _tv.gt(10) ? (ultraShort ? 0 : 2) : _tv.gt(1) ? (ultraShort ? 0 : 3) : ultraShort ? 2 : 4;
+    const decimals = _tv.gt(10) ? (isUltraShort ? 0 : 2) : _tv.gt(1) ? (isUltraShort ? 0 : 3) : isUltraShort ? 2 : 4;
     return `${showPlus ? "+" : ""}${this.trimDecimals(tv, decimals).toHuman()}`;
   }
 

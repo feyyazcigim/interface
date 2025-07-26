@@ -50,7 +50,7 @@ const FarmerExplorer = () => {
         useSeasonalResult={plantedData}
         dataNotFetching={dataNotFetching}
         valueFormatter={f.number0dFormatter}
-        tickValueFormatter={f.largeNumberFormatter}
+        tickValueFormatter={f.largeNumber1dFormatter}
         noDataMessage={NO_DATA_MESSAGE}
       />
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
@@ -64,7 +64,7 @@ const FarmerExplorer = () => {
             useSeasonalResult={grownStalkData}
             dataNotFetching={dataNotFetching}
             valueFormatter={f.number0dFormatter}
-            tickValueFormatter={f.largeNumberFormatter}
+            tickValueFormatter={f.largeNumber1dFormatter}
             noDataMessage={NO_DATA_MESSAGE}
           />
         </div>

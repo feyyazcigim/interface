@@ -302,24 +302,20 @@ export type StatPanelData = {
   isLoading: boolean;
 };
 
-export type UseSeasonalResult = {
-  data: SeasonalChartData[] | undefined;
+export type UseSeasonalResult<T = SeasonalChartData[]> = {
+  data: T | undefined;
   isLoading: boolean;
   isError: boolean;
 };
 
-export type UseMultiSeasonalResult = {
-  data: { [key: string]: SeasonalChartData[] } | undefined;
-  isLoading: boolean;
-  isError: boolean;
-};
+export type UseMultiSeasonalResult = UseSeasonalResult<{ [key: string]: SeasonalChartData[] }>;
 
 export type SeasonalAPYChartData = Record<APYWindow, SeasonalChartData[]>;
-export type UseSeasonalAPYResult = {
-  data: SeasonalAPYChartData | undefined;
-  isLoading: boolean;
-  isError: boolean;
-};
+export type UseSeasonalAPYResult = UseSeasonalResult<SeasonalAPYChartData>;
+
+type TokenSymbol = string;
+export type SeasonalMarketPerformanceChartData = Record<TokenSymbol | "NET", SeasonalChartData[]>;
+export type UseSeasonalMarketPerformanceResult = UseSeasonalResult<SeasonalMarketPerformanceChartData>;
 
 export type BlockInfo = {
   blockNumber: number;

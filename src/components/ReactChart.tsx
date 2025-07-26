@@ -2,7 +2,15 @@ import { generateID } from "@/utils/utils";
 import { noop } from "@/utils/utils";
 import { Chart } from "chart.js";
 import type { ChartData, ChartOptions, ChartType, Plugin, UpdateMode } from "chart.js";
-import { CategoryScale, Filler, LineController, LineElement, LinearScale, PointElement } from "chart.js";
+import {
+  CategoryScale,
+  Filler,
+  LineController,
+  LineElement,
+  LinearScale,
+  PointElement,
+  ScatterController,
+} from "chart.js";
 import React, { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 
@@ -13,7 +21,7 @@ interface ReactChartComponent extends ForwardRefExoticComponent<ChartProps<Chart
 type ChartInputFunction<T> = (ctx: CanvasRenderingContext2D | null) => T;
 type ReactChartInput<T> = T | ChartInputFunction<T>;
 
-Chart.register(LineController, LineElement, LinearScale, CategoryScale, PointElement, Filler);
+Chart.register(LineController, ScatterController, LineElement, LinearScale, CategoryScale, PointElement, Filler);
 
 // biome-ignore lint/suspicious/noExplicitAny: needed for type check
 function isInputFunctionType<T>(value: any): value is ChartInputFunction<T> {

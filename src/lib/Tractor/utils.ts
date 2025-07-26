@@ -204,7 +204,20 @@ export async function createSowTractorData({
     ],
   });
 
-  // Step 2: Generate deposit optimization calls separately (for the user transaction)
+  const advFarmCall = encodeFunctionData({
+    abi: beanstalkAbi,
+    functionName: "advancedFarm",
+    args: [
+      [
+        {
+          callData: pipeCall,
+          clipboard: "0x" as `0x${string}`, // Empty clipboard
+        },
+      ],
+    ],
+  });
+
+  // Step 3: Generate deposit optimization calls separately (for the user transaction)
   let depositOptimizationCalls: `0x${string}`[] | undefined;
 
   if (farmerDeposits && userAddress && protocolAddress) {
@@ -225,15 +238,12 @@ export async function createSowTractorData({
     }
   }
 
-  // Step 3: The blueprint data should ONLY contain the sow order (like before)
-  const data = pipeCall;
-
   console.debug("Raw sowBlueprintv0 call:", sowBlueprintCall);
   console.debug("advancedPipe call:", pipeCall);
-  console.debug("Final blueprint data:", data);
+  console.debug("Final blueprint data:", advFarmCall);
 
   return {
-    data,
+    data: advFarmCall,
     operatorPasteInstrs: [], // TODO: Update if needed
     rawCall: sowBlueprintCall, // Return the raw call data
     depositOptimizationCalls, // Return optimization calls for user transaction
@@ -386,19 +396,16 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
       data: encodedData,
     });
 
-    // Step 2: If the encoded data is an advancedPipe call, return the decoded data.
-    if (calls.functionName === "advancedPipe" && calls.args?.[0]) {
-      return handleDecodeSowV0BlueprintFromAdvancedPipe(calls.args[0]);
-    }
-    // Step 3: If the encoded data is an advancedFarm call, decode again.
-    else if (calls.functionName === "advancedFarm" && calls.args[0]) {
+    // Valid tractor orders are encoded as advancedFarm(advancedPipe(callData))
+    // Step 2: If the encoded data is an advancedFarm call, decode again.
+    if (calls.functionName === "advancedFarm" && calls.args[0]) {
       const farmCalls = calls.args[0];
 
       if (!farmCalls.length) {
         console.debug("[Tractor/decodeSowTractorData] No farm calls provided. Returning null.");
         return null;
       }
-      // Step 4: Try to decode the inner call as advancedPipe
+      // Step 3: Try to decode the inner call as advancedPipe
       try {
         const pipeCallData = farmCalls[0].callData;
         const advancedPipeDecoded = decodeFunctionData({
@@ -542,7 +549,7 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
         if (!requisition?.blueprint || !requisition?.blueprintHash || !requisition?.signature) return null;
 
         // Only filter by address if one is provided
-        if (!stringEq(requisition.blueprint.publisher, address)) {
+        if (address && !stringEq(requisition.blueprint.publisher, address)) {
           return null;
         }
 

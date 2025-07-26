@@ -4,7 +4,7 @@ import { FarmToMode, Token } from "@/utils/types";
 import FarmBalancesList from "../../FarmBalancesList";
 
 interface StepTwoProps {
-  balanceTo: FarmToMode;
+  balanceTo: FarmToMode | undefined;
   destination: string | undefined;
   transferData: { token: Token; amount: string }[];
 }

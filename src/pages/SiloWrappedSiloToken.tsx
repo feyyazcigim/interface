@@ -1,6 +1,5 @@
 import backArrowIcon from "@/assets/misc/LeftArrow.svg";
 import { TV } from "@/classes/TokenValue";
-import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 import LabelValue from "@/components/LabelValue";
 import MobileActionBar from "@/components/MobileActionBar";
 import TextSkeleton from "@/components/TextSkeleton";
@@ -117,16 +116,6 @@ export default function SiloWrappedSiloToken({ token }: { token: Token }) {
               loading={overviewStatsLoading}
             />
           </div>
-        </div>
-        <div
-          className={cn(
-            "flex flex-col w-full",
-            // responsive widths. Easier way to do this? 4.5rem === gap-9
-            "lg:max-w-[calc(100%-384px-4.5rem)] 3xl:max-w-[calc(100%-518px-4.5rem)]",
-            !showContents ? "hidden" : "",
-          )}
-        >
-          <AccordionGroup items={FAQ_ITEMS} groupTitle="Frequently Asked Questions" />
         </div>
         {!currentAction && (
           <MobileActionBar>
@@ -387,24 +376,3 @@ const SiloedTokenOverviewStats = ({
     </div>
   );
 };
-
-const FAQ_ITEMS: IBaseAccordionContent[] = [
-  {
-    key: "what-is-spinto",
-    title: "What is sPinto?",
-    content:
-      "sPinto is a yield bearing token denominated in Pinto. It wraps Pinto Silo deposits and adheres to the ERC-20 and ERC-4626 standards. The token will increase in Pinto denominated value as yield accrues and does not rebase.",
-  },
-  {
-    key: "do-i-claim-yield",
-    title: "Do I need to claim yield with sPINTO?",
-    content:
-      "No. Holding sPinto allows users to have exposure to Silo yield without needing to interact directly with the Pinto protocol.",
-  },
-  {
-    key: "what-happens-stalk-and-seed",
-    title: "What happens to my Stalk and Seed?",
-    content:
-      "Stalk and Seeds are shared equally amongst all holders of sPinto. When unwrapping a user will receive the sPinto deposits with the lowest grown Stalk. It advisable to avoid wrapping deposits with a large amount of grown Stalk.",
-  },
-] as const;

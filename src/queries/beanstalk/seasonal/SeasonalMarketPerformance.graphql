@@ -1,0 +1,24 @@
+query BeanstalkSeasonalMarketPerformance($from: Int, $to: Int) {
+  marketPerformanceSeasonals(
+    where: { season_gte: $from, season_lte: $to, valid: true }
+    first: 1000
+    orderBy: season
+    orderDirection: asc
+  ) {
+    id
+    season
+    timestamp
+    thisSeasonTokenUsdPrices
+    usdChange
+    percentChange
+    totalUsdChange
+    totalPercentChange
+    cumulativeUsdChange
+    cumulativePercentChange
+    cumulativeTotalUsdChange
+    cumulativeTotalPercentChange
+    silo {
+      whitelistedTokens
+    }
+  }
+}

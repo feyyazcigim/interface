@@ -36,7 +36,7 @@ export default function MarketModeSelect({ onMainSelectionChange, onSecondarySel
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 mb-4">
       <Tabs defaultValue="buy" className="w-full" value={mainTab} onValueChange={handleMainChange}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="buy">Buy Pods</TabsTrigger>
