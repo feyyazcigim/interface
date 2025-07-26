@@ -69,6 +69,8 @@ if (!enabledChainIds.length) {
   throw new Error("No chains enabled");
 }
 
+export const getIsLocalhostNetwork = (chainId: number) => chainId === localhostNetwork.id;
+
 export const ENABLE_SWITCH_CHAINS = enabledChainIds.length > 1;
 
 export const getChainWithChainId = (chainId: number) => {
