@@ -3,6 +3,7 @@ import { getExplorerLink, getOverrideAllowanceStateOverride } from "@/utils/chai
 import { Token } from "@/utils/types";
 import { HashString, Prettify } from "@/utils/types.generic";
 import { exists } from "@/utils/utils";
+import { getIsProdNetwork } from "@/utils/wagmi/chains";
 import { estimateGas } from "@wagmi/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -126,7 +127,9 @@ export default function useTransaction({
 
   const receipt = useWaitForTransactionReceipt({
     hash,
-    pollingInterval: 2_000,
+    // 2 confirmation on production networks
+    confirmations: getIsProdNetwork(chainId) ? 2 : 1,
+    pollingInterval: 1_000,
   });
 
   // Add hash to cached hashes when a new hash is set.
@@ -139,9 +142,9 @@ export default function useTransaction({
   // biome-ignore lint/correctness/useExhaustiveDependencies: Run only when hash changes or txn was successful.
   useEffect(() => {
     if (receipt.isSuccess && exists(hash) && hashes.current?.has(hash)) {
+      successCallback?.(receipt.data);
       setSubmitting(false);
       hashes.current.delete(hash);
-      successCallback?.(receipt.data);
       toast.dismiss();
       const explorerLink = getExplorerLink(hash, chainId);
       toast.success(

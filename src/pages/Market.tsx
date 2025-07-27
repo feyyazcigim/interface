@@ -1,7 +1,6 @@
 import PodIcon from "@/assets/protocol/Pod.png";
 import PintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
-import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 import FrameAnimator from "@/components/LoadingSpinner";
 import ScatterChart from "@/components/charts/ScatterChart";
 import { navLinks } from "@/components/nav/nav/Navbar";
@@ -328,15 +327,6 @@ export function Market() {
                 {viewMode === "sell" && !fillView && <CreateListing />}
                 {viewMode === "sell" && fillView && <FillOrder />}
               </div>
-              <Separator className="bg-pinto-gray-2" />
-              <div className="pt-4">
-                <AccordionGroup
-                  items={FAQ_ITEMS}
-                  size="small"
-                  groupTitle="Frequently Asked Questions"
-                  allExpanded={false}
-                />
-              </div>
             </div>
           </div>
         </div>
@@ -344,53 +334,3 @@ export function Market() {
     </>
   );
 }
-
-// ---------- MARKET FAQ ----------
-
-const FAQ_ITEMS: IBaseAccordionContent[] = [
-  {
-    key: "what-is-the-pod-market",
-    title: "What is the Pod Market?",
-    content:
-      "The Pod Market is where farmers can buy Pods from other farmers on the secondary market. Pods are Pinto's unique debt asset, minted whenever the protocol borrows Pinto from the open market.",
-  },
-  {
-    key: "why-purchase-pods-on-the-pod-market",
-    title: "Why buy Pods on the Pod Market instead of directly in the Field?",
-    content:
-      "In the Field, you can buy new Pods at the back of the queue or redeem your Pods once they reach the front. The Pod Market lets you buy or sell Pods at any position in the line.",
-  },
-  {
-    key: "pod-listing-vs-pod-order",
-    title: "What's the difference between a Pod Listing and a Pod Order?",
-    content:
-      "A Pod Listing is an offer to sell Pods at a specified price, while a Pod Order is an offer to buy Pods at a specified price. Farmers can both create and fill Pod Listings and Pod Orders.",
-  },
-  {
-    key: "how-can-i-learn-more-on-the-pod-marketplace",
-    title: "How can I learn more about the Pod marketplace?",
-    content: (
-      <>
-        Head to the{" "}
-        <Link
-          className="text-pinto-green-4 hover:underline transition-all"
-          to={`${navLinks.docs}/farm/toolshed/pod-market`}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Pinto docs
-        </Link>{" "}
-        for more info, or ask any questions in the{" "}
-        <Link
-          className="text-pinto-green-4 hover:underline transition-all"
-          to={navLinks.discord}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          discord
-        </Link>{" "}
-        community!
-      </>
-    ),
-  },
-];
