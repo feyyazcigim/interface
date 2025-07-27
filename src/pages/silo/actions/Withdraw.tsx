@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import IconImage from "@/components/ui/IconImage";
 import { Label } from "@/components/ui/Label";
 import { Separator } from "@/components/ui/Separator";
+import Warning from "@/components/ui/Warning";
 import encoders from "@/encoders";
 import { beanstalkAbi, beanstalkAddress } from "@/generated/contractHooks";
 import { useTokenMap } from "@/hooks/pinto/useTokenMap";
@@ -24,6 +25,7 @@ import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import useFieldSnapshots from "@/state/useFieldSnapshots";
 import { usePriceData } from "@/state/usePriceData";
+import { useSiloData } from "@/state/useSiloData";
 import useSiloSnapshots from "@/state/useSiloSnapshots";
 import { useInvalidateSun } from "@/state/useSunData";
 import { sortAndPickCrates } from "@/utils/convert";
@@ -59,6 +61,7 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
   const account = useAccount();
   const chainId = useChainId();
   const farmerSilo = useFarmerSilo();
+  const siloData = useSiloData();
   const fieldSnapshots = useFieldSnapshots();
   const siloSnapshots = useSiloSnapshots();
   const invalidateSun = useInvalidateSun();
@@ -250,8 +253,30 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
       amount: amountTV,
       stalkLost: transferData.stalk,
       seedsLost: transferData.seeds,
+      bdvLost: transferData.bdv,
     };
   }, [amount, deposits, siloToken.decimals, shouldSwap, swapData, inputError, exceedsBalance]);
+
+  // Calculate seasons of grown stalk being withdrawn
+  const seasonsOfGrownStalkWithdrawn = useMemo(() => {
+    const averageGrownStalkPerBdvPerSeason = siloData.averageGrownStalkPerBdvPerSeason;
+
+    // Grown stalk = total stalk - base stalk (1 stalk per BDV)
+    const grownStalkLost = withdrawOutput ? withdrawOutput.stalkLost.sub(withdrawOutput.bdvLost) : TokenValue.ZERO;
+
+    // Average grown stalk this BDV would generate per season
+    const expectedGrownStalkPerSeason =
+      withdrawOutput && grownStalkLost.gt(0)
+        ? withdrawOutput.bdvLost.mul(averageGrownStalkPerBdvPerSeason)
+        : TokenValue.ZERO;
+
+    // Calculate how many seasons worth of grown stalk is being lost
+    const seasonsOfGrownStalkWithdrawn = expectedGrownStalkPerSeason.gt(0)
+      ? Math.ceil(grownStalkLost.div(expectedGrownStalkPerSeason).toNumber())
+      : 0;
+
+    return seasonsOfGrownStalkWithdrawn;
+  }, [withdrawOutput, siloData.averageGrownStalkPerBdvPerSeason]);
 
   const tokenOutUSD = prices.tokenPrices.get(tokenOut);
   const amountOutUSD = tokenOutUSD ? withdrawOutput?.amount.mul(tokenOutUSD.instant) : undefined;
@@ -313,6 +338,8 @@ function Withdraw({ siloToken }: { siloToken: Token }) {
             stalk={withdrawOutput.stalkLost}
             seeds={withdrawOutput.seedsLost}
             showNegativeDeltas
+            showGrownStalkSeasonsNotice
+            grownStalkSeasons={seasonsOfGrownStalkWithdrawn}
           />
         )}
         {shouldSwap && withdrawOutput && (

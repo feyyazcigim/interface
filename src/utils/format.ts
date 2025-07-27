@@ -312,3 +312,46 @@ export function toFixedNumber(num: number, digits: number, base?: number) {
 }
 
 export const trulyTheBestTimeFormat = "yyyy MMM dd, t";
+
+// Time conversion constants
+const HOURS_PER_DAY = 24;
+const DAYS_PER_WEEK = 7;
+const AVERAGE_DAYS_PER_MONTH = 30.44; // Average days per month
+const DAYS_PER_YEAR_WITH_LEAP = 365.25; // Account for leap years
+
+export const formatSeasonsAsTime = (seasons: number): string => {
+  const hours = seasons;
+  const days = Math.floor(hours / HOURS_PER_DAY);
+  const weeks = Math.floor(days / DAYS_PER_WEEK);
+  const months = Math.floor(days / AVERAGE_DAYS_PER_MONTH);
+  const years = Math.floor(days / DAYS_PER_YEAR_WITH_LEAP);
+
+  if (years >= 1) {
+    const remainingMonths = Math.floor((days % DAYS_PER_YEAR_WITH_LEAP) / AVERAGE_DAYS_PER_MONTH);
+    return years === 1 && remainingMonths === 0
+      ? " (1 year)"
+      : remainingMonths === 0
+        ? ` (${years} years)`
+        : ` (${years} year${years > 1 ? "s" : ""}, ${remainingMonths} month${remainingMonths > 1 ? "s" : ""})`;
+  }
+
+  if (months >= 1) {
+    const remainingWeeks = Math.floor((days % AVERAGE_DAYS_PER_MONTH) / DAYS_PER_WEEK);
+    return months === 1 && remainingWeeks === 0
+      ? " (1 month)"
+      : remainingWeeks === 0
+        ? ` (${months} months)`
+        : ` (${months} month${months > 1 ? "s" : ""}, ${remainingWeeks} week${remainingWeeks > 1 ? "s" : ""})`;
+  }
+
+  if (weeks >= 1) {
+    const remainingDays = days % DAYS_PER_WEEK;
+    return weeks === 1 && remainingDays === 0
+      ? " (1 week)"
+      : remainingDays === 0
+        ? ` (${weeks} weeks)`
+        : ` (${weeks} week${weeks > 1 ? "s" : ""}, ${remainingDays} day${remainingDays > 1 ? "s" : ""})`;
+  }
+
+  return ` (${days} day${days > 1 ? "s" : ""})`;
+};
