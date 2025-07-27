@@ -15,6 +15,9 @@ export default function AnnouncementBanner() {
     return null;
   }
   */
+  if (!renderAnnouncement) {
+    return null;
+  }
 
   return (
     <div className="w-full hidden sm:flex h-8 border-b border-pinto-gray-4 bg-white items-center justify-center">
