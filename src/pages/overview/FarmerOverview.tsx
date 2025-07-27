@@ -251,25 +251,34 @@ const Overview = () => {
           <StatPanel {...(hasOnlyPods ? statPanelData.depositedValue : statPanelData.stalk)} />
           <StatPanel {...(hasOnlyPods ? statPanelData.stalk : statPanelData.seeds)} />
           <StatPanel {...(hasOnlyPods ? statPanelData.seeds : statPanelData.pods)} />
-          {(statPanelData.pods.mainValue.eq(0) || (statPanelData.pods.mainValueChange?.lt(0) && !hasOnlyPods)) &&
-            isSoilAvailable && (
-              <HelperLink
-                onClick={() =>
-                  navigate(statPanelData.pods.mainValueChange?.lt(0) ? "/field?action=harvest" : "/field?action=sow")
-                }
-                text={statPanelData.pods.mainValueChange?.lt(0) ? "Harvest Pods" : "Sow (Lend) in the Field for Pods"}
-                className={`absolute -mt-[13.75rem] -right-52 whitespace-break-spaces w-[140px] z-20 2xl:whitespace-normal 2xl:w-auto`}
-                dataTarget="pods-stats"
-                sourceAnchor="left"
-                targetAnchor="right"
-                source90Degree={true}
-                perpLength={10}
-                onMouseEnter={() => {
-                  setHoveredButton(statPanelData.pods.mainValueChange?.gte(0) ? "" : "harvest");
-                }}
-                onMouseLeave={() => setHoveredButton("")}
-              />
-            )}
+          {statPanelData.pods.mainValue.eq(0) && !hasOnlyPods && isSoilAvailable && (
+            <HelperLink
+              onClick={() => navigate("/field?action=sow")}
+              text={"Sow (Lend) in the Field for Pods"}
+              className={`absolute -mt-[13.75rem] -right-56 whitespace-break-spaces w-[140px] z-20 2xl:whitespace-normal 2xl:w-auto`}
+              dataTarget="pods-stats"
+              sourceAnchor="left"
+              targetAnchor="right"
+              source90Degree={true}
+              perpLength={10}
+            />
+          )}
+          {statPanelData.pods.mainValue.gt(0) && statPanelData.pods.mainValueChange?.lt(0) && !hasOnlyPods && (
+            <HelperLink
+              onClick={() => navigate("/field?action=harvest")}
+              text={"Harvest Pods"}
+              className={`absolute -mt-[13.75rem] -right-20 whitespace-break-spaces w-[140px] z-20 2xl:whitespace-normal 2xl:w-auto`}
+              dataTarget="pods-stats"
+              sourceAnchor="left"
+              targetAnchor="right"
+              source90Degree={true}
+              perpLength={10}
+              onMouseEnter={() => {
+                setHoveredButton("harvest");
+              }}
+              onMouseLeave={() => setHoveredButton("")}
+            />
+          )}
           {/*hasOnlyPods && (
             <HelperLink
               onClick={() => navigate("/silo")}
