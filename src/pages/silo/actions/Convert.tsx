@@ -123,7 +123,11 @@ function ConvertForm({
 
   const hasGerminating = deposits?.amount.gt(0) && !deposits?.amount.eq(deposits.convertibleAmount);
 
-  const { data: maxConvertQueryData = TV.ZERO, ...maxConvertQuery } = useSiloMaxConvertQuery(
+  const {
+    data: maxConvertQueryData = TV.ZERO,
+    isLoading: maxConvertLoading,
+    ...maxConvertQuery
+  } = useSiloMaxConvertQuery(
     siloConvert,
     deposits,
     siloToken,
@@ -429,6 +433,7 @@ function ConvertForm({
           mode="balance"
           disableButton
           disableClamping={true}
+          isLoading={targetToken && maxConvertLoading}
         />
       </div>
       {warningRendered ? (
