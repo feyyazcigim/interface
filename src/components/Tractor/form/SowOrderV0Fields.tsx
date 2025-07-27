@@ -18,6 +18,12 @@ import { Label } from "@/components/ui/Label";
 import { cn } from "@/utils/utils";
 import { useFormContext, useWatch } from "react-hook-form";
 
+const sharedInputProps = {
+  type: "text",
+  inputMode: "decimal",
+  pattern: "[0-9]*.?[0-9]*",
+} as const;
+
 interface BaseIFormContextHandlers {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => ReturnType<typeof sanitizeNumericInputValue>;
   onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
@@ -115,8 +121,8 @@ SowOrderV0Fields.TotalAmount = function TotalAmount() {
           <FormControl>
             <Input
               {...field}
+              {...sharedInputProps}
               placeholder="0.00"
-              type="text"
               outlined
               {...getHandlers()}
               isError={!!fieldState.error}
@@ -157,8 +163,8 @@ SowOrderV0Fields.MinSoil = function MinSoil() {
             <FormControl>
               <Input
                 {...field}
+                {...sharedInputProps}
                 placeholder="0.00"
-                type="text"
                 outlined
                 {...getHandlers()}
                 isError={!!fieldState.error}
@@ -200,9 +206,9 @@ SowOrderV0Fields.MaxPerSeason = function MaxPerSeason() {
           <FormControl className="flex-1">
             <Input
               {...field}
+              {...sharedInputProps}
               placeholder="0.00"
               outlined
-              type="text"
               {...getHandlers()}
               isError={!!fieldState.error}
               endIcon={<MainTokenAdornment />}
@@ -315,9 +321,9 @@ SowOrderV0Fields.Temperature = function Temperature() {
             <FormControl>
               <Input
                 {...field}
+                {...sharedInputProps}
                 className="rounded-lg w-[140px]"
                 placeholder={`${Math.max(10, Math.floor(currTemp.scaled?.toNumber() || 0) + 1)}`}
-                type="text"
                 outlined
                 {...handlers}
                 isError={!!fieldState.error}
@@ -387,9 +393,9 @@ SowOrderV0Fields.PodLineLength = function PodLineLength() {
           <FormControl>
             <Input
               {...field}
+              {...sharedInputProps}
               placeholder={podLine.gt(0) ? formatter.number(podLine) : "0.00"}
               outlined
-              type="text"
               isError={!!fieldState.error}
               {...handlers}
             />
@@ -535,9 +541,9 @@ SowOrderV0Fields.OperatorTip = function OperatorTip({
             <FormControl>
               <Input
                 {...field}
+                {...sharedInputProps}
                 outlined
                 placeholder="0.00"
-                type="text"
                 {...handlers}
                 isError={!!fieldState.error}
                 endIcon={<MainTokenAdornment />}

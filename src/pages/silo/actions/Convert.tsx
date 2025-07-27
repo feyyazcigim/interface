@@ -96,7 +96,7 @@ function ConvertForm({
   const diamond = useProtocolAddress();
   const pintoToken = useChainConstant(MAIN_TOKEN);
   const account = useAccount();
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [slippage, setSlippage] = useState(0.25);
   const [maxConvert, setMaxConvert] = useState(TV.ZERO);
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
@@ -202,7 +202,7 @@ function ConvertForm({
   // ------------------------------ TXN SUBMISSION ------------------------------
 
   const successCallback = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     setTargetToken(undefined);
     setRouteIndex(undefined);
     siloConvert.clear();
@@ -288,7 +288,7 @@ function ConvertForm({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: Reset amount in when target token changes
   useEffect(() => {
-    setAmountIn("0");
+    setAmountIn("");
     setMaxConvert(TV.ZERO);
     setRouteIndex(undefined);
     setShowMinAmountWarning(false);
@@ -428,6 +428,7 @@ function ConvertForm({
           {...getAltTextProps()}
           mode="balance"
           disableButton
+          disableClamping={true}
         />
       </div>
       {warningRendered ? (

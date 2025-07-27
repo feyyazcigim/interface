@@ -17,6 +17,7 @@ import useMaxBuy from "@/hooks/swap/useMaxBuy";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import usePriceImpactSummary from "@/hooks/wells/usePriceImpactSummary";
 import usePodListings from "@/state/market/usePodListings";
@@ -26,7 +27,7 @@ import { useHarvestableIndex } from "@/state/useFieldData";
 import { useQueryKeys } from "@/state/useQueryKeys";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { stringToNumber } from "@/utils/string";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { getBalanceFromMode } from "@/utils/utils";
@@ -84,22 +85,24 @@ export default function FillListing() {
   const listing = allListings?.podListings.find((listing) => listing.index === id);
 
   const [didSetPreferred, setDidSetPreferred] = useState(false);
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [tokenIn, setTokenIn] = useState(mainToken);
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [slippage, setSlippage] = useState(0.1);
 
   const isUsingMain = tokensEqual(tokenIn, mainToken);
 
+  const amountInTV = useSafeTokenValue(amountIn, tokenIn);
+
   const { data: swapData, resetSwap } = useSwap({
     tokenIn,
     tokenOut: mainToken,
     slippage,
-    amountIn: TokenValue.fromHuman(amountIn, tokenIn.decimals),
+    amountIn: amountInTV,
     disabled: isUsingMain,
   });
 
-  const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
+  const value = tokenIn.isNative ? amountInTV : undefined;
 
   const swapBuild = useBuildSwapQuote(swapData, balanceFrom, FarmToMode.INTERNAL);
   const swapSummary = useSwapSummary(swapData);
@@ -124,7 +127,7 @@ export default function FillListing() {
   // reset form and invalidate pod listings/farmer plot queries
   const onSuccess = useCallback(() => {
     navigate(`/market/pods/buy/fill`);
-    setAmountIn("0");
+    setAmountIn("");
     resetSwap();
     allQK.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));
   }, [navigate, resetSwap, queryClient, allQK]);
@@ -139,7 +142,7 @@ export default function FillListing() {
   const podsAvailable = TokenValue.fromBlockchain(listing?.amount || 0n, PODS.decimals);
   const pricePerPod = TokenValue.fromBlockchain(listing?.pricePerPod || 0n, mainToken.decimals);
   const mainTokensToFill = podsAvailable.mul(pricePerPod);
-  const mainTokensIn = isUsingMain ? TokenValue.fromHuman(amountIn, mainToken.decimals) : swapData?.buyAmount;
+  const mainTokensIn = isUsingMain ? toSafeTVFromHuman(amountIn, mainToken.decimals) : swapData?.buyAmount;
 
   const tokenInBalance = farmerBalances.balances.get(tokenIn);
   const { data: maxFillAmount } = useMaxBuy(tokenIn, slippage, mainTokensToFill);
@@ -173,7 +176,7 @@ export default function FillListing() {
               minFillAmount: TokenValue.fromBlockchain(listing.minFillAmount, mainToken.decimals).toBigInt(), // minFillAmount, measured in Beans
               mode: Number(listing.mode), // mode
             },
-            TokenValue.fromHuman(amountIn, mainToken.decimals).toBigInt(), // amountIn
+            toSafeTVFromHuman(amountIn, mainToken.decimals).toBigInt(), // amountIn
             Number(balanceFrom), // fromMode
           ],
         });
@@ -297,8 +300,9 @@ export default function FillListing() {
                     }
                     filterTokens={filterTokens}
                     altText={balanceExceedsMax ? "Usable balance:" : undefined}
+                    disableClamping={true}
                   />
-                  {!isUsingMain && stringToNumber(amountIn) > 0 && (
+                  {!isUsingMain && amountInTV.gt(0) && (
                     <RoutingAndSlippageInfo
                       title="Total Swap Slippage"
                       swapSummary={swapSummary}

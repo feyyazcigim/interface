@@ -131,7 +131,9 @@ function TractorButton({ onClick }: { onClick: () => void }) {
           Set up a Tractor Order to automate Sowing
         </span>
       </button>
-      <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="1rem" />
+      {!inputExceedsSoil && (
+        <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="1rem" />
+      )}
     </div>
   );
 }
