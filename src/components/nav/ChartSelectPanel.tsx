@@ -7,6 +7,7 @@ import { cn } from "@/utils/utils";
 import { useAtom } from "jotai";
 import { isEqual } from "lodash";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { renderAnnouncement } from "../AnnouncementBanner";
 import { ChevronDownIcon, SearchIcon } from "../Icons";
 import { MIN_ADV_SEASON, chartSeasonInputsAtom, selectedChartsAtom } from "../charts/AdvancedChart";
 import { Input } from "../ui/Input";
@@ -167,7 +168,10 @@ const ChartSelectPanel = memo(() => {
   );
 
   return (
-    <div className="grid grid-rows-[auto_auto_1fr] h-[calc(100vh-5rem)]">
+    <div
+      className="grid grid-rows-[auto_auto_1fr]"
+      style={{ height: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}
+    >
       <div className="flex flex-col gap-6 p-6">
         <div className="flex flex-row justify-between items-center">
           <span className="pinto-h4">Compare Data</span>

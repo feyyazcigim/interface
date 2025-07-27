@@ -11,6 +11,7 @@ import { useAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
+import { renderAnnouncement } from "./AnnouncementBanner";
 import ChainButton from "./ChainButton";
 import { BackwardArrowDotsIcon, LeftArrowIcon, UpDownArrowsIcon } from "./Icons";
 import WalletButtonClaim from "./WalletButtonClaim";
@@ -290,7 +291,10 @@ export default function WalletButtonPanel({ togglePanel }) {
   }
 
   return (
-    <div className="grid grid-rows-[auto_1fr_auto] h-[calc(100vh-5rem)]">
+    <div
+      className="grid grid-rows-[auto_1fr_auto]"
+      style={{ height: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}
+    >
       <CardHeader className="flex flex-col gap-4 p-4 2xl:p-6">
         <WalletHeader
           address={address}

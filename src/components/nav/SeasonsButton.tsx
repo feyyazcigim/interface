@@ -13,6 +13,7 @@ import { textConfig } from "@/utils/theme";
 import { cn, isDev } from "@/utils/utils";
 import clsx from "clsx";
 import { HTMLAttributes, useMemo } from "react";
+import { renderAnnouncement } from "../AnnouncementBanner";
 import TooltipSimple from "../TooltipSimple";
 import { Button } from "../ui/Button";
 import { CardContent, CardHeader } from "../ui/Card";
@@ -104,7 +105,7 @@ const PanelContent = ({
   }, [siloSnapshots.data, supplySnapshots.data, fieldSnapshots.data]);
 
   return (
-    <div className="grid grid-rows-[auto_1fr] h-[calc(100vh-5rem)]">
+    <div className="grid grid-rows-[auto_1fr]" style={{ height: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}>
       <CardHeader className="p-0">
         <div className="flex flex-row w-full justify-between p-4 box-border gap-2">
           <div className="flex flex-col gap-2">

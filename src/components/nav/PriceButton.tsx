@@ -15,6 +15,7 @@ import { cn } from "@/utils/utils";
 import { HTMLAttributes, memo, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useChainId } from "wagmi";
+import { renderAnnouncement } from "../AnnouncementBanner";
 import { InlineCenterSpan } from "../Container";
 import { ExternalLinkIcon, ForwardArrowIcon, GearIcon } from "../Icons";
 import TooltipSimple from "../TooltipSimple";
@@ -87,7 +88,10 @@ function PriceButtonPanel() {
   const combinedDeltaB = priceData.deltaB;
 
   return (
-    <div className="grid grid-rows-[auto_1fr_auto] h-[calc(100vh-5rem)]">
+    <div
+      className="grid grid-rows-[auto_1fr_auto]"
+      style={{ height: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}
+    >
       <CardHeader className="transition-all p-0 space-y-0 sm:space-y-1.5">
         {!showSettings ? (
           <div className="px-4 py-3 sm:p-6">
