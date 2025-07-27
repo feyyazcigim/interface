@@ -1,6 +1,7 @@
 import { TV } from "@/classes/TokenValue";
 import { defaultQuerySettingsQuote } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import { SiloConvert } from "@/lib/siloConvert/SiloConvert";
 import { queryKeys } from "@/state/queryKeys";
 import { stringEq } from "@/utils/string";
@@ -156,7 +157,7 @@ export function useSiloConvertQuote(
     [account.address, source.address, target?.address, amountIn, slippage],
   );
 
-  const sourceAmount = TV.fromHuman(amountIn, source.decimals);
+  const sourceAmount = useSafeTokenValue(amountIn, source.decimals);
 
   const queryEnabled = !!account.address && !!convertibleDeposits?.length && sourceAmount.gt(0) && !!target && enabled;
 

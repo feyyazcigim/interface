@@ -107,7 +107,7 @@ export default function SimpleInputField({
       <div className="flex flex-row gap-2 items-center">
         <input
           type="text"
-          className="flex w-full px-1 text-2xl text-black align-middle focus-visible:outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="flex w-full px-1 text-2xl text-black align-middle focus-visible:outline-none placeholder:text-pinto-light disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           value={internalAmount ?? amount ?? ""}
           placeholder={placeholder?.toString()}
           onInput={handleInputChange}
