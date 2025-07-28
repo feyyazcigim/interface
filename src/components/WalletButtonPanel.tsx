@@ -11,6 +11,7 @@ import { useAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
+import { renderAnnouncement } from "./AnnouncementBanner";
 import ChainButton from "./ChainButton";
 import { BackwardArrowDotsIcon, LeftArrowIcon, UpDownArrowsIcon } from "./Icons";
 import WalletButtonClaim from "./WalletButtonClaim";
@@ -290,7 +291,10 @@ export default function WalletButtonPanel({ togglePanel }) {
   }
 
   return (
-    <>
+    <div
+      className="grid grid-rows-[auto_1fr_auto]"
+      style={{ height: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}
+    >
       <CardHeader className="flex flex-col gap-4 p-4 2xl:p-6">
         <WalletHeader
           address={address}
@@ -304,11 +308,16 @@ export default function WalletButtonPanel({ togglePanel }) {
         <ActionButtons navigate={navigate} togglePanel={togglePanel} />
       </CardHeader>
 
-      <CardContent className="p-0">
+      <CardContent className="p-0 min-h-0">
         <Separator className="w-[40rem] -ml-4" />
-        <div className="p-3 pb-12 2xl:p-6 sm:pb-16">
-          <Tabs defaultValue="combined" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
-            <TabsList className="grid w-full grid-cols-3 h-11 sm:h-12 py-0 px-1 gap-[0.5rem] sm:gap-[0.75rem]">
+        <div className="p-3 2xl:p-6 h-full flex flex-col">
+          <Tabs
+            defaultValue="combined"
+            className="w-full flex-1 min-h-0 flex flex-col"
+            value={currentTab}
+            onValueChange={setCurrentTab}
+          >
+            <TabsList className="grid w-full grid-cols-3 h-11 sm:h-12 py-0 px-1 gap-[0.5rem] sm:gap-[0.75rem] flex-shrink-0">
               <TabsTrigger className="h-9 text-[0.875rem] sm:text-[1rem] hover:bg-pinto-gray-1" value="combined">
                 Combined
               </TabsTrigger>
@@ -320,7 +329,7 @@ export default function WalletButtonPanel({ togglePanel }) {
               </TabsTrigger>
             </TabsList>
 
-            <ScrollArea className="h-[calc(100dvh-28.5rem)] sm:h-[calc(100dvh-32rem)] lg:h-[calc(100dvh-31rem)] 2xl:h-[calc(100dvh-37rem)] -mx-3 px-3">
+            <ScrollArea className="h-full -mx-3 px-3 flex-1 min-h-0">
               <TabsContent value="combined" className="overflow-y-auto overflow-x-clip">
                 {totalBalance.total.eq(0) ? (
                   <EmptyState message="You don't have any value in your Wallet or Farm Balance, Bridge value to Base to get started." />
@@ -367,7 +376,7 @@ export default function WalletButtonPanel({ togglePanel }) {
         </div>
       </CardContent>
 
-      <CardFooter className="absolute bottom-0 mx-auto left-0 right-0 text-center justify-center flex flex-col gap-4">
+      <CardFooter className="bottom-0 mx-auto left-0 right-0 sm:mb-4 text-center justify-center flex flex-col gap-4">
         {ENABLE_SWITCH_CHAINS && !showClaim && <ChainButton />}
         <Button
           variant="default"
@@ -381,6 +390,6 @@ export default function WalletButtonPanel({ togglePanel }) {
         </Button>
         {totalFlood.gt(0) && <WalletButtonClaim />}
       </CardFooter>
-    </>
+    </div>
   );
 }

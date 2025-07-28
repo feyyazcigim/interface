@@ -2,7 +2,6 @@ import pintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import { useSiloYieldsQuery } from "@/state/useSiloAPYs";
 import useTokenData from "@/state/useTokenData";
-import { formatter } from "@/utils/format";
 import IconImage from "./ui/IconImage";
 
 export default function APYTooltip() {
@@ -12,25 +11,25 @@ export default function APYTooltip() {
   const apyInfo = [
     {
       label: "24H:",
-      value: TokenValue.fromBlockchain(apyData.data?.ema[24].beansPerSeason || 0, mainToken.decimals),
+      value: TokenValue.fromBlockchain(apyData.data?.ema?.[24]?.beansPerSeason || 0, mainToken.decimals),
     },
     {
       label: "7D:",
-      value: TokenValue.fromBlockchain(apyData.data?.ema[168].beansPerSeason || 0, mainToken.decimals),
+      value: TokenValue.fromBlockchain(apyData.data?.ema?.[168]?.beansPerSeason || 0, mainToken.decimals),
     },
     {
       label: "30D:",
-      value: TokenValue.fromBlockchain(apyData.data?.ema[720].beansPerSeason || 0, mainToken.decimals),
+      value: TokenValue.fromBlockchain(apyData.data?.ema?.[720]?.beansPerSeason || 0, mainToken.decimals),
     },
     {
       label: "90D:",
-      value: TokenValue.fromBlockchain(apyData.data?.ema[2160].beansPerSeason || 0, mainToken.decimals),
+      value: TokenValue.fromBlockchain(apyData.data?.ema?.[2160]?.beansPerSeason || 0, mainToken.decimals),
     },
   ];
 
-  const has24h = Number(apyData.data?.ema[24].beansPerSeason) > 0;
-  const has7d = Number(apyData.data?.ema[168].beansPerSeason) > 0;
-  const has30d = Number(apyData.data?.ema[720].beansPerSeason) > 0;
+  const has24h = Number(apyData.data?.ema[24]?.beansPerSeason || 0) > 0;
+  const has7d = Number(apyData.data?.ema[168]?.beansPerSeason || 0) > 0;
+  const has30d = Number(apyData.data?.ema[720]?.beansPerSeason || 0) > 0;
 
   return (
     <div className="flex flex-col gap-6 w-[31.25rem] px-3 py-[1.125rem]">

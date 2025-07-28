@@ -11,7 +11,7 @@ import { useTotalDepositedBdvPerTokenQuery } from "./useSiloData";
 import { useSeason } from "./useSunData";
 import useTokenData, { useWhitelistedTokens } from "./useTokenData";
 
-export type EmaWindow = 24 | 168 | 720 | 2160;
+export type EmaWindow = 24 | 168 | 720; // | 2160;
 
 /**
  * Yields for a single token, for a single EMA window.
@@ -71,12 +71,13 @@ export function useSiloYieldsQuery<TSelect = SiloYieldsAPIResponse>(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          emaWindows: [24, 168, 720, 2160],
+          emaWindows: [24, 168, 720 /*2160 */],
         }),
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
       const result = await res.json();
+      /*
       const season90d = result.ema["2160"].effectiveWindow;
 
       if (season90d < 2160) {
@@ -93,11 +94,12 @@ export function useSiloYieldsQuery<TSelect = SiloYieldsAPIResponse>(
           beansPerSeason: currentBeansPerSeason,
         };
       }
+        */
 
       result.yields[24] = normalizeYields(result.yields[24]);
       result.yields[168] = normalizeYields(result.yields[168]);
       result.yields[720] = normalizeYields(result.yields[720]);
-      result.yields[2160] = normalizeYields(result.yields[2160]);
+      // result.yields[2160] = normalizeYields(result.yields[2160]);
 
       return result;
     },
@@ -127,13 +129,13 @@ export function useSiloYieldsByToken<T = SiloYieldsByToken>(args?: {
         const ema24 = data.yields[24]?.[tokenIndex]?.bean ?? 0;
         const ema168 = data.yields[168]?.[tokenIndex]?.bean ?? 0;
         const ema720 = data.yields[720]?.[tokenIndex]?.bean ?? 0;
-        const ema2160 = data.yields[2160]?.[tokenIndex]?.bean ?? 0;
+        // const ema2160 = data.yields[2160]?.[tokenIndex]?.bean ?? 0;
 
         const obj = {
           ema24,
           ema168,
           ema720,
-          ema2160,
+          ema2160: 0,
         };
 
         apys[tokenIndex] = obj;
@@ -166,7 +168,7 @@ export const useSiloTokenAPYs = (token: Token | string | undefined) => {
         apys.ema24 = data.yields[24]?.[tokenIndex]?.bean;
         apys.ema168 = data.yields[168]?.[tokenIndex]?.bean;
         apys.ema720 = data.yields[720]?.[tokenIndex]?.bean;
-        apys.ema2160 = data.yields[2160]?.[tokenIndex]?.bean;
+        apys.ema2160 = 0; // data.yields[2160]?.[tokenIndex]?.bean;
       }
 
       return apys;
@@ -208,12 +210,12 @@ export const useAverageBDVWeightedSiloAPYs = () => {
       const yield24 = apyResponse.yields[24]?.[tokenIndex]?.bean;
       const yield168 = apyResponse.yields[168]?.[tokenIndex]?.bean;
       const yield720 = apyResponse.yields[720]?.[tokenIndex]?.bean;
-      const yield2160 = apyResponse.yields[2160]?.[tokenIndex]?.bean;
+      const yield2160 = 0; // apyResponse.yields[2160]?.[tokenIndex]?.bean;
 
       const weightedYield24 = yield24 ? yield24 * depositedBDV.toNumber() : 0;
       const weightedYield168 = yield168 ? yield168 * depositedBDV.toNumber() : 0;
       const weightedYield720 = yield720 ? yield720 * depositedBDV.toNumber() : 0;
-      const weightedYield2160 = yield2160 ? yield2160 * depositedBDV.toNumber() : 0;
+      const weightedYield2160 = 0; // yield2160 ? yield2160 * depositedBDV.toNumber() : 0;
 
       totalWeightedYield24 += weightedYield24;
       totalWeightedYield168 += weightedYield168;

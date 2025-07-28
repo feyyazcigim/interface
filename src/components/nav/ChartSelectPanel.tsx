@@ -7,6 +7,7 @@ import { cn } from "@/utils/utils";
 import { useAtom } from "jotai";
 import { isEqual } from "lodash";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { renderAnnouncement } from "../AnnouncementBanner";
 import { ChevronDownIcon, SearchIcon } from "../Icons";
 import { MIN_ADV_SEASON, chartSeasonInputsAtom, selectedChartsAtom } from "../charts/AdvancedChart";
 import { Input } from "../ui/Input";
@@ -167,96 +168,97 @@ const ChartSelectPanel = memo(() => {
   );
 
   return (
-    <>
-      <div className="flex flex-col">
-        <div className="flex flex-col gap-6 p-6">
-          <div className="flex flex-row justify-between items-center">
-            <span className="pinto-h4">Compare Data</span>
-            <span className="pinto-sm-light text-pinto-gray-4">
-              {currentlySelected}/{maxChartsSelected} Selected
-            </span>
-          </div>
-          <Input
-            type="text"
-            className="bg-pinto-gray-1 placeholder:text-pinto-gray-4 border-pinto-gray-2"
-            placeholder="Search"
-            onChange={(e) => updateSearchInput(e.target.value)}
-            startIcon={<SearchIcon className="ml-2" />}
-          />
+    <div
+      className="grid grid-rows-[auto_auto_1fr]"
+      style={{ height: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}
+    >
+      <div className="flex flex-col gap-6 p-6">
+        <div className="flex flex-row justify-between items-center">
+          <span className="pinto-h4">Compare Data</span>
+          <span className="pinto-sm-light text-pinto-gray-4">
+            {currentlySelected}/{maxChartsSelected} Selected
+          </span>
         </div>
-        <Separator />
-        <div className="overflow-clip">
-          <ScrollArea className="flex flex-col h-[calc(100dvh-17.5rem)]">
-            {Object.entries(groupedData).map(([type, items]) => (
-              <div key={type} className="flex flex-col">
-                <div
-                  className="flex flex-row items-center gap-3 justify-between hover:cursor-pointer hover:bg-pinto-gray-2/20 py-3 pl-3 pr-4 transition-colors"
-                  onClick={() => toggleType(type)}
-                >
-                  <div className="flex items-center gap-2">
-                    <ChevronDownIcon
-                      className={cn("w-4 h-4 transition-transform", expandedTypes.has(type) ? "rotate-180" : "")}
-                    />
-                    <span className="pinto-body-light">{type}</span>
-                  </div>
-                  <span className="pinto-sm-light text-pinto-gray-4">{items.length} items</span>
-                </div>
-                <div className="flex flex-col">
-                  {items.map((data) => {
-                    const indexInSelection = internalSelected.findIndex(
-                      (selectionIndex) => data.index === selectionIndex,
-                    );
-                    const isSelected = indexInSelection > -1;
-                    return (
-                      (expandedTypes.has(type) || isSelected) && (
-                        <div
-                          key={`${type}-chartSelectList-${data.id}`}
-                          className={cn(
-                            "hover:cursor-pointer hover:bg-pinto-gray-2/20 py-2 px-6",
-                            isSelected && "bg-pinto-gray-2/70 hover:bg-pinto-gray-2/50",
-                          )}
-                          onClick={() => handleSelection(data.index)}
-                        >
-                          <div
-                            key={`chartSelectList${data.id}`}
-                            className="flex flex-row items-center gap-3 my-0.5 justify-between transition-colors"
-                          >
-                            <IconImage src={data.icon} size={9} />
-                            <div className="flex flex-col basis-full gap-1">
-                              <div className="pinto-body-light">{data.name}</div>
-                              <div className="pinto-sm-light text-pinto-gray-4">{data.shortDescription}</div>
-                            </div>
-                          </div>
-                          {isSelected && data.inputOptions === "SEASON" && (
-                            <div className="mt-2 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              <label
-                                htmlFor={`season-input-${data.id}`}
-                                className="pinto-sm-light text-pinto-primary whitespace-nowrap"
-                              >
-                                Starting Season:
-                              </label>
-                              <Input
-                                id={`season-input-${data.id}`}
-                                type="number"
-                                min={MIN_ADV_SEASON}
-                                max={currentSeason}
-                                value={rawSeasonInputs[data.id] || ""}
-                                onChange={(e) => handleSeasonInputChange(data.id, e.target.value)}
-                                className="w-[70px] rounded-[0.5rem] bg-pinto-gray-1 border-pinto-gray-2 text-sm px-2 py-0 h-8"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </ScrollArea>
-        </div>
+        <Input
+          type="text"
+          className="bg-pinto-gray-1 placeholder:text-pinto-gray-4 border-pinto-gray-2"
+          placeholder="Search"
+          onChange={(e) => updateSearchInput(e.target.value)}
+          startIcon={<SearchIcon className="ml-2" />}
+        />
       </div>
-    </>
+      <Separator />
+      <div className="overflow-clip min-h-0">
+        <ScrollArea className="flex flex-col h-full">
+          {Object.entries(groupedData).map(([type, items]) => (
+            <div key={type} className="flex flex-col mb-3 sm:mb-4">
+              <div
+                className="flex flex-row items-center gap-3 justify-between hover:cursor-pointer hover:bg-pinto-gray-2/20 py-3 pl-3 pr-4 transition-colors"
+                onClick={() => toggleType(type)}
+              >
+                <div className="flex items-center gap-2">
+                  <ChevronDownIcon
+                    className={cn("w-4 h-4 transition-transform", expandedTypes.has(type) ? "rotate-180" : "")}
+                  />
+                  <span className="pinto-body-light">{type}</span>
+                </div>
+                <span className="pinto-sm-light text-pinto-gray-4">{items.length} items</span>
+              </div>
+              <div className="flex flex-col">
+                {items.map((data) => {
+                  const indexInSelection = internalSelected.findIndex(
+                    (selectionIndex) => data.index === selectionIndex,
+                  );
+                  const isSelected = indexInSelection > -1;
+                  return (
+                    (expandedTypes.has(type) || isSelected) && (
+                      <div
+                        key={`${type}-chartSelectList-${data.id}`}
+                        className={cn(
+                          "hover:cursor-pointer hover:bg-pinto-gray-2/20 py-2 px-6",
+                          isSelected && "bg-pinto-gray-2/70 hover:bg-pinto-gray-2/50",
+                        )}
+                        onClick={() => handleSelection(data.index)}
+                      >
+                        <div
+                          key={`chartSelectList${data.id}`}
+                          className="flex flex-row items-center gap-3 my-0.5 justify-between transition-colors"
+                        >
+                          <IconImage src={data.icon} size={9} />
+                          <div className="flex flex-col basis-full gap-1">
+                            <div className="pinto-body-light">{data.name}</div>
+                            <div className="pinto-sm-light text-pinto-gray-4">{data.shortDescription}</div>
+                          </div>
+                        </div>
+                        {isSelected && data.inputOptions === "SEASON" && (
+                          <div className="mt-2 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <label
+                              htmlFor={`season-input-${data.id}`}
+                              className="pinto-sm-light text-pinto-primary whitespace-nowrap"
+                            >
+                              Starting Season:
+                            </label>
+                            <Input
+                              id={`season-input-${data.id}`}
+                              type="number"
+                              min={MIN_ADV_SEASON}
+                              max={currentSeason}
+                              value={rawSeasonInputs[data.id] || ""}
+                              onChange={(e) => handleSeasonInputChange(data.id, e.target.value)}
+                              className="w-[70px] rounded-[0.5rem] bg-pinto-gray-1 border-pinto-gray-2 text-sm px-2 py-0 h-8"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </ScrollArea>
+      </div>
+    </div>
   );
 });
 
