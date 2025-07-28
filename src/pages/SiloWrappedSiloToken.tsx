@@ -121,7 +121,7 @@ export default function SiloWrappedSiloToken({ token }: { token: Token }) {
         {!currentAction && (
           <MobileActionBar>
             <Button
-              onClick={() => navigate(`/${navLinks.sPinto}?action=wrap`)}
+              onClick={() => navigate(`${navLinks.sPinto}?action=wrap`)}
               rounded={"full"}
               variant={"outline-secondary"}
               className="pinto-sm-bold text-sm flex-1 flex h-full"
@@ -129,7 +129,7 @@ export default function SiloWrappedSiloToken({ token }: { token: Token }) {
               Wrap
             </Button>
             <Button
-              onClick={() => navigate(`/${navLinks.sPinto}?action=unwrap`)}
+              onClick={() => navigate(`${navLinks.sPinto}?action=unwrap`)}
               rounded={"full"}
               variant={"outline-secondary"}
               className="pinto-sm-bold text-sm flex-1 flex h-full"
