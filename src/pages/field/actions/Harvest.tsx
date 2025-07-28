@@ -125,7 +125,7 @@ function Harvest({ isMorning }: HarvestProps) {
           </div>
           <div className="flex flex-col gap-4">
             <div className="pinto-body-light text-pinto-light">
-              Your Pods will be harvested and automatically deposited into the Silo for yield generation.
+              Harvest your pods for freshly minted Pinto in the Silo.
             </div>
           </div>
         </>
@@ -143,7 +143,7 @@ function Harvest({ isMorning }: HarvestProps) {
         token={undefined}
         disabled={harvestableAmount.eq(0) || isConfirming || submitting}
         submitFunction={onSubmit}
-        submitButtonText="Harvest & Deposit"
+        submitButtonText="Harvest"
         className="hidden sm:flex"
       />
       <MobileActionBar>
@@ -153,7 +153,7 @@ function Harvest({ isMorning }: HarvestProps) {
           token={undefined}
           disabled={harvestableAmount.eq(0) || isConfirming || submitting}
           submitFunction={onSubmit}
-          submitButtonText="Harvest & Deposit"
+          submitButtonText="Harvest"
           className="h-full"
         />
       </MobileActionBar>
