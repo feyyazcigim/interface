@@ -13,6 +13,7 @@ import { textConfig } from "@/utils/theme";
 import { cn, isDev } from "@/utils/utils";
 import clsx from "clsx";
 import { HTMLAttributes, useMemo } from "react";
+import { renderAnnouncement } from "../AnnouncementBanner";
 import TooltipSimple from "../TooltipSimple";
 import { Button } from "../ui/Button";
 import { CardContent, CardHeader } from "../ui/Card";
@@ -104,7 +105,7 @@ const PanelContent = ({
   }, [siloSnapshots.data, supplySnapshots.data, fieldSnapshots.data]);
 
   return (
-    <>
+    <div className="grid grid-rows-[auto_1fr]" style={{ height: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}>
       <CardHeader className="p-0">
         <div className="flex flex-row w-full justify-between p-4 box-border gap-2">
           <div className="flex flex-col gap-2">
@@ -138,8 +139,8 @@ const PanelContent = ({
         </div>
         <Separator />
       </CardHeader>
-      <CardContent className="px-4 overflow-clip">
-        <ScrollArea className="h-[calc(100dvh-17.5rem)] -mx-4">
+      <CardContent className="px-4 overflow-clip min-h-0">
+        <ScrollArea className="h-full -mx-4">
           <Table
             className={`border-separate border-spacing-x-3 border-spacing-y-8 -mt-8 ${hasFloodOrRain ? "w-[max(800px,calc(100vw-48px))]" : "w-[max(620px,calc(100vw-48px))]"} sm:w-full`}
           >
@@ -348,7 +349,7 @@ const PanelContent = ({
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </CardContent>
-    </>
+    </div>
   );
 };
 
