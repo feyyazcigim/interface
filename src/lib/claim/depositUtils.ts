@@ -595,7 +595,7 @@ export function encodeClaimRewardCombineCalls(
   });
 
   // Sort groups by average Stalk/BDV ratio
-  const groupsWithRatio = groups.map((group, i) => {
+  const groupsWithRatio = groups.map((group) => {
     const groupDeposits = group.deposits
       .map((stem) => deposits.find((d) => d.stem.toHuman() === stem))
       .filter(Boolean) as DepositData[];
