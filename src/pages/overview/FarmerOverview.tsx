@@ -16,6 +16,7 @@ import useIsMobile from "@/hooks/display/useIsMobile";
 import useIsSmallDesktop from "@/hooks/display/useIsSmallDesktop";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useFarmerActions from "@/hooks/useFarmerActions";
+import { useHarvestAndDeposit } from "@/hooks/useHarvestAndDeposit";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerField } from "@/state/useFarmerField";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -47,6 +48,7 @@ const Overview = () => {
 
   const navigate = useNavigate();
   const { submitClaimRewards } = useClaimRewards();
+  const { submitHarvestAndDeposit, isSubmitting: isHarvestSubmitting, hasHarvestablePods } = useHarvestAndDeposit();
 
   const isSmallDesktop = useIsSmallDesktop();
 
@@ -255,10 +257,10 @@ const Overview = () => {
             (statPanelData.pods.mainValueChange?.lt(0) && !hasOnlyPods)) && (
             <HelperLink
               onClick={() =>
-                navigate(statPanelData.pods.mainValueChange?.lt(0) ? "/field?action=harvest" : "/field?action=sow")
+                statPanelData.pods.mainValueChange?.lt(0) ? submitHarvestAndDeposit() : navigate("/field?action=sow")
               }
               text={statPanelData.pods.mainValueChange?.lt(0) ? "Harvest Pods" : "Sow (Lend) in the Field for Pods"}
-              className={`absolute -mt-[13.75rem] -right-52 whitespace-break-spaces w-[140px] z-20 2xl:whitespace-normal 2xl:w-auto`}
+              className={`absolute -mt-[13.75rem] -right-52 whitespace-break-spaces w-[140px] z-20 2xl:whitespace-normal 2xl:w-auto ${isHarvestSubmitting && statPanelData.pods.mainValueChange?.lt(0) ? "opacity-50 cursor-not-allowed" : ""}`}
               dataTarget="pods-stats"
               sourceAnchor="left"
               targetAnchor="right"
