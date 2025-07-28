@@ -123,13 +123,15 @@ function ConvertForm({
 
   const hasGerminating = deposits?.amount.gt(0) && !deposits?.amount.eq(deposits.convertibleAmount);
 
-  const { data: maxConvertQueryData = TV.ZERO, ...maxConvertQuery } = useSiloMaxConvertQuery(
+  const maxConvertQuery = useSiloMaxConvertQuery(
     siloConvert,
     deposits,
     siloToken,
     targetToken,
     !!(isDefaultConvert ? hasConvertible && deltaPEnabled : hasConvertible),
   );
+  const maxConvertQueryData = maxConvertQuery.data ?? TV.ZERO;
+  const maxConvertLoading = maxConvertQuery.isLoading;
 
   const amountInNum = stringToNumber(amountIn);
   const isValidAmountIn = Boolean(minAmountIn?.gt(0) ? amountInNum >= minAmountIn.toNumber() : amountInNum > 0);
@@ -429,6 +431,7 @@ function ConvertForm({
           mode="balance"
           disableButton
           disableClamping={true}
+          isLoading={targetToken && maxConvertLoading}
         />
       </div>
       {warningRendered ? (
