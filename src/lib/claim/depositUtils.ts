@@ -650,6 +650,8 @@ export function encodeClaimRewardCombineCalls(
     .sort((a, b) => b.stalkPerBdv.sub(a.stalkPerBdv).toNumber())
     .map(({ id, deposits, stalkPerBdv }) => ({ id, deposits, stalkPerBdv }));
 
+  console.log("[encodeClaimRewardCombineCalls]: sortedGroups: ", sortedGroups);
+
   console.debug("Sorted groups by Stalk/BDV ratio for", token.symbol, ":", {
     sortedGroups: sortedGroups.map((g) => ({
       id: g.id,
@@ -664,6 +666,8 @@ export function encodeClaimRewardCombineCalls(
     token,
     deposits,
   );
+
+  console.log("[encodeClaimRewardCombineCalls]: result: ", result);
 
   console.debug("Final encoded calls for", token.symbol, ":", {
     groupCount: sortedGroups.length,
