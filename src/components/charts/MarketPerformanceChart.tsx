@@ -234,7 +234,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
       <div className="flex justify-between pt-4 px-4 mb-3 sm:pt-6 sm:px-6">
         <div className="flex flex-row gap-1 items-center">
-          <div className="sm:pinto-body text-pinto-light sm:text-pinto-light">Crypto Market Performance</div>
+          <div className="sm:pinto-body text-pinto-light sm:text-pinto-light flex-1">Crypto Market Performance</div>
           <TooltipSimple
             content="Measures historical fluctuations of non-Pinto value in the ecosystem."
             variant="gray"
@@ -246,7 +246,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                 type="button"
                 onClick={() => handleChangeDataType(type)}
                 className={cn(
-                  "sm:px-3 pt-0.5 rounded-md text-sm transition-all duration-500",
+                  "sm:px-3 pt-0.5 rounded-md text-sm transition-all duration-500 min-w-14",
                   dataType === type
                     ? "bg-pinto-green-3 text-white shadow-sm"
                     : "text-pinto-gray-2 hover:text-pinto-light hover:bg-gray-1/50",
@@ -264,32 +264,28 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
           storageKeyPrefix="marketPerformanceChart"
         />
       </div>
-      {(!allData || displayIndex === null) && (
-        <>
-          {/* Keep sizing the same as when there is data. Allows centering spinner/error vertically */}
-          <div
-            className={`relative w-full flex items-center justify-center ${size === "small" || size === "huge" ? "aspect-3/1" : "aspect-6/1"}`}
-            style={{
-              paddingBottom: `calc(85px + ${size === "small" || size === "huge" ? "33.33%" : "16.67%"})`,
-              height: "0",
-            }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              {seasonalPerformance.isLoading && !seasonalPerformance.isError && <FrameAnimator size={75} />}
-              {seasonalPerformance.isError && (
-                <>
-                  <CloseIconAlt color={"red"} />
-                  <div className="pinto-body text-pinto-green-3">An error has occurred</div>
-                </>
-              )}
-            </div>
+      {!allData || displayIndex === null ? (
+        <div
+          className={`relative w-full flex items-center justify-center ${size === "small" || size === "huge" ? "aspect-3/1" : "aspect-6/1"}`}
+          style={{
+            paddingBottom: `calc(85px + ${size === "small" || size === "huge" ? "33.33%" : "16.67%"})`,
+            height: size === "huge" ? 550 + 85 : 300 + 85,
+          }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            {seasonalPerformance.isLoading && !seasonalPerformance.isError && <FrameAnimator size={75} />}
+            {seasonalPerformance.isError && (
+              <>
+                <CloseIconAlt color={"red"} />
+                <div className="pinto-body text-pinto-green-3">An error has occurred</div>
+              </>
+            )}
           </div>
-        </>
-      )}
-      {allData && displayIndex !== null && (
+        </div>
+      ) : (
         <>
           <div className="h-[85px] px-4 sm:px-6 flex flex-row justify-between">
-            <div className="flex flex-col gap-0 mt-2 sm:gap-2 sm:mt-3">
+            <div className="flex flex-col gap-0 sm:gap-2">
               <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
                 Season {allData.NET[displayIndex].season}
               </div>
@@ -298,14 +294,11 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
               </div>
             </div>
             <div className="pinto-sm sm:pinto-body lg:pinto-h3">
-              <div className="grid grid-flow-col grid-cols-2 grid-rows-4 sm:grid-rows-2 lg:flex gap-0.5 gap-x-4 lg:flex-row lg:gap-0 items-center">
+              <div className="flex flex-col gap-0.5 items-end lg:flex-row lg:gap-0 lg:items-center">
                 {chartDataset.tokens.map((token, idx) => {
                   const tokenSymbol = token?.symbol ?? "NET";
                   return (
-                    <div
-                      key={`${tokenSymbol}-value`}
-                      className={`flex items-center justify-between ${tokenSymbol === "NET" ? "row-span-4 sm:row-span-2 sm:self-center self-start" : ""}`}
-                    >
+                    <div key={`${tokenSymbol}-value`} className="flex items-center justify-between">
                       {token && (
                         <IconImage
                           src={token.logoURI}
