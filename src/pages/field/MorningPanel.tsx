@@ -4,7 +4,6 @@ import { MorningTimer } from "./MorningCountdown";
 
 const MorningPanel = () => {
   const morning = useMorning();
-  const sunData = useSunData();
 
   if (!morning.isMorning) {
     return null;
@@ -22,12 +21,6 @@ const MorningPanel = () => {
         For the first ten minutes of every Season, the Temperature increases from 1% of the Max Temperature of the
         Season.
       </div>
-      {sunData.abovePeg && (
-        <div className="pinto-xs sm:pinto-body-light text-pinto-light sm:text-pinto-light">
-          When the system is above the value target, the amount of available Soil decreases throughout the morning
-          auction.
-        </div>
-      )}
     </MorningCard>
   );
 };

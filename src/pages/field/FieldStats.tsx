@@ -1,4 +1,5 @@
 import TextSkeleton from "@/components/TextSkeleton";
+import TooltipSimple from "@/components/TooltipSimple";
 import { useInitialSoil, usePodLine, usePodLoading, useTemperature, useTotalSoil } from "@/state/useFieldData";
 import { useMorning, useSunData } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
@@ -61,8 +62,12 @@ const FieldStats = () => {
             </div>
           </TextSkeleton>
           {isMorning && abovePeg && (
-            <div className="pinto-xs sm:pinto-sm-light text-pinto-morning sm:text-pinto-morning inline-block tabular-nums">
+            <div className="pinto-xs sm:pinto-sm-light text-pinto-morning sm:text-pinto-morning inline-flex gap-1 tabular-nums">
               <MorningIntervalCountdown prefix={"Decreasing in"} />
+              <TooltipSimple
+                content="When the system is above the value target, throughout the Morning Auction, the available Soil decreases as the Temperature increases, ensuring that the maximum number of Pods issued during the Season remains fixed."
+                variant="stalk"
+              />
             </div>
           )}
         </div>
