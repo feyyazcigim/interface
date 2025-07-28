@@ -584,7 +584,13 @@ export function encodeClaimRewardCombineCalls(
   });
 
   // Use our existing smart grouping logic
-  const groups = createSmartGroups(deposits, targetGroups);
+  let groups: DepositGroup[] = [];
+  try {
+    groups = createSmartGroups(deposits, targetGroups);
+  } catch (e) {
+    console.error("[encodeClaimRewardCombineCalls]: Error creating smart groups for", token.symbol, ":", e);
+    groups = [];
+  }
 
   console.debug("Created groups for", token.symbol, ":", {
     groupCount: groups.length,
@@ -595,22 +601,45 @@ export function encodeClaimRewardCombineCalls(
   });
 
   // Sort groups by average Stalk/BDV ratio
+  console.log("[encodeClaimRewardCombineCalls]: groupsWithRatio: ", groups);
   const groupsWithRatio = groups.map((group) => {
-    const groupDeposits = group.deposits
-      .map((stem) => deposits.find((d) => d.stem.toHuman() === stem))
-      .filter(Boolean) as DepositData[];
+    try {
+      const groupDeposits = group.deposits
+        .map((stem) => deposits.find((d) => d.stem.toHuman() === stem))
+        .filter(Boolean) as DepositData[];
 
-    const totalStalk = groupDeposits.reduce((sum, deposit) => sum.add(deposit.stalk.total), TokenValue.ZERO);
+      console.log("[encodeClaimRewardCombineCalls]: groupDeposits: ", groupDeposits);
 
-    const totalBdv = groupDeposits.reduce((sum, deposit) => sum.add(deposit.depositBdv), TokenValue.ZERO);
+      const totalStalk = groupDeposits.reduce((sum, deposit) => sum.add(deposit.stalk.total), TokenValue.ZERO);
 
-    // Calculate the stalk-to-BDV ratio for the entire group
-    const stalkPerBdv = totalBdv.gt(0) ? totalStalk.div(totalBdv) : TokenValue.ZERO;
+      const totalBdv = groupDeposits.reduce((sum, deposit) => sum.add(deposit.depositBdv), TokenValue.ZERO);
 
-    return {
-      ...group,
-      stalkPerBdv,
-    };
+      // Calculate the stalk-to-BDV ratio for the entire group
+      const stalkPerBdv = totalBdv.gt(0) ? totalStalk.div(totalBdv) : TokenValue.ZERO;
+
+      return {
+        ...group,
+        stalkPerBdv,
+      };
+    } catch (e) {
+      console.error("2: Error calculating stalk-to-BDV ratio for group", group.id, ":", e);
+      throw new Error("Error calculating stalk-to-BDV ratio for group");
+    }
+    // const groupDeposits = group.deposits
+    //   .map((stem) => deposits.find((d) => d.stem.toHuman() === stem))
+    //   .filter(Boolean) as DepositData[];
+
+    // const totalStalk = groupDeposits.reduce((sum, deposit) => sum.add(deposit.stalk.total), TokenValue.ZERO);
+
+    // const totalBdv = groupDeposits.reduce((sum, deposit) => sum.add(deposit.depositBdv), TokenValue.ZERO);
+
+    // // Calculate the stalk-to-BDV ratio for the entire group
+    // const stalkPerBdv = totalBdv.gt(0) ? totalStalk.div(totalBdv) : TokenValue.ZERO;
+
+    // return {
+    //   ...group,
+    //   stalkPerBdv,
+    // };
   });
 
   // Sort by Stalk/BDV ratio (highest to lowest)
