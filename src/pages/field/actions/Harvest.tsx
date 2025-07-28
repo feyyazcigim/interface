@@ -125,7 +125,7 @@ function Harvest({ isMorning }: HarvestProps) {
           </div>
           <div className="flex flex-col gap-4">
             <div className="pinto-body-light text-pinto-light">
-              Harvest your pods for freshly minted Pinto in the Silo.
+              Harvest your Pods for freshly minted Pinto in the Silo.
             </div>
           </div>
         </>
