@@ -45,6 +45,23 @@ export function useHarvestAndDeposit() {
     return { plots: _plots, harvestableAmount: harvestable };
   }, [fieldPlots]);
 
+  // Calculate stalk and seed gains from deposit
+  const { stalkGain, seedGain } = useMemo(() => {
+    if (harvestableAmount.lte(0)) {
+      return { stalkGain: TokenValue.ZERO, seedGain: TokenValue.ZERO };
+    }
+
+    const sData = siloData.tokenData.get(mainToken);
+    if (!sData) {
+      return { stalkGain: TokenValue.ZERO, seedGain: TokenValue.ZERO };
+    }
+
+    const stalkGain = harvestableAmount.mul(sData.rewards.stalk).mul(sData.tokenBDV);
+    const seedGain = harvestableAmount.mul(sData.rewards.seeds).mul(sData.tokenBDV);
+
+    return { stalkGain, seedGain };
+  }, [harvestableAmount, siloData.tokenData, mainToken]);
+
   const onSuccess = useCallback(() => {
     // Invalidate all related queries to update UI values
     fieldQueryKeys.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));
@@ -115,5 +132,7 @@ export function useHarvestAndDeposit() {
     isSubmitting: isSubmitting || isConfirming,
     harvestableAmount,
     hasHarvestablePods: harvestableAmount.gt(0),
+    stalkGain,
+    seedGain,
   };
 }

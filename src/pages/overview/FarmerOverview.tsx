@@ -48,7 +48,13 @@ const Overview = () => {
 
   const navigate = useNavigate();
   const { submitClaimRewards } = useClaimRewards();
-  const { submitHarvestAndDeposit, isSubmitting: isHarvestSubmitting, hasHarvestablePods } = useHarvestAndDeposit();
+  const {
+    submitHarvestAndDeposit,
+    isSubmitting: isHarvestSubmitting,
+    hasHarvestablePods,
+    stalkGain: harvestStalkGain,
+    seedGain: harvestSeedGain,
+  } = useHarvestAndDeposit();
 
   const isSmallDesktop = useIsSmallDesktop();
 
@@ -164,7 +170,7 @@ const Overview = () => {
         hoveredButton === "claim"
           ? farmerActions.claimRewards.outputs.bdvGain
           : farmerActions.harvestPods.outputs.bdvGain,
-      showActionValues: hoveredButton === "claim" /* || hoveredButton === "harvest" */,
+      showActionValues: hoveredButton === "claim" || hoveredButton === "harvest",
       isLoading: farmerSilo.isLoading,
     },
     stalk: {
@@ -175,7 +181,9 @@ const Overview = () => {
       mainValueChange:
         hoveredButton === "claim"
           ? farmerActions.claimRewards.outputs.stalkGain.add(farmerActions.updateDeposits.totalGains.stalkGain)
-          : farmerActions.harvestPods.outputs.stalkGain,
+          : hoveredButton === "harvest"
+            ? harvestStalkGain
+            : farmerActions.harvestPods.outputs.stalkGain,
       actionValue: hoveredButton === "claim" ? claimSiloPct.sub(siloPct) : harvestSiloPct.sub(siloPct),
       secondaryValue: siloPct,
       tooltipContent: (
@@ -188,7 +196,7 @@ const Overview = () => {
           </Link>
         </span>
       ),
-      showActionValues: hoveredButton === "claim" /* || hoveredButton === "harvest" */,
+      showActionValues: hoveredButton === "claim" || hoveredButton === "harvest",
       isLoading: farmerSilo.isLoading,
     },
     seeds: {
@@ -200,16 +208,20 @@ const Overview = () => {
           ? farmerActions.convertDeposits.bestConversion.outputs.seedGain
           : hoveredButton === "claim"
             ? farmerActions.claimRewards.outputs.seedGain.add(farmerActions.updateDeposits.totalGains.seedGain)
-            : farmerActions.harvestPods.outputs.seedGain,
+            : hoveredButton === "harvest"
+              ? harvestSeedGain
+              : farmerActions.harvestPods.outputs.seedGain,
       actionValue:
         hoveredButton === "convert"
           ? farmerActions.convertDeposits.bestConversion.outputs.seedGain
           : hoveredButton === "claim"
             ? farmerActions.claimRewards.outputs.seedGain.add(farmerActions.updateDeposits.totalGains.seedGain)
-            : farmerActions.harvestPods.outputs.seedGain,
+            : hoveredButton === "harvest"
+              ? harvestSeedGain
+              : farmerActions.harvestPods.outputs.seedGain,
       secondaryValue: stalkPerSeason,
       tooltipContent: "Seeds grow 1/10,000 Stalk each Season.",
-      showActionValues: hoveredButton !== "" && hoveredButton !== "harvest" && hoveredButton !== "wrap",
+      showActionValues: hoveredButton !== "" && hoveredButton !== "wrap",
       isLoading: farmerSilo.isLoading,
     },
     pods: {
