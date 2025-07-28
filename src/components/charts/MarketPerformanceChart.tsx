@@ -13,6 +13,7 @@ import { CloseIconAlt } from "../Icons";
 import FrameAnimator from "../LoadingSpinner";
 import TooltipSimple from "../TooltipSimple";
 import IconImage from "../ui/IconImage";
+import { Separator } from "../ui/Separator";
 import LineChart, { LineChartData } from "./LineChart";
 import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
 
@@ -245,7 +246,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                 type="button"
                 onClick={() => handleChangeDataType(type)}
                 className={cn(
-                  "px-3 pt-0.5 rounded-md text-sm transition-all duration-500",
+                  "sm:px-3 pt-0.5 rounded-md text-sm transition-all duration-500",
                   dataType === type
                     ? "bg-pinto-green-3 text-white shadow-sm"
                     : "text-pinto-gray-2 hover:text-pinto-light hover:bg-gray-1/50",
@@ -287,34 +288,45 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
       )}
       {allData && displayIndex !== null && (
         <>
-          <div className="h-[85px] px-4 sm:px-6">
-            <div className="pinto-body sm:pinto-h3">
-              <div className="flex flex-row items-center gap-3">
-                {chartDataset.tokens.map((token, idx) => {
-                  const tokenSymbol = token?.symbol ?? "NET";
-                  return (
-                    <div key={`${tokenSymbol}-value`} className="flex items-center">
-                      {token && (
-                        <IconImage src={token.logoURI} size={8} alt={token.symbol} className="inline-block mr-2" />
-                      )}
-                      <div style={{ color: token?.color }} className={`mr-2 ${!token?.color && "text-pinto-green-3"}`}>
-                        {tokenSymbol === "NET" && "Total: "}
-                        <p className="inline-block w-[7.1ch] text-right">
-                          {displayValueFormatter(allData[tokenSymbol][displayIndex].value)}
-                        </p>
-                      </div>
-                      {idx < Object.keys(allData).length - 1 && <p className="text-pinto-gray-2 mx-2">|</p>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          <div className="h-[85px] px-4 sm:px-6 flex flex-row justify-between">
             <div className="flex flex-col gap-0 mt-2 sm:gap-2 sm:mt-3">
               <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
                 Season {allData.NET[displayIndex].season}
               </div>
               <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
                 {formatDate(allData.NET[displayIndex].timestamp)}
+              </div>
+            </div>
+            <div className="pinto-sm sm:pinto-body lg:pinto-h3">
+              <div className="grid grid-flow-col grid-cols-2 grid-rows-4 sm:grid-rows-2 lg:flex gap-0.5 gap-x-4 lg:flex-row lg:gap-0 items-center">
+                {chartDataset.tokens.map((token, idx) => {
+                  const tokenSymbol = token?.symbol ?? "NET";
+                  return (
+                    <div
+                      key={`${tokenSymbol}-value`}
+                      className={`flex items-center justify-between ${tokenSymbol === "NET" ? "row-span-4 sm:row-span-2 sm:self-center self-start" : ""}`}
+                    >
+                      {token && (
+                        <IconImage
+                          src={token.logoURI}
+                          size={8}
+                          mobileSize={4}
+                          alt={token.symbol}
+                          className="inline-block"
+                        />
+                      )}
+                      <div style={{ color: token?.color }} className={`${!token?.color && "text-pinto-green-3"}`}>
+                        {tokenSymbol === "NET" && "Total: "}
+                        <p className="inline-block w-[7.1ch] text-right">
+                          {displayValueFormatter(allData[tokenSymbol][displayIndex].value)}
+                        </p>
+                      </div>
+                      {idx < Object.keys(allData).length - 1 && (
+                        <Separator className="hidden lg:flex h-[2rem] w-[2px] mx-4" orientation={"vertical"} />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
