@@ -1,20 +1,20 @@
 import { TokenValue } from "@/classes/TokenValue";
-import DestinationBalanceSelect from "@/components/DestinationBalanceSelect";
 import MobileActionBar from "@/components/MobileActionBar";
 import SmartSubmitButton from "@/components/SmartSubmitButton";
 import IconImage from "@/components/ui/IconImage";
 import { PODS } from "@/constants/internalTokens";
+import deposit from "@/encoders/deposit";
+import harvest from "@/encoders/harvest";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useTransaction from "@/hooks/useTransaction";
-import { useDestinationBalance } from "@/state/useDestinationBalance";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerField } from "@/state/useFarmerField";
 import { useHarvestableIndex, useInvalidateField } from "@/state/useFieldData";
 import { usePriceData } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { FarmToMode } from "@/utils/types";
+import { AdvancedFarmCall, FarmFromMode, FarmToMode } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -34,7 +34,6 @@ function Harvest({ isMorning }: HarvestProps) {
   const priceData = usePriceData();
   const queryClient = useQueryClient();
   const invalidateField = useInvalidateField();
-  const { balanceTo, setBalanceTo } = useDestinationBalance();
   const { plots: fieldPlots, queryKeys } = useFarmerField();
   const balances = useFarmerBalances();
 
@@ -64,18 +63,31 @@ function Harvest({ isMorning }: HarvestProps) {
       if (!account.address) throw new Error("Signer required");
       if (!plots.length) throw new Error("No plots to harvest");
       if (harvestableAmount.lte(0)) throw new Error("No harvestable pods");
-      if (!balanceTo) throw new Error("Destination required");
-      toast.loading("Harvesting...");
+      toast.loading("Harvesting and depositing...");
+
+      const advFarm: AdvancedFarmCall[] = [];
+
+      // Step 1: Harvest to INTERNAL balance
+      const harvestStruct = harvest(
+        0n, // fieldId
+        plots,
+        FarmToMode.INTERNAL, // Always to internal balance
+      );
+      advFarm.push(harvestStruct);
+
+      // Step 2: Deposit from INTERNAL balance to Silo
+      const depositStruct = deposit(
+        mainToken,
+        harvestableAmount,
+        FarmFromMode.INTERNAL, // From internal balance
+      );
+      advFarm.push(depositStruct);
 
       return writeWithEstimateGas({
         address: diamond,
         abi: beanstalkAbi,
-        functionName: "harvest",
-        args: [
-          0n, // field id
-          plots.map((plot) => BigInt(plot)), //array of plot id(s)
-          Number(balanceTo), // FarmToMode
-        ],
+        functionName: "advancedFarm",
+        args: [advFarm],
       });
     } catch (e) {
       setSubmitting(false);
@@ -86,7 +98,7 @@ function Harvest({ isMorning }: HarvestProps) {
     } finally {
       setSubmitting(false);
     }
-  }, [account.address, plots, harvestableAmount, balanceTo, writeWithEstimateGas, diamond, setSubmitting]);
+  }, [account.address, plots, harvestableAmount, writeWithEstimateGas, diamond, setSubmitting, mainToken]);
 
   const nextHarvestablePlot = fieldPlots?.[0];
 
@@ -98,7 +110,7 @@ function Harvest({ isMorning }: HarvestProps) {
         <>
           <div className="flex flex-col">
             <div className="flex flex-col gap-1">
-              <div className="pinto-body-light text-pinto-light">You receive</div>
+              <div className="pinto-body-light text-pinto-light">You will receive in Silo</div>
               <div className="flex flex-row gap-2 items-center">
                 <div className="pinto-h3 inline-flex gap-1 items-center">
                   {formatter.token(harvestableAmount, mainToken)}
@@ -112,8 +124,9 @@ function Harvest({ isMorning }: HarvestProps) {
             </div>
           </div>
           <div className="flex flex-col gap-4">
-            <div className="pinto-body-light text-pinto-light">I want to receive Pinto to my:</div>
-            <DestinationBalanceSelect setBalanceTo={setBalanceTo} balanceTo={balanceTo} />
+            <div className="pinto-body-light text-pinto-light">
+              Your Pods will be harvested and automatically deposited into the Silo for yield generation.
+            </div>
           </div>
         </>
       ) : (
@@ -130,7 +143,7 @@ function Harvest({ isMorning }: HarvestProps) {
         token={undefined}
         disabled={harvestableAmount.eq(0) || isConfirming || submitting}
         submitFunction={onSubmit}
-        submitButtonText="Harvest"
+        submitButtonText="Harvest & Deposit"
         className="hidden sm:flex"
       />
       <MobileActionBar>
@@ -140,7 +153,7 @@ function Harvest({ isMorning }: HarvestProps) {
           token={undefined}
           disabled={harvestableAmount.eq(0) || isConfirming || submitting}
           submitFunction={onSubmit}
-          submitButtonText="Harvest"
+          submitButtonText="Harvest & Deposit"
           className="h-full"
         />
       </MobileActionBar>
