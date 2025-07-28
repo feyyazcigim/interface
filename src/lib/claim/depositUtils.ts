@@ -602,17 +602,20 @@ export function encodeClaimRewardCombineCalls(
 
   // Sort groups by average Stalk/BDV ratio
   console.log("[encodeClaimRewardCombineCalls]: groupsWithRatio: ", groups);
-  const groupsWithRatio = groups.map((group) => {
+  const groupsWithRatio = groups.map((group, i) => {
     try {
       const groupDeposits = group.deposits
         .map((stem) => deposits.find((d) => d.stem.toHuman() === stem))
         .filter(Boolean) as DepositData[];
 
-      console.log("[encodeClaimRewardCombineCalls]: groupDeposits: ", groupDeposits);
-
       const totalStalk = groupDeposits.reduce((sum, deposit) => sum.add(deposit.stalk.total), TokenValue.ZERO);
 
       const totalBdv = groupDeposits.reduce((sum, deposit) => sum.add(deposit.depositBdv), TokenValue.ZERO);
+      console.log("[encodeClaimRewardCombineCalls]: groupDeposits: ", {
+        groupDeposits,
+        totalStalk,
+        totalBdv,
+      });
 
       // Calculate the stalk-to-BDV ratio for the entire group
       const stalkPerBdv = totalBdv.gt(0) ? totalStalk.div(totalBdv) : TokenValue.ZERO;
@@ -622,7 +625,7 @@ export function encodeClaimRewardCombineCalls(
         stalkPerBdv,
       };
     } catch (e) {
-      console.error("2: Error calculating stalk-to-BDV ratio for group", group.id, ":", e);
+      console.error(`2: Error calculating stalk-to-BDV ratio for group: ${i}`, group, e);
       throw new Error("Error calculating stalk-to-BDV ratio for group");
     }
     // const groupDeposits = group.deposits
