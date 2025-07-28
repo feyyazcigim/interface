@@ -289,6 +289,9 @@ export function useFarmerSilo(address?: `0x${string}`) {
 
   // Process all farmer silo data
   const depositsData = useMemo(() => {
+    // 0.000001 is the minimum BDV for a deposit to be considered valid so we don't run into divide by 0 errors
+    const minValidBdv = TokenValue.fromHuman(0.000001, BEAN.decimals);
+
     const output = new Map<Token, TokenDepositData>();
     let _depositsBDV = TokenValue.ZERO;
     let _depositsUSD = TokenValue.ZERO;
@@ -370,10 +373,13 @@ export function useFarmerSilo(address?: `0x${string}`) {
           germinationDate,
         };
 
-        depositData.push(thisDeposit);
-        if (!isGerminating) {
-          convertibleAmount = convertibleAmount.add(depositAmount);
-          convertibleDeposits.push(thisDeposit);
+        if (thisDeposit.depositBdv.gte(minValidBdv)) {
+          depositData.push(thisDeposit);
+
+          if (!isGerminating) {
+            convertibleAmount = convertibleAmount.add(depositAmount);
+            convertibleDeposits.push(thisDeposit);
+          }
         }
       });
 
