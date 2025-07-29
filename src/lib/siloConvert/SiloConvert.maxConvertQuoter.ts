@@ -73,11 +73,17 @@ const CONVERT_DOWN_PENALTY_RATE = TV.fromHuman(1.0005, 6);
  * - Staleness detection for cache invalidation
  *
  */
+
+export interface MaxConvertResult {
+  max: TV;
+  maxAtRate: TV | undefined;
+}
+
 export class SiloConvertMaxConvertQuoter {
   private readonly context: SiloConvertContext;
   private readonly cache: SiloConvertPriceCache;
   private readonly scalarCache: ITTLCache<number>;
-  private readonly maxConvertCache: ITTLCache<TV>;
+  private readonly maxConvertCache: ITTLCache<MaxConvertResult>;
 
   static NO_MAX_CONVERT_AMOUNT = 1_000_000_000;
 
@@ -87,12 +93,12 @@ export class SiloConvertMaxConvertQuoter {
     context: SiloConvertContext,
     cache: SiloConvertPriceCache,
     scalarCache?: ITTLCache<number>,
-    maxConvertCache?: ITTLCache<TV>,
+    maxConvertCache?: ITTLCache<MaxConvertResult>,
   ) {
     this.context = context;
     this.cache = cache;
     this.scalarCache = scalarCache || new InMemoryTTLCache<number>();
-    this.maxConvertCache = maxConvertCache || new InMemoryTTLCache<TV>();
+    this.maxConvertCache = maxConvertCache || new InMemoryTTLCache<MaxConvertResult>();
   }
 
   // ===================================================================
@@ -131,16 +137,20 @@ export class SiloConvertMaxConvertQuoter {
    * If farmerDeposits are provided, it will return a tested scaled max convert.
    * Results are cached for 15 seconds to avoid duplicate expensive calculations.
    */
-  async quoteMaxConvert(source: Token, target: Token, farmerDeposits: DepositData[] | undefined): Promise<TV> {
+  async quoteMaxConvert(
+    source: Token,
+    target: Token,
+    farmerDeposits: DepositData[] | undefined,
+  ): Promise<MaxConvertResult> {
     const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
 
     return errorHandler.wrapAsync(async () => {
       // Basic validation
       errorHandler.assert(!!source && !!target, "Missing source or target token");
-      errorHandler.assert(source.address !== target.address, "Cannot convert token to itself");
+      errorHandler.assert(!tokensEqual(source, target), "Cannot convert token to itself");
 
       // Generate cache keys
-      const cacheKey = errorHandler.wrapCache(
+      const tokensCacheKey = errorHandler.wrapCache(
         () => this.maxConvertCache.generateKey([source.address, target.address]),
         "generate base cache key",
         `${source.address}-${target.address}`, // fallback
@@ -149,65 +159,60 @@ export class SiloConvertMaxConvertQuoter {
       const depositsHash = hashDeposits(farmerDeposits);
       const withDepositsKey =
         farmerDeposits?.length && depositsHash
-          ? errorHandler.wrapCache(
-              () => this.maxConvertCache.generateKey([source.address, target.address], depositsHash),
-              "generate deposits cache key",
-              undefined, // fallback
-            )
+          ? this.maxConvertCache.generateKey(tokensCacheKey, depositsHash)
           : undefined;
 
       // Check cache first
-      const cached = errorHandler.wrapCache(
-        () => (withDepositsKey ? this.maxConvertCache.get(withDepositsKey) : this.maxConvertCache.get(cacheKey)),
-        "read from cache",
-        undefined, // fallback - cache miss
-      );
+      const cached = this.maxConvertCache.get(withDepositsKey ?? tokensCacheKey);
 
+      // If cached, return the result first
       if (cached) {
         console.debug("[MaxConvertQuoter/quoteMaxConvert]: using cached result", {
           source: source.symbol,
           target: target.symbol,
-          cached: cached.toHuman(),
+          cached: cached.max.toHuman(),
+          cachedAtRate: cached.maxAtRate?.toHuman(),
           cacheMetrics: this.maxConvertCache.getMetrics(),
         });
         return cached;
       }
 
-      // Cache miss - perform expensive calculation
-      let result: TV;
+      // Cache miss
+      const results: MaxConvertResult = {
+        max: TV.ZERO,
+        maxAtRate: undefined,
+      };
 
       if (source.isMain || target.isMain) {
-        result = await this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits);
+        const [res, resAtRate] = await Promise.all([
+          this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits),
+          this.getMaxAmountInAtRate(source, target),
+        ]);
+        results.max = res;
+        results.maxAtRate = resAtRate;
       } else if (source.isLP && target.isLP) {
-        result = await this.getMaxConvertLPToLP({ source, target });
+        results.max = await this.getMaxConvertLPToLP({ source, target });
       } else {
         errorHandler.validateConversionTokens("default"); // This will throw appropriate error
         throw new Error("Unreachable: validation should have thrown");
       }
 
-      // Validate result
-      errorHandler.validateAmount(result, "max convert result");
-
       // Cache the result
-      errorHandler.wrapCache(
-        () => {
-          if (withDepositsKey) {
-            this.maxConvertCache.set(withDepositsKey, result);
-          }
-          this.maxConvertCache.set(cacheKey, result);
-        },
-        "write to cache",
-        undefined, // non-fatal if cache write fails
-      );
+      if (withDepositsKey) {
+        this.maxConvertCache.set(withDepositsKey, results);
+      }
+      // Store the result in the tokens cache Key as well
+      this.maxConvertCache.set(tokensCacheKey, results);
 
       console.debug("[MaxConvertQuoter/quoteMaxConvert]: calculated and cached result", {
         source: source.symbol,
         target: target.symbol,
-        result: result.toHuman(),
+        max: results.max.toHuman(),
+        maxAtRate: results.maxAtRate?.toHuman(),
         cacheMetrics: this.maxConvertCache.getMetrics(),
       });
 
-      return result;
+      return results;
     }, "quote max convert");
   }
 
@@ -219,14 +224,20 @@ export class SiloConvertMaxConvertQuoter {
    *
    * @note Only supported for BEAN -> LP Token (as it is the only case where applicable).
    */
-  async getMaxAmountInAtRate(source: Token, target: Token, rate: TV = CONVERT_DOWN_PENALTY_RATE) {
+  async getMaxAmountInAtRate(
+    source: Token,
+    target: Token,
+    rate: TV = CONVERT_DOWN_PENALTY_RATE,
+  ): Promise<TV | undefined> {
     const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
 
     return errorHandler.wrapAsync(async () => {
       // Validate Inputs
+
       // Contract will throw if source !== BEAN || target !== LP
-      errorHandler.assert(Boolean(source.isMain), "Source token must be the main token", { source });
-      errorHandler.assert(Boolean(target.isLP), "Target token must be a LP token", { target });
+      if (!source.isMain || !target.isLP) {
+        return undefined;
+      }
 
       // Get max amount in at rate
       const maxAmountInAtRate = await readContract(

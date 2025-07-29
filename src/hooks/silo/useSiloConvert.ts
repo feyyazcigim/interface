@@ -3,6 +3,7 @@ import { defaultQuerySettingsQuote } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import { SiloConvert } from "@/lib/siloConvert/SiloConvert";
+import { MaxConvertResult } from "@/lib/siloConvert/SiloConvert.maxConvertQuoter";
 import { queryKeys } from "@/state/queryKeys";
 import { stringEq } from "@/utils/string";
 import { DepositData, Token, TokenDepositData } from "@/utils/types";
@@ -91,6 +92,9 @@ const SILO_CONVERT_QUERY_SETTINGS = {
  * @param enabled - Whether the query should be enabled
  * @returns Query result with TokenValue instance
  */
+
+const emptyMaxConvertResult: MaxConvertResult = { max: TV.ZERO, maxAtRate: undefined } as const;
+
 export function useSiloMaxConvertQuery(
   siloConvert: SiloConvert,
   farmerDeposits: TokenDepositData | undefined,
@@ -110,10 +114,10 @@ export function useSiloMaxConvertQuery(
   const query = useQuery({
     queryKey,
     queryFn: async () => {
-      if (!source || !target || !farmerDeposits) return TV.ZERO;
+      if (!source || !target || !farmerDeposits) return emptyMaxConvertResult;
       return siloConvert.getMaxConvert(source, target, farmerDeposits.convertibleDeposits).catch((e) => {
         console.error("Error fetching max convert: ", e);
-        return TV.ZERO;
+        return emptyMaxConvertResult;
       });
     },
     enabled: !!account.address && !!source?.address && !!target?.address && enabled && !!farmerMax,
