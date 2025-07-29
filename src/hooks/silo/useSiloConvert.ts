@@ -59,7 +59,7 @@ export function useClearSiloConvertQueries() {
   const qc = useQueryClient();
 
   const clear = useCallback(() => {
-    qc.invalidateQueries({ queryKey: queryKeys.base.silo.convert, exact: false, type: "all" });
+    qc.removeQueries({ queryKey: queryKeys.base.silo.convert, exact: false, type: "all" });
   }, [qc]);
 
   return clear;
