@@ -1,6 +1,7 @@
 import { Clipboard } from "@/classes/Clipboard";
 import { ITTLCache, InMemoryTTLCache } from "@/classes/TTLCache";
 import { TV } from "@/classes/TokenValue";
+import { diamondABI } from "@/constants/abi/diamondABI";
 import { abiSnippets } from "@/constants/abiSnippets";
 import { MAIN_TOKEN, PINTO_WSOL_TOKEN } from "@/constants/tokens";
 import encoders from "@/encoders";
@@ -13,7 +14,7 @@ import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow"
 import { SiloConvertPriceCache } from "@/lib/siloConvert/SiloConvert.cache";
 import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExchangeWell, ExtendedRawWellData } from "@/lib/well/ExchangeWell";
-import { resolveChainId } from "@/utils/chain";
+import { getChainConstant, resolveChainId } from "@/utils/chain";
 import { pickCratesMultiple } from "@/utils/convert";
 import { tokensEqual } from "@/utils/token";
 import { DepositData, Token } from "@/utils/types";
@@ -37,6 +38,11 @@ interface ConvertTokens {
  * This is a temporary fix to ensure we don't run into issues with small amounts.
  */
 const MIN_THRESHOLD = 150;
+
+/**
+ * The rate at which grown stalk penalty is applied.
+ */
+const GROW_STALK_PENALTY_RATE_STR = "1.0005";
 
 /**
  * SiloConvertMaxConvertQuoter
@@ -200,6 +206,26 @@ export class SiloConvertMaxConvertQuoter {
 
       return result;
     }, "quote max convert");
+  }
+
+  async quoteMaxConvertAtRate(source: Token, target: Token) {
+    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
+
+    const bean = getChainConstant(this.context.chainId, MAIN_TOKEN);
+
+    return errorHandler.wrapAsync(async () => {
+      const maxAmountInAtRate = await readContract(
+        this.context.wagmiConfig.getClient({ chainId: this.context.chainId }),
+        {
+          abi: diamondABI,
+          functionName: "getMaxAmountInAtRate",
+          address: this.context.diamond,
+          args: [source.address, target.address, TV.fromHuman(GROW_STALK_PENALTY_RATE_STR, bean.decimals).toBigInt()],
+        },
+      );
+
+      return TV.fromBigInt(maxAmountInAtRate, source.decimals);
+    }, "Quote max convert at rate");
   }
 
   // ===================================================================
