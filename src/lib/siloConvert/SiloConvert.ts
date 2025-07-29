@@ -30,6 +30,12 @@ import { decodeConvertResults } from "./utils";
  * 2. quote the convert between 2 tokens
  * 3. provide an executable advancedFarm workflow
  *
+ * Implementation is split up into:
+ * 1. maxConvertQuoter
+ * 2. strategizer
+ *
+ *
+ *
  * To fetch the maximum convert, we utilize the SiloConvertMaxConvertQuoter class.
  * (more on this in ./SiloConvert.maxConvertQuoter.ts)
  *

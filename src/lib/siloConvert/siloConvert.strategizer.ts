@@ -83,6 +83,13 @@ export class Strategizer {
     return this.strategizeLP2LP(source, target, amountIn);
   }
 
+  /**
+   * LP<>Main conversion
+   * @param source
+   * @param target
+   * @param amountIn
+   * @returns
+   */
   async strategizeLPAndMain(source: Token, target: Token, amountIn: TV): Promise<SiloConvertRoute<SiloConvertType>[]> {
     try {
       await this.cache.update();
@@ -94,6 +101,7 @@ export class Strategizer {
       );
     }
 
+    // Throw if both source and target are LP.
     if (source.isLP && target.isLP) {
       throw new InvalidConversionTokensError(
         source,
@@ -103,6 +111,7 @@ export class Strategizer {
       );
     }
 
+    // Throw if both source and target are main.
     if (source.isMain && target.isMain) {
       throw new InvalidConversionTokensError(
         source,
@@ -112,8 +121,7 @@ export class Strategizer {
       );
     }
 
-    // Only options for source and target are LP || main.
-
+    // Only options for source and target are LP<>Main.
     const defaultRoute: SiloConvertRoute<SiloConvertType> = {
       source,
       target,
@@ -326,6 +334,32 @@ export class Strategizer {
         target,
         `Failed to construct LP2LP route: ${error instanceof Error ? error.message : "Unknown error"}`,
         { strategiesCount: strategies.length },
+      );
+    }
+  }
+
+  /**
+   * Main -> LP Down Convert
+   * @param source
+   * @param target
+   * @param amountIn
+   */
+  async strategizeMain2LP(source: Token, target: Token, amountIn: TV) {
+    if (!source.isMain) {
+      throw new InvalidConversionTokensError(
+        source,
+        target,
+        "default",
+        `Expected source token to be a main token for Main -> LP down convert but got ${source.symbol}`,
+      );
+    }
+
+    if (!target.isLP) {
+      throw new InvalidConversionTokensError(
+        source,
+        target,
+        "default",
+        `Expected target token to be a LP token for Main -> LP down convert but got ${target.symbol}`,
       );
     }
   }
