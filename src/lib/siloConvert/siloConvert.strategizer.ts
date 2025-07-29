@@ -12,6 +12,7 @@ import {
   SiloConvertLP2LPSingleSidedPairTokenStrategy as LP2LPSingleSidedPair,
   SiloConvertLP2MainPipelineConvertStrategy as LP2MainPipeline,
 } from "./strategies/implementations";
+import { ErrorHandlerFactory } from "./strategies/validation/ErrorHandlerFactory";
 import {
   CacheError,
   InvalidConversionTokensError,
@@ -64,23 +65,23 @@ export class Strategizer {
   static MIN_DELTA_B = 100;
 
   async strategize(source: Token, target: Token, amountIn: TV): Promise<SiloConvertRoute<SiloConvertType>[]> {
-    try {
-      await this.cache.update();
-    } catch (error) {
-      throw new CacheError("strategize cache update", error instanceof Error ? error.message : "Unknown cache error", {
+    const eh = ErrorHandlerFactory.createStrategizerHandler(source, target);
+
+    return eh.wrapAsync(async () => {
+      await eh.wrapAsync(async () => this.cache.update(), "strategize_cache_update", {
         source: source.symbol,
         target: target.symbol,
         amountIn: amountIn.toHuman(),
       });
-    }
 
-    const isLP2LP = source.isLP && target.isLP;
+      const isLP2LP = source.isLP && target.isLP;
 
-    if (!isLP2LP) {
-      return this.strategizeLPAndMain(source, target, amountIn);
-    }
+      if (!isLP2LP) {
+        return this.strategizeLPAndMain(source, target, amountIn);
+      }
 
-    return this.strategizeLP2LP(source, target, amountIn);
+      return this.strategizeLP2LP(source, target, amountIn);
+    }, "strategize");
   }
 
   /**
@@ -91,57 +92,41 @@ export class Strategizer {
    * @returns
    */
   async strategizeLPAndMain(source: Token, target: Token, amountIn: TV): Promise<SiloConvertRoute<SiloConvertType>[]> {
-    try {
-      await this.cache.update();
-    } catch (error) {
-      throw new CacheError(
-        "strategizeLPAndMain cache update",
-        error instanceof Error ? error.message : "Unknown cache error",
-        { source: source.symbol, target: target.symbol, amountIn: amountIn.toHuman() },
-      );
-    }
+    const eh = ErrorHandlerFactory.createStrategizerHandler(source, target);
 
-    // Throw if both source and target are LP.
-    if (source.isLP && target.isLP) {
-      throw new InvalidConversionTokensError(
+    return eh.wrapAsync(async () => {
+      await eh.wrapAsync(async () => this.cache.update(), "strategizeLPAndMain_cache_update", {
+        source: source.symbol,
+        target: target.symbol,
+        amountIn: amountIn.toHuman(),
+      });
+
+      eh.validateConversionTokens("default", source, target);
+
+      if (source.isMain && target.isLP) {
+        return this.strategizeLPAndMainDownConvert(source, target, amountIn);
+      }
+
+      // Only options for source and target are LP<>Main.
+      const defaultRoute: SiloConvertRoute<SiloConvertType> = {
         source,
         target,
-        "default",
-        "Expected only 1 LP token for LP/Main conversion, but got 2 LP tokens",
-      );
-    }
+        strategies: [
+          {
+            strategy: new DefaultConvertStrategy(source, target, this.context),
+            amount: amountIn,
+          },
+        ],
+        convertType: "LPAndMain",
+      };
 
-    // Throw if both source and target are main.
-    if (source.isMain && target.isMain) {
-      throw new InvalidConversionTokensError(
-        source,
-        target,
-        "default",
-        "Expected only 1 main token for LP/Main conversion, but got 2 main tokens",
-      );
-    }
+      // always include the default convert route
+      const routes: SiloConvertRoute<SiloConvertType>[] = [defaultRoute];
 
-    // Only options for source and target are LP<>Main.
-    const defaultRoute: SiloConvertRoute<SiloConvertType> = {
-      source,
-      target,
-      strategies: [
-        {
-          strategy: new DefaultConvertStrategy(source, target, this.context),
-          amount: amountIn,
-        },
-      ],
-      convertType: "LPAndMain",
-    };
+      const sourceWell = source.isLP ? this.cache.getWell(source.address) : undefined;
 
-    // always include the default convert route
-    const routes: SiloConvertRoute<SiloConvertType>[] = [defaultRoute];
-
-    const sourceWell = source.isLP ? this.cache.getWell(source.address) : undefined;
-
-    // if SourceWell exists, target must be main due to validation above.
-    if (sourceWell && !this.maxConvertQuoter.isAggDisabledToken(source)) {
-      try {
+      // if SourceWell exists, target must be main due to validation above.
+      if (sourceWell && !this.maxConvertQuoter.isAggDisabledToken(source)) {
         routes.push({
           source,
           target,
@@ -153,17 +138,10 @@ export class Strategizer {
           ],
           convertType: "LP2MainPipeline",
         });
-      } catch (error) {
-        throw new StrategySelectionError(
-          source,
-          target,
-          `Failed to create LP2MainPipeline strategy: ${error instanceof Error ? error.message : "Unknown error"}`,
-          { sourceWell: sourceWell.pool.address },
-        );
       }
-    }
 
-    return routes;
+      return routes;
+    }, "strategizeLPAndMain");
   }
 
   async strategizeLP2LP(source: Token, target: Token, amountIn: TV) {
@@ -343,25 +321,83 @@ export class Strategizer {
    * @param source
    * @param target
    * @param amountIn
+   *
+   * Returns 2 different routes based on
+   * 1. the WP (Well Price)
+   * 2. MCAR (Max Convert Amount at Rate)
+   * 3. amountIn
+   * 4. GSPR (Grown Stalk Penalty Rate) (At time of writing, 1.005)
+   *
+   * If WP > GSPR & amountIn < MCAR
+   * -> return 1 strategy. (should NOT incur Grown Stalk Penalty b/c we are not converting below the GSPR)
+   *
+   * If WP < GSPR & amountIn < MCAR
+   * -> 1 strategy. (SHOULD incur Grown Stalk Penalty since we are converting below the GSPR)
+   *
+   * If WP > GSPR & MCAR < amountIn
+   * -> 2 strategies.
+   * 1. Convert down to the GSPR with a buffer. (SHOULD NOT incur Grown Stalk Penalty)
+   * 2. Convert down towards the Value Target (SHOULD incur Grown Stalk Penalty)
+   *
    */
-  async strategizeMain2LP(source: Token, target: Token, amountIn: TV) {
-    if (!source.isMain) {
-      throw new InvalidConversionTokensError(
-        source,
-        target,
-        "default",
-        `Expected source token to be a main token for Main -> LP down convert but got ${source.symbol}`,
-      );
-    }
+  private async strategizeLPAndMainDownConvert(
+    source: Token,
+    target: Token,
+    amountIn: TV,
+  ): Promise<SiloConvertRoute<SiloConvertType>[]> {
+    const eh = ErrorHandlerFactory.createStrategizerHandler(source, target);
 
-    if (!target.isLP) {
-      throw new InvalidConversionTokensError(
-        source,
-        target,
-        "default",
-        `Expected target token to be a LP token for Main -> LP down convert but got ${target.symbol}`,
-      );
-    }
+    return eh.wrapAsync(async () => {
+      // no need to update cache for this operation
+      eh.validateConversionTokens("default-down", source, target);
+
+      const maxConvert = await this.maxConvertQuoter.quoteMaxConvert(source, target);
+
+      eh.assert(amountIn.lte(maxConvert.max), "Amount in must be <= max convert amount", {
+        amountIn: amountIn.toHuman(),
+        max: maxConvert.max.toHuman(),
+        maxAtRate: maxConvert.maxAtRate?.toHuman(),
+      });
+
+      const targetWell = await this.cache.getWell(target.address);
+      const targetWellPrice = targetWell.price;
+
+      const args: { amount: TV; grownStalkPenaltyExpected?: boolean }[] = [];
+
+      // 1. Check if the target well price is less than the penalty rate.
+      if (targetWellPrice.lt(this.maxConvertQuoter.CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER)) {
+        // 1 strategy. Should incur Grown Stalk Penalty.
+        args.push({ amount: amountIn, grownStalkPenaltyExpected: true });
+      } else {
+        // At this point we know that the well price > GSPR.
+        const maxAtRate = eh.assertDefined(
+          maxConvert.maxAtRate,
+          "Expected maxConvertAtRate to be defined for default down convert",
+        );
+        const exceedsMaxAtRate = amountIn.gt(maxAtRate);
+
+        if (!exceedsMaxAtRate) {
+          // 1 strategy. Should NOT incur Grown Stalk Penalty.
+          args.push({ amount: amountIn });
+        } else {
+          // 2 strategies in the order of execution.
+          args.push({ amount: maxAtRate });
+          args.push({ amount: amountIn.sub(maxAtRate), grownStalkPenaltyExpected: true });
+        }
+      }
+
+      return [
+        {
+          source,
+          target,
+          convertType: "LPAndMain",
+          strategies: args.map(({ amount, grownStalkPenaltyExpected }) => ({
+            strategy: new DefaultConvertStrategy(source, target, this.context, { grownStalkPenaltyExpected }),
+            amount,
+          })),
+        },
+      ];
+    }, "splitUpMain2LP");
   }
 }
 

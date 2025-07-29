@@ -21,7 +21,7 @@ import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { readContract } from "viem/actions";
 import { DefaultConvertStrategy } from "./strategies/implementations/DefaultConvertStrategy";
-import { MaxConvertQuoterErrorHandler } from "./strategies/validation/MaxConvertQuoterErrorHandler";
+import { ErrorHandlerFactory } from "./strategies/validation/ErrorHandlerFactory";
 import { MaxConvertQuotationError } from "./strategies/validation/SiloConvertErrors";
 
 interface ConvertTokens {
@@ -38,14 +38,6 @@ interface ConvertTokens {
  * This is a temporary fix to ensure we don't run into issues with small amounts.
  */
 const MIN_THRESHOLD = 150;
-
-/**
- * The rate at which grown stalk penalty is applied. Refer to:
- * https://github.com/pinto-org/protocol/blob/master/contracts/beanstalk/init/InitalizeDiamond.sol
- *
- * Rate has 6 decimals of precision.
- */
-const CONVERT_DOWN_PENALTY_RATE = TV.fromHuman(1.0005, 6);
 
 /**
  * SiloConvertMaxConvertQuoter
@@ -86,6 +78,16 @@ export class SiloConvertMaxConvertQuoter {
   private readonly maxConvertCache: ITTLCache<MaxConvertResult>;
 
   static NO_MAX_CONVERT_AMOUNT = 1_000_000_000;
+
+  /**
+   * The rate at which grown stalk penalty is applied. Refer to:
+   * https://github.com/pinto-org/protocol/blob/master/contracts/beanstalk/init/InitalizeDiamond.sol
+   *
+   * Rate has 6 decimals of precision.
+   *
+   * Rate is at time of writing 1.005, but we use a 0.0001 buffer
+   */
+  readonly CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.00051, 6);
 
   // ---------- Constructor ----------
 
@@ -140,9 +142,9 @@ export class SiloConvertMaxConvertQuoter {
   async quoteMaxConvert(
     source: Token,
     target: Token,
-    farmerDeposits: DepositData[] | undefined,
+    farmerDeposits: DepositData[] | undefined = undefined,
   ): Promise<MaxConvertResult> {
-    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
+    const errorHandler = ErrorHandlerFactory.createMaxConvertQuoterHandler(source, target);
 
     return errorHandler.wrapAsync(async () => {
       // Basic validation
@@ -193,7 +195,7 @@ export class SiloConvertMaxConvertQuoter {
       } else if (source.isLP && target.isLP) {
         results.max = await this.getMaxConvertLPToLP({ source, target });
       } else {
-        errorHandler.validateConversionTokens("default"); // This will throw appropriate error
+        errorHandler.validateConversionTokens("default", source, target); // This will throw appropriate error
         throw new Error("Unreachable: validation should have thrown");
       }
 
@@ -227,9 +229,9 @@ export class SiloConvertMaxConvertQuoter {
   async getMaxAmountInAtRate(
     source: Token,
     target: Token,
-    rate: TV = CONVERT_DOWN_PENALTY_RATE,
+    rate: TV = this.CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER,
   ): Promise<TV | undefined> {
-    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
+    const errorHandler = ErrorHandlerFactory.createMaxConvertQuoterHandler(source, target);
 
     return errorHandler.wrapAsync(async () => {
       // Validate Inputs
@@ -265,11 +267,11 @@ export class SiloConvertMaxConvertQuoter {
    */
   private async getDefaultConvertMaxConvert(convertTokens: ConvertTokens, farmerDeposits?: DepositData[]): Promise<TV> {
     const { source, target } = convertTokens;
-    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
+    const errorHandler = ErrorHandlerFactory.createMaxConvertQuoterHandler(source, target);
 
     return errorHandler.wrapAsync(async () => {
       // Validate conversion tokens
-      errorHandler.validateConversionTokens("default");
+      errorHandler.validateConversionTokens("default", source, target);
 
       const lpToken = source.isMain ? target : source;
       errorHandler.assertDefined(lpToken, "LP token must be defined for default convert");
@@ -351,11 +353,11 @@ export class SiloConvertMaxConvertQuoter {
     farmerDeposits: DepositData[],
   ): Promise<TV> {
     const { source, target } = tokens;
-    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
+    const errorHandler = ErrorHandlerFactory.createMaxConvertQuoterHandler(source, target);
 
     return errorHandler.wrapAsync(async () => {
       // Validate inputs
-      errorHandler.validateConversionTokens("default");
+      errorHandler.validateConversionTokens("default", source, target);
       errorHandler.validateAmount(maxConvert, "max convert amount");
       errorHandler.assert(!!farmerDeposits, "Farmer deposits are required");
 
