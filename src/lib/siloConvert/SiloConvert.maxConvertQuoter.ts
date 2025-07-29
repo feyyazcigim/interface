@@ -86,14 +86,14 @@ export class SiloConvertMaxConvertQuoter {
    * Rate has 6 decimals of precision.
    *
    */
-  readonly CONVERT_DOWN_PENALTY_RATE = TV.fromHuman(1.0005, 6);
+  readonly CONVERT_DOWN_PENALTY_RATE = TV.fromHuman(1.005, 6);
 
   /**
    * Rate with a 0.0001 buffer.
    *
    * This is to minimize the risk of running into issues with price volatility.
    */
-  readonly CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.00051, 6);
+  readonly CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.0051, 6);
 
   // ---------- Constructor ----------
 
