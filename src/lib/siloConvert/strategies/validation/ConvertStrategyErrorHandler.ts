@@ -100,31 +100,4 @@ export class ConvertStrategyErrorHandler extends BaseErrorHandler<string, AnyRec
       });
     }
   }
-
-  /**
-   * Strategy-specific assertion that creates ConversionQuotationError
-   * Overrides base implementation for domain-specific error type
-   */
-  assert(condition: boolean, message: string, context?: AnyRecord) {
-    if (!condition) {
-      throw new ConversionQuotationError(message, {
-        assertion: "failed",
-        ...this.buildContext(context),
-      });
-    }
-  }
-
-  /**
-   * Strategy-specific type-safe assertion
-   * Overrides base implementation for domain-specific error type
-   */
-  assertDefined<T>(value: T | undefined | null, message: string, context?: AnyRecord): T {
-    if (value === undefined || value === null) {
-      throw new ConversionQuotationError(message, {
-        valueType: typeof value,
-        ...this.buildContext(context),
-      });
-    }
-    return value;
-  }
 }

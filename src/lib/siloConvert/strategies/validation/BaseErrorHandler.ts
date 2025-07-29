@@ -1,5 +1,10 @@
 import { TV } from "@/classes/TokenValue";
-import { SiloConvertError } from "@/lib/siloConvert/strategies/validation/SiloConvertErrors";
+import {
+  CacheError,
+  InvalidConversionTokensError,
+  SiloConvertError,
+} from "@/lib/siloConvert/strategies/validation/SiloConvertErrors";
+import { Token } from "@/utils/types";
 import { AnyRecord } from "@/utils/types.generic";
 
 /**
@@ -83,7 +88,11 @@ export abstract class BaseErrorHandler<TTokenContext = unknown, TContext extends
    * Create domain-specific cache error - subclasses can override
    */
   protected createCacheError(operationName: string, originalError: unknown, context: AnyRecord): SiloConvertError {
-    return this.createDomainError(operationName, originalError, context);
+    return new CacheError(
+      operationName,
+      originalError instanceof Error ? originalError.message : "Unknown cache error",
+      context,
+    );
   }
 
   /**
@@ -179,6 +188,89 @@ export abstract class BaseErrorHandler<TTokenContext = unknown, TContext extends
         ...fullContext,
       });
       return fallback;
+    }
+  }
+
+  /**
+   * Validates token conversion patterns
+   */
+  validateConversionTokens(expectedType: "default" | "LP2LP" | "default-down", sourceToken: Token, targetToken: Token) {
+    // Basic token validation
+    if (!sourceToken || !targetToken) {
+      throw new InvalidConversionTokensError(sourceToken, targetToken, expectedType, "Missing source or target token");
+    }
+
+    if (!sourceToken.address || !targetToken.address) {
+      throw new InvalidConversionTokensError(sourceToken, targetToken, expectedType, "Invalid token addresses");
+    }
+
+    if (sourceToken.address === targetToken.address) {
+      throw new InvalidConversionTokensError(
+        sourceToken,
+        targetToken,
+        expectedType,
+        "Source and target cannot be the same token",
+      );
+    }
+
+    // Type-specific validation
+    if (expectedType === "LP2LP") {
+      if (sourceToken.isMain || targetToken.isMain) {
+        throw new InvalidConversionTokensError(
+          sourceToken,
+          targetToken,
+          expectedType,
+          `Expected both tokens to be LP tokens but got source: ${sourceToken.symbol}(isMain:${sourceToken.isMain}) and target: ${targetToken.symbol}(isMain:${targetToken.isMain})`,
+        );
+      }
+
+      if (!sourceToken.isLP || !targetToken.isLP) {
+        throw new InvalidConversionTokensError(
+          sourceToken,
+          targetToken,
+          expectedType,
+          `Both tokens must be LP tokens but got source: ${sourceToken.symbol}(isLP:${sourceToken.isLP}) and target: ${targetToken.symbol}(isLP:${targetToken.isLP})`,
+        );
+      }
+    }
+
+    if (expectedType === "default") {
+      if (sourceToken.isLP && targetToken.isLP) {
+        throw new InvalidConversionTokensError(
+          sourceToken,
+          targetToken,
+          expectedType,
+          `Expected only one LP token for default convert but got source: ${sourceToken.symbol}(isLP:${sourceToken.isLP}) and target: ${targetToken.symbol}(isLP:${targetToken.isLP})`,
+        );
+      }
+
+      if (!(sourceToken.isMain || targetToken.isMain)) {
+        throw new InvalidConversionTokensError(
+          sourceToken,
+          targetToken,
+          expectedType,
+          `Default convert requires one main token but got source: ${sourceToken.symbol}(isMain:${sourceToken.isMain}) and target: ${targetToken.symbol}(isMain:${targetToken.isMain})`,
+        );
+      }
+    }
+
+    if (expectedType === "default-down") {
+      if (!sourceToken.isMain || !targetToken.isLP) {
+        const msg = !sourceToken.isMain
+          ? `Default down convert requires source token to be a main token but got source: ${sourceToken.symbol}(isMain:${sourceToken.isMain})`
+          : `Default down convert requires target token to be a LP token but got target: ${targetToken.symbol}(isLP:${targetToken.isLP})`;
+
+        throw new InvalidConversionTokensError(sourceToken, targetToken, expectedType, msg);
+      }
+    }
+
+    if (sourceToken.isMain && targetToken.isMain) {
+      throw new InvalidConversionTokensError(
+        sourceToken,
+        targetToken,
+        expectedType,
+        `Cannot convert between two main tokens: source: ${sourceToken.symbol} and target: ${targetToken.symbol}`,
+      );
     }
   }
 

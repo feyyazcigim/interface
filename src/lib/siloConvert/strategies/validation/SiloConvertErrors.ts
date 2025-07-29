@@ -44,7 +44,7 @@ export class InvalidConversionTokensError extends SiloConvertError {
   readonly code = "INVALID_CONVERSION_TOKENS";
   readonly category = "validation" as const;
 
-  constructor(source: Token, target: Token, expectedType: "default" | "LP2LP", reason?: string) {
+  constructor(source: Token, target: Token, expectedType: "default" | "LP2LP" | "default-down", reason?: string) {
     const baseMessage = `Invalid conversion tokens: source=${source.symbol}(${source.address}), target=${target.symbol}(${target.address}), expected=${expectedType}`;
     const message = reason ? `${baseMessage}. Reason: ${reason}` : baseMessage;
 
@@ -220,6 +220,18 @@ export class AggregatorDisabledError extends SiloConvertError {
         symbol: token.symbol,
         address: token.address,
       },
+      ...context,
+    });
+  }
+}
+
+export class StrategizerError extends SiloConvertError {
+  readonly code = "STRATEGIZER_ERROR";
+  readonly category = "execution" as const;
+
+  constructor(operation: string, context?: AnyRecord) {
+    super(`Strategizer error for '${operation}':`, {
+      operation,
       ...context,
     });
   }
