@@ -18,6 +18,7 @@ import { MaxConvertResult, SiloConvertMaxConvertQuoter } from "./SiloConvert.max
 import { SiloConvertRoute, SiloConvertStrategizer } from "./siloConvert.strategizer";
 import { ConvertStrategyQuote } from "./strategies/core";
 import { SiloConvertType } from "./strategies/core";
+import { DefaultConvertStrategy } from "./strategies/implementations";
 import { ConversionQuotationError, SimulationError } from "./strategies/validation/SiloConvertErrors";
 import { SiloConvertContext } from "./types";
 import { decodeConvertResults } from "./utils";
@@ -258,8 +259,7 @@ export class SiloConvert {
         const advFarm = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
         const quotes: ConvertStrategyQuote<SiloConvertType>[] = [];
 
-        const amounts = route.strategies.map((s) => s.amount);
-        const crates = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
+        const crates = this.selectCratesFromRoute(route, farmerDeposits);
 
         // Has to be run sequentially.
         for (const [i, strategy] of route.strategies.entries()) {
@@ -350,6 +350,40 @@ export class SiloConvert {
     console.debug("[SiloConvert/quote] quoting finished!!!", datas);
 
     return datas;
+  }
+
+  /**
+   * Selects the crates from the farmerDeposits based on the route.
+   *
+   * @param route - The route to select crates from.
+   * @param farmerDeposits - The farmer deposits to select crates from.
+   * @returns The crates selected from the farmerDeposits.
+   */
+  private selectCratesFromRoute(route: SiloConvertRoute<SiloConvertType>, farmerDeposits: DepositData[]) {
+    // Get the amounts for each strategy.
+    const amounts = route.strategies.map((s) => s.amount);
+
+    const incursGSPenalty =
+      route.convertType === "LPAndMain" &&
+      route.strategies.some((s) => {
+        return s.strategy instanceof DefaultConvertStrategy && s.strategy.grownStalkPenaltyExpected;
+      });
+
+    // If the route incurs a penalty, reverse the amounts such that the penalty is applied to the deposits with the least amount of grown stalk.
+    // Amounts are returned in the order of execution of the strategies, therefore we can deduce that amounts are in the order of [no penalty, ...penalty]
+    if (incursGSPenalty) {
+      amounts.reverse();
+    }
+
+    // If the route incurs a penalty, sort the crates by stem. Otherwise, sort the crates by bdv.
+    const crates = pickCratesMultiple(farmerDeposits, incursGSPenalty ? "stem" : "bdv", "asc", amounts);
+
+    // If the route incurs a penalty, reverse crates such that the crates being passed into quote are in the correct order.
+    if (incursGSPenalty) {
+      crates.reverse();
+    }
+
+    return crates;
   }
 
   private decodeRouteAndPriceResults(
