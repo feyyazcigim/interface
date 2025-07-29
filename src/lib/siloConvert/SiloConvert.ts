@@ -14,7 +14,7 @@ import { throwIfAborted } from "@/utils/utils";
 import { Config } from "@wagmi/core";
 import { Address } from "viem";
 import { SiloConvertPriceCache } from "./SiloConvert.cache";
-import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
+import { MaxConvertResult, SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
 import { SiloConvertRoute, SiloConvertStrategizer } from "./siloConvert.strategizer";
 import { ConvertStrategyQuote } from "./strategies/core";
 import { SiloConvertType } from "./strategies/core";
@@ -127,7 +127,7 @@ export class SiloConvert {
 
   private scalarCache: ITTLCache<number>;
 
-  private maxConvertCache: ITTLCache<TV>;
+  private maxConvertCache: ITTLCache<MaxConvertResult>;
 
   constructor(diamondAddress: Address, account: Address, config: Config, chainId: number) {
     this.context = {
@@ -139,7 +139,7 @@ export class SiloConvert {
 
     this.priceCache = new SiloConvertPriceCache(this.context);
     this.scalarCache = new InMemoryTTLCache<number>();
-    this.maxConvertCache = new InMemoryTTLCache<TV>();
+    this.maxConvertCache = new InMemoryTTLCache<MaxConvertResult>();
 
     this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(
       this.context,
@@ -176,7 +176,12 @@ export class SiloConvert {
   /**
    * Given a source and target token, returns the max convert amount.
    */
-  async getMaxConvert(source: Token, target: Token, deposits?: DepositData[], forceUpdateCache?: boolean): Promise<TV> {
+  async getMaxConvert(
+    source: Token,
+    target: Token,
+    deposits: DepositData[] | undefined,
+    forceUpdateCache?: boolean,
+  ): Promise<MaxConvertResult> {
     // update cache if requested
     await this.priceCache.update(forceUpdateCache);
 
