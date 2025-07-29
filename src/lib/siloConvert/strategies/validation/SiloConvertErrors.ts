@@ -7,7 +7,7 @@ import { Address } from "viem";
  */
 export abstract class SiloConvertError extends Error {
   abstract readonly code: string;
-  abstract readonly category: "validation" | "quotation" | "execution" | "network" | "configuration";
+  abstract readonly category: "validation" | "quotation" | "execution" | "cache" | "network" | "configuration";
 
   constructor(
     message: string,
@@ -110,49 +110,15 @@ export class ConversionQuotationError extends SiloConvertError {
 }
 
 /**
- * Thrown when swap quotation fails
- */
-export class SwapQuotationError extends SiloConvertError {
-  readonly code = "SWAP_QUOTATION_FAILED";
-  readonly category = "network" as const;
-
-  constructor(sellToken: Token, buyToken: Token, amount: string, reason: string, context?: AnyRecord) {
-    super(`Failed to quote swap ${sellToken.symbol} -> ${buyToken.symbol} for amount ${amount}: ${reason}`, {
-      sellToken: sellToken.symbol,
-      buyToken: buyToken.symbol,
-      amount,
-      reason,
-      ...context,
-    });
-  }
-}
-
-/**
  * Thrown when cache operations fail
  */
 export class CacheError extends SiloConvertError {
   readonly code = "CACHE_ERROR";
-  readonly category = "network" as const;
+  readonly category = "cache" as const;
 
   constructor(operation: string, reason: string, context?: AnyRecord) {
     super(`Cache operation '${operation}' failed: ${reason}`, {
       operation,
-      reason,
-      ...context,
-    });
-  }
-}
-
-/**
- * Thrown when well data is not found or invalid
- */
-export class WellDataError extends SiloConvertError {
-  readonly code = "WELL_DATA_ERROR";
-  readonly category = "configuration" as const;
-
-  constructor(wellAddress: Address, reason: string, context?: AnyRecord) {
-    super(`Well data error for ${wellAddress}: ${reason}`, {
-      wellAddress,
       reason,
       ...context,
     });
@@ -206,31 +172,12 @@ export class InvalidAmountError extends SiloConvertError {
     });
   }
 }
-
-/**
- * Thrown when aggregator is disabled for a token
- */
-export class AggregatorDisabledError extends SiloConvertError {
-  readonly code = "AGGREGATOR_DISABLED";
-  readonly category = "configuration" as const;
-
-  constructor(token: Token, context?: AnyRecord) {
-    super(`Aggregator is disabled for token ${token.symbol} (${token.address})`, {
-      token: {
-        symbol: token.symbol,
-        address: token.address,
-      },
-      ...context,
-    });
-  }
-}
-
 export class StrategizerError extends SiloConvertError {
   readonly code = "STRATEGIZER_ERROR";
-  readonly category = "execution" as const;
+  readonly category = "quotation" as const;
 
   constructor(operation: string, context?: AnyRecord) {
-    super(`Strategizer error for '${operation}':`, {
+    super(`Strategizer error for '${operation}'`, {
       operation,
       ...context,
     });
