@@ -14,7 +14,7 @@ import { AdvancedFarmWorkflow, AdvancedPipeWorkflow } from "@/lib/farm/workflow"
 import { SiloConvertPriceCache } from "@/lib/siloConvert/SiloConvert.cache";
 import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExchangeWell, ExtendedRawWellData } from "@/lib/well/ExchangeWell";
-import { getChainConstant, resolveChainId } from "@/utils/chain";
+import { resolveChainId } from "@/utils/chain";
 import { pickCratesMultiple } from "@/utils/convert";
 import { tokensEqual } from "@/utils/token";
 import { DepositData, Token } from "@/utils/types";
@@ -40,9 +40,12 @@ interface ConvertTokens {
 const MIN_THRESHOLD = 150;
 
 /**
- * The rate at which grown stalk penalty is applied.
+ * The rate at which grown stalk penalty is applied. Refer to:
+ * https://github.com/pinto-org/protocol/blob/master/contracts/beanstalk/init/InitalizeDiamond.sol
+ *
+ * Rate has 6 decimals of precision.
  */
-const GROW_STALK_PENALTY_RATE_STR = "1.0005";
+const CONVERT_DOWN_PENALTY_RATE = TV.fromHuman(1.0005, 6);
 
 /**
  * SiloConvertMaxConvertQuoter
@@ -128,7 +131,7 @@ export class SiloConvertMaxConvertQuoter {
    * If farmerDeposits are provided, it will return a tested scaled max convert.
    * Results are cached for 15 seconds to avoid duplicate expensive calculations.
    */
-  async quoteMaxConvert(source: Token, target: Token, farmerDeposits?: DepositData[]): Promise<TV> {
+  async quoteMaxConvert(source: Token, target: Token, farmerDeposits: DepositData[] | undefined): Promise<TV> {
     const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
 
     return errorHandler.wrapAsync(async () => {
@@ -208,19 +211,31 @@ export class SiloConvertMaxConvertQuoter {
     }, "quote max convert");
   }
 
-  async quoteMaxConvertAtRate(source: Token, target: Token) {
+  /**
+   * Returns the maximum amount that can be converted of `source` to `target` such that the price after the convert is equal to the rate.
+   * @param source - The source token
+   * @param target - The target token
+   * @param rate - The rate to use
+   *
+   * @note Only supported for BEAN -> LP Token (as it is the only case where applicable).
+   */
+  async getMaxAmountInAtRate(source: Token, target: Token, rate: TV = CONVERT_DOWN_PENALTY_RATE) {
     const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
 
-    const bean = getChainConstant(this.context.chainId, MAIN_TOKEN);
-
     return errorHandler.wrapAsync(async () => {
+      // Validate Inputs
+      // Contract will throw if source !== BEAN || target !== LP
+      errorHandler.assert(Boolean(source.isMain), "Source token must be the main token", { source });
+      errorHandler.assert(Boolean(target.isLP), "Target token must be a LP token", { target });
+
+      // Get max amount in at rate
       const maxAmountInAtRate = await readContract(
         this.context.wagmiConfig.getClient({ chainId: this.context.chainId }),
         {
           abi: diamondABI,
           functionName: "getMaxAmountInAtRate",
           address: this.context.diamond,
-          args: [source.address, target.address, TV.fromHuman(GROW_STALK_PENALTY_RATE_STR, bean.decimals).toBigInt()],
+          args: [source.address, target.address, rate.toBigInt()],
         },
       );
 
