@@ -365,7 +365,7 @@ export class Strategizer {
       const args: { amount: TV; grownStalkPenaltyExpected?: boolean }[] = [];
 
       // 1. Check if the target well price is less than the penalty rate.
-      if (targetWellPrice.lt(this.maxConvertQuoter.CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER)) {
+      if (targetWellPrice.lt(this.maxConvertQuoter.CONVERT_DOWN_PENALTY_RATE)) {
         // 1 strategy. Should incur Grown Stalk Penalty.
         args.push({ amount: amountIn, grownStalkPenaltyExpected: true });
       } else {
