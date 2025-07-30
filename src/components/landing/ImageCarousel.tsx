@@ -78,32 +78,44 @@ const wallpaperImages: CarouselItem[] = [
 ];
 
 export default function ImageCarousel() {
+  // Track which item should be in the center position
   const [activeIndex, setActiveIndex] = useState<number>(0);
 
+  // Convert any activeIndex (including negatives) to valid array index (0 to length-1)
+  // Formula handles negative numbers: (-2 % 5 + 5) % 5 = 3
   const indexInArrayScope = ((activeIndex % wallpaperImages.length) + wallpaperImages.length) % wallpaperImages.length;
 
+  // Create infinite loop by doubling the array and slicing 5 consecutive items
+  // Example: [A,B,C,D,E] becomes [A,B,C,D,E,A,B,C,D,E], then slice(2,7) = [C,D,E,A,B]
+  // This ensures seamless wrapping without jumps when navigating
   const visibleItems = [...wallpaperImages, ...wallpaperImages].slice(
     indexInArrayScope,
     indexInArrayScope + CAROUSEL_CONFIG.VISIBLE_ITEMS,
   );
 
+  // Determine which of the 5 positions (leftmost, left, center, right, rightmost) an item occupies
   const getItemPosition = (item: CarouselItem): Position => {
     const index = visibleItems.indexOf(item);
     return POSITIONS[index] || "center";
   };
 
+  // Handle click interactions: center item opens PDF, side items navigate carousel
   const handleClick = (item: CarouselItem): void => {
     const position = getItemPosition(item);
+    // Click left side items to move carousel left (decrease activeIndex)
     if (position === "leftmost" || position === "left") {
       setActiveIndex((prevIndex) => prevIndex - 1);
+      // Click right side items to move carousel right (increase activeIndex)
     } else if (position === "rightmost" || position === "right") {
       setActiveIndex((prevIndex) => prevIndex + 1);
     }
+    // Center item clicks are handled by the <a> tag href (opens PDF)
   };
 
   return (
     <div className="flex flex-col items-center w-[133%] place-self-center">
       <div className="flex">
+        {/* AnimatePresence handles smooth enter/exit animations when items change positions */}
         <AnimatePresence mode="popLayout" initial={false}>
           {visibleItems.map((item) => {
             const position = getItemPosition(item);
@@ -111,27 +123,30 @@ export default function ImageCarousel() {
 
             return (
               <a
+                // Only center item is clickable link to PDF
                 href={isCenter ? item.href : undefined}
                 target={isCenter ? "_blank" : undefined}
                 rel={isCenter ? "noopener noreferrer" : undefined}
                 key={item.alt}
                 className="block"
                 onClick={
+                  // Side items navigate carousel instead of opening link
                   !isCenter
                     ? (e) => {
-                        e.preventDefault();
-                        handleClick(item);
+                        e.preventDefault(); // Prevent link navigation
+                        handleClick(item); // Trigger carousel navigation
                       }
                     : undefined
                 }
               >
+                {/* Animated image with position-based transformations */}
                 <motion.img
                   className="w-full mx-auto border-t border-x rounded-md"
                   src={item.src}
                   alt={item.alt}
                   layout
-                  variants={POSITION_CONFIGS}
-                  animate={position}
+                  variants={POSITION_CONFIGS} // Use predefined position animations
+                  animate={position} // Animate to current position
                   transition={{ type: "spring", stiffness: 100, damping: 20 }}
                 />
               </a>
