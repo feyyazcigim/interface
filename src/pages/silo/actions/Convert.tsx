@@ -97,8 +97,7 @@ function ConvertForm({
   const pintoToken = useChainConstant(MAIN_TOKEN);
   const account = useAccount();
   const [amountIn, setAmountIn] = useState("");
-  // const [slippage, setSlippage] = useState(0.25);
-  const [slippage, setSlippage] = useState(75);
+  const [slippage, setSlippage] = useState(0.25);
   const [maxConvert, setMaxConvert] = useState(TV.ZERO);
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
   const [showMinAmountWarning, setShowMinAmountWarning] = useState(false);
