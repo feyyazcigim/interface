@@ -1,3 +1,5 @@
+import PintoLogo from "@/assets/protocol/PintoLogo.svg";
+import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import { animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import { navLinks } from "../nav/nav/Navbar";
@@ -17,14 +19,17 @@ export default function MainCTA() {
           transition={{ duration: 0.5, ease: "easeInOut", delay: 1 }}
           {...revealAnimation}
         >
-          Fair Fiat Money
+          <div className="flex flex-row gap-4 items-center">
+            <img src={PintoLogo} alt="Pinto Logo" className="h-20" />
+            <img src={PintoLogoText} alt="Pinto Logo" className="h-20" />
+          </div>
         </motion.h2>
         <motion.span
           className="text-2xl leading-[1.4] font-thin text-pinto-gray-4"
           transition={{ duration: 0.5, ease: "easeInOut", delay: 1.25 }}
           {...revealAnimation}
         >
-          Printed directly to the people. Founded on decentralized credit.
+          An Algorithmic Stablecoin Balanced by Farmers like you.
         </motion.span>
       </div>
       <motion.div
