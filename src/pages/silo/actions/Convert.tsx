@@ -36,7 +36,7 @@ import useTransaction from "@/hooks/useTransaction";
 import { useDeterminePriceImpactWithResults } from "@/hooks/wells/usePriceImpactSummary";
 import { useWellUnderlying } from "@/hooks/wells/wells";
 import { SiloConvert, SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
-import { SiloConvertMaxConvertQuoter } from "@/lib/siloConvert/SiloConvert.maxConvertQuoter";
+import { MaxConvertResult, SiloConvertMaxConvertQuoter } from "@/lib/siloConvert/SiloConvert.maxConvertQuoter";
 import { SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import ConvertProvider, { SiloTokenConvertPath, useConvertState } from "@/state/context/convert.provider";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -97,7 +97,8 @@ function ConvertForm({
   const pintoToken = useChainConstant(MAIN_TOKEN);
   const account = useAccount();
   const [amountIn, setAmountIn] = useState("");
-  const [slippage, setSlippage] = useState(0.25);
+  // const [slippage, setSlippage] = useState(0.25);
+  const [slippage, setSlippage] = useState(75);
   const [maxConvert, setMaxConvert] = useState(TV.ZERO);
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
   const [showMinAmountWarning, setShowMinAmountWarning] = useState(false);
@@ -130,7 +131,14 @@ function ConvertForm({
     targetToken,
     !!(isDefaultConvert ? hasConvertible && deltaPEnabled : hasConvertible),
   );
-  const maxConvertQueryData = maxConvertQuery.data ?? TV.ZERO;
+  const maxConvertQueryData = maxConvertQuery.data?.max ?? TV.ZERO;
+  const maxConvertAtRate = maxConvertQuery.data?.maxAtRate;
+
+  useEffect(() => {
+    console.log("maxConvertQueryData", maxConvertQueryData.toHuman());
+    console.log("maxConvertAtRate", maxConvertAtRate?.toHuman());
+  }, [maxConvertQuery.data]);
+
   const maxConvertLoading = maxConvertQuery.isLoading;
 
   const amountInNum = stringToNumber(amountIn);
@@ -154,6 +162,10 @@ function ConvertForm({
 
   const { results: convertResults, sortedIndexes, showRoutes } = useSiloConvertResult(siloToken, targetToken, quote);
   const grownStalkPenaltyQuery = useSiloConvertDownPenaltyQuery(siloToken, targetToken, convertResults, isDownConvert);
+
+  // useEffect(() => {
+  //   console.log("grownStalkPenaltyQuery", grownStalkPenaltyQuery.data);
+  // }, [grownStalkPenaltyQuery.data]);
 
   const convertPriceResults = useExtractSiloConvertResultPriceResults(quote);
   const priceImpact = useDeterminePriceImpactWithResults(convertPriceResults);
@@ -430,7 +442,6 @@ function ConvertForm({
           {...getAltTextProps()}
           mode="balance"
           disableButton
-          disableClamping={true}
           isLoading={targetToken && maxConvertLoading}
         />
       </div>
@@ -1007,7 +1018,7 @@ const ConvertWarning = ({
   farmerConvertibleAmount: TV;
   targetToken: Token | undefined;
   siloToken: Token;
-  maxConvertQuery: Omit<UseQueryResult<TV>, "data"> | undefined;
+  maxConvertQuery: Omit<UseQueryResult<MaxConvertResult>, "data"> | undefined;
   isDefaultConvert: boolean;
   maxConvert: TV;
 }) => {
