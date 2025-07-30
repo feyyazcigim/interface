@@ -251,6 +251,8 @@ export class SiloConvert {
       });
     });
 
+    console.log("routes", routes);
+
     // Check if aborted after async operation
     throwIfAborted(signal);
 
@@ -261,6 +263,8 @@ export class SiloConvert {
 
         const crates = this.selectCratesFromRoute(route, farmerDeposits);
 
+        console.log("crates", crates);
+
         // Has to be run sequentially.
         for (const [i, strategy] of route.strategies.entries()) {
           // Check if aborted before each strategy
@@ -268,6 +272,12 @@ export class SiloConvert {
 
           let quote: ConvertStrategyQuote<SiloConvertType>;
           try {
+            console.log("quoting strategy...", {
+              strategy,
+              advFarm: advFarm.getSteps(),
+              advFarmLength: advFarm.length,
+              i,
+            });
             quote = await strategy.strategy.quote(crates[i], advFarm, slippage, signal);
           } catch (e) {
             console.error(`[SiloConvert/quote${i}] FAILED: `, strategy, e);
@@ -292,7 +302,7 @@ export class SiloConvert {
       });
     });
 
-    console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
+    console.log("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
 
     const simulationsRawResults = await Promise.all(
       quotedRoutes.map((route) =>
@@ -371,17 +381,18 @@ export class SiloConvert {
 
     // If the route incurs a penalty, reverse the amounts such that the penalty is applied to the deposits with the least amount of grown stalk.
     // Amounts are returned in the order of execution of the strategies, therefore we can deduce that amounts are in the order of [no penalty, ...penalty]
-    if (incursGSPenalty) {
-      amounts.reverse();
-    }
+    // if (incursGSPenalty) {
+    //   amounts.reverse();
+    // }
 
     // If the route incurs a penalty, sort the crates by stem. Otherwise, sort the crates by bdv.
-    const crates = pickCratesMultiple(farmerDeposits, incursGSPenalty ? "stem" : "bdv", "asc", amounts);
+    const crates = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
+    // const crates = pickCratesMultiple(farmerDeposits, incursGSPenalty ? "stem" : "bdv", "asc", amounts);
 
     // If the route incurs a penalty, reverse crates such that the crates being passed into quote are in the correct order.
-    if (incursGSPenalty) {
-      crates.reverse();
-    }
+    // if (incursGSPenalty) {
+    //   crates.reverse();
+    // }
 
     return crates;
   }
