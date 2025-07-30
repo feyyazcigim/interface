@@ -14,10 +14,11 @@ import { throwIfAborted } from "@/utils/utils";
 import { Config } from "@wagmi/core";
 import { Address } from "viem";
 import { SiloConvertPriceCache } from "./SiloConvert.cache";
-import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
+import { MaxConvertResult, SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
 import { SiloConvertRoute, SiloConvertStrategizer } from "./siloConvert.strategizer";
 import { ConvertStrategyQuote } from "./strategies/core";
 import { SiloConvertType } from "./strategies/core";
+import { DefaultConvertStrategy } from "./strategies/implementations";
 import { ConversionQuotationError, SimulationError } from "./strategies/validation/SiloConvertErrors";
 import { SiloConvertContext } from "./types";
 import { decodeConvertResults } from "./utils";
@@ -29,6 +30,12 @@ import { decodeConvertResults } from "./utils";
  * 1. quote the maximum convert between 2 tokens (if applicable)
  * 2. quote the convert between 2 tokens
  * 3. provide an executable advancedFarm workflow
+ *
+ * Implementation is split up into:
+ * 1. maxConvertQuoter
+ * 2. strategizer
+ *
+ *
  *
  * To fetch the maximum convert, we utilize the SiloConvertMaxConvertQuoter class.
  * (more on this in ./SiloConvert.maxConvertQuoter.ts)
@@ -121,7 +128,7 @@ export class SiloConvert {
 
   private scalarCache: ITTLCache<number>;
 
-  private maxConvertCache: ITTLCache<TV>;
+  private maxConvertCache: ITTLCache<MaxConvertResult>;
 
   constructor(diamondAddress: Address, account: Address, config: Config, chainId: number) {
     this.context = {
@@ -133,7 +140,7 @@ export class SiloConvert {
 
     this.priceCache = new SiloConvertPriceCache(this.context);
     this.scalarCache = new InMemoryTTLCache<number>();
-    this.maxConvertCache = new InMemoryTTLCache<TV>();
+    this.maxConvertCache = new InMemoryTTLCache<MaxConvertResult>();
 
     this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(
       this.context,
@@ -170,7 +177,12 @@ export class SiloConvert {
   /**
    * Given a source and target token, returns the max convert amount.
    */
-  async getMaxConvert(source: Token, target: Token, deposits?: DepositData[], forceUpdateCache?: boolean): Promise<TV> {
+  async getMaxConvert(
+    source: Token,
+    target: Token,
+    deposits: DepositData[] | undefined,
+    forceUpdateCache?: boolean,
+  ): Promise<MaxConvertResult> {
     // update cache if requested
     await this.priceCache.update(forceUpdateCache);
 
@@ -239,6 +251,8 @@ export class SiloConvert {
       });
     });
 
+    console.log("routes", routes);
+
     // Check if aborted after async operation
     throwIfAborted(signal);
 
@@ -247,8 +261,9 @@ export class SiloConvert {
         const advFarm = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
         const quotes: ConvertStrategyQuote<SiloConvertType>[] = [];
 
-        const amounts = route.strategies.map((s) => s.amount);
-        const crates = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
+        const crates = this.selectCratesFromRoute(route, farmerDeposits);
+
+        console.log("crates", crates);
 
         // Has to be run sequentially.
         for (const [i, strategy] of route.strategies.entries()) {
@@ -257,6 +272,12 @@ export class SiloConvert {
 
           let quote: ConvertStrategyQuote<SiloConvertType>;
           try {
+            console.log("quoting strategy...", {
+              strategy,
+              advFarm: advFarm.getSteps(),
+              advFarmLength: advFarm.length,
+              i,
+            });
             quote = await strategy.strategy.quote(crates[i], advFarm, slippage, signal);
           } catch (e) {
             console.error(`[SiloConvert/quote${i}] FAILED: `, strategy, e);
@@ -281,7 +302,7 @@ export class SiloConvert {
       });
     });
 
-    console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
+    console.log("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
 
     const simulationsRawResults = await Promise.all(
       quotedRoutes.map((route) =>
@@ -339,6 +360,41 @@ export class SiloConvert {
     console.debug("[SiloConvert/quote] quoting finished!!!", datas);
 
     return datas;
+  }
+
+  /**
+   * Selects the crates from the farmerDeposits based on the route.
+   *
+   * @param route - The route to select crates from.
+   * @param farmerDeposits - The farmer deposits to select crates from.
+   * @returns The crates selected from the farmerDeposits.
+   */
+  private selectCratesFromRoute(route: SiloConvertRoute<SiloConvertType>, farmerDeposits: DepositData[]) {
+    // Get the amounts for each strategy.
+    const amounts = route.strategies.map((s) => s.amount);
+
+    const incursGSPenalty =
+      route.convertType === "LPAndMain" &&
+      route.strategies.some((s) => {
+        return s.strategy instanceof DefaultConvertStrategy && s.strategy.grownStalkPenaltyExpected;
+      });
+
+    // If the route incurs a penalty, reverse the amounts such that the penalty is applied to the deposits with the least amount of grown stalk.
+    // Amounts are returned in the order of execution of the strategies, therefore we can deduce that amounts are in the order of [no penalty, ...penalty]
+    // if (incursGSPenalty) {
+    //   amounts.reverse();
+    // }
+
+    // If the route incurs a penalty, sort the crates by stem. Otherwise, sort the crates by bdv.
+    const crates = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
+    // const crates = pickCratesMultiple(farmerDeposits, incursGSPenalty ? "stem" : "bdv", "asc", amounts);
+
+    // If the route incurs a penalty, reverse crates such that the crates being passed into quote are in the correct order.
+    // if (incursGSPenalty) {
+    //   crates.reverse();
+    // }
+
+    return crates;
   }
 
   private decodeRouteAndPriceResults(

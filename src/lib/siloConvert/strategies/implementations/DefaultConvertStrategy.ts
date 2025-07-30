@@ -4,17 +4,25 @@ import { diamondABI } from "@/constants/abi/diamondABI";
 import encoders from "@/encoders";
 import { AdvancedFarmWorkflow } from "@/lib/farm/workflow";
 import { ConvertStrategyQuote, SiloConvertStrategy } from "@/lib/siloConvert/strategies/core";
+import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExtendedPickedCratesDetails, calculateConvertData } from "@/utils/convert";
-import { AdvancedFarmCall } from "@/utils/types";
+import { AdvancedFarmCall, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { throwIfAborted } from "@/utils/utils";
 import { decodeFunctionResult, encodeFunctionData } from "viem";
 
+export interface DefaultConvertStrategyOptions {
+  grownStalkPenaltyExpected?: boolean;
+}
+
 export class DefaultConvertStrategy extends SiloConvertStrategy<"LPAndMain"> {
   readonly name = "LP_And_Main_Default";
 
-  constructor(...args: ConstructorParameters<typeof SiloConvertStrategy<"LPAndMain">>) {
-    super(...args);
+  grownStalkPenaltyExpected: boolean;
+
+  constructor(source: Token, target: Token, context: SiloConvertContext, options?: DefaultConvertStrategyOptions) {
+    super(source, target, context);
+    this.grownStalkPenaltyExpected = Boolean(options?.grownStalkPenaltyExpected);
     this.initErrorHandlerCtx();
   }
 

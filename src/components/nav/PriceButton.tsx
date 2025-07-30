@@ -87,6 +87,15 @@ function PriceButtonPanel() {
 
   const combinedDeltaB = priceData.deltaB;
 
+  const underlyingTokensToShow = useMemo(() => {
+    return Array.from(priceData.tokenPrices).filter(([tk]) => tk.isLPUnderlying && tk.isCompositeLPWhitelisted);
+  }, [priceData.tokenPrices]);
+
+  const marqueeTokens = useMemo(
+    () => [...underlyingTokensToShow, ...underlyingTokensToShow, ...underlyingTokensToShow],
+    [underlyingTokensToShow],
+  );
+
   return (
     <div
       className="grid grid-rows-[auto_1fr_auto]"
@@ -229,11 +238,6 @@ function PriceButtonPanel() {
                 </Button>
               )}
               {priceData.pools.map((pool, i) => {
-                const isWhitelisted =
-                  tokenData.whitelistedTokens.findIndex(
-                    (token) => token?.address.toLowerCase() === pool.pool?.address.toLowerCase(),
-                  ) > -1;
-                if (!isWhitelisted) return;
                 const token0Price = pool.tokens[0].isMain
                   ? pool.price
                   : useTwa
@@ -421,44 +425,9 @@ function PriceButtonPanel() {
           <Separator className="w-[38rem] -ml-4 " />
           <div className="inline-flex items-center">
             <div className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4 animate-marquee">
-              {Array.from(priceData.tokenPrices).map((token, i) => {
-                if (!token[0].isWhitelisted) return;
+              {marqueeTokens.map((token, i) => {
                 return (
-                  <div key={`${token[0].address}_marquee1_${i}`}>
-                    {token[0]?.name && (
-                      <div className="inline-flex items-center px-2 gap-1.5">
-                        <IconImage src={token[0].logoURI} size={6} />
-                        <div className="pinto-body text-pinto-secondary text-nowrap">
-                          {`${token[0].symbol}: ${formatter.usd(token[1][useTwa ? "twa" : "instant"] ? token[1][useTwa ? "twa" : "instant"].toHuman() : 0)}`}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4 animate-marquee">
-              {Array.from(priceData.tokenPrices).map((token, i) => {
-                if (!token[0].isWhitelisted) return;
-                return (
-                  <div key={`${token[0].address}_marquee2_${i}`}>
-                    {token[0]?.name && (
-                      <div className="inline-flex items-center px-2 gap-1.5">
-                        <IconImage src={token[0].logoURI} size={6} />
-                        <div className="pinto-body text-pinto-secondary text-nowrap">
-                          {`${token[0].symbol}: ${formatter.usd(token[1][useTwa ? "twa" : "instant"] ? token[1][useTwa ? "twa" : "instant"].toHuman() : 0)}`}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4 animate-marquee">
-              {Array.from(priceData.tokenPrices).map((token, i) => {
-                if (!token[0].isWhitelisted) return;
-                return (
-                  <div key={`${token[0].address}_marquee3_${i}`}>
+                  <div key={`${token[0].address}_marquee_${i}`}>
                     {token[0]?.name && (
                       <div className="inline-flex items-center px-2 gap-1.5">
                         <IconImage src={token[0].logoURI} size={6} />

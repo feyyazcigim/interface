@@ -152,13 +152,15 @@ function SiloTokenInner({ siloToken }: { siloToken: Token }) {
               >
                 Convert
               </Button>
-              <Button
-                onClick={() => navigate(`/silo/${siloToken.address}?action=deposit`)}
-                rounded={"full"}
-                className="pinto-sm-bold text-sm flex-1 flex h-full"
-              >
-                Deposit
-              </Button>
+              {siloToken.isWhitelisted && (
+                <Button
+                  onClick={() => navigate(`/silo/${siloToken.address}?action=deposit`)}
+                  rounded={"full"}
+                  className="pinto-sm-bold text-sm flex-1 flex h-full"
+                >
+                  Deposit
+                </Button>
+              )}
             </MobileActionBar>
           )}
         </div>
