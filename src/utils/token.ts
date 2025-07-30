@@ -80,6 +80,9 @@ export const sortTokensForDeposits = (
 
     // Sort other tokens by seed reward rate
     const sortedOtherTokens = otherTokens.sort((a, b) => {
+      if (a.isWhitelisted && !b.isWhitelisted) return -1;
+      else if (b.isWhitelisted && !a.isWhitelisted) return 1;
+
       const aData = siloData.get(a);
       const bData = siloData.get(b);
 
