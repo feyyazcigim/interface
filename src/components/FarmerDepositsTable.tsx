@@ -258,7 +258,13 @@ export default function FarmerDepositsTable({
               return (
                 <TableRow
                   key={`${token.address}_${i}`}
-                  className={`h-[4.5rem] bg-white hover:bg-pinto-green-1/50 hover:cursor-pointer ${germinatingStalk.gt(0) ? "bg-pinto-off-green/15" : ""} ${(amountOfDeposits === 0 && !addClaimable) || (addClaimable && amountOfDeposits === 0 && !hoveringClaim && beanGain.gt(0)) ? "opacity-70" : "opacity-100"}`}
+                  className={`h-[4.5rem] hover:cursor-pointer ${
+                    !token.isWhitelisted
+                      ? "bg-gray-100 opacity-60 hover:bg-gray-200"
+                      : germinatingStalk.gt(0)
+                        ? "bg-pinto-off-green/15 hover:bg-pinto-green-1/50"
+                        : "bg-white hover:bg-pinto-green-1/50"
+                  } ${(amountOfDeposits === 0 && !addClaimable) || (addClaimable && amountOfDeposits === 0 && !hoveringClaim && beanGain.gt(0)) ? "opacity-70" : "opacity-100"}`}
                   onClick={() => navigate(`/silo/${token.address}`)}
                   data-action-target={`token-row-${token.address}`}
                 >
@@ -267,7 +273,14 @@ export default function FarmerDepositsTable({
                       <div className="inline-flex items-center gap-1.5">
                         <img src={token.logoURI} className="h-8 w-8 min-w-8 max-w-8" alt={`${token.name} logo`} />
                         <div className="flex-row space-y-0.5">
-                          <div className="pinto-sm whitespace-nowrap">{token.name}</div>
+                          <div className="pinto-sm whitespace-nowrap flex flex-col gap-1">
+                            {token.name}
+                            {!token.isWhitelisted && (
+                              <div className="bg-pinto-gray-2/70 text-pinto-secondary px-[0.1875rem] py-[0.1875rem] rounded-[0.25rem] pinto-xs w-fit leading-none">
+                                Dewhitelisted
+                              </div>
+                            )}
+                          </div>
                           <div className="pinto-xs sm:pinto-sm inline-flex items-center align-bottom gap-1 opacity-70 flex-wrap">
                             <span className="inline-flex gap-1 text-pinto-gray-4">
                               <IconImage src={seedIcon} alt={"seeds"} size={4} />

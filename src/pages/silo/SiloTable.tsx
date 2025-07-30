@@ -141,8 +141,12 @@ function SiloTable({ hovering }: { hovering: boolean }) {
             return (
               <TableRow
                 className={cn(
-                  `h-[4.5rem] hover:bg-pinto-green-1/50 hover:cursor-pointer relative`,
-                  hasGerminatingDeposits ? "bg-pinto-off-green/15" : "bg-white",
+                  `h-[4.5rem] hover:cursor-pointer relative`,
+                  !token.isWhitelisted
+                    ? "bg-gray-100 opacity-60 hover:bg-gray-200"
+                    : hasGerminatingDeposits
+                      ? "bg-pinto-off-green/15 hover:bg-pinto-green-1/50"
+                      : "bg-white hover:bg-pinto-green-1/50",
                 )}
                 key={`silo_table_${token.address}`}
                 onClick={() => navigate(`/silo/${token.address}`)}
