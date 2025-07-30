@@ -62,6 +62,7 @@ class StrategizerErrorHandler extends BaseErrorHandler<Token, AnyRecord> {
     return new SCE.StrategizerError(operationName, {
       operation: operationName,
       error: errorMessage,
+      originalError,
       ...context,
     });
   }
@@ -96,6 +97,7 @@ class MaxConvertQuoterErrorHandler extends BaseErrorHandler<Token, AnyRecord> {
     return new SCE.MaxConvertQuotationError(this.sourceToken, this.targetToken, `${operationName} failed`, {
       operation: operationName,
       error: errorMessage,
+      originalError,
       ...context,
     });
   }
@@ -120,6 +122,7 @@ class ConvertStrategyErrorHandler extends BaseErrorHandler<string, AnyRecord> {
     return new SCE.ConversionQuotationError(`${operationName} failed for ${this.sourceToken} -> ${this.targetToken}`, {
       operation: operationName,
       error: errorMessage,
+      originalError,
       ...context,
     });
   }

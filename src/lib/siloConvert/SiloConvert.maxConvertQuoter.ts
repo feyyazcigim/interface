@@ -86,14 +86,14 @@ export class SiloConvertMaxConvertQuoter {
    * Rate has 6 decimals of precision.
    *
    */
-  readonly CONVERT_DOWN_PENALTY_RATE = TV.fromHuman(1.0005, 6);
+  readonly CONVERT_DOWN_PENALTY_RATE = TV.fromHuman(1.005, 6);
 
   /**
    * Rate with a 0.0001 buffer.
    *
    * This is to minimize the risk of running into issues with price volatility.
    */
-  readonly CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.00051, 6);
+  readonly CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.0051, 6);
 
   // ---------- Constructor ----------
 
@@ -294,13 +294,23 @@ export class SiloConvertMaxConvertQuoter {
       const client = this.context.wagmiConfig.getClient({ chainId: this.context.chainId });
       errorHandler.assertDefined(client, `No wagmi client available for chain ID: ${this.context.chainId}`);
 
+      console.log("getMaxAmountIn", {
+        source: source.address,
+        target: target.address,
+        diamond: this.context.diamond,
+        chainId: this.context.chainId,
+      });
+
       const maxAmountIn = await errorHandler.wrapAsync(
         () =>
           readContract(client, {
-            abi: abiSnippets.silo.getMaxAmountIn,
+            abi: diamondABI,
             address: this.context.diamond,
-            functionName: "getMaxAmountIn",
-            args: [source.address, target.address],
+            functionName: "getMaxAmountIn" as const,
+            args: [source.address, target.address] as const,
+          }).catch((e) => {
+            console.log("Error getting max amount in", e);
+            throw e;
           }),
         "read max amount from contract",
         {
@@ -308,6 +318,8 @@ export class SiloConvertMaxConvertQuoter {
           chainId: this.context.chainId,
         },
       );
+
+      console.log("maxAmountIn", maxAmountIn);
 
       // Validate contract response
       errorHandler.validateContractResponse(maxAmountIn, "getMaxAmountIn");

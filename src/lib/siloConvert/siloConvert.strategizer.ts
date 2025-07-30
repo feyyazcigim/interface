@@ -103,9 +103,9 @@ export class Strategizer {
 
       eh.validateConversionTokens("default", source, target);
 
-      if (source.isMain && target.isLP) {
-        return this.strategizeLPAndMainDownConvert(source, target, amountIn);
-      }
+      // if (source.isMain && target.isLP) {
+      //   return this.strategizeLPAndMainDownConvert(source, target, amountIn);
+      // }
 
       // Only options for source and target are LP<>Main.
       const defaultRoute: SiloConvertRoute<SiloConvertType> = {

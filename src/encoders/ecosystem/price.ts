@@ -63,3 +63,36 @@ export function decodePriceResult(result: HashString): PriceContractPriceResult<
     deltaB: decoded.deltaB as bigint,
   };
 }
+
+export function encodeGetWell(chainId: number, address: Address) {
+  const callData = encodeFunctionData({
+    abi: diamondPriceABI,
+    functionName: "getWell",
+    args: [address],
+  });
+
+  return {
+    target: beanstalkPriceAddress[chainId],
+    callData: callData,
+    clipboard: Clipboard.encode([]),
+  };
+}
+
+export function decodeGetWell(result: HashString): BasePoolData<Address, bigint> {
+  const decoded = decodeFunctionResult({
+    abi: diamondPriceABI,
+    functionName: "getWell",
+    data: result,
+  });
+
+  return {
+    pool: decoded.pool,
+    tokens: decoded.tokens as [Address, Address],
+    balances: decoded.balances as [bigint, bigint],
+    price: decoded.price as bigint,
+    liquidity: decoded.liquidity as bigint,
+    deltaB: decoded.deltaB as bigint,
+    lpUsd: decoded.lpUsd as bigint,
+    lpBdv: decoded.lpBdv as bigint,
+  };
+}
