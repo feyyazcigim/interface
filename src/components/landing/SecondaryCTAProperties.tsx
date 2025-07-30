@@ -28,8 +28,8 @@ const data = [
 
 export default function SecondaryCTAProperties() {
   return (
-    <div className="flex items-center animate-marquee">
-      {Array(2)
+    <div className="w-fit flex flex-row items-center animate-long-marquee-reverse">
+      {Array(12)
         .fill(data)
         .flat()
         .map((info, index) => (

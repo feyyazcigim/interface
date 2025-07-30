@@ -205,6 +205,10 @@ module.exports = {
           from: { transform: "translateX( 0% )" },
           to: { transform: "translateX( -50% )" },
         },
+        "marquee-reverse": {
+          from: { transform: "translateX( -50% )" },
+          to: { transform: "translateX( 0% )" },
+        },
         "vertical-marquee": {
           from: { transform: "translateY( 0% )" },
           to: { transform: "translateY( -200% )" },
@@ -222,6 +226,9 @@ module.exports = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         marquee: "marquee 24s linear infinite",
+        "marquee-reverse": "marquee-reverse 24s linear infinite",
+        "long-marquee": "marquee 72s linear infinite",
+        "long-marquee-reverse": "marquee-reverse 72s linear infinite",
         "vertical-marquee": "vertical-marquee 36s linear infinite",
         "vertical-marquee-reverse": "vertical-marquee-reverse 54s linear infinite",
         "vertical-marquee-small": "vertical-marquee-small 80s linear infinite",
