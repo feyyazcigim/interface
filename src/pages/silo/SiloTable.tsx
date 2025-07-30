@@ -40,12 +40,6 @@ function SiloTable({ hovering }: { hovering: boolean }) {
   const farmerActions = useFarmerActions();
   const { data: apys } = useSiloTableAPYs();
 
-  useEffect(() => {
-    if (priceData.pools.length > 0) {
-      console.log(priceData.pools);
-    }
-  }, [priceData.pools]);
-
   // Sort tokens with PINTO first, then by Seeds
   const sortedTokens = useMemo(() => {
     const sorted = sortTokensForDeposits(

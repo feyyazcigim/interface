@@ -118,6 +118,7 @@ function ConvertForm({
   const isDownConvert = Boolean(siloToken.isMain && targetToken?.isLP);
 
   const deposits = farmerDeposits.get(siloToken);
+
   const convertibleDeposits = deposits?.convertibleDeposits;
   const farmerConvertibleAmount = deposits?.convertibleAmount || TV.ZERO;
   const hasConvertible = minAmountIn && farmerConvertibleAmount.gt(0) && farmerConvertibleAmount.gte(minAmountIn);
@@ -134,10 +135,12 @@ function ConvertForm({
   const maxConvertQueryData = maxConvertQuery.data?.max ?? TV.ZERO;
   const maxConvertAtRate = maxConvertQuery.data?.maxAtRate;
 
-  useEffect(() => {
-    console.log("maxConvertQueryData", maxConvertQueryData.toHuman());
-    console.log("maxConvertAtRate", maxConvertAtRate?.toHuman());
-  }, [maxConvertQuery.data]);
+  // useEffect(() => {
+  //   console.log("maxConvertQueryData", {
+  //     maxConvertQueryData: maxConvertQueryData.toHuman(),
+  //     maxConvertAtRate: maxConvertAtRate?.toHuman(),
+  //   });
+  // }, [maxConvertQuery.data]);
 
   const maxConvertLoading = maxConvertQuery.isLoading;
 

@@ -334,6 +334,8 @@ export class SiloConvert {
         throw new Error(`[SiloConvert/quote] Invalid route index: ${i}`);
       }
 
+      console.log("rawResponse", rawResponse);
+
       const staticCallResult = [...rawResponse.result];
 
       let decoded: ReturnType<typeof this.decodeRouteAndPriceResults>;
