@@ -1,4 +1,4 @@
-import { LP_TOKENS, MAIN_TOKEN, S_MAIN_TOKEN, tokens } from "@/constants/tokens";
+import { LP_TOKENS, MAIN_TOKEN, NATIVE_TOKEN, S_MAIN_TOKEN, WETH_TOKEN, tokens } from "@/constants/tokens";
 import { useChainConstant, useResolvedChainId } from "@/utils/chain";
 import { Token } from "@/utils/types";
 import { useMemo } from "react";
@@ -10,58 +10,57 @@ export function useWhitelistedTokens() {
 
   return useMemo(() => {
     const mainToken = MAIN_TOKEN[chainId];
-    const t = LP_TOKENS[chainId];
+    const t = LP_TOKENS[chainId].filter((token) => token.isWhitelisted);
 
     return [mainToken, ...t];
   }, [chainId]);
 }
 
 export default function useTokenData() {
-  const chainId = useChainId();
+  const chainId = useResolvedChainId();
 
   const sMainToken = useChainConstant(S_MAIN_TOKEN);
+  const mainToken = useChainConstant(MAIN_TOKEN);
+  const nativeToken = useChainConstant(NATIVE_TOKEN);
+  const wrappedNativeToken = useChainConstant(WETH_TOKEN);
 
-  const { mainToken, nativeToken, wrappedNativeToken, lpTokens, preferredTokens, siloWrappedToken3p } = useMemo(() => {
-    const _lpTokens: Token[] = [];
-    const _preferredTokens: Token[] = [];
+  return useMemo(() => {
+    const lpTokens: Token[] = [];
+    const preferredTokens: Token[] = [];
+    const whitelistedTokens: Token[] = [];
+    const deWhitelistedTokens: Token[] = [];
 
-    const _chainId = chainId === 41337 ? base.id : chainId === 1337 ? base.id : chainId;
+    const siloWrappedToken3p = tokens[chainId].find((token) => token.is3PSiloWrapped) as Token;
 
-    const _mainToken = tokens[_chainId].find((token) => token.isMain) as Token;
-    const _nativeToken = tokens[_chainId].find((token) => token.isNative) as Token;
-    const _wrappedNativeToken = tokens[_chainId].find((token) => token.isWrappedNative) as Token;
-    const _3pWrappedNativeToken = tokens[_chainId].find((token) => token.is3PSiloWrapped) as Token;
+    if (!siloWrappedToken3p) {
+      throw new Error("3p wrapped native token not found");
+    }
 
-    for (const token of tokens[_chainId]) {
+    for (const token of tokens[chainId]) {
       if (token.isLP) {
-        _lpTokens.push(token);
+        lpTokens.push(token);
       }
       if (!token.isNative && !token.isLP) {
-        _preferredTokens.push(token);
+        preferredTokens.push(token);
+      }
+      if (token.isWhitelisted) {
+        whitelistedTokens.push(token);
+      }
+      if (token.isLP && !token.isWhitelisted) {
+        deWhitelistedTokens.push(token);
       }
     }
 
     return {
-      mainToken: _mainToken,
-      nativeToken: _nativeToken,
-      wrappedNativeToken: _wrappedNativeToken,
-      siloWrappedToken3p: _3pWrappedNativeToken,
-      lpTokens: _lpTokens,
-      preferredTokens: _preferredTokens,
-    };
-  }, [chainId]);
-
-  return useMemo(
-    () => ({
-      mainToken: mainToken,
+      mainToken,
       siloWrappedToken: sMainToken,
-      siloWrappedToken3p: siloWrappedToken3p,
-      nativeToken: nativeToken,
-      wrappedNativeToken: wrappedNativeToken,
-      lpTokens: lpTokens,
-      preferredTokens: preferredTokens,
-      whitelistedTokens: [mainToken, ...lpTokens],
-    }),
-    [sMainToken, mainToken, nativeToken, wrappedNativeToken, lpTokens, preferredTokens],
-  );
+      siloWrappedToken3p,
+      nativeToken,
+      wrappedNativeToken,
+      lpTokens,
+      preferredTokens,
+      whitelistedTokens,
+      deWhitelistedTokens,
+    };
+  }, [chainId, sMainToken, mainToken, nativeToken, wrappedNativeToken]);
 }

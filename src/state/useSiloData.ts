@@ -12,7 +12,7 @@ import { Lookup, Prettify } from "@/utils/types.generic";
 import { exists } from "@/utils/utils";
 import { QueryKey, useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useCallback } from "react";
 import { Address, Omit } from "viem";
 import { ContractFunctionParameters } from "viem";
@@ -189,7 +189,7 @@ function useReadSiloTokenData(token: Token | undefined) {
   });
 }
 
-export function useSiloData() {
+export function useSiloData(log?: boolean) {
   const chainId = useChainId();
   const protocolAddress = useProtocolAddress();
   const BEAN = useTokenData().mainToken;
@@ -239,21 +239,19 @@ export function useSiloData() {
     ...settings,
   });
 
-  const SILO_WHITELIST = useTokenData().whitelistedTokens;
+  const { whitelistedTokens: SILO_WHITELIST } = useTokenData();
 
   // we have 5 whitelisted tokens
   const wlTokenData0 = useReadSiloTokenData(SILO_WHITELIST?.[0]);
   const wlTokenData1 = useReadSiloTokenData(SILO_WHITELIST?.[1]);
   const wlTokenData2 = useReadSiloTokenData(SILO_WHITELIST?.[2]);
   const wlTokenData3 = useReadSiloTokenData(SILO_WHITELIST?.[3]);
-  const wlTokenData4 = useReadSiloTokenData(SILO_WHITELIST?.[4]);
-  const wlTokenData5 = useReadSiloTokenData(SILO_WHITELIST?.[5]);
 
   const wlTokenDatas = useMemo(() => {
     const keys: QueryKey[] = [];
     const data: Map<Token, SiloTokenData> = new Map();
 
-    const wl = [wlTokenData0, wlTokenData1, wlTokenData2, wlTokenData3, wlTokenData4, wlTokenData5];
+    const wl = [wlTokenData0, wlTokenData1, wlTokenData2, wlTokenData3];
 
     for (const [i, { data: wlTokenData, queryKey }] of wl.entries()) {
       const token = SILO_WHITELIST[i];
@@ -261,7 +259,9 @@ export function useSiloData() {
       const index = yields?.siloYields[0]?.tokenAPYS?.findIndex((apys) => stringEq(apys?.token, token?.address));
       const yieldData = index ? yields?.siloYields[0]?.tokenAPYS?.[index] : undefined;
 
-      if (!wlTokenData) continue;
+      if (!wlTokenData) {
+        continue;
+      }
 
       keys.push(queryKey);
       data.set(token, {
@@ -277,7 +277,7 @@ export function useSiloData() {
       tokenData: data.size !== SILO_WHITELIST.length ? new Map<Token, SiloTokenData>() : data,
       queryKeys: keys,
     };
-  }, [wlTokenData0, wlTokenData1, wlTokenData2, wlTokenData3, wlTokenData4, wlTokenData5, SILO_WHITELIST, yields]);
+  }, [wlTokenData0, wlTokenData1, wlTokenData2, wlTokenData3, SILO_WHITELIST, yields]);
 
   return {
     ...wlTokenDatas,
