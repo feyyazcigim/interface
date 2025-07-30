@@ -2,7 +2,6 @@ import * as T from "@/constants/tokens";
 import { stringEq } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { Token } from "@/utils/types";
-import main from "graphql-request";
 import { base } from "viem/chains";
 import { describe, expect, it, test } from "vitest";
 
@@ -190,25 +189,20 @@ describe("Token Configs", () => {
           isLP: true,
           isWhitelisted: "defined",
         });
-      });
-
-      it.each(LPsKeyedBySymbol)("%s should have correct structure", (symbol, token) => {
         // LP tokens must reference their underlying token pair
         expectLPTokenStructure(token);
-        // Whitelist status determines if LP can be deposited in Silo
-        expect(token.isWhitelisted, `${symbol}.isWhitelisted should be defined`).toBeDefined();
       });
     });
 
     // LP<>Underlying relationships - ensures consistency between LP and underlying tokens
     describe("LP<>Underlying", () => {
-      it.each(LPsKeyedBySymbol)("%s have defined underlying pair", (_symbol, token) => {
+      it.each(LPsKeyedBySymbol)("%s have defined underlying pair", (symbol, token) => {
         // Every LP token must have a findable underlying pair token
-        // This ensures the LP's non-PINTO component is properly configured
+        // This ensures the LP's non-PINTO underlying token is properly configured
         const pairAddress = stringEq(token.tokens?.[0], main.address) ? token.tokens?.[1] : token.tokens?.[0];
         const underlyingPairToken = T.tokens[base.id].find((t) => stringEq(t.address, pairAddress));
 
-        expect(underlyingPairToken, `${token.symbol} underlying pair token should be findable`).toBeDefined();
+        expect(underlyingPairToken, `${symbol} underlying pair token should be findable`).toBeDefined();
       });
 
       it.each(LPsKeyedBySymbol)("%s underlying pair represents LP whitelist status", (symbol, token) => {
