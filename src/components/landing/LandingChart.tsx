@@ -344,7 +344,7 @@ export default function LandingChart() {
   }, [currentFarmer, currentTxType]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full">
+    <div className="flex flex-col items-center justify-center h-full w-full mb-32">
       <div ref={containerRef} className="w-full relative">
         <svg width="100%" height={height} viewBox={`0 0 ${viewportWidth} ${height}`} style={{ overflow: "visible" }}>
           <defs>
@@ -472,6 +472,7 @@ export default function LandingChart() {
           />
         </motion.div>
       </div>
+      {/*
       <div className="flex flex-row justify-between w-full px-14 mt-5 mb-5">
         {personIcons.map((data, index) => {
           // Use a unique key for each profile
@@ -631,6 +632,7 @@ export default function LandingChart() {
           );
         })}
       </div>
+      */}
     </div>
   );
 }

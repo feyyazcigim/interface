@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/Button";
+import Contributors from "./Contributors";
 import ImageCarousel from "./ImageCarousel";
 import LandingVolume from "./LandingVolume";
 import ProtocolUpgrades from "./ProtocolUpgrades";
@@ -31,9 +32,7 @@ function StatContent({ activeButton }: StatContentProps) {
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             {activeButton === "upgrades" && <ProtocolUpgrades activeButton={activeButton} />}
-            {activeButton === "contributors" && (
-              <p className="text-gray-700">Placeholder content for contributors...</p>
-            )}
+            {activeButton === "contributors" && <Contributors />}
             {activeButton === "years" && <ImageCarousel />}
             {activeButton === "volume" && <LandingVolume />}
           </motion.div>
