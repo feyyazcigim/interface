@@ -207,7 +207,11 @@ const Navbar = () => {
   const handleInvalidateWallet = useCallback(() => invalidateData("wallet"), [invalidateData]);
 
   return (
-    <div className="flex flex-col sticky top-0 z-[2]" id="pinto-navbar" style={{ transformOrigin: "top left" }}>
+    <div
+      className={`flex flex-col sticky top-0 z-[2] ${isHome ? "opacity-0 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+      id="pinto-navbar"
+      style={{ transformOrigin: "top left" }}
+    >
       {!isHome && <AnnouncementBanner />}
       <div
         className={cn(
