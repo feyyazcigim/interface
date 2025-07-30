@@ -56,8 +56,24 @@ export default function FarmerDepositsTable({
 
   // Sort tokens with PINTO first, then by BDV
   const sortedTokens = useMemo(() => {
-    return sortTokensForDeposits(tokenData.whitelistedTokens, farmerDeposits, mainToken, priceData.price, "value");
-  }, [farmerDeposits, priceData.price, tokenData.whitelistedTokens, mainToken]);
+    const sorted = sortTokensForDeposits(
+      tokenData.mayBeWhitelistedTokens,
+      farmerDeposits,
+      mainToken,
+      priceData.price,
+      "value",
+    );
+    const filtered = sorted.filter((token) => {
+      if (token.isWhitelisted) {
+        return true;
+      }
+      const hasDeposits = farmerDeposits.get(token)?.amount?.gt(0);
+
+      return !!hasDeposits;
+    });
+
+    return filtered;
+  }, [farmerDeposits, priceData.price, tokenData.mayBeWhitelistedTokens, mainToken]);
 
   const claimBeanGain = farmerActions.claimRewards.outputs.beanGain;
   const claimStalkGain = farmerActions.claimRewards.outputs.stalkGain;
@@ -235,6 +251,8 @@ export default function FarmerDepositsTable({
                 stalkGain: data.update?.stalkGain || TokenValue.ZERO,
               };
 
+              const effectiveBDV = userData?.currentBDV.gt(0) ? userData?.currentBDV : userData?.depositBDV;
+
               const addClaimable = token.isMain;
 
               return (
@@ -278,7 +296,7 @@ export default function FarmerDepositsTable({
                           </div>
                           <div className="text-pinto-gray-4 font-[300] text-[1rem]">
                             {denomination === "USD"
-                              ? formatter.usd(userData?.currentBDV.mul(token.isMain ? priceData.price : poolPrice))
+                              ? formatter.usd(effectiveBDV?.mul(token.isMain ? priceData.price : poolPrice))
                               : formatter.pdv(userData?.depositBDV)}
                           </div>
                         </>
@@ -303,8 +321,8 @@ export default function FarmerDepositsTable({
                           >
                             {denomination === "USD"
                               ? formatter.usd(
-                                  userData?.currentBDV
-                                    .add(rewardGains.bdvGain)
+                                  effectiveBDV
+                                    ?.add(rewardGains.bdvGain)
                                     .add(updateGains.bdvGain)
                                     .add(addClaimable ? BDVGain : 0)
                                     .mul(token.isMain ? priceData.price : poolPrice),
