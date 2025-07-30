@@ -61,6 +61,7 @@ export default function useTokenData() {
       preferredTokens,
       whitelistedTokens,
       deWhitelistedTokens,
+      mayBeWhitelistedTokens: [...whitelistedTokens, ...deWhitelistedTokens],
     };
   }, [chainId, sMainToken, mainToken, nativeToken, wrappedNativeToken]);
 }
