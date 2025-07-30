@@ -23,6 +23,7 @@ import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { stringEq } from "@/utils/string";
 import { getTokenIndex, sortTokensForDeposits } from "@/utils/token";
+import { Token } from "@/utils/types";
 import { AddressLookup } from "@/utils/types.generic";
 import { cn } from "@/utils/utils";
 import { forwardRef, useCallback, useMemo } from "react";
@@ -33,7 +34,8 @@ function SiloTable({ hovering }: { hovering: boolean }) {
   const mainToken = useTokenData().mainToken;
   const farmerSilo = useFarmerSilo();
   const farmerDeposits = farmerSilo.deposits;
-  const SILO_WHITELIST = useTokenData().whitelistedTokens;
+  const { whitelistedTokens: SILO_WHITELIST, deWhitelistedTokens } = useTokenData();
+
   const priceData = usePriceData();
   const farmerActions = useFarmerActions();
   const { data: apys } = useSiloTableAPYs();
@@ -126,42 +128,14 @@ function SiloTable({ hovering }: { hovering: boolean }) {
                 onClick={() => navigate(`/silo/${token.address}`)}
                 data-action-target={`token-row-${token.address}`}
               >
-                <TableCell className="text-left pl-2 sm:pl-4 table-cell items-center">
-                  <div className="flex flex-col gap-2">
-                    <div className="inline-flex items-center gap-1 sm:gap-2 whitespace-nowrap">
-                      <IconImage src={token.logoURI} alt={token.name} size={8} />
-                      {token.name}
-                    </div>
-                    <div className="sm:hidden">
-                      <div className="pinto-xs inline-flex gap-0.5">
-                        <span className="text-pinto-gray-4">Value:</span>
-                        {farmerSilo.isLoading ? (
-                          <Skeleton className="w-16 h-4 rounded-[0.75rem]" />
-                        ) : (
-                          <span>
-                            {formatter.usd(
-                              farmerDeposits.get(token)?.currentBDV.mul(token.isMain ? priceData.price : _poolPrice),
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {earnedPinto && token.isMain && (
-                      <div className="sm:hidden">
-                        <div className="pinto-xs inline-flex gap-0.5">
-                          <span className="text-pinto-gray-4">Claimable:</span>
-                          {farmerSilo.isLoading ? (
-                            <Skeleton className="w-16 h-4 rounded-[0.75rem]" />
-                          ) : (
-                            <span className="text-pinto-green">
-                              {formatter.usd(farmerActions.claimRewards.outputs.beanGain.mul(priceData.price))}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
+                <TokenCell
+                  token={token}
+                  isLoading={farmerSilo.isLoading}
+                  price={token.isMain ? priceData.price : _poolPrice}
+                  depositedPDV={userData?.currentBDV}
+                  earnedPinto={earnedPinto}
+                  claimableValue={farmerActions.claimRewards.outputs.beanGain.mul(priceData.price)}
+                />
                 <TableCell className="pl-1 pr-2 py-2.5 sm:p-auto ">
                   <div className="flex flex-col-reverse place-self-end items-center gap-3 sm:place-self-start sm:flex-row">
                     <div className="inline-flex items-center gap-1 sm:gap-3">
@@ -308,9 +282,30 @@ function SiloTable({ hovering }: { hovering: boolean }) {
               </TableRow>
             );
           })}
+          {deWhitelistedTokens.map((token, i) => {
+            return (
+              <TableRow
+                key={`dewhitelisted-${token.address}-${i}`}
+                className={`h-[4.5rem] opacity-80 bg-white hover:bg-pinto-green-1/50 hover:cursor-pointer`}
+                onClick={() => navigate(`/silo/${token.address}`)}
+                data-action-target={`token-row-${token.address}`}
+              >
+                <TokenCell
+                  token={token}
+                  isLoading={farmerSilo.isLoading}
+                  price={TokenValue.ZERO}
+                  depositedPDV={TokenValue.ZERO}
+                />
+                <TableCell className="text-left">{"N/A"}</TableCell>
+                <TableCell className="text-right pr-4 hidden sm:table-cell">{"N/A"}</TableCell>
+                <TableCell className="text-right pr-4 hidden sm:table-cell">
+                  {formatter.token(farmerDeposits.get(token)?.amount, token)}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
-      {/* </ScrollArea> */}
     </div>
   );
 }
@@ -365,6 +360,55 @@ const useSiloTableAPYs = () => {
 };
 
 // ---------------------- components ----------------------
+
+const TokenCell = ({
+  token,
+  isLoading,
+  price,
+  depositedPDV,
+  earnedPinto,
+  claimableValue,
+}: {
+  token: Token;
+  isLoading?: boolean;
+  price?: TokenValue;
+  depositedPDV?: TokenValue;
+  earnedPinto?: boolean;
+  claimableValue?: TokenValue;
+}) => {
+  return (
+    <TableCell className="text-left pl-2 sm:pl-4 table-cell items-center">
+      <div className="flex flex-col gap-2">
+        <div className="inline-flex items-center gap-1 sm:gap-2 whitespace-nowrap">
+          <IconImage src={token.logoURI} alt={token.name} size={8} mobileSize={6} />
+          {token.name}
+        </div>
+        <div className="sm:hidden">
+          <div className="pinto-xs inline-flex gap-0.5">
+            <span className="text-pinto-gray-4">Value:</span>
+            {isLoading ? (
+              <Skeleton className="w-16 h-4 rounded-[0.75rem]" />
+            ) : (
+              <span>{formatter.usd(depositedPDV?.mul(price ?? TokenValue.ZERO))}</span>
+            )}
+          </div>
+        </div>
+        {earnedPinto && token.isMain && (
+          <div className="sm:hidden">
+            <div className="pinto-xs inline-flex gap-0.5">
+              <span className="text-pinto-gray-4">Claimable:</span>
+              {isLoading ? (
+                <Skeleton className="w-16 h-4 rounded-[0.75rem]" />
+              ) : (
+                <span className="text-pinto-green">{formatter.usd(claimableValue)}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </TableCell>
+  );
+};
 
 const SeparatorVertical = () => <Separator orientation="vertical" className="bg-pinto-green-4/30 w-[1px] h-4" />;
 
