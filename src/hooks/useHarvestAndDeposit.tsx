@@ -79,7 +79,7 @@ export function useHarvestAndDeposit() {
   ]);
 
   const { writeWithEstimateGas, isConfirming } = useTransaction({
-    successMessage: "Harvest and deposit complete!",
+    successMessage: "Harvest complete!",
     successCallback: onSuccess,
   });
 
@@ -90,7 +90,7 @@ export function useHarvestAndDeposit() {
       if (harvestableAmount.lte(0)) throw new Error("No harvestable pods");
 
       setIsSubmitting(true);
-      toast.loading("Harvesting and depositing...");
+      toast.loading("Harvesting...");
 
       const advFarm: AdvancedFarmCall[] = [];
 
