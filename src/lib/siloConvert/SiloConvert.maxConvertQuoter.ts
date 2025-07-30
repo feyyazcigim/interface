@@ -294,12 +294,14 @@ export class SiloConvertMaxConvertQuoter {
       const client = this.context.wagmiConfig.getClient({ chainId: this.context.chainId });
       errorHandler.assertDefined(client, `No wagmi client available for chain ID: ${this.context.chainId}`);
 
+      /*
       console.log("getMaxAmountIn", {
         source: source.address,
         target: target.address,
         diamond: this.context.diamond,
         chainId: this.context.chainId,
       });
+      */
 
       const maxAmountIn = await errorHandler.wrapAsync(
         () =>
@@ -319,7 +321,7 @@ export class SiloConvertMaxConvertQuoter {
         },
       );
 
-      console.log("maxAmountIn", maxAmountIn);
+      // console.log("maxAmountIn", maxAmountIn);
 
       // Validate contract response
       errorHandler.validateContractResponse(maxAmountIn, "getMaxAmountIn");
