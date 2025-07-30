@@ -44,7 +44,7 @@ export function usePriceQuery() {
 }
 
 type MinViablePoolReturnType = Omit<
-  ReadContractReturnType<typeof abiSnippets.price.getWell, "getWell", [Address]>,
+  ReadContractReturnType<typeof diamondPriceABI, "getWell", [Address]>,
   "beanLiquidity" | "nonBeanLiquidity"
 >;
 
@@ -102,9 +102,9 @@ const useDeWhitelistedWellsPriceQuery = () => {
   return useReadContracts({
     contracts: deWhitelistedTokens.map((token) => ({
       address: priceAddress,
-      abi: abiSnippets.price.getWell,
-      functionName: "getWell",
-      args: [token.address],
+      abi: diamondPriceABI,
+      functionName: "getWell" as const,
+      args: [token.address] as const,
     })),
     query: {
       ...settings.query,
