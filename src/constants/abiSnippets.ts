@@ -310,6 +310,40 @@ const convert = [
   },
 ] as const;
 
+/**
+ * Not exactly sure why this is the case, but using diamondPrice in useReadContracts
+ * causes the output type to be the same as diamondPrice.price()
+ *
+ * This is a workaround to get the correct output type for diamond.getWell($address)
+ */
+const getWell = [
+  {
+    inputs: [{ internalType: "address", name: "wellAddress", type: "address" }],
+    name: "getWell",
+    outputs: [
+      {
+        components: [
+          { internalType: "address", name: "pool", type: "address" },
+          { internalType: "address[2]", name: "tokens", type: "address[2]" },
+          { internalType: "uint256[2]", name: "balances", type: "uint256[2]" },
+          { internalType: "uint256", name: "price", type: "uint256" },
+          { internalType: "uint256", name: "liquidity", type: "uint256" },
+          { internalType: "uint256", name: "beanLiquidity", type: "uint256" },
+          { internalType: "uint256", name: "nonBeanLiquidity", type: "uint256" },
+          { internalType: "int256", name: "deltaB", type: "int256" },
+          { internalType: "uint256", name: "lpUsd", type: "uint256" },
+          { internalType: "uint256", name: "lpBdv", type: "uint256" },
+        ],
+        internalType: "struct P.Pool",
+        name: "pool",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
+
 export const abiSnippets = {
   advancedPipe,
   advancedFarm,
@@ -325,6 +359,7 @@ export const abiSnippets = {
   price: {
     getTokenUsdPrice,
     getTokenUsdTwap,
+    getWell,
   },
   pool: {
     poolDeltaBNoCap,
