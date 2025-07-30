@@ -25,18 +25,57 @@ export interface Token {
   symbol: string;
   chainId: number;
   decimals: number;
-  displayDecimals?: number;
-  isMain?: boolean;
-  isLP?: boolean;
-  isNative?: boolean;
-  isWrappedNative?: boolean;
-  isWhitelisted?: boolean;
-  isSiloWrapped?: boolean;
-  is3PSiloWrapped?: boolean;
   address: Address;
   logoURI: string;
-  color?: string;
+  displayDecimals?: number;
+  /**
+   * Addresses of the tokens that make up the LP.
+   */
   tokens?: Address[];
+  /**
+   * Is the main token of the Protocol (PINTO/BEAN).
+   */
+  isMain?: boolean;
+  /**
+   * Is an LP.
+   */
+  isLP?: boolean;
+  /**
+   * Is the native token of the chain (ETH)
+   */
+  isNative?: boolean;
+  /**
+   * Is a wrapped native token (WETH)
+   */
+  isWrappedNative?: boolean;
+  /**
+   * Whitelisted for the Silo.
+   */
+  isWhitelisted?: boolean;
+  /**
+   * Is a NON-main underlying asset of an LP
+   */
+  isLPUnderlying?: boolean;
+  /**
+   * Whether the LP token this token is underlying is whitelisted in the Silo.
+   * Ex: if this token is WETH, whether PINTOWETH is whitelisted.
+   */
+  isCompositeLPWhitelisted?: boolean;
+  /**
+   * Whether the token represents a silo wrapped token (sPINTO)
+   */
+  isSiloWrapped?: boolean;
+  /**
+   * Whether the token represents a 3rd Party Silo wrapped token (created by a 3rd party)
+   */
+  is3PSiloWrapped?: boolean;
+  /**
+   * Color of the token. Used for charting and etc.
+   */
+  color?: string;
+  /**
+   * Description of the token (If Applicable).
+   */
   description?: string;
 }
 
