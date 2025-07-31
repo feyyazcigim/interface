@@ -138,8 +138,9 @@ function ConvertForm({
   const maxConvertAtRate = maxConvertQuery.data?.maxAtRate;
 
   const poolPrice = useMemo(
-    () => pools.find((pool) => pool.pool.address.toLowerCase() === siloToken.address.toLowerCase())?.price ?? TV.ZERO,
-    [pools, siloToken],
+    () =>
+      pools.find((pool) => pool.pool.address.toLowerCase() === targetToken?.address.toLowerCase())?.price ?? TV.ZERO,
+    [pools, targetToken],
   );
 
   const maxConvertQueryData =
