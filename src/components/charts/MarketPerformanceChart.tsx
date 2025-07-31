@@ -164,7 +164,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
       const chartData: LineChartData[] = [];
       const tokens: (Token | undefined)[] = [];
       const chartStrokeGradients: StrokeGradientFunction[] = [];
-      for (const token of ["NET", "WETH", "cbETH", "cbBTC", "WSOL"]) {
+      for (const token of ["NET", "cbETH", "cbBTC"]) {
         for (let i = 0; i < allData[token].length; i++) {
           chartData[i] ??= {
             timestamp: allData[token][i].timestamp,
