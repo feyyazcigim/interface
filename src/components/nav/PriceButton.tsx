@@ -238,6 +238,7 @@ function PriceButtonPanel() {
                 </Button>
               )}
               {priceData.pools.map((pool, i) => {
+                if (!pool.pool.isWhitelisted) return null;
                 const token0Price = pool.tokens[0].isMain
                   ? pool.price
                   : useTwa
