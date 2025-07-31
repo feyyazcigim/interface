@@ -103,9 +103,9 @@ export class Strategizer {
 
       eh.validateConversionTokens("default", source, target);
 
-      // if (source.isMain && target.isLP) {
-      //   return this.strategizeLPAndMainDownConvert(source, target, amountIn);
-      // }
+      if (source.isMain && target.isLP) {
+        return this.strategizeLPAndMainDownConvert(source, target, amountIn);
+      }
 
       // Only options for source and target are LP<>Main.
       const defaultRoute: SiloConvertRoute<SiloConvertType> = {
@@ -363,6 +363,13 @@ export class Strategizer {
       const targetWellPrice = targetWell.price;
 
       let grownStalkPenaltyExpected = false;
+
+      // TODO: To actually calculate if the grown stalk penalty will be applied, we need to:
+      // diamond.getGaugeValue(1) returns bytes,
+      // abi.decode(bytes, (uint256,uint256)) = (uint256 penaltyRatio, uint256 rollingRateAbovePeg)
+      // check if penalty ratio = 0
+
+      // However, a large chunk of mints are required for penaltyRatio to be == 0, so we will just use the well price for now.
 
       // 1. Check if the target well price is less than the penalty rate.
       if (targetWellPrice.lt(this.maxConvertQuoter.CONVERT_DOWN_PENALTY_RATE)) {
