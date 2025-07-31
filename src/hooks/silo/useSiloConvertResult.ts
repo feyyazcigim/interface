@@ -50,7 +50,6 @@ export function useSiloConvertResult(
 
   const results = useMemo(() => {
     if (!summaries || !target || !summaries.length) return;
-    // console.log("useSiloConvertResult", summaries, target);
 
     const sourceData = siloTokenData.get(source);
     const targetData = siloTokenData.get(target);
