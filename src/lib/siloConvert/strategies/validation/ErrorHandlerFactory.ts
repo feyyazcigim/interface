@@ -58,10 +58,10 @@ class StrategizerErrorHandler extends BaseErrorHandler<Token, AnyRecord> {
   }
 
   protected createDomainError(operationName: string, originalError: unknown, context: AnyRecord): SCE.SiloConvertError {
-    const errorMessage = originalError instanceof Error ? originalError.message : "Unknown error";
-    return new SCE.StrategizerError(operationName, {
+    const originalMessage = originalError instanceof Error ? originalError.message : "Unknown error";
+    return new SCE.StrategizerError(originalMessage, {
       operation: operationName,
-      error: errorMessage,
+      error: originalMessage,
       originalError,
       ...context,
     });
@@ -93,10 +93,11 @@ class MaxConvertQuoterErrorHandler extends BaseErrorHandler<Token, AnyRecord> {
   }
 
   protected createDomainError(operationName: string, originalError: unknown, context: AnyRecord): SCE.SiloConvertError {
-    const errorMessage = originalError instanceof Error ? originalError.message : "Unknown error";
-    return new SCE.MaxConvertQuotationError(this.sourceToken, this.targetToken, `${operationName} failed`, {
+    const originalMessage = originalError instanceof Error ? originalError.message : "Unknown error";
+    return new SCE.MaxConvertQuotationError(this.sourceToken, this.targetToken, originalMessage, {
       operation: operationName,
-      error: errorMessage,
+      operationContext: `${operationName} failed`,
+      error: originalMessage,
       originalError,
       ...context,
     });
@@ -118,10 +119,11 @@ class ConvertStrategyErrorHandler extends BaseErrorHandler<string, AnyRecord> {
   }
 
   protected createDomainError(operationName: string, originalError: unknown, context: AnyRecord): SCE.SiloConvertError {
-    const errorMessage = originalError instanceof Error ? originalError.message : "Unknown error";
-    return new SCE.ConversionQuotationError(`${operationName} failed for ${this.sourceToken} -> ${this.targetToken}`, {
+    const originalMessage = originalError instanceof Error ? originalError.message : "Unknown error";
+    return new SCE.ConversionQuotationError(originalMessage, {
       operation: operationName,
-      error: errorMessage,
+      operationContext: `${operationName} failed for ${this.sourceToken} -> ${this.targetToken}`,
+      error: originalMessage,
       originalError,
       ...context,
     });
