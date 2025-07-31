@@ -1,6 +1,7 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { ZERO_ADDRESS } from "@/constants/address";
 import { SEEDS, STALK } from "@/constants/internalTokens";
+import { defaultQuerySettings } from "@/constants/query";
 import {
   beanstalkAbi,
   useReadFarmer_BalanceOfGrownStalkMultiple,
@@ -248,6 +249,7 @@ const useFarmerSiloDepositsQuery = () => {
     query: {
       enabled: !!farmer.address, // Only run when wallet is connected
       select: selectDepositsForAccount,
+      ...defaultQuerySettings,
     },
   });
 
@@ -256,7 +258,7 @@ const useFarmerSiloDepositsQuery = () => {
 
 export function useFarmerSilo(address?: `0x${string}`) {
   const account = useAccount();
-  const { mainToken: BEAN, preferredTokens, mayBeWhitelistedTokens: maybeWLTokens, whitelistedTokens } = useTokenData();
+  const { mainToken: BEAN, preferredTokens, mayBeWhitelistedTokens: maybeWLTokens } = useTokenData();
   const siloData = useSiloData();
   const protocolAddress = useProtocolAddress();
   const priceData = usePriceData();
@@ -332,9 +334,9 @@ export function useFarmerSilo(address?: `0x${string}`) {
 
   // Fetch flood data with stable arguments
   const floodArgs: readonly [readonly `0x${string}`[]] | undefined = useMemo(() => {
-    if (!farmerAddress || !whitelistedTokens.length) return undefined;
-    return [getFloodCallArguments(whitelistedTokens, farmerAddress)] as const;
-  }, [farmerAddress, whitelistedTokens]);
+    if (!farmerAddress || !maybeWLTokens.length) return undefined;
+    return [getFloodCallArguments(maybeWLTokens, farmerAddress)] as const;
+  }, [farmerAddress, maybeWLTokens]);
 
   const floodData = useSimulateContract({
     address: protocolAddress,
@@ -495,8 +497,8 @@ export function useFarmerSilo(address?: `0x${string}`) {
       wellsPlenty: { plenty: TokenValue; plentyPerRoot: bigint };
     }[] = [];
 
-    if (floodData.data && whitelistedTokens) {
-      whitelistedTokens.forEach((token) => {
+    if (floodData.data && maybeWLTokens) {
+      maybeWLTokens.forEach((token) => {
         if (floodData.data && token.tokens) {
           const sopToken = floodData.data.farmerSops.find(
             (farmerSop) => farmerSop.well.toLowerCase() === token.address.toLowerCase(),
@@ -527,7 +529,7 @@ export function useFarmerSilo(address?: `0x${string}`) {
       roots: floodData?.data?.roots ?? 0n,
       farmerSops: sops,
     };
-  }, [floodData.data, whitelistedTokens, BEAN.address, preferredTokens]);
+  }, [floodData.data, maybeWLTokens, BEAN.address, preferredTokens]);
 
   // Combine query keys
   const queryKeys = useMemo(

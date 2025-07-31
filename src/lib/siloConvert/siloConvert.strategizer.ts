@@ -1,4 +1,5 @@
 import { TV } from "@/classes/TokenValue";
+import { CONVERT_DOWN_PENALTY_RATE } from "@/constants/silo";
 import { Token } from "@/utils/types";
 import { Prettify } from "@/utils/types.generic";
 import { ExtendedPoolData, SiloConvertPriceCache } from "./SiloConvert.cache";
@@ -15,7 +16,6 @@ import {
 import { ErrorHandlerFactory } from "./strategies/validation/ErrorHandlerFactory";
 import {
   CacheError,
-  InvalidConversionTokensError,
   MaxConvertQuotationError,
   StrategySelectionError,
 } from "./strategies/validation/SiloConvertErrors";
@@ -372,7 +372,7 @@ export class Strategizer {
       // However, a large chunk of mints are required for penaltyRatio to be == 0, so we will just use the well price for now.
 
       // 1. Check if the target well price is less than the penalty rate.
-      if (targetWellPrice.lt(this.maxConvertQuoter.CONVERT_DOWN_PENALTY_RATE)) {
+      if (targetWellPrice.lt(CONVERT_DOWN_PENALTY_RATE)) {
         grownStalkPenaltyExpected = true;
       } else {
         // At this point we know that the well price > GSPR.

@@ -125,6 +125,11 @@ const usePrepareConvertContext = () => {
           deltaSeedRewards: targetState.rewards.seeds.sub(fromState.rewards.seeds),
         };
 
+        // Disable ->  Non-Whitelisted converts
+        if (!target.isWhitelisted) {
+          data.enabled = false;
+        }
+
         // PINTO -> LP Converts
         if (fromToken.isMain) {
           // Disable converts from PINTO -> LP when overall deltaB < 0
@@ -134,10 +139,6 @@ const usePrepareConvertContext = () => {
 
           // Disable converts from PINTO -> LP when LP pool deltaB < 0
           if (target.isLP && targetState.pool?.deltaB.lte(0)) {
-            data.enabled = false;
-          }
-
-          if (!target.isWhitelisted) {
             data.enabled = false;
           }
         }
@@ -150,11 +151,6 @@ const usePrepareConvertContext = () => {
 
           // Disable converts LP -> PINTO when pool deltaB < 0
           if (target.isMain && fromState.pool?.deltaB.gt(0)) {
-            data.enabled = false;
-          }
-
-          // Disable converts LP -> NON whitelisted LP when
-          if (target.isLP && !target.isWhitelisted) {
             data.enabled = false;
           }
         }

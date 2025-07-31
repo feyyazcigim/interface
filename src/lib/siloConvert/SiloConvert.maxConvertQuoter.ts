@@ -3,6 +3,7 @@ import { ITTLCache, InMemoryTTLCache } from "@/classes/TTLCache";
 import { TV } from "@/classes/TokenValue";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { abiSnippets } from "@/constants/abiSnippets";
+import { CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER, NO_MAX_CONVERT_AMOUNT } from "@/constants/silo";
 import { MAIN_TOKEN, PINTO_WSOL_TOKEN } from "@/constants/tokens";
 import encoders from "@/encoders";
 import decodeJunctionResult from "@/encoders/junction/decodeJunction";
@@ -76,24 +77,6 @@ export class SiloConvertMaxConvertQuoter {
   private readonly cache: SiloConvertPriceCache;
   private readonly scalarCache: ITTLCache<number>;
   private readonly maxConvertCache: ITTLCache<MaxConvertResult>;
-
-  static NO_MAX_CONVERT_AMOUNT = 1_000_000_000;
-
-  /**
-   * The rate at which grown stalk penalty is applied. Refer to:
-   * https://github.com/pinto-org/protocol/blob/master/contracts/beanstalk/init/InitalizeDiamond.sol
-   *
-   * Rate has 6 decimals of precision.
-   *
-   */
-  readonly CONVERT_DOWN_PENALTY_RATE = TV.fromHuman(1.005, 6);
-
-  /**
-   * Rate with a 0.00004 buffer.
-   *
-   * This is to minimize the risk of running into issues with price volatility.
-   */
-  static CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.00504, 6);
 
   // ---------- Constructor ----------
 
@@ -236,7 +219,7 @@ export class SiloConvertMaxConvertQuoter {
   async getMaxAmountInAtRate(
     source: Token,
     target: Token,
-    rate: TV = SiloConvertMaxConvertQuoter.CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER,
+    rate: TV = CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER,
   ): Promise<TV | undefined> {
     const errorHandler = ErrorHandlerFactory.createMaxConvertQuoterHandler(source, target);
 
@@ -547,7 +530,7 @@ export class SiloConvertMaxConvertQuoter {
     }
 
     // No additional restrictions apply as we can convert in equal proportions
-    return TV.fromHuman(SiloConvertMaxConvertQuoter.NO_MAX_CONVERT_AMOUNT, source.decimals);
+    return TV.fromHuman(NO_MAX_CONVERT_AMOUNT, source.decimals);
   }
 
   /**
