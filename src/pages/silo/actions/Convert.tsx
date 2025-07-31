@@ -104,7 +104,6 @@ function ConvertForm({
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
   const [showMinAmountWarning, setShowMinAmountWarning] = useState(false);
   const [allowStalkPenalty, setAllowStalkPenalty] = useState(false);
-  const pintoWSOL = useChainConstant(PINTO_WSOL_TOKEN);
 
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
   const clearSiloConvertQueries = useClearSiloConvertQueries();
@@ -146,13 +145,6 @@ function ConvertForm({
   const maxConvertQueryData =
     (poolPrice.gt(CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER) ? maxConvertAtRate : maxConvertOverall) ?? TV.ZERO;
 
-  // useEffect(() => {
-  //   console.log("maxConvertQueryData", {
-  //     maxConvertQueryData: maxConvertQueryData.toHuman(),
-  //     maxConvertAtRate: maxConvertAtRate?.toHuman(),
-  //   });
-  // }, [maxConvertQuery.data]);
-
   const maxConvertLoading = maxConvertQuery.isLoading;
 
   const amountInNum = stringToNumber(amountIn);
@@ -176,10 +168,6 @@ function ConvertForm({
 
   const { results: convertResults, sortedIndexes, showRoutes } = useSiloConvertResult(siloToken, targetToken, quote);
   const grownStalkPenaltyQuery = useSiloConvertDownPenaltyQuery(siloToken, targetToken, convertResults, isDownConvert);
-
-  // useEffect(() => {
-  //   console.log("grownStalkPenaltyQuery", grownStalkPenaltyQuery.data);
-  // }, [grownStalkPenaltyQuery.data]);
 
   const convertPriceResults = useExtractSiloConvertResultPriceResults(quote);
   const priceImpact = useDeterminePriceImpactWithResults(convertPriceResults);

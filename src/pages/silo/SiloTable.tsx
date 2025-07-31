@@ -55,9 +55,11 @@ function SiloTable({ hovering }: { hovering: boolean }) {
       if (token.isWhitelisted) {
         return true;
       }
-      const hasDeposits = farmerDeposits.get(token)?.amount?.gt(0);
+      // const hasDeposits = farmerDeposits.get(token)?.amount?.gt(0);
 
-      return !!hasDeposits;
+      // return !!hasDeposits;
+
+      return true;
     });
 
     return filtered;

@@ -194,6 +194,7 @@ export class SiloConvertMaxConvertQuoter {
       if (source.isMain || target.isMain) {
         const [res, resAtRate] = await Promise.all([
           this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits),
+          // Promise.resolve(TV.fromHuman("100", source.decimals)),
           this.getMaxAmountInAtRate(source, target),
         ]);
         results.max = res;
@@ -252,9 +253,9 @@ export class SiloConvertMaxConvertQuoter {
         this.context.wagmiConfig.getClient({ chainId: this.context.chainId }),
         {
           abi: diamondABI,
-          functionName: "getMaxAmountInAtRate",
           address: this.context.diamond,
-          args: [source.address, target.address, rate.toBigInt()],
+          functionName: "getMaxAmountInAtRate" as const,
+          args: [source.address, target.address, rate.toBigInt()] as const,
         },
       );
 
@@ -294,15 +295,6 @@ export class SiloConvertMaxConvertQuoter {
       const client = this.context.wagmiConfig.getClient({ chainId: this.context.chainId });
       errorHandler.assertDefined(client, `No wagmi client available for chain ID: ${this.context.chainId}`);
 
-      /*
-      console.log("getMaxAmountIn", {
-        source: source.address,
-        target: target.address,
-        diamond: this.context.diamond,
-        chainId: this.context.chainId,
-      });
-      */
-
       const maxAmountIn = await errorHandler.wrapAsync(
         () =>
           readContract(client, {
@@ -310,9 +302,6 @@ export class SiloConvertMaxConvertQuoter {
             address: this.context.diamond,
             functionName: "getMaxAmountIn" as const,
             args: [source.address, target.address] as const,
-          }).catch((e) => {
-            console.log("Error getting max amount in", e);
-            throw e;
           }),
         "read max amount from contract",
         {
@@ -320,8 +309,6 @@ export class SiloConvertMaxConvertQuoter {
           chainId: this.context.chainId,
         },
       );
-
-      // console.log("maxAmountIn", maxAmountIn);
 
       // Validate contract response
       errorHandler.validateContractResponse(maxAmountIn, "getMaxAmountIn");

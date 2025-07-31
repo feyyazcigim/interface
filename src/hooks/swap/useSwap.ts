@@ -44,10 +44,8 @@ const useGetSwapOptions = () => {
       }
 
       return {
-        // directOnly: wsolIn || wsolOut,
-        // aggDisabled: wsolIn || wsolOut,
-        directOnly: true,
-        aggDisabled: true,
+        directOnly: wsolIn || wsolOut,
+        aggDisabled: wsolIn || wsolOut,
         disabledThruTokens: new Set([wsol]),
         lpRouteOverrides,
       };

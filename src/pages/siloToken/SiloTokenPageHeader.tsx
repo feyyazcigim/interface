@@ -83,7 +83,7 @@ const SiloTokenPageHeader = ({
           <IconImage src={token.logoURI} size={12} alt={token.name} />
           <div className="inline-flex gap-3 items-center">
             <div className="pinto-h2 sm:pinto-h1">{showSymbol ? token.symbol : token.name}</div>
-            {!token.isWhitelisted && (
+            {!token.isWhitelisted && token.isLP && (
               <div className="bg-pinto-gray-2/70 text-pinto-secondary px-[0.25rem] py-[0.25rem] rounded-[0.25rem] pinto-sm leading-none w-fit">
                 Dewhitelisted
               </div>
