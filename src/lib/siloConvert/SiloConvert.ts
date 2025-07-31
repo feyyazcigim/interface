@@ -313,6 +313,7 @@ export class SiloConvert {
     );
 
     console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
+    console.debug("[SiloConvert/quote] simulationsRawResults: ", simulationsRawResults);
 
     const datas = quotedRoutes.map((route, i): SiloConvertSummary<SiloConvertType> => {
       const rawResponse = simulationsRawResults[i];
@@ -391,13 +392,19 @@ export class SiloConvert {
     const mainToken = getChainConstant(this.context.chainId, MAIN_TOKEN);
     try {
       const staticCallResult = [...rawResponse];
+
+      console.debug("[SiloConvert/decodeRouteAndPriceResults] staticCallResult: ", staticCallResult);
+
       // price result is the last element in the static call result
       const priceResult = staticCallResult.pop();
 
       const decodedConvertResults = decodeConvertResults(staticCallResult, route.convertType);
 
       const decodedAdvPipePriceCall = priceResult ? AdvancedPipeWorkflow.decodeResult(priceResult) : undefined;
-      const postPriceData = decodedAdvPipePriceCall?.length ? decodePriceResult(decodedAdvPipePriceCall[0]) : undefined;
+      console.debug("[SiloConvert/decodeRouteAndPriceResults] decodedAdvPipePriceCall: ", decodedAdvPipePriceCall);
+      const postPriceData = decodedAdvPipePriceCall?.length
+        ? this.priceCache.decodePriceCallResults([...decodedAdvPipePriceCall])
+        : undefined;
 
       return {
         postPriceData,
