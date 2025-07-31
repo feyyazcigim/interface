@@ -82,7 +82,12 @@ function SiloTokenInner({ siloToken }: { siloToken: Token }) {
               <div className="flex flex-col w-full gap-6">
                 {(!isMobile || (!currentAction && isMobile)) && (
                   <>
-                    <SiloTokenPageSubHeader siloTokenData={siloTokenData} apys={apysQuery.data} isMobile={isMobile} />
+                    <SiloTokenPageSubHeader
+                      siloTokenData={siloTokenData}
+                      apys={apysQuery.data}
+                      isMobile={isMobile}
+                      hideAPYs={!siloToken.isWhitelisted}
+                    />
                     <Separator />
                   </>
                 )}

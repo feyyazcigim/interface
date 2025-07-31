@@ -288,7 +288,6 @@ export class SiloConvert {
       console.error("[SiloConvert/quote] FAILED to quote routes: ", e);
       throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to quote routes", {
         routes,
-        quotedRoutes,
       });
     });
 

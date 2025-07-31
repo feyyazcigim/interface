@@ -15,7 +15,7 @@ import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
 import { abiSnippets } from "@/constants/abiSnippets";
 import { defaultQuerySettingsQuote } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { useTokenMap, useWSOL } from "@/hooks/pinto/useTokenMap";
 import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
@@ -429,12 +429,13 @@ const useButtonApprovalProps = (
 const useFilterDestinationTokens = () => {
   const tokenMap = useTokenMap();
   const [tokens, setTokens] = useState<Set<Token>>(new Set());
+  const wsol = useWSOL();
 
   useEffect(() => {
     const tokens = Object.values(tokenMap);
-    const filtered = tokens.filter((t) => t.isSiloWrapped || t.isLP || t.is3PSiloWrapped);
+    const filtered = tokens.filter((t) => t.isSiloWrapped || t.isLP || t.is3PSiloWrapped || tokensEqual(t, wsol));
     setTokens(new Set(filtered));
-  }, [tokenMap]);
+  }, [tokenMap, wsol]);
 
   return tokens;
 };
