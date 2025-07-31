@@ -89,11 +89,11 @@ export class SiloConvertMaxConvertQuoter {
   readonly CONVERT_DOWN_PENALTY_RATE = TV.fromHuman(1.005, 6);
 
   /**
-   * Rate with a 0.0001 buffer.
+   * Rate with a 0.00004 buffer.
    *
    * This is to minimize the risk of running into issues with price volatility.
    */
-  readonly CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.0051, 6);
+  readonly CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.00504, 6);
 
   // ---------- Constructor ----------
 
