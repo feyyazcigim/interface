@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PINTO } from "@/constants/tokens";
 import { useDenomination } from "@/hooks/useAppSettings";
 import useFarmerActions from "@/hooks/useFarmerActions";
+import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import { EMAWindows, SiloYieldsByToken, useSiloYieldsByToken } from "@/state/useSiloAPYs";
@@ -26,13 +27,14 @@ import { getTokenIndex, sortTokensForDeposits } from "@/utils/token";
 import { Token } from "@/utils/types";
 import { AddressLookup } from "@/utils/types.generic";
 import { cn } from "@/utils/utils";
-import { forwardRef, useCallback, useEffect, useMemo } from "react";
+import { forwardRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 function SiloTable({ hovering }: { hovering: boolean }) {
   const siloData = useSiloData();
   const mainToken = useTokenData().mainToken;
   const farmerSilo = useFarmerSilo();
+  const { balances } = useFarmerBalances();
   const farmerDeposits = farmerSilo.deposits;
   const { mayBeWhitelistedTokens } = useTokenData();
 
@@ -52,12 +54,13 @@ function SiloTable({ hovering }: { hovering: boolean }) {
     );
 
     const filtered = sorted.filter((token) => {
-      if (token.isWhitelisted) {
-        return true;
-      }
-      const hasDeposits = farmerDeposits.get(token)?.amount?.gt(0);
+      if (token.isWhitelisted) return true;
 
-      return !!hasDeposits;
+      // show non-whitelisted tokens if they have deposits or balance
+      const hasDeposits = farmerDeposits.get(token)?.amount?.gt(0);
+      const hasBalance = balances.get(token)?.total?.gt(0);
+
+      return !!hasDeposits || !!hasBalance;
     });
 
     return filtered;

@@ -177,7 +177,6 @@ export class SiloConvertMaxConvertQuoter {
       if (source.isMain || target.isMain) {
         const [res, resAtRate] = await Promise.all([
           this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits),
-          // Promise.resolve(TV.fromHuman("100", source.decimals)),
           this.getMaxAmountInAtRate(source, target),
         ]);
         results.max = res;

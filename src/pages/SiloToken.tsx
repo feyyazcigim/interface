@@ -294,6 +294,10 @@ const SiloTokenAbout = ({ siloToken, price, siloData }: ISiloTokenAbout) => {
 
   const { siloTVD, liquidityTVD } = [...siloData.tokenData.entries()].reduce<SiloBDVs>(
     (prev, [token, data]) => {
+      if (!token.isWhitelisted) {
+        return prev;
+      }
+
       const bdv = data.depositedBDV.add(data.germinatingBDV);
 
       prev.siloTVD = prev.siloTVD.add(bdv);
@@ -335,7 +339,9 @@ const SiloTokenAbout = ({ siloToken, price, siloData }: ISiloTokenAbout) => {
         {siloToken.isLP ? (
           <div>
             <div className="pinto-sm-light font-thin sm:font-light text-pinto-secondary">Current % of Dep. LP PDV</div>
-            <div className="pinto-body sm:pinto-h4 pt-1">{formatter.pct(liquidityRatio)}</div>
+            <div className="pinto-body sm:pinto-h4 pt-1">
+              {siloToken.isWhitelisted ? formatter.pct(liquidityRatio) : "N/A"}
+            </div>
           </div>
         ) : null}
         {siloToken.isLP ? (
@@ -344,7 +350,7 @@ const SiloTokenAbout = ({ siloToken, price, siloData }: ISiloTokenAbout) => {
               Optimal % of Dep. LP PDV
             </div>
             <div className="pinto-body sm:pinto-h4 pt-1 text-right sm:text-start">
-              {formatter.pct(optimalDepositedRatio)}
+              {siloToken.isWhitelisted ? formatter.pct(optimalDepositedRatio) : "N/A"}
             </div>
           </div>
         ) : null}
