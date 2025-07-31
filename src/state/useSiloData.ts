@@ -239,7 +239,7 @@ export function useSiloData() {
     ...settings.query,
   });
 
-  const { whitelistedTokens, deWhitelistedTokens } = useTokenData();
+  const { whitelistedTokens, deWhitelistedTokens, mayBeWhitelistedTokens } = useTokenData();
 
   // we have 5 whitelisted tokens
   const wlTokenData0 = useReadSiloTokenData(whitelistedTokens?.[0]);
@@ -250,11 +250,6 @@ export function useSiloData() {
   const dwlTokenData0 = useReadSiloTokenData(deWhitelistedTokens?.[0]);
   const dwlTokenData1 = useReadSiloTokenData(deWhitelistedTokens?.[1]);
 
-  const allMaybeWhitelistedTokens = useMemo(
-    () => [...whitelistedTokens, ...deWhitelistedTokens],
-    [whitelistedTokens, deWhitelistedTokens],
-  );
-
   const wlTokenDatas = useMemo(() => {
     const keys: QueryKey[] = [];
     const data: Map<Token, SiloTokenData> = new Map();
@@ -262,7 +257,7 @@ export function useSiloData() {
     const wl = [wlTokenData0, wlTokenData1, wlTokenData2, wlTokenData3, dwlTokenData0, dwlTokenData1];
 
     for (const [i, { data: wlTokenData, queryKey }] of wl.entries()) {
-      const token = [...allMaybeWhitelistedTokens][i];
+      const token = mayBeWhitelistedTokens[i];
 
       const index = yields?.siloYields[0]?.tokenAPYS?.findIndex((apys) => stringEq(apys?.token, token?.address));
       const yieldData = index ? yields?.siloYields[0]?.tokenAPYS?.[index] : undefined;
@@ -282,7 +277,7 @@ export function useSiloData() {
     }
 
     return {
-      tokenData: data.size !== allMaybeWhitelistedTokens.length ? new Map<Token, SiloTokenData>() : data,
+      tokenData: data.size !== mayBeWhitelistedTokens.length ? new Map<Token, SiloTokenData>() : data,
       queryKeys: keys,
     };
   }, [
@@ -292,7 +287,7 @@ export function useSiloData() {
     wlTokenData3,
     dwlTokenData0,
     dwlTokenData1,
-    allMaybeWhitelistedTokens,
+    mayBeWhitelistedTokens,
     yields,
   ]);
 

@@ -149,7 +149,7 @@ export function useTwaDeltaBLPQuery() {
     [tokenData.lpTokens],
   );
 
-  const q = useReadContracts({
+  return useReadContracts({
     contracts: tokenData.lpTokens.map((token) => {
       return {
         functionName: "poolDeltaBNoCap",
@@ -163,8 +163,6 @@ export function useTwaDeltaBLPQuery() {
       select: handleSelect,
     },
   });
-
-  return q;
 }
 
 export function useInstantTWATokenPricesQuery() {
@@ -243,19 +241,18 @@ export function usePriceData() {
   const selectWellPriceData = useSelectWellPriceData();
 
   const priceResults = useMemo(() => {
-    const poolMap: Lookup<PoolData> = {};
+    const pools: PoolData[] = [];
 
     if (price?.ps && deWhitelistedWellsQuery.data) {
       const combined = [...price.ps, ...deWhitelistedWellsQuery.data];
       for (const wellPriceData of combined) {
         const poolData = selectWellPriceData(wellPriceData);
         if (poolData) {
-          poolMap[getTokenIndex(poolData.pool)] = poolData;
+          pools.push(poolData);
         }
       }
     }
 
-    const pools = Object.values(poolMap);
     // Sort pools by whitelisted status first, then by liquidity
     pools.sort((a, b) => {
       if (a.pool.isWhitelisted && !b.pool.isWhitelisted) return -1;
