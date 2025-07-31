@@ -50,6 +50,7 @@ export function useSiloConvertResult(
 
   const results = useMemo(() => {
     if (!summaries || !target || !summaries.length) return;
+    // console.log("useSiloConvertResult", summaries, target);
 
     const sourceData = siloTokenData.get(source);
     const targetData = siloTokenData.get(target);
@@ -82,7 +83,7 @@ export function useSiloConvertResult(
   const sortedIndexes = useMemo(() => {
     if (!results) return;
 
-    const sortedIndexes = [...results]
+    const sortedIndicies = [...results]
       .map((result, index) => ({ ...result, index }))
       .sort((a, b) => {
         const aBDV = a.toBdv;
@@ -99,7 +100,7 @@ export function useSiloConvertResult(
       })
       .map((r) => r.index);
 
-    return sortedIndexes;
+    return sortedIndicies;
   }, [results]);
 
   const showRoutes = useMemo(() => {
@@ -118,11 +119,14 @@ export function useSiloConvertResult(
     return bestRoute.totalAmountOut.gt(nextBestRoute.totalAmountOut) && bestRoute.toBdv.lt(nextBestRoute.toBdv);
   }, [results, sortedIndexes]);
 
-  return {
-    results,
-    sortedIndexes,
-    showRoutes,
-  };
+  return useMemo(
+    () => ({
+      results,
+      sortedIndexes,
+      showRoutes,
+    }),
+    [results, sortedIndexes, showRoutes],
+  );
 }
 
 // ────────────────────────────────────────────────────────────────────────────────

@@ -231,9 +231,10 @@ const useFarmerSiloDepositsQuery = () => {
 
   const { mayBeWhitelistedTokens } = useTokenData();
 
-  const selectDepositsForAccount = useCallback(getSelectDepositsForAccount(mayBeWhitelistedTokens), [
-    mayBeWhitelistedTokens,
-  ]);
+  const selectDepositsForAccount = useMemo(
+    () => getSelectDepositsForAccount(mayBeWhitelistedTokens),
+    [mayBeWhitelistedTokens],
+  );
 
   const query = useReadContracts({
     // Create parallel contract calls for all potentially whitelisted tokens

@@ -93,7 +93,7 @@ export class SiloConvertMaxConvertQuoter {
    *
    * This is to minimize the risk of running into issues with price volatility.
    */
-  readonly CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.00504, 6);
+  static CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.00504, 6);
 
   // ---------- Constructor ----------
 
@@ -236,7 +236,7 @@ export class SiloConvertMaxConvertQuoter {
   async getMaxAmountInAtRate(
     source: Token,
     target: Token,
-    rate: TV = this.CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER,
+    rate: TV = SiloConvertMaxConvertQuoter.CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER,
   ): Promise<TV | undefined> {
     const errorHandler = ErrorHandlerFactory.createMaxConvertQuoterHandler(source, target);
 
