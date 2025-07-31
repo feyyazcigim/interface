@@ -219,7 +219,7 @@ const SiloTokenActions = ({ siloToken, farmerDeposits }: ISiloTokenActions) => {
       </div>
       {farmerDeposits?.deposits.map((farmerDeposit) => {
         if (farmerDeposit.isGerminating || farmerDeposit.isPlantDeposit) {
-          return <GerminationNotice type="single" deposit={farmerDeposit} />;
+          return <GerminationNotice type="single" deposit={farmerDeposit} key={`germinating-${farmerDeposit.id}`} />;
         }
         return null;
       })}
@@ -236,6 +236,15 @@ interface IUndepositedSiloToken extends IBaseSiloToken {
 const UndepositedSiloTokenInfoHeader = ({ siloToken, farmerBalanceSiloTokenAmount, isMain }: IUndepositedSiloToken) => {
   const chainId = useChainId();
 
+  const getLPMessage = (): string => {
+    const start = `You have ${formatter.token(farmerBalanceSiloTokenAmount.toNumber(), siloToken)} ${siloToken.name} not currently Deposited.`;
+    const end = siloToken.isWhitelisted
+      ? "Deposit them to earn yield or unwrap via the Pinto Exchange."
+      : "Unwrap via the Pinto Exchange.";
+
+    return `${start} ${end}`;
+  };
+
   return (
     <>
       {isMain ? (
@@ -250,10 +259,7 @@ const UndepositedSiloTokenInfoHeader = ({ siloToken, farmerBalanceSiloTokenAmoun
       ) : (
         <div className="flex flex-col bg-pinto-off-white border p-4 rounded-[1rem] gap-y-2">
           <div className="flex flex-row gap-x-2 items-center">
-            <div className="pinto-sm font-regular text-pinto-primary leading-2">
-              You have {formatter.token(farmerBalanceSiloTokenAmount.toNumber(), siloToken)} {siloToken.name} not
-              currently Deposited. Deposit them to earn yield or unwrap via the Pinto Exchange.
-            </div>
+            <div className="pinto-sm font-regular text-pinto-primary leading-2">{getLPMessage()}</div>
           </div>
           <Button variant="outline-white" className="flex gap-x-2" asChild>
             <Link
