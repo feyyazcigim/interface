@@ -109,7 +109,7 @@ function ConvertForm({
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
   const clearSiloConvertQueries = useClearSiloConvertQueries();
   const invalidateSun = useInvalidateSun();
-  const { tokenPrices, price } = usePriceData();
+  const { tokenPrices, pools } = usePriceData();
 
   const minAmountIn = convertExceptions.minAmountIn;
   const isDefaultConvert = siloToken.isMain || targetToken?.isMain;
@@ -136,12 +136,14 @@ function ConvertForm({
 
   const maxConvertOverall = maxConvertQuery.data?.max ?? TV.ZERO;
   const maxConvertAtRate = maxConvertQuery.data?.maxAtRate;
+
+  const poolPrice = useMemo(
+    () => pools.find((pool) => pool.pool.address.toLowerCase() === siloToken.address.toLowerCase())?.price ?? TV.ZERO,
+    [pools, siloToken],
+  );
+
   const maxConvertQueryData =
-    (isDownConvert && price.gt(CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER)
-      ? maxConvertAtRate
-      : price.lt(TV.ONE)
-        ? maxConvertOverall
-        : TV.ZERO) ?? TV.ZERO;
+    (poolPrice.gt(CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER) ? maxConvertAtRate : maxConvertOverall) ?? TV.ZERO;
 
   // useEffect(() => {
   //   console.log("maxConvertQueryData", {
