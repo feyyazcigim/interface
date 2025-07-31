@@ -362,27 +362,21 @@ export class Strategizer {
       const targetWell = await this.cache.getWell(target.address);
       const targetWellPrice = targetWell.price;
 
-      const args: { amount: TV; grownStalkPenaltyExpected?: boolean }[] = [];
+      let grownStalkPenaltyExpected = false;
 
       // 1. Check if the target well price is less than the penalty rate.
       if (targetWellPrice.lt(this.maxConvertQuoter.CONVERT_DOWN_PENALTY_RATE)) {
-        // 1 strategy. Should incur Grown Stalk Penalty.
-        args.push({ amount: amountIn, grownStalkPenaltyExpected: true });
+        grownStalkPenaltyExpected = true;
       } else {
         // At this point we know that the well price > GSPR.
         const maxAtRate = eh.assertDefined(
           maxConvert.maxAtRate,
           "Expected maxConvertAtRate to be defined for default down convert",
         );
-        const exceedsMaxAtRate = amountIn.gt(maxAtRate);
 
-        if (!exceedsMaxAtRate) {
-          // 1 strategy. Should NOT incur Grown Stalk Penalty.
-          args.push({ amount: amountIn });
-        } else {
-          // 2 strategies in the order of execution.
-          args.push({ amount: maxAtRate });
-          args.push({ amount: amountIn.sub(maxAtRate), grownStalkPenaltyExpected: true });
+        // 2. Check if the amountIn is greater than the maxAtRate.
+        if (amountIn.gt(maxAtRate)) {
+          grownStalkPenaltyExpected = true;
         }
       }
 
@@ -391,10 +385,12 @@ export class Strategizer {
           source,
           target,
           convertType: "LPAndMain",
-          strategies: args.map(({ amount, grownStalkPenaltyExpected }) => ({
-            strategy: new DefaultConvertStrategy(source, target, this.context, { grownStalkPenaltyExpected }),
-            amount,
-          })),
+          strategies: [
+            {
+              strategy: new DefaultConvertStrategy(source, target, this.context, { grownStalkPenaltyExpected }),
+              amount: amountIn,
+            },
+          ],
         },
       ];
     }, "splitUpMain2LP");

@@ -312,7 +312,10 @@ export class SiloConvert {
       ),
     );
 
-    console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
+    console.debug("[SiloConvert/quote] post simulation results: ", {
+      quotedRoutes,
+      simulationsRawResults,
+    });
 
     const datas = quotedRoutes.map((route, i): SiloConvertSummary<SiloConvertType> => {
       const rawResponse = simulationsRawResults[i];
@@ -344,7 +347,9 @@ export class SiloConvert {
       };
     });
 
-    console.debug("[SiloConvert/quote] quoting finished!!!", datas);
+    console.debug("[SiloConvert/quote] ------------------");
+    console.debug("[SiloConvert/quote] quoting finished!!!", datas, "\n");
+    console.debug("[SiloConvert/quote] ------------------");
 
     return datas;
   }
@@ -366,20 +371,10 @@ export class SiloConvert {
         return s.strategy instanceof DefaultConvertStrategy && s.strategy.grownStalkPenaltyExpected;
       });
 
-    // If the route incurs a penalty, reverse the amounts such that the penalty is applied to the deposits with the least amount of grown stalk.
-    // Amounts are returned in the order of execution of the strategies, therefore we can deduce that amounts are in the order of [no penalty, ...penalty]
-    // if (incursGSPenalty) {
-    //   amounts.reverse();
-    // }
+    // If the route incurs a penalty, sort the crates by stem to minimize grown stalk loss. Otherwise, sort by bdv
+    const sortBy = incursGSPenalty ? "stem" : "bdv";
 
-    // If the route incurs a penalty, sort the crates by stem. Otherwise, sort the crates by bdv.
-    const crates = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
-    // const crates = pickCratesMultiple(farmerDeposits, incursGSPenalty ? "stem" : "bdv", "asc", amounts);
-
-    // If the route incurs a penalty, reverse crates such that the crates being passed into quote are in the correct order.
-    // if (incursGSPenalty) {
-    //   crates.reverse();
-    // }
+    const crates = pickCratesMultiple(farmerDeposits, sortBy, "asc", amounts);
 
     return crates;
   }
@@ -391,13 +386,16 @@ export class SiloConvert {
     const mainToken = getChainConstant(this.context.chainId, MAIN_TOKEN);
     try {
       const staticCallResult = [...rawResponse];
+
       // price result is the last element in the static call result
       const priceResult = staticCallResult.pop();
 
       const decodedConvertResults = decodeConvertResults(staticCallResult, route.convertType);
 
-      const decodedAdvPipePriceCall = priceResult ? AdvancedPipeWorkflow.decodeResult(priceResult) : undefined;
-      const postPriceData = decodedAdvPipePriceCall?.length ? decodePriceResult(decodedAdvPipePriceCall[0]) : undefined;
+      const decodedPriceCalls = priceResult ? AdvancedPipeWorkflow.decodeResult(priceResult) : undefined;
+      const postPriceData = decodedPriceCalls?.length
+        ? this.priceCache.decodePriceCallResults([...decodedPriceCalls])
+        : undefined;
 
       return {
         postPriceData,

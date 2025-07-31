@@ -80,8 +80,6 @@ interface ConvertProps extends BaseConvertProps {
   onSuccess: () => void;
 }
 
-const CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.00504, 6);
-
 // INNER COMPONENT
 function ConvertForm({
   siloToken,
@@ -143,7 +141,9 @@ function ConvertForm({
   );
 
   const maxConvertQueryData =
-    (poolPrice.gt(CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER) ? maxConvertAtRate : maxConvertOverall) ?? TV.ZERO;
+    (poolPrice.gt(SiloConvertMaxConvertQuoter.CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER)
+      ? maxConvertAtRate
+      : maxConvertOverall) ?? TV.ZERO;
 
   const maxConvertLoading = maxConvertQuery.isLoading;
 
