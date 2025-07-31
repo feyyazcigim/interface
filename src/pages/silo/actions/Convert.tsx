@@ -80,6 +80,8 @@ interface ConvertProps extends BaseConvertProps {
   onSuccess: () => void;
 }
 
+const CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER = TV.fromHuman(1.0051, 6);
+
 // INNER COMPONENT
 function ConvertForm({
   siloToken,
@@ -107,7 +109,7 @@ function ConvertForm({
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
   const clearSiloConvertQueries = useClearSiloConvertQueries();
   const invalidateSun = useInvalidateSun();
-  const { tokenPrices } = usePriceData();
+  const { tokenPrices, price } = usePriceData();
 
   const minAmountIn = convertExceptions.minAmountIn;
   const isDefaultConvert = siloToken.isMain || targetToken?.isMain;
@@ -131,8 +133,15 @@ function ConvertForm({
     targetToken,
     !!(isDefaultConvert ? hasConvertible && deltaPEnabled : hasConvertible),
   );
-  const maxConvertQueryData = maxConvertQuery.data?.max ?? TV.ZERO;
+
+  const maxConvertOverall = maxConvertQuery.data?.max ?? TV.ZERO;
   const maxConvertAtRate = maxConvertQuery.data?.maxAtRate;
+  const maxConvertQueryData =
+    (isDownConvert && price.gt(CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER)
+      ? maxConvertAtRate
+      : price.lt(TV.ONE)
+        ? maxConvertOverall
+        : TV.ZERO) ?? TV.ZERO;
 
   // useEffect(() => {
   //   console.log("maxConvertQueryData", {
