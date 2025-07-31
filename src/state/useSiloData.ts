@@ -1,24 +1,22 @@
 import { TokenValue } from "@/classes/TokenValue";
-import { ZERO_ADDRESS } from "@/constants/address";
 import { SEEDS, STALK } from "@/constants/internalTokens";
 import { defaultQuerySettings } from "@/constants/query";
 import { subgraphs } from "@/constants/subgraph";
-import { beanstalkAbi, beanstalkAddress } from "@/generated/contractHooks";
+import { beanstalkAbi } from "@/generated/contractHooks";
 import { SiloYieldsDocument } from "@/generated/gql/pintostalk/graphql";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { stringEq } from "@/utils/string";
 import { getTokenIndex } from "@/utils/token";
 import { SiloTokenData, Token } from "@/utils/types";
-import { Lookup, Prettify } from "@/utils/types.generic";
+import { Lookup } from "@/utils/types.generic";
 import { exists } from "@/utils/utils";
 import { QueryKey, useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import { chunk } from "lodash";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useCallback } from "react";
-import { Address, MulticallResponse, Omit } from "viem";
-import { ContractFunctionParameters } from "viem";
-import { UseReadContractsReturnType, useChainId, useReadContracts } from "wagmi";
+import { MulticallResponse, Omit } from "viem";
+import { useChainId, useReadContracts } from "wagmi";
 import useTokenData, { useWhitelistedTokens } from "./useTokenData";
 
 const settings = {
@@ -27,21 +25,18 @@ const settings = {
   },
 };
 
-type GetTotalDepositedBDVParams = ContractFunctionParameters<typeof GetTotalDepositedBDVABI>;
-
-type GetTotalDepositedBdvContractsResponse = Prettify<UseReadContractsReturnType<GetTotalDepositedBDVParams[], true>>;
-
 export function useTotalDepositedBdvPerTokenQuery() {
   const whitelistedTokens = useWhitelistedTokens();
   const diamond = useProtocolAddress();
 
   const select = useCallback(
-    (data: GetTotalDepositedBdvContractsResponse["data"]) => {
+    (data: FailableChainResponse<bigint>[]) => {
       return data?.reduce<Lookup<TokenValue>>((acc, curr, idx) => {
         const token = whitelistedTokens[idx];
 
-        if (!token || !exists(curr.result)) return acc;
-        acc[getTokenIndex(token)] = TokenValue.fromBlockchain(curr.result, token.decimals);
+        if (token && exists(curr.result)) {
+          acc[getTokenIndex(token)] = TokenValue.fromBlockchain(curr.result, token.decimals);
+        }
         return acc;
       }, {});
     },
@@ -52,10 +47,10 @@ export function useTotalDepositedBdvPerTokenQuery() {
     contracts: whitelistedTokens.map((token) => {
       return {
         address: diamond,
-        abi: GetTotalDepositedBDVABI,
-        functionName: "getTotalDepositedBdv",
-        args: [token.address],
-      };
+        abi: beanstalkAbi,
+        functionName: "getTotalDepositedBdv" as const,
+        args: [token.address] as const,
+      } as const;
     }),
     query: {
       enabled: !!whitelistedTokens.length,
@@ -73,7 +68,6 @@ const makeSiloTokenData = (
   mainToken: Token,
 ): Omit<SiloTokenData, "yields"> => {
   const ts = siloTokenData?.[5]?.result;
-
   const tokenSettings: SiloTokenData["tokenSettings"] = {
     deltaStalkEarnedPerSeason: TokenValue.fromBlockchain(ts?.deltaStalkEarnedPerSeason ?? 0n, STALK.decimals),
     encodeType: ts?.encodeType ?? "0x",
@@ -99,7 +93,6 @@ const makeSiloTokenData = (
       10 ** mainToken.decimals,
     ),
   };
-
   const rewards: SiloTokenData["rewards"] = {
     seeds: TokenValue.fromBlockchain(ts?.stalkEarnedPerSeason ?? 0n, SEEDS.decimals),
     stalk: TokenValue.fromBlockchain(ts?.stalkIssuedPerBdv ?? 0n, STALK.decimals).mul(10 ** mainToken.decimals),
@@ -127,7 +120,7 @@ export function useReadSiloTokensDataQuery(tokens: Token[]) {
   const enabled = Boolean(tokens.length && tokens.every((token) => !!token.address));
 
   const selectSiloTokensData = useCallback(
-    // unkown here because we expect the same data type for all tokens but it is [...Type, ...Type] not [Type, Type]
+    // unknown here because we expect the same data type for all tokens but it is [...Type, ...Type] not [Type, Type]
     (data: unknown[]) => {
       const chunks = chunk(data, CALLS_STRUCTS_PER_SILO_TOKEN) as SiloTokenDataResponse[];
 
@@ -176,69 +169,19 @@ export function useReadSiloTokensDataQuery(tokens: Token[]) {
   });
 }
 
-export function useReadSiloTokenData(token: Token | undefined) {
-  const chainId = useChainId();
-  const protocolAddress = beanstalkAddress[chainId as keyof typeof beanstalkAddress];
-
+const useComboSiloDataQuery = () => {
+  const protocolAddress = useProtocolAddress();
   const BEAN = useTokenData().mainToken;
 
-  const selectSiloTokenData = useCallback(
-    (siloTokenData: SiloTokenDataResponse): Omit<SiloTokenData, "yields"> => {
-      // should never happen
-      if (!token) return {} as Omit<SiloTokenData, "yields">;
-
+  const selectComboSiloData = useCallback(
+    (queryData: SiloDataResponse) => {
       return {
-        totalDeposited: TokenValue.fromBlockchain(siloTokenData?.[0]?.result ?? 0n, token.decimals),
-        tokenBDV: TokenValue.fromBlockchain(siloTokenData?.[1]?.result ?? 0n, BEAN.decimals),
-        stemTip: TokenValue.fromBlockchain(siloTokenData?.[2]?.result ?? 0n, BEAN.decimals),
-        depositedBDV: TokenValue.fromBlockchain(siloTokenData?.[3]?.result ?? 0n, BEAN.decimals),
-        germinatingStem: TokenValue.fromBlockchain(siloTokenData?.[4]?.result ?? 0n, BEAN.decimals),
-        tokenSettings: {
-          deltaStalkEarnedPerSeason: TokenValue.fromBlockchain(
-            siloTokenData?.[5]?.result?.deltaStalkEarnedPerSeason ?? 0n,
-            STALK.decimals,
-          ),
-          encodeType: siloTokenData?.[5]?.result?.encodeType as string,
-          gaugePointImplementation: {
-            target: siloTokenData?.[5]?.result?.gaugePointImplementation.target as Address,
-            selector: siloTokenData?.[5]?.result?.gaugePointImplementation.selector as string,
-            encodeType: siloTokenData?.[5]?.result?.gaugePointImplementation.encodeType as string,
-            data: siloTokenData?.[5]?.result?.gaugePointImplementation.data as string,
-          },
-          gaugePoints: siloTokenData?.[5]?.result?.gaugePoints as bigint,
-          liquidityWeightImplementation: {
-            target: siloTokenData?.[5]?.result?.liquidityWeightImplementation.target as Address,
-            selector: siloTokenData?.[5]?.result?.liquidityWeightImplementation.selector as string,
-            encodeType: siloTokenData?.[5]?.result?.liquidityWeightImplementation.encodeType as string,
-            data: siloTokenData?.[5]?.result?.liquidityWeightImplementation.data as string,
-          },
-          milestoneSeason: siloTokenData?.[5]?.result?.milestoneSeason as number,
-          milestoneStem: TokenValue.fromBlockchain(siloTokenData?.[5]?.result?.milestoneStem ?? 0n, BEAN.decimals),
-          optimalPercentDepositedBdv: TokenValue.fromBlockchain(
-            siloTokenData?.[5]?.result?.optimalPercentDepositedBdv ?? 0n,
-            BEAN.decimals,
-          ),
-          selector: siloTokenData?.[5]?.result?.selector as string,
-          stalkEarnedPerSeason: TokenValue.fromBlockchain(
-            siloTokenData?.[5]?.result?.stalkEarnedPerSeason ?? 1n,
-            SEEDS.decimals,
-          ),
-          stalkIssuedPerBdv: TokenValue.fromBlockchain(
-            siloTokenData?.[5]?.result?.stalkIssuedPerBdv ?? 1n,
-            STALK.decimals,
-          ).mul(10 ** BEAN.decimals),
-        },
-        rewards: {
-          seeds: TokenValue.fromBlockchain(siloTokenData?.[5]?.result?.stalkEarnedPerSeason ?? 0n, SEEDS.decimals),
-          stalk: TokenValue.fromBlockchain(siloTokenData?.[5]?.result?.stalkIssuedPerBdv ?? 0n, STALK.decimals).mul(
-            10 ** BEAN.decimals,
-          ),
-        },
-        germinatingAmount: TokenValue.fromBlockchain(siloTokenData?.[6]?.result ?? 0n, token.decimals),
-        germinatingBDV: TokenValue.fromBlockchain(siloTokenData?.[7]?.result ?? 0n, BEAN.decimals),
-      } as Omit<SiloTokenData, "yields">;
+        totalStalk: TokenValue.fromBlockchain(queryData[0], STALK.decimals),
+        totalEarnedBeans: TokenValue.fromBlockchain(queryData[1], BEAN.decimals),
+        averageGrownStalkPerBdvPerSeason: TokenValue.fromBlockchain(queryData[2], STALK.decimals),
+      };
     },
-    [token, BEAN],
+    [BEAN],
   );
 
   return useReadContracts({
@@ -246,96 +189,17 @@ export function useReadSiloTokenData(token: Token | undefined) {
       {
         address: protocolAddress,
         abi: beanstalkAbi,
-        functionName: "getTotalDeposited",
-        args: [token?.address ?? ZERO_ADDRESS],
+        functionName: "totalStalk" as const,
       },
       {
         address: protocolAddress,
         abi: beanstalkAbi,
-        functionName: "bdv",
-        args: [token?.address ?? ZERO_ADDRESS, BigInt(10 ** (token?.decimals ?? 1))],
+        functionName: "totalEarnedBeans" as const,
       },
       {
         address: protocolAddress,
         abi: beanstalkAbi,
-        functionName: "stemTipForToken",
-        args: [token?.address ?? ZERO_ADDRESS],
-      },
-      {
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "getTotalDepositedBdv",
-        args: [token?.address ?? ZERO_ADDRESS],
-      },
-      {
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "getGerminatingStem",
-        args: [token?.address ?? ZERO_ADDRESS],
-      },
-      {
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "tokenSettings",
-        args: [token?.address ?? ZERO_ADDRESS],
-      },
-      {
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "getTotalGerminatingAmount",
-        args: [token?.address ?? ZERO_ADDRESS],
-      },
-      {
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "getTotalGerminatingBdv",
-        args: [token?.address ?? ZERO_ADDRESS],
-      },
-    ],
-    scopeKey: token?.address,
-    query: {
-      ...settings.query,
-      enabled: Boolean(token?.address),
-      select: selectSiloTokenData,
-    },
-  });
-}
-
-export function useSiloData() {
-  const chainId = useChainId();
-  const protocolAddress = useProtocolAddress();
-  const BEAN = useTokenData().mainToken;
-
-  const selectComboSiloData = useCallback(
-    (queryData: SiloDataResponse) => {
-      return {
-        totalStalk: TokenValue.fromBlockchain(queryData?.[0] ?? 0n, STALK.decimals),
-        totalEarnedBeans: TokenValue.fromBlockchain(queryData?.[1] ?? 0n, BEAN.decimals),
-        averageGrownStalkPerBdvPerSeason: TokenValue.fromBlockchain(queryData?.[2] ?? 0n, STALK.decimals),
-      };
-    },
-    [BEAN],
-  );
-
-  const comboSiloData = useReadContracts({
-    contracts: [
-      {
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "totalStalk",
-        args: [],
-      },
-      {
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "totalEarnedBeans",
-        args: [],
-      },
-      {
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        functionName: "getAverageGrownStalkPerBdvPerSeason",
-        args: [],
+        functionName: "getAverageGrownStalkPerBdvPerSeason" as const,
       },
     ],
     allowFailure: false,
@@ -344,23 +208,21 @@ export function useSiloData() {
       select: selectComboSiloData,
     },
   });
+};
+
+export function useSiloData() {
+  const chainId = useChainId();
+  const comboSiloData = useComboSiloDataQuery();
+  const { whitelistedTokens, deWhitelistedTokens, mayBeWhitelistedTokens } = useTokenData();
 
   const { data: yields } = useQuery({
     queryKey: ["siloYields", { chainId: chainId }],
-    queryFn: async () => await request(subgraphs[chainId].beanstalk, SiloYieldsDocument),
+    queryFn: () => request(subgraphs[chainId].beanstalk, SiloYieldsDocument),
     ...settings.query,
   });
 
-  const { whitelistedTokens, deWhitelistedTokens, mayBeWhitelistedTokens } = useTokenData();
-
-  const { data: whitelistedTokensData, ...whitelistedTokensDataQuery } = useReadSiloTokensDataQuery(whitelistedTokens);
-  const { data: deWhitelistedTokensData, ...deWhitelistedTokensDataQuery } =
-    useReadSiloTokensDataQuery(deWhitelistedTokens);
-
-  const keys = useMemo(
-    () => [whitelistedTokensDataQuery.queryKey, deWhitelistedTokensDataQuery.queryKey],
-    [whitelistedTokensDataQuery.queryKey, deWhitelistedTokensDataQuery.queryKey],
-  );
+  const { data: whitelistedTokensData, ...wLTokenDataQuery } = useReadSiloTokensDataQuery(whitelistedTokens);
+  const { data: deWhitelistedTokensData, ...dWLTokenDataQuery } = useReadSiloTokensDataQuery(deWhitelistedTokens);
 
   const wlTokenDatas = useMemo(() => {
     const keys: QueryKey[] = [];
@@ -387,8 +249,12 @@ export function useSiloData() {
     };
   }, [whitelistedTokensData, deWhitelistedTokensData, mayBeWhitelistedTokens, yields]);
 
-  const isLoading =
-    comboSiloData.isLoading || whitelistedTokensDataQuery.isLoading || deWhitelistedTokensDataQuery.isLoading;
+  const keys = useMemo(
+    () => [wLTokenDataQuery.queryKey, dWLTokenDataQuery.queryKey, comboSiloData.queryKey],
+    [wLTokenDataQuery.queryKey, dWLTokenDataQuery.queryKey, comboSiloData.queryKey],
+  );
+
+  const isLoading = wLTokenDataQuery.isLoading || dWLTokenDataQuery.isLoading || comboSiloData.isLoading;
 
   return useMemo(() => {
     return {
@@ -402,35 +268,9 @@ export function useSiloData() {
   }, [comboSiloData.data, wlTokenDatas, isLoading, keys]);
 }
 
-const GetTotalDepositedBDVABI = [
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-    ],
-    name: "getTotalDepositedBdv",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-] as const;
-
 type SiloDataResponse = [totalStalk: bigint, totalEarnedBeans: bigint, averageGrownStalkPerBdvPerSeason: bigint];
 
 type FailableChainResponse<T> = MulticallResponse<T, Error, true>;
-
-type Repeat<T, N extends number, Result extends readonly T[] = []> = Result["length"] extends N
-  ? Result
-  : Repeat<T, N, readonly [...Result, T]>;
 
 type SiloTokenTokenSettings = {
   selector: `0x${string}`;
