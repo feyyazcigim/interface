@@ -35,7 +35,12 @@ const useFilterTokens = (siloToken: Token, balances: ReturnType<typeof useFarmer
     const set = new Set<Token>();
 
     [...balances.keys()].forEach((token) => {
-      if ((token.isLP && !tokensEqual(token, siloToken)) || token.isSiloWrapped || token.is3PSiloWrapped) {
+      if (
+        (token.isLP && !tokensEqual(token, siloToken)) ||
+        token.isSiloWrapped ||
+        token.is3PSiloWrapped ||
+        token.symbol.includes("WSOL")
+      ) {
         set.add(token);
       }
     });
