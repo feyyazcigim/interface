@@ -11,7 +11,7 @@ import { PODS } from "@/constants/internalTokens";
 import fillPodListing from "@/encoders/fillPodListing";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { useIsWSOL, useTokenMap } from "@/hooks/pinto/useTokenMap";
 import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import useMaxBuy from "@/hooks/swap/useMaxBuy";
 import useSwap from "@/hooks/swap/useSwap";
@@ -41,17 +41,18 @@ import CancelListing from "./CancelListing";
 
 const useFilterTokens = () => {
   const tokens = useTokenMap();
+  const isWSOL = useIsWSOL();
 
   return useMemo(() => {
     const set = new Set<Token>();
 
     [...Object.values(tokens)].forEach((token) => {
-      if (token.isLP || token.isSiloWrapped || token.is3PSiloWrapped) {
+      if (token.isLP || token.isSiloWrapped || token.is3PSiloWrapped || isWSOL(token)) {
         set.add(token);
       }
     });
     return set;
-  }, [tokens]);
+  }, [tokens, isWSOL]);
 };
 
 export default function FillListing() {
