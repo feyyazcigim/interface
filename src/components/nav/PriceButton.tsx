@@ -52,13 +52,17 @@ function PriceButtonPanel() {
 
   const { data: twaDeltaBMap } = useTwaDeltaBLPQuery();
 
+  const whitelistedPools = useMemo(() => {
+    return priceData.pools.filter((pool) => pool.pool.isWhitelisted);
+  }, [priceData.pools]);
+
   const mainTokenBalances = useMemo(() => {
-    return priceData.pools.flatMap((pool) =>
+    return whitelistedPools.flatMap((pool) =>
       pool.balances.map(
         (balance, index) => pool.tokens[index].isMain && tokenData.whitelistedTokens.includes(pool.pool) && balance,
       ),
     );
-  }, [priceData.pools, tokenData.whitelistedTokens]);
+  }, [whitelistedPools, tokenData.whitelistedTokens]);
 
   const totalMainTokens = useMemo(() => {
     return mainTokenBalances.reduce(
@@ -67,7 +71,11 @@ function PriceButtonPanel() {
     );
   }, [mainTokenBalances]);
 
-  const totalDeltaBar = priceData.deltaB.div(totalMainTokens.gt(0) ? totalMainTokens : 1).mul(-100);
+  const combinedDeltaB = useMemo(() => {
+    return whitelistedPools.reduce((total: TokenValue, pool) => total.add(pool.deltaB), TokenValue.ZERO);
+  }, [whitelistedPools]);
+
+  const totalDeltaBar = combinedDeltaB.div(totalMainTokens.gt(0) ? totalMainTokens : 1).mul(-100);
 
   const [showSettings, setShowSettings] = useState(false);
   const [showPrices, setShowPrices] = useState(false);
@@ -84,8 +92,6 @@ function PriceButtonPanel() {
   useEffect(() => {
     localStorage.setItem("pinto.priceButton.expandAll", JSON.stringify(expandAll));
   }, [expandAll]);
-
-  const combinedDeltaB = priceData.deltaB;
 
   const underlyingTokensToShow = useMemo(() => {
     return Array.from(priceData.tokenPrices).filter(([tk]) => tk.isLPUnderlying && tk.isCompositeLPWhitelisted);
@@ -163,11 +169,11 @@ function PriceButtonPanel() {
                   width: `${totalDeltaBar.add(50).sub(100).abs().toHuman()}%`,
                 }}
               >
-                {priceData.pools.map((pool, i) => {
+                {whitelistedPools.map((pool, i) => {
                   const deltaBar = Number(
                     pool.deltaB
                       .abs()
-                      .div(priceData.deltaB.eq(0) ? 1 : priceData.deltaB.abs())
+                      .div(combinedDeltaB.eq(0) ? 1 : combinedDeltaB.abs())
                       .mul(100)
                       .toHuman(),
                   ).toFixed(2);
@@ -185,13 +191,13 @@ function PriceButtonPanel() {
                 })}
               </div>
               <div
-                className={`${priceData.deltaB.gt(0) ? "right-[50%] border-l-2" : "left-[50%] border-r-2"} h-2 bg-white opacity-50 absolute max-w-[calc(50%_-_0.5rem)]`}
+                className={`${combinedDeltaB.gt(0) ? "right-[50%] border-l-2" : "left-[50%] border-r-2"} h-2 bg-white opacity-50 absolute max-w-[calc(50%_-_0.5rem)]`}
                 style={{
                   width: `${totalDeltaBar.abs().toHuman()}%`,
                 }}
               />
               <div
-                className={`${priceData.deltaB.gt(0) ? "right-[50%] border-l-2" : "left-[50%] border-r-2"} h-2 bg-transparent border-white absolute max-w-[calc(50%_-_0.5rem)]`}
+                className={`${combinedDeltaB.gt(0) ? "right-[50%] border-l-2" : "left-[50%] border-r-2"} h-2 bg-transparent border-white absolute max-w-[calc(50%_-_0.5rem)]`}
                 style={{
                   width: `${totalDeltaBar.abs().toHuman()}%`,
                 }}
