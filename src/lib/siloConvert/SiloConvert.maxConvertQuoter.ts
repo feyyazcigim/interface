@@ -2,7 +2,6 @@ import { Clipboard } from "@/classes/Clipboard";
 import { ITTLCache, InMemoryTTLCache } from "@/classes/TTLCache";
 import { TV } from "@/classes/TokenValue";
 import { diamondABI } from "@/constants/abi/diamondABI";
-import { abiSnippets } from "@/constants/abiSnippets";
 import { CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER, NO_MAX_CONVERT_AMOUNT } from "@/constants/silo";
 import { MAIN_TOKEN, PINTO_WSOL_TOKEN } from "@/constants/tokens";
 import encoders from "@/encoders";
