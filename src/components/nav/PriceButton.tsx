@@ -75,6 +75,10 @@ function PriceButtonPanel() {
     return whitelistedPools.reduce((total: TokenValue, pool) => total.add(pool.deltaB), TokenValue.ZERO);
   }, [whitelistedPools]);
 
+  const totalLiquidity = useMemo(() => {
+    return whitelistedPools.reduce((total: TokenValue, pool) => total.add(pool.liquidity), TokenValue.ZERO);
+  }, [whitelistedPools]);
+
   const totalDeltaBar = combinedDeltaB.div(totalMainTokens.gt(0) ? totalMainTokens : 1).mul(-100);
 
   const [showSettings, setShowSettings] = useState(false);
@@ -170,13 +174,9 @@ function PriceButtonPanel() {
                 }}
               >
                 {whitelistedPools.map((pool, i) => {
-                  const deltaBar = Number(
-                    pool.deltaB
-                      .abs()
-                      .div(combinedDeltaB.eq(0) ? 1 : combinedDeltaB.abs())
-                      .mul(100)
-                      .toHuman(),
-                  ).toFixed(2);
+                  const liquidityPercentage = totalLiquidity.gt(0)
+                    ? Number(pool.liquidity.div(totalLiquidity).mul(100).toHuman()).toFixed(2)
+                    : "0";
                   if (!pool.pool?.color) return;
                   return (
                     <div
@@ -184,7 +184,7 @@ function PriceButtonPanel() {
                       className={`${i === 0 ? "border-l-0" : "border-l-2"} border-white min-w-2`}
                       style={{
                         background: pool.pool.color,
-                        width: `${deltaBar}%`,
+                        width: `${liquidityPercentage}%`,
                       }}
                     />
                   );
