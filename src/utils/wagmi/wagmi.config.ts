@@ -83,10 +83,10 @@ const config = defineConfig(() => {
         address: {
           [mainnet.id]: "0x4BEd6cb142b7d474242d87F4796387DEB9E1E1B4",
           [arbitrum.id]: "0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7",
-          [base.id]: "0xD0fd333F7B30c7925DEBD81B7b7a4DFE106c3a5E", // temp address
-          [localhost.id]: "0xD0fd333F7B30c7925DEBD81B7b7a4DFE106c3a5E", // base
-          [TESTNET_CHAIN_ID]: "0xD0fd333F7B30c7925DEBD81B7b7a4DFE106c3a5E", // base
-          [foundry.id]: "0xD0fd333F7B30c7925DEBD81B7b7a4DFE106c3a5E", // base
+          [base.id]: "0x13D25ABCB6a19948d35654715c729c6501230b49", // temp address
+          [localhost.id]: "0x13D25ABCB6a19948d35654715c729c6501230b49", // base
+          [TESTNET_CHAIN_ID]: "0x13D25ABCB6a19948d35654715c729c6501230b49", // base
+          [foundry.id]: "0x13D25ABCB6a19948d35654715c729c6501230b49", // base
         },
       },
       {

@@ -349,6 +349,8 @@ export function useFarmerSilo(address?: `0x${string}`) {
 
   // Process all farmer silo data
   const depositsData = useMemo(() => {
+    const minValidBdv = TokenValue.fromHuman(0.000001, BEAN.decimals);
+
     const output = new Map<Token, TokenDepositData>();
     let _depositsBDV = TokenValue.ZERO;
     let _depositsUSD = TokenValue.ZERO;
@@ -379,10 +381,16 @@ export function useFarmerSilo(address?: `0x${string}`) {
       tokenDeposits.forEach((deposit) => {
         const isGerminating = deposit.stem >= siloTokenData.germinatingStem.toBigInt();
         const _depositBDV = TokenValue.fromBlockchain(deposit.depositedBDV, BEAN.decimals);
-        const depositStem = TokenValue.fromBlockchain(deposit.stem, BEAN.decimals);
-        const lastStem = mowStatusPerToken.data?.get(token)?.lastStem ?? TokenValue.ZERO;
         const depositAmount = TokenValue.fromBlockchain(deposit.depositedAmount, token.decimals);
         const _currentBDV = depositAmount.mul(siloTokenData.tokenBDV);
+
+        // 0.000001 is the minimum BDV for a deposit to be considered valid so we don't run into divide by 0 errors
+        if (_depositBDV.lt(minValidBdv) || _currentBDV.lt(minValidBdv)) {
+          return;
+        }
+
+        const depositStem = TokenValue.fromBlockchain(deposit.stem, BEAN.decimals);
+        const lastStem = mowStatusPerToken.data?.get(token)?.lastStem ?? TokenValue.ZERO;
         const seeds = _depositBDV.mul(siloTokenData.rewards.seeds);
 
         const stalkAtDeposit = _depositBDV.reDecimal(STALK.decimals);
@@ -431,6 +439,7 @@ export function useFarmerSilo(address?: `0x${string}`) {
         };
 
         depositData.push(thisDeposit);
+
         if (!isGerminating) {
           convertibleAmount = convertibleAmount.add(depositAmount);
           convertibleDeposits.push(thisDeposit);
