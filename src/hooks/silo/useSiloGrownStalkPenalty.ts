@@ -2,7 +2,7 @@ import { TV } from "@/classes/TokenValue";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { STALK } from "@/constants/internalTokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { FailableUseContractsResult, Token } from "@/utils/types";
+import { Token } from "@/utils/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useReadContracts } from "wagmi";
 import { useSiloConvertResult } from "./useSiloConvertResult";
