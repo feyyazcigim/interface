@@ -388,7 +388,10 @@ export function useFarmerSilo(address?: `0x${string}`) {
         const _currentBDV = depositAmount.mul(siloTokenData.tokenBDV);
 
         // 0.000001 is the minimum BDV for a deposit to be considered valid so we don't run into divide by 0 errors
-        if (_depositBDV.lt(minValidBdv) && token.isWhitelisted && _currentBDV.lt(minValidBdv)) {
+        if (
+          (token.isWhitelisted && _currentBDV.lt(minValidBdv)) ||
+          (!token.isWhitelisted && _depositBDV.lt(minValidBdv))
+        ) {
           return;
         }
 
