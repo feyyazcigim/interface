@@ -202,13 +202,13 @@ module.exports = {
         },
         marquee: {
           from: { transform: "translateX( 0% )" },
-          to: { transform: "translateX( -100% )" },
+          to: { transform: "translateX( -50% )" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        marquee: "marquee 72s linear infinite",
+        marquee: "marquee 24s linear infinite",
       },
       aspectRatio: {
         "3/1": "3 / 1",
