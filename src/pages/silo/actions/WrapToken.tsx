@@ -15,7 +15,7 @@ import { diamondABI } from "@/constants/abi/diamondABI";
 import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
 import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { useTokenMap, useWSOL } from "@/hooks/pinto/useTokenMap";
 import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
@@ -393,16 +393,18 @@ const useFilterTokens = () => {
 
   const [filter, setFilter] = useState<Set<Token>>(new Set());
 
+  const wsol = useWSOL();
+
   useEffect(() => {
     const filteredSet = Object.values(tokenMap).reduce((prev, curr) => {
-      if (curr.isSiloWrapped || curr.isLP || curr.is3PSiloWrapped) {
+      if (curr.isSiloWrapped || curr.isLP || curr.is3PSiloWrapped || tokensEqual(curr, wsol)) {
         prev.add(curr);
       }
       return prev;
     }, new Set<Token>());
 
     setFilter(filteredSet);
-  }, [tokenMap]);
+  }, [tokenMap, wsol]);
 
   return filter;
 };

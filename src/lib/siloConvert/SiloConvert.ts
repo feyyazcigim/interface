@@ -251,8 +251,6 @@ export class SiloConvert {
       });
     });
 
-    // console.log("routes", routes);
-
     // Check if aborted after async operation
     throwIfAborted(signal);
 
@@ -263,8 +261,6 @@ export class SiloConvert {
 
         const crates = this.selectCratesFromRoute(route, farmerDeposits);
 
-        // console.log("crates", crates);
-
         // Has to be run sequentially.
         for (const [i, strategy] of route.strategies.entries()) {
           // Check if aborted before each strategy
@@ -272,14 +268,6 @@ export class SiloConvert {
 
           let quote: ConvertStrategyQuote<SiloConvertType>;
           try {
-            /*
-            console.log("quoting strategy...", {
-              strategy,
-              advFarm: advFarm.getSteps(),
-              advFarmLength: advFarm.length,
-              i,
-            });
-            */
             quote = await strategy.strategy.quote(crates[i], advFarm, slippage, signal);
           } catch (e) {
             console.error(`[SiloConvert/quote${i}] FAILED: `, strategy, e);
@@ -300,11 +288,8 @@ export class SiloConvert {
       console.error("[SiloConvert/quote] FAILED to quote routes: ", e);
       throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to quote routes", {
         routes,
-        quotedRoutes,
       });
     });
-
-    // console.log("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
 
     const simulationsRawResults = await Promise.all(
       quotedRoutes.map((route) =>
@@ -327,7 +312,7 @@ export class SiloConvert {
       ),
     );
 
-    // console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
+    console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
 
     const datas = quotedRoutes.map((route, i): SiloConvertSummary<SiloConvertType> => {
       const rawResponse = simulationsRawResults[i];
@@ -335,8 +320,6 @@ export class SiloConvert {
       if (!rawResponse || !rawResponse.result) {
         throw new Error(`[SiloConvert/quote] Invalid route index: ${i}`);
       }
-
-      // console.log("rawResponse", rawResponse);
 
       const staticCallResult = [...rawResponse.result];
 
