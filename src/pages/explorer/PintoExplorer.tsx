@@ -43,7 +43,7 @@ const PintoExplorer = () => {
           <MarketCapChart season={season} />
         </div>
       </div>
-      <MarketPerformanceChart season={season} size="huge" />
+      {/* <MarketPerformanceChart season={season} size="huge" /> */}
     </>
   );
 };
