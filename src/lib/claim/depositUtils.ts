@@ -131,7 +131,9 @@ export function generateCombineAndL2LCallData(farmerDeposits: Map<Token, TokenDe
 
   // We're now just going to combine/sort all tokens, so that Tractor orders will work as expected.
 
-  return tokenEntries.flatMap(([token, depositData]) => encodeClaimRewardCombineCalls(depositData.deposits, token));
+  return tokenEntries
+    .filter(([token]) => token.isWhitelisted)
+    .flatMap(([token, depositData]) => encodeClaimRewardCombineCalls(depositData.deposits, token));
 }
 
 /**

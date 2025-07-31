@@ -1,7 +1,8 @@
 import { Clipboard } from "@/classes/Clipboard";
 import { ITTLCache, InMemoryTTLCache } from "@/classes/TTLCache";
 import { TV } from "@/classes/TokenValue";
-import { abiSnippets } from "@/constants/abiSnippets";
+import { diamondABI } from "@/constants/abi/diamondABI";
+import { CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER, NO_MAX_CONVERT_AMOUNT } from "@/constants/silo";
 import { MAIN_TOKEN, PINTO_WSOL_TOKEN } from "@/constants/tokens";
 import encoders from "@/encoders";
 import decodeJunctionResult from "@/encoders/junction/decodeJunction";
@@ -20,7 +21,7 @@ import { DepositData, Token } from "@/utils/types";
 import { HashString } from "@/utils/types.generic";
 import { readContract } from "viem/actions";
 import { DefaultConvertStrategy } from "./strategies/implementations/DefaultConvertStrategy";
-import { MaxConvertQuoterErrorHandler } from "./strategies/validation/MaxConvertQuoterErrorHandler";
+import { ErrorHandlerFactory } from "./strategies/validation/ErrorHandlerFactory";
 import { MaxConvertQuotationError } from "./strategies/validation/SiloConvertErrors";
 
 interface ConvertTokens {
@@ -64,13 +65,17 @@ const MIN_THRESHOLD = 150;
  * - Staleness detection for cache invalidation
  *
  */
+
+export interface MaxConvertResult {
+  max: TV;
+  maxAtRate: TV | undefined;
+}
+
 export class SiloConvertMaxConvertQuoter {
   private readonly context: SiloConvertContext;
   private readonly cache: SiloConvertPriceCache;
   private readonly scalarCache: ITTLCache<number>;
-  private readonly maxConvertCache: ITTLCache<TV>;
-
-  static NO_MAX_CONVERT_AMOUNT = 1_000_000_000;
+  private readonly maxConvertCache: ITTLCache<MaxConvertResult>;
 
   // ---------- Constructor ----------
 
@@ -78,12 +83,12 @@ export class SiloConvertMaxConvertQuoter {
     context: SiloConvertContext,
     cache: SiloConvertPriceCache,
     scalarCache?: ITTLCache<number>,
-    maxConvertCache?: ITTLCache<TV>,
+    maxConvertCache?: ITTLCache<MaxConvertResult>,
   ) {
     this.context = context;
     this.cache = cache;
     this.scalarCache = scalarCache || new InMemoryTTLCache<number>();
-    this.maxConvertCache = maxConvertCache || new InMemoryTTLCache<TV>();
+    this.maxConvertCache = maxConvertCache || new InMemoryTTLCache<MaxConvertResult>();
   }
 
   // ===================================================================
@@ -122,16 +127,20 @@ export class SiloConvertMaxConvertQuoter {
    * If farmerDeposits are provided, it will return a tested scaled max convert.
    * Results are cached for 15 seconds to avoid duplicate expensive calculations.
    */
-  async quoteMaxConvert(source: Token, target: Token, farmerDeposits?: DepositData[]): Promise<TV> {
-    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
+  async quoteMaxConvert(
+    source: Token,
+    target: Token,
+    farmerDeposits: DepositData[] | undefined = undefined,
+  ): Promise<MaxConvertResult> {
+    const errorHandler = ErrorHandlerFactory.createMaxConvertQuoterHandler(source, target);
 
     return errorHandler.wrapAsync(async () => {
       // Basic validation
       errorHandler.assert(!!source && !!target, "Missing source or target token");
-      errorHandler.assert(source.address !== target.address, "Cannot convert token to itself");
+      errorHandler.assert(!tokensEqual(source, target), "Cannot convert token to itself");
 
       // Generate cache keys
-      const cacheKey = errorHandler.wrapCache(
+      const tokensCacheKey = errorHandler.wrapCache(
         () => this.maxConvertCache.generateKey([source.address, target.address]),
         "generate base cache key",
         `${source.address}-${target.address}`, // fallback
@@ -140,66 +149,99 @@ export class SiloConvertMaxConvertQuoter {
       const depositsHash = hashDeposits(farmerDeposits);
       const withDepositsKey =
         farmerDeposits?.length && depositsHash
-          ? errorHandler.wrapCache(
-              () => this.maxConvertCache.generateKey([source.address, target.address], depositsHash),
-              "generate deposits cache key",
-              undefined, // fallback
-            )
+          ? this.maxConvertCache.generateKey(tokensCacheKey, depositsHash)
           : undefined;
 
       // Check cache first
-      const cached = errorHandler.wrapCache(
-        () => (withDepositsKey ? this.maxConvertCache.get(withDepositsKey) : this.maxConvertCache.get(cacheKey)),
-        "read from cache",
-        undefined, // fallback - cache miss
-      );
+      const cached = this.maxConvertCache.get(withDepositsKey ?? tokensCacheKey);
 
+      // If cached, return the result first
       if (cached) {
         console.debug("[MaxConvertQuoter/quoteMaxConvert]: using cached result", {
           source: source.symbol,
           target: target.symbol,
-          cached: cached.toHuman(),
+          cached: cached.max.toHuman(),
+          cachedAtRate: cached.maxAtRate?.toHuman(),
           cacheMetrics: this.maxConvertCache.getMetrics(),
         });
         return cached;
       }
 
-      // Cache miss - perform expensive calculation
-      let result: TV;
+      // Cache miss
+      const results: MaxConvertResult = {
+        max: TV.ZERO,
+        maxAtRate: undefined,
+      };
 
       if (source.isMain || target.isMain) {
-        result = await this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits);
+        const [res, resAtRate] = await Promise.all([
+          this.getDefaultConvertMaxConvert({ source, target }, farmerDeposits),
+          this.getMaxAmountInAtRate(source, target),
+        ]);
+        results.max = res;
+        results.maxAtRate = resAtRate;
       } else if (source.isLP && target.isLP) {
-        result = await this.getMaxConvertLPToLP({ source, target });
+        results.max = await this.getMaxConvertLPToLP({ source, target });
       } else {
-        errorHandler.validateConversionTokens("default"); // This will throw appropriate error
+        errorHandler.validateConversionTokens("default", source, target); // This will throw appropriate error
         throw new Error("Unreachable: validation should have thrown");
       }
 
-      // Validate result
-      errorHandler.validateAmount(result, "max convert result");
-
       // Cache the result
-      errorHandler.wrapCache(
-        () => {
-          if (withDepositsKey) {
-            this.maxConvertCache.set(withDepositsKey, result);
-          }
-          this.maxConvertCache.set(cacheKey, result);
-        },
-        "write to cache",
-        undefined, // non-fatal if cache write fails
-      );
+      if (withDepositsKey) {
+        this.maxConvertCache.set(withDepositsKey, results);
+      }
+      // Store the result in the tokens cache Key as well
+      this.maxConvertCache.set(tokensCacheKey, results);
 
       console.debug("[MaxConvertQuoter/quoteMaxConvert]: calculated and cached result", {
         source: source.symbol,
         target: target.symbol,
-        result: result.toHuman(),
+        max: results.max.toHuman(),
+        maxAtRate: results.maxAtRate?.toHuman(),
         cacheMetrics: this.maxConvertCache.getMetrics(),
       });
 
-      return result;
+      return results;
     }, "quote max convert");
+  }
+
+  /**
+   * Returns the maximum amount that can be converted of `source` to `target` such that the price after the convert is equal to the rate.
+   * @param source - The source token
+   * @param target - The target token
+   * @param rate - The rate to use
+   *
+   * @note Only supported for BEAN -> LP Token (as it is the only case where applicable).
+   */
+  async getMaxAmountInAtRate(
+    source: Token,
+    target: Token,
+    rate: TV = CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER,
+  ): Promise<TV | undefined> {
+    const errorHandler = ErrorHandlerFactory.createMaxConvertQuoterHandler(source, target);
+
+    return errorHandler.wrapAsync(async () => {
+      // Validate Inputs
+
+      // Contract will throw if source !== BEAN || target !== LP
+      if (!source.isMain || !target.isLP) {
+        return undefined;
+      }
+
+      // Get max amount in at rate
+      const maxAmountInAtRate = await readContract(
+        this.context.wagmiConfig.getClient({ chainId: this.context.chainId }),
+        {
+          abi: diamondABI,
+          address: this.context.diamond,
+          functionName: "getMaxAmountInAtRate" as const,
+          args: [source.address, target.address, rate.toBigInt()] as const,
+        },
+      );
+
+      return TV.fromBigInt(maxAmountInAtRate, source.decimals);
+    }, "Quote max convert at rate");
   }
 
   // ===================================================================
@@ -213,11 +255,11 @@ export class SiloConvertMaxConvertQuoter {
    */
   private async getDefaultConvertMaxConvert(convertTokens: ConvertTokens, farmerDeposits?: DepositData[]): Promise<TV> {
     const { source, target } = convertTokens;
-    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
+    const errorHandler = ErrorHandlerFactory.createMaxConvertQuoterHandler(source, target);
 
     return errorHandler.wrapAsync(async () => {
       // Validate conversion tokens
-      errorHandler.validateConversionTokens("default");
+      errorHandler.validateConversionTokens("default", source, target);
 
       const lpToken = source.isMain ? target : source;
       errorHandler.assertDefined(lpToken, "LP token must be defined for default convert");
@@ -237,10 +279,10 @@ export class SiloConvertMaxConvertQuoter {
       const maxAmountIn = await errorHandler.wrapAsync(
         () =>
           readContract(client, {
-            abi: abiSnippets.silo.getMaxAmountIn,
+            abi: diamondABI,
             address: this.context.diamond,
-            functionName: "getMaxAmountIn",
-            args: [source.address, target.address],
+            functionName: "getMaxAmountIn" as const,
+            args: [source.address, target.address] as const,
           }),
         "read max amount from contract",
         {
@@ -299,11 +341,11 @@ export class SiloConvertMaxConvertQuoter {
     farmerDeposits: DepositData[],
   ): Promise<TV> {
     const { source, target } = tokens;
-    const errorHandler = new MaxConvertQuoterErrorHandler(source, target);
+    const errorHandler = ErrorHandlerFactory.createMaxConvertQuoterHandler(source, target);
 
     return errorHandler.wrapAsync(async () => {
       // Validate inputs
-      errorHandler.validateConversionTokens("default");
+      errorHandler.validateConversionTokens("default", source, target);
       errorHandler.validateAmount(maxConvert, "max convert amount");
       errorHandler.assert(!!farmerDeposits, "Farmer deposits are required");
 
@@ -486,7 +528,7 @@ export class SiloConvertMaxConvertQuoter {
     }
 
     // No additional restrictions apply as we can convert in equal proportions
-    return TV.fromHuman(SiloConvertMaxConvertQuoter.NO_MAX_CONVERT_AMOUNT, source.decimals);
+    return TV.fromHuman(NO_MAX_CONVERT_AMOUNT, source.decimals);
   }
 
   /**

@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { useParamsTabs } from "@/hooks/useRouterTabs";
 import { Token } from "@/utils/types";
 import { cn } from "@/utils/utils";
+import { useEffect } from "react";
 import Convert from "./actions/Convert";
 import Deposit from "./actions/Deposit";
 import UnwrapToken from "./actions/UnwrapToken";
@@ -16,18 +17,31 @@ interface SiloToken {
 const SLUGS = {
   wrappable: ["wrap", "unwrap"],
   nonWrappable: ["deposit", "withdraw", "convert"],
+  nonWhitelistedNonWrappable: ["withdraw", "convert"],
 } as const;
 
 export default function SiloActions({ token }: SiloToken) {
   const [tab, handleChangeTab] = useParamsTabs(
-    token.isSiloWrapped ? SLUGS.wrappable : SLUGS.nonWrappable,
+    token.isSiloWrapped ? SLUGS.wrappable : token.isWhitelisted ? SLUGS.nonWrappable : SLUGS.nonWhitelistedNonWrappable,
     "action",
     true,
   );
 
+  useEffect(() => {
+    if (token.isWhitelisted) {
+      return;
+    }
+
+    if (tab === "deposit") {
+      handleChangeTab("withdraw");
+    }
+  }, [token, tab, handleChangeTab]);
+
   return (
     <Tabs value={tab} onValueChange={handleChangeTab} className="w-full">
-      <TabsList className={cn("grid w-full", token.isSiloWrapped ? "grid-cols-2" : "grid-cols-3")}>
+      <TabsList
+        className={cn("grid w-full", token.isSiloWrapped || !token.isWhitelisted ? "grid-cols-2" : "grid-cols-3")}
+      >
         {token.isSiloWrapped ? (
           <>
             <TabsTrigger value="wrap">Wrap</TabsTrigger>
@@ -35,14 +49,14 @@ export default function SiloActions({ token }: SiloToken) {
           </>
         ) : (
           <>
-            <TabsTrigger value="deposit">Deposit</TabsTrigger>
+            {token.isWhitelisted && <TabsTrigger value="deposit">Deposit</TabsTrigger>}
             <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
             <TabsTrigger value="convert">Convert</TabsTrigger>
           </>
         )}
       </TabsList>
       <Separator className="my-4" />
-      {tab === "deposit" && (
+      {tab === "deposit" && token.isWhitelisted && (
         <TabsContent value="deposit">
           <Deposit siloToken={token} />
         </TabsContent>

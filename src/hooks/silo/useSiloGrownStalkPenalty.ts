@@ -1,4 +1,5 @@
 import { TV } from "@/classes/TokenValue";
+import { diamondABI } from "@/constants/abi/diamondABI";
 import { STALK } from "@/constants/internalTokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { Token } from "@/utils/types";
@@ -47,99 +48,64 @@ export const useSiloConvertDownPenaltyQuery = (
 
   const isConvertDown = Boolean(source.isMain && target?.isLP);
 
-  const { contractArgs, isValidArgs } = useMemo(() => {
-    const args = result?.map((r) => {
-      return {
-        fromGrownStalk: r.fromGrownStalk,
-        fromBdv: r.fromBdv,
-        well: isConvertDown ? target : undefined,
-      };
-    });
+  const bdvValues = useMemo(() => result?.map((r) => r.fromBdv), [result]);
 
-    const allHaveWells = args?.every((r) => r.well);
-    const allHaveBdv = args?.every((r) => r.fromBdv.gt(0));
-
-    return {
-      contractArgs: args,
-      isValidArgs: Boolean(allHaveWells && allHaveBdv && args?.length),
-    };
-  }, [result]);
-
-  const queryEnabled = isValidArgs && !!contractArgs?.length && isConvertDown && enabled;
-
-  const bdvValues = useMemo(() => contractArgs?.map((r) => r.fromBdv) ?? [], [contractArgs]);
-
-  const selectData = useCallback(
-    (data: (readonly [bigint, bigint])[]) => selectGrownStalkPenaltyMultiple(data, bdvValues),
+  const select = useCallback(
+    (data: (readonly [bigint, bigint])[]) => {
+      return selectGrownStalkPenaltyMultiple(data, bdvValues ?? []);
+    },
     [bdvValues],
   );
 
-  const queries = useReadContracts({
-    contracts: (contractArgs ?? [])?.map((r) => {
+  const args = result?.map((r) => {
+    return {
+      fromGrownStalk: r.fromGrownStalk,
+      fromBdv: r.fromBdv,
+      well: isConvertDown ? target : undefined,
+      fromAmount: r.fromAmountIn,
+    };
+  });
+
+  const isValidArgs = args?.every((r) => r.well && r.fromBdv.gt(0) && r.fromAmount.gt(0));
+  const queryEnabled = isValidArgs && !!args?.length && isConvertDown && enabled;
+
+  const { data: queryData, ...queries } = useReadContracts({
+    contracts: (args ?? [])?.map((r) => {
       return {
         address: diamond,
-        abi: abi,
-        functionName: "downPenalizedGrownStalk",
-        args: [r.well?.address ?? "0x", r.fromBdv.toBigInt(), r.fromGrownStalk.toBigInt()],
+        abi: diamondABI,
+        functionName: "downPenalizedGrownStalk" as const,
+        args: [
+          r.well?.address ?? "0x",
+          r.fromBdv.toBigInt(),
+          r.fromGrownStalk.toBigInt(),
+          r.fromAmount.toBigInt(),
+        ] as const,
       };
     }),
     allowFailure: false,
     query: {
       enabled: queryEnabled,
-      select: selectData,
+      select,
     },
   });
 
   useEffect(() => {
-    const amts = queries.data?.map((r) => r.lossGrownStalk ?? TV.ZERO);
+    const amts = queryData?.map((r) => r.lossGrownStalk ?? TV.ZERO);
     const structAmts = structs?.map((r) => r.lossGrownStalk ?? TV.ZERO);
 
-    if (amts && structAmts && amts.every((amt, i) => amt.eq(structAmts[i] ?? TV.ZERO))) return;
+    if (amts && structAmts && amts?.every((amt, i) => amt.eq(structAmts?.[i] ?? TV.ZERO))) return;
 
     if (amts?.every((amt, i) => amt.eq(structAmts?.[i] ?? TV.ZERO))) return;
 
-    queries.data && setStructs(queries.data);
-  }, [queries]);
+    queryData && setStructs(queryData);
+  }, [queryData]);
 
-  return {
-    ...queries,
-    data: structs,
-  };
+  return useMemo(
+    () => ({
+      ...queries,
+      data: structs,
+    }),
+    [queries, structs],
+  );
 };
-
-const abi = [
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "well",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "bdvToConvert",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "grownStalkToConvert",
-        type: "uint256",
-      },
-    ],
-    name: "downPenalizedGrownStalk",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "newGrownStalk",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "grownStalkLost",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-] as const;

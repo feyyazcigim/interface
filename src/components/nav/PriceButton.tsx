@@ -52,13 +52,17 @@ function PriceButtonPanel() {
 
   const { data: twaDeltaBMap } = useTwaDeltaBLPQuery();
 
+  const whitelistedPools = useMemo(() => {
+    return priceData.pools.filter((pool) => pool.pool.isWhitelisted);
+  }, [priceData.pools]);
+
   const mainTokenBalances = useMemo(() => {
-    return priceData.pools.flatMap((pool) =>
+    return whitelistedPools.flatMap((pool) =>
       pool.balances.map(
         (balance, index) => pool.tokens[index].isMain && tokenData.whitelistedTokens.includes(pool.pool) && balance,
       ),
     );
-  }, [priceData.pools, tokenData.whitelistedTokens]);
+  }, [whitelistedPools, tokenData.whitelistedTokens]);
 
   const totalMainTokens = useMemo(() => {
     return mainTokenBalances.reduce(
@@ -67,7 +71,15 @@ function PriceButtonPanel() {
     );
   }, [mainTokenBalances]);
 
-  const totalDeltaBar = priceData.deltaB.div(totalMainTokens.gt(0) ? totalMainTokens : 1).mul(-100);
+  const combinedDeltaB = useMemo(() => {
+    return whitelistedPools.reduce((total: TokenValue, pool) => total.add(pool.deltaB), TokenValue.ZERO);
+  }, [whitelistedPools]);
+
+  const totalLiquidity = useMemo(() => {
+    return whitelistedPools.reduce((total: TokenValue, pool) => total.add(pool.liquidity), TokenValue.ZERO);
+  }, [whitelistedPools]);
+
+  const totalDeltaBar = combinedDeltaB.div(totalMainTokens.gt(0) ? totalMainTokens : 1).mul(-100);
 
   const [showSettings, setShowSettings] = useState(false);
   const [showPrices, setShowPrices] = useState(false);
@@ -85,7 +97,14 @@ function PriceButtonPanel() {
     localStorage.setItem("pinto.priceButton.expandAll", JSON.stringify(expandAll));
   }, [expandAll]);
 
-  const combinedDeltaB = priceData.deltaB;
+  const underlyingTokensToShow = useMemo(() => {
+    return Array.from(priceData.tokenPrices).filter(([tk]) => tk.isLPUnderlying && tk.isCompositeLPWhitelisted);
+  }, [priceData.tokenPrices]);
+
+  const marqueeTokens = useMemo(
+    () => [...underlyingTokensToShow, ...underlyingTokensToShow, ...underlyingTokensToShow],
+    [underlyingTokensToShow],
+  );
 
   return (
     <div
@@ -154,14 +173,10 @@ function PriceButtonPanel() {
                   width: `${totalDeltaBar.add(50).sub(100).abs().toHuman()}%`,
                 }}
               >
-                {priceData.pools.map((pool, i) => {
-                  const deltaBar = Number(
-                    pool.deltaB
-                      .abs()
-                      .div(priceData.deltaB.eq(0) ? 1 : priceData.deltaB.abs())
-                      .mul(100)
-                      .toHuman(),
-                  ).toFixed(2);
+                {whitelistedPools.map((pool, i) => {
+                  const liquidityPercentage = totalLiquidity.gt(0)
+                    ? Number(pool.liquidity.div(totalLiquidity).mul(100).toHuman()).toFixed(2)
+                    : "0";
                   if (!pool.pool?.color) return;
                   return (
                     <div
@@ -169,20 +184,20 @@ function PriceButtonPanel() {
                       className={`${i === 0 ? "border-l-0" : "border-l-2"} border-white min-w-2`}
                       style={{
                         background: pool.pool.color,
-                        width: `${deltaBar}%`,
+                        width: `${liquidityPercentage}%`,
                       }}
                     />
                   );
                 })}
               </div>
               <div
-                className={`${priceData.deltaB.gt(0) ? "right-[50%] border-l-2" : "left-[50%] border-r-2"} h-2 bg-white opacity-50 absolute max-w-[calc(50%_-_0.5rem)]`}
+                className={`${combinedDeltaB.gt(0) ? "right-[50%] border-l-2" : "left-[50%] border-r-2"} h-2 bg-white opacity-50 absolute max-w-[calc(50%_-_0.5rem)]`}
                 style={{
                   width: `${totalDeltaBar.abs().toHuman()}%`,
                 }}
               />
               <div
-                className={`${priceData.deltaB.gt(0) ? "right-[50%] border-l-2" : "left-[50%] border-r-2"} h-2 bg-transparent border-white absolute max-w-[calc(50%_-_0.5rem)]`}
+                className={`${combinedDeltaB.gt(0) ? "right-[50%] border-l-2" : "left-[50%] border-r-2"} h-2 bg-transparent border-white absolute max-w-[calc(50%_-_0.5rem)]`}
                 style={{
                   width: `${totalDeltaBar.abs().toHuman()}%`,
                 }}
@@ -229,11 +244,7 @@ function PriceButtonPanel() {
                 </Button>
               )}
               {priceData.pools.map((pool, i) => {
-                const isWhitelisted =
-                  tokenData.whitelistedTokens.findIndex(
-                    (token) => token?.address.toLowerCase() === pool.pool?.address.toLowerCase(),
-                  ) > -1;
-                if (!isWhitelisted) return;
+                if (!pool.pool.isWhitelisted) return null;
                 const token0Price = pool.tokens[0].isMain
                   ? pool.price
                   : useTwa
@@ -421,44 +432,9 @@ function PriceButtonPanel() {
           <Separator className="w-[38rem] -ml-4 " />
           <div className="inline-flex items-center">
             <div className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4 animate-marquee">
-              {Array.from(priceData.tokenPrices).map((token, i) => {
-                if (!token[0].isWhitelisted) return;
+              {marqueeTokens.map((token, i) => {
                 return (
-                  <div key={`${token[0].address}_marquee1_${i}`}>
-                    {token[0]?.name && (
-                      <div className="inline-flex items-center px-2 gap-1.5">
-                        <IconImage src={token[0].logoURI} size={6} />
-                        <div className="pinto-body text-pinto-secondary text-nowrap">
-                          {`${token[0].symbol}: ${formatter.usd(token[1][useTwa ? "twa" : "instant"] ? token[1][useTwa ? "twa" : "instant"].toHuman() : 0)}`}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4 animate-marquee">
-              {Array.from(priceData.tokenPrices).map((token, i) => {
-                if (!token[0].isWhitelisted) return;
-                return (
-                  <div key={`${token[0].address}_marquee2_${i}`}>
-                    {token[0]?.name && (
-                      <div className="inline-flex items-center px-2 gap-1.5">
-                        <IconImage src={token[0].logoURI} size={6} />
-                        <div className="pinto-body text-pinto-secondary text-nowrap">
-                          {`${token[0].symbol}: ${formatter.usd(token[1][useTwa ? "twa" : "instant"] ? token[1][useTwa ? "twa" : "instant"].toHuman() : 0)}`}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4 animate-marquee">
-              {Array.from(priceData.tokenPrices).map((token, i) => {
-                if (!token[0].isWhitelisted) return;
-                return (
-                  <div key={`${token[0].address}_marquee3_${i}`}>
+                  <div key={`${token[0].address}_marquee_${i}`}>
                     {token[0]?.name && (
                       <div className="inline-flex items-center px-2 gap-1.5">
                         <IconImage src={token[0].logoURI} size={6} />

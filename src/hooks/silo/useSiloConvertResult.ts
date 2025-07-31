@@ -18,6 +18,7 @@ const defaultData = {
   toGrownStalk: TV.ZERO,
   toSeed: TV.ZERO,
   fromTotalStalk: TV.ZERO,
+  fromAmountIn: TV.ZERO,
   fromInitialStalk: TV.ZERO,
   fromGrownStalk: TV.ZERO,
   fromSeed: TV.ZERO,
@@ -81,7 +82,7 @@ export function useSiloConvertResult(
   const sortedIndexes = useMemo(() => {
     if (!results) return;
 
-    const sortedIndexes = [...results]
+    const sortedIndicies = [...results]
       .map((result, index) => ({ ...result, index }))
       .sort((a, b) => {
         const aBDV = a.toBdv;
@@ -98,7 +99,7 @@ export function useSiloConvertResult(
       })
       .map((r) => r.index);
 
-    return sortedIndexes;
+    return sortedIndicies;
   }, [results]);
 
   const showRoutes = useMemo(() => {
@@ -117,11 +118,14 @@ export function useSiloConvertResult(
     return bestRoute.totalAmountOut.gt(nextBestRoute.totalAmountOut) && bestRoute.toBdv.lt(nextBestRoute.toBdv);
   }, [results, sortedIndexes]);
 
-  return {
-    results,
-    sortedIndexes,
-    showRoutes,
-  };
+  return useMemo(
+    () => ({
+      results,
+      sortedIndexes,
+      showRoutes,
+    }),
+    [results, sortedIndexes, showRoutes],
+  );
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -161,6 +165,7 @@ const reduceSummary = (summary: SiloConvertSummary<SiloConvertType>, targetToken
         toInitialStalk: prev.toInitialStalk.add(toInitialStalk),
         toGrownStalk: prev.toGrownStalk.add(toGrownStalk),
         toSeed: prev.toSeed.add(toSeed),
+        fromAmountIn: prev.fromAmountIn.add(result.fromAmount),
         fromTotalStalk: prev.fromTotalStalk.add(picked.totalStalk),
         fromInitialStalk: prev.fromInitialStalk.add(picked.totalInitialStalk),
         fromGrownStalk: prev.fromGrownStalk.add(picked.totalGrownStalkSinceDeposit),

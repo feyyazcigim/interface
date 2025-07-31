@@ -20,7 +20,6 @@ import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import { useSiloData } from "@/state/useSiloData";
 import { useInvalidateSun } from "@/state/useSunData";
-import { toSafeTVFromHuman } from "@/utils/number";
 import { stringEq, stringToNumber } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
@@ -35,7 +34,12 @@ const useFilterTokens = (siloToken: Token, balances: ReturnType<typeof useFarmer
     const set = new Set<Token>();
 
     [...balances.keys()].forEach((token) => {
-      if ((token.isLP && !tokensEqual(token, siloToken)) || token.isSiloWrapped || token.is3PSiloWrapped) {
+      if (
+        (token.isLP && !tokensEqual(token, siloToken)) ||
+        token.isSiloWrapped ||
+        token.is3PSiloWrapped ||
+        token.symbol.includes("WSOL")
+      ) {
         set.add(token);
       }
     });

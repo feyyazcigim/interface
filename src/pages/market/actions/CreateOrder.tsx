@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/Separator";
 import { PODS } from "@/constants/internalTokens";
 import createPodOrder from "@/encoders/createPodOrder";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { useIsWSOL, useTokenMap } from "@/hooks/pinto/useTokenMap";
 import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
@@ -44,17 +44,18 @@ const maxPlaceInLineValidation = {
 
 const useFilterTokens = () => {
   const tokens = useTokenMap();
+  const isWSOL = useIsWSOL();
 
   return useMemo(() => {
     const set = new Set<Token>();
 
     [...Object.values(tokens)].forEach((token) => {
-      if (token.isLP || token.isSiloWrapped || token.is3PSiloWrapped) {
+      if (token.isLP || token.isSiloWrapped || token.is3PSiloWrapped || isWSOL(token)) {
         set.add(token);
       }
     });
     return set;
-  }, [tokens]);
+  }, [tokens, isWSOL]);
 };
 
 export default function CreateOrder() {

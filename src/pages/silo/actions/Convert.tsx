@@ -18,6 +18,7 @@ import VerticalAccordion from "@/components/ui/VerticalAccordion";
 import Warning from "@/components/ui/Warning";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { SEEDS } from "@/constants/internalTokens";
+import { CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER, NO_MAX_CONVERT_AMOUNT } from "@/constants/silo";
 import { MAIN_TOKEN, PINTO_USDC_TOKEN, PINTO_WSOL_TOKEN } from "@/constants/tokens";
 import useDelayedLoading from "@/hooks/display/useDelayedLoading";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
@@ -36,7 +37,7 @@ import useTransaction from "@/hooks/useTransaction";
 import { useDeterminePriceImpactWithResults } from "@/hooks/wells/usePriceImpactSummary";
 import { useWellUnderlying } from "@/hooks/wells/wells";
 import { SiloConvert, SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
-import { SiloConvertMaxConvertQuoter } from "@/lib/siloConvert/SiloConvert.maxConvertQuoter";
+import { MaxConvertResult } from "@/lib/siloConvert/SiloConvert.maxConvertQuoter";
 import { SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import ConvertProvider, { SiloTokenConvertPath, useConvertState } from "@/state/context/convert.provider";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -102,12 +103,11 @@ function ConvertForm({
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
   const [showMinAmountWarning, setShowMinAmountWarning] = useState(false);
   const [allowStalkPenalty, setAllowStalkPenalty] = useState(false);
-  const pintoWSOL = useChainConstant(PINTO_WSOL_TOKEN);
 
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
   const clearSiloConvertQueries = useClearSiloConvertQueries();
   const invalidateSun = useInvalidateSun();
-  const { tokenPrices } = usePriceData();
+  const { tokenPrices, pools } = usePriceData();
 
   const minAmountIn = convertExceptions.minAmountIn;
   const isDefaultConvert = siloToken.isMain || targetToken?.isMain;
@@ -117,6 +117,7 @@ function ConvertForm({
   const isDownConvert = Boolean(siloToken.isMain && targetToken?.isLP);
 
   const deposits = farmerDeposits.get(siloToken);
+
   const convertibleDeposits = deposits?.convertibleDeposits;
   const farmerConvertibleAmount = deposits?.convertibleAmount || TV.ZERO;
   const hasConvertible = minAmountIn && farmerConvertibleAmount.gt(0) && farmerConvertibleAmount.gte(minAmountIn);
@@ -130,7 +131,19 @@ function ConvertForm({
     targetToken,
     !!(isDefaultConvert ? hasConvertible && deltaPEnabled : hasConvertible),
   );
-  const maxConvertQueryData = maxConvertQuery.data ?? TV.ZERO;
+
+  const maxConvertOverall = maxConvertQuery.data?.max ?? TV.ZERO;
+  const maxConvertAtRate = maxConvertQuery.data?.maxAtRate;
+
+  const poolPrice = useMemo(
+    () =>
+      pools.find((pool) => pool.pool.address.toLowerCase() === targetToken?.address.toLowerCase())?.price ?? TV.ZERO,
+    [pools, targetToken],
+  );
+
+  const maxConvertQueryData =
+    (poolPrice.gt(CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER) ? maxConvertAtRate : maxConvertOverall) ?? TV.ZERO;
+
   const maxConvertLoading = maxConvertQuery.isLoading;
 
   const amountInNum = stringToNumber(amountIn);
@@ -369,7 +382,7 @@ function ConvertForm({
     !siloToken.isLP ||
     !targetToken?.isLP ||
     maxConvertQueryData.lte(0) ||
-    maxConvertQueryData.eq(SiloConvertMaxConvertQuoter.NO_MAX_CONVERT_AMOUNT)
+    maxConvertQueryData.eq(NO_MAX_CONVERT_AMOUNT)
   );
 
   const renderMinAmountWarning = minAmountIn?.gt(0) && !isValidAmountIn;
@@ -430,7 +443,6 @@ function ConvertForm({
           {...getAltTextProps()}
           mode="balance"
           disableButton
-          disableClamping={true}
           isLoading={targetToken && maxConvertLoading}
         />
       </div>
@@ -1007,7 +1019,7 @@ const ConvertWarning = ({
   farmerConvertibleAmount: TV;
   targetToken: Token | undefined;
   siloToken: Token;
-  maxConvertQuery: Omit<UseQueryResult<TV>, "data"> | undefined;
+  maxConvertQuery: Omit<UseQueryResult<MaxConvertResult>, "data"> | undefined;
   isDefaultConvert: boolean;
   maxConvert: TV;
 }) => {
