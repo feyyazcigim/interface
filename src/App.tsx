@@ -19,16 +19,18 @@ import Transfer from "./pages/Transfer";
 import Whitepaper from "./pages/Whitepaper";
 import NewUserView from "./pages/overview/NewUserView";
 
+import Footer from "@/components/Footer";
 import TourOfTheFarm from "@/components/TourOfTheFarm";
 import { useMetaCRM } from "./utils/meta-crm";
 
 function AppLayout({ children }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <TourOfTheFarm />
       <ScrollToTop />
-      <div className={cn("relative z-[1] w-screen")}>{children}</div>
+      <div className={cn("relative z-[1] w-screen flex-1")}>{children}</div>
+      <Footer />
     </div>
   );
 }
