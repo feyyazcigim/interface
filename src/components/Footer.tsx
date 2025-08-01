@@ -44,7 +44,7 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="p-1 text-pinto-light hover:text-pinto-green-4 transition-colors duration-200 rounded-md hover:bg-gray-100"
+    className="text-pinto-light hover:text-pinto-green-4 transition-colors duration-200"
     aria-label={label}
   >
     {icon}
@@ -69,20 +69,20 @@ export default function Footer() {
           </div>
 
           {/* Social Icons Section - Bottom Right Corner */}
-          <div className="flex items-center gap-1 sm:ml-auto">
+          <div className="flex items-center gap-3 sm:ml-auto">
             <SocialIcon
               href="https://pinto.money/discord"
-              icon={<DiscordLogoIcon width={16} height={16} />}
+              icon={<DiscordLogoIcon width={18} height={18} />}
               label="Discord"
             />
             <SocialIcon
               href="https://x.com/pintodotmoney"
-              icon={<TwitterLogoIcon width={16} height={16} />}
+              icon={<TwitterLogoIcon width={18} height={18} />}
               label="X (Twitter)"
             />
             <SocialIcon
               href="https://github.com/pinto-org"
-              icon={<GitHubLogoIcon width={16} height={16} />}
+              icon={<GitHubLogoIcon width={18} height={18} />}
               label="GitHub"
             />
           </div>
