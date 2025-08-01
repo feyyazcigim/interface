@@ -11,7 +11,7 @@ interface FooterLinkProps {
 
 const FooterLink = ({ href, children, external = false, className = "" }: FooterLinkProps) => {
   const linkClasses = cn(
-    "text-pinto-light hover:text-pinto-green-4 transition-colors duration-200 text-xs font-medium",
+    "text-pinto-light hover:text-pinto-green-4 transition-colors duration-200 text-xs sm:text-xs font-medium",
     className,
   );
 
@@ -50,11 +50,11 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
 
 export default function Footer() {
   return (
-    <footer className="border-t border-gray-200 bg-gradient-light mt-auto">
-      <div className="w-full px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <footer className="border-t border-gray-200 bg-gradient-light mt-auto pb-[4.5rem] sm:pb-0">
+      <div className="w-full px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           {/* Links Section - Bottom Left Corner */}
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <FooterLink href="/?fromNav=true">About</FooterLink>
             <FooterLink href="https://docs.pinto.money/disclosures" external>
               Terms of Service
@@ -68,17 +68,17 @@ export default function Footer() {
           <div className="flex items-center gap-3 sm:ml-auto">
             <SocialIcon
               href="https://pinto.money/discord"
-              icon={<DiscordLogoIcon width={18} height={18} />}
+              icon={<DiscordLogoIcon width={16} height={16} className="sm:w-[18px] sm:h-[18px]" />}
               label="Discord"
             />
             <SocialIcon
               href="https://x.com/pintodotmoney"
-              icon={<TwitterLogoIcon width={18} height={18} />}
+              icon={<TwitterLogoIcon width={16} height={16} className="sm:w-[18px] sm:h-[18px]" />}
               label="X (Twitter)"
             />
             <SocialIcon
               href="https://github.com/pinto-org"
-              icon={<GitHubLogoIcon width={18} height={18} />}
+              icon={<GitHubLogoIcon width={16} height={16} className="sm:w-[18px] sm:h-[18px]" />}
               label="GitHub"
             />
           </div>
