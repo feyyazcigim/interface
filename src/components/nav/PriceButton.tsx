@@ -433,7 +433,9 @@ function PriceButtonPanel() {
           className={`h-6 w-6 p-0 z-[1] absolute peer-hover:bottom-16 bottom-2 left-1/2 transform -translate-x-1/2 shadow-xl border-black transition-all`}
           onClick={() => setShowPrices(true)}
         >
-          {!isMobile && (
+          {isMobile ? (
+            <ForwardArrowIcon color={"currentColor"} height={"1rem"} width={"1rem"} />
+          ) : (
             <span className="text-black mr-[1rem]">
               <ForwardArrowIcon color={"currentColor"} height={"1rem"} width={"1rem"} />
             </span>
