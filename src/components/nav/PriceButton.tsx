@@ -369,7 +369,11 @@ function PriceButtonPanel() {
                         </div>
                         <div
                           className={`pinto-xs inline-flex font-normal leading-same-xs items-center px-2 py-0.5 h-6 text-pinto-green-3 bg-pinto-green-1 rounded-[0.25rem] gap-1 transition-all duration-200 ease-in-out origin-top overflow-hidden ${
-                            useTwa ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0"
+                            useTwa
+                              ? "scale-y-100 opacity-100"
+                              : expandAll
+                                ? "scale-y-0 opacity-0"
+                                : "scale-y-0 opacity-0 group-hover:scale-y-100 group-hover:opacity-100"
                           }`}
                         >
                           <span className="hidden sm:block">
