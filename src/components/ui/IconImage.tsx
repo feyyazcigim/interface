@@ -55,7 +55,11 @@ const smSizeClasses = {
 } as const;
 
 const makeIconImageClassName = (s: number, ms?: number) => {
-  const mobileClass = sizeClasses[ms ?? (s as keyof typeof sizeClasses)] || "";
+  if (!ms) {
+    return sizeClasses[s as keyof typeof sizeClasses] || "";
+  }
+
+  const mobileClass = sizeClasses[ms as keyof typeof sizeClasses] || "";
   const desktopClass = smSizeClasses[s as keyof typeof smSizeClasses] || "";
 
   return `${mobileClass} ${desktopClass}`;

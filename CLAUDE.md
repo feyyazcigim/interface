@@ -242,8 +242,7 @@ This project represents a sophisticated DeFi frontend with complex state managem
 When working on code changes that result in commits, AI agents must:
 
 1. **Always lint and format code** before creating a pull request:
-   - Run `yarn lint:check` to check for linting issues
-   - Run `yarn format` to auto-format code with Biome
+   - Run `yarn format-and-lint` to auto-format and lint code with Biome
    - Fix any linting issues specific to the files you've changed
    - Commit any formatting fixes before creating the PR
 2. **Always create a pull request** after pushing commits to a feature branch

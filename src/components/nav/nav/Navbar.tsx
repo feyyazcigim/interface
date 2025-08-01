@@ -1,3 +1,4 @@
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 import HelperLink, { hoveredIdAtom } from "@/components/HelperLink";
 import NoBaseValueAlert from "@/components/NoBaseValueAlert";
 import { ScrollHideComponent } from "@/components/ScrollHideComponent";
@@ -205,6 +206,7 @@ const Navbar = () => {
 
   return (
     <div className="flex flex-col sticky top-0 z-[2]" id="pinto-navbar" style={{ transformOrigin: "top left" }}>
+      <AnnouncementBanner />
       <div
         className={cn(
           `grid px-4 pt-4 pb-2 sm:px-6 sm:pt-6 w-full z-[2] ${isHome ? "bg-transparent" : "bg-gradient-light"} action-container transition-colors`,

@@ -79,11 +79,21 @@ const SiloTokenPageHeader = ({
         </div>
       </div>
       <div className="inline-flex items-center flex-wrap gap-3">
-        <div className="inline-flex gap-3 items-center whitespace-nowrap">
+        <div className="hidden sm:inline-flex gap-3 items-center">
           <IconImage src={token.logoURI} size={12} alt={token.name} />
-          <div className="pinto-h2 sm:pinto-h1">{showSymbol ? token.symbol : token.name}</div>
+          <div className="inline-flex gap-3 items-center">
+            <div className="pinto-h2 sm:pinto-h1">{showSymbol ? token.symbol : token.name}</div>
+            {!token.isWhitelisted && token.isLP && <DewhitelistedBadge />}
+          </div>
         </div>
-        <div className="hidden sm:block">
+        <div className="flex sm:hidden flex-col gap-3">
+          <div className="flex flex-row gap-3 items-center">
+            <IconImage src={token.logoURI} size={12} alt={token.name} />
+            <div className="pinto-h2">{showSymbol ? token.symbol : token.name}</div>
+          </div>
+          {!token.isWhitelisted && token.isLP && <DewhitelistedBadge />}
+        </div>
+        <div className="hidden sm:block whitespace-nowrap">
           <AuxButtons />
         </div>
       </div>
@@ -91,14 +101,27 @@ const SiloTokenPageHeader = ({
   );
 };
 
+const DewhitelistedBadge = () => (
+  <div className="bg-pinto-gray-2/70 text-pinto-secondary px-[0.25rem] py-[0.25rem] rounded-[0.25rem] pinto-sm leading-none w-fit">
+    Dewhitelisted
+  </div>
+);
+
 export interface SiloTokenPageSubHeaderProps {
   isMobile: boolean;
+  hideAPYs?: boolean;
   apys?: Partial<SiloTokenYield>;
   siloTokenData?: SiloTokenData;
   description?: string;
 }
 
-export const SiloTokenPageSubHeader = ({ siloTokenData, description, apys, isMobile }: SiloTokenPageSubHeaderProps) => {
+export const SiloTokenPageSubHeader = ({
+  siloTokenData,
+  description,
+  apys,
+  isMobile,
+  hideAPYs = false,
+}: SiloTokenPageSubHeaderProps) => {
   const season = useSeason();
   const stalkRewards = siloTokenData?.rewards.stalk;
   const seedRewards = siloTokenData?.rewards.seeds;
@@ -156,14 +179,16 @@ export const SiloTokenPageSubHeader = ({ siloTokenData, description, apys, isMob
           </div>
         )}
         {/*<TooltipSimple content={<APYTooltip />}> */}
-        <div className="flex flex-col place-self-start sm:flex-row sm:items-center justify-end gap-2 sm:gap-4 lg:gap-6">
-          <div
-            className={`pinto-sm-light text-pinto-green-4 text-left sm:text-right ${stats[0].notApplicable ? "opacity-50" : ""}`}
-          >
-            Variable APY
+        {!hideAPYs ? (
+          <div className="flex flex-col place-self-start sm:flex-row sm:items-center justify-end gap-2 sm:gap-4 lg:gap-6">
+            <div
+              className={`pinto-sm-light text-pinto-green-4 text-left sm:text-right ${stats[0].notApplicable ? "opacity-50" : ""}`}
+            >
+              Variable APY
+            </div>
+            <InlineStats variant={isMobile ? "sm-alt" : "sm"} mode={"apy"} stats={stats} />
           </div>
-          <InlineStats variant={isMobile ? "sm-alt" : "sm"} mode={"apy"} stats={stats} />
-        </div>
+        ) : null}
         {/* </TooltipSimple> */}
       </div>
     </>

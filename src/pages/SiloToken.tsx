@@ -82,7 +82,12 @@ function SiloTokenInner({ siloToken }: { siloToken: Token }) {
               <div className="flex flex-col w-full gap-6">
                 {(!isMobile || (!currentAction && isMobile)) && (
                   <>
-                    <SiloTokenPageSubHeader siloTokenData={siloTokenData} apys={apysQuery.data} isMobile={isMobile} />
+                    <SiloTokenPageSubHeader
+                      siloTokenData={siloTokenData}
+                      apys={apysQuery.data}
+                      isMobile={isMobile}
+                      hideAPYs={!siloToken.isWhitelisted}
+                    />
                     <Separator />
                   </>
                 )}
@@ -152,13 +157,15 @@ function SiloTokenInner({ siloToken }: { siloToken: Token }) {
               >
                 Convert
               </Button>
-              <Button
-                onClick={() => navigate(`/silo/${siloToken.address}?action=deposit`)}
-                rounded={"full"}
-                className="pinto-sm-bold text-sm flex-1 flex h-full"
-              >
-                Deposit
-              </Button>
+              {siloToken.isWhitelisted && (
+                <Button
+                  onClick={() => navigate(`/silo/${siloToken.address}?action=deposit`)}
+                  rounded={"full"}
+                  className="pinto-sm-bold text-sm flex-1 flex h-full"
+                >
+                  Deposit
+                </Button>
+              )}
             </MobileActionBar>
           )}
         </div>
@@ -212,7 +219,7 @@ const SiloTokenActions = ({ siloToken, farmerDeposits }: ISiloTokenActions) => {
       </div>
       {farmerDeposits?.deposits.map((farmerDeposit) => {
         if (farmerDeposit.isGerminating || farmerDeposit.isPlantDeposit) {
-          return <GerminationNotice type="single" deposit={farmerDeposit} />;
+          return <GerminationNotice type="single" deposit={farmerDeposit} key={`germinating-${farmerDeposit.id}`} />;
         }
         return null;
       })}
@@ -229,6 +236,15 @@ interface IUndepositedSiloToken extends IBaseSiloToken {
 const UndepositedSiloTokenInfoHeader = ({ siloToken, farmerBalanceSiloTokenAmount, isMain }: IUndepositedSiloToken) => {
   const chainId = useChainId();
 
+  const getLPMessage = (): string => {
+    const start = `You have ${formatter.token(farmerBalanceSiloTokenAmount.toNumber(), siloToken)} ${siloToken.name} not currently Deposited.`;
+    const end = siloToken.isWhitelisted
+      ? "Deposit them to earn yield or unwrap via the Pinto Exchange."
+      : "Unwrap via the Pinto Exchange.";
+
+    return `${start} ${end}`;
+  };
+
   return (
     <>
       {isMain ? (
@@ -243,10 +259,7 @@ const UndepositedSiloTokenInfoHeader = ({ siloToken, farmerBalanceSiloTokenAmoun
       ) : (
         <div className="flex flex-col bg-pinto-off-white border p-4 rounded-[1rem] gap-y-2">
           <div className="flex flex-row gap-x-2 items-center">
-            <div className="pinto-sm font-regular text-pinto-primary leading-2">
-              You have {formatter.token(farmerBalanceSiloTokenAmount.toNumber(), siloToken)} {siloToken.name} not
-              currently Deposited. Deposit them to earn yield or unwrap via the Pinto Exchange.
-            </div>
+            <div className="pinto-sm font-regular text-pinto-primary leading-2">{getLPMessage()}</div>
           </div>
           <Button variant="outline-white" className="flex gap-x-2" asChild>
             <Link
@@ -281,6 +294,10 @@ const SiloTokenAbout = ({ siloToken, price, siloData }: ISiloTokenAbout) => {
 
   const { siloTVD, liquidityTVD } = [...siloData.tokenData.entries()].reduce<SiloBDVs>(
     (prev, [token, data]) => {
+      if (!token.isWhitelisted) {
+        return prev;
+      }
+
       const bdv = data.depositedBDV.add(data.germinatingBDV);
 
       prev.siloTVD = prev.siloTVD.add(bdv);
@@ -322,7 +339,9 @@ const SiloTokenAbout = ({ siloToken, price, siloData }: ISiloTokenAbout) => {
         {siloToken.isLP ? (
           <div>
             <div className="pinto-sm-light font-thin sm:font-light text-pinto-secondary">Current % of Dep. LP PDV</div>
-            <div className="pinto-body sm:pinto-h4 pt-1">{formatter.pct(liquidityRatio)}</div>
+            <div className="pinto-body sm:pinto-h4 pt-1">
+              {siloToken.isWhitelisted ? formatter.pct(liquidityRatio) : "N/A"}
+            </div>
           </div>
         ) : null}
         {siloToken.isLP ? (
@@ -331,7 +350,7 @@ const SiloTokenAbout = ({ siloToken, price, siloData }: ISiloTokenAbout) => {
               Optimal % of Dep. LP PDV
             </div>
             <div className="pinto-body sm:pinto-h4 pt-1 text-right sm:text-start">
-              {formatter.pct(optimalDepositedRatio)}
+              {siloToken.isWhitelisted ? formatter.pct(optimalDepositedRatio) : "N/A"}
             </div>
           </div>
         ) : null}

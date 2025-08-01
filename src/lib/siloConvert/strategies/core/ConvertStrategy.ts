@@ -5,7 +5,7 @@ import { AdvancedFarmWorkflow } from "@/lib/farm/workflow";
 import { SiloConvertContext } from "@/lib/siloConvert/types";
 import { ExtendedPickedCratesDetails } from "@/utils/convert";
 import { AnyRecord } from "@/utils/types.generic";
-import { ConvertStrategyErrorHandler } from "../validation/ConvertStrategyErrorHandler";
+import { ErrorHandlerFactory } from "../validation/ErrorHandlerFactory";
 import { ConvertStrategyQuote, SiloConvertType } from "./types";
 
 export abstract class SiloConvertStrategy<T extends SiloConvertType> {
@@ -16,13 +16,13 @@ export abstract class SiloConvertStrategy<T extends SiloConvertType> {
   abstract readonly name: string;
 
   // Error handler instance available to all strategies
-  protected readonly errorHandler: ConvertStrategyErrorHandler;
+  readonly errorHandler: ReturnType<typeof ErrorHandlerFactory.createStrategyHandler>;
 
   constructor(source: Token, target: Token, context: SiloConvertContext) {
     this.sourceToken = source;
     this.targetToken = target;
     this.context = context;
-    this.errorHandler = new ConvertStrategyErrorHandler(source.symbol, target.symbol);
+    this.errorHandler = ErrorHandlerFactory.createStrategyHandler(source.symbol, target.symbol);
   }
 
   abstract quote(

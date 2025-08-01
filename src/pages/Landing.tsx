@@ -150,11 +150,11 @@ export default function Landing() {
   };
 
   return (
-    <div className="space-y-8 relative z-10">
+    <div className="flex flex-col flex-1 relative z-10">
       <div
         style={{
           width: "100vw",
-          height: "80vh",
+          height: "100vh",
           position: "relative",
           display: "flex",
           backgroundColor: "#FEFDF4",

@@ -1984,6 +1984,32 @@ export const diamondABI = [
     anonymous: false,
     inputs: [
       {
+        indexed: false,
+        internalType: "uint256",
+        name: "secondsSinceStart",
+        type: "uint256",
+      },
+    ],
+    name: "SoilMostlySoldOut",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "secondsSinceStart",
+        type: "uint256",
+      },
+    ],
+    name: "SoilSoldOut",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: true,
         internalType: "address",
         name: "account",
@@ -2142,6 +2168,32 @@ export const diamondABI = [
         internalType: "struct FieldFacet.Plot[]",
         name: "plots",
         type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getSoilMostlySoldOutThreshold",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getSoilSoldOutThreshold",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -6750,6 +6802,11 @@ export const diamondABI = [
         name: "grownStalkToConvert",
         type: "uint256",
       },
+      {
+        internalType: "uint256",
+        name: "amountConverted",
+        type: "uint256",
+      },
     ],
     name: "downPenalizedGrownStalk",
     outputs: [
@@ -6810,6 +6867,35 @@ export const diamondABI = [
       },
     ],
     name: "getMaxAmountIn",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "amountIn",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "tokenIn",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "tokenOut",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "rate",
+        type: "uint256",
+      },
+    ],
+    name: "getMaxAmountInAtRate",
     outputs: [
       {
         internalType: "uint256",
@@ -7934,6 +8020,25 @@ export const diamondABI = [
         name: "gaugeId",
         type: "uint8",
       },
+      {
+        indexed: false,
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
+    ],
+    name: "EngagedData",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8",
+      },
     ],
     name: "RemovedGauge",
     type: "event",
@@ -7977,6 +8082,75 @@ export const diamondABI = [
       },
     ],
     name: "UpdatedGauge",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8",
+      },
+      {
+        indexed: false,
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
+    ],
+    name: "UpdatedGaugeData",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8",
+      },
+      {
+        indexed: false,
+        internalType: "bytes",
+        name: "value",
+        type: "bytes",
+      },
+    ],
+    name: "UpdatedGaugeValue",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "season",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "caseId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "int32",
+        name: "absChange",
+        type: "int32",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "fieldId",
+        type: "uint256",
+      },
+    ],
+    name: "TemperatureChange",
     type: "event",
   },
   {
@@ -8296,9 +8470,14 @@ export const diamondABI = [
             type: "uint256",
           },
           {
-            internalType: "bytes32[60]",
+            internalType: "uint256",
+            name: "convertDownPenaltyRate",
+            type: "uint256",
+          },
+          {
+            internalType: "bytes32[59]",
             name: "buffer",
-            type: "bytes32[60]",
+            type: "bytes32[59]",
           },
         ],
         internalType: "struct ExtEvaluationParameters",
@@ -9067,37 +9246,6 @@ export const diamondABI = [
       },
     ],
     name: "Sunrise",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "season",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "caseId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "int32",
-        name: "absChange",
-        type: "int32",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "fieldId",
-        type: "uint256",
-      },
-    ],
-    name: "TemperatureChange",
     type: "event",
   },
   {
@@ -9949,6 +10097,86 @@ export const diamondABI = [
     ],
     name: "getGaugeData",
     outputs: [
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum GaugeId",
+        name: "gaugeId",
+        type: "uint8",
+      },
+      {
+        internalType: "bytes",
+        name: "systemData",
+        type: "bytes",
+      },
+    ],
+    name: "getGaugeIdResult",
+    outputs: [
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes",
+      },
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        components: [
+          {
+            internalType: "bytes",
+            name: "value",
+            type: "bytes",
+          },
+          {
+            internalType: "address",
+            name: "target",
+            type: "address",
+          },
+          {
+            internalType: "bytes4",
+            name: "selector",
+            type: "bytes4",
+          },
+          {
+            internalType: "bytes",
+            name: "data",
+            type: "bytes",
+          },
+        ],
+        internalType: "struct Gauge",
+        name: "gauge",
+        type: "tuple",
+      },
+      {
+        internalType: "bytes",
+        name: "systemData",
+        type: "bytes",
+      },
+    ],
+    name: "getGaugeResult",
+    outputs: [
+      {
+        internalType: "bytes",
+        name: "",
+        type: "bytes",
+      },
       {
         internalType: "bytes",
         name: "",

@@ -3,7 +3,12 @@ import { TV } from "@/classes/TokenValue";
 import { diamondPriceABI } from "@/constants/abi/diamondPriceABI";
 import { abiSnippets } from "@/constants/abiSnippets";
 import { MAIN_TOKEN } from "@/constants/tokens";
-import { PriceContractPriceResult, decodePriceResult } from "@/encoders/ecosystem/price";
+import encodePrice, {
+  PriceContractPriceResult,
+  decodeGetWell,
+  decodePriceResult,
+  encodeGetWell,
+} from "@/encoders/ecosystem/price";
 import { beanstalkPriceAddress } from "@/generated/contractHooks";
 import { AdvancedPipeWorkflow } from "@/lib/farm/workflow";
 import { SiloConvertContext } from "@/lib/siloConvert/types";
@@ -12,8 +17,8 @@ import { PoolData } from "@/state/usePriceData";
 import { resolveChainId } from "@/utils/chain";
 import { getChainToken, getChainTokenMap, getTokenIndex } from "@/utils/token";
 import { tokensEqual } from "@/utils/token";
-import { Token } from "@/utils/types";
-import { AddressLookup } from "@/utils/types.generic";
+import { AdvancedPipeCall, Token } from "@/utils/types";
+import { AddressLookup, HashString } from "@/utils/types.generic";
 import { Address, decodeFunctionResult, encodeFunctionData } from "viem";
 
 /**
@@ -75,6 +80,9 @@ export class SiloConvertPriceCache {
   /** Mapping of LP tokens to their pair token */
   private lp2Pair: AddressLookup<Token>;
 
+  /** Mapping of dewhitelisted LP tokens to their pair token */
+  private dewhitelistedLP: AddressLookup<Token>;
+
   /** The cached price contract Price() result */
   private priceStruct: ExtendedPriceResult | undefined = undefined;
 
@@ -87,6 +95,7 @@ export class SiloConvertPriceCache {
   constructor(context: SiloConvertContext) {
     this.context = context;
     this.lp2Pair = getLpTokensToPairs(context.chainId);
+    this.dewhitelistedLP = getDewhitelistedLPs(context.chainId);
   }
 
   /**
@@ -185,7 +194,6 @@ export class SiloConvertPriceCache {
    */
   async update(force: boolean = false) {
     const diff = Date.now() - this.lastUpdateTimestamp;
-
     if (force || this.lastUpdateTimestamp === 0 || diff > REFETCH_INTERVAL) {
       const priceResult = await this.fetch();
       this.priceStruct = priceResult;
@@ -226,20 +234,42 @@ export class SiloConvertPriceCache {
     return wellData;
   }
 
+  getPriceCallStructs(): AdvancedPipeCall[] {
+    return [
+      encodePrice(this.context.chainId),
+      ...Object.values(this.dewhitelistedLP).map((tk) => encodeGetWell(this.context.chainId, tk.address)),
+    ];
+  }
+
+  decodePriceCallResults(results: HashString[]) {
+    // +1 for the price call
+    const expectedLength = Object.keys(this.dewhitelistedLP).length + 1;
+
+    if (results.length < expectedLength) {
+      throw new Error(`Cannot decode price call results. Expected ${expectedLength} results but got ${results.length}`);
+    }
+
+    const [priceData, ...dewhitelistedLPResults] = results;
+    const priceResult = decodePriceResult(priceData);
+
+    priceResult.pools = { ...priceResult.pools };
+
+    Object.values(this.dewhitelistedLP).forEach((tk, idx) => {
+      const res = decodeGetWell(dewhitelistedLPResults[idx]);
+      priceResult.pools[getTokenIndex(tk.address)] = res;
+    });
+
+    return priceResult;
+  }
+
   /**
    * Constructs an AdvancedPipeWorkflow for fetching the price data.
    */
   constructPriceAdvPipe(options?: { noTokenPrices?: boolean }) {
     const advPipe = new AdvancedPipeWorkflow(this.context.chainId, this.context.wagmiConfig);
 
-    advPipe.add({
-      target: beanstalkPriceAddress[this.context.chainId],
-      callData: encodeFunctionData({
-        abi: diamondPriceABI,
-        functionName: "price",
-        args: [],
-      }),
-      clipboard: Clipboard.encode([]),
+    this.getPriceCallStructs().forEach((callStruct) => {
+      advPipe.add(callStruct);
     });
 
     if (options?.noTokenPrices) {
@@ -271,9 +301,13 @@ export class SiloConvertPriceCache {
     const advPipe = this.constructPriceAdvPipe();
 
     // Fetch price contract data & price oracle data
-    const [priceData, ...tokenUsdData] = await advPipe.readStatic();
 
-    const priceResult = decodePriceResult(priceData);
+    const advPipeResult = await advPipe.readStatic();
+    const sliceIdx = Object.keys(this.dewhitelistedLP).length + 1;
+    const priceFragments = advPipeResult.slice(0, sliceIdx);
+    const tokenUsdData = advPipeResult.slice(sliceIdx, advPipeResult.length);
+
+    const priceResult = this.decodePriceCallResults(priceFragments);
 
     const map: AddressLookup<ExtendedPoolData> = {};
 
@@ -344,6 +378,17 @@ function getLpTokensToPairs(chainId: number) {
 
     prev[tokenIndex] = reserveTokens[0].isMain ? reserveTokens[1] : reserveTokens[0];
 
+    return prev;
+  }, {});
+}
+
+function getDewhitelistedLPs(chainId: number) {
+  const tokenMap = getChainTokenMap(chainId);
+
+  return Object.entries(tokenMap).reduce<AddressLookup<Token>>((prev, [tokenIndex, token]) => {
+    if (token.isLP && !token.isWhitelisted) {
+      prev[getTokenIndex(tokenIndex)] = token;
+    }
     return prev;
   }, {});
 }

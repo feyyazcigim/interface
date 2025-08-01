@@ -89,6 +89,7 @@ const RoutingAndSlippageInfo = (props: RoutingAndSlippageInfoProps) => {
           </DialogTrigger>
           <DialogContent
             hideCloseButton={true}
+            aria-describedby="routing-and-slippage-dialog-contents"
             className={cn("bg-pinto-off-white", props.txnType === "Convert" && "sm:min-w-[600px]")}
           >
             <DialogHeader>

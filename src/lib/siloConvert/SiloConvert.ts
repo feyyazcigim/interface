@@ -14,10 +14,11 @@ import { throwIfAborted } from "@/utils/utils";
 import { Config } from "@wagmi/core";
 import { Address } from "viem";
 import { SiloConvertPriceCache } from "./SiloConvert.cache";
-import { SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
+import { MaxConvertResult, SiloConvertMaxConvertQuoter } from "./SiloConvert.maxConvertQuoter";
 import { SiloConvertRoute, SiloConvertStrategizer } from "./siloConvert.strategizer";
 import { ConvertStrategyQuote } from "./strategies/core";
 import { SiloConvertType } from "./strategies/core";
+import { DefaultConvertStrategy } from "./strategies/implementations";
 import { ConversionQuotationError, SimulationError } from "./strategies/validation/SiloConvertErrors";
 import { SiloConvertContext } from "./types";
 import { decodeConvertResults } from "./utils";
@@ -29,6 +30,12 @@ import { decodeConvertResults } from "./utils";
  * 1. quote the maximum convert between 2 tokens (if applicable)
  * 2. quote the convert between 2 tokens
  * 3. provide an executable advancedFarm workflow
+ *
+ * Implementation is split up into:
+ * 1. maxConvertQuoter
+ * 2. strategizer
+ *
+ *
  *
  * To fetch the maximum convert, we utilize the SiloConvertMaxConvertQuoter class.
  * (more on this in ./SiloConvert.maxConvertQuoter.ts)
@@ -121,7 +128,7 @@ export class SiloConvert {
 
   private scalarCache: ITTLCache<number>;
 
-  private maxConvertCache: ITTLCache<TV>;
+  private maxConvertCache: ITTLCache<MaxConvertResult>;
 
   constructor(diamondAddress: Address, account: Address, config: Config, chainId: number) {
     this.context = {
@@ -133,7 +140,7 @@ export class SiloConvert {
 
     this.priceCache = new SiloConvertPriceCache(this.context);
     this.scalarCache = new InMemoryTTLCache<number>();
-    this.maxConvertCache = new InMemoryTTLCache<TV>();
+    this.maxConvertCache = new InMemoryTTLCache<MaxConvertResult>();
 
     this.maxConvertQuoter = new SiloConvertMaxConvertQuoter(
       this.context,
@@ -170,7 +177,12 @@ export class SiloConvert {
   /**
    * Given a source and target token, returns the max convert amount.
    */
-  async getMaxConvert(source: Token, target: Token, deposits?: DepositData[], forceUpdateCache?: boolean): Promise<TV> {
+  async getMaxConvert(
+    source: Token,
+    target: Token,
+    deposits: DepositData[] | undefined,
+    forceUpdateCache?: boolean,
+  ): Promise<MaxConvertResult> {
     // update cache if requested
     await this.priceCache.update(forceUpdateCache);
 
@@ -247,8 +259,7 @@ export class SiloConvert {
         const advFarm = new AdvancedFarmWorkflow(this.context.chainId, this.context.wagmiConfig);
         const quotes: ConvertStrategyQuote<SiloConvertType>[] = [];
 
-        const amounts = route.strategies.map((s) => s.amount);
-        const crates = pickCratesMultiple(farmerDeposits, "bdv", "asc", amounts);
+        const crates = this.selectCratesFromRoute(route, farmerDeposits);
 
         // Has to be run sequentially.
         for (const [i, strategy] of route.strategies.entries()) {
@@ -277,11 +288,8 @@ export class SiloConvert {
       console.error("[SiloConvert/quote] FAILED to quote routes: ", e);
       throw new ConversionQuotationError(e instanceof Error ? e.message : "Failed to quote routes", {
         routes,
-        quotedRoutes,
       });
     });
-
-    console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
 
     const simulationsRawResults = await Promise.all(
       quotedRoutes.map((route) =>
@@ -304,7 +312,10 @@ export class SiloConvert {
       ),
     );
 
-    console.debug("[SiloConvert/quote] quotedRoutes: ", quotedRoutes);
+    console.debug("[SiloConvert/quote] post simulation results: ", {
+      quotedRoutes,
+      simulationsRawResults,
+    });
 
     const datas = quotedRoutes.map((route, i): SiloConvertSummary<SiloConvertType> => {
       const rawResponse = simulationsRawResults[i];
@@ -336,9 +347,36 @@ export class SiloConvert {
       };
     });
 
-    console.debug("[SiloConvert/quote] quoting finished!!!", datas);
+    console.debug("[SiloConvert/quote] ------------------");
+    console.debug("[SiloConvert/quote] quoting finished!!!", datas, "\n");
+    console.debug("[SiloConvert/quote] ------------------");
 
     return datas;
+  }
+
+  /**
+   * Selects the crates from the farmerDeposits based on the route.
+   *
+   * @param route - The route to select crates from.
+   * @param farmerDeposits - The farmer deposits to select crates from.
+   * @returns The crates selected from the farmerDeposits.
+   */
+  private selectCratesFromRoute(route: SiloConvertRoute<SiloConvertType>, farmerDeposits: DepositData[]) {
+    // Get the amounts for each strategy.
+    const amounts = route.strategies.map((s) => s.amount);
+
+    const incursGSPenalty =
+      route.convertType === "LPAndMain" &&
+      route.strategies.some((s) => {
+        return s.strategy instanceof DefaultConvertStrategy && s.strategy.grownStalkPenaltyExpected;
+      });
+
+    // If the route incurs a penalty, sort the crates by stem to minimize grown stalk loss. Otherwise, sort by bdv
+    const sortBy = incursGSPenalty ? "stem" : "bdv";
+
+    const crates = pickCratesMultiple(farmerDeposits, sortBy, "asc", amounts);
+
+    return crates;
   }
 
   private decodeRouteAndPriceResults(
@@ -348,13 +386,16 @@ export class SiloConvert {
     const mainToken = getChainConstant(this.context.chainId, MAIN_TOKEN);
     try {
       const staticCallResult = [...rawResponse];
+
       // price result is the last element in the static call result
       const priceResult = staticCallResult.pop();
 
       const decodedConvertResults = decodeConvertResults(staticCallResult, route.convertType);
 
-      const decodedAdvPipePriceCall = priceResult ? AdvancedPipeWorkflow.decodeResult(priceResult) : undefined;
-      const postPriceData = decodedAdvPipePriceCall?.length ? decodePriceResult(decodedAdvPipePriceCall[0]) : undefined;
+      const decodedPriceCalls = priceResult ? AdvancedPipeWorkflow.decodeResult(priceResult) : undefined;
+      const postPriceData = decodedPriceCalls?.length
+        ? this.priceCache.decodePriceCallResults([...decodedPriceCalls])
+        : undefined;
 
       return {
         postPriceData,

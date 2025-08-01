@@ -90,6 +90,16 @@ export default function Swap() {
     return s;
   }, [tokenMap]);
 
+  const filterTokensForBuy = useMemo(() => {
+    const buyFilter = new Set(filterTokens);
+    Object.values(tokenMap).forEach((t) => {
+      if (t.symbol.includes("WSOL")) {
+        buyFilter.add(t);
+      }
+    });
+    return buyFilter;
+  }, [filterTokens, tokenMap]);
+
   const amountInTV = useSafeTokenValue(amountIn, tokenIn);
 
   const {
@@ -286,7 +296,7 @@ export default function Swap() {
                 isLoading={swapQuery.isLoading || false}
                 disableInput
                 hideMax
-                filterTokens={filterTokens}
+                filterTokens={filterTokensForBuy}
                 selectKey="buy"
               />
             </div>

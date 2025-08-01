@@ -21,7 +21,7 @@ export function useClaimRewards() {
   const data = useFarmerSilo();
   const siloData = useSiloData();
   const isRaining = useSunData().raining;
-  const whitelistedTokens = useTokenData().whitelistedTokens;
+  const { whitelistedTokens, mayBeWhitelistedTokens } = useTokenData();
   const farmerDeposits = data.deposits;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const invalidateSun = useInvalidateSun();
@@ -51,7 +51,7 @@ export function useClaimRewards() {
         functionName: "plant",
       });
 
-      const tokensToMow = whitelistedTokens.map((token) => token.address);
+      const tokensToMow = mayBeWhitelistedTokens.map((token) => token.address);
       const mow = encodeFunctionData({
         abi: beanstalkAbi,
         functionName: "mowMultiple",

@@ -1,4 +1,5 @@
 import TextSkeleton from "@/components/TextSkeleton";
+import TooltipSimple from "@/components/TooltipSimple";
 import { useInitialSoil, usePodLine, usePodLoading, useTemperature, useTotalSoil } from "@/state/useFieldData";
 import { useMorning, useSunData } from "@/state/useSunData";
 import { formatter } from "@/utils/format";
@@ -15,7 +16,7 @@ const FieldStats = () => {
   const soilIsLoading = totalSoilAtom.isLoading;
 
   const initialSoilAtom = useInitialSoil();
-  const initialSoil = normalizeTV(initialSoilAtom.initialSoil);
+  // const initialSoil = normalizeTV(initialSoilAtom.initialSoil);
   const initialSoilIsLoading = initialSoilAtom.isLoading;
 
   const podLine = usePodLine();
@@ -57,12 +58,16 @@ const FieldStats = () => {
         <div className="flex flex-col gap-1">
           <TextSkeleton desktopHeight="same-h3" height="body" className="w-14" loading={isLoading}>
             <div className="pinto-body sm:pinto-h3">
-              {formatter.number(soil, { minValue: 0.01 })} / {formatter.number(initialSoil, { minValue: 0.01 })}
+              {formatter.number(soil, { minValue: 0.01 })} {/* {formatter.number(initialSoil, { minValue: 0.01 })} */}
             </div>
           </TextSkeleton>
           {isMorning && abovePeg && (
-            <div className="pinto-xs sm:pinto-sm-light text-pinto-morning sm:text-pinto-morning inline-block tabular-nums">
+            <div className="pinto-xs sm:pinto-sm-light text-pinto-morning sm:text-pinto-morning inline-flex gap-1 tabular-nums">
               <MorningIntervalCountdown prefix={"Decreasing in"} />
+              <TooltipSimple
+                content="When the system is above the value target, throughout the Morning Auction, the available Soil decreases as the Temperature increases, ensuring that the maximum number of Pods issued during the Season remains fixed."
+                variant="stalk"
+              />
             </div>
           )}
         </div>

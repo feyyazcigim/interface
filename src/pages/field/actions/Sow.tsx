@@ -35,7 +35,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover
 import { Switch } from "@/components/ui/Switch";
 import siloWithdraw from "@/encoders/silo/withdraw";
 import useDelayedLoading from "@/hooks/display/useDelayedLoading";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { useIsWSOL, useTokenMap } from "@/hooks/pinto/useTokenMap";
 import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useMaxBuy from "@/hooks/swap/useMaxBuy";
 import useSwap from "@/hooks/swap/useSwap";
@@ -587,22 +587,34 @@ type TokenSource = "deposits" | "balances";
 
 const useFilterTokens = (mode: TokenSource) => {
   const tokenMap = useTokenMap();
+  const isWSOL = useIsWSOL();
+
   return useMemo(() => {
     const set = new Set<Token>();
 
     Object.values(tokenMap).forEach((token) => {
       if (mode === "balances") {
-        if (token.isLP || token.isSiloWrapped || token.is3PSiloWrapped) {
+        if (
+          token.isLP || // disable LP tokens
+          token.isSiloWrapped || // disable sPINTO
+          token.is3PSiloWrapped || // disable 3rd party sPINTO tokens
+          isWSOL(token) // disable WSOL
+        ) {
           set.add(token);
         }
       } else if (mode === "deposits") {
-        if (token.isSiloWrapped || token.is3PSiloWrapped || (!token.isLP && !token.isMain)) {
+        if (
+          token.isSiloWrapped || //disable sPINTO
+          token.is3PSiloWrapped || // disable 3rd party sPINTO tokens
+          (!token.isLP && !token.isMain) || // disable non-LP tokens
+          !token.isWhitelisted // disable non-whitelisted LP tokens
+        ) {
           set.add(token);
         }
       }
     });
     return set;
-  }, [tokenMap, mode]);
+  }, [tokenMap, mode, isWSOL]);
 };
 
 const useMapSiloDepositsToAmounts = (deposits: ReturnType<typeof useFarmerSilo>["deposits"]) => {
