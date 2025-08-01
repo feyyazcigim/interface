@@ -60,8 +60,6 @@ export function useTotalDepositedBdvPerTokenQuery() {
   });
 }
 
-const CALLS_STRUCTS_PER_SILO_TOKEN = 8;
-
 const makeSiloTokenData = (
   siloTokenData: SiloTokenDataResponse,
   token: Token,
@@ -113,16 +111,46 @@ const makeSiloTokenData = (
 
 export function useReadSiloTokensDataQuery(tokens: Token[]) {
   const protocolAddress = useProtocolAddress();
-
   const { mainToken } = useTokenData();
 
   const scopeKey = tokens.map((token) => token.address).join(",");
   const enabled = Boolean(tokens.length && tokens.every((token) => !!token.address));
 
+  const contractFunctionParamters = tokens.flatMap((token) => {
+    const shared = {
+      address: protocolAddress,
+      abi: beanstalkAbi,
+      args: [token.address],
+    } as const;
+
+    const bdvArgs = [token.address, BigInt(10 ** (token?.decimals ?? 1))] as const;
+
+    return [
+      { ...shared, functionName: "getTotalDeposited" },
+      { ...shared, functionName: "bdv", args: bdvArgs },
+      { ...shared, functionName: "stemTipForToken" },
+      { ...shared, functionName: "getTotalDepositedBdv" },
+      { ...shared, functionName: "getGerminatingStem" },
+      { ...shared, functionName: "tokenSettings" },
+      { ...shared, functionName: "getTotalGerminatingAmount" },
+      { ...shared, functionName: "getTotalGerminatingBdv" },
+    ] as const;
+  });
+
+  // Calculate calls per token dynamically
+  const callsPerToken = tokens.length > 0 ? Math.round(contractFunctionParamters.length / tokens.length) : 0;
+
+  // Ensure we have consistent calls per token
+  if (tokens.length > 0 && contractFunctionParamters.length % tokens.length !== 0) {
+    throw new Error(
+      `Contract parameters length (${contractFunctionParamters.length}) is not evenly divisible by tokens length (${tokens.length})`,
+    );
+  }
+
   const selectSiloTokensData = useCallback(
     // unknown here because we expect the same data type for all tokens but it is [...Type, ...Type] not [Type, Type]
     (data: unknown[]) => {
-      const chunks = chunk(data, CALLS_STRUCTS_PER_SILO_TOKEN) as SiloTokenDataResponse[];
+      const chunks = chunk(data, callsPerToken) as SiloTokenDataResponse[];
 
       if (chunks.length !== tokens.length) {
         throw new Error("tokens and chunked data length mismatch");
@@ -134,32 +162,11 @@ export function useReadSiloTokensDataQuery(tokens: Token[]) {
         return prev;
       }, []);
     },
-    [tokens, mainToken],
+    [tokens, mainToken, callsPerToken],
   );
 
   return useReadContracts({
-    contracts: tokens.flatMap((token) => {
-      const shared = {
-        address: protocolAddress,
-        abi: beanstalkAbi,
-        args: [token.address] as const,
-      } as const;
-      const tokenAddress = token.address;
-      return [
-        { ...shared, functionName: "getTotalDeposited" as const },
-        {
-          ...shared,
-          functionName: "bdv" as const,
-          args: [tokenAddress, BigInt(10 ** (token?.decimals ?? 1))] as const,
-        },
-        { ...shared, functionName: "stemTipForToken" as const },
-        { ...shared, functionName: "getTotalDepositedBdv" as const },
-        { ...shared, functionName: "getGerminatingStem" as const },
-        { ...shared, functionName: "tokenSettings" as const },
-        { ...shared, functionName: "getTotalGerminatingAmount" as const },
-        { ...shared, functionName: "getTotalGerminatingBdv" as const },
-      ];
-    }),
+    contracts: contractFunctionParamters,
     scopeKey,
     query: {
       ...settings.query,
