@@ -60,10 +60,10 @@ export default function Footer() {
         isMobileActionBarVisible ? "pb-[4.5rem]" : "pb-0",
       )}
     >
-      <div className="w-full px-3 py-1.5 sm:px-6 sm:py-2 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3">
+      <div className="w-full px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           {/* Links Section - Bottom Left Corner */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <FooterLink href="/?fromNav=true">About Pinto</FooterLink>
             <FooterLink href="https://docs.pinto.money/disclosures" external>
               Terms & Privacy
@@ -74,7 +74,7 @@ export default function Footer() {
           </div>
 
           {/* Social Icons Section - Bottom Right Corner */}
-          <div className="flex items-center gap-2 sm:gap-3 sm:ml-auto">
+          <div className="flex items-center gap-3 sm:ml-auto">
             <SocialIcon
               href="https://pinto.money/discord"
               icon={<DiscordLogoIcon width={16} height={16} className="sm:w-[18px] sm:h-[18px]" />}

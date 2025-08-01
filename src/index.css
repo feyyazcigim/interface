@@ -225,6 +225,6 @@ body::-webkit-scrollbar {
 }
 
 #tsparticles {
-  height: 80vh;
+  height: 100%;
   z-index: 0;
 }
