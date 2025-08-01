@@ -11,7 +11,7 @@ import { useSiloData } from "@/state/useSiloData";
 import useTokenData from "@/state/useTokenData";
 import { AdvancedFarmCall, FarmFromMode, FarmToMode } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
 import useTransaction from "./useTransaction";
@@ -29,8 +29,6 @@ export function useHarvestAndDeposit() {
   const farmerSilo = useFarmerSilo();
   const siloData = useSiloData();
   const invalidateField = useInvalidateField();
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Calculate harvestable data
   const { plots, harvestableAmount } = useMemo(() => {
@@ -78,7 +76,7 @@ export function useHarvestAndDeposit() {
     invalidateField,
   ]);
 
-  const { writeWithEstimateGas, isConfirming } = useTransaction({
+  const { writeWithEstimateGas, isConfirming, submitting, setSubmitting } = useTransaction({
     successMessage: "Harvest complete!",
     successCallback: onSuccess,
   });
@@ -89,7 +87,7 @@ export function useHarvestAndDeposit() {
       if (!plots.length) throw new Error("No plots to harvest");
       if (harvestableAmount.lte(0)) throw new Error("No harvestable pods");
 
-      setIsSubmitting(true);
+      setSubmitting(true);
       toast.loading("Harvesting...");
 
       const advFarm: AdvancedFarmCall[] = [];
@@ -118,18 +116,18 @@ export function useHarvestAndDeposit() {
       });
     } catch (e: unknown) {
       console.error(e);
-      setIsSubmitting(false);
+      setSubmitting(false);
       toast.dismiss();
       toast.error(e instanceof Error ? e.message : "Transaction failed.");
       throw e;
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   }, [account.address, plots, harvestableAmount, writeWithEstimateGas, diamond, mainToken]);
 
   return {
     submitHarvestAndDeposit,
-    isSubmitting: isSubmitting || isConfirming,
+    isSubmitting: submitting || isConfirming,
     harvestableAmount,
     hasHarvestablePods: harvestableAmount.gt(0),
     stalkGain,

@@ -34,7 +34,7 @@ function Harvest({ isMorning }: HarvestProps) {
         <>
           <div className="flex flex-col">
             <div className="flex flex-col gap-1">
-              <div className="pinto-body-light text-pinto-light">You will receive in Silo</div>
+              <div className="pinto-body-light text-pinto-light">Silo deposit amount</div>
               <div className="flex flex-row gap-2 items-center">
                 <div className="pinto-h3 inline-flex gap-1 items-center">
                   {formatter.token(harvestableAmount, mainToken)}
