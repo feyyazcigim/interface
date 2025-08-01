@@ -13,7 +13,7 @@ interface FooterLinkProps {
 
 const FooterLink = ({ href, children, external = false, className = "" }: FooterLinkProps) => {
   const linkClasses = cn(
-    "flex items-center gap-1.5 text-gray-600 hover:text-pinto-green-4 transition-colors duration-200 text-sm font-medium",
+    "flex items-center gap-1 text-gray-600 hover:text-pinto-green-4 transition-colors duration-200 text-xs font-medium",
     className,
   );
 
@@ -21,7 +21,7 @@ const FooterLink = ({ href, children, external = false, className = "" }: Footer
     return (
       <a href={href} target="_blank" rel="noopener noreferrer" className={linkClasses}>
         {children}
-        <ExternalLinkIcon width={12} height={12} color="currentColor" />
+        <ExternalLinkIcon width={10} height={10} color="currentColor" />
       </a>
     );
   }
@@ -44,7 +44,7 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="p-2 text-gray-600 hover:text-pinto-green-4 transition-colors duration-200 rounded-md hover:bg-gray-50"
+    className="p-1 text-gray-600 hover:text-pinto-green-4 transition-colors duration-200 rounded-md hover:bg-gray-50"
     aria-label={label}
   >
     {icon}
@@ -54,35 +54,35 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
 export default function Footer() {
   return (
     <footer className="border-t border-gray-200 bg-white mt-auto">
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          {/* Links Section */}
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          {/* Links Section - Bottom Left */}
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
             <FooterLink href="/?fromNav=true">About</FooterLink>
             <FooterLink href="https://docs.pinto.money/disclosures" external>
               Terms of Service
             </FooterLink>
-            <FooterLink href="https://pinto.exchange/" external className="flex items-center gap-2">
-              <IconImage src="/assets/misc/pinto-exchange-logo.svg" alt="Pinto Exchange" width={16} height={16} />
+            <FooterLink href="https://pinto.exchange/" external className="flex items-center gap-1.5">
+              <IconImage src="/assets/misc/pinto-exchange-logo.svg" alt="Pinto Exchange" width={12} height={12} />
               Exchange
             </FooterLink>
           </div>
 
-          {/* Social Icons Section */}
-          <div className="flex items-center gap-2">
+          {/* Social Icons Section - Bottom Right */}
+          <div className="flex items-center gap-1">
             <SocialIcon
               href="https://pinto.money/discord"
-              icon={<DiscordLogoIcon width={20} height={20} />}
+              icon={<DiscordLogoIcon width={16} height={16} />}
               label="Discord"
             />
             <SocialIcon
               href="https://x.com/pintocommunity"
-              icon={<TwitterLogoIcon width={20} height={20} />}
+              icon={<TwitterLogoIcon width={16} height={16} />}
               label="X (Twitter)"
             />
             <SocialIcon
               href="https://github.com/pinto-org"
-              icon={<GitHubLogoIcon width={20} height={20} />}
+              icon={<GitHubLogoIcon width={16} height={16} />}
               label="GitHub"
             />
           </div>
