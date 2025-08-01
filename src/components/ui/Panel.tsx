@@ -25,7 +25,7 @@ export const Sidebar = ({ isOpen, side, className, ...props }: ISidebar) => {
     <Card
       {...props}
       className={cn(
-        `absolute box-border top-[${top}rem] transition-all overflow-clip h-[calc(100vh-${renderAnnouncement ? 8 : 6}rem)] z-[51]`,
+        `absolute box-border top-4 transition-all overflow-clip max-h-[calc(100vh-${renderAnnouncement ? 8 : 6}rem)] h-fit z-[51]`,
         side === "left" ? `left-0 transform ${translateClass} mr-12` : `right-0 transform ${translateClass} ml-12`,
         className,
       )}

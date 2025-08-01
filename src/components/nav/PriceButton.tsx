@@ -48,6 +48,7 @@ function PriceButtonPanel() {
   const tokenData = useTokenData();
   const twaDeltaB = useTwaDeltaBQuery();
   const chainId = useChainId();
+  const isMobile = useIsMobile();
 
   const { data: twaDeltaBMap } = useTwaDeltaBLPQuery();
 
@@ -106,8 +107,8 @@ function PriceButtonPanel() {
 
   return (
     <div
-      className="grid grid-rows-[auto_1fr_auto]"
-      style={{ height: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}
+      className="grid grid-rows-[auto_auto_auto]"
+      style={{ maxHeight: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}
     >
       <CardHeader className="transition-all p-0 space-y-0 sm:space-y-1.5">
         <div className="px-4 py-3 sm:p-6">
@@ -212,8 +213,8 @@ function PriceButtonPanel() {
         </div>
         <Separator className="w-full" />
       </CardHeader>
-      <CardContent className="mb-12 px-3 pb-0 3xl:px-4 3xl:pb-4 3xl:pt-0 min-h-0">
-        <ScrollArea className="-mx-3 px-3 h-full transition-all">
+      <CardContent className="px-3 pb-0 3xl:px-4 3xl:pb-4 3xl:pt-0 min-h-0 overflow-hidden">
+        <ScrollArea className="-mx-3 px-3 flex-1 transition-all">
           <div className="flex flex-col gap-3 sm:gap-4 mt-0 sm:mt-4 relative first:mt-3 last:mb-3 sm:first:mt-4 sm:last:mb-8">
             {showPrices && (
               <Button
@@ -399,25 +400,27 @@ function PriceButtonPanel() {
       {!showPrices && (
         <CardFooter
           onClick={() => setShowPrices(!showPrices)}
-          className="flex flex-col absolute bottom-0 z-[2] peer bg-pinto-gray-1 pb-2 3xl:pb-4 items-stretch hover:bg-pinto-gray-2 transition-colors cursor-pointer"
+          className="flex flex-col z-[2] peer bg-pinto-gray-1 p-0 items-stretch hover:bg-pinto-gray-2 transition-colors cursor-pointer"
         >
-          <Separator className="w-[38rem] -ml-4 " />
-          <div className="inline-flex items-center">
-            <div className="flex flex-row min-w-fit max-w-fit mt-2 3xl:mt-4 animate-marquee">
-              {marqueeTokens.map((token, i) => {
-                return (
-                  <div key={`${token[0].address}_marquee_${i}`}>
-                    {token[0]?.name && (
-                      <div className="inline-flex items-center px-2 gap-1.5">
-                        <IconImage src={token[0].logoURI} size={6} />
-                        <div className="pinto-body text-pinto-secondary text-nowrap">
-                          {`${token[0].symbol}: ${formatter.usd(token[1][useTwa ? "twa" : "instant"] ? token[1][useTwa ? "twa" : "instant"].toHuman() : 0)}`}
+          <Separator className="w-full" />
+          <div className="px-4 py-3 sm:p-2">
+            <div className="inline-flex items-center">
+              <div className="flex flex-row min-w-fit max-w-fit animate-marquee">
+                {marqueeTokens.map((token, i) => {
+                  return (
+                    <div key={`${token[0].address}_marquee_${i}`}>
+                      {token[0]?.name && (
+                        <div className="inline-flex items-center px-2 gap-1.5">
+                          <IconImage src={token[0].logoURI} size={6} />
+                          <div className="pinto-body text-pinto-secondary text-nowrap">
+                            {`${token[0].symbol}: ${formatter.usd(token[1][useTwa ? "twa" : "instant"] ? token[1][useTwa ? "twa" : "instant"].toHuman() : 0)}`}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </CardFooter>
@@ -427,12 +430,14 @@ function PriceButtonPanel() {
           variant="outline"
           noShrink
           rounded="full"
-          className={`h-6 w-6 p-0 z-[1] absolute peer-hover:bottom-20 bottom-0 left-[50%] shadow-xl -ml-[0.65rem] border-black transition-all`}
+          className={`h-6 w-6 p-0 z-[1] absolute peer-hover:bottom-16 bottom-2 left-1/2 transform -translate-x-1/2 shadow-xl border-black transition-all`}
           onClick={() => setShowPrices(true)}
         >
-          <span className="text-black mr-[1rem]">
-            <ForwardArrowIcon color={"currentColor"} height={"1rem"} width={"1rem"} />
-          </span>
+          {!isMobile && (
+            <span className="text-black mr-[1rem]">
+              <ForwardArrowIcon color={"currentColor"} height={"1rem"} width={"1rem"} />
+            </span>
+          )}
         </Button>
       )}
     </div>
