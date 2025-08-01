@@ -1,8 +1,6 @@
-import { ExternalLinkIcon } from "@/components/Icons";
 import { cn } from "@/utils/utils";
 import { DiscordLogoIcon, GitHubLogoIcon, TwitterLogoIcon } from "@radix-ui/react-icons";
 import { Link as ReactLink } from "react-router-dom";
-import IconImage from "./ui/IconImage";
 
 interface FooterLinkProps {
   href: string;
@@ -13,7 +11,7 @@ interface FooterLinkProps {
 
 const FooterLink = ({ href, children, external = false, className = "" }: FooterLinkProps) => {
   const linkClasses = cn(
-    "flex items-center gap-1 text-pinto-light hover:text-pinto-green-4 transition-colors duration-200 text-xs font-medium",
+    "text-pinto-light hover:text-pinto-green-4 transition-colors duration-200 text-xs font-medium",
     className,
   );
 
@@ -21,7 +19,6 @@ const FooterLink = ({ href, children, external = false, className = "" }: Footer
     return (
       <a href={href} target="_blank" rel="noopener noreferrer" className={linkClasses}>
         {children}
-        <ExternalLinkIcon width={10} height={10} color="currentColor" />
       </a>
     );
   }
@@ -62,9 +59,8 @@ export default function Footer() {
             <FooterLink href="https://docs.pinto.money/disclosures" external>
               Terms of Service
             </FooterLink>
-            <FooterLink href="https://pinto.exchange/" external className="flex items-center gap-1.5">
-              <IconImage src="/assets/misc/pinto-exchange-logo.svg" alt="Pinto Exchange" width={12} height={12} />
-              Exchange
+            <FooterLink href="https://pinto.exchange/" external>
+              Pinto Exchange
             </FooterLink>
           </div>
 
