@@ -65,17 +65,6 @@ export default function Landing() {
 
   const transitionComplete = localStorage.getItem("hasWatchedTransition");
 
-  // RESET ANIMATION STATE
-  const resetCoinState = useCallback(() => {
-    setCurrentIndex(0);
-    setNextIndex(1);
-    setShowPinto(false);
-    setOpacity(1);
-    zoomRef.current = false;
-    particlesBackgroundRef.current?.loadTheme("default");
-    localStorage.removeItem("hasWatchedTransition");
-  }, []);
-
   useEffect(() => {
     // PARSE QUERY PARAMS - MARK IF THE USER HAS VISITED THE SITE BEFORE
     const params = new URLSearchParams(location.search);
@@ -89,19 +78,28 @@ export default function Landing() {
       } else {
         localStorage.setItem("hasVisitedBefore", "true");
       }
-    } else {
-      // Reset animation when coming from navigation
-      resetCoinState();
     }
+  }, [navigate, location]);
 
-    // CHECK LOCALSTORAGE TO SEE IF THE USER HAS ALREADY VIEWED THE TRANSITIONS
-    // Only skip animation if user hasn't come from navigation
-    if (transitionComplete === "true" && !fromNav) {
+  // CHECK LOCALSTORAGE TO SEE IF THE USER HAS ALREADY VIEWED THE TRANSITIONS
+  useEffect(() => {
+    if (transitionComplete === "true") {
       particlesBackgroundRef.current?.loadTheme("5"); // Directly load the theme
       setCurrentIndex(landingImages.length - 1); // Set the current index to the last image
       setNextIndex(landingImages.length); // Set the next index to exceed the length
     }
-  }, [navigate, location]);
+  }, []);
+
+  // RESET ANIMATION STATE
+  const resetCoinState = useCallback(() => {
+    setCurrentIndex(0);
+    setNextIndex(1);
+    setShowPinto(false);
+    setOpacity(1);
+    zoomRef.current = false;
+    particlesBackgroundRef.current?.loadTheme("default");
+    localStorage.removeItem("hasWatchedTransition");
+  }, []);
 
   // EFFECT TO UPDATE ANIMATION SPEED, PARTICLE BACKGROUND THEME, AND CAMERA ZOOM
   useEffect(() => {
@@ -156,10 +154,10 @@ export default function Landing() {
       <div
         style={{
           width: "100vw",
-          height: "100vh",
           position: "relative",
           display: "flex",
           backgroundColor: "#FEFDF4",
+          flexGrow: 1,
         }}
       >
         {/* Memoized TSParticles Background */}
