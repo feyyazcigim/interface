@@ -13,7 +13,7 @@ interface FooterLinkProps {
 
 const FooterLink = ({ href, children, external = false, className = "" }: FooterLinkProps) => {
   const linkClasses = cn(
-    "flex items-center gap-1 text-pinto-grey hover:text-pinto-green-4 transition-colors duration-200 text-xs font-medium",
+    "flex items-center gap-1 text-pinto-light hover:text-pinto-green-4 transition-colors duration-200 text-xs font-medium",
     className,
   );
 
@@ -44,7 +44,7 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="p-1 text-pinto-grey hover:text-pinto-green-4 transition-colors duration-200 rounded-md hover:bg-gray-100"
+    className="p-1 text-pinto-light hover:text-pinto-green-4 transition-colors duration-200 rounded-md hover:bg-gray-100"
     aria-label={label}
   >
     {icon}
@@ -53,7 +53,7 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
 
 export default function Footer() {
   return (
-    <footer className="border-t border-gray-200 bg-gray-50 mt-auto">
+    <footer className="border-t border-gray-200 bg-gradient-light mt-auto">
       <div className="w-full px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           {/* Links Section - Bottom Left Corner */}
