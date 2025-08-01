@@ -1,5 +1,6 @@
 import { cn } from "@/utils/utils";
-import { DiscordLogoIcon, GitHubLogoIcon, TwitterLogoIcon } from "@radix-ui/react-icons";
+import { DiscordLogoIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
+import { X } from "lucide-react";
 import { Link as ReactLink } from "react-router-dom";
 import { useMobileActionBarContext } from "./MobileActionBarContext";
 
@@ -59,13 +60,13 @@ export default function Footer() {
         isMobileActionBarVisible ? "pb-[4.5rem]" : "pb-0",
       )}
     >
-      <div className="w-full px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
+      <div className="w-full px-3 py-2 sm:px-6 sm:py-3 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           {/* Links Section - Bottom Left Corner */}
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-            <FooterLink href="/?fromNav=true">About</FooterLink>
+            <FooterLink href="/?fromNav=true">About Pinto</FooterLink>
             <FooterLink href="https://docs.pinto.money/disclosures" external>
-              Terms of Service
+              Terms & Privacy
             </FooterLink>
             <FooterLink href="https://pinto.exchange/" external>
               Pinto Exchange
@@ -81,7 +82,7 @@ export default function Footer() {
             />
             <SocialIcon
               href="https://x.com/pintodotmoney"
-              icon={<TwitterLogoIcon width={16} height={16} className="sm:w-[18px] sm:h-[18px]" />}
+              icon={<X width={16} height={16} className="sm:w-[18px] sm:h-[18px]" />}
               label="X (Twitter)"
             />
             <SocialIcon
