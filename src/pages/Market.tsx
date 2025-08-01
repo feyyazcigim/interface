@@ -3,7 +3,6 @@ import PintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import FrameAnimator from "@/components/LoadingSpinner";
 import ScatterChart from "@/components/charts/ScatterChart";
-import { navLinks } from "@/components/nav/nav/Navbar";
 import { Separator } from "@/components/ui/Separator";
 import { useAllMarket } from "@/state/market/useAllMarket";
 import { useHarvestableIndex, usePodLine } from "@/state/useFieldData";
@@ -11,7 +10,6 @@ import { ActiveElement, ChartEvent, PointStyle, TooltipOptions } from "chart.js"
 import { Chart } from "chart.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Link } from "react-router-dom";
 import { AllActivityTable } from "./market/AllActivityTable";
 import { FarmerActivityTable } from "./market/FarmerActivityTable";
 import MarketModeSelect from "./market/MarketModeSelect";
@@ -61,6 +59,7 @@ type MarketScatterChartData = {
   data: MarketScatterChartDataPoint[];
   color: string;
   pointStyle: PointStyle;
+  pointRadius: number;
 };
 
 const shapeScatterChartData = (data: any[], harvestableIndex: TokenValue): MarketScatterChartData[] => {
@@ -126,14 +125,16 @@ const shapeScatterChartData = (data: any[], harvestableIndex: TokenValue): Marke
         {
           label: "Orders",
           data: [] as MarketScatterChartDataPoint[],
-          color: "#00C767",
+          color: "#40b0a6", // teal
           pointStyle: "circle" as PointStyle,
+          pointRadius: 6,
         },
         {
           label: "Listings",
           data: [] as MarketScatterChartDataPoint[],
-          color: "#FF0000",
+          color: "#e0b57d", // tan
           pointStyle: "rect" as PointStyle,
+          pointRadius: 6,
         },
       ],
     ) || []
