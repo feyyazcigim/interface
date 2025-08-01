@@ -141,8 +141,8 @@ function PriceButtonPanel() {
                 </InlineCenterSpan>
               </div>
               <div
-                className={`pinto-xs sm:pinto-sm text-pinto-green-3 sm:text-pinto-green-3 px-2 py-0.5 h-6 bg-pinto-green-1 rounded-[0.25rem] inline-flex items-center gap-1 transition-all duration-200 ease-in-out origin-top overflow-hidden ${
-                  useTwa ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0"
+                className={`pinto-xs sm:pinto-sm text-pinto-green-3 sm:text-pinto-green-3 px-2 py-0.5 h-6 bg-pinto-green-1 rounded-[0.25rem] inline-flex items-center gap-1 transition-all duration-200 ease-in-out ${
+                  useTwa ? "mb-0 opacity-100" : "-mb-6 opacity-0"
                 }`}
               >
                 Total TWAΔP:{" "}
@@ -347,10 +347,10 @@ function PriceButtonPanel() {
                         </div>
                       </div>
                       <div
-                        className={`flex flex-row gap-4 justify-center h-10 transition-all duration-200 ease-in-out origin-top overflow-hidden ${
+                        className={`flex flex-row gap-4 justify-center transition-all duration-200 ease-in-out ${
                           expandAll
-                            ? "scale-y-100 opacity-100"
-                            : "scale-y-0 opacity-0 group-hover:scale-y-100 group-hover:opacity-100"
+                            ? "mb-0 opacity-100"
+                            : "-mb-8 sm:-mb-10 opacity-0 group-hover:mb-0 group-hover:opacity-100"
                         }`}
                       >
                         <div className="pinto-xs inline-flex font-normal leading-same-xs items-center px-2 py-0.5 h-6 bg-pinto-gray-blue rounded-[0.25rem]">
@@ -368,12 +368,8 @@ function PriceButtonPanel() {
                           <TooltipSimple content={"The current shortage or excess of Pinto in the pool."} />
                         </div>
                         <div
-                          className={`pinto-xs inline-flex font-normal leading-same-xs items-center px-2 py-0.5 h-6 text-pinto-green-3 bg-pinto-green-1 rounded-[0.25rem] gap-1 transition-all duration-200 ease-in-out origin-top overflow-hidden ${
-                            useTwa
-                              ? "scale-y-100 opacity-100"
-                              : expandAll
-                                ? "scale-y-0 opacity-0"
-                                : "scale-y-0 opacity-0 group-hover:scale-y-100 group-hover:opacity-100"
+                          className={`pinto-xs inline-flex font-normal leading-same-xs items-center px-2 py-0.5 h-6 text-pinto-green-3 bg-pinto-green-1 rounded-[0.25rem] gap-1 transition-all duration-200 ease-in-out ${
+                            useTwa ? "mb-0 opacity-100" : "-mb-6 opacity-0"
                           }`}
                         >
                           <span className="hidden sm:block">
