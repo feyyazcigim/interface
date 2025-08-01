@@ -154,10 +154,10 @@ export default function Landing() {
       <div
         style={{
           width: "100vw",
+          height: "100vh",
           position: "relative",
           display: "flex",
           backgroundColor: "#FEFDF4",
-          flexGrow: 1,
         }}
       >
         {/* Memoized TSParticles Background */}

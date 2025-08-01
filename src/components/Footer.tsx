@@ -64,7 +64,7 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           {/* Links Section - Bottom Left Corner */}
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-            <FooterLink href="/?fromNav=true">About Pinto</FooterLink>
+            <FooterLink href="/?fromNav=true">About</FooterLink>
             <FooterLink href="https://docs.pinto.money/disclosures" external>
               Terms & Privacy
             </FooterLink>
