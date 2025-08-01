@@ -1,6 +1,7 @@
 import { cn } from "@/utils/utils";
 import { DiscordLogoIcon, GitHubLogoIcon, TwitterLogoIcon } from "@radix-ui/react-icons";
 import { Link as ReactLink } from "react-router-dom";
+import { useMobileActionBarContext } from "./MobileActionBarContext";
 
 interface FooterLinkProps {
   href: string;
@@ -49,8 +50,15 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
 );
 
 export default function Footer() {
+  const { isMobileActionBarVisible } = useMobileActionBarContext();
+
   return (
-    <footer className="border-t border-gray-200 bg-gradient-light mt-auto pb-[4.5rem] sm:pb-0">
+    <footer
+      className={cn(
+        "border-t border-gray-200 bg-gradient-light mt-auto",
+        isMobileActionBarVisible ? "pb-[4.5rem]" : "pb-0",
+      )}
+    >
       <div className="w-full px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           {/* Links Section - Bottom Left Corner */}
