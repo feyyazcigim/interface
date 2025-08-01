@@ -19,16 +19,19 @@ import Transfer from "./pages/Transfer";
 import Whitepaper from "./pages/Whitepaper";
 import NewUserView from "./pages/overview/NewUserView";
 
+import Footer from "@/components/Footer";
+import { MobileActionBarProvider } from "@/components/MobileActionBarContext";
 import TourOfTheFarm from "@/components/TourOfTheFarm";
 import { useMetaCRM } from "./utils/meta-crm";
 
 function AppLayout({ children }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <TourOfTheFarm />
       <ScrollToTop />
-      <div className={cn("relative z-[1] w-screen")}>{children}</div>
+      <div className={cn("relative z-[1] w-screen flex-1")}>{children}</div>
+      <Footer />
     </div>
   );
 }
@@ -161,35 +164,37 @@ function App() {
 
   return (
     <BrowserRouter>
-      <AppLayout>
-        <Routes>
-          <Route
-            index
-            element={
-              <PageMetaWrapper metaKey="index">
-                <Landing />
-              </PageMetaWrapper>
-            }
-          />
-          <Route
-            path="/how-pinto-works"
-            element={
-              <PageMetaWrapper metaKey="overview">
-                <NewUserView />
-              </PageMetaWrapper>
-            }
-          />
-          <Route path="/whitepaper" element={<Whitepaper />} />
-          <Route path="/*" element={<ProtectedLayout />} />
-          <Route
-            path="/announcing-pinto"
-            Component={() => {
-              window.location.replace(externalLinks.announcingPinto);
-              return null;
-            }}
-          />
-        </Routes>
-      </AppLayout>
+      <MobileActionBarProvider>
+        <AppLayout>
+          <Routes>
+            <Route
+              index
+              element={
+                <PageMetaWrapper metaKey="index">
+                  <Landing />
+                </PageMetaWrapper>
+              }
+            />
+            <Route
+              path="/how-pinto-works"
+              element={
+                <PageMetaWrapper metaKey="overview">
+                  <NewUserView />
+                </PageMetaWrapper>
+              }
+            />
+            <Route path="/whitepaper" element={<Whitepaper />} />
+            <Route path="/*" element={<ProtectedLayout />} />
+            <Route
+              path="/announcing-pinto"
+              Component={() => {
+                window.location.replace(externalLinks.announcingPinto);
+                return null;
+              }}
+            />
+          </Routes>
+        </AppLayout>
+      </MobileActionBarProvider>
     </BrowserRouter>
   );
 }
