@@ -1,3 +1,5 @@
+import useIsMobile from "@/hooks/display/useIsMobile";
+import useIsTablet from "@/hooks/display/useIsTablet";
 import React, { useEffect } from "react";
 import { useMobileActionBarContext } from "./MobileActionBarContext";
 
@@ -8,16 +10,22 @@ interface MobileActionBarProps {
 
 const MobileActionBar = ({ children, showOnTablet }: MobileActionBarProps) => {
   const { setMobileActionBarVisible } = useMobileActionBarContext();
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
 
   useEffect(() => {
-    // Register that this MobileActionBar is visible
-    setMobileActionBarVisible(true);
+    // Only register as visible if the component will actually be displayed
+    // showOnTablet=true means show on mobile + tablet (lg:hidden)
+    // showOnTablet=false means show on mobile only (sm:hidden)
+    const shouldBeVisible = showOnTablet ? isMobile || isTablet : isMobile;
+
+    setMobileActionBarVisible(shouldBeVisible);
 
     // Cleanup when component unmounts
     return () => {
       setMobileActionBarVisible(false);
     };
-  }, [setMobileActionBarVisible]);
+  }, [setMobileActionBarVisible, isMobile, isTablet, showOnTablet]);
 
   return (
     <div
