@@ -53,11 +53,11 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
 
 export default function Footer() {
   return (
-    <footer className="border-t border-gray-200 bg-white mt-auto">
-      <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          {/* Links Section - Bottom Left */}
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
+    <footer className="border-t border-gray-200 bg-gray-50 mt-auto">
+      <div className="w-full px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          {/* Links Section - Bottom Left Corner */}
+          <div className="flex flex-wrap items-center gap-4">
             <FooterLink href="/?fromNav=true">About</FooterLink>
             <FooterLink href="https://docs.pinto.money/disclosures" external>
               Terms of Service
@@ -68,8 +68,8 @@ export default function Footer() {
             </FooterLink>
           </div>
 
-          {/* Social Icons Section - Bottom Right */}
-          <div className="flex items-center gap-1">
+          {/* Social Icons Section - Bottom Right Corner */}
+          <div className="flex items-center gap-1 sm:ml-auto">
             <SocialIcon
               href="https://pinto.money/discord"
               icon={<DiscordLogoIcon width={16} height={16} />}
