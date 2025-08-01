@@ -13,7 +13,7 @@ interface FooterLinkProps {
 
 const FooterLink = ({ href, children, external = false, className = "" }: FooterLinkProps) => {
   const linkClasses = cn(
-    "flex items-center gap-1 text-gray-600 hover:text-pinto-green-4 transition-colors duration-200 text-xs font-medium",
+    "flex items-center gap-1 text-pinto-grey hover:text-pinto-green-4 transition-colors duration-200 text-xs font-medium",
     className,
   );
 
@@ -44,7 +44,7 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="p-1 text-gray-600 hover:text-pinto-green-4 transition-colors duration-200 rounded-md hover:bg-gray-50"
+    className="p-1 text-pinto-grey hover:text-pinto-green-4 transition-colors duration-200 rounded-md hover:bg-gray-100"
     aria-label={label}
   >
     {icon}
@@ -76,7 +76,7 @@ export default function Footer() {
               label="Discord"
             />
             <SocialIcon
-              href="https://x.com/pintocommunity"
+              href="https://x.com/pintodotmoney"
               icon={<TwitterLogoIcon width={16} height={16} />}
               label="X (Twitter)"
             />
