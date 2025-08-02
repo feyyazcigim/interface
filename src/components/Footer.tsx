@@ -1,7 +1,7 @@
 import { cn } from "@/utils/utils";
 import { DiscordLogoIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
-import { X } from "lucide-react";
 import { Link as ReactLink } from "react-router-dom";
+import { XTwitterIcon } from "./Icons";
 import { useMobileActionBarContext } from "./MobileActionBarContext";
 
 interface FooterLinkProps {
@@ -83,7 +83,7 @@ export default function Footer() {
             />
             <SocialIcon
               href="https://x.com/pintodotmoney"
-              icon={<X width={16} height={16} className="sm:w-[18px] sm:h-[18px]" />}
+              icon={<XTwitterIcon width={14} height={14} color="currentColor" />}
               label="X (Twitter)"
             />
             <SocialIcon
