@@ -1030,6 +1030,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "WETH Price",
       description: "WETH Price",
+      valueAxis: "ethPrice",
       formatter: usdFormatter,
     }),
     marketEntry({
@@ -1038,6 +1039,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "cbETH Price",
       description: "cbETH Price",
+      valueAxis: "ethPrice",
       formatter: usdFormatter,
     }),
     marketEntry({
@@ -1056,6 +1058,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       description: "WSOL Price",
       formatter: usdFormatter,
     }),
+    /*
     marketEntry({
       id: "marketCumulativeNonPintoUsd",
       name: "Protocol Cumulative Non-Pinto Value Change (USD)",
@@ -1226,6 +1229,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       description: "Percentage change of WSOL liquidity value by season.",
       formatter: chartFormatters.percentFormatter(4),
     }),
+    */
   ];
 };
 
