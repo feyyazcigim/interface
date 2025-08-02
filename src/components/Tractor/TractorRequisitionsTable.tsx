@@ -26,6 +26,24 @@ export function TractorRequisitionsTable({ refreshTrigger = 0 }: TractorRequisit
   const { data: requisitions = [], ...requisitionsQuery } = useTractorPublishedRequisitions(address);
 
   const handleCancelBlueprint = async (requisitionData: RequisitionEvent) => {
+    console.debug("=== REQUISITIONS TABLE CANCEL DEBUG ===");
+    console.debug("Full requisitionData object:", requisitionData);
+    console.debug("requisitionData.requisition:", requisitionData.requisition);
+    console.debug("blueprintHash:", requisitionData.requisition.blueprintHash);
+    console.debug("blueprintHash type:", typeof requisitionData.requisition.blueprintHash);
+    console.debug("blueprintHash length:", requisitionData.requisition.blueprintHash?.length);
+    console.debug("signature:", requisitionData.requisition.signature);
+    console.debug("signature type:", typeof requisitionData.requisition.signature);
+    console.debug("signature length:", requisitionData.requisition.signature?.length);
+    console.debug("blueprint:", requisitionData.requisition.blueprint);
+    console.debug("blueprint.publisher:", requisitionData.requisition.blueprint?.publisher);
+    console.debug("blueprint.data:", requisitionData.requisition.blueprint?.data);
+    console.debug("blueprint.operatorPasteInstrs:", requisitionData.requisition.blueprint?.operatorPasteInstrs);
+    console.debug("blueprint.maxNonce:", requisitionData.requisition.blueprint?.maxNonce);
+    console.debug("blueprint.startTime:", requisitionData.requisition.blueprint?.startTime);
+    console.debug("blueprint.endTime:", requisitionData.requisition.blueprint?.endTime);
+    console.debug("=== END REQUISITIONS TABLE DEBUG ===");
+
     if (!address || !protocolAddress) return;
 
     try {

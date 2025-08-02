@@ -111,7 +111,24 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   });
 
   const handleCancelBlueprint = async (req: RequisitionEvent, e: React.MouseEvent) => {
-    console.debug("Cancelling blueprint...'", req.requisition.blueprintHash);
+    console.debug("=== CANCEL BLUEPRINT DEBUG ===");
+    console.debug("Full req object:", req);
+    console.debug("req.requisition:", req.requisition);
+    console.debug("blueprintHash:", req.requisition.blueprintHash);
+    console.debug("blueprintHash type:", typeof req.requisition.blueprintHash);
+    console.debug("blueprintHash length:", req.requisition.blueprintHash?.length);
+    console.debug("signature:", req.requisition.signature);
+    console.debug("signature type:", typeof req.requisition.signature);
+    console.debug("signature length:", req.requisition.signature?.length);
+    console.debug("blueprint:", req.requisition.blueprint);
+    console.debug("blueprint.publisher:", req.requisition.blueprint?.publisher);
+    console.debug("blueprint.data:", req.requisition.blueprint?.data);
+    console.debug("blueprint.operatorPasteInstrs:", req.requisition.blueprint?.operatorPasteInstrs);
+    console.debug("blueprint.maxNonce:", req.requisition.blueprint?.maxNonce);
+    console.debug("blueprint.startTime:", req.requisition.blueprint?.startTime);
+    console.debug("blueprint.endTime:", req.requisition.blueprint?.endTime);
+    console.debug("=== END DEBUG ===");
+
     setSubmitting(true);
     e.stopPropagation(); // Prevent opening the order dialog
 
