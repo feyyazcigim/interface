@@ -1,7 +1,7 @@
 import { cn } from "@/utils/utils";
 import { DiscordLogoIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
-import { X } from "lucide-react";
 import { Link as ReactLink } from "react-router-dom";
+import { XTwitterIcon } from "./Icons";
 import { useMobileActionBarContext } from "./MobileActionBarContext";
 
 interface FooterLinkProps {
@@ -56,9 +56,10 @@ export default function Footer() {
   return (
     <footer
       className={cn(
-        "border-t border-gray-200 bg-gradient-light mt-auto",
+        "border-t border-pinto-gray-2 bg-gradient-light mt-auto",
         isMobileActionBarVisible ? "pb-[4.5rem]" : "pb-0",
       )}
+      id="pinto-footer"
     >
       <div className="w-full px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
@@ -82,7 +83,7 @@ export default function Footer() {
             />
             <SocialIcon
               href="https://x.com/pintodotmoney"
-              icon={<X width={16} height={16} className="sm:w-[18px] sm:h-[18px]" />}
+              icon={<XTwitterIcon width={14} height={14} color="currentColor" />}
               label="X (Twitter)"
             />
             <SocialIcon

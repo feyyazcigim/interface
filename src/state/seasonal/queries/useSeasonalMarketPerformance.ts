@@ -1,11 +1,19 @@
 import { subgraphs } from "@/constants/subgraph";
 import {
+  PINTO_CBBTC_TOKEN,
+  PINTO_CBETH_TOKEN,
+  PINTO_USDC_TOKEN,
+  PINTO_WETH_TOKEN,
+  PINTO_WSOL_TOKEN,
+} from "@/constants/tokens";
+import {
   BeanstalkSeasonalMarketPerformanceDocument,
   BeanstalkSeasonalMarketPerformanceQuery,
   MarketPerformanceSeasonal,
 } from "@/generated/gql/pintostalk/graphql";
 import { useLPTokenToNonPintoUnderlyingMap } from "@/hooks/pinto/useTokenMap";
 import useTokenData from "@/state/useTokenData";
+import { useChainConstant } from "@/utils/chain";
 import { PaginationSettings, paginateSubgraph } from "@/utils/paginateSubgraph";
 import {
   SeasonalMarketPerformanceChartData,
@@ -109,11 +117,43 @@ export function useMarketPerformanceCalc(
   const mainToken = useTokenData().mainToken;
   const lpToUnderlyingMap = useLPTokenToNonPintoUnderlyingMap();
 
+  // Temporary workaround for inconsistent subgraph data ordering post-dewhitelisting
+  // This should be removed once the subgraph is fixed to return data with identifiers for each value
+  const PINTO_WETH = useChainConstant(PINTO_WETH_TOKEN);
+  const PINTO_CBETH = useChainConstant(PINTO_CBETH_TOKEN);
+  const PINTO_CBBTC = useChainConstant(PINTO_CBBTC_TOKEN);
+  const PINTO_WSOL = useChainConstant(PINTO_WSOL_TOKEN);
+  const PINTO_USDC = useChainConstant(PINTO_USDC_TOKEN);
+
+  const preDewhitelisting = useMemo(() => {
+    return [
+      mainToken.address.toLowerCase(),
+      PINTO_WETH.address.toLowerCase(),
+      PINTO_CBETH.address.toLowerCase(),
+      PINTO_CBBTC.address.toLowerCase(),
+      PINTO_USDC.address.toLowerCase(),
+      PINTO_WSOL.address.toLowerCase(),
+    ];
+  }, [
+    mainToken.address,
+    PINTO_WETH.address,
+    PINTO_CBETH.address,
+    PINTO_CBBTC.address,
+    PINTO_USDC.address,
+    PINTO_WSOL.address,
+  ]);
+
+  const dewhitelistingSeason = 6088;
+
   const responseData = useMemo(() => {
     const result: SeasonalMarketPerformanceChartData = {};
     if (seasonalData) {
       for (let i = 0; i < seasonalData.length; ++i) {
         const season = seasonalData[i];
+        const allTokens =
+          season.season < dewhitelistingSeason
+            ? preDewhitelisting
+            : [...season.silo.whitelistedTokens, ...season.silo.dewhitelistedTokens];
         if (chartType !== SMPChartType.TOKEN_PRICES) {
           if (season.season <= (startSeasons.NET ?? 0)) {
             continue;
@@ -142,7 +182,7 @@ export function useMarketPerformanceCalc(
         }
 
         let tokenIdx = 0;
-        for (const token of season.silo.whitelistedTokens) {
+        for (const token of allTokens) {
           // Skip Pinto token
           if (token === mainToken.address) {
             continue;
@@ -194,7 +234,7 @@ export function useMarketPerformanceCalc(
       }
     }
     return result;
-  }, [seasonalData, chartType, startSeasons, mainToken.address, lpToUnderlyingMap]);
+  }, [seasonalData, chartType, startSeasons, mainToken.address, lpToUnderlyingMap, preDewhitelisting]);
   return responseData;
 }
 
