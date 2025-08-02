@@ -116,7 +116,7 @@ export function useReadSiloTokensDataQuery(tokens: Token[]) {
   const scopeKey = tokens.map((token) => token.address).join(",");
   const enabled = Boolean(tokens.length && tokens.every((token) => !!token.address));
 
-  const contractFunctionParamters = tokens.flatMap((token) => {
+  const contractFunctionParameters = tokens.flatMap((token) => {
     const shared = {
       address: protocolAddress,
       abi: beanstalkAbi,
@@ -138,12 +138,12 @@ export function useReadSiloTokensDataQuery(tokens: Token[]) {
   });
 
   // Calculate calls per token dynamically
-  const callsPerToken = tokens.length > 0 ? Math.round(contractFunctionParamters.length / tokens.length) : 0;
+  const callsPerToken = tokens.length > 0 ? Math.round(contractFunctionParameters.length / tokens.length) : 0;
 
   // Ensure we have consistent calls per token
-  if (tokens.length > 0 && contractFunctionParamters.length % tokens.length !== 0) {
+  if (tokens.length > 0 && contractFunctionParameters.length % tokens.length !== 0) {
     throw new Error(
-      `Contract parameters length (${contractFunctionParamters.length}) is not evenly divisible by tokens length (${tokens.length})`,
+      `Contract parameters length (${contractFunctionParameters.length}) is not evenly divisible by tokens length (${tokens.length})`,
     );
   }
 
@@ -166,7 +166,7 @@ export function useReadSiloTokensDataQuery(tokens: Token[]) {
   );
 
   return useReadContracts({
-    contracts: contractFunctionParamters,
+    contracts: contractFunctionParameters,
     scopeKey,
     query: {
       ...settings.query,
