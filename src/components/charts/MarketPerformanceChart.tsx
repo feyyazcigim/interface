@@ -239,6 +239,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
             content="Measures historical fluctuations of non-Pinto value in the ecosystem."
             variant="gray"
           />
+          {/*
           <div className="ml-4 flex items-center gap-1 bg-gray-2 rounded-lg p-0.5 border border-pinto-gray-2">
             {Object.values(DataType).map((type) => (
               <button
@@ -256,6 +257,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
               </button>
             ))}
           </div>
+          */}
         </div>
         <CalendarButton
           setTimePeriod={handleChangeTimeSelect}
@@ -294,7 +296,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
               </div>
             </div>
             <div className="pinto-sm sm:pinto-body lg:pinto-h3">
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1 sm:flex sm:flex-row sm:gap-2 sm:items-center">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 sm:gap-x-0 sm:gap-y-0 sm:flex sm:flex-row sm:items-center">
                 {chartDataset.tokens.map((token, idx) => {
                   const tokenSymbol = token?.symbol ?? "NET";
                   const isNetToken = tokenSymbol === "NET";
@@ -328,7 +330,10 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                         </p>
                       </div>
                       {idx < Object.keys(allData).length - 1 && (
-                        <Separator className="hidden lg:flex h-[2rem] w-[2px] mx-4" orientation={"vertical"} />
+                        <Separator
+                          className="hidden sm:flex h-[1.5rem] w-[0.5px] lg:h-[2rem] sm:mx-2 lg:mx-4"
+                          orientation={"vertical"}
+                        />
                       )}
                     </div>
                   );
