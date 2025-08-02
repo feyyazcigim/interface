@@ -284,7 +284,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
         </div>
       ) : (
         <>
-          <div className="h-[85px] px-4 sm:px-6 flex flex-row justify-between">
+          <div className="h-[85px] px-4 sm:px-6 flex flex-col gap-2 sm:flex-row justify-between">
             <div className="flex flex-col gap-0 sm:gap-2">
               <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
                 Season {allData.NET[displayIndex].season}
@@ -294,19 +294,32 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
               </div>
             </div>
             <div className="pinto-sm sm:pinto-body lg:pinto-h3">
-              <div className="flex flex-col gap-0.5 items-end lg:flex-row lg:gap-0 lg:items-center">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 sm:flex sm:flex-row sm:gap-2 sm:items-center">
                 {chartDataset.tokens.map((token, idx) => {
                   const tokenSymbol = token?.symbol ?? "NET";
+                  const isNetToken = tokenSymbol === "NET";
                   return (
-                    <div key={`${tokenSymbol}-value`} className="flex items-center justify-between">
+                    <div
+                      key={`${tokenSymbol}-value`}
+                      className={`flex items-center justify-between ${isNetToken ? "col-span-2 lg:col-span-1" : ""}`}
+                    >
                       {token && (
-                        <IconImage
-                          src={token.logoURI}
-                          size={8}
-                          mobileSize={4}
-                          alt={token.symbol}
-                          className="inline-block"
-                        />
+                        <>
+                          <IconImage
+                            src={token.logoURI}
+                            size={8}
+                            mobileSize={4}
+                            alt={token.symbol}
+                            className="hidden lg:inline-block"
+                          />
+                          <IconImage
+                            src={token.logoURI}
+                            size={6}
+                            mobileSize={4}
+                            alt={token.symbol}
+                            className="inline-block lg:hidden"
+                          />
+                        </>
                       )}
                       <div style={{ color: token?.color }} className={`${!token?.color && "text-pinto-green-3"}`}>
                         {tokenSymbol === "NET" && "Total: "}
