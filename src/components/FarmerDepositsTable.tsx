@@ -192,7 +192,7 @@ export default function FarmerDepositsTable({
   };
 
   return (
-    <div className={`relative action-container overflow-visible ${hoveringClaim && canClaim && "mb-[4.5rem]"}`}>
+    <div className={`relative action-container overflow-visible`}>
       <div className="border border-pinto-gray-2 rounded-[1rem] overflow-clip">
         <Table>
           <TableHeader className="bg-pinto-gray-1 hover:bg-pinto-gray-1">
