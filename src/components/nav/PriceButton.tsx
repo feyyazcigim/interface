@@ -102,7 +102,7 @@ function PriceButtonPanel() {
   }, [priceData.tokenPrices]);
 
   const marqueeTokens = useMemo(
-    () => [...underlyingTokensToShow, ...underlyingTokensToShow, ...underlyingTokensToShow],
+    () => [...underlyingTokensToShow, ...underlyingTokensToShow, ...underlyingTokensToShow, ...underlyingTokensToShow],
     [underlyingTokensToShow],
   );
 

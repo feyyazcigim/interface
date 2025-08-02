@@ -180,11 +180,13 @@ export const AdvancedChart = () => {
 
   useEffect(() => {
     const calculateHeight = () => {
-      const elem = document.getElementById("pinto-navbar");
-      if (!elem) return;
+      const navbar = document.getElementById("pinto-navbar");
+      const footer = document.getElementById("pinto-footer");
+      if (!navbar || !footer) return;
       const windowHeight = window.innerHeight;
-      const headerOffset = elem.getBoundingClientRect().height;
-      const newHeight = windowHeight - headerOffset;
+      const headerOffset = navbar.getBoundingClientRect().height;
+      const footerOffset = footer.getBoundingClientRect().height;
+      const newHeight = windowHeight - headerOffset - footerOffset;
       setHeight(newHeight);
     };
 
@@ -205,7 +207,7 @@ export const AdvancedChart = () => {
   }
 
   return (
-    <div className="flex flex-col -mb-8 gap-4 sm:-mb-20 sm:gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       <div className="flex flex-row gap-4 justify-between">
         <div ref={selectedChartsRef} className="flex flex-row flex-1">
           <div
