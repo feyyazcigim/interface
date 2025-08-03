@@ -15,6 +15,7 @@ const slugs = [
   "transfer",
   "explorer",
   "beavers",
+  "collectionsoon",
   "404",
   "PINTOUSDC",
   "PINTOcbBTC",
@@ -125,7 +126,12 @@ const PINTO_META: Record<MetaSlug, MetaProps> = {
   beavers: {
     title: "My Collection | Pinto",
     description: "View and manage your collection of Pinto Beavers.",
-    url: "https://pinto.money/beavers",
+    url: "https://pinto.money/collection",
+  },
+  collectionsoon: {
+    title: "My Collection | Pinto",
+    description: "View and manage your collection of Pinto Beavers.",
+    url: "https://pinto.money/collectionsoon",
   },
 };
 

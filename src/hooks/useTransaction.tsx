@@ -155,8 +155,8 @@ export default function useTransaction({
               View on Basescan
             </a>
           </Button>
-          <Button 
-            variant="link" 
+          <Button
+            variant="link"
             className="h-auto text-s text-pinto-green-4"
             onClick={() => {
               navigator.clipboard.writeText(explorerLink);

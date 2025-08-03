@@ -27,3 +27,5 @@ export const WELL_FUNCTION_ADDRESSES: ChainLookup<{
     cp2: "0xBA510C289fD067EBbA41335afa11F0591940d6fe",
   },
 } as const;
+
+export const PINTO_BEAVERS_CONTRACT: HashString = "0xa0D3d3009637A28874CA5f04720ac891d7632023";
