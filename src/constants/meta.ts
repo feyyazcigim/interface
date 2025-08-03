@@ -123,8 +123,8 @@ const PINTO_META: Record<MetaSlug, MetaProps> = {
     url: "https://pinto.money/tractor",
   },
   beavers: {
-    title: "My Beavers | Pinto",
-    description: "View and manage your Beaver NFT collection on Pinto.",
+    title: "My Collection | Pinto",
+    description: "View and manage your collection of Pinto Beavers.",
     url: "https://pinto.money/beavers",
   },
 };
