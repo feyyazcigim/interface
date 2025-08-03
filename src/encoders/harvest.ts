@@ -1,5 +1,5 @@
 import { Clipboard } from "@/classes/Clipboard";
-import { TokenValue } from "@/classes/TokenValue";
+import { beanstalkAbi } from "@/generated/contractHooks";
 import { FarmToMode } from "@/utils/types";
 import { encodeFunctionData } from "viem";
 
@@ -17,7 +17,7 @@ export default function harvest(
   }
 
   const data = encodeFunctionData({
-    abi: harvestABI,
+    abi: beanstalkAbi,
     functionName: "harvest",
     args: [fieldId, plots.map((plot) => BigInt(plot)), Number(destination)],
   });
@@ -27,35 +27,3 @@ export default function harvest(
     clipboard: clipboard || Clipboard.encode([]),
   };
 }
-
-const harvestABI = [
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "fieldId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256[]",
-        name: "plots",
-        type: "uint256[]",
-      },
-      {
-        internalType: "enum LibTransfer.To",
-        name: "mode",
-        type: "uint8",
-      },
-    ],
-    name: "harvest",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "beansHarvested",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "payable",
-    type: "function",
-  },
-] as const;
