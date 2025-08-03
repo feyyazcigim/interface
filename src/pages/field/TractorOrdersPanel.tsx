@@ -111,24 +111,6 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   });
 
   const handleCancelBlueprint = async (req: RequisitionEvent, e: React.MouseEvent) => {
-    console.debug("=== CANCEL BLUEPRINT DEBUG ===");
-    console.debug("Full req object:", req);
-    console.debug("req.requisition:", req.requisition);
-    console.debug("blueprintHash:", req.requisition.blueprintHash);
-    console.debug("blueprintHash type:", typeof req.requisition.blueprintHash);
-    console.debug("blueprintHash length:", req.requisition.blueprintHash?.length);
-    console.debug("signature:", req.requisition.signature);
-    console.debug("signature type:", typeof req.requisition.signature);
-    console.debug("signature length:", req.requisition.signature?.length);
-    console.debug("blueprint:", req.requisition.blueprint);
-    console.debug("blueprint.publisher:", req.requisition.blueprint?.publisher);
-    console.debug("blueprint.data:", req.requisition.blueprint?.data);
-    console.debug("blueprint.operatorPasteInstrs:", req.requisition.blueprint?.operatorPasteInstrs);
-    console.debug("blueprint.maxNonce:", req.requisition.blueprint?.maxNonce);
-    console.debug("blueprint.startTime:", req.requisition.blueprint?.startTime);
-    console.debug("blueprint.endTime:", req.requisition.blueprint?.endTime);
-    console.debug("=== END DEBUG ===");
-
     setSubmitting(true);
     e.stopPropagation(); // Prevent opening the order dialog
 
@@ -142,12 +124,28 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
 
     toast.loading("Cancelling order...");
 
+    // Fix timestamp values for transaction
+    const fixedRequisition = {
+      ...req.requisition,
+      blueprint: {
+        ...req.requisition.blueprint,
+        startTime: req.requisition.blueprint.startTime,
+        endTime:
+          req.requisition.blueprint.endTime === 8640000000000n
+            ? BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935") // max uint256
+            : req.requisition.blueprint.endTime,
+        operatorPasteInstrs: req.requisition.blueprint.operatorPasteInstrs.filter(
+          (instr) => instr !== "0x" && instr !== "",
+        ),
+      },
+    };
+
     try {
       return writeWithEstimateGas({
         address: protocolAddress,
         abi: diamondABI,
         functionName: "cancelBlueprint",
-        args: [req.requisition],
+        args: [fixedRequisition],
       });
     } catch (error) {
       console.error("Error cancelling blueprint:", error);
@@ -164,7 +162,6 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     try {
       // Use the existing function to extract the sowBlueprintv0 call from the advancedFarm call
       const sowCall = extractSowBlueprintCall(req.requisition.blueprint.data);
-      console.debug("[TractorOrdersPanel] Extracted sowCall:", sowCall);
       setRawSowBlueprintCall(sowCall);
     } catch (error) {
       console.error("Failed to extract sowBlueprintv0 call data:", error);

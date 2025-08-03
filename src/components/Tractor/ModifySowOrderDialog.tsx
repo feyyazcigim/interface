@@ -66,6 +66,7 @@ export default function ModifyTractorOrderDialog({
 
   // Effects. Pre-fill form with existing order data
   const [didPrefill, setDidPrefill] = useState(false);
+
   useEffect(() => {
     if (didPrefill || getStrategyProps.isLoading || !existingOrder.decodedData) return;
 
@@ -139,10 +140,8 @@ export default function ModifyTractorOrderDialog({
                   </div>
                 </DialogTitle>
                 <DialogDescription className="pinto-sm-light text-pinto-light pt-2">
-                  <p>
-                    Update your existing Tractor Order. The current order will be cancelled and a new one will be
-                    created with your updated conditions.
-                  </p>
+                  Update your existing Tractor Order. The current order will be cancelled and a new one will be created
+                  with your updated conditions.
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
@@ -491,21 +490,25 @@ const RenderConstantParam = (props: ValueDiff<unknown>) => {
       <div className="text-pinto-light">
         {typeof prev === "string"
           ? prev
-          : prev instanceof TokenValue
-            ? formatter.number(prev)
-            : prev && typeof prev === "object" && "type" in prev
-              ? (() => {
-                  const strategy = prev as ExtendedTractorTokenStrategy;
-                  switch (true) {
-                    case strategy.type === "SPECIFIC_TOKEN":
-                      return strategy.token?.symbol ?? "Unknown Token";
-                    case strategy.type === "LOWEST_PRICE":
-                      return "Token with lowest price";
-                    default:
-                      return "Token with lowest Seeds";
-                  }
-                })()
-              : null}
+          : typeof prev === "boolean"
+            ? prev
+              ? "Yes"
+              : "No"
+            : prev instanceof TokenValue
+              ? formatter.number(prev)
+              : prev && typeof prev === "object" && "type" in prev
+                ? (() => {
+                    const strategy = prev as ExtendedTractorTokenStrategy;
+                    switch (true) {
+                      case strategy.type === "SPECIFIC_TOKEN":
+                        return strategy.token?.symbol ?? "Unknown Token";
+                      case strategy.type === "LOWEST_PRICE":
+                        return "Token with lowest price";
+                      default:
+                        return "Token with lowest Seeds";
+                    }
+                  })()
+                : null}
       </div>
     </Row>
   );
