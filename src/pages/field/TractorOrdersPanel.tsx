@@ -135,7 +135,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
             ? BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935") // max uint256
             : req.requisition.blueprint.endTime,
         operatorPasteInstrs: req.requisition.blueprint.operatorPasteInstrs.filter(
-          (instr) => instr !== "0x" && instr !== "",
+          (instr) => instr !== "0x" && instr !== ("" as `0x${string}`),
         ),
       },
     };
