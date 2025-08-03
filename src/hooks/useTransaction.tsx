@@ -155,6 +155,16 @@ export default function useTransaction({
               View on Basescan
             </a>
           </Button>
+          <Button 
+            variant="link" 
+            className="h-auto text-s text-pinto-green-4"
+            onClick={() => {
+              navigator.clipboard.writeText(explorerLink);
+              toast.success("Link copied to clipboard", { duration: 2000 });
+            }}
+          >
+            Copy link
+          </Button>
         </div>,
       );
       if (token && !token.isNative) {

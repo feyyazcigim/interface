@@ -6,6 +6,7 @@ import PageMetaWrapper from "./components/PageMetaWrapper";
 import ScrollToTop from "./components/ScrollToTop";
 import Navbar from "./components/nav/nav/Navbar";
 import { externalLinks } from "./constants/links";
+import Beavers from "./pages/Beavers";
 import Error404 from "./pages/Error404";
 import Explorer from "./pages/Explorer";
 import Field from "./pages/Field";
@@ -135,6 +136,14 @@ function ProtectedLayout() {
         element={
           <PageMetaWrapper metaKey="explorer">
             <Explorer />
+          </PageMetaWrapper>
+        }
+      />
+      <Route
+        path="/beavers"
+        element={
+          <PageMetaWrapper metaKey="beavers">
+            <Beavers />
           </PageMetaWrapper>
         }
       />
