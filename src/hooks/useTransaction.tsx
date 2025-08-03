@@ -150,11 +150,23 @@ export default function useTransaction({
       toast.success(
         <div className="flex flex-row items-center gap-4">
           <span className="text-pinto-sm">{successMessage ?? "Transaction successful"}</span>
-          <Button asChild variant="link" className="h-auto text-s text-pinto-green-4">
-            <a href={explorerLink} target="_blank" rel="noopener noreferrer">
-              View on Basescan
-            </a>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="link" className="h-auto text-s text-pinto-green-4">
+              <a href={explorerLink} target="_blank" rel="noopener noreferrer">
+                View on Basescan
+              </a>
+            </Button>
+            <Button
+              variant="link"
+              className="h-auto text-s text-pinto-green-4"
+              onClick={() => {
+                navigator.clipboard.writeText(explorerLink);
+                toast.success("Link copied to clipboard");
+              }}
+            >
+              Copy Link
+            </Button>
+          </div>
         </div>,
       );
       if (token && !token.isNative) {
