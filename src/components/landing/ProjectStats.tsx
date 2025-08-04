@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "../ui/Button";
-import Contributors from "./Contributors";
+import ContributorMessage from "./ContributorMessage";
+import ContributorProfiles from "./ContributorProfiles";
 import ImageCarousel from "./ImageCarousel";
 import LandingVolume from "./LandingVolume";
 import ProtocolUpgrades from "./ProtocolUpgrades";
@@ -32,9 +33,9 @@ function StatContent({ activeButton }: StatContentProps) {
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             {activeButton === "upgrades" && <ProtocolUpgrades activeButton={activeButton} />}
-            {activeButton === "contributors" && <Contributors />}
             {activeButton === "years" && <ImageCarousel />}
             {activeButton === "volume" && <LandingVolume />}
+            {activeButton === "contributors" && <ContributorMessage />}
           </motion.div>
         )}
       </AnimatePresence>
@@ -52,7 +53,7 @@ export default function ProjectStats() {
 
   return (
     <motion.div
-      className="flex flex-col items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all"
+      className="flex flex-col items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
       transition={{ duration: 0.4, ease: "easeInOut" }}
     >
       <span className="flex flex-row gap-6 items-center">
@@ -74,13 +75,29 @@ export default function ProjectStats() {
         >
           51
         </span>
-        <Button
-          variant="outline-rounded"
-          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer hover:bg-gray-50 transition-opacity duration-300 ${getElementOpacity(activeButton === "contributors")}`}
-          onClick={() => setActiveButton(activeButton === "contributors" ? null : "contributors")}
-        >
-          🧑‍🌾 contributors
-        </Button>
+        {/* Contributors floating above the button */}
+        <span className="relative">
+          <AnimatePresence>
+            {activeButton === "contributors" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="absolute left-24 -top-20"
+              >
+                <ContributorProfiles />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <Button
+            variant="outline-rounded"
+            className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer hover:bg-gray-50 transition-opacity duration-300 ${getElementOpacity(activeButton === "contributors")}`}
+            onClick={() => setActiveButton(activeButton === "contributors" ? null : "contributors")}
+          >
+            🧑‍🌾 contributors
+          </Button>
+        </span>
         <span className={`transition-opacity duration-300 ${getElementOpacity(false)}`}>over</span>
       </span>
       <span className="flex flex-row gap-6 items-center">
