@@ -140,14 +140,14 @@ function ProtectedLayout() {
           </PageMetaWrapper>
         }
       />
-      {/* <Route
+      <Route
         path="/collection"
         element={
-          <PageMetaWrapper metaKey="collection">
+          <PageMetaWrapper metaKey="beavers">
             <Collection />
           </PageMetaWrapper>
         }
-      /> */}
+      />
       <Route
         path="/collectionsoon"
         element={

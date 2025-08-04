@@ -1,4 +1,6 @@
 import openSeaLogo from "@/assets/misc/opensea-logo.svg";
+import FrameAnimator from "@/components/LoadingSpinner";
+import { NFTCard } from "@/components/NFTCard";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
@@ -8,20 +10,33 @@ import { ERC721ABI } from "@/constants/abi/ERC721ABI";
 import { PINTO_BEAVERS_CONTRACT } from "@/constants/address";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
+import { useNFTImage } from "@/hooks/useNFTImage";
 import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
 type CollectionFilter = "all" | "genesis";
 type ViewMode = "owned" | "all";
 
+interface NFTData {
+  id: number;
+  contractAddress: string;
+}
+
 export default function Collection() {
   const { address } = useAccount();
   const [activeFilter, setActiveFilter] = useState<CollectionFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("owned");
-  const [userBeavers, setUserBeavers] = useState<any[]>([]);
-  const [allBeavers, setAllBeavers] = useState<any[]>([]);
-  const [selectedNFT, setSelectedNFT] = useState<any>(null);
+  const [userBeavers, setUserBeavers] = useState<NFTData[]>([]);
+  const [allBeavers, setAllBeavers] = useState<NFTData[]>([]);
+  const [selectedNFT, setSelectedNFT] = useState<NFTData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Load selected NFT image data for modal
+  const {
+    imageUrl: selectedImageUrl,
+    metadata: selectedMetadata,
+    loading: selectedLoading,
+  } = useNFTImage(selectedNFT?.contractAddress || "", selectedNFT?.id || 0);
 
   // Log wallet connection status
   console.log("Collection page - Connected address:", address);
@@ -91,14 +106,12 @@ export default function Collection() {
             console.log(`User owns token ID: ${tokenId}`);
             return {
               id: tokenId,
-              name: `${getCollectionName(PINTO_BEAVERS_CONTRACT)} #${tokenId}`,
-              description: null,
-              image: null,
+              contractAddress: PINTO_BEAVERS_CONTRACT,
             };
           }
           return null;
         })
-        .filter(Boolean);
+        .filter(Boolean) as NFTData[];
 
       setUserBeavers(userNFTs);
       console.log("User NFTs with real token IDs:", userNFTs);
@@ -138,14 +151,12 @@ export default function Collection() {
             console.log(`Collection token ID: ${tokenId}`);
             return {
               id: tokenId,
-              name: `${getCollectionName(PINTO_BEAVERS_CONTRACT)} #${tokenId}`,
-              description: null,
-              image: null,
+              contractAddress: PINTO_BEAVERS_CONTRACT,
             };
           }
           return null;
         })
-        .filter(Boolean);
+        .filter(Boolean) as NFTData[];
 
       setAllBeavers(allNFTs);
       console.log("All collection NFTs with real token IDs:", allNFTs);
@@ -211,29 +222,14 @@ export default function Collection() {
           const isOwned = viewMode === "all" && userBeavers.some((owned) => owned.id === beaver.id);
 
           return (
-            <Card
-              key={index}
-              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 transform transition-transform relative"
+            <NFTCard
+              key={`${beaver.contractAddress}-${beaver.id}`}
+              contractAddress={beaver.contractAddress}
+              tokenId={beaver.id}
               onClick={() => handleNFTClick(beaver)}
-            >
-              {/* Ownership badge for "all" view mode */}
-              {viewMode === "all" && isOwned && (
-                <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-pinto-green-1 text-pinto-green-3 text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full z-10">
-                  Owned
-                </div>
-              )}
-              <CardContent className="p-0">
-                <div className="aspect-square bg-gray-100 flex items-center justify-center">
-                  <div className="text-gray-400 text-xs sm:pinto-sm">Beaver #{beaver.id}</div>
-                </div>
-                <div className="p-2 sm:p-3">
-                  <div className="text-xs sm:pinto-xs font-medium mb-1">{beaver.name}</div>
-                  {viewMode === "owned" && beaver.description && (
-                    <div className="text-xs sm:pinto-xs text-pinto-light">{beaver.description}</div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              showOwned={viewMode === "all"}
+              isOwned={isOwned}
+            />
           );
         })}
       </div>
@@ -338,11 +334,25 @@ export default function Collection() {
           </DialogHeader>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
             {/* NFT Image */}
-            <div className="flex-shrink-0 w-full sm:w-80 h-80 bg-gray-100 rounded-lg flex items-center justify-center">
-              {selectedNFT?.image ? (
-                <img src={selectedNFT.image} alt={selectedNFT.name} className="w-full h-full object-cover rounded-lg" />
-              ) : (
-                <div className="text-gray-400 pinto-h3">Beaver #{selectedNFT?.id}</div>
+            <div className="flex-shrink-0 w-full sm:w-80 h-80 bg-gray-100 rounded-lg flex items-center justify-center relative overflow-hidden">
+              {selectedLoading && (
+                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+                  <FrameAnimator size={64} />
+                </div>
+              )}
+
+              {selectedImageUrl && !selectedLoading && (
+                <img
+                  src={selectedImageUrl}
+                  alt={selectedMetadata?.name || `NFT #${selectedNFT?.id}`}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              )}
+
+              {!selectedImageUrl && !selectedLoading && (
+                <div className="text-gray-400 pinto-h3">
+                  {getCollectionName(selectedNFT?.contractAddress || "")} #{selectedNFT?.id}
+                </div>
               )}
             </div>
 
@@ -353,21 +363,21 @@ export default function Collection() {
                   <span className="text-sm sm:pinto-sm font-medium">Token ID:</span>
                   <span className="text-sm sm:pinto-sm text-pinto-light ml-2">#{selectedNFT?.id}</span>
                 </div>
-                {selectedNFT?.description && (
+                {selectedMetadata?.description && (
                   <div>
                     <span className="text-sm sm:pinto-sm font-medium">Description:</span>
-                    <p className="text-sm sm:pinto-sm text-pinto-light mt-1">{selectedNFT?.description}</p>
+                    <p className="text-sm sm:pinto-sm text-pinto-light mt-1">{selectedMetadata.description}</p>
                   </div>
                 )}
                 <div>
                   <span className="text-sm sm:pinto-sm font-medium">Contract:</span>
                   <a
-                    href={`https://basescan.org/address/${PINTO_BEAVERS_CONTRACT}`}
+                    href={`https://basescan.org/address/${selectedNFT?.contractAddress}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs sm:pinto-xs text-pinto-green-3 mt-1 font-mono break-all hover:underline block"
                   >
-                    {PINTO_BEAVERS_CONTRACT.slice(0, 8)}...{PINTO_BEAVERS_CONTRACT.slice(-6)}
+                    {selectedNFT?.contractAddress?.slice(0, 8)}...{selectedNFT?.contractAddress?.slice(-6)}
                   </a>
                 </div>
               </div>
