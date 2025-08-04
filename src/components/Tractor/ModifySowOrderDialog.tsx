@@ -484,32 +484,36 @@ const RenderValueDiff = (props: ValueDiff<unknown>) => {
 const RenderConstantParam = (props: ValueDiff<unknown>) => {
   const { label, prev } = props;
 
+  const getConstantParamValue = () => {
+    try {
+      if (typeof prev === "string") {
+        return prev;
+      } else if (typeof prev === "boolean") {
+        return prev ? "Yes" : "No";
+      } else if (prev instanceof TokenValue) {
+        return formatter.number(prev);
+      } else if (prev && typeof prev === "object" && "type" in prev) {
+        const strategy = prev as ExtendedTractorTokenStrategy;
+        switch (true) {
+          case strategy.type === "SPECIFIC_TOKEN":
+            return strategy.token?.symbol ?? "Unknown Token";
+          case strategy.type === "LOWEST_PRICE":
+            return "Token with lowest price";
+          default:
+            return "Token with lowest Seeds";
+        }
+      }
+    } catch (e) {
+      console.debug("Error getting render constant param", e);
+    }
+
+    return null;
+  };
+
   return (
     <Row key={`constant-${label}`} className="justify-between items-center">
       <div className="text-pinto-secondary">{label}</div>
-      <div className="text-pinto-light">
-        {typeof prev === "string"
-          ? prev
-          : typeof prev === "boolean"
-            ? prev
-              ? "Yes"
-              : "No"
-            : prev instanceof TokenValue
-              ? formatter.number(prev)
-              : prev && typeof prev === "object" && "type" in prev
-                ? (() => {
-                    const strategy = prev as ExtendedTractorTokenStrategy;
-                    switch (true) {
-                      case strategy.type === "SPECIFIC_TOKEN":
-                        return strategy.token?.symbol ?? "Unknown Token";
-                      case strategy.type === "LOWEST_PRICE":
-                        return "Token with lowest price";
-                      default:
-                        return "Token with lowest Seeds";
-                    }
-                  })()
-                : null}
-      </div>
+      <div className="text-pinto-light">{getConstantParamValue()}</div>
     </Row>
   );
 };
