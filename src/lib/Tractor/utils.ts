@@ -1466,3 +1466,32 @@ export const isTractorTokenStrategy = (value: unknown): value is TractorTokenStr
       return false;
   }
 };
+
+/**
+ * Prepare a requisition event for a transaction by normalizing the blueprint data.
+ * - Fix timestamp values for transaction
+ * - Filter out invalid operator paste instructions
+ * @param req - The requisition event to prepare
+ * @returns The prepared requisition event
+ */
+export const prepareSowOrderV0RequisitionEventForTxn = (req: RequisitionEvent) => {
+  const normalizeEndTime = (endTime: bigint) => {
+    if (endTime === 8640000000000n) {
+      // max uint256
+      return BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
+    }
+    return endTime;
+  };
+
+  return {
+    ...req.requisition,
+    blueprint: {
+      ...req.requisition.blueprint,
+      startTime: req.requisition.blueprint.startTime,
+      endTime: normalizeEndTime(req.requisition.blueprint.endTime),
+      operatorPasteInstrs: req.requisition.blueprint.operatorPasteInstrs.filter(
+        (instr) => instr !== "0x" && instr !== ("" as `0x${string}`),
+      ),
+    },
+  };
+};

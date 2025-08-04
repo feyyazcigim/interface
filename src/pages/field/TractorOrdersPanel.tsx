@@ -20,6 +20,7 @@ import {
   RequisitionEvent,
   decodeSowTractorData,
   getSowOrderTokenStrategy,
+  prepareSowOrderV0RequisitionEventForTxn,
 } from "@/lib/Tractor/utils";
 import usePublisherTractorExecutions from "@/state/tractor/useTractorExecutions";
 import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
@@ -111,7 +112,6 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
   });
 
   const handleCancelBlueprint = async (req: RequisitionEvent, e: React.MouseEvent) => {
-    console.debug("Cancelling blueprint...'", req.requisition.blueprintHash);
     setSubmitting(true);
     e.stopPropagation(); // Prevent opening the order dialog
 
@@ -125,12 +125,15 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
 
     toast.loading("Cancelling order...");
 
+    // Fix timestamp values for transaction
+    const fixedRequisition = prepareSowOrderV0RequisitionEventForTxn(req);
+
     try {
       return writeWithEstimateGas({
         address: protocolAddress,
         abi: diamondABI,
         functionName: "cancelBlueprint",
-        args: [req.requisition],
+        args: [fixedRequisition],
       });
     } catch (error) {
       console.error("Error cancelling blueprint:", error);
@@ -147,7 +150,6 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     try {
       // Use the existing function to extract the sowBlueprintv0 call from the advancedFarm call
       const sowCall = extractSowBlueprintCall(req.requisition.blueprint.data);
-      console.debug("[TractorOrdersPanel] Extracted sowCall:", sowCall);
       setRawSowBlueprintCall(sowCall);
     } catch (error) {
       console.error("Failed to extract sowBlueprintv0 call data:", error);
