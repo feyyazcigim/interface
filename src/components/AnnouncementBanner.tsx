@@ -15,21 +15,20 @@ export default function AnnouncementBanner() {
     return null;
   }
   */
+  if (!renderAnnouncement) {
+    return null;
+  }
 
   return (
-    <div className="w-full hidden sm:block">
-      <div className="font-pinto inset-0 bg-gradient-light flex items-center justify-center">
-        <div className="bg-white shadow-none border-b border-pinto-gray-4 p-2 w-full text-center">
-          <AnnouncementBannerContent />
-        </div>
-      </div>
+    <div className="w-full hidden sm:flex h-8 border-b border-pinto-gray-4 bg-white items-center justify-center">
+      <AnnouncementBannerContent />
     </div>
   );
 }
 
 const AnnouncementBannerContent = () => {
   return (
-    <div className="flex flex-row justify-center">
+    <div className="flex flex-row justify-center items-center">
       <div className="pinto-sm text-black text-center">
         <Link
           to={ANNOUNCEMENT_URL}

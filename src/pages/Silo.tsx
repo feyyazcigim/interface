@@ -266,6 +266,7 @@ function Silo() {
                   }
                 />
               )} */}
+              {/*
               {!convertEnabled && bestDeposit && (
                 <TableRowConnector
                   toTarget={`token-row-${bestDeposit.address}`}
@@ -299,6 +300,7 @@ function Silo() {
                   }
                 />
               )}
+              */}
             </div>
           </div>
           <div className="flex flex-col w-full gap-8">

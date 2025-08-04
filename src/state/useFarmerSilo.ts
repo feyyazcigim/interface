@@ -1,6 +1,7 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { ZERO_ADDRESS } from "@/constants/address";
 import { SEEDS, STALK } from "@/constants/internalTokens";
+import { defaultQuerySettings } from "@/constants/query";
 import {
   beanstalkAbi,
   useReadFarmer_BalanceOfGrownStalkMultiple,
@@ -9,11 +10,11 @@ import {
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { stringEq } from "@/utils/string";
 import { getTokenIndex } from "@/utils/token";
-import { DepositData, Token, TokenDepositData } from "@/utils/types";
-import { unpackStem } from "@/utils/utils";
+import { DepositData, FailableUseContractsResult, Token, TokenDepositData } from "@/utils/types";
+import { exists, unpackStem } from "@/utils/utils";
 import { useCallback, useMemo } from "react";
-import { Address, decodeAbiParameters, encodeFunctionData, toHex } from "viem";
-import { useAccount, useReadContract, useSimulateContract } from "wagmi";
+import { Address, ReadContractReturnType, decodeAbiParameters, encodeFunctionData, toHex } from "viem";
+import { useAccount, useReadContract, useReadContracts, useSimulateContract } from "wagmi";
 import { usePriceData } from "./usePriceData";
 import { useSiloData } from "./useSiloData";
 import useTokenData from "./useTokenData";
@@ -94,6 +95,50 @@ const createSelectMowStatusPerToken = (whitelist: Token[], mainToken: Token) => 
   return map;
 };
 
+/**
+ * Selector for fetching all farmer deposits across all whitelisted tokens. Used in the useFarmerSiloDepositsQuery hook.
+ *
+ * @param tokens - The tokens to fetch deposits for
+ * @returns A selector function that transforms the contract response into a map of token indices to their deposit arrays
+ */
+const getSelectDepositsForAccount = (tokens: Token[]) => {
+  return (
+    response: FailableUseContractsResult<
+      ReadContractReturnType<typeof beanstalkAbi, "getTokenDepositsForAccount", [Address, Address]>
+    >,
+  ) => {
+    const depositMap = new Map<string, DepositQuery[]>();
+    // Process each token's deposit response
+    for (const [lpIdx, token] of tokens.entries()) {
+      const result = response[lpIdx]?.result;
+
+      if (!result) continue; // Skip failed or empty responses
+
+      // Transform raw contract data into structured deposit objects
+      const tokenDeposits: DepositQuery[] = result.depositIds
+        .map((depositId, index) => {
+          const stem = unpackStem(depositId);
+          const thisTokenDeposits = result.tokenDeposits[index];
+
+          if (!exists(thisTokenDeposits)) return;
+
+          return {
+            id: depositId,
+            stem,
+            depositedAmount: thisTokenDeposits.amount,
+            depositedBDV: thisTokenDeposits.bdv,
+          };
+        })
+        .filter((deposit): deposit is DepositQuery => exists(deposit));
+
+      // Store deposits by token index for efficient lookup in main processing
+      depositMap.set(getTokenIndex(token), tokenDeposits);
+    }
+
+    return depositMap;
+  };
+};
+
 const selectFloodData = (data: { result: readonly `0x${string}`[] }) => {
   const decoded = decodeAbiParameters(abiSnippet[0].outputs, data.result[1])[0];
   return decoded;
@@ -163,9 +208,57 @@ const abiSnippet = [
   },
 ] as const;
 
+/**
+ * Hook for fetching all farmer deposits across all whitelisted tokens
+ *
+ * This query fetches deposit data for every token that has ever been whitelisted
+ * in the silo, not just currently active ones. This ensures we don't lose track
+ * of historical deposits even if tokens are later removed from the whitelist.
+ *
+ * The query runs in parallel for all tokens and transforms the raw contract
+ * responses into a structured format for easier processing.
+ *
+ * Data Flow:
+ * 1. Creates parallel contract calls for each potentially whitelisted token
+ * 2. Calls getTokenDepositsForAccount(farmer, token) for each token
+ * 3. Transforms raw responses into DepositQuery objects
+ * 4. Maps results by token index for efficient lookup
+ *
+ * @returns Query result containing a map of token indices to their deposit arrays
+ */
+const useFarmerSiloDepositsQuery = () => {
+  const diamond = useProtocolAddress();
+  const farmer = useAccount();
+
+  const { mayBeWhitelistedTokens } = useTokenData();
+
+  const selectDepositsForAccount = useMemo(
+    () => getSelectDepositsForAccount(mayBeWhitelistedTokens),
+    [mayBeWhitelistedTokens],
+  );
+
+  const query = useReadContracts({
+    // Create parallel contract calls for all potentially whitelisted tokens
+    contracts: mayBeWhitelistedTokens.map((token) => ({
+      address: diamond,
+      abi: beanstalkAbi,
+      functionName: "getTokenDepositsForAccount" as const,
+      args: [farmer.address ?? ZERO_ADDRESS, token.address] as const,
+    })),
+    allowFailure: true, // Continue even if individual calls fail
+    query: {
+      enabled: !!farmer.address, // Only run when wallet is connected
+      select: selectDepositsForAccount,
+      ...defaultQuerySettings,
+    },
+  });
+
+  return query;
+};
+
 export function useFarmerSilo(address?: `0x${string}`) {
   const account = useAccount();
-  const { whitelistedTokens: SILO_WHITELIST, mainToken: BEAN, preferredTokens } = useTokenData();
+  const { mainToken: BEAN, preferredTokens, mayBeWhitelistedTokens: maybeWLTokens } = useTokenData();
   const siloData = useSiloData();
   const protocolAddress = useProtocolAddress();
   const priceData = usePriceData();
@@ -197,16 +290,7 @@ export function useFarmerSilo(address?: `0x${string}`) {
   });
 
   // Fetch deposit data
-  const { data: deposits, ...depositsQuery } = useReadContract({
-    address: protocolAddress,
-    abi: beanstalkAbi,
-    functionName: "getDepositsForAccount",
-    args: [farmerAddress as Address],
-    query: {
-      ...QUERY_SETTINGS,
-      enabled: Boolean(farmerAddress),
-    },
-  });
+  const { data: depositsByToken, ...depositsQuery } = useFarmerSiloDepositsQuery();
 
   const { data: roots, ...rootsQuery } = useReadContract({
     address: protocolAddress,
@@ -219,19 +303,20 @@ export function useFarmerSilo(address?: `0x${string}`) {
     },
   });
 
+  const maybeWLAddresses = useMemo(() => maybeWLTokens.map((token) => token.address), [maybeWLTokens]);
+
   // Fetch grown stalk data
-  const whitelistAddresses = useMemo(() => SILO_WHITELIST.map((token) => token.address), [SILO_WHITELIST]);
   const selectMowStatusPerToken = useMemo(
-    () => createSelectMowStatusPerToken(SILO_WHITELIST, BEAN),
-    [SILO_WHITELIST, BEAN],
+    () => createSelectMowStatusPerToken(maybeWLTokens, BEAN),
+    [maybeWLTokens, BEAN],
   );
 
-  const selectGrownStalkPerToken = useMemo(() => createSelectGrownStalkPerToken(SILO_WHITELIST), [SILO_WHITELIST]);
+  const selectGrownStalkPerToken = useMemo(() => createSelectGrownStalkPerToken(maybeWLTokens), [maybeWLTokens]);
 
   const grownStalkPerToken = useReadFarmer_BalanceOfGrownStalkMultiple({
-    args: [farmerAddress ?? ZERO_ADDRESS, whitelistAddresses],
+    args: [farmerAddress ?? ZERO_ADDRESS, maybeWLAddresses],
     query: {
-      enabled: Boolean(farmerAddress) && whitelistAddresses.length > 0,
+      enabled: Boolean(farmerAddress) && maybeWLAddresses.length > 0,
       select: selectGrownStalkPerToken,
       ...QUERY_SETTINGS_NO_SHARING,
     },
@@ -239,9 +324,9 @@ export function useFarmerSilo(address?: `0x${string}`) {
 
   // Fetch mow status data
   const mowStatusPerToken = useReadFarmer_GetMowStatus({
-    args: [farmerAddress ?? ZERO_ADDRESS, whitelistAddresses],
+    args: [farmerAddress ?? ZERO_ADDRESS, maybeWLAddresses],
     query: {
-      enabled: Boolean(farmerAddress) && whitelistAddresses.length > 0,
+      enabled: Boolean(farmerAddress) && maybeWLAddresses.length > 0,
       select: selectMowStatusPerToken,
       ...QUERY_SETTINGS_NO_SHARING,
     },
@@ -249,9 +334,9 @@ export function useFarmerSilo(address?: `0x${string}`) {
 
   // Fetch flood data with stable arguments
   const floodArgs: readonly [readonly `0x${string}`[]] | undefined = useMemo(() => {
-    if (!farmerAddress || !SILO_WHITELIST.length) return undefined;
-    return [getFloodCallArguments(SILO_WHITELIST, farmerAddress)] as const;
-  }, [farmerAddress, SILO_WHITELIST]);
+    if (!farmerAddress || !maybeWLTokens.length) return undefined;
+    return [getFloodCallArguments(maybeWLTokens, farmerAddress)] as const;
+  }, [farmerAddress, maybeWLTokens]);
 
   const floodData = useSimulateContract({
     address: protocolAddress,
@@ -265,30 +350,10 @@ export function useFarmerSilo(address?: `0x${string}`) {
     },
   });
 
-  // Process deposits
-  const depositsByToken = useMemo(() => {
-    const depositMap = new Map<string, DepositQuery[]>();
-
-    for (const deposit of deposits ?? []) {
-      const tokenDeposits: DepositQuery[] = deposit.depositIds.map((depositId, index) => {
-        const stem = unpackStem(depositId);
-        const tokenDeposit = deposit.tokenDeposits[index];
-        return {
-          id: depositId,
-          stem: stem,
-          depositedAmount: tokenDeposit.amount,
-          depositedBDV: tokenDeposit.bdv,
-        };
-      });
-
-      depositMap.set(getTokenIndex(deposit.token), tokenDeposits);
-    }
-
-    return depositMap;
-  }, [deposits]);
-
   // Process all farmer silo data
   const depositsData = useMemo(() => {
+    const minValidBdv = TokenValue.fromHuman(0.000001, BEAN.decimals);
+
     const output = new Map<Token, TokenDepositData>();
     let _depositsBDV = TokenValue.ZERO;
     let _depositsUSD = TokenValue.ZERO;
@@ -296,13 +361,13 @@ export function useFarmerSilo(address?: `0x${string}`) {
     let _totalGerminatingStalk = TokenValue.ZERO;
 
     depositsByToken?.forEach((tokenDeposits, tokenIndex) => {
-      const token = SILO_WHITELIST.find((t) => getTokenIndex(t) === tokenIndex);
+      const token = maybeWLTokens.find((t) => getTokenIndex(t) === tokenIndex);
       if (!token) return;
       const siloTokenData = siloData.tokenData.get(token);
       const pool = priceData.pools.find((poolData) => stringEq(poolData.pool.address, token.address));
       const poolPrice = pool?.price ?? TokenValue.ZERO;
 
-      if (!token || !siloTokenData) return;
+      if (!siloTokenData) return;
 
       const depositData: DepositData[] = [];
       const convertibleDeposits: DepositData[] = [];
@@ -319,10 +384,19 @@ export function useFarmerSilo(address?: `0x${string}`) {
       tokenDeposits.forEach((deposit) => {
         const isGerminating = deposit.stem >= siloTokenData.germinatingStem.toBigInt();
         const _depositBDV = TokenValue.fromBlockchain(deposit.depositedBDV, BEAN.decimals);
-        const depositStem = TokenValue.fromBlockchain(deposit.stem, BEAN.decimals);
-        const lastStem = mowStatusPerToken.data?.get(token)?.lastStem ?? TokenValue.ZERO;
         const depositAmount = TokenValue.fromBlockchain(deposit.depositedAmount, token.decimals);
         const _currentBDV = depositAmount.mul(siloTokenData.tokenBDV);
+
+        // 0.000001 is the minimum BDV for a deposit to be considered valid so we don't run into divide by 0 errors
+        if (
+          (token.isWhitelisted && _currentBDV.lt(minValidBdv)) ||
+          (!token.isWhitelisted && _depositBDV.lt(minValidBdv))
+        ) {
+          return;
+        }
+
+        const depositStem = TokenValue.fromBlockchain(deposit.stem, BEAN.decimals);
+        const lastStem = mowStatusPerToken.data?.get(token)?.lastStem ?? TokenValue.ZERO;
         const seeds = _depositBDV.mul(siloTokenData.rewards.seeds);
 
         const stalkAtDeposit = _depositBDV.reDecimal(STALK.decimals);
@@ -371,6 +445,7 @@ export function useFarmerSilo(address?: `0x${string}`) {
         };
 
         depositData.push(thisDeposit);
+
         if (!isGerminating) {
           convertibleAmount = convertibleAmount.add(depositAmount);
           convertibleDeposits.push(thisDeposit);
@@ -408,13 +483,11 @@ export function useFarmerSilo(address?: `0x${string}`) {
     };
   }, [
     depositsByToken,
-    SILO_WHITELIST,
+    maybeWLTokens,
     siloData.tokenData,
     priceData.price,
-    // depositEvents.data,
     grownStalkPerToken.data,
     mowStatusPerToken.data,
-    // plantEvents.data,
     currPrice,
     BEAN.decimals,
   ]);
@@ -427,8 +500,8 @@ export function useFarmerSilo(address?: `0x${string}`) {
       wellsPlenty: { plenty: TokenValue; plentyPerRoot: bigint };
     }[] = [];
 
-    if (floodData.data && SILO_WHITELIST) {
-      SILO_WHITELIST.forEach((token) => {
+    if (floodData.data && maybeWLTokens) {
+      maybeWLTokens.forEach((token) => {
         if (floodData.data && token.tokens) {
           const sopToken = floodData.data.farmerSops.find(
             (farmerSop) => farmerSop.well.toLowerCase() === token.address.toLowerCase(),
@@ -459,7 +532,7 @@ export function useFarmerSilo(address?: `0x${string}`) {
       roots: floodData?.data?.roots ?? 0n,
       farmerSops: sops,
     };
-  }, [floodData.data, SILO_WHITELIST, BEAN.address, preferredTokens]);
+  }, [floodData.data, maybeWLTokens, BEAN.address, preferredTokens]);
 
   // Combine query keys
   const queryKeys = useMemo(

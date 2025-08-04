@@ -1,4 +1,6 @@
 import backArrowIcon from "@/assets/misc/LeftArrow.svg";
+import creamFinanceLogo from "@/assets/misc/cream-finance-logo.png";
+import spectraLogo from "@/assets/misc/spectra-token-logo.svg";
 import { TV } from "@/classes/TokenValue";
 import LabelValue from "@/components/LabelValue";
 import MobileActionBar from "@/components/MobileActionBar";
@@ -10,9 +12,8 @@ import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
 import { SEEDS, STALK } from "@/constants/internalTokens";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import { useProtocolIntegrationLinks } from "@/hooks/useProtocolIntegrations";
-import { ProtocolIntegration, ProtocolIntegrationQueryReturnType } from "@/state/integrations/types";
-import { useSpectraYieldSummary } from "@/state/integrations/useSpectraYieldSummary";
+import { ProtocolIntegrationSummary, useProtocolIntegrationLinks } from "@/hooks/useProtocolIntegrations";
+import { useSpectraPoolData } from "@/state/integrations/useSpectraPoolData";
 import { useSeasonalPrice, useSeasonalWrappedDepositExchangeRate } from "@/state/seasonal/seasonalDataHooks";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -120,7 +121,7 @@ export default function SiloWrappedSiloToken({ token }: { token: Token }) {
         {!currentAction && (
           <MobileActionBar>
             <Button
-              onClick={() => navigate(`/${navLinks.sPinto}?action=wrap`)}
+              onClick={() => navigate(`${navLinks.sPinto}?action=wrap`)}
               rounded={"full"}
               variant={"outline-secondary"}
               className="pinto-sm-bold text-sm flex-1 flex h-full"
@@ -128,7 +129,7 @@ export default function SiloWrappedSiloToken({ token }: { token: Token }) {
               Wrap
             </Button>
             <Button
-              onClick={() => navigate(`/${navLinks.sPinto}?action=unwrap`)}
+              onClick={() => navigate(`${navLinks.sPinto}?action=unwrap`)}
               rounded={"full"}
               variant={"outline-secondary"}
               className="pinto-sm-bold text-sm flex-1 flex h-full"
@@ -241,48 +242,60 @@ const BalanceSection = ({ token, tokenPrices, farmerBalances, loading }: IBalanc
   );
 };
 
-type ProtocolIntegrationToQueryLookup = Partial<
-  Record<ProtocolIntegration, ProtocolIntegrationQueryReturnType["data"]>
->;
-
 const IntegrationLinks = ({ token }: { token: Token }) => {
   const integrations = useProtocolIntegrationLinks();
 
-  const spectra = useSpectraYieldSummary();
+  const spectraData = useSpectraPoolData();
+  const poolData = spectraData.data?.[0];
 
-  const queries = [spectra];
+  const ProtocolIntegrationCard = ({
+    ctaMessage,
+    protocol,
+    logoURI,
+    url,
+    name,
+    value,
+  }: ProtocolIntegrationSummary & { value?: number }) => {
+    return (
+      <div className="flex flex-row items-center justify-between p-4 box-border rounded-[1.25rem] bg-pinto-off-white border-pinto-gray-2 border gap-2">
+        <div className="pinto-sm-light text-pinto-light">{ctaMessage(token, value)}</div>
+        <Button asChild variant="outline-secondary" className="rounded-[0.75rem] min-w-min">
+          <Link to={url} target="_blank" rel="noopener noreferrer">
+            <div className="flex flex-row items-center gap-2 pinto-sm-light">
+              <IconImage src={logoURI} size={6} alt={protocol} />
+              <span>Visit {protocol}</span>
+            </div>
+          </Link>
+        </Button>
+      </div>
+    );
+  };
 
-  const byIntegration: ProtocolIntegrationToQueryLookup = queries.reduce((acc, query) => {
-    acc[query.integration] = query.data;
-    return acc;
-  }, {});
-
-  if (!integrations) return null;
+  function getCardValue(key: string) {
+    if (key === "spectraPool") {
+      return poolData?.pools[0].lpApy.total;
+    } else if (key === "spectraFixedRate") {
+      return poolData?.pools[0].ptApy;
+    } else if (key === "spectraTradeYield") {
+      return poolData?.pools[0].ytLeverage;
+    } else {
+      return undefined;
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
       {Object.entries(integrations).map(([key, integration]) => {
-        const queryData = byIntegration[key as ProtocolIntegration];
-
         return (
-          <div
-            key={`protocol-integration-${key}`}
-            className="flex flex-row items-center justify-between p-4 box-border rounded-[1.25rem] bg-pinto-off-white border-pinto-gray-2 border gap-2"
-          >
-            <div className="pinto-sm-light text-pinto-light">
-              {typeof integration.ctaMessage === "function"
-                ? integration.ctaMessage(token, queryData)
-                : integration.ctaMessage}
-            </div>
-            <Button asChild variant="outline-secondary" className="rounded-[12px] min-w-min">
-              <Link to={integration.url} target="_blank" rel="noopener noreferrer">
-                <div className="flex flex-row items-center gap-2 pinto-sm-light">
-                  <IconImage src={integration.logoURI} size={6} alt="Cream Finance" />
-                  <span>Visit {integration.protocol}</span>
-                </div>
-              </Link>
-            </Button>
-          </div>
+          <ProtocolIntegrationCard
+            key={key}
+            name={integration.name}
+            ctaMessage={integration.ctaMessage}
+            logoURI={integration.logoURI}
+            protocol={integration.protocol}
+            url={integration.url}
+            value={getCardValue(key)}
+          />
         );
       })}
     </div>
