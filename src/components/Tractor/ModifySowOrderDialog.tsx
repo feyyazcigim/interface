@@ -383,33 +383,21 @@ function ModifyTractorOrderReviewDialog({
               {/* Show a comparison of old vs new */}
               <div className="bg-gray-50 p-4 rounded-lg mb-4">
                 <div className="space-y-4 text-sm">
-                  {/* Show differences between old and new order */}
+                  {/* Show all order parameters in single New Order table */}
                   {valueDiffs.modifications.length || valueDiffs.constants.length ? (
-                    <Col className="gap-4">
-                      {/* Order Modifications Section */}
-                      {valueDiffs.modifications.length > 0 && (
-                        <div>
-                          <h4 className="pinto-body font-medium text-pinto-secondary mb-2">Order Modifications</h4>
-                          <Col className="gap-2 pinto-sm-light">
-                            {valueDiffs.modifications.map(([key, value]) => {
-                              return <RenderValueDiff key={`sow-v0-diff-${key}`} {...value} />;
-                            })}
-                          </Col>
-                        </div>
-                      )}
-
-                      {/* Order Constants Section */}
-                      {valueDiffs.constants.length > 0 && (
-                        <div>
-                          <h4 className="pinto-body font-medium text-pinto-secondary mb-2">Order Constants</h4>
-                          <Col className="gap-2 pinto-sm-light">
-                            {valueDiffs.constants.map(([key, value]) => {
-                              return <RenderConstantParam key={`sow-v0-constant-${key}`} {...value} />;
-                            })}
-                          </Col>
-                        </div>
-                      )}
-                    </Col>
+                    <div>
+                      <h4 className="pinto-body font-medium text-pinto-secondary mb-2">New Order</h4>
+                      <Col className="gap-2 pinto-sm-light">
+                        {/* Show modifications first */}
+                        {valueDiffs.modifications.map(([key, value]) => {
+                          return <RenderValueDiff key={`sow-v0-diff-${key}`} {...value} />;
+                        })}
+                        {/* Show constants after modifications */}
+                        {valueDiffs.constants.map(([key, value]) => {
+                          return <RenderConstantParam key={`sow-v0-constant-${key}`} {...value} />;
+                        })}
+                      </Col>
+                    </div>
                   ) : (
                     <div className="pinto-body text-pinto-light text-center h-[2rem] flex items-center justify-center">
                       No changes
