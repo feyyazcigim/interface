@@ -4,6 +4,7 @@ import { Token } from "@/utils/types";
 import { HashString, Prettify } from "@/utils/types.generic";
 import { exists } from "@/utils/utils";
 import { getIsProdNetwork } from "@/utils/wagmi/chains";
+import { CopyIcon } from "@radix-ui/react-icons";
 import { estimateGas } from "@wagmi/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -150,22 +151,21 @@ export default function useTransaction({
       toast.success(
         <div className="flex flex-row items-center gap-4">
           <span className="text-pinto-sm">{successMessage ?? "Transaction successful"}</span>
-          <div className="flex gap-2">
-            <Button asChild variant="link" className="h-auto text-s text-pinto-green-4">
+          <div className="flex flex-row items-center gap-2">
+            <div className="h-auto text-s text-pinto-green-4 hover:underline">
               <a href={explorerLink} target="_blank" rel="noopener noreferrer">
                 View on Basescan
               </a>
-            </Button>
-            <Button
-              variant="link"
-              className="h-auto text-s text-pinto-green-4"
+            </div>
+            <div
+              className="h-auto text-s text-pinto-green-4 cursor-pointer"
               onClick={() => {
                 navigator.clipboard.writeText(explorerLink);
                 toast.success("Link copied to clipboard");
               }}
             >
-              Copy Link
-            </Button>
+              <CopyIcon className="w-4 h-4" />
+            </div>
           </div>
         </div>,
       );
