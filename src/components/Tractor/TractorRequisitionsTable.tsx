@@ -18,7 +18,7 @@ export function TractorRequisitionsTable({ refreshTrigger = 0 }: TractorRequisit
   const { address } = useAccount();
   const protocolAddress = useProtocolAddress();
 
-  const { writeWithEstimateGas, submitting } = useTransaction({
+  const { writeWithEstimateGas, submitting, isConfirming, setSubmitting } = useTransaction({
     successMessage: "Blueprint cancelled successfully",
     errorMessage: "Failed to cancel blueprint",
   });
@@ -26,25 +26,34 @@ export function TractorRequisitionsTable({ refreshTrigger = 0 }: TractorRequisit
   const { data: requisitions = [], ...requisitionsQuery } = useTractorPublishedRequisitions(address);
 
   const handleCancelBlueprint = async (requisitionData: RequisitionEvent) => {
-    console.debug("=== REQUISITIONS TABLE CANCEL DEBUG ===");
-    console.debug("Full requisitionData object:", requisitionData);
-    console.debug("requisitionData.requisition:", requisitionData.requisition);
-    console.debug("blueprintHash:", requisitionData.requisition.blueprintHash);
-    console.debug("blueprintHash type:", typeof requisitionData.requisition.blueprintHash);
-    console.debug("blueprintHash length:", requisitionData.requisition.blueprintHash?.length);
-    console.debug("signature:", requisitionData.requisition.signature);
-    console.debug("signature type:", typeof requisitionData.requisition.signature);
-    console.debug("signature length:", requisitionData.requisition.signature?.length);
-    console.debug("blueprint:", requisitionData.requisition.blueprint);
-    console.debug("blueprint.publisher:", requisitionData.requisition.blueprint?.publisher);
-    console.debug("blueprint.data:", requisitionData.requisition.blueprint?.data);
-    console.debug("blueprint.operatorPasteInstrs:", requisitionData.requisition.blueprint?.operatorPasteInstrs);
-    console.debug("blueprint.maxNonce:", requisitionData.requisition.blueprint?.maxNonce);
-    console.debug("blueprint.startTime:", requisitionData.requisition.blueprint?.startTime);
-    console.debug("blueprint.endTime:", requisitionData.requisition.blueprint?.endTime);
-    console.debug("=== END REQUISITIONS TABLE DEBUG ===");
+    if (!address) {
+      throw new Error("Signer required");
+    }
 
-    if (!address || !protocolAddress) return;
+    if (!protocolAddress) {
+      throw new Error("Protocol address not found");
+    }
+
+    console.debug("=== REQUISITIONS TABLE CANCEL DEBUG ===");
+    console.debug({
+      "Full requisitionData object": requisitionData,
+      "requisitionData.requisition": requisitionData.requisition,
+      blueprintHash: requisitionData.requisition.blueprintHash,
+      "blueprintHash type": typeof requisitionData.requisition.blueprintHash,
+      "blueprintHash length": requisitionData.requisition.blueprintHash?.length,
+      signature: requisitionData.requisition.signature,
+      "signature type": typeof requisitionData.requisition.signature,
+      "signature length": requisitionData.requisition.signature?.length,
+      blueprint: requisitionData.requisition.blueprint,
+      "blueprint.publisher": requisitionData.requisition.blueprint?.publisher,
+      "blueprint.data": requisitionData.requisition.blueprint?.data,
+      "blueprint.operatorPasteInstrs": requisitionData.requisition.blueprint?.operatorPasteInstrs,
+      "blueprint.maxNonce": requisitionData.requisition.blueprint?.maxNonce,
+      "blueprint.startTime": requisitionData.requisition.blueprint?.startTime,
+      "blueprint.endTime": requisitionData.requisition.blueprint?.endTime,
+    });
+    console.debug("=== END REQUISITIONS TABLE DEBUG ===");
+    setSubmitting(true);
 
     try {
       toast.loading("Cancelling blueprint...");
@@ -60,6 +69,8 @@ export function TractorRequisitionsTable({ refreshTrigger = 0 }: TractorRequisit
     } catch (error) {
       console.error("Error cancelling blueprint:", error);
       toast.error("Failed to cancel blueprint");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -142,7 +153,7 @@ export function TractorRequisitionsTable({ refreshTrigger = 0 }: TractorRequisit
                       variant="outline"
                       size="sm"
                       onClick={() => handleCancelBlueprint(req)}
-                      disabled={submitting}
+                      disabled={submitting || isConfirming}
                       className="text-pinto-gray-4 hover:text-pinto-gray-5"
                     >
                       Cancel
