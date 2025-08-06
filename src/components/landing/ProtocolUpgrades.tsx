@@ -536,6 +536,7 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
       <div className="flex flex-row min-w-max items-center gap-4">
         {sortedAudits.map((audit, index) => {
           const { before, after } = calculateConnectingLines(index);
+          const hasDescription = audit.name.startsWith("BIP-") && audit.description && audit.description.length > 0;
 
           return (
             <>
@@ -574,7 +575,7 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
                                 className="flex flex-row gap-0.5 text-pinto-green-4 hover:underline decoration-1 opacity-0 group-hover:opacity-100 transition-all transform-gpu text-center items-center justify-center"
                               >
                                 <span className="text-xl font-light text-pinto-green-4">{description}</span>
-                                <DiagonalRightArrowIcon color="currentColor" />
+                                <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
                               </Link>
                             );
                           })}
@@ -586,10 +587,19 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
                         to={audit.githubLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex flex-row gap-0.5 text-pinto-green-4 hover:underline decoration-1 absolute top-0 whitespace-nowrap text-center items-center justify-center"
+                        className={`flex flex-col gap-0.5 text-pinto-green-4 hover:underline decoration-1 absolute top-0 whitespace-nowrap text-center items-center justify-center ${hasDescription ? "-top-2" : ""}`}
                       >
-                        <span className="text-xl font-light text-pinto-green-4">{audit.name}</span>
-                        <DiagonalRightArrowIcon color="currentColor" />
+                        <div className="flex flex-col items-center justify-center align-bottom">
+                          <div className="flex flex-row gap-0.5 items-center">
+                            <span className="text-xl font-light text-pinto-green-4">{audit.name}</span>
+                            <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
+                          </div>
+                          {hasDescription && (
+                            <span className="text-sm font-light text-pinto-green-4 text-center">
+                              {audit.description}
+                            </span>
+                          )}
+                        </div>
                       </Link>
                     )}
 
