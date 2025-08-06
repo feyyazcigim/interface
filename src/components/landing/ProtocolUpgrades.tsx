@@ -317,24 +317,18 @@ const audits: Audit[] = [
     auditor: "halborn",
   },
   {
-    name: "BIP-19",
-    description: "Governance Exploit Response",
-    githubLink: "https://bean.money/bip-19",
+    name: "Governance Exploit Response",
+    description: "",
+    githubLink: "",
     hashLink: "",
     date: "April 17, 2022",
+    combinedLinks: ["https://bean.money/bip-18", "https://bean.money/bip-19"],
+    combinedHashes: ["", ""],
+    descriptions: ["BIP-18", "BIP-19"],
     timestamp: new Date("April 17, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
-  },
-  {
-    name: "BIP-18",
-    description: "Governance Exploit Response",
-    githubLink: "https://bean.money/bip-18",
-    hashLink: "",
-    date: "April 17, 2022",
-    timestamp: new Date("April 17, 2022").getTime(),
-    auditHash: "",
-    auditor: "bean",
+    isCombined: true,
   },
   {
     name: "Omniscia Audit",
@@ -536,7 +530,10 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
       <div className="flex flex-row min-w-max items-center gap-4">
         {sortedAudits.map((audit, index) => {
           const { before, after } = calculateConnectingLines(index);
-          const hasDescription = audit.name.startsWith("BIP-") && audit.description && audit.description.length > 0;
+          const hasDescription =
+            (audit.name.startsWith("BIP-") || audit.name.startsWith("PI-")) &&
+            audit.description &&
+            audit.description.length > 0;
 
           return (
             <>
@@ -559,7 +556,7 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
                 ) : (
                   <>
                     {audit.isCombined ? (
-                      <div className="flex flex-col gap-0.5 absolute top-0 group text-center items-center justify-center">
+                      <div className="flex flex-col gap-0.5 absolute top-0 group text-center items-center justify-center py-2 px-4">
                         <span className="text-xl font-light text-pinto-green-4 absolute top-0 group-hover:-top-6 whitespace-nowrap transition-all transform-gpu">
                           {audit.name}
                         </span>
@@ -583,24 +580,22 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
                       </div>
                     ) : (
                       /* Audit name */
-                      <Link
-                        to={audit.githubLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex flex-col gap-0.5 text-pinto-green-4 hover:underline decoration-1 absolute top-0 whitespace-nowrap text-center items-center justify-center ${hasDescription ? "-top-2" : ""}`}
-                      >
-                        <div className="flex flex-col items-center justify-center align-bottom">
-                          <div className="flex flex-row gap-0.5 items-center">
-                            <span className="text-xl font-light text-pinto-green-4">{audit.name}</span>
-                            <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
-                          </div>
-                          {hasDescription && (
-                            <span className="text-sm font-light text-pinto-green-4 text-center">
-                              {audit.description}
-                            </span>
-                          )}
-                        </div>
-                      </Link>
+                      <div className="flex flex-col gap-0.5 absolute top-0 group text-center items-center justify-center py-2 px-4">
+                        <Link
+                          to={audit.githubLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex flex-row gap-0.5 text-pinto-green-4 group-hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 ${hasDescription ? "group-hover:-top-4" : ""} transition-all transform-gpu`}
+                        >
+                          <span className="text-xl font-light text-pinto-green-4">{audit.name}</span>
+                          <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
+                        </Link>
+                        {hasDescription && (
+                          <span className="text-sm font-light text-pinto-green-4 text-center whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:underline group-hover:cursor-pointer group-hover:-top-6 transition-all transform-gpu">
+                            {audit.description}
+                          </span>
+                        )}
+                      </div>
                     )}
 
                     {/* Connecting line */}
