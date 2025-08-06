@@ -267,6 +267,16 @@ const audits: Audit[] = [
     auditor: "halborn",
   },
   {
+    name: "BIP-21",
+    description: "Replant Beanstalk",
+    githubLink: "https://bean.money/blog/bip-21-proposal-announcement",
+    hashLink: "",
+    date: "July 29, 2022",
+    timestamp: new Date("July 29, 2022").getTime(),
+    auditHash: "",
+    auditor: "bean",
+  },
+  {
     name: "Trail Of Bits Audit",
     description: "",
     githubLink: "",
@@ -287,6 +297,16 @@ const audits: Audit[] = [
     isCombined: true,
   },
   {
+    name: "BIP-20",
+    description: "Migration of Balances",
+    githubLink: "https://bean.money/bip-20",
+    hashLink: "",
+    date: "July 15, 2022",
+    timestamp: new Date("July 15, 2022").getTime(),
+    auditHash: "",
+    auditor: "bean",
+  },
+  {
     name: "Halborn Audit",
     description: "",
     githubLink: "https://github.com/BeanstalkFarms/Beanstalk-Audits/blob/main/beanstalk/07-13-22-halborn-report.pdf",
@@ -297,6 +317,26 @@ const audits: Audit[] = [
     auditor: "halborn",
   },
   {
+    name: "BIP-19",
+    description: "Governance Exploit Response",
+    githubLink: "https://bean.money/bip-19",
+    hashLink: "",
+    date: "April 17, 2022",
+    timestamp: new Date("April 17, 2022").getTime(),
+    auditHash: "",
+    auditor: "bean",
+  },
+  {
+    name: "BIP-18",
+    description: "Governance Exploit Response",
+    githubLink: "https://bean.money/bip-18",
+    hashLink: "",
+    date: "April 17, 2022",
+    timestamp: new Date("April 17, 2022").getTime(),
+    auditHash: "",
+    auditor: "bean",
+  },
+  {
     name: "Omniscia Audit",
     description: "",
     githubLink: "https://github.com/BeanstalkFarms/Beanstalk-Audits/blob/main/beanstalk/04-02-22-omniscia-report.md",
@@ -305,6 +345,78 @@ const audits: Audit[] = [
     timestamp: new Date("April 2, 2022").getTime(),
     auditHash: "ee4720cdb449d5b6ff2b789083792c4395628674",
     auditor: "omniscia",
+  },
+  {
+    name: "BIP-15",
+    description: "Demand for Soil Improvement",
+    githubLink:
+      "https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-15-demand-for-soil-improvement.md",
+    hashLink: "",
+    date: "April 3, 2022",
+    timestamp: new Date("April 3, 2022").getTime(),
+    auditHash: "",
+    auditor: "bean",
+  },
+  {
+    name: "BIP-12",
+    description: "Silo Generalization I",
+    githubLink: "https://bean.money/bip-12",
+    hashLink: "",
+    date: "February 28, 2022",
+    timestamp: new Date("February 28, 2022").getTime(),
+    auditHash: "",
+    auditor: "bean",
+  },
+  {
+    name: "BIP-9",
+    description: "Various Efficiency Improvements",
+    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/32",
+    hashLink: "",
+    date: "January 30, 2022",
+    timestamp: new Date("January 30, 2022").getTime(),
+    auditHash: "",
+    auditor: "bean",
+  },
+  {
+    name: "BIP-7",
+    description: "Expanded Convert",
+    githubLink: "https://bean.money/bip-7",
+    hashLink: "",
+    date: "December 15, 2021",
+    timestamp: new Date("December 15, 2021").getTime(),
+    auditHash: "",
+    auditor: "bean",
+  },
+  {
+    name: "BIP-6",
+    description: "Soil Efficiency",
+    githubLink:
+      "https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-06-soil-efficiency.md",
+    hashLink: "",
+    date: "December 2, 2021",
+    timestamp: new Date("December 2, 2021").getTime(),
+    auditHash: "",
+    auditor: "bean",
+  },
+  {
+    name: "BIP-2",
+    description: "Capital Gains Tax Efficiency Improvement",
+    githubLink: "https://bean.money/bip-2",
+    hashLink: "",
+    date: "November 1, 2021",
+    timestamp: new Date("November 1, 2021").getTime(),
+    auditHash: "",
+    auditor: "bean",
+  },
+  {
+    name: "BIP-0",
+    description: "Silo Refactor",
+    githubLink: "https://bean.money/bip-0",
+    hashLink: "",
+    date: "October 15, 2021",
+    timestamp: new Date("October 15, 2021").getTime(),
+    auditHash: "",
+    auditor: "bean",
   },
 ];
 
@@ -365,7 +477,7 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
     const isCombined = nextAudit.isCombined;
 
     // If either is a year marker, minimum 3 lines
-    const minimumLines = isCombined ? 14 : isCurrentYear || isNextYear ? 4 : 3;
+    const minimumLines = isCombined ? 14 : isCurrentYear || isNextYear ? 8 : 8;
 
     // Scale lines based on time difference (1 line per day, with minimum and maximum)
     const lines = Math.min(Math.max(Math.round(daysDifference / 1), minimumLines), 15);
@@ -390,6 +502,31 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
       return () => clearTimeout(timeoutId);
     }
   }, [activeButton]);
+
+  // Add horizontal scroll wheel functionality and trackpad gestures
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Handle horizontal trackpad swipes (deltaX) and convert vertical scroll to horizontal (deltaY)
+      if (e.deltaX !== 0) {
+        // Direct horizontal scrolling from trackpad swipes
+        e.preventDefault();
+        scrollContainer.scrollLeft += e.deltaX;
+      } else if (e.deltaY !== 0) {
+        // Convert vertical scroll wheel to horizontal scroll
+        e.preventDefault();
+        scrollContainer.scrollLeft += e.deltaY;
+      }
+    };
+
+    scrollContainer.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      scrollContainer.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
 
   return (
     <div
