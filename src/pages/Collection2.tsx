@@ -14,7 +14,6 @@ import { useNFTImage } from "@/hooks/useNFTImage";
 import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
-type CollectionFilter = "all" | "genesis";
 type ViewMode = "owned" | "all";
 
 interface NFTData {
@@ -22,9 +21,8 @@ interface NFTData {
   contractAddress: string;
 }
 
-export default function Collection() {
+export default function Collection2() {
   const { address } = useAccount();
-  const [activeFilter, setActiveFilter] = useState<CollectionFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("owned");
   const [userBeavers, setUserBeavers] = useState<NFTData[]>([]);
   const [allBeavers, setAllBeavers] = useState<NFTData[]>([]);
@@ -39,8 +37,8 @@ export default function Collection() {
   } = useNFTImage(selectedNFT?.contractAddress || "", selectedNFT?.id || 0);
 
   // Log wallet connection status
-  console.log("Collection page - Connected address:", address);
-  console.log("Collection page - Pinto Beavers contract:", PINTO_BEAVERS_CONTRACT);
+  console.log("Collection2 page - Connected address:", address);
+  console.log("Collection2 page - Pinto Beavers contract:", PINTO_BEAVERS_CONTRACT);
 
   // Query user's NFT balance
   const {
@@ -168,10 +166,6 @@ export default function Collection() {
     }
   }, [allTokenIds, totalSupply, allTokenError]);
 
-  const handleFilterToggle = (filter: CollectionFilter) => {
-    setActiveFilter(activeFilter === filter ? "all" : filter);
-  };
-
   const handleNFTClick = (beaver: any) => {
     console.log("NFT clicked:", beaver);
     setSelectedNFT(beaver);
@@ -268,51 +262,20 @@ export default function Collection() {
               {viewMode === "owned" ? "My Collection" : `${getCollectionName(PINTO_BEAVERS_CONTRACT)}s Collection`}
             </div>
             <div className="pinto-sm sm:pinto-body-light text-pinto-light">
-              {viewMode === "owned"
-                ? `Your collection of ${getCollectionName(PINTO_BEAVERS_CONTRACT)}s.`
-                : `Browse all ${getCollectionName(PINTO_BEAVERS_CONTRACT)}s.`}
+              {viewMode === "owned" ? `Your collection of Pinto NFTs.` : `Browse all Pinto NFTs.`}
             </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => handleFilterToggle("genesis")}
-              className={`rounded-full font-medium px-6 py-2 ${
-                activeFilter === "genesis"
-                  ? "bg-pinto-green-1 text-pinto-green-3 border-pinto-green-3 hover:bg-pinto-green-1/90"
-                  : "hover:bg-pinto-green-1/50 hover:text-pinto-gray-4"
-              }`}
-            >
-              {getCollectionName(PINTO_BEAVERS_CONTRACT)}s
-            </Button>
-            {viewMode === "owned" && (
-              <Button
-                variant="outline"
-                onClick={() => handleFilterToggle("all")}
-                className={`rounded-full font-medium px-6 py-2 ${
-                  activeFilter === "all"
-                    ? "bg-pinto-green-1 text-pinto-green-3 border-pinto-green-3 hover:bg-pinto-green-1/90"
-                    : "hover:bg-pinto-green-1/50 hover:text-pinto-gray-4"
-                }`}
-              >
-                All
-              </Button>
-            )}
           </div>
 
           {/* Toggle link above separator */}
-          {activeFilter === "genesis" && (
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={handleViewModeToggle}
-                className="text-pinto-green-4 hover:text-pinto-green-3 pinto-sm font-medium"
-              >
-                {viewMode === "owned" ? "View All in Collection" : "View My Collection"}
-              </button>
-            </div>
-          )}
+          {/* <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleViewModeToggle}
+              className="text-pinto-green-4 hover:text-pinto-green-3 pinto-sm font-medium"
+            >
+              {viewMode === "owned" ? "View All in Collection" : "View My Collection"}
+            </button>
+          </div> */}
 
           <Separator />
 
@@ -361,12 +324,6 @@ export default function Collection() {
                   <span className="text-sm sm:pinto-sm font-medium">Token ID:</span>
                   <span className="text-sm sm:pinto-sm text-pinto-light ml-2">#{selectedNFT?.id}</span>
                 </div>
-                {selectedMetadata?.description && (
-                  <div>
-                    <span className="text-sm sm:pinto-sm font-medium">Description:</span>
-                    <p className="text-sm sm:pinto-sm text-pinto-light mt-1">{selectedMetadata.description}</p>
-                  </div>
-                )}
                 <div>
                   <span className="text-sm sm:pinto-sm font-medium">Contract:</span>
                   <a

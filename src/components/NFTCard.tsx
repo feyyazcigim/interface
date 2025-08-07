@@ -75,12 +75,7 @@ export const NFTCard = ({ contractAddress, tokenId, onClick, showOwned = false, 
 
         {/* NFT Info */}
         <div className="p-2 sm:p-3">
-          <div className="text-xs sm:pinto-xs font-medium mb-1">
-            {metadata?.name || `${getCollectionName(contractAddress)} #${tokenId}`}
-          </div>
-          {metadata?.description && (
-            <div className="text-xs sm:pinto-xs text-pinto-light line-clamp-2">{metadata.description}</div>
-          )}
+          <div className="text-xs sm:pinto-xs font-medium mb-1">#{tokenId}</div>
         </div>
       </CardContent>
     </Card>

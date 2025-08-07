@@ -51,13 +51,11 @@ const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
             className={`flex flex-row gap-0.5 sm:gap-2 items-center ${isOpen && "border-pinto-green"} ${className}`}
             ref={ref}
           >
-            {/* NFT Profile Picture - show instead of ENS avatar if user has NFT */}
-            {hasNFT && profileImageUrl && address ? (
-              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-white flex-shrink-0">
-                <img src={profileImageUrl} alt="NFT Profile" className="w-full h-full object-cover" />
+            {/* Question mark icon instead of profile picture */}
+            {address && (
+              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-white flex-shrink-0 flex items-center justify-center">
+                <span className="text-gray-500 font-semibold text-sm">?</span>
               </div>
-            ) : (
-              ensAvatar && <Avatar address={address} size={28} />
             )}
 
             <>

@@ -80,6 +80,9 @@ const AppNavi = () => {
           <NavigationMenuItem>
             <Link href={navLinks.sPinto}>sPinto</Link>
           </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href={navLinks.collection}>Collection</Link>
+          </NavigationMenuItem>
           {isDev() && (
             <NavigationMenuItem>
               <Link href="/dev">Dev</Link>

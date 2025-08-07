@@ -7,7 +7,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Navbar from "./components/nav/nav/Navbar";
 import { externalLinks } from "./constants/links";
 import Collection from "./pages/Collection";
-import CollectionSoon from "./pages/CollectionSoon";
+import Collection2 from "./pages/Collection2";
 import Error404 from "./pages/Error404";
 import Explorer from "./pages/Explorer";
 import Field from "./pages/Field";
@@ -149,10 +149,10 @@ function ProtectedLayout() {
         }
       />
       <Route
-        path="/collectionsoon"
+        path="/collection2"
         element={
-          <PageMetaWrapper metaKey="collectionsoon">
-            <CollectionSoon />
+          <PageMetaWrapper metaKey="beavers">
+            <Collection2 />
           </PageMetaWrapper>
         }
       />
