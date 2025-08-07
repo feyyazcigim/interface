@@ -22,6 +22,7 @@ interface Audit {
   combinedHashes?: string[];
   combinedLinks?: string[];
   descriptions?: string[];
+  customLines?: { before?: number; after?: number };
 }
 
 // Pinto Improvement Proposals
@@ -443,6 +444,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     isCombined: true,
+    customLines: { after: 12 },
   },
   {
     name: "BIP-17",
@@ -835,6 +837,7 @@ const regularAudits: Audit[] = [
     timestamp: new Date("December 13, 2022").getTime(),
     auditHash: "6699e071626a17283facc67242536037989ecd91",
     auditor: "halborn",
+    customLines: { before: 6, after: 10 },
   },
   {
     name: "Trail Of Bits Audit",
@@ -879,9 +882,30 @@ const regularAudits: Audit[] = [
 ];
 
 // Combine all audits and sort by timestamp (most recent first)
-const audits: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...regularAudits].sort(
-  (a, b) => b.timestamp - a.timestamp,
-);
+// If timestamps are equal, sort by audit number (lowest number first)
+const audits: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...regularAudits].sort((a, b) => {
+  // Primary sort: timestamp (most recent first)
+  if (a.timestamp !== b.timestamp) {
+    return b.timestamp - a.timestamp;
+  }
+
+  // Secondary sort: extract numbers from audit names for same timestamps
+  const getAuditNumber = (name: string): number => {
+    const match = name.match(/(?:BIP|PI|EBIP)-(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
+
+  const aNumber = getAuditNumber(a.name);
+  const bNumber = getAuditNumber(b.name);
+
+  // If both have numbers, sort by number (lowest first)
+  if (aNumber && bNumber) {
+    return aNumber - bNumber;
+  }
+
+  // Fallback to alphabetical sort
+  return a.name.localeCompare(b.name);
+});
 
 export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -920,14 +944,28 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
   };
 
   const calculateConnectingLines = (index: number) => {
+    const currentAudit = sortedAudits[index];
+    const nextAudit = sortedAudits[index + 1];
+
+    // Check if current audit has custom lines specified
+    if (currentAudit.customLines) {
+      const customBefore = currentAudit.customLines.before ?? 0;
+      const customAfter = currentAudit.customLines.after ?? 10;
+
+      // For first entry, use custom before value
+      if (index === 0) return { before: customBefore, after: customAfter };
+
+      // For last entry, use custom after value
+      if (index === sortedAudits.length - 1) return { before: customBefore, after: customAfter };
+
+      return { before: customBefore, after: customAfter };
+    }
+
     // First entry: always 10 lines before
     if (index === 0) return { before: 10, after: 10 };
 
     // Last entry: always 10 lines after
     if (index === sortedAudits.length - 1) return { before: 0, after: 10 };
-
-    const currentAudit = sortedAudits[index];
-    const nextAudit = sortedAudits[index + 1];
 
     // Calculate time difference in days between current and next audit
     const currentTimestamp = currentAudit.timestamp;
@@ -940,7 +978,7 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
     const isCombined = nextAudit.isCombined;
 
     // If either is a year marker, minimum 3 lines
-    const minimumLines = isCombined ? 14 : isCurrentYear || isNextYear ? 12 : 12;
+    const minimumLines = isCombined ? 14 : isCurrentYear || isNextYear ? 4 : 6;
 
     // Scale lines based on time difference (1 line per day, with minimum and maximum)
     const lines = Math.min(Math.max(Math.round(daysDifference / 1), minimumLines), 15);
@@ -1049,18 +1087,18 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
                       </div>
                     ) : (
                       /* Audit name */
-                      <div className="flex flex-col gap-0.5 absolute top-0 group text-center items-center justify-center py-2 px-4">
+                      <div className="flex flex-col-reverse gap-0.5 absolute top-0 text-center items-center justify-center py-2 px-4">
                         <Link
                           to={audit.githubLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`flex flex-row gap-0.5 text-pinto-green-4 group-hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 ${hasDescription ? "group-hover:-top-4" : ""} transition-all transform-gpu`}
+                          className={`flex flex-row gap-0.5 text-pinto-green-4 peer hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 transition-all transform-gpu`}
                         >
                           <span className="text-xl font-light text-pinto-green-4">{audit.name}</span>
                           <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
                         </Link>
                         {hasDescription && (
-                          <span className="text-sm font-light text-pinto-green-4 text-center whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:underline group-hover:cursor-pointer group-hover:-top-6 transition-all transform-gpu">
+                          <span className="text-sm font-light text-pinto-green-4 text-center whitespace-nowrap opacity-0 peer-hover:opacity-100 peer-hover:underline peer-hover:cursor-pointer absolute top-0 peer-hover:-top-6 transition-all transform-gpu pointer-events-none">
                             {audit.description}
                           </span>
                         )}
