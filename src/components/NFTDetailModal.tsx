@@ -65,7 +65,9 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <h1 className="pinto-h3 sm:pinto-h2 text-pinto-dark mb-1 truncate">
-                    {selectedMetadata?.name || `${getCollectionName(selectedNFT.contractAddress)} #${selectedNFT.id}`}
+                    {
+                      /*selectedMetadata?.name || */ `${getCollectionName(selectedNFT.contractAddress)} #${selectedNFT.id}`
+                    }
                   </h1>
                   <p className="pinto-xs sm:pinto-sm text-pinto-light">
                     {getCollectionName(selectedNFT.contractAddress)}
