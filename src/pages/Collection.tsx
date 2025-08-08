@@ -1,5 +1,6 @@
 import openSeaLogo from "@/assets/misc/opensea-logo.svg";
 import { NFTCard } from "@/components/NFTCard";
+import { NFTCardFlipReveal } from "@/components/NFTCardFlipReveal";
 import { TraitsCard } from "@/components/TraitsCard";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -10,6 +11,7 @@ import { abiSnippets } from "@/constants/abiSnippets";
 import { NFT_COLLECTION_1_CONTRACT } from "@/constants/address";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
+import { useCardFlipAnimation } from "@/hooks/useCardFlipAnimation";
 import { useNFTImage } from "@/hooks/useNFTImage";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -169,6 +171,20 @@ export default function Collection() {
     }
   }, [allTokenIds, totalSupply, allTokenError]);
 
+  // Check if user has NFTs and setup reveal animation
+  const hasNFTs = balance && Number(balance) > 0;
+  const firstNFT = userNFTs[0];
+
+  const { shouldShowAnimation, hasSeenAnimation, resetAnimation } = useCardFlipAnimation(address, !!hasNFTs);
+
+  // Add reset button for testing (development only)
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      (window as any).__resetCardFlip = resetAnimation;
+      console.log("Dev helper: Use window.__resetCardFlip() to reset the card flip animation");
+    }
+  }, [resetAnimation]);
+
   const handleFilterToggle = (filter: CollectionFilter) => {
     setActiveFilter(activeFilter === filter ? "all" : filter);
   };
@@ -213,7 +229,13 @@ export default function Collection() {
   );
 
   const NFTsGrid = () => {
-    const displayNFTs = viewMode === "owned" ? userNFTs : allNFTs;
+    let displayNFTs = viewMode === "owned" ? userNFTs : allNFTs;
+
+    // Hide NFTs from grid if user hasn't seen the reveal animation yet
+    if (hasNFTs && !hasSeenAnimation && viewMode === "owned") {
+      displayNFTs = [];
+    }
+
     const gridCols =
       viewMode === "all"
         ? "grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8"
@@ -245,9 +267,9 @@ export default function Collection() {
         <div className="flex flex-col w-full mt-4 sm:mt-0">
           <div className="flex flex-col self-center w-full gap-4 mb-20 sm:mb-0 sm:gap-8">
             <div className="flex flex-col gap-y-3">
-              <div className="pinto-h2 sm:pinto-h1">My Collection</div>
+              <div className="pinto-h2 sm:pinto-h1">My Pinto Beavers</div>
               <div className="pinto-sm sm:pinto-body-light text-pinto-light">
-                Connect your wallet to view your collection of Pinto NFTs.
+                Connect your wallet to view your collection of Pinto Beavers.
               </div>
             </div>
             <Separator />
@@ -270,11 +292,13 @@ export default function Collection() {
         <div className="flex flex-col self-center w-full gap-4 mb-20 sm:mb-0 sm:gap-8">
           <div className="flex flex-col gap-y-3">
             <div className="pinto-h2 sm:pinto-h1">
-              {viewMode === "owned" ? "My Collection" : `${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s Collection`}
+              {viewMode === "owned"
+                ? "My Pinto Beavers"
+                : `${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s Collection`}
             </div>
             <div className="pinto-sm sm:pinto-body-light text-pinto-light">
               {viewMode === "owned"
-                ? `Your collection of ${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s.`
+                ? "My Collection of Pinto Beaver NFTs"
                 : `Browse all ${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s.`}
             </div>
           </div>
@@ -322,6 +346,26 @@ export default function Collection() {
             */}
 
           <Separator />
+
+          {/* Development Controls */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <div className="text-sm font-medium text-yellow-800 mb-2">Development Controls</div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetAnimation}
+                  className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
+                >
+                  Reset Card Flip Animation
+                </Button>
+                <div className="text-xs text-yellow-600 self-center">
+                  Clears localStorage and allows animation to replay
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="mt-4">
             {(viewMode === "owned" ? userNFTs : allNFTs).length === 0 ? <EmptyState /> : <NFTsGrid />}
@@ -443,6 +487,16 @@ export default function Collection() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* NFT Card Flip Reveal Animation Overlay */}
+      {shouldShowAnimation && firstNFT && (
+        <NFTCardFlipReveal
+          contractAddress={firstNFT.contractAddress}
+          tokenId={firstNFT.id}
+          address={address}
+          hasNFTs={!!hasNFTs}
+        />
+      )}
     </PageContainer>
   );
 }
