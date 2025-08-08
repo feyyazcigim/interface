@@ -7,7 +7,6 @@ import ScrollToTop from "./components/ScrollToTop";
 import Navbar from "./components/nav/nav/Navbar";
 import { externalLinks } from "./constants/links";
 import Collection from "./pages/Collection";
-import Collection2 from "./pages/Collection2";
 import Error404 from "./pages/Error404";
 import Explorer from "./pages/Explorer";
 import Field from "./pages/Field";
