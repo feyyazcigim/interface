@@ -28,4 +28,4 @@ export const WELL_FUNCTION_ADDRESSES: ChainLookup<{
   },
 } as const;
 
-export const PINTO_BEAVERS_CONTRACT: HashString = "0xF8E74deFE094095eA0fa68F8e201c585F11e3273";
+export const NFT_COLLECTION_1_CONTRACT: HashString = "0x90DDaf07dF526Ba7F607D3870596528c8903a44d";
