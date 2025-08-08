@@ -1010,18 +1010,44 @@ const NFTCollectionToggle = () => {
     );
   };
 
+  const handleResetCardFlip = () => {
+    // Clear the card flip animation storage for all addresses
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("card-flip-animation-")) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+    toast.success("Card flip animation reset - will replay on next visit");
+    console.log("Cleared card flip animation storage for all addresses");
+  };
+
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex flex-col">
-        <span className="text-sm font-medium">Enable NFT Collection</span>
-        <span className="text-xs text-gray-500">Override launch date to show collection page</span>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">Enable NFT Collection</span>
+          <span className="text-xs text-gray-500">Override launch date to show collection page</span>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => window.open("/collection", "_blank")}>
+            Visit Page
+          </Button>
+          <Button variant={enabled ? "default" : "outline"} size="sm" onClick={handleToggle}>
+            {enabled ? "Enabled" : "Disabled"}
+          </Button>
+        </div>
       </div>
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={() => window.open("/collection", "_blank")}>
-          Visit Page
-        </Button>
-        <Button variant={enabled ? "default" : "outline"} size="sm" onClick={handleToggle}>
-          {enabled ? "Enabled" : "Disabled"}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">Reset Card Flip Animation</span>
+          <span className="text-xs text-gray-500">Clears localStorage to allow first-time animation to replay</span>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleResetCardFlip}>
+          Reset Animation
         </Button>
       </div>
     </div>

@@ -74,9 +74,11 @@ export const NFTCard = ({ contractAddress, tokenId, onClick, showOwned = false, 
         </div>
 
         {/* NFT Info */}
+        {/* Temporarily commented out - uncomment to show token ID
         <div className="p-2 sm:p-3">
           <div className="text-xs sm:pinto-xs font-medium mb-1">#{tokenId}</div>
         </div>
+        */}
       </CardContent>
     </Card>
   );
