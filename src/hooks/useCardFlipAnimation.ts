@@ -20,7 +20,7 @@ export function useCardFlipAnimation(
   hasNFTs: boolean,
   options: UseCardFlipAnimationOptions = {},
 ) {
-  const { enabled = true, flipDuration = 5000, fadeDelay = 500 } = options;
+  const { enabled = true, flipDuration = 4500, fadeDelay = 500 } = options;
 
   // Create a unique key per wallet address to track animation state
   const storageKey = address ? `nft-card-flip-${address.toLowerCase()}` : "nft-card-flip-default";

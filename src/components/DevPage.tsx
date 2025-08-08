@@ -990,57 +990,28 @@ export default function DevPage() {
 }
 
 const NFTCollectionToggle = () => {
-  const [enabled, setEnabled] = useState(() => {
-    return localStorage.getItem("nft-collection-dev-enabled") === "true";
-  });
-
-  const handleToggle = () => {
-    const newValue = !enabled;
-    setEnabled(newValue);
-    localStorage.setItem("nft-collection-dev-enabled", newValue.toString());
-
-    // Dispatch custom event to notify other components
-    window.dispatchEvent(new CustomEvent("nft-collection-toggle", { detail: { enabled: newValue } }));
-
-    console.log(
-      "NFT Collection toggle:",
-      newValue,
-      "localStorage:",
-      localStorage.getItem("nft-collection-dev-enabled"),
-    );
-  };
-
   const handleResetCardFlip = () => {
+    console.log("Reset button clicked!"); // Debug log
+
     // Clear the card flip animation storage for all addresses
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith("card-flip-animation-")) {
+      if (key && key.startsWith("nft-card-flip-")) {
         keysToRemove.push(key);
       }
     }
+
+    console.log("Keys to remove:", keysToRemove); // Debug log
     keysToRemove.forEach((key) => localStorage.removeItem(key));
+    console.log("Keys removed from localStorage"); // Debug log
 
     toast.success("Card flip animation reset - will replay on next visit");
-    console.log("Cleared card flip animation storage for all addresses");
+    console.log("Toast should have been shown"); // Debug log
   };
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col">
-          <span className="text-sm font-medium">Enable NFT Collection</span>
-          <span className="text-xs text-gray-500">Override launch date to show collection page</span>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => window.open("/collection", "_blank")}>
-            Visit Page
-          </Button>
-          <Button variant={enabled ? "default" : "outline"} size="sm" onClick={handleToggle}>
-            {enabled ? "Enabled" : "Disabled"}
-          </Button>
-        </div>
-      </div>
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-sm font-medium">Reset Card Flip Animation</span>

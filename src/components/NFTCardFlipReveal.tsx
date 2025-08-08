@@ -74,10 +74,14 @@ export function NFTCardFlipReveal({ contractAddress, tokenId, address, hasNFTs, 
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 backdrop-blur-md z-50 flex items-center justify-center p-4"
           style={{
             perspective: "1000px",
             transformStyle: "preserve-3d",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
           }}
         >
           <div className="relative">
@@ -105,19 +109,21 @@ export function NFTCardFlipReveal({ contractAddress, tokenId, address, hasNFTs, 
                     className="relative w-full h-full"
                     style={{ transformStyle: "preserve-3d" }}
                     animate={{
-                      rotateY: isFlipping ? 1980 : isShowingNFT ? 180 : 0, // Stay at 180deg when showing NFT
+                      rotateY: isFlipping ? 1980 : isShowingNFT ? 180 : 0, // 5 full rotations then land on NFT
                     }}
                     transition={
                       isFlipping
                         ? {
-                            duration: 5,
-                            ease: [0.25, 0.1, 0.25, 1], // Much slower deceleration at the end
-                            times: [0, 0.2, 0.8, 1], // Fast start, very slow end
+                            duration: 5, // Total spin duration
+                            // ease: [0.25, 0.46, 0.45, 0.94], // Fast start, very slow smooth end
+                            // Alternative easing options to try:
+                            ease: [0.17, 0.67, 0.15, 1], // More dramatic slowdown
+                            // ease: [0.5, 0, 0.15, 1], // Very fast start, gradual slowdown
+                            // ease: "easeOut", // Simple but effective
                           }
                         : isShowingNFT
                           ? {
-                              duration: 0.1, // Instant snap to NFT position
-                              ease: "linear",
+                              duration: 0.0, // Immediate - no animation
                             }
                           : {
                               duration: 0.5, // Normal transition for cleanup
