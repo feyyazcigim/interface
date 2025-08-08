@@ -348,6 +348,15 @@ export default function LandingChart() {
       <div ref={containerRef} className="w-full relative">
         <svg width="100%" height={height} viewBox={`0 0 ${viewportWidth} ${height}`} style={{ overflow: "visible" }}>
           <defs>
+            <linearGradient id="fadeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="white" stopOpacity="0" />
+              <stop offset="20%" stopColor="white" stopOpacity="1" />
+              <stop offset="80%" stopColor="white" stopOpacity="1" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
+            </linearGradient>
+            <mask id="fadeMask" maskUnits="userSpaceOnUse">
+              <rect width="100%" height="100%" fill="url(#fadeGradient)" />
+            </mask>
             <pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse">
               <path d="M 72 0 L 0 0 0 72" fill="none" stroke="#D9D9D9" strokeWidth="1" />
             </pattern>
@@ -360,22 +369,22 @@ export default function LandingChart() {
             width="100%"
             height="100%"
             fill="url(#grid)"
+            mask="url(#fadeMask)"
             initial={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
             animate={{ opacity: 1, clipPath: "inset(0 0 0 0)" }}
             transition={{ duration: 3, ease: "easeInOut", delay: 2 }}
           />
           {/* Measurement line at 75% */}
-          <motion.line
-            x1={measurementX}
-            y1={0}
-            x2={measurementX}
-            y2={height}
+          <motion.path
+            d={`M ${measurementX} 0 L ${measurementX} ${height}`}
             stroke="#387F5C"
             strokeWidth="2"
             strokeDasharray="3,3"
-            initial={{ clipPath: "inset(0 0 100% 0)" }}
+            fill="none"
+            mask="url(#fadeMask)"
+            initial={{ clipPath: "inset(100% 0 0 0)" }}
             animate={{ clipPath: "inset(0 0 0 0)" }}
-            transition={{ duration: 0.5, ease: "easeInOut", delay: 4.5 }}
+            transition={{ duration: 4, ease: "easeInOut", delay: 4.5 }}
           />
           {/* Scrolling price line */}
           <g clipPath="url(#viewport)">
