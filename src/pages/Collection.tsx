@@ -20,6 +20,63 @@ interface NFTData {
   contractAddress: string;
 }
 
+interface NFTsGridProps {
+  nfts: NFTData[];
+  viewMode: ViewMode;
+  userNFTs: NFTData[];
+  onNFTClick: (nft: NFTData) => void;
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-4">
+      <div className="text-center max-w-md">
+        <div className="pinto-h3 mb-4 text-pinto-dark">No NFT Found</div>
+        <div className="pinto-body text-pinto-light mb-6">You can purchase one from a NFT marketplace.</div>
+        <Button
+          asChild
+          variant="outline"
+          className="rounded-[0.75rem] font-medium inline-flex items-center gap-2 bg-[#0086FF] hover:bg-[#0074E0] hover:text-white text-white border-[#0086FF] hover:border-[#0074E0]"
+        >
+          <Link to={externalLinks.nftMarketplace} target="_blank" rel="noopener noreferrer" className="text-white">
+            <img src={openSeaLogo} alt="OpenSea" className="w-5 h-5" />
+            Visit OpenSea
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function NFTsGrid({ nfts, viewMode, userNFTs, onNFTClick }: NFTsGridProps) {
+  const gridCols = useMemo(
+    () =>
+      viewMode === "all"
+        ? "grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8"
+        : "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4",
+    [viewMode],
+  );
+
+  return (
+    <div className={`grid ${gridCols} gap-2 sm:gap-4`}>
+      {nfts.map((nft, index) => {
+        const isOwned = viewMode === "all" && userNFTs.some((owned) => owned.id === nft.id);
+
+        return (
+          <NFTCard
+            key={`${nft.contractAddress}-${nft.id}`}
+            contractAddress={nft.contractAddress}
+            tokenId={nft.id}
+            onClick={() => onNFTClick(nft)}
+            showOwned={viewMode === "all"}
+            isOwned={isOwned}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Collection() {
   const { address } = useAccount();
   const [activeFilter, setActiveFilter] = useState<CollectionFilter>("all");
@@ -70,15 +127,18 @@ export default function Collection() {
   });
 
   // Query actual token IDs owned by user
-  const userTokenQueries =
-    balance && Number(balance) > 0 && address
-      ? Array.from({ length: Number(balance) }, (_, index) => ({
-          address: NFT_COLLECTION_1_CONTRACT,
-          abi: abiSnippets.erc721Enum,
-          functionName: "tokenOfOwnerByIndex",
-          args: [address, BigInt(index)],
-        }))
-      : [];
+  const userTokenQueries = useMemo(
+    () =>
+      balance && Number(balance) > 0 && address
+        ? Array.from({ length: Number(balance) }, (_, index) => ({
+            address: NFT_COLLECTION_1_CONTRACT,
+            abi: abiSnippets.erc721Enum,
+            functionName: "tokenOfOwnerByIndex",
+            args: [address, BigInt(index)],
+          }))
+        : [],
+    [balance, address],
+  );
 
   const { data: userTokenIds, error: userTokenError } = useReadContracts({
     contracts: userTokenQueries,
@@ -115,15 +175,18 @@ export default function Collection() {
   }, [userTokenIds, balance, userTokenError]);
 
   // Query actual token IDs for all tokens in collection
-  const allTokenQueries =
-    totalSupply && Number(totalSupply) > 0
-      ? Array.from({ length: Number(totalSupply) }, (_, index) => ({
-          address: NFT_COLLECTION_1_CONTRACT,
-          abi: abiSnippets.erc721Enum,
-          functionName: "tokenByIndex",
-          args: [BigInt(index)],
-        }))
-      : [];
+  const allTokenQueries = useMemo(
+    () =>
+      totalSupply && Number(totalSupply) > 0
+        ? Array.from({ length: Number(totalSupply) }, (_, index) => ({
+            address: NFT_COLLECTION_1_CONTRACT,
+            abi: abiSnippets.erc721Enum,
+            functionName: "tokenByIndex",
+            args: [BigInt(index)],
+          }))
+        : [],
+    [totalSupply],
+  );
 
   const { data: allTokenIds, error: allTokenError } = useReadContracts({
     contracts: allTokenQueries,
@@ -183,56 +246,7 @@ export default function Collection() {
     console.log("View mode changed to:", newMode);
   };
 
-  const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="text-center max-w-md">
-        <div className="pinto-h3 mb-4 text-pinto-dark">No NFT Found</div>
-        <div className="pinto-body text-pinto-light mb-6">You can purchase one from a NFT marketplace.</div>
-        <Button
-          asChild
-          variant="outline"
-          className="rounded-[0.75rem] font-medium inline-flex items-center gap-2 bg-[#0086FF] hover:bg-[#0074E0] hover:text-white text-white border-[#0086FF] hover:border-[#0074E0]"
-        >
-          <Link to={externalLinks.nftMarketplace} target="_blank" rel="noopener noreferrer" className="text-white">
-            <img src={openSeaLogo} alt="OpenSea" className="w-5 h-5" />
-            Visit OpenSea
-          </Link>
-        </Button>
-      </div>
-    </div>
-  );
-
   const displayNFTs = useMemo(() => (viewMode === "owned" ? userNFTs : allNFTs), [viewMode, userNFTs, allNFTs]);
-
-  const gridCols = useMemo(
-    () =>
-      viewMode === "all"
-        ? "grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8"
-        : "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4",
-    [viewMode],
-  );
-
-  const NFTsGrid = useMemo(
-    () => (
-      <div className={`grid ${gridCols} gap-2 sm:gap-4`}>
-        {displayNFTs.map((nft, index) => {
-          const isOwned = viewMode === "all" && userNFTs.some((owned) => owned.id === nft.id);
-
-          return (
-            <NFTCard
-              key={`${nft.contractAddress}-${nft.id}`}
-              contractAddress={nft.contractAddress}
-              tokenId={nft.id}
-              onClick={() => handleNFTClick(nft)}
-              showOwned={viewMode === "all"}
-              isOwned={isOwned}
-            />
-          );
-        })}
-      </div>
-    ),
-    [displayNFTs, gridCols, viewMode, userNFTs, handleNFTClick],
-  );
 
   if (!address) {
     return (
@@ -318,7 +332,13 @@ export default function Collection() {
 
           <Separator />
 
-          <div className="mt-4">{displayNFTs.length === 0 ? <EmptyState /> : NFTsGrid}</div>
+          <div className="mt-4">
+            {displayNFTs.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <NFTsGrid nfts={displayNFTs} viewMode={viewMode} userNFTs={userNFTs} onNFTClick={handleNFTClick} />
+            )}
+          </div>
         </div>
       </div>
 
