@@ -48,7 +48,7 @@ const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
             variant="outline-secondary"
             noShrink
             rounded="full"
-            className={`flex flex-row gap-0.5 sm:gap-2 items-center ${isOpen && "border-pinto-green"} ${className}`}
+            className={`flex flex-row gap-0.5 sm:gap-2 items-center ${isOpen && "border-pinto-green"} ${className} ${hasNFT ? "-ml-8" : ""}`}
             ref={ref}
           >
             {/* Question mark icon instead of profile picture */}
