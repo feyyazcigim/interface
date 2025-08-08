@@ -61,7 +61,7 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
           {/* Right Panel - NFT Details */}
           <div className="flex-1 lg:flex-[2] bg-white flex flex-col h-auto overflow-y-auto scrollbar-none">
             {/* Header */}
-            <div className="sticky top-0 bg-white z-10 px-3 pt-3 sm:px-4 sm:pt-4 lg:px-6 lg:pt-6">
+            <div className="sticky top-0 bg-white z-10 pl-3 pt-3 sm:pl-4 sm:pt-4 lg:pl-6 lg:pt-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <h1 className="pinto-h3 sm:pinto-h2 text-pinto-dark mb-1 truncate">
@@ -75,7 +75,7 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
             </div>
 
             {/* Content */}
-            <div className="flex flex-col p-3 sm:p-4 lg:p-6 gap-6">
+            <div className="flex flex-col pl-3 pt-3 sm:pl-4 sm:pt-4 lg:pl-6 lg:pt-6 gap-6">
               <Separator />
 
               {/* Action Section */}

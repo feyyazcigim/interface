@@ -4,21 +4,15 @@ import { NFTDetailModal } from "@/components/NFTDetailModal";
 import { Button } from "@/components/ui/Button";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
-import { abiSnippets } from "@/constants/abiSnippets";
 import { NFT_COLLECTION_1_CONTRACT } from "@/constants/address";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { type NFTData, type ViewMode, useNFTData } from "@/state/useNFTData";
+import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAccount, useReadContract, useReadContracts } from "wagmi";
+import { useAccount } from "wagmi";
 
 type CollectionFilter = "all" | "genesis";
-type ViewMode = "owned" | "all";
-
-interface NFTData {
-  id: number;
-  contractAddress: string;
-}
 
 interface NFTsGridProps {
   nfts: NFTData[];
@@ -81,146 +75,17 @@ export default function Collection() {
   const { address } = useAccount();
   const [activeFilter, setActiveFilter] = useState<CollectionFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("owned");
-  const [userNFTs, setUserNFTs] = useState<NFTData[]>([]);
-  const [allNFTs, setAllNFTs] = useState<NFTData[]>([]);
   const [selectedNFT, setSelectedNFT] = useState<NFTData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { userNFTs, allNFTs, displayNFTs, balance, totalSupply, loading, error } = useNFTData({
+    contractAddress: NFT_COLLECTION_1_CONTRACT,
+    viewMode,
+  });
 
   // Log wallet connection status
   console.log("Collection page - Connected address:", address);
   console.log("Collection page - Pinto NFTs contract:", NFT_COLLECTION_1_CONTRACT);
-
-  // Query user's NFT balance
-  const {
-    data: balance,
-    error: balanceError,
-    isLoading: balanceLoading,
-  } = useReadContract({
-    address: NFT_COLLECTION_1_CONTRACT,
-    abi: abiSnippets.erc721Enum,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-  });
-
-  // Query total supply of NFTs
-  const {
-    data: totalSupply,
-    error: totalSupplyError,
-    isLoading: totalSupplyLoading,
-  } = useReadContract({
-    address: NFT_COLLECTION_1_CONTRACT,
-    abi: abiSnippets.erc721Enum,
-    functionName: "totalSupply",
-  });
-
-  console.log("NFT Balance Query:", {
-    balance: balance?.toString(),
-    error: balanceError,
-    isLoading: balanceLoading,
-    address,
-  });
-
-  console.log("Total Supply Query:", {
-    totalSupply: totalSupply?.toString(),
-    error: totalSupplyError,
-    isLoading: totalSupplyLoading,
-  });
-
-  // Query actual token IDs owned by user
-  const userTokenQueries = useMemo(
-    () =>
-      balance && Number(balance) > 0 && address
-        ? Array.from({ length: Number(balance) }, (_, index) => ({
-            address: NFT_COLLECTION_1_CONTRACT,
-            abi: abiSnippets.erc721Enum,
-            functionName: "tokenOfOwnerByIndex",
-            args: [address, BigInt(index)],
-          }))
-        : [],
-    [balance, address],
-  );
-
-  const { data: userTokenIds, error: userTokenError } = useReadContracts({
-    contracts: userTokenQueries,
-    query: {
-      enabled: userTokenQueries.length > 0,
-    },
-  });
-
-  useEffect(() => {
-    if (userTokenIds && userTokenIds.length > 0) {
-      console.log("Raw user token IDs response:", userTokenIds);
-      const userNFTs = userTokenIds
-        .map((result, index) => {
-          if (result.status === "success" && result.result) {
-            const tokenId = Number(result.result);
-            console.log(`User owns token ID: ${tokenId}`);
-            return {
-              id: tokenId,
-              contractAddress: NFT_COLLECTION_1_CONTRACT,
-            };
-          }
-          return null;
-        })
-        .filter(Boolean) as NFTData[];
-
-      setUserNFTs(userNFTs);
-      console.log("User NFTs with real token IDs:", userNFTs);
-    } else if (balance && Number(balance) === 0) {
-      console.log("User has 0 NFTs");
-      setUserNFTs([]);
-    } else if (userTokenError) {
-      console.error("Error fetching user token IDs:", userTokenError);
-    }
-  }, [userTokenIds, balance, userTokenError]);
-
-  // Query actual token IDs for all tokens in collection
-  const allTokenQueries = useMemo(
-    () =>
-      totalSupply && Number(totalSupply) > 0
-        ? Array.from({ length: Number(totalSupply) }, (_, index) => ({
-            address: NFT_COLLECTION_1_CONTRACT,
-            abi: abiSnippets.erc721Enum,
-            functionName: "tokenByIndex",
-            args: [BigInt(index)],
-          }))
-        : [],
-    [totalSupply],
-  );
-
-  const { data: allTokenIds, error: allTokenError } = useReadContracts({
-    contracts: allTokenQueries,
-    query: {
-      enabled: allTokenQueries.length > 0,
-    },
-  });
-
-  useEffect(() => {
-    if (allTokenIds && allTokenIds.length > 0) {
-      console.log("Raw all token IDs response:", allTokenIds);
-      const allNFTs = allTokenIds
-        .map((result, index) => {
-          if (result.status === "success" && result.result) {
-            const tokenId = Number(result.result);
-            console.log(`Collection token ID: ${tokenId}`);
-            return {
-              id: tokenId,
-              contractAddress: NFT_COLLECTION_1_CONTRACT,
-            };
-          }
-          return null;
-        })
-        .filter(Boolean) as NFTData[];
-
-      setAllNFTs(allNFTs);
-      console.log("All collection NFTs with real token IDs:", allNFTs);
-    } else if (totalSupply && Number(totalSupply) === 0) {
-      console.log("Collection has 0 NFTs");
-      setAllNFTs([]);
-    } else if (allTokenError) {
-      console.error("Error fetching all token IDs:", allTokenError);
-    }
-  }, [allTokenIds, totalSupply, allTokenError]);
 
   const handleFilterToggle = (filter: CollectionFilter) => {
     setActiveFilter(activeFilter === filter ? "all" : filter);
@@ -245,8 +110,6 @@ export default function Collection() {
     setViewMode(newMode);
     console.log("View mode changed to:", newMode);
   };
-
-  const displayNFTs = useMemo(() => (viewMode === "owned" ? userNFTs : allNFTs), [viewMode, userNFTs, allNFTs]);
 
   if (!address) {
     return (
