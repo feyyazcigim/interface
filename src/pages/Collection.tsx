@@ -11,7 +11,7 @@ import { NFT_COLLECTION_1_CONTRACT } from "@/constants/address";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
 import { useNFTImage } from "@/hooks/useNFTImage";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
@@ -173,11 +173,11 @@ export default function Collection() {
     setActiveFilter(activeFilter === filter ? "all" : filter);
   };
 
-  const handleNFTClick = (nft: any) => {
+  const handleNFTClick = useCallback((nft: any) => {
     console.log("NFT clicked:", nft);
     setSelectedNFT(nft);
     setIsModalOpen(true);
-  };
+  }, []);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -212,14 +212,18 @@ export default function Collection() {
     </div>
   );
 
-  const NFTsGrid = () => {
-    const displayNFTs = viewMode === "owned" ? userNFTs : allNFTs;
-    const gridCols =
+  const displayNFTs = useMemo(() => (viewMode === "owned" ? userNFTs : allNFTs), [viewMode, userNFTs, allNFTs]);
+
+  const gridCols = useMemo(
+    () =>
       viewMode === "all"
         ? "grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8"
-        : "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4";
+        : "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4",
+    [viewMode],
+  );
 
-    return (
+  const NFTsGrid = useMemo(
+    () => (
       <div className={`grid ${gridCols} gap-2 sm:gap-4`}>
         {displayNFTs.map((nft, index) => {
           const isOwned = viewMode === "all" && userNFTs.some((owned) => owned.id === nft.id);
@@ -236,8 +240,9 @@ export default function Collection() {
           );
         })}
       </div>
-    );
-  };
+    ),
+    [displayNFTs, gridCols, viewMode, userNFTs, handleNFTClick],
+  );
 
   if (!address) {
     return (
@@ -323,9 +328,7 @@ export default function Collection() {
 
           <Separator />
 
-          <div className="mt-4">
-            {(viewMode === "owned" ? userNFTs : allNFTs).length === 0 ? <EmptyState /> : <NFTsGrid />}
-          </div>
+          <div className="mt-4">{displayNFTs.length === 0 ? <EmptyState /> : NFTsGrid}</div>
         </div>
       </div>
 
