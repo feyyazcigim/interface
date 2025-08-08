@@ -1,10 +1,9 @@
 import openSeaLogo from "@/assets/misc/opensea-logo.svg";
-import FrameAnimator from "@/components/LoadingSpinner";
 import { NFTCard } from "@/components/NFTCard";
 import { TraitsCard } from "@/components/TraitsCard";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
+import { Dialog, DialogContent } from "@/components/ui/Dialog";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
 import { abiSnippets } from "@/constants/abiSnippets";
