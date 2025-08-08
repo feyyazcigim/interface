@@ -181,7 +181,7 @@ export const useNFTImages = (contractAddress: string, tokenIds: number[]) => {
     } else {
       setGlobalLoading(false);
     }
-  }, [contractAddress, tokenIds.join(",")]);
+  }, [contractAddress, tokenIds]);
 
   return {
     results,
