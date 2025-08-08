@@ -1,7 +1,7 @@
+import { abiSnippets } from "@/constants/abiSnippets";
 import { NFT_COLLECTION_1_CONTRACT } from "@/constants/address";
 import { useNFTImage } from "@/hooks/useNFTImage";
 import { useEffect, useState } from "react";
-import { erc721Abi } from "viem";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
 interface WalletNFTProfile {
@@ -18,7 +18,7 @@ export const useWalletNFTProfile = (): WalletNFTProfile => {
   // Get user's NFT balance
   const { data: balance } = useReadContract({
     address: NFT_COLLECTION_1_CONTRACT as `0x${string}`,
-    abi: erc721Abi,
+    abi: abiSnippets.erc721Enum,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
     query: {
@@ -30,7 +30,7 @@ export const useWalletNFTProfile = (): WalletNFTProfile => {
   const balanceNum = balance ? Number(balance) : 0;
   const tokenIndexCalls = Array.from({ length: balanceNum }, (_, index) => ({
     address: NFT_COLLECTION_1_CONTRACT as `0x${string}`,
-    abi: erc721Abi,
+    abi: abiSnippets.erc721Enum,
     functionName: "tokenOfOwnerByIndex",
     args: address ? [address, BigInt(index)] : undefined,
   }));

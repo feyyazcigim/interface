@@ -6,12 +6,12 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import { abiSnippets } from "@/constants/abiSnippets";
 import { NFT_COLLECTION_1_CONTRACT } from "@/constants/address";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
 import { useNFTImage } from "@/hooks/useNFTImage";
 import { useEffect, useState } from "react";
-import { erc721Abi } from "viem";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
 type CollectionFilter = "all" | "genesis";
@@ -49,7 +49,7 @@ export default function Collection() {
     isLoading: balanceLoading,
   } = useReadContract({
     address: NFT_COLLECTION_1_CONTRACT,
-    abi: erc721Abi,
+    abi: abiSnippets.erc721Enum,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
   });
@@ -61,7 +61,7 @@ export default function Collection() {
     isLoading: totalSupplyLoading,
   } = useReadContract({
     address: NFT_COLLECTION_1_CONTRACT,
-    abi: erc721Abi,
+    abi: abiSnippets.erc721Enum,
     functionName: "totalSupply",
   });
 
@@ -83,7 +83,7 @@ export default function Collection() {
     balance && Number(balance) > 0 && address
       ? Array.from({ length: Number(balance) }, (_, index) => ({
           address: NFT_COLLECTION_1_CONTRACT,
-          abi: erc721Abi,
+          abi: abiSnippets.erc721Enum,
           functionName: "tokenOfOwnerByIndex",
           args: [address, BigInt(index)],
         }))
@@ -128,7 +128,7 @@ export default function Collection() {
     totalSupply && Number(totalSupply) > 0
       ? Array.from({ length: Number(totalSupply) }, (_, index) => ({
           address: NFT_COLLECTION_1_CONTRACT,
-          abi: erc721Abi,
+          abi: abiSnippets.erc721Enum,
           functionName: "tokenByIndex",
           args: [BigInt(index)],
         }))

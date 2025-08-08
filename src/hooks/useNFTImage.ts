@@ -1,7 +1,7 @@
+import { abiSnippets } from "@/constants/abiSnippets";
 import { imageCache, imageToDataUrl, metadataCache } from "@/utils/imageCache";
 import { type NFTMetadata, fetchNFTMetadata, getOptimizedImageUrl } from "@/utils/ipfs";
 import { useEffect, useState } from "react";
-import { erc721Abi } from "viem";
 import { useReadContract } from "wagmi";
 
 interface UseNFTImageResult {
@@ -20,7 +20,7 @@ export const useNFTImage = (contractAddress: string, tokenId: number): UseNFTIma
   // Query tokenURI from contract
   const { data: tokenURI, error: contractError } = useReadContract({
     address: contractAddress as `0x${string}`,
-    abi: erc721Abi,
+    abi: abiSnippets.erc721Enum,
     functionName: "tokenURI",
     args: [BigInt(tokenId)],
     query: {
