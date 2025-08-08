@@ -13,7 +13,8 @@ import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
 import { useCardFlipAnimation } from "@/hooks/useCardFlipAnimation";
 import { useNFTImage } from "@/hooks/useNFTImage";
-import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
@@ -27,12 +28,14 @@ interface NFTData {
 
 export default function Collection() {
   const { address } = useAccount();
+  const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<CollectionFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("owned");
   const [userNFTs, setUserNFTs] = useState<NFTData[]>([]);
   const [allNFTs, setAllNFTs] = useState<NFTData[]>([]);
   const [selectedNFT, setSelectedNFT] = useState<NFTData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [animationCompleted, setAnimationCompleted] = useState(false);
 
   // Load selected NFT image data for modal
   const {
@@ -50,6 +53,7 @@ export default function Collection() {
     data: balance,
     error: balanceError,
     isLoading: balanceLoading,
+    refetch: refetchBalance,
   } = useReadContract({
     address: NFT_COLLECTION_1_CONTRACT,
     abi: abiSnippets.erc721Enum,
@@ -62,6 +66,7 @@ export default function Collection() {
     data: totalSupply,
     error: totalSupplyError,
     isLoading: totalSupplyLoading,
+    refetch: refetchTotalSupply,
   } = useReadContract({
     address: NFT_COLLECTION_1_CONTRACT,
     abi: abiSnippets.erc721Enum,
@@ -92,7 +97,11 @@ export default function Collection() {
         }))
       : [];
 
-  const { data: userTokenIds, error: userTokenError } = useReadContracts({
+  const {
+    data: userTokenIds,
+    error: userTokenError,
+    refetch: refetchUserTokenIds,
+  } = useReadContracts({
     contracts: userTokenQueries,
     query: {
       enabled: userTokenQueries.length > 0,
@@ -137,7 +146,11 @@ export default function Collection() {
         }))
       : [];
 
-  const { data: allTokenIds, error: allTokenError } = useReadContracts({
+  const {
+    data: allTokenIds,
+    error: allTokenError,
+    refetch: refetchAllTokenIds,
+  } = useReadContracts({
     contracts: allTokenQueries,
     query: {
       enabled: allTokenQueries.length > 0,
@@ -176,6 +189,22 @@ export default function Collection() {
   const firstNFT = userNFTs[0];
 
   const { shouldShowAnimation, hasSeenAnimation, resetAnimation } = useCardFlipAnimation(address, !!hasNFTs);
+
+  // Debug: Log when hasSeenAnimation changes
+  useEffect(() => {
+    console.log("🔍 hasSeenAnimation changed to:", hasSeenAnimation);
+  }, [hasSeenAnimation]);
+
+  // Refresh all NFT data after animation completes
+  const handleAnimationComplete = useCallback(() => {
+    console.log("🎯 Animation complete callback triggered!");
+    console.log("🎯 Current userNFTs length:", userNFTs.length);
+    console.log("🎯 Current balance:", balance?.toString());
+    console.log("🎯 Setting animationCompleted to true to force re-render");
+
+    // Force re-render by updating local state
+    setAnimationCompleted(true);
+  }, [userNFTs.length, balance]);
 
   const handleFilterToggle = (filter: CollectionFilter) => {
     setActiveFilter(activeFilter === filter ? "all" : filter);
@@ -223,8 +252,12 @@ export default function Collection() {
   const NFTsGrid = () => {
     let displayNFTs = viewMode === "owned" ? userNFTs : allNFTs;
 
+    console.log("🔍 NFTsGrid render - hasNFTs:", hasNFTs, "hasSeenAnimation:", hasSeenAnimation, "viewMode:", viewMode);
+    console.log("🔍 Initial displayNFTs length:", displayNFTs.length);
+
     // Hide NFTs from grid if user hasn't seen the reveal animation yet
-    if (hasNFTs && !hasSeenAnimation && viewMode === "owned") {
+    if (hasNFTs && !hasSeenAnimation && !animationCompleted && viewMode === "owned") {
+      console.log("🔍 Hiding NFTs because animation not seen yet");
       displayNFTs = [];
     }
 
@@ -475,6 +508,7 @@ export default function Collection() {
           tokenId={firstNFT.id}
           address={address}
           hasNFTs={!!hasNFTs}
+          onComplete={handleAnimationComplete}
         />
       )}
     </PageContainer>
