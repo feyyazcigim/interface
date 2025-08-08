@@ -33,10 +33,10 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[90vw] h-[90vh] max-w-[90vw] max-h-[90vh] rounded-2xl border bg-white backdrop-blur-sm">
+      <DialogContent className="w-[80vw] h-[90vh] max-w-[80vw] max-h-[90vh] rounded-2xl border bg-white backdrop-blur-sm">
         <div className="flex flex-col lg:flex-row h-full overflow-y-scroll scrollbar-none">
           {/* Left Panel - NFT Image */}
-          <div className="flex-1 lg:flex-[3] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+          <div className="flex aspect-square bg-gradient-to-br from-gray-50 to-gray-100 items-center justify-center">
             {selectedImageUrl && !selectedLoading && (
               <img
                 src={selectedImageUrl}
