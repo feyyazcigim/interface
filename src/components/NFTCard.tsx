@@ -16,7 +16,7 @@ export const NFTCard = ({ contractAddress, tokenId, onClick, showOwned = false, 
 
   return (
     <Card
-      className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 transform transition-transform relative"
+      className="overflow-hidden hover:shadow-lg cursor-pointer hover:scale-105 transform-all relative"
       onClick={onClick}
     >
       {/* Ownership badge */}

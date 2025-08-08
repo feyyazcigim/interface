@@ -1,6 +1,7 @@
 import openSeaLogo from "@/assets/misc/opensea-logo.svg";
 import FrameAnimator from "@/components/LoadingSpinner";
 import { NFTCard } from "@/components/NFTCard";
+import { TraitsCard } from "@/components/TraitsCard";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
@@ -12,6 +13,7 @@ import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
 import { useNFTImage } from "@/hooks/useNFTImage";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
 type CollectionFilter = "all" | "genesis";
@@ -197,11 +199,15 @@ export default function Collection() {
       <div className="text-center max-w-md">
         <div className="pinto-h3 mb-4 text-pinto-dark">No NFT Found</div>
         <div className="pinto-body text-pinto-light mb-6">You can purchase one from a NFT marketplace.</div>
-        <Button asChild variant="outline" className="rounded-[0.75rem] font-medium inline-flex items-center gap-2">
-          <a href={externalLinks.nftMarketplace} target="_blank" rel="noopener noreferrer">
+        <Button
+          asChild
+          variant="outline"
+          className="rounded-[0.75rem] font-medium inline-flex items-center gap-2 bg-[#0086FF] hover:bg-[#0074E0] text-white border-[#0086FF] hover:border-[#0074E0]"
+        >
+          <Link to={externalLinks.nftMarketplace} target="_blank" rel="noopener noreferrer">
             <img src={openSeaLogo} alt="OpenSea" className="w-5 h-5" />
             Visit OpenSea
-          </a>
+          </Link>
         </Button>
       </div>
     </div>
@@ -273,7 +279,7 @@ export default function Collection() {
                 : `Browse all ${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s.`}
             </div>
           </div>
-
+          {/*
           <div className="flex flex-wrap gap-2 mt-4">
             <Button
               variant="outline"
@@ -300,19 +306,21 @@ export default function Collection() {
               </Button>
             )}
           </div>
-
+*/}
           {/* Toggle link above separator */}
+          {/*}
           {activeFilter === "genesis" && (
             <div className="flex justify-end">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 onClick={handleViewModeToggle}
-                className="text-pinto-green-4 hover:text-pinto-green-3 pinto-sm font-medium"
+                className="text-pinto-green-4 hover:text-pinto-green-3 pinto-sm font-medium p-0 h-auto"
               >
                 {viewMode === "owned" ? "View All in Collection" : "View My Collection"}
-              </button>
+              </Button>
             </div>
           )}
+            */}
 
           <Separator />
 
@@ -324,75 +332,113 @@ export default function Collection() {
 
       {/* NFT Detail Modal */}
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
-        <DialogContent className="max-w-2xl mx-auto w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">
-              {getCollectionName(NFT_COLLECTION_1_CONTRACT)} #{selectedNFT?.id}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-            {/* NFT Image */}
-            <div className="flex-shrink-0 w-full sm:w-80 h-80 bg-gray-100 rounded-lg flex items-center justify-center relative overflow-hidden">
-              {selectedLoading && (
-                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-                  <FrameAnimator size={64} />
-                </div>
-              )}
-
+        <DialogContent className="w-[90vw] h-[90vh] max-w-[90vw] max-h-[90vh] rounded-2xl border bg-white backdrop-blur-sm">
+          <div className="flex flex-col lg:flex-row h-full overflow-y-scroll scrollbar-none">
+            {/* Left Panel - NFT Image */}
+            <div className="flex-1 lg:flex-[3] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
               {selectedImageUrl && !selectedLoading && (
                 <img
                   src={selectedImageUrl}
                   alt={selectedMetadata?.name || `NFT #${selectedNFT?.id}`}
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover rounded-2xl"
                 />
               )}
+              {/*
+              <div className="w-full h-full max-w-xs sm:max-w-md lg:max-w-lg max-h-[32vh] sm:max-h-[40vh] lg:max-h-lg bg-white rounded-xl lg:rounded-2xl shadow-lg relative overflow-hidden">
+                {/*selectedLoading && (
+                  <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+                    <FrameAnimator size={48} />
+                  </div>
+                )*/}
 
-              {!selectedImageUrl && !selectedLoading && (
-                <div className="text-gray-400 pinto-h3">
-                  {getCollectionName(selectedNFT?.contractAddress || "")} #{selectedNFT?.id}
-                </div>
-              )}
+              {/*!selectedImageUrl && !selectedLoading && (
+                  <div className="text-gray-400 pinto-h3 lg:pinto-h2 text-center px-4">
+                    {getCollectionName(selectedNFT?.contractAddress || "")} #{selectedNFT?.id}
+                  </div>
+                )*/}
             </div>
 
-            {/* NFT Metadata */}
-            <div className="flex-1 space-y-3 sm:space-y-4">
-              <div className="space-y-2 sm:space-y-3">
-                <div>
-                  <span className="text-sm sm:pinto-sm font-medium">Token ID:</span>
-                  <span className="text-sm sm:pinto-sm text-pinto-light ml-2">#{selectedNFT?.id}</span>
-                </div>
-                {selectedMetadata?.description && (
-                  <div>
-                    <span className="text-sm sm:pinto-sm font-medium">Description:</span>
-                    <p className="text-sm sm:pinto-sm text-pinto-light mt-1">{selectedMetadata.description}</p>
+            {/* Right Panel - NFT Details */}
+            <div className="flex-1 lg:flex-[2] bg-white flex flex-col h-auto overflow-y-auto scrollbar-none">
+              {/* Header */}
+              <div className="sticky top-0 bg-white z-10 px-3 pt-3 sm:px-4 sm:pt-4 lg:px-6 lg:pt-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h1 className="pinto-h3 sm:pinto-h2 text-pinto-dark mb-1 truncate">
+                      {`${getCollectionName(NFT_COLLECTION_1_CONTRACT)} #${selectedNFT?.id}`}
+                    </h1>
+                    <p className="pinto-xs sm:pinto-sm text-pinto-light">
+                      {getCollectionName(NFT_COLLECTION_1_CONTRACT)}
+                    </p>
                   </div>
-                )}
-                <div>
-                  <span className="text-sm sm:pinto-sm font-medium">Contract:</span>
-                  <a
-                    href={`https://basescan.org/address/${selectedNFT?.contractAddress}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs sm:pinto-xs text-pinto-green-3 mt-1 font-mono break-all hover:underline block"
-                  >
-                    {selectedNFT?.contractAddress?.slice(0, 8)}...{selectedNFT?.contractAddress?.slice(-6)}
-                  </a>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="pt-3 sm:pt-4">
-                <Button asChild variant="default" className="w-full text-sm sm:text-base py-2 sm:py-3">
-                  <a
-                    href={externalLinks.nftMarketplace}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2"
+              {/* Content */}
+              <div className="flex flex-col p-3 sm:p-4 lg:p-6 gap-6">
+                <Separator />
+
+                {/* Action Section */}
+                <div className="space-y-3 sm:space-y-4">
+                  <Button
+                    asChild
+                    variant="default"
+                    size="lg"
+                    className="w-full py-3 sm:py-4 text-sm sm:text-base font-semibold bg-[#0086FF] hover:bg-[#0074E0] text-white border-[#0086FF] hover:border-[#0074E0]"
                   >
-                    <img src={openSeaLogo} alt="OpenSea" className="w-4 h-4" />
-                    Trade on OpenSea
-                  </a>
-                </Button>
+                    <Link
+                      to={externalLinks.nftMarketplace}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 sm:gap-3"
+                    >
+                      <img src={openSeaLogo} alt="OpenSea" className="w-4 h-4 sm:w-5 sm:h-5" />
+                      Trade on OpenSea
+                    </Link>
+                  </Button>
+                </div>
+
+                <Separator />
+
+                {/* Traits */}
+                <TraitsCard attributes={selectedMetadata?.attributes} />
+
+                <Separator />
+
+                {/* Details */}
+                <Card>
+                  <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+                    <h3 className="pinto-h4 sm:pinto-h3 text-pinto-dark">Details</h3>
+
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="pinto-xs sm:pinto-sm text-pinto-light">Token ID</span>
+                        <span className="pinto-xs sm:pinto-sm font-medium text-pinto-dark">#{selectedNFT?.id}</span>
+                      </div>
+
+                      <div className="flex justify-between items-start gap-2">
+                        <span className="pinto-xs sm:pinto-sm text-pinto-light flex-shrink-0">Contract Address</span>
+                        <Link
+                          to={`https://basescan.org/address/${selectedNFT?.contractAddress}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[0.65rem] sm:pinto-xs text-pinto-green-3 font-mono hover:underline text-right break-all min-w-0"
+                        >
+                          {selectedNFT?.contractAddress}
+                        </Link>
+                      </div>
+
+                      {/*selectedMetadata?.description && (
+                        <div className="space-y-1 sm:space-y-2">
+                          <span className="pinto-xs sm:pinto-sm text-pinto-light block">Description</span>
+                          <p className="pinto-xs sm:pinto-sm text-pinto-dark leading-relaxed">
+                            {selectedMetadata.description}
+                          </p>
+                        </div>
+                      )*/}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>

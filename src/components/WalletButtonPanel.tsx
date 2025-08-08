@@ -40,7 +40,7 @@ const NFTProfileDisplay = ({ navigate, togglePanel }: NFTProfileDisplayProps) =>
     <button
       type="button"
       onClick={() => {
-        navigate("/collection2");
+        navigate("/collection");
         togglePanel();
       }}
       className="w-[11.25rem] h-20 rounded-lg overflow-hidden bg-gray-100 hover:opacity-80 transition-opacity flex-shrink-0"

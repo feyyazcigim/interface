@@ -41,7 +41,7 @@ export const TraitsCard = ({ attributes }: TraitsCardProps) => {
     <Card className="w-full">
       <CardContent className="p-3 sm:p-4">
         <h3 className="pinto-h4 sm:pinto-h3 mb-3 sm:mb-4 text-pinto-dark">Traits</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2 sm:gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-2 sm:gap-3">
           {sortedAttributes.map((attribute, index) => (
             <div
               key={`${attribute.trait_type}-${index}`}
