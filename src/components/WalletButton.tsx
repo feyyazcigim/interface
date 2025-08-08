@@ -52,7 +52,7 @@ const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
             ref={ref}
           >
             {/* Question mark icon instead of profile picture */}
-            {address && (
+            {address && hasNFT && (
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-white flex-shrink-0 flex items-center justify-center">
                 <span className="text-gray-500 font-semibold text-sm">?</span>
               </div>
