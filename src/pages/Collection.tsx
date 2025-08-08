@@ -202,9 +202,9 @@ export default function Collection() {
         <Button
           asChild
           variant="outline"
-          className="rounded-[0.75rem] font-medium inline-flex items-center gap-2 bg-[#0086FF] hover:bg-[#0074E0] text-white border-[#0086FF] hover:border-[#0074E0]"
+          className="rounded-[0.75rem] font-medium inline-flex items-center gap-2 bg-[#0086FF] hover:bg-[#0074E0] hover:text-white text-white border-[#0086FF] hover:border-[#0074E0]"
         >
-          <Link to={externalLinks.nftMarketplace} target="_blank" rel="noopener noreferrer">
+          <Link to={externalLinks.nftMarketplace} target="_blank" rel="noopener noreferrer" className="text-white">
             <img src={openSeaLogo} alt="OpenSea" className="w-5 h-5" />
             Visit OpenSea
           </Link>
@@ -390,7 +390,7 @@ export default function Collection() {
                       to={externalLinks.nftMarketplace}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 sm:gap-3"
+                      className="inline-flex items-center justify-center gap-2 sm:gap-3 text-white"
                     >
                       <img src={openSeaLogo} alt="OpenSea" className="w-4 h-4 sm:w-5 sm:h-5" />
                       Trade on OpenSea
