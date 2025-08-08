@@ -7,12 +7,12 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
-import { ERC721ABI } from "@/constants/abi/ERC721ABI";
 import { PINTO_BEAVERS_CONTRACT } from "@/constants/address";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
 import { useNFTImage } from "@/hooks/useNFTImage";
 import { useEffect, useState } from "react";
+import { erc721Abi } from "viem";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
 type ViewMode = "owned" | "all";
@@ -48,7 +48,7 @@ export default function Collection2() {
     isLoading: balanceLoading,
   } = useReadContract({
     address: PINTO_BEAVERS_CONTRACT,
-    abi: ERC721ABI,
+    abi: erc721Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
   });
@@ -60,7 +60,7 @@ export default function Collection2() {
     isLoading: totalSupplyLoading,
   } = useReadContract({
     address: PINTO_BEAVERS_CONTRACT,
-    abi: ERC721ABI,
+    abi: erc721Abi,
     functionName: "totalSupply",
   });
 
@@ -82,7 +82,7 @@ export default function Collection2() {
     balance && Number(balance) > 0 && address
       ? Array.from({ length: Number(balance) }, (_, index) => ({
           address: PINTO_BEAVERS_CONTRACT,
-          abi: ERC721ABI,
+          abi: erc721Abi,
           functionName: "tokenOfOwnerByIndex",
           args: [address, BigInt(index)],
         }))
@@ -127,7 +127,7 @@ export default function Collection2() {
     totalSupply && Number(totalSupply) > 0
       ? Array.from({ length: Number(totalSupply) }, (_, index) => ({
           address: PINTO_BEAVERS_CONTRACT,
-          abi: ERC721ABI,
+          abi: erc721Abi,
           functionName: "tokenByIndex",
           args: [BigInt(index)],
         }))
