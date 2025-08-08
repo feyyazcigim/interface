@@ -143,16 +143,8 @@ function ProtectedLayout() {
       <Route
         path="/collection"
         element={
-          <PageMetaWrapper metaKey="beavers">
+          <PageMetaWrapper metaKey="nftCollection">
             <Collection />
-          </PageMetaWrapper>
-        }
-      />
-      <Route
-        path="/collection2"
-        element={
-          <PageMetaWrapper metaKey="beavers">
-            <Collection2 />
           </PageMetaWrapper>
         }
       />

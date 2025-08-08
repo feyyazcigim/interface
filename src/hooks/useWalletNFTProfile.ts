@@ -1,4 +1,4 @@
-import { PINTO_BEAVERS_CONTRACT } from "@/constants/address";
+import { NFT_COLLECTION_1_CONTRACT } from "@/constants/address";
 import { useNFTImage } from "@/hooks/useNFTImage";
 import { useEffect, useState } from "react";
 import { erc721Abi } from "viem";
@@ -17,7 +17,7 @@ export const useWalletNFTProfile = (): WalletNFTProfile => {
 
   // Get user's NFT balance
   const { data: balance } = useReadContract({
-    address: PINTO_BEAVERS_CONTRACT as `0x${string}`,
+    address: NFT_COLLECTION_1_CONTRACT as `0x${string}`,
     abi: erc721Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
@@ -29,7 +29,7 @@ export const useWalletNFTProfile = (): WalletNFTProfile => {
   // Get all user's token IDs
   const balanceNum = balance ? Number(balance) : 0;
   const tokenIndexCalls = Array.from({ length: balanceNum }, (_, index) => ({
-    address: PINTO_BEAVERS_CONTRACT as `0x${string}`,
+    address: NFT_COLLECTION_1_CONTRACT as `0x${string}`,
     abi: erc721Abi,
     functionName: "tokenOfOwnerByIndex",
     args: address ? [address, BigInt(index)] : undefined,
@@ -43,7 +43,7 @@ export const useWalletNFTProfile = (): WalletNFTProfile => {
   });
 
   // Get user's NFT image for the lowest tokenId (rarest)
-  const { imageUrl, loading: imageLoading } = useNFTImage(PINTO_BEAVERS_CONTRACT, lowestTokenId || 0);
+  const { imageUrl, loading: imageLoading } = useNFTImage(NFT_COLLECTION_1_CONTRACT, lowestTokenId || 0);
 
   useEffect(() => {
     if (!tokenIds || tokenIds.length === 0) {

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
-import { PINTO_BEAVERS_CONTRACT } from "@/constants/address";
+import { NFT_COLLECTION_1_CONTRACT } from "@/constants/address";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
 import { useNFTImage } from "@/hooks/useNFTImage";
@@ -26,8 +26,8 @@ export default function Collection() {
   const { address } = useAccount();
   const [activeFilter, setActiveFilter] = useState<CollectionFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("owned");
-  const [userBeavers, setUserBeavers] = useState<NFTData[]>([]);
-  const [allBeavers, setAllBeavers] = useState<NFTData[]>([]);
+  const [userNFTs, setUserNFTs] = useState<NFTData[]>([]);
+  const [allNFTs, setAllNFTs] = useState<NFTData[]>([]);
   const [selectedNFT, setSelectedNFT] = useState<NFTData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -40,7 +40,7 @@ export default function Collection() {
 
   // Log wallet connection status
   console.log("Collection page - Connected address:", address);
-  console.log("Collection page - Pinto Beavers contract:", PINTO_BEAVERS_CONTRACT);
+  console.log("Collection page - Pinto NFTs contract:", NFT_COLLECTION_1_CONTRACT);
 
   // Query user's NFT balance
   const {
@@ -48,7 +48,7 @@ export default function Collection() {
     error: balanceError,
     isLoading: balanceLoading,
   } = useReadContract({
-    address: PINTO_BEAVERS_CONTRACT,
+    address: NFT_COLLECTION_1_CONTRACT,
     abi: erc721Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
@@ -60,7 +60,7 @@ export default function Collection() {
     error: totalSupplyError,
     isLoading: totalSupplyLoading,
   } = useReadContract({
-    address: PINTO_BEAVERS_CONTRACT,
+    address: NFT_COLLECTION_1_CONTRACT,
     abi: erc721Abi,
     functionName: "totalSupply",
   });
@@ -82,7 +82,7 @@ export default function Collection() {
   const userTokenQueries =
     balance && Number(balance) > 0 && address
       ? Array.from({ length: Number(balance) }, (_, index) => ({
-          address: PINTO_BEAVERS_CONTRACT,
+          address: NFT_COLLECTION_1_CONTRACT,
           abi: erc721Abi,
           functionName: "tokenOfOwnerByIndex",
           args: [address, BigInt(index)],
@@ -106,18 +106,18 @@ export default function Collection() {
             console.log(`User owns token ID: ${tokenId}`);
             return {
               id: tokenId,
-              contractAddress: PINTO_BEAVERS_CONTRACT,
+              contractAddress: NFT_COLLECTION_1_CONTRACT,
             };
           }
           return null;
         })
         .filter(Boolean) as NFTData[];
 
-      setUserBeavers(userNFTs);
+      setUserNFTs(userNFTs);
       console.log("User NFTs with real token IDs:", userNFTs);
     } else if (balance && Number(balance) === 0) {
       console.log("User has 0 NFTs");
-      setUserBeavers([]);
+      setUserNFTs([]);
     } else if (userTokenError) {
       console.error("Error fetching user token IDs:", userTokenError);
     }
@@ -127,7 +127,7 @@ export default function Collection() {
   const allTokenQueries =
     totalSupply && Number(totalSupply) > 0
       ? Array.from({ length: Number(totalSupply) }, (_, index) => ({
-          address: PINTO_BEAVERS_CONTRACT,
+          address: NFT_COLLECTION_1_CONTRACT,
           abi: erc721Abi,
           functionName: "tokenByIndex",
           args: [BigInt(index)],
@@ -151,18 +151,18 @@ export default function Collection() {
             console.log(`Collection token ID: ${tokenId}`);
             return {
               id: tokenId,
-              contractAddress: PINTO_BEAVERS_CONTRACT,
+              contractAddress: NFT_COLLECTION_1_CONTRACT,
             };
           }
           return null;
         })
         .filter(Boolean) as NFTData[];
 
-      setAllBeavers(allNFTs);
+      setAllNFTs(allNFTs);
       console.log("All collection NFTs with real token IDs:", allNFTs);
     } else if (totalSupply && Number(totalSupply) === 0) {
       console.log("Collection has 0 NFTs");
-      setAllBeavers([]);
+      setAllNFTs([]);
     } else if (allTokenError) {
       console.error("Error fetching all token IDs:", allTokenError);
     }
@@ -172,9 +172,9 @@ export default function Collection() {
     setActiveFilter(activeFilter === filter ? "all" : filter);
   };
 
-  const handleNFTClick = (beaver: any) => {
-    console.log("NFT clicked:", beaver);
-    setSelectedNFT(beaver);
+  const handleNFTClick = (nft: any) => {
+    console.log("NFT clicked:", nft);
+    setSelectedNFT(nft);
     setIsModalOpen(true);
   };
 
@@ -198,7 +198,7 @@ export default function Collection() {
         <div className="pinto-h3 mb-4 text-pinto-dark">No NFT Found</div>
         <div className="pinto-body text-pinto-light mb-6">You can purchase one from a NFT marketplace.</div>
         <Button asChild variant="outline" className="rounded-[0.75rem] font-medium inline-flex items-center gap-2">
-          <a href={externalLinks.beaversMarketplace} target="_blank" rel="noopener noreferrer">
+          <a href={externalLinks.nftMarketplace} target="_blank" rel="noopener noreferrer">
             <img src={openSeaLogo} alt="OpenSea" className="w-5 h-5" />
             Visit OpenSea
           </a>
@@ -207,8 +207,8 @@ export default function Collection() {
     </div>
   );
 
-  const BeaversGrid = () => {
-    const displayBeavers = viewMode === "owned" ? userBeavers : allBeavers;
+  const NFTsGrid = () => {
+    const displayNFTs = viewMode === "owned" ? userNFTs : allNFTs;
     const gridCols =
       viewMode === "all"
         ? "grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8"
@@ -216,15 +216,15 @@ export default function Collection() {
 
     return (
       <div className={`grid ${gridCols} gap-2 sm:gap-4`}>
-        {displayBeavers.map((beaver, index) => {
-          const isOwned = viewMode === "all" && userBeavers.some((owned) => owned.id === beaver.id);
+        {displayNFTs.map((nft, index) => {
+          const isOwned = viewMode === "all" && userNFTs.some((owned) => owned.id === nft.id);
 
           return (
             <NFTCard
-              key={`${beaver.contractAddress}-${beaver.id}`}
-              contractAddress={beaver.contractAddress}
-              tokenId={beaver.id}
-              onClick={() => handleNFTClick(beaver)}
+              key={`${nft.contractAddress}-${nft.id}`}
+              contractAddress={nft.contractAddress}
+              tokenId={nft.id}
+              onClick={() => handleNFTClick(nft)}
               showOwned={viewMode === "all"}
               isOwned={isOwned}
             />
@@ -242,7 +242,7 @@ export default function Collection() {
             <div className="flex flex-col gap-y-3">
               <div className="pinto-h2 sm:pinto-h1">My Collection</div>
               <div className="pinto-sm sm:pinto-body-light text-pinto-light">
-                Connect your wallet to view your collection of Pinto Beavers.
+                Connect your wallet to view your collection of Pinto NFTs.
               </div>
             </div>
             <Separator />
@@ -265,12 +265,12 @@ export default function Collection() {
         <div className="flex flex-col self-center w-full gap-4 mb-20 sm:mb-0 sm:gap-8">
           <div className="flex flex-col gap-y-3">
             <div className="pinto-h2 sm:pinto-h1">
-              {viewMode === "owned" ? "My Collection" : `${getCollectionName(PINTO_BEAVERS_CONTRACT)}s Collection`}
+              {viewMode === "owned" ? "My Collection" : `${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s Collection`}
             </div>
             <div className="pinto-sm sm:pinto-body-light text-pinto-light">
               {viewMode === "owned"
-                ? `Your collection of ${getCollectionName(PINTO_BEAVERS_CONTRACT)}s.`
-                : `Browse all ${getCollectionName(PINTO_BEAVERS_CONTRACT)}s.`}
+                ? `Your collection of ${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s.`
+                : `Browse all ${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s.`}
             </div>
           </div>
 
@@ -284,7 +284,7 @@ export default function Collection() {
                   : "hover:bg-pinto-green-1/50 hover:text-pinto-gray-4"
               }`}
             >
-              {getCollectionName(PINTO_BEAVERS_CONTRACT)}s
+              {getCollectionName(NFT_COLLECTION_1_CONTRACT)}s
             </Button>
             {viewMode === "owned" && (
               <Button
@@ -317,7 +317,7 @@ export default function Collection() {
           <Separator />
 
           <div className="mt-4">
-            {(viewMode === "owned" ? userBeavers : allBeavers).length === 0 ? <EmptyState /> : <BeaversGrid />}
+            {(viewMode === "owned" ? userNFTs : allNFTs).length === 0 ? <EmptyState /> : <NFTsGrid />}
           </div>
         </div>
       </div>
@@ -327,7 +327,7 @@ export default function Collection() {
         <DialogContent className="max-w-2xl mx-auto w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">
-              {getCollectionName(PINTO_BEAVERS_CONTRACT)} #{selectedNFT?.id}
+              {getCollectionName(NFT_COLLECTION_1_CONTRACT)} #{selectedNFT?.id}
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
@@ -384,7 +384,7 @@ export default function Collection() {
               <div className="pt-3 sm:pt-4">
                 <Button asChild variant="default" className="w-full text-sm sm:text-base py-2 sm:py-3">
                   <a
-                    href={externalLinks.beaversMarketplace}
+                    href={externalLinks.nftMarketplace}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2"

@@ -9,9 +9,7 @@ export default function CollectionSoon() {
           <div className="flex flex-col gap-y-3">
             <div className="pinto-h2 sm:pinto-h1">My Collection</div>
           </div>
-
           <Separator />
-
           <div className="flex flex-col items-center justify-center py-32">
             <div className="text-center max-w-md">
               <div className="pinto-h2 mb-4 text-pinto-dark">Coming Soon...</div>
