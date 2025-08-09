@@ -76,6 +76,8 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
       return totalBdv.gt(0) ? totalStalk.div(totalBdv) : TokenValue.ZERO;
     };
 
+    const bdvToUse = token.isWhitelisted ? deposit?.currentBdv : deposit?.depositBdv;
+
     return (
       <TableRow
         {...props}
@@ -117,7 +119,7 @@ const DepositRow = React.forwardRef<HTMLTableRowElement, DepositRowProps & Table
             <div className="opacity-70">{`${formatter.token(deposit.amount, token)}`}</div>
             <span className="opacity-70 hidden md:block">{token.name}</span>
           </div>
-          <div className="text-pinto-gray-4 mt-1 opacity-70 font-[340]">{`${denomination === "USD" ? formatter.usd((deposit.currentBdv || TokenValue.ZERO).mul(price)) : formatter.pdv(deposit.depositBdv)}`}</div>
+          <div className="text-pinto-gray-4 mt-1 opacity-70 font-[340]">{`${denomination === "USD" ? formatter.usd((bdvToUse || TokenValue.ZERO).mul(price)) : formatter.pdv(deposit.depositBdv)}`}</div>
         </TableCell>
         <TableCell className="pinto-sm text-right">
           <div className="flex flex-row gap-1 items-center justify-end">
