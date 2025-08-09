@@ -251,7 +251,11 @@ export default function FarmerDepositsTable({
                 stalkGain: data.update?.stalkGain || TokenValue.ZERO,
               };
 
-              const effectiveBDV = userData?.currentBDV.gt(0) ? userData?.currentBDV : userData?.depositBDV;
+              const effectiveBDV = !token.isWhitelisted
+                ? userData?.depositBDV
+                : userData?.currentBDV.gt(0)
+                  ? userData?.currentBDV
+                  : userData?.depositBDV;
 
               const addClaimable = token.isMain;
 
