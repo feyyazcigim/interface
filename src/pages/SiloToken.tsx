@@ -381,6 +381,8 @@ const FarmerSiloTokenDeposits = ({ siloToken, farmerDeposits, price, isMobile }:
   const hasGerminating = farmerDeposits?.stalk.germinating.gt(0);
   const hasOnlyGerminating = stalkAmount?.eq(0) && hasGerminating;
 
+  const bdvToUse = siloToken.isWhitelisted ? farmerDeposits?.currentBDV : farmerDeposits?.depositBDV;
+
   return (
     <div className="flex flex-col gap-6 sm:flex-row sm:gap-16">
       <div className="flex flex-col gap-2">
@@ -393,9 +395,7 @@ const FarmerSiloTokenDeposits = ({ siloToken, farmerDeposits, price, isMobile }:
         </div>
         <div className="flex flex-row items-center gap-x-1 -mt-1 sm:mt-0">
           <div className="pinto-body font-thin sm:font-regular text-pinto-secondary">
-            {denomination === "USD"
-              ? formatter.usd(farmerDeposits?.currentBDV.mul(price))
-              : formatter.pdv(farmerDeposits?.depositBDV)}
+            {denomination === "USD" ? formatter.usd(bdvToUse?.mul(price)) : formatter.pdv(farmerDeposits?.depositBDV)}
           </div>
           <DenominationSwitcher />
         </div>
