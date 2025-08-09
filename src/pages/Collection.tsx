@@ -24,6 +24,7 @@ interface NFTsGridProps {
   hasNFTs?: boolean;
   hasSeenAnimation?: boolean;
   animationCompleted?: boolean;
+  onAnimationComplete?: () => void;
 }
 
 function EmptyState() {
@@ -55,6 +56,7 @@ function NFTsGrid({
   hasNFTs,
   hasSeenAnimation,
   animationCompleted,
+  onAnimationComplete,
 }: NFTsGridProps) {
   let displayNFTs = [...nfts];
 
@@ -66,11 +68,25 @@ function NFTsGrid({
     console.log("🔗 NFT #" + nft.id + " contract: " + nft.contractAddress + " - will load IPFS metadata");
   });
 
+  // Temporary pop-in animation for cards - only when data is loaded and ready
+  const shouldShowPopAnimation =
+    hasNFTs && !hasSeenAnimation && !animationCompleted && viewMode === "owned" && nfts.length > 0;
+
+  // Auto-complete animation after delay
+  useEffect(() => {
+    if (shouldShowPopAnimation && onAnimationComplete) {
+      const timer = setTimeout(() => {
+        onAnimationComplete(); // Trigger completion
+      }, 1000); // Complete after 1 second
+      return () => clearTimeout(timer);
+    }
+  }, [shouldShowPopAnimation, onAnimationComplete]);
+
   // Hide NFTs from grid if user hasn't seen the reveal animation yet
-  if (hasNFTs && !hasSeenAnimation && !animationCompleted && viewMode === "owned") {
-    console.log("🔍 Hiding NFTs because animation not seen yet");
-    displayNFTs = [];
-  }
+  // if (hasNFTs && !hasSeenAnimation && !animationCompleted && viewMode === "owned") {
+  //   console.log("🔍 Hiding NFTs because animation not seen yet");
+  //   displayNFTs = [];
+  // }
 
   // Temporarily limit to first NFT for owned view
   if (viewMode === "owned" && displayNFTs.length > 0) {
@@ -97,7 +113,11 @@ function NFTsGrid({
         return (
           <div
             key={`${nft.contractAddress}-${nft.id}`}
-            className={isSingleCard ? "w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw] xl:w-[30vw] max-w-[800px]" : ""}
+            className={`
+              ${isSingleCard ? "w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw] xl:w-[30vw] max-w-[800px]" : ""}
+              ${shouldShowPopAnimation ? "animate-pop-in" : ""}
+            `}
+            style={{ animationDelay: `${index * 150}ms` }}
           >
             <NFTCard
               contractAddress={nft.contractAddress}
@@ -183,16 +203,16 @@ export default function Collection() {
           <div className="flex flex-col self-center w-full gap-4 mb-20 sm:mb-0 sm:gap-8">
             <div className="flex flex-col gap-y-3">
               {/* <div className="pinto-h2 sm:pinto-h1">My Pinto Beavers</div> */}
-              <div className="pinto-sm sm:pinto-body-light text-pinto-light">
+              {/* <div className="pinto-sm sm:pinto-body-light text-pinto-light">
                 Connect your wallet to view your collection of Pinto Beavers.
-              </div>
+              </div> */}
             </div>
             <Separator />
             <div className="flex flex-col items-center justify-center py-16">
               <div className="text-center">
-                <div className="pinto-body text-pinto-light mb-4">
+                {/* <div className="pinto-body text-pinto-light mb-4">
                   Please connect your wallet to view your collection.
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -263,8 +283,20 @@ export default function Collection() {
           <Separator />
 
           <div className="mt-4">
-            {displayNFTs.length === 0 ? (
-              <EmptyState />
+            {loading ? (
+              // Show nothing while loading to prevent flash
+              <div />
+            ) : displayNFTs.length === 0 ? (
+              // <EmptyState />
+              <div className="grid grid-cols-1 place-items-center">
+                <div className="w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw] xl:w-[30vw] max-w-[800px] animate-pop-in">
+                  <div className="bg-gray-100 rounded-xl aspect-square flex items-center justify-center">
+                    {/* <div className="text-gray-400 pinto-h3 lg:pinto-h2 text-center px-4">
+                      No NFT
+                    </div> */}
+                  </div>
+                </div>
+              </div>
             ) : (
               <NFTsGrid
                 nfts={displayNFTs}
@@ -274,6 +306,7 @@ export default function Collection() {
                 hasNFTs={!!hasNFTs}
                 hasSeenAnimation={hasSeenAnimation}
                 animationCompleted={animationCompleted}
+                onAnimationComplete={handleAnimationComplete}
               />
             )}
           </div>
@@ -283,7 +316,7 @@ export default function Collection() {
       <NFTDetailModal isOpen={isModalOpen} onClose={handleCloseModal} selectedNFT={selectedNFT} />
 
       {/* NFT Card Flip Reveal Animation Overlay */}
-      {shouldShowAnimation && firstNFT && (
+      {/* {shouldShowAnimation && firstNFT && (
         <NFTCardFlipReveal
           contractAddress={firstNFT.contractAddress}
           tokenId={firstNFT.id}
@@ -291,7 +324,7 @@ export default function Collection() {
           hasNFTs={!!hasNFTs}
           onComplete={handleAnimationComplete}
         />
-      )}
+      )} */}
     </PageContainer>
   );
 }
