@@ -31,6 +31,9 @@ const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
     const { data: ensAvatar } = useEnsAvatar({ name: ensName as string });
     const { hasNFT, profileImageUrl } = useWalletNFTProfile();
 
+    // TEMPORARY: Hide NFT profile images - set to false to show real NFT images
+    const hideNFTProfile = true;
+
     useSyncAccountConnecting(modal.open, account);
 
     return (
@@ -51,10 +54,26 @@ const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
             className={`flex flex-row gap-0.5 sm:gap-2 items-center ${isOpen && "border-pinto-green"} ${className} ${hasNFT ? "-ml-8" : ""}`}
             ref={ref}
           >
-            {/* Question mark icon instead of profile picture */}
+            {/* Profile picture or question mark */}
             {address && hasNFT && (
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-white flex-shrink-0 flex items-center justify-center">
-                <span className="text-gray-500 font-semibold text-sm">?</span>
+                {hideNFTProfile ? (
+                  <span className="text-gray-500 font-semibold text-sm">?</span>
+                ) : (
+                  <img
+                    src={profileImageUrl || ensAvatar || ""}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to question mark if image fails to load
+                      e.currentTarget.style.display = "none";
+                      const parent = e.currentTarget.parentElement;
+                      if (parent) {
+                        parent.innerHTML = '<span class="text-gray-500 font-semibold text-sm">?</span>';
+                      }
+                    }}
+                  />
+                )}
               </div>
             )}
 

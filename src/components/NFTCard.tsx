@@ -20,6 +20,9 @@ export const NFTCard = ({ contractAddress, tokenId, onClick, showOwned = false, 
   const cardSize = useRef<{ width: number; height: number } | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
+  // TEMPORARY: Hide actual NFT images - set to false to show real images
+  const hideNFTImages = true;
+
   const handleMouseEnter = (e: MouseEvent<HTMLDivElement>) => {
     if (cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect();

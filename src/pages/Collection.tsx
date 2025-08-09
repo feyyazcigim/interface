@@ -44,6 +44,13 @@ export default function Collection() {
     loading: selectedLoading,
   } = useNFTImage(selectedNFT?.contractAddress || "", selectedNFT?.id || 0);
 
+  // Log IPFS JSON metadata when available
+  useEffect(() => {
+    if (selectedMetadata && selectedNFT) {
+      console.log("🔗 IPFS JSON metadata for NFT #" + selectedNFT.id + ":", selectedMetadata);
+    }
+  }, [selectedMetadata, selectedNFT]);
+
   // Log wallet connection status
   console.log("Collection page - Connected address:", address);
   console.log("Collection page - Pinto NFTs contract:", NFT_COLLECTION_1_CONTRACT);
@@ -254,6 +261,11 @@ export default function Collection() {
 
     console.log("🔍 NFTsGrid render - hasNFTs:", hasNFTs, "hasSeenAnimation:", hasSeenAnimation, "viewMode:", viewMode);
     console.log("🔍 Initial displayNFTs length:", displayNFTs.length);
+
+    // Log IPFS data for displayed NFTs
+    displayNFTs.forEach((nft) => {
+      console.log("🔗 NFT #" + nft.id + " contract: " + nft.contractAddress + " - will load IPFS metadata");
+    });
 
     // Hide NFTs from grid if user hasn't seen the reveal animation yet
     if (hasNFTs && !hasSeenAnimation && !animationCompleted && viewMode === "owned") {
