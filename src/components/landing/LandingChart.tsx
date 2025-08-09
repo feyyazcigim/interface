@@ -382,7 +382,7 @@ export default function LandingChart() {
             strokeDasharray="3,3"
             fill="none"
             mask="url(#fadeMask)"
-            initial={{ clipPath: "inset(100% 0 0 0)" }}
+            initial={{ clipPath: "inset(0 0 100% 0)" }}
             animate={{ clipPath: "inset(0 0 0 0)" }}
             transition={{ duration: 4, ease: "easeInOut", delay: 4.5 }}
           />
