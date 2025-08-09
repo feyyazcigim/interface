@@ -202,8 +202,8 @@ export const imageToDataUrl = (imageUrl: string): Promise<string> => {
         return;
       }
 
-      // Resize for storage efficiency (max 400x400)
-      const maxSize = 400;
+      // Maximum quality settings (max 1024x1024)
+      const maxSize = 1024;
       let { width, height } = img;
 
       if (width > maxSize || height > maxSize) {
@@ -218,7 +218,8 @@ export const imageToDataUrl = (imageUrl: string): Promise<string> => {
       ctx.drawImage(img, 0, 0, width, height);
 
       try {
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        // Use PNG for lossless compression
+        const dataUrl = canvas.toDataURL("image/png");
         resolve(dataUrl);
       } catch (error) {
         reject(error);

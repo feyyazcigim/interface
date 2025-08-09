@@ -1,5 +1,6 @@
 import openSeaLogo from "@/assets/misc/opensea-logo.svg";
 import { NFTCard } from "@/components/NFTCard";
+import { NFTCardFlipReveal } from "@/components/NFTCardFlipReveal";
 import { NFTDetailModal } from "@/components/NFTDetailModal";
 import { Button } from "@/components/ui/Button";
 import PageContainer from "@/components/ui/PageContainer";
@@ -7,8 +8,9 @@ import { Separator } from "@/components/ui/Separator";
 import { NFT_COLLECTION_1_CONTRACT } from "@/constants/address";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
+import { useCardFlipAnimation } from "@/hooks/useCardFlipAnimation";
 import { type NFTData, type ViewMode, useNFTData } from "@/state/useNFTData";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAccount } from "wagmi";
 
@@ -19,6 +21,10 @@ interface NFTsGridProps {
   viewMode: ViewMode;
   userNFTs: NFTData[];
   onNFTClick: (nft: NFTData) => void;
+  hasNFTs?: boolean;
+  hasSeenAnimation?: boolean;
+  animationCompleted?: boolean;
+  onAnimationComplete?: () => void;
 }
 
 function EmptyState() {
@@ -42,29 +48,85 @@ function EmptyState() {
   );
 }
 
-function NFTsGrid({ nfts, viewMode, userNFTs, onNFTClick }: NFTsGridProps) {
+function NFTsGrid({
+  nfts,
+  viewMode,
+  userNFTs,
+  onNFTClick,
+  hasNFTs,
+  hasSeenAnimation,
+  animationCompleted,
+  onAnimationComplete,
+}: NFTsGridProps) {
+  let displayNFTs = [...nfts];
+
+  console.log("🔍 NFTsGrid render - hasNFTs:", hasNFTs, "hasSeenAnimation:", hasSeenAnimation, "viewMode:", viewMode);
+  console.log("🔍 Initial displayNFTs length:", displayNFTs.length);
+
+  // Log IPFS data for displayed NFTs
+  displayNFTs.forEach((nft) => {
+    console.log("🔗 NFT #" + nft.id + " contract: " + nft.contractAddress + " - will load IPFS metadata");
+  });
+
+  // Temporary pop-in animation for cards - only when data is loaded and ready
+  const shouldShowPopAnimation =
+    hasNFTs && !hasSeenAnimation && !animationCompleted && viewMode === "owned" && nfts.length > 0;
+
+  // Auto-complete animation after delay
+  useEffect(() => {
+    if (shouldShowPopAnimation && onAnimationComplete) {
+      const timer = setTimeout(() => {
+        onAnimationComplete(); // Trigger completion
+      }, 1000); // Complete after 1 second
+      return () => clearTimeout(timer);
+    }
+  }, [shouldShowPopAnimation, onAnimationComplete]);
+
+  // Hide NFTs from grid if user hasn't seen the reveal animation yet
+  // if (hasNFTs && !hasSeenAnimation && !animationCompleted && viewMode === "owned") {
+  //   console.log("🔍 Hiding NFTs because animation not seen yet");
+  //   displayNFTs = [];
+  // }
+
+  // Temporarily limit to first NFT for owned view
+  if (viewMode === "owned" && displayNFTs.length > 0) {
+    displayNFTs = [displayNFTs[0]];
+  }
+
+  const isSingleCard = viewMode === "owned" && displayNFTs.length === 1;
+
   const gridCols = useMemo(
     () =>
       viewMode === "all"
         ? "grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8"
-        : "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4",
-    [viewMode],
+        : isSingleCard
+          ? "grid-cols-1 place-items-center"
+          : "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4",
+    [viewMode, isSingleCard],
   );
 
   return (
-    <div className={`grid ${gridCols} gap-2 sm:gap-4`}>
-      {nfts.map((nft, index) => {
+    <div className={`grid ${gridCols} gap-2 sm:gap-4 ${isSingleCard ? "justify-center" : ""}`}>
+      {displayNFTs.map((nft, index) => {
         const isOwned = viewMode === "all" && userNFTs.some((owned) => owned.id === nft.id);
 
         return (
-          <NFTCard
+          <div
             key={`${nft.contractAddress}-${nft.id}`}
-            contractAddress={nft.contractAddress}
-            tokenId={nft.id}
-            onClick={() => onNFTClick(nft)}
-            showOwned={viewMode === "all"}
-            isOwned={isOwned}
-          />
+            className={`
+              ${isSingleCard ? "w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw] xl:w-[30vw] max-w-[800px]" : ""}
+              ${shouldShowPopAnimation ? "animate-pop-in" : ""}
+            `}
+            style={{ animationDelay: `${index * 150}ms` }}
+          >
+            <NFTCard
+              contractAddress={nft.contractAddress}
+              tokenId={nft.id}
+              onClick={() => onNFTClick(nft)}
+              showOwned={viewMode === "all"}
+              isOwned={isOwned}
+            />
+          </div>
         );
       })}
     </div>
@@ -77,11 +139,34 @@ export default function Collection() {
   const [viewMode, setViewMode] = useState<ViewMode>("owned");
   const [selectedNFT, setSelectedNFT] = useState<NFTData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [animationCompleted, setAnimationCompleted] = useState(false);
 
   const { userNFTs, allNFTs, displayNFTs, balance, totalSupply, loading, error } = useNFTData({
     contractAddress: NFT_COLLECTION_1_CONTRACT,
     viewMode,
   });
+
+  // Check if user has NFTs and setup reveal animation
+  const hasNFTs = balance && Number(balance) > 0;
+  const firstNFT = userNFTs[0];
+
+  const { shouldShowAnimation, hasSeenAnimation, resetAnimation } = useCardFlipAnimation(address, !!hasNFTs);
+
+  // Debug: Log when hasSeenAnimation changes
+  useEffect(() => {
+    console.log("🔍 hasSeenAnimation changed to:", hasSeenAnimation);
+  }, [hasSeenAnimation]);
+
+  // Refresh all NFT data after animation completes
+  const handleAnimationComplete = useCallback(() => {
+    console.log("🎯 Animation complete callback triggered!");
+    console.log("🎯 Current userNFTs length:", userNFTs.length);
+    console.log("🎯 Current balance:", balance?.toString());
+    console.log("🎯 Setting animationCompleted to true to force re-render");
+
+    // Force re-render by updating local state
+    setAnimationCompleted(true);
+  }, [userNFTs.length, balance]);
 
   // Log wallet connection status
   console.log("Collection page - Connected address:", address);
@@ -117,17 +202,17 @@ export default function Collection() {
         <div className="flex flex-col w-full mt-4 sm:mt-0">
           <div className="flex flex-col self-center w-full gap-4 mb-20 sm:mb-0 sm:gap-8">
             <div className="flex flex-col gap-y-3">
-              <div className="pinto-h2 sm:pinto-h1">My Collection</div>
-              <div className="pinto-sm sm:pinto-body-light text-pinto-light">
-                Connect your wallet to view your collection of Pinto NFTs.
-              </div>
+              {/* <div className="pinto-h2 sm:pinto-h1">My Pinto Beavers</div> */}
+              {/* <div className="pinto-sm sm:pinto-body-light text-pinto-light">
+                Connect your wallet to view your collection of Pinto Beavers.
+              </div> */}
             </div>
             <Separator />
             <div className="flex flex-col items-center justify-center py-16">
               <div className="text-center">
-                <div className="pinto-body text-pinto-light mb-4">
+                {/* <div className="pinto-body text-pinto-light mb-4">
                   Please connect your wallet to view your collection.
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -142,11 +227,13 @@ export default function Collection() {
         <div className="flex flex-col self-center w-full gap-4 mb-20 sm:mb-0 sm:gap-8">
           <div className="flex flex-col gap-y-3">
             <div className="pinto-h2 sm:pinto-h1">
-              {viewMode === "owned" ? "My Collection" : `${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s Collection`}
+              {viewMode === "owned"
+                ? /* "My Pinto Beavers" */ null
+                : `${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s Collection`}
             </div>
             <div className="pinto-sm sm:pinto-body-light text-pinto-light">
               {viewMode === "owned"
-                ? `Your collection of ${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s.`
+                ? /* "My Collection of Pinto Beaver NFTs" */ null
                 : `Browse all ${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s.`}
             </div>
           </div>
@@ -196,16 +283,48 @@ export default function Collection() {
           <Separator />
 
           <div className="mt-4">
-            {displayNFTs.length === 0 ? (
-              <EmptyState />
+            {loading ? (
+              // Show nothing while loading to prevent flash
+              <div />
+            ) : displayNFTs.length === 0 ? (
+              // <EmptyState />
+              <div className="grid grid-cols-1 place-items-center">
+                <div className="w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw] xl:w-[30vw] max-w-[800px] animate-pop-in">
+                  <div className="bg-gray-100 rounded-xl aspect-square flex items-center justify-center">
+                    {/* <div className="text-gray-400 pinto-h3 lg:pinto-h2 text-center px-4">
+                      No NFT
+                    </div> */}
+                  </div>
+                </div>
+              </div>
             ) : (
-              <NFTsGrid nfts={displayNFTs} viewMode={viewMode} userNFTs={userNFTs} onNFTClick={handleNFTClick} />
+              <NFTsGrid
+                nfts={displayNFTs}
+                viewMode={viewMode}
+                userNFTs={userNFTs}
+                onNFTClick={handleNFTClick}
+                hasNFTs={!!hasNFTs}
+                hasSeenAnimation={hasSeenAnimation}
+                animationCompleted={animationCompleted}
+                onAnimationComplete={handleAnimationComplete}
+              />
             )}
           </div>
         </div>
       </div>
 
       <NFTDetailModal isOpen={isModalOpen} onClose={handleCloseModal} selectedNFT={selectedNFT} />
+
+      {/* NFT Card Flip Reveal Animation Overlay */}
+      {/* {shouldShowAnimation && firstNFT && (
+        <NFTCardFlipReveal
+          contractAddress={firstNFT.contractAddress}
+          tokenId={firstNFT.id}
+          address={address}
+          hasNFTs={!!hasNFTs}
+          onComplete={handleAnimationComplete}
+        />
+      )} */}
     </PageContainer>
   );
 }

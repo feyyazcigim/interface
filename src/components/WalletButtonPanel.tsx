@@ -32,6 +32,9 @@ interface NFTProfileDisplayProps {
 const NFTProfileDisplay = ({ navigate, togglePanel }: NFTProfileDisplayProps) => {
   const { hasNFT, profileImageUrl } = useWalletNFTProfile();
 
+  // TEMPORARY: Hide NFT profile images - set to false to show real NFT images
+  const hideNFTProfile = true;
+
   if (!hasNFT || !profileImageUrl) {
     return null;
   }
@@ -43,9 +46,13 @@ const NFTProfileDisplay = ({ navigate, togglePanel }: NFTProfileDisplayProps) =>
         navigate("/collection");
         togglePanel();
       }}
-      className="w-[11.25rem] h-20 rounded-lg overflow-hidden bg-gray-100 hover:opacity-80 transition-opacity flex-shrink-0"
+      className="w-[11.25rem] h-20 rounded-lg overflow-hidden bg-gray-100 hover:opacity-80 transition-opacity flex-shrink-0 flex items-center justify-center"
     >
-      <img src={profileImageUrl} alt="NFT Profile" className="w-full h-full object-cover" />
+      {hideNFTProfile ? (
+        <span className="text-gray-500 font-semibold text-2xl">?</span>
+      ) : (
+        <img src={profileImageUrl} alt="NFT Profile" className="w-full h-full object-cover" />
+      )}
     </button>
   );
 };
