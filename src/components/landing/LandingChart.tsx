@@ -3,9 +3,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import TxFloater from "./TxFloater";
 
 const height = 577;
-const repetitions = 4; // Number of times to repeat the pattern
-const pointSpacing = 80; // pixels between each data point
-const scrollSpeed = 0.75;
+const repetitions = 50; // Number of times to repeat the pattern
+const pointSpacing = 120; // pixels between each data point
+const scrollSpeed = 1.5;
 
 // Price data with more baseline points to space out peaks and dips
 // Define the type for priceData
@@ -18,63 +18,173 @@ interface PricePoint {
   value: number;
   farmer?: Farmer;
   speed?: number; // Optional speed for specific transactions
+  speedVariance?: number;
+  priceVariance?: number;
+  spacingVariance?: number; // Optional spacing variance for this data point
 }
 
 const unstablePriceData: PricePoint[] = [
   { txType: null, value: 1.0 },
   { txType: null, value: 1.0 },
   { txType: "deposit", value: 1.008 },
-  { txType: "harvest", value: 0.992 },
-  { txType: "deposit", value: 1.006 },
-  { txType: "withdraw", value: 0.995 },
-  { txType: "convert", value: 1.005 },
-  { txType: "convert", value: 0.997 },
-  { txType: "deposit", value: 1.004 },
-  { txType: "harvest", value: 0.998 },
-  { txType: "sow", value: 1.003 },
-  { txType: "withdraw", value: 0.999 },
-  { txType: "convert", value: 1.002 },
-  { txType: "yield", value: 1.0 },
-  { txType: null, value: 1.001 },
-  { txType: null, value: 1.0 },
-  { txType: null, value: 0.999 },
-  { txType: null, value: 1.001 },
-  { txType: null, value: 1.0 },
-  { txType: null, value: 1.002 },
+  { txType: "harvest", value: 0.993, speed: 0.8 },
+  { txType: "deposit", value: 1.0055, speed: 0.7 },
+  { txType: "withdraw", value: 0.9955, speed: 0.6 },
+  { txType: "convert", value: 1.0025, speed: 0.6 },
+  { txType: "convert", value: 0.9984, speed: 0.6 },
+  { txType: "sow", value: 1.0004, speed: 0.6 },
+  { txType: "withdraw", value: 0.9995, speed: 0.6 },
+  { txType: null, value: 1.0001 },
+  { txType: null, value: 0.9998 },
   { txType: "deposit", value: 1.004 },
   { txType: "harvest", value: 0.997 },
   { txType: "deposit", value: 1.003 },
   { txType: "withdraw", value: 0.998 },
   { txType: "convert", value: 1.0025 },
   { txType: "yield", value: 1.0 },
-  { txType: null, value: 1.0005 },
-  { txType: null, value: 0.9995 },
-  { txType: null, value: 1.0002 },
-  { txType: null, value: 0.9998 },
-  { txType: null, value: 1.0003 },
-  { txType: null, value: 0.9999 },
 ];
 
 const stablePriceData: PricePoint[] = [
-  { txType: "sow", value: 0.9994 },
-  { txType: "harvest", value: 1.0004 },
-  { txType: null, value: 0.9994, speed: 3 },
-  { txType: "yield", value: 1.005, speed: 3 },
-  { txType: "convert", value: 0.995, speed: 1 },
-  { txType: null, value: 1.0004 },
-  { txType: "deposit", value: 0.9994 },
-  { txType: "withdraw", value: 1.0004 },
-  { txType: null, value: 0.9994, speed: 3 },
-  { txType: "yield", value: 1.005, speed: 3 },
-  { txType: "convert", value: 0.995, speed: 1 },
-  { txType: null, value: 1.0004 },
+  { txType: "deposit", value: 0.9994, speedVariance: 0.25, priceVariance: 0.0004, spacingVariance: 50 },
+  { txType: "withdraw", value: 1.0004, speedVariance: 0.25, priceVariance: 0.0004, spacingVariance: 50 },
+  { txType: "sow", value: 0.9994, speed: 3, speedVariance: 0.25, priceVariance: 0.0004, spacingVariance: 50 },
+  { txType: "yield", value: 1.005, speed: 3, speedVariance: 0.25, priceVariance: 0.0004, spacingVariance: 50 },
+  { txType: "convert", value: 0.995, speed: 1, speedVariance: 0.25, priceVariance: 0.0004, spacingVariance: 50 },
+  { txType: "harvest", value: 1.0004, speedVariance: 0.25, priceVariance: 0.0004, spacingVariance: 50 },
 ];
 
-// Combine unstablePriceData once, then stablePriceData repeated for seamless looping
-const fullPriceData: PricePoint[] = [
-  ...unstablePriceData,
-  ...Array.from({ length: repetitions }).flatMap(() => stablePriceData),
-];
+// Segment-based data structure
+interface ChartSegment {
+  id: string;
+  startX: number;
+  endX: number;
+  pathData: string;
+  points: { x: number; y: number; price: number }[];
+  transactionMarkers: { x: number; y: number; txType: string; farmer?: Farmer; index: number }[];
+  bezierSegments: {
+    p0: { x: number; y: number };
+    c1: { x: number; y: number };
+    c2: { x: number; y: number };
+    p1: { x: number; y: number };
+  }[];
+}
+
+// Function to apply variance to price data points
+function applyVarianceToPoint(point: PricePoint): PricePoint {
+  const newPoint = { ...point };
+
+  // Apply speed variance if present
+  if (point.speedVariance !== undefined) {
+    const speedVar = (Math.random() - 0.5) * 2 * point.speedVariance;
+    if (point.speed !== undefined) {
+      newPoint.speed = Math.max(0.1, point.speed + speedVar);
+    } else {
+      newPoint.speed = Math.max(0.1, scrollSpeed + speedVar);
+    }
+  }
+
+  // Apply price variance if present
+  if (point.priceVariance !== undefined) {
+    const priceVar = (Math.random() - 0.5) * 2 * point.priceVariance;
+    newPoint.value = point.value + priceVar;
+  }
+
+  return newPoint;
+}
+
+// Generate a single segment from price data
+function generateSegment(
+  data: PricePoint[],
+  startX: number,
+  segmentId: string,
+  lastPrice?: number,
+  globalIndexOffset: number = 0,
+  nextSegmentFirstPoint?: { x: number; y: number; price: number },
+): ChartSegment {
+  const points: { x: number; y: number; price: number }[] = [];
+  const transactionMarkers: { x: number; y: number; txType: string; farmer?: Farmer; index: number }[] = [];
+  const beziers: {
+    p0: { x: number; y: number };
+    c1: { x: number; y: number };
+    c2: { x: number; y: number };
+    p1: { x: number; y: number };
+  }[] = [];
+
+  let x = startX;
+  const processedData = [...data];
+
+  // Ensure price continuity
+  if (lastPrice !== undefined && processedData.length > 0) {
+    processedData[0] = { ...processedData[0], value: lastPrice };
+  }
+
+  for (let i = 0; i < processedData.length; i++) {
+    const y = priceToY(processedData[i].value);
+    points.push({ x, y, price: processedData[i].value });
+
+    if (processedData[i].txType) {
+      const txType = processedData[i].txType as string;
+      transactionMarkers.push({
+        x,
+        y,
+        txType,
+        farmer: processedData[i].farmer,
+        index: globalIndexOffset + i,
+      });
+    }
+
+    // Don't add spacing after the last point
+    if (i < processedData.length - 1) {
+      let spacing = pointSpacing;
+      if (processedData[i].spacingVariance !== undefined) {
+        const spacingVar = (Math.random() - 0.5) * 2 * (processedData[i].spacingVariance || 0);
+        spacing = Math.max(10, pointSpacing + spacingVar);
+      }
+      const segSpeed = processedData[i].speed || 1;
+      x += spacing / segSpeed;
+    }
+  }
+
+  // Generate path with Bezier smoothing
+  let pathData = "";
+  if (points.length > 0) {
+    pathData = segmentId === "unstable" ? `M ${points[0].x} ${points[0].y}` : "";
+
+    for (let i = segmentId === "unstable" ? 1 : 0; i < points.length; i++) {
+      const p0 = i > 0 ? points[i - 1] : points[i];
+      const p1 = points[i];
+      const prev = points[i - 2] || p0;
+
+      // For the last point, use the next segment's first point if available
+      let next = points[i + 1] || p1;
+      if (i === points.length - 1 && nextSegmentFirstPoint) {
+        next = nextSegmentFirstPoint;
+      }
+
+      // Calculate control points
+      const c1x = p0.x + (p1.x - prev.x) / 6;
+      const c1y = p0.y + (p1.y - prev.y) / 6;
+      const c2x = p1.x - (next.x - p0.x) / 6;
+      const c2y = p1.y - (next.y - p0.y) / 6;
+
+      pathData += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p1.x} ${p1.y}`;
+
+      if (i > 0) {
+        beziers.push({ p0, c1: { x: c1x, y: c1y }, c2: { x: c2x, y: c2y }, p1 });
+      }
+    }
+  }
+
+  return {
+    id: segmentId,
+    startX,
+    endX: x,
+    pathData,
+    points,
+    transactionMarkers,
+    bezierSegments: beziers,
+  };
+}
 
 // Array of person icons with different color backgrounds
 const personIcons = [
@@ -115,103 +225,185 @@ function priceToY(price: number) {
   return minY - ((price - minPrice) / (maxPrice - minPrice)) * (minY - maxY);
 }
 
-// Generate complete line path with multiple repetitions (Bezier smoothing)
-function generateCompletePath(pointSpacing: number) {
-  // Per-segment speed compression
-  const points: { x: number; y: number; price: number }[] = [];
-  const beziers: {
-    p0: { x: number; y: number };
-    c1: { x: number; y: number };
-    c2: { x: number; y: number };
-    p1: { x: number; y: number };
-  }[] = [];
-  const transactionMarkers: { x: number; y: number; txType: string; farmer?: Farmer; index: number }[] = [];
-
-  let x = 0;
-  for (let i = 0; i < fullPriceData.length; i++) {
-    const y = priceToY(fullPriceData[i].value);
-    points.push({ x, y, price: fullPriceData[i].value });
-    if (fullPriceData[i].txType) {
-      const txType = fullPriceData[i].txType as string;
-      transactionMarkers.push({ x, y, txType, farmer: fullPriceData[i].farmer, index: i });
-    }
-    // If this segment has a speed, compress the next segment's width
-    const segSpeed = fullPriceData[i].speed || 1;
-    x += pointSpacing / segSpeed;
-  }
-
-  if (points.length === 0) return { path: "", points: [], totalWidth: 0, beziers: [], transactionMarkers: [] };
-
-  let path = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 1; i < points.length; i++) {
-    const p0 = points[i - 1];
-    const p1 = points[i];
-    const prev = points[i - 2] || p0;
-    const next = points[i + 1] || p1;
-    // Calculate control points
-    const c1x = p0.x + (p1.x - prev.x) / 6;
-    const c1y = p0.y + (p1.y - prev.y) / 6;
-    const c2x = p1.x - (next.x - p0.x) / 6;
-    const c2y = p1.y - (next.y - p0.y) / 6;
-    path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p1.x} ${p1.y}`;
-    beziers.push({ p0, c1: { x: c1x, y: c1y }, c2: { x: c2x, y: c2y }, p1 });
-  }
-
-  const totalWidth = points.length > 0 ? points[points.length - 1].x : 0;
-  return { path, points, totalWidth, beziers, transactionMarkers };
-}
-
 // Helper: cubic Bezier at t
 function cubicBezier(p0: number, c1: number, c2: number, p1: number, t: number) {
   const mt = 1 - t;
   return mt ** 3 * p0 + 3 * mt ** 2 * t * c1 + 3 * mt * t ** 2 * c2 + t ** 3 * p1;
 }
 
-// Helper to get width of a price data segment
-function getSegmentWidth(data: PricePoint[], pointSpacing: number) {
-  let width = 0;
-  for (let i = 0; i < data.length; i++) {
-    const segSpeed = data[i].speed || 1;
-    width += pointSpacing / segSpeed;
-  }
-  return width;
-}
-
 export default function LandingChart() {
-  const [viewportWidth, setViewportWidth] = useState(1920); // Default width
+  const [viewportWidth, setViewportWidth] = useState(1920);
+  const [segments, setSegments] = useState<ChartSegment[]>([]);
+  const [unstableSegment, setUnstableSegment] = useState<ChartSegment | null>(null);
+  const segmentIdCounterRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const scrollOffset = useMotionValue(0);
   const x = useTransform(scrollOffset, (value) => -value);
+
+  // Generate the initial unstable segment
+  useEffect(() => {
+    const unstable = generateSegment(unstablePriceData, 0, "unstable", undefined, 0);
+    setUnstableSegment(unstable);
+
+    // Assign farmers to unstable segment transaction markers
+    let farmerIdx = 0;
+    unstable.transactionMarkers.forEach((marker) => {
+      const pointIndex = unstable.points.findIndex((p) => p.x === marker.x);
+      if (pointIndex !== -1 && unstable.points[pointIndex]) {
+        marker.farmer = personIcons[farmerIdx % personIcons.length];
+        farmerIdx++;
+      }
+    });
+  }, []);
 
   // Update viewport width on mount and resize
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
         setViewportWidth(containerRef.current.clientWidth);
-        if (viewportWidth && singlePatternWidth) {
-          scrollOffset.set(viewportWidth * -1);
+        // Initialize scroll to show the left edge
+        if (viewportWidth === 1920) {
+          // Only on first load
+          scrollOffset.set(-viewportWidth);
         }
       }
     };
 
-    // Initial measurement
     updateWidth();
-
-    // Listen for resize events
     window.addEventListener("resize", updateWidth);
-
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const singlePatternWidth = stablePriceData.length * pointSpacing;
+  // Segment management: generate segments based on scroll position
+  useEffect(() => {
+    if (!unstableSegment) return;
 
-  // Calculate compressed widths for unstable and stable segments
-  const unstablePhaseWidth = useMemo(() => getSegmentWidth(unstablePriceData, pointSpacing), []);
-  const stablePhaseWidth = useMemo(() => getSegmentWidth(stablePriceData, pointSpacing), []);
+    const unsubscribe = scrollOffset.on("change", (currentScroll) => {
+      const bufferWidth = viewportWidth * 2;
+      const visibleStart = currentScroll;
+      const visibleEnd = currentScroll + viewportWidth;
+      const generateEnd = visibleEnd + bufferWidth;
 
-  // Memoize generateCompletePath result, only recalculating if pointSpacing or priceData changes
-  const { path, beziers, transactionMarkers, totalWidth } = useMemo(() => generateCompletePath(pointSpacing), []);
+      setSegments((currentSegments) => {
+        // Find the rightmost point we need to cover
+        const lastSegment = currentSegments.length > 0 ? currentSegments[currentSegments.length - 1] : null;
+        const currentRightEdge = lastSegment ? lastSegment.endX : unstableSegment.endX;
+
+        // Generate new segments if needed
+        if (currentRightEdge < generateEnd) {
+          const newSegments: ChartSegment[] = [...currentSegments];
+          let nextX = currentRightEdge;
+          let globalIndex =
+            unstableSegment.points.length + currentSegments.reduce((acc, seg) => acc + seg.points.length, 0);
+
+          while (nextX < generateEnd) {
+            // Get the last price for continuity
+            let lastPrice: number | undefined;
+            if (newSegments.length > 0) {
+              const lastSeg = newSegments[newSegments.length - 1];
+              lastPrice = lastSeg.points[lastSeg.points.length - 1]?.price;
+            } else {
+              lastPrice = unstableSegment.points[unstableSegment.points.length - 1]?.price;
+            }
+
+            // Generate current segment data
+            const currentVarianceData = stablePriceData.map(applyVarianceToPoint);
+
+            // Generate next segment data to get its first point for smooth connection
+            const nextVarianceData = stablePriceData.map(applyVarianceToPoint);
+            let nextSegmentFirstPoint: { x: number; y: number; price: number } | undefined;
+
+            if (nextX + 500 < generateEnd) {
+              // Only if we need another segment
+              // Calculate where the next segment would start
+              let tempX = nextX;
+              for (let i = 0; i < currentVarianceData.length - 1; i++) {
+                let spacing = pointSpacing;
+                if (currentVarianceData[i].spacingVariance !== undefined) {
+                  const spacingVar = (Math.random() - 0.5) * 2 * (currentVarianceData[i].spacingVariance || 0);
+                  spacing = Math.max(10, pointSpacing + spacingVar);
+                }
+                const segSpeed = currentVarianceData[i].speed || 1;
+                tempX += spacing / segSpeed;
+              }
+
+              // Get the first point of next segment
+              const nextLastPrice = currentVarianceData[currentVarianceData.length - 1].value;
+              const nextFirstPrice = nextVarianceData.length > 0 ? nextLastPrice : nextLastPrice;
+              nextSegmentFirstPoint = {
+                x: tempX,
+                y: priceToY(nextFirstPrice),
+                price: nextFirstPrice,
+              };
+            }
+
+            // Generate the current segment with next segment's first point for smooth curves
+            const newSegment = generateSegment(
+              currentVarianceData,
+              nextX,
+              `stable-${segmentIdCounterRef.current}`,
+              lastPrice,
+              globalIndex,
+              nextSegmentFirstPoint,
+            );
+
+            // Assign farmers to transaction markers
+            let farmerIdx = 0;
+            newSegment.transactionMarkers.forEach((marker) => {
+              marker.farmer = personIcons[farmerIdx % personIcons.length];
+              farmerIdx++;
+            });
+
+            newSegments.push(newSegment);
+            nextX = newSegment.endX;
+            segmentIdCounterRef.current++;
+            globalIndex += newSegment.points.length;
+          }
+
+          return newSegments;
+        }
+
+        // Clean up segments that are far to the left
+        const cleanupThreshold = visibleStart - bufferWidth * 2;
+        const keptSegments = currentSegments.filter((seg) => seg.endX > cleanupThreshold);
+        return keptSegments.length !== currentSegments.length ? keptSegments : currentSegments;
+      });
+    });
+
+    return unsubscribe;
+  }, [unstableSegment, viewportWidth]);
+
+  // Combine all segments for rendering
+  const allSegments = useMemo(() => {
+    return unstableSegment ? [unstableSegment, ...segments] : segments;
+  }, [unstableSegment, segments]);
+
+  const allBeziers = useMemo(() => {
+    return allSegments.flatMap((seg) => seg.bezierSegments);
+  }, [allSegments]);
+
+  const allTransactionMarkers = useMemo(() => {
+    return allSegments.flatMap((seg) => seg.transactionMarkers);
+  }, [allSegments]);
+
+  const combinedPath = useMemo(() => {
+    if (allSegments.length === 0) return "";
+
+    let combined = "";
+    for (let i = 0; i < allSegments.length; i++) {
+      const segment = allSegments[i];
+      if (i === 0) {
+        // First segment includes the Move command
+        combined += segment.pathData;
+      } else {
+        // Subsequent segments: skip the 'M x y' part and just add the curves
+        const pathWithoutMove = segment.pathData.replace(/^M\s+[\d.-]+\s+[\d.-]+\s*/, "");
+        combined += " " + pathWithoutMove;
+      }
+    }
+    return combined;
+  }, [allSegments]);
 
   // Memoize measurementX
   const measurementX = useMemo(() => viewportWidth * 0.75, [viewportWidth]);
@@ -219,7 +411,7 @@ export default function LandingChart() {
   // Memoize getYOnBezierCurve
   const getYOnBezierCurve = useCallback(
     (xVal: number) => {
-      for (const seg of beziers) {
+      for (const seg of allBeziers) {
         if (xVal >= seg.p0.x && xVal <= seg.p1.x) {
           // Find t for xVal in [p0.x, p1.x] using binary search
           let t0 = 0;
@@ -237,47 +429,53 @@ export default function LandingChart() {
           return cubicBezier(seg.p0.y, seg.c1.y, seg.c2.y, seg.p1.y, t);
         }
       }
-      // Fallback: clamp to ends
-      if (beziers.length > 0) {
-        if (xVal < beziers[0].p0.x) return beziers[0].p0.y;
-        if (xVal > beziers[beziers.length - 1].p1.x) return beziers[beziers.length - 1].p1.y;
+      // Fallback: find closest point
+      const allPoints = allSegments.flatMap((seg) => seg.points);
+      if (allPoints.length > 0) {
+        let closest = allPoints[0];
+        let minDist = Math.abs(closest.x - xVal);
+        for (const point of allPoints) {
+          const dist = Math.abs(point.x - xVal);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = point;
+          }
+        }
+        return closest.y;
       }
-      return 0;
+      return height / 2; // Fallback to middle
     },
-    [beziers],
+    [allBeziers, allSegments],
   );
 
   // Use Bezier curve for indicator Y
   const currentY = useTransform(scrollOffset, (currentOffset) => {
-    // Looping logic: after initial phase, loop only the stable segment
-    let xVal = measurementX + currentOffset;
-    if (xVal > unstablePhaseWidth) {
-      // Offset so the stable segment loops seamlessly
-      const stableOffset = (xVal - unstablePhaseWidth) % stablePhaseWidth;
-      xVal = unstablePhaseWidth + stableOffset;
-    }
+    const xVal = measurementX + currentOffset;
     return getYOnBezierCurve(xVal);
   });
 
-  // Get current price and txType at the 75% position
-  const currentIndex = useTransform(scrollOffset, (currentOffset) => {
-    let xVal = measurementX + currentOffset;
-    if (xVal > unstablePhaseWidth) {
-      const stableOffset = (xVal - unstablePhaseWidth) % stablePhaseWidth;
-      xVal = unstablePhaseWidth + stableOffset;
-    }
-    // Find the closest point index by X
-    let minDist = Infinity;
-    let idx = 0;
-    for (let i = 0; i < beziers.length; i++) {
-      const seg = beziers[i];
-      if (Math.abs(seg.p0.x - xVal) < minDist) {
-        minDist = Math.abs(seg.p0.x - xVal);
-        idx = i;
+  // Get current transaction data at the measurement position
+  const getCurrentTransactionData = useCallback(
+    (currentOffset: number) => {
+      const xVal = measurementX + currentOffset;
+
+      // Find the closest transaction marker
+      let closestMarker: { txType: string; farmer?: Farmer } | null = null;
+      let minDist = Infinity;
+
+      for (const marker of allTransactionMarkers) {
+        const dist = Math.abs(marker.x - xVal);
+        if (dist < minDist && dist < pointSpacing / 2) {
+          // Within half spacing
+          minDist = dist;
+          closestMarker = { txType: marker.txType, farmer: marker.farmer };
+        }
       }
-    }
-    return idx;
-  });
+
+      return closestMarker;
+    },
+    [measurementX, allTransactionMarkers],
+  );
 
   // Get the current txType and farmer for the floating marker
   const [currentTxType, setCurrentTxType] = useState<string | null>(null);
@@ -286,10 +484,10 @@ export default function LandingChart() {
   const lineStrokeColor = useMotionValue("#387F5C");
 
   useEffect(() => {
-    const unsubscribe = currentIndex.on("change", (idx) => {
-      const i = Math.max(0, Math.min(Math.round(idx), fullPriceData.length - 1));
-      const newTxType = fullPriceData[i].txType;
-      const newFarmer = fullPriceData[i].farmer;
+    const unsubscribe = scrollOffset.on("change", (currentOffset) => {
+      const transactionData = getCurrentTransactionData(currentOffset);
+      const newTxType = transactionData?.txType || null;
+      const newFarmer = transactionData?.farmer;
 
       // Trigger flash effect when txType changes and is not null
       if (newTxType !== currentTxType && newTxType !== null) {
@@ -302,30 +500,41 @@ export default function LandingChart() {
       setCurrentFarmer(newFarmer);
     });
     return unsubscribe;
-  }, [currentIndex]);
+  }, [scrollOffset, getCurrentTransactionData, currentTxType]);
 
-  // Use totalWidth for animation loop
+  // Infinite scrolling animation at constant rate
   useEffect(() => {
-    let controls: ReturnType<typeof animate> | null = null;
-    const pxPerSecond = scrollSpeed * 60;
-    controls = animate(scrollOffset, unstablePhaseWidth, {
-      duration: unstablePhaseWidth / pxPerSecond,
-      ease: "linear",
-      delay: 5.5,
-      onComplete: () => {
-        // Loop only the stable segment
-        controls = animate(scrollOffset, unstablePhaseWidth + stablePhaseWidth, {
-          duration: stablePhaseWidth / pxPerSecond / 2,
-          ease: "linear",
-          repeat: Infinity,
-          repeatType: "loop",
-        });
-      },
-    });
-    return () => {
-      controls?.stop();
+    let animationId: number;
+    let startTime: number;
+    let initialScrollValue: number;
+
+    const animate = () => {
+      const currentTime = performance.now();
+      const elapsed = currentTime - startTime;
+
+      // Scroll at constant rate: scrollSpeed pixels per second
+      const newScrollValue = initialScrollValue + (elapsed / 1000) * scrollSpeed * 60;
+      scrollOffset.set(newScrollValue);
+
+      animationId = requestAnimationFrame(animate);
     };
-  }, [scrollOffset, unstablePhaseWidth, stablePhaseWidth]);
+
+    // Start animation after delay
+    const startAnimation = () => {
+      startTime = performance.now();
+      initialScrollValue = scrollOffset.get();
+      animationId = requestAnimationFrame(animate);
+    };
+
+    const timeoutId = setTimeout(startAnimation, 5500); // 5.5 second delay
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [scrollOffset]);
 
   const [showAnimation, setShowAnimation] = useState<(string | undefined)[]>(() => personIcons.map(() => undefined));
 
@@ -383,13 +592,13 @@ export default function LandingChart() {
             fill="none"
             mask="url(#fadeMask)"
             initial={{ clipPath: "inset(0 0 100% 0)" }}
-            animate={{ clipPath: "inset(0 0 0 0)" }}
+            animate={{ clipPath: "inset(0 0 0.01% 0)" }}
             transition={{ duration: 4, ease: "easeInOut", delay: 4.5 }}
           />
           {/* Scrolling price line */}
           <g clipPath="url(#viewport)">
             <motion.path
-              d={path}
+              d={combinedPath}
               fill="none"
               stroke={lineStrokeColor}
               strokeWidth="3"
@@ -401,23 +610,13 @@ export default function LandingChart() {
               transition={{ duration: 0.5, delay: 5.5 }}
             />
             {/* Static transaction floaters */}
-            {transactionMarkers.map((marker) => {
-              // Use marker.index for robust placement
-              let positionAbove = false;
-              if (marker.index > 0) {
-                const prev = fullPriceData[marker.index - 1];
-                const curr = fullPriceData[marker.index];
-                if (curr.value !== prev.value) {
-                  positionAbove = curr.value > prev.value;
-                } else if (marker.index < fullPriceData.length - 1) {
-                  const next = fullPriceData[marker.index + 1];
-                  positionAbove = curr.value > next.value;
-                }
-              }
+            {allTransactionMarkers.map((marker, index) => {
+              // Simple positioning logic
+              const positionAbove = Math.random() > 0.5; // Randomize for now
               return (
                 <motion.foreignObject
-                  key={`${marker.x}-${marker.y}-${marker.txType}`}
-                  x={marker.x - 20}
+                  key={`${marker.x}-${marker.y}-${marker.txType}-${index}`}
+                  x={marker.x - 40}
                   y={positionAbove ? marker.y - 40 : marker.y + 10}
                   width={80}
                   height={40}
@@ -481,177 +680,6 @@ export default function LandingChart() {
           />
         </motion.div>
       </div>
-      {/*
-      <div className="flex flex-row justify-between w-full px-14 mt-5 mb-5">
-        {personIcons.map((data, index) => {
-          // Use a unique key for each profile
-          const key = `${data.icon}-${data.bg}`;
-          return (
-            <div key={key} className="flex flex-col items-center relative">
-              <div className="px-[0.8125rem] py-2 absolute top-0 border-t border-l border-r rounded-t-3xl border-transparent">
-                <FarmerProfile icon={data.icon} bg={data.bg} size={36} />
-              </div>
-              <motion.div
-                variants={{
-                  deposit: { opacity: [0, 1, 1, 0], transition: { duration: 2, times: [0, 0.25, 0.75, 1] } },
-                  withdraw: { opacity: [0, 1, 1, 0], transition: { duration: 2, times: [0, 0.25, 0.75, 1] } },
-                  convert: { opacity: [0, 1, 1, 0], transition: { duration: 2, times: [0, 0.25, 0.75, 1] } },
-                  harvest: { opacity: [0, 1, 1, 0], transition: { duration: 2, times: [0, 0.25, 0.75, 1] } },
-                  sow: { opacity: [0, 1, 1, 0], transition: { duration: 2, times: [0, 0.25, 0.75, 1] } },
-                  yield: { opacity: [0, 1, 1, 0], transition: { duration: 2, times: [0, 0.25, 0.75, 1] } },
-                  default: { opacity: 0, transition: { duration: 0.25 } },
-                }}
-                animate={showAnimation[index] || "default"}
-                transition={{ ease: "easeInOut", delayChildren: 0.5 }}
-                onAnimationComplete={(def) => {
-                  if (!showAnimation[index]) return;
-                  setShowAnimation((prev) => {
-                    const next = [...prev];
-                    next[index] = undefined;
-                    return next;
-                  });
-                }}
-              >
-                <div className="px-[0.8125rem] py-2 border-t border-l border-r rounded-t-3xl">
-                  <FarmerProfile icon={data.icon} bg={data.bg} size={36} />
-                </div>
-                {showAnimation[index] !== "yield" && (
-                  <div className="flex flex-row border h-[6rem] p-2 gap-0.5 overflow-hidden">
-                    <motion.div
-                      className="h-20 w-6 rounded bg-pinto-green self-end"
-                      variants={{
-                        deposit: { width: "30%" },
-                        convert: { width: "70%" },
-                        withdraw: { width: "50%", transform: "translateX(-150%)" },
-                        harvest: {
-                          width: "50%",
-                          height: ["25%", "100%"],
-                          transition: { duration: 0.75, ease: "easeInOut" },
-                        },
-                        sow: { width: "50%" },
-                        yield: { width: "50%" },
-                        default: { width: "50%" },
-                      }}
-                      animate={showAnimation[index] || "default"}
-                      transition={{ duration: 0.25, ease: "easeIn" }}
-                      style={{ minWidth: 0 }}
-                    />
-                    <motion.div
-                      className="flex flex-col gap-0.5 items-center"
-                      variants={{
-                        deposit: { width: "70%" },
-                        convert: { width: "30%" },
-                        withdraw: { width: "50%", transform: "translateX(150%)" },
-                        harvest: { width: "50%" },
-                        sow: { width: "50%" },
-                        yield: { width: "50%" },
-                        default: { width: "50%" },
-                      }}
-                      animate={showAnimation[index] || "default"}
-                      transition={{ duration: 0.25, ease: "easeIn" }}
-                      style={{ minWidth: 0 }}
-                    >
-                      <motion.div
-                        className="w-full rounded basis-1/4"
-                        variants={{
-                          deposit: { height: "20%" },
-                          convert: { height: "20%" },
-                          withdraw: { height: "20%" },
-                          harvest: { height: "20%" },
-                          sow: { height: "20%" },
-                          yield: { height: "20%" },
-                          default: { height: "20%" },
-                        }}
-                        animate={showAnimation[index] || "default"}
-                        transition={{ duration: 0.25, ease: "easeIn" }}
-                        style={{ backgroundColor: "#2775CA" }}
-                      />
-                      <motion.div
-                        className="w-full rounded basis-1/4"
-                        variants={{
-                          deposit: { height: "20%" },
-                          convert: { height: "20%" },
-                          withdraw: { height: "20%" },
-                          harvest: { height: "20%" },
-                          sow: { height: "20%" },
-                          yield: { height: "20%" },
-                          default: { height: "20%" },
-                        }}
-                        animate={showAnimation[index] || "default"}
-                        transition={{ duration: 0.25, ease: "easeIn" }}
-                        style={{ backgroundColor: "#9945FF" }}
-                      />
-                      <motion.div
-                        className="w-full rounded basis-1/4"
-                        variants={{
-                          deposit: { height: "20%" },
-                          convert: { height: "20%" },
-                          withdraw: { height: "20%" },
-                          harvest: { height: "20%" },
-                          sow: { height: "20%" },
-                          yield: { height: "20%" },
-                          default: { height: "20%" },
-                        }}
-                        animate={showAnimation[index] || "default"}
-                        transition={{ duration: 0.25, ease: "easeIn" }}
-                        style={{ backgroundColor: "#F7931A" }}
-                      />
-                      <motion.div
-                        className="w-full rounded basis-1/4"
-                        variants={{
-                          deposit: { height: "20%" },
-                          convert: { height: "20%" },
-                          withdraw: { height: "20%" },
-                          harvest: { height: "20%" },
-                          sow: { height: "20%" },
-                          yield: { height: "20%" },
-                          default: { height: "20%" },
-                        }}
-                        animate={showAnimation[index] || "default"}
-                        transition={{ duration: 0.25, ease: "easeIn" }}
-                        style={{ backgroundColor: "#0052FF" }}
-                      />
-                      <motion.div
-                        className="w-full rounded basis-1/4"
-                        variants={{
-                          deposit: { height: "20%" },
-                          convert: { height: "20%" },
-                          withdraw: { height: "20%" },
-                          harvest: { height: "20%" },
-                          sow: { height: "20%" },
-                          yield: { height: "20%" },
-                          default: { height: "20%" },
-                        }}
-                        animate={showAnimation[index] || "default"}
-                        transition={{ duration: 0.25, ease: "easeIn" }}
-                        style={{ backgroundColor: "#8C8C8C" }}
-                      />
-                    </motion.div>
-                  </div>
-                )}
-                {showAnimation[index] === "yield" && (
-                  <div className="flex flex-row h-[6rem] overflow-hidden">
-                    <div className="border py-2 px-[0.9375rem] h-12">
-                      <img src={"Yield_Landing.svg"} alt="Yield" className="h-8 w-8" />
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            </div>
-          );
-        })}
-      </div>
-      */}
     </div>
   );
-}
-
-// Assign a unique farmer icon to each non-null txType price point
-const assignedFarmers = personIcons.slice();
-let farmerIdx = 0;
-for (let i = 0; i < fullPriceData.length; i++) {
-  if (fullPriceData[i].txType) {
-    fullPriceData[i].farmer = assignedFarmers[farmerIdx % assignedFarmers.length];
-    farmerIdx++;
-  }
 }
