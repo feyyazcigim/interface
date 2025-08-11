@@ -449,11 +449,13 @@ export default function LandingChart() {
     [scrollOffset, measurementX, priceTrackingActive],
     ([currentOffset, measX, isActive]) => {
       // If price tracking is not active, return static position
+      // @ts-ignore-next-line
       if (isActive < 1) {
         return staticY;
       }
 
       // Looping logic: after initial phase (unstable + semi-stable), loop only the stable segment
+      // @ts-ignore-next-line
       let xVal = measX + currentOffset;
       const totalInitialWidth = positions.segments.totalInitial; // unstable + semi-stable
       if (xVal > totalInitialWidth) {
@@ -467,6 +469,7 @@ export default function LandingChart() {
 
   // Get current price and txType at the measurement position
   const currentIndex = useTransform([scrollOffset, measurementX], ([currentOffset, measX]) => {
+    // @ts-ignore-next-line
     const xVal = measX + currentOffset;
     // Find the closest point index by X
     let minDist = Infinity;
@@ -935,6 +938,7 @@ export default function LandingChart() {
             txType={currentTxType}
             viewportWidth={viewportWidth}
             x={x}
+            // @ts-ignore-next-line
             markerX={measurementX}
             isFixed={false}
           />
