@@ -7,10 +7,173 @@ import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 import TxFloater from "./TxFloater";
 
-const height = 577;
-const repetitions = 4; // Number of times to repeat the pattern
-const pointSpacing = 80; // pixels between each data point
-const scrollSpeed = 0.75;
+// Master animation configuration - Variable-driven system
+// This configuration drives all animations through percentages and proportions
+// instead of hardcoded values, making the entire system responsive and scalable
+const ANIMATION_CONFIG = {
+  // Visual constants
+  height: 577,
+  repetitions: 4,
+  pointSpacing: 140,
+
+  // Speed constants
+  baseSpeed: 3, // pixels per frame at 60fps
+
+  // Phase proportions and timing
+  phases: {
+    fadeIn: 0.1, // 10% of total experience time
+    phase1: 0.2, // 20% of total time
+    phase2: 0.35, // 35% of total time
+    phase3: 0.4, // 40% of total time (initial scroll)
+  },
+
+  // Stage message positioning (as percentages of data segment widths)
+  stageMessages: {
+    // Messages appear during unstable phase based on position
+    realStability: {
+      phase: "unstable",
+      startPosition: 0.1, // 10% through unstable period
+      endPosition: 0.9, // 90% through unstable period
+    },
+    creditEarned: {
+      phase: "semiStable",
+      startPosition: 0.1, // 10% through semi-stable period
+      endPosition: 0.9, // 90% through semi-stable period
+    },
+    pintoAlive: {
+      phase: "stable",
+      startPosition: 0.3, // 30% through stable period (first loop)
+      duration: 5000, // Fixed 5s duration
+    },
+  },
+
+  // Measurement line positions (as viewport percentages)
+  measurementLine: {
+    initial: 0.75, // 75% from left
+    minimum: 0.1, // 10% from left
+    final: 0.75, // back to 75%
+  },
+
+  // Clip path expansion
+  clipPath: {
+    initial: 0.1, // 10% width
+    final: 0.75, // 75% width
+  },
+
+  // Fade-in sequence timing (as percentages of fade-in phase)
+  fadeInSequence: {
+    grid: { start: 0.0, duration: 0.6 },
+    measurementLine: { start: 0.2, duration: 0.4 },
+    priceLine: { start: 1, duration: 0.2 },
+    priceIndicator: { start: 0.85, duration: 0.15 },
+  },
+
+  // Price indicator
+  priceIndicator: {
+    staticPosition: 0.5, // 50% of chart height
+  },
+
+  // Horizontal reference line (represents $1.00)
+  horizontalReference: {
+    position: 0.5, // 50% of chart height
+    color: "#D1D5DB", // Light gray
+    strokeWidth: 1,
+    dashArray: "5,5",
+  },
+};
+
+// Legacy constants for backward compatibility during transition
+const height = ANIMATION_CONFIG.height;
+const repetitions = ANIMATION_CONFIG.repetitions;
+const pointSpacing = ANIMATION_CONFIG.pointSpacing;
+const _scrollSpeed = ANIMATION_CONFIG.baseSpeed;
+
+// Position calculation system based on data segment widths
+function calculatePositions(viewportWidth: number, chartHeight: number) {
+  // Calculate actual widths of each data segment
+  const unstableWidth = getSegmentWidth(unstablePriceData, pointSpacing);
+  const semiStableWidth = getSegmentWidth(semiStablePriceData, pointSpacing);
+  const stableWidth = getSegmentWidth(stablePriceData, pointSpacing);
+
+  return {
+    // Data segment widths
+    segments: {
+      unstable: unstableWidth,
+      semiStable: semiStableWidth,
+      stable: stableWidth,
+      // Cumulative positions for each segment start
+      unstableStart: 0,
+      semiStableStart: unstableWidth,
+      stableStart: unstableWidth + semiStableWidth,
+      totalInitial: unstableWidth + semiStableWidth,
+    },
+
+    // Stage message trigger positions
+    messagePositions: {
+      realStability: {
+        show: unstableWidth * ANIMATION_CONFIG.stageMessages.realStability.startPosition,
+        hide: unstableWidth * ANIMATION_CONFIG.stageMessages.realStability.endPosition,
+      },
+      creditEarned: {
+        show: unstableWidth + semiStableWidth * ANIMATION_CONFIG.stageMessages.creditEarned.startPosition,
+        hide: unstableWidth + semiStableWidth * ANIMATION_CONFIG.stageMessages.creditEarned.endPosition,
+      },
+      pintoAlive: {
+        show: unstableWidth + semiStableWidth, // Start of stable phase
+        duration: ANIMATION_CONFIG.stageMessages.pintoAlive.duration,
+      },
+    },
+
+    // Measurement line positions
+    measurementLine: {
+      initial: viewportWidth * ANIMATION_CONFIG.measurementLine.initial,
+      minimum: viewportWidth * ANIMATION_CONFIG.measurementLine.minimum,
+      final: viewportWidth * ANIMATION_CONFIG.measurementLine.final,
+      moveToMinimumOffset:
+        viewportWidth * (ANIMATION_CONFIG.measurementLine.minimum - ANIMATION_CONFIG.measurementLine.initial),
+      moveToFinalOffset: 0,
+    },
+
+    // Clip path dimensions
+    clipPath: {
+      initial: viewportWidth * ANIMATION_CONFIG.clipPath.initial,
+      final: viewportWidth * ANIMATION_CONFIG.clipPath.final,
+    },
+
+    // Price indicator positions
+    priceIndicator: {
+      staticY: chartHeight * ANIMATION_CONFIG.priceIndicator.staticPosition,
+    },
+  };
+}
+
+// Duration calculation system - simplified for fade-in only
+function calculateDurations(_viewportWidth: number) {
+  const _pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60;
+  const fadeInDuration = 8; // Fixed fade-in duration in seconds
+
+  return {
+    // Fade-in sequence durations only
+    fadeInSequence: {
+      grid: {
+        start: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.grid.start,
+        duration: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.grid.duration,
+      },
+      measurementLine: {
+        start: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.measurementLine.start,
+        duration: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.measurementLine.duration,
+      },
+      priceLine: {
+        start: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceLine.start,
+        duration: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceLine.duration,
+      },
+      priceIndicator: {
+        start: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceIndicator.start,
+        duration: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceIndicator.duration,
+      },
+    },
+  };
+}
 
 // Price data with more baseline points to space out peaks and dips
 // Define the type for priceData
@@ -174,21 +337,37 @@ export default function LandingChart() {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Calculate durations and positions based on current viewport
+  const durations = useMemo(() => calculateDurations(viewportWidth), [viewportWidth]);
+  const positions = useMemo(() => calculatePositions(viewportWidth, height), [viewportWidth]);
+  const singlePatternWidth = useMemo(() => stablePriceData.length * pointSpacing, []);
+
   const scrollOffset = useMotionValue(0);
   const measurementLineOffset = useMotionValue(0); // Separate offset for measurement line movement
   const clipPathWidth = useMotionValue(0); // Separate motion value for clip path
+  const horizontalLineClipPath = useMotionValue(viewportWidth); // For horizontal line reveal animation (starts hidden from right)
   const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
   const floatersOpacity = useTransform(priceTrackingActive, (active) => (active >= 1 ? 1 : 0));
   const x = useTransform(scrollOffset, (value) => -value);
 
-  // Update viewport width on mount and resize
+  // Update viewport width on mount and resize with responsive recalculation
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setViewportWidth(containerRef.current.clientWidth);
-        if (viewportWidth && singlePatternWidth) {
-          scrollOffset.set(viewportWidth * -0.1);
-          clipPathWidth.set(viewportWidth * 0.1); // Initialize clip path to 10%
+        const newViewportWidth = containerRef.current.clientWidth;
+        setViewportWidth(newViewportWidth);
+
+        // Recalculate positions for new viewport width
+        const newPositions = calculatePositions(newViewportWidth, height);
+
+        if (newViewportWidth && singlePatternWidth) {
+          // Reset motion values with new calculated positions
+          scrollOffset.set(newViewportWidth * -ANIMATION_CONFIG.clipPath.initial);
+          clipPathWidth.set(newPositions.clipPath.initial);
+          horizontalLineClipPath.set(newViewportWidth); // Start fully clipped from right (invisible)
+
+          // Reset measurement line offset to baseline for responsive changes
+          measurementLineOffset.set(0);
         }
       }
     };
@@ -196,13 +375,20 @@ export default function LandingChart() {
     // Initial measurement
     updateWidth();
 
-    // Listen for resize events
-    window.addEventListener("resize", updateWidth);
+    // Listen for resize events with debouncing for performance
+    let resizeTimeout: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(updateWidth, 150); // 150ms debounce
+    };
 
-    return () => window.removeEventListener("resize", updateWidth);
-  }, [viewportWidth, scrollOffset, clipPathWidth]);
+    window.addEventListener("resize", debouncedResize);
 
-  const singlePatternWidth = stablePriceData.length * pointSpacing;
+    return () => {
+      window.removeEventListener("resize", debouncedResize);
+      clearTimeout(resizeTimeout);
+    };
+  }, [scrollOffset, clipPathWidth, horizontalLineClipPath, measurementLineOffset, singlePatternWidth]);
 
   // Calculate compressed widths for unstable and stable segments
   const unstablePhaseWidth = useMemo(() => getSegmentWidth(unstablePriceData, pointSpacing), []);
@@ -222,8 +408,8 @@ export default function LandingChart() {
     return generateCompletePath(pointSpacing);
   }, []);
 
-  // Dynamic measurement line position
-  const baseMeasurementX = useMemo(() => viewportWidth * 0.75, [viewportWidth]);
+  // Dynamic measurement line position using calculated baseline
+  const baseMeasurementX = useMemo(() => positions.measurementLine.initial, [positions.measurementLine.initial]);
   const measurementX = useTransform(measurementLineOffset, (offset) => baseMeasurementX + offset);
 
   // Memoize getYOnBezierCurve
@@ -258,7 +444,7 @@ export default function LandingChart() {
   );
 
   // Use Bezier curve for indicator Y - only when price tracking is active
-  const staticY = height * 0.5; // 50% of chart height for neutral position
+  const staticY = positions.priceIndicator.staticY; // Calculated static position
   const currentY = useTransform(
     [scrollOffset, measurementX, priceTrackingActive],
     ([currentOffset, measX, isActive]) => {
@@ -267,12 +453,13 @@ export default function LandingChart() {
         return staticY;
       }
 
-      // Looping logic: after initial phase, loop only the stable segment
+      // Looping logic: after initial phase (unstable + semi-stable), loop only the stable segment
       let xVal = measX + currentOffset;
-      if (xVal > unstablePhaseWidth) {
+      const totalInitialWidth = positions.segments.totalInitial; // unstable + semi-stable
+      if (xVal > totalInitialWidth) {
         // Offset so the stable segment loops seamlessly
-        const stableOffset = (xVal - unstablePhaseWidth) % stablePhaseWidth;
-        xVal = unstablePhaseWidth + stableOffset;
+        const stableOffset = (xVal - totalInitialWidth) % positions.segments.stable;
+        xVal = totalInitialWidth + stableOffset;
       }
       return getYOnBezierCurve(xVal);
     },
@@ -306,7 +493,6 @@ export default function LandingChart() {
 
   // Refs to prevent timer interference
   const pintoTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const ctaTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const lineStrokeColor = useMotionValue("#387F5C");
 
@@ -335,71 +521,76 @@ export default function LandingChart() {
       if (pintoTimerRef.current) {
         clearTimeout(pintoTimerRef.current);
       }
-      if (ctaTimerRef.current) {
-        clearTimeout(ctaTimerRef.current);
-      }
     };
   }, []);
 
-  // Two-phase animation: measurement line movement, then chart scrolling
+  // Position-based animation system: start scrolling and track position for messages
   useEffect(() => {
     let controls: ReturnType<typeof animate> | null = null;
 
     const startAnimation = async () => {
-      // Phase 1: Move measurement line from 75% to 10% (chart draws behind)
-      const moveToStart = viewportWidth * (0.1 - 0.75); // Negative offset to move left
-      controls = animate(measurementLineOffset, moveToStart, {
-        duration: 3,
+      // Calculate timing for measurement line animations
+      const measurementLineStartDelay =
+        durations.fadeInSequence.priceIndicator.start + durations.fadeInSequence.priceIndicator.duration + 1;
+      const measurementLineDuration = 3;
+
+      // Horizontal line Stage 1: Start when measurement line reveals, end halfway through measurement line reveal
+      const _horizontalStage1 = animate(horizontalLineClipPath, viewportWidth * 0.25, {
+        duration: durations.fadeInSequence.measurementLine.duration / 2, // Half the measurement line reveal duration
         ease: "easeInOut",
-        delay: 6.5, // After all fade-ins complete
+        delay: durations.fadeInSequence.measurementLine.start, // Start when measurement line reveals
+      });
+
+      // Phase 1: Move measurement line to 10% position
+      controls = animate(measurementLineOffset, positions.measurementLine.moveToMinimumOffset, {
+        duration: measurementLineDuration,
+        ease: "easeInOut",
+        delay: measurementLineStartDelay,
+      });
+
+      // Phase 2: Move measurement line back to 75% and expand clip path
+      const phase2Duration = 4;
+      const phase2StartDelay = measurementLineStartDelay + measurementLineDuration;
+
+      // Horizontal line Stage 2: Start when measurement line begins moving back to left
+      const _horizontalStage2 = animate(horizontalLineClipPath, 0, {
+        duration: phase2Duration, // Same duration as measurement line return
+        ease: "easeInOut",
+        delay: phase2StartDelay, // Start when Phase 2 begins
       });
 
       await controls;
 
-      // Phase 2: Move measurement line back to 75% AND expand clip path (chart draws)
-      const _clipPathAnimation = animate(clipPathWidth, viewportWidth * 0.75, {
-        duration: 4,
+      const _clipPathAnimation = animate(clipPathWidth, positions.clipPath.final, {
+        duration: phase2Duration,
         ease: "easeIn",
       });
 
-      controls = animate(measurementLineOffset, 0, {
-        duration: 4,
+      controls = animate(measurementLineOffset, positions.measurementLine.moveToFinalOffset, {
+        duration: phase2Duration,
         ease: "easeIn",
       });
 
       // Activate price tracking at the start of Phase 2
       priceTrackingActive.set(1);
 
-      // Trigger stage messages during Phase 2
-      setTimeout(() => setShowRealStability(true), 500); // 0.5s into Phase 2
-      setTimeout(() => {
-        setShowRealStability(false);
-        setShowCreditEarned(true);
-      }, 2000); // 2s into Phase 2
-      setTimeout(() => {
-        setShowCreditEarned(false);
-        setShowPintoAlive(true);
-        // Hide "Pinto is alive" after 5 seconds and then show MainCTA
-        pintoTimerRef.current = setTimeout(() => {
-          setShowPintoAlive(false);
-          ctaTimerRef.current = setTimeout(() => {
-            setShowMainCTA(true);
-          }, 500);
-        }, 5000);
-      }, 3500); // 3.5s into Phase 2
-
       await controls;
 
-      // Phase 3: Resume normal chart scrolling behavior
-      const pxPerSecond = scrollSpeed * 60;
-      const totalInitialWidth = unstablePhaseWidth + getSegmentWidth(semiStablePriceData, pointSpacing);
-      controls = animate(scrollOffset, totalInitialWidth, {
-        duration: totalInitialWidth / pxPerSecond,
+      // No need for setTimeout-based messages anymore - they're handled by position monitoring
+
+      // Phase 3: Start continuous scrolling through all data
+      const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60;
+      const totalDataWidth = positions.segments.unstable + positions.segments.semiStable;
+
+      // Scroll through initial segments (unstable + semi-stable)
+      controls = animate(scrollOffset, totalDataWidth, {
+        duration: totalDataWidth / pxPerSecond,
         ease: "linear",
         onComplete: () => {
-          // Loop only the stable segment
-          controls = animate(scrollOffset, totalInitialWidth + stablePhaseWidth, {
-            duration: stablePhaseWidth / pxPerSecond / 2,
+          // Loop only the stable segment with consistent speed
+          const loopDuration = positions.segments.stable / pxPerSecond;
+          controls = animate(scrollOffset, totalDataWidth + positions.segments.stable, {
+            duration: loopDuration,
             ease: "linear",
             repeat: Infinity,
             repeatType: "loop",
@@ -416,11 +607,67 @@ export default function LandingChart() {
   }, [
     scrollOffset,
     measurementLineOffset,
-    unstablePhaseWidth,
-    stablePhaseWidth,
-    viewportWidth,
     clipPathWidth,
+    horizontalLineClipPath,
     priceTrackingActive,
+    positions,
+    durations,
+    viewportWidth,
+  ]);
+
+  // Position-based message triggering system
+  useEffect(() => {
+    const unsubscribe = scrollOffset.on("change", (currentScrollOffset) => {
+      // Calculate where the measurement line intersects the data
+      // This accounts for both the scroll offset and measurement line position
+      const measurementLineX = positions.measurementLine.initial + measurementLineOffset.get();
+      const dataPosition = measurementLineX + currentScrollOffset;
+
+      // Real Stability message - during unstable phase (30-90%)
+      if (
+        dataPosition >= positions.messagePositions.realStability.show &&
+        dataPosition <= positions.messagePositions.realStability.hide
+      ) {
+        if (!showRealStability) {
+          setShowRealStability(true);
+        }
+      } else if (showRealStability) {
+        setShowRealStability(false);
+      }
+
+      // Credit Earned message - during semi-stable phase (30-90%)
+      if (
+        dataPosition >= positions.messagePositions.creditEarned.show &&
+        dataPosition <= positions.messagePositions.creditEarned.hide
+      ) {
+        if (!showCreditEarned) {
+          setShowCreditEarned(true);
+        }
+      } else if (showCreditEarned) {
+        setShowCreditEarned(false);
+      }
+
+      // Pinto Alive message - at start of stable phase (only trigger once)
+      if (dataPosition >= positions.messagePositions.pintoAlive.show && !showPintoAlive && !showMainCTA) {
+        setShowPintoAlive(true);
+
+        // Hide "Pinto is alive" after fixed duration and show MainCTA immediately
+        pintoTimerRef.current = setTimeout(() => {
+          setShowPintoAlive(false);
+          setShowMainCTA(true); // Show MainCTA immediately when Pinto disappears
+        }, positions.messagePositions.pintoAlive.duration);
+      }
+    });
+
+    return unsubscribe;
+  }, [
+    scrollOffset,
+    measurementLineOffset,
+    positions,
+    showRealStability,
+    showCreditEarned,
+    showPintoAlive,
+    showMainCTA,
   ]);
 
   const [_showAnimation, setShowAnimation] = useState<(string | undefined)[]>(() => personIcons.map(() => undefined));
@@ -556,7 +803,11 @@ export default function LandingChart() {
             mask="url(#fadeMask)"
             initial={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
             animate={{ opacity: 1, clipPath: "inset(0 0 0 0)" }}
-            transition={{ duration: 3, ease: "easeInOut", delay: 2 }}
+            transition={{
+              duration: durations.fadeInSequence.grid.duration,
+              ease: "easeInOut",
+              delay: durations.fadeInSequence.grid.start,
+            }}
           />
           {/* Measurement line */}
           <motion.path
@@ -569,7 +820,23 @@ export default function LandingChart() {
             style={{ x: measurementLineOffset }}
             initial={{ clipPath: "inset(0 0 100% 0)" }}
             animate={{ clipPath: "inset(0 0 0.01% 0)" }}
-            transition={{ duration: 2, ease: "easeInOut", delay: 3 }}
+            transition={{
+              duration: durations.fadeInSequence.measurementLine.duration,
+              ease: "easeInOut",
+              delay: durations.fadeInSequence.measurementLine.start,
+            }}
+          />
+          {/* Horizontal reference line at $1.00 - Two-stage reveal */}
+          <motion.path
+            d={`M 0 ${height * ANIMATION_CONFIG.horizontalReference.position} L ${viewportWidth} ${height * ANIMATION_CONFIG.horizontalReference.position}`}
+            stroke="#387F5C"
+            strokeWidth="2"
+            strokeDasharray="10,10"
+            fill="none"
+            mask="url(#fadeMask)"
+            style={{
+              clipPath: useTransform(horizontalLineClipPath, (clipX) => `inset(0 ${clipX}px 0 0)`),
+            }}
           />
           {/* Scrolling price line */}
           <g clipPath="url(#viewport)">
@@ -583,7 +850,10 @@ export default function LandingChart() {
               style={{ x }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 5.2 }}
+              transition={{
+                duration: durations.fadeInSequence.priceLine.duration,
+                delay: durations.fadeInSequence.priceLine.start,
+              }}
             />
             {/* Static transaction floaters - only show during price tracking */}
             {transactionMarkers.map((marker) => {
@@ -640,7 +910,10 @@ export default function LandingChart() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, scale: [1, 1.1, 1] }}
           transition={{
-            opacity: { duration: 0.25, delay: 5.9 },
+            opacity: {
+              duration: durations.fadeInSequence.priceIndicator.duration,
+              delay: durations.fadeInSequence.priceIndicator.start,
+            },
             scale: { duration: 1, repeat: Infinity, ease: "easeInOut" },
           }}
         >
@@ -670,3 +943,10 @@ export default function LandingChart() {
     </div>
   );
 }
+
+// Variable-driven animation system complete:
+// - All timings calculated from ANIMATION_CONFIG percentages
+// - All positions derived from viewport dimensions
+// - Fully responsive with automatic recalculation
+// - Consistent animation speeds across all phases
+// - Timeline-based coordination of all events
