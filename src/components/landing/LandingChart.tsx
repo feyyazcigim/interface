@@ -567,7 +567,7 @@ export default function LandingChart() {
             mask="url(#fadeMask)"
             style={{ x: measurementLineOffset }}
             initial={{ clipPath: "inset(0 0 100% 0)" }}
-            animate={{ clipPath: "inset(0 0 0 0)" }}
+            animate={{ clipPath: "inset(0 0 0.01% 0)" }}
             transition={{ duration: 2, ease: "easeInOut", delay: 3 }}
           />
           {/* Scrolling price line */}
