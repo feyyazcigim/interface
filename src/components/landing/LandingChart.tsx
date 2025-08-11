@@ -1,5 +1,10 @@
+import PintoLogo from "@/assets/protocol/PintoLogo.svg";
+import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { navLinks } from "../nav/nav/Navbar";
+import { Button } from "../ui/Button";
 import TxFloater from "./TxFloater";
 
 const height = 577;
@@ -23,36 +28,23 @@ interface PricePoint {
 const unstablePriceData: PricePoint[] = [
   { txType: null, value: 1.0 },
   { txType: null, value: 1.0 },
-  { txType: "deposit", value: 1.008 },
-  { txType: "harvest", value: 0.992 },
-  { txType: "deposit", value: 1.006 },
-  { txType: "withdraw", value: 0.995 },
-  { txType: "convert", value: 1.005 },
-  { txType: "convert", value: 0.997 },
-  { txType: "deposit", value: 1.004 },
-  { txType: "harvest", value: 0.998 },
-  { txType: "sow", value: 1.003 },
-  { txType: "withdraw", value: 0.999 },
-  { txType: "convert", value: 1.002 },
-  { txType: "yield", value: 1.0 },
-  { txType: null, value: 1.001 },
-  { txType: null, value: 1.0 },
-  { txType: null, value: 0.999 },
-  { txType: null, value: 1.001 },
-  { txType: null, value: 1.0 },
-  { txType: null, value: 1.002 },
+  { txType: "harvest", value: 0.993, speed: 0.8 },
+  { txType: "deposit", value: 1.0055, speed: 0.7 },
+  { txType: "withdraw", value: 0.9955, speed: 0.6 },
+  { txType: "convert", value: 1.0025, speed: 0.6 },
+  { txType: "convert", value: 0.9984, speed: 0.6 },
+  { txType: "sow", value: 1.0004, speed: 0.6 },
+  { txType: "withdraw", value: 0.9995, speed: 0.6 },
+];
+
+const semiStablePriceData: PricePoint[] = [
+  { txType: null, value: 0.9998 },
   { txType: "deposit", value: 1.004 },
   { txType: "harvest", value: 0.997 },
   { txType: "deposit", value: 1.003 },
   { txType: "withdraw", value: 0.998 },
   { txType: "convert", value: 1.0025 },
   { txType: "yield", value: 1.0 },
-  { txType: null, value: 1.0005 },
-  { txType: null, value: 0.9995 },
-  { txType: null, value: 1.0002 },
-  { txType: null, value: 0.9998 },
-  { txType: null, value: 1.0003 },
-  { txType: null, value: 0.9999 },
 ];
 
 const stablePriceData: PricePoint[] = [
@@ -73,6 +65,7 @@ const stablePriceData: PricePoint[] = [
 // Combine unstablePriceData once, then stablePriceData repeated for seamless looping
 const fullPriceData: PricePoint[] = [
   ...unstablePriceData,
+  ...semiStablePriceData,
   ...Array.from({ length: repetitions }).flatMap(() => stablePriceData),
 ];
 
@@ -283,6 +276,26 @@ export default function LandingChart() {
   const [currentTxType, setCurrentTxType] = useState<string | null>(null);
   const [currentFarmer, setCurrentFarmer] = useState<Farmer | undefined>(undefined);
 
+  // Track animation phase and progress
+  type AnimationPhase = "unstable" | "semiStable" | "stable";
+  const [currentPhase, setCurrentPhase] = useState<AnimationPhase>("unstable");
+  const [phaseProgress, setPhaseProgress] = useState(0); // 0 to 1
+
+  // Stage message states
+  const [showRealStability, setShowRealStability] = useState(false);
+  const [showCreditEarned, setShowCreditEarned] = useState(false);
+  const [showPintoAlive, setShowPintoAlive] = useState(false);
+  const [showMainCTA, setShowMainCTA] = useState(false);
+
+  // Flags to track if messages have been shown (prevent looping)
+  const [realStabilityShown, setRealStabilityShown] = useState(false);
+  const [creditEarnedShown, setCreditEarnedShown] = useState(false);
+  const [pintoAliveShown, setPintoAliveShown] = useState(false);
+
+  // Refs to prevent timer interference
+  const pintoTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const ctaTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const lineStrokeColor = useMotionValue("#387F5C");
 
   useEffect(() => {
@@ -290,6 +303,26 @@ export default function LandingChart() {
       const i = Math.max(0, Math.min(Math.round(idx), fullPriceData.length - 1));
       const newTxType = fullPriceData[i].txType;
       const newFarmer = fullPriceData[i].farmer;
+
+      // Calculate phase and progress
+      let phase: AnimationPhase = "unstable";
+      let progress = 0;
+
+      if (i < unstablePriceData.length) {
+        phase = "unstable";
+        progress = i / (unstablePriceData.length - 1);
+      } else if (i < unstablePriceData.length + semiStablePriceData.length) {
+        phase = "semiStable";
+        const semiStableIndex = i - unstablePriceData.length;
+        progress = semiStableIndex / (semiStablePriceData.length - 1);
+      } else {
+        phase = "stable";
+        const stableIndex = (i - unstablePriceData.length - semiStablePriceData.length) % stablePriceData.length;
+        progress = stableIndex / (stablePriceData.length - 1);
+      }
+
+      setCurrentPhase(phase);
+      setPhaseProgress(progress);
 
       // Trigger flash effect when txType changes and is not null
       if (newTxType !== currentTxType && newTxType !== null) {
@@ -303,6 +336,57 @@ export default function LandingChart() {
     });
     return unsubscribe;
   }, [currentIndex]);
+
+  // Handle "Real stability takes time" message
+  useEffect(() => {
+    if (currentPhase === "unstable" && phaseProgress >= 0.3 && phaseProgress <= 0.95 && !realStabilityShown) {
+      setShowRealStability(true);
+      setRealStabilityShown(true);
+    } else if (currentPhase !== "unstable" || phaseProgress > 0.95) {
+      setShowRealStability(false);
+    }
+  }, [currentPhase, phaseProgress, realStabilityShown]);
+
+  // Handle "Credit is earned" message
+  useEffect(() => {
+    if (currentPhase === "semiStable" && phaseProgress >= 0.3 && phaseProgress <= 0.95 && !creditEarnedShown) {
+      setShowCreditEarned(true);
+      setCreditEarnedShown(true);
+    } else if (currentPhase !== "semiStable" || phaseProgress > 0.95) {
+      setShowCreditEarned(false);
+    }
+  }, [currentPhase, phaseProgress, creditEarnedShown]);
+
+  // Handle "Pinto is alive" message and MainCTA timing
+  useEffect(() => {
+    if (currentPhase === "stable" && !pintoAliveShown && !pintoTimerRef.current) {
+      console.log("Starting Pinto is alive sequence");
+      setShowPintoAlive(true);
+      setPintoAliveShown(true);
+
+      // Hide "Pinto is alive" after 5 seconds and then show MainCTA
+      pintoTimerRef.current = setTimeout(() => {
+        console.log("Timer fired - Hiding Pinto is alive");
+        setShowPintoAlive(false);
+        ctaTimerRef.current = setTimeout(() => {
+          console.log("Showing MainCTA");
+          setShowMainCTA(true);
+        }, 500); // Small delay for smooth transition
+      }, 5000);
+    }
+  }, [currentPhase, pintoAliveShown]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (pintoTimerRef.current) {
+        clearTimeout(pintoTimerRef.current);
+      }
+      if (ctaTimerRef.current) {
+        clearTimeout(ctaTimerRef.current);
+      }
+    };
+  }, []);
 
   // Use totalWidth for animation loop
   useEffect(() => {
@@ -343,8 +427,101 @@ export default function LandingChart() {
     });
   }, [currentFarmer, currentTxType]);
 
+  const revealAnimation = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full mb-32">
+    <div className="flex flex-col items-center justify-center h-full w-full mb-32 gap-10">
+      {/* Stage Messages */}
+      <div className="min-h-[200px] flex flex-col items-center justify-center">
+        <AnimatePresence mode="wait">
+          {showRealStability && (
+            <motion.span
+              key="real-stability"
+              className="text-2xl leading-[1.4] font-thin text-pinto-gray-4 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              Real stability takes time
+            </motion.span>
+          )}
+          {!showRealStability && showCreditEarned && (
+            <motion.span
+              key="credit-earned"
+              className="text-2xl leading-[1.4] font-thin text-pinto-gray-4 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              Credit is earned
+            </motion.span>
+          )}
+          {!showRealStability && !showCreditEarned && showPintoAlive && (
+            <motion.span
+              key="pinto-alive"
+              className="text-2xl leading-[1.4] font-thin text-pinto-gray-4 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              Pinto is alive
+            </motion.span>
+          )}
+          {/* MainCTA Component - Only show after Pinto is alive fades out */}
+          {showMainCTA && (
+            <motion.div
+              className="flex flex-col gap-8"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+            >
+              <div className="flex flex-col gap-4 self-stretch items-center">
+                <motion.h2
+                  className="text-[4rem] leading-[1.1] font-thin text-black"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
+                >
+                  <div className="flex flex-row gap-4 items-center">
+                    <img src={PintoLogo} alt="Pinto Logo" className="h-20" />
+                    <img src={PintoLogoText} alt="Pinto Logo" className="h-20" />
+                  </div>
+                </motion.h2>
+                <motion.span
+                  className="text-2xl leading-[1.4] font-thin text-pinto-gray-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, ease: "easeInOut", delay: 0.4 }}
+                >
+                  An Algorithmic Stablecoin Balanced by Farmers like you.
+                </motion.span>
+              </div>
+              <motion.div
+                className="flex flex-row gap-4 mx-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
+              >
+                <Link to={navLinks.overview}>
+                  <Button rounded="full">Come Seed the Trustless Economy →</Button>
+                </Link>
+                <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
+                    Read the Docs
+                  </Button>
+                </Link>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      {/* Chart Component */}
       <div ref={containerRef} className="w-full relative">
         <svg width="100%" height={height} viewBox={`0 0 ${viewportWidth} ${height}`} style={{ overflow: "visible" }}>
           <defs>

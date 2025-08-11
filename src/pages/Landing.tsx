@@ -2,7 +2,6 @@ import AuditsList from "@/components/landing/AuditsList";
 import BugBounty from "@/components/landing/BugBounty";
 import FarmToTable from "@/components/landing/FarmToTable";
 import LandingChart from "@/components/landing/LandingChart";
-import MainCTA from "@/components/landing/MainCTA";
 import ProjectStats from "@/components/landing/ProjectStats";
 import Resources from "@/components/landing/Resources";
 import SecondaryCTA from "@/components/landing/SecondaryCTA";
@@ -43,10 +42,7 @@ export default function Landing() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-20 mt-9 overflow-clip">
-        <div className="mx-auto">
-          <MainCTA />
-        </div>
+      <div className="flex flex-col mt-9 overflow-clip">
         <div>
           <LandingChart />
         </div>
