@@ -175,6 +175,9 @@ export default function LandingChart() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const scrollOffset = useMotionValue(0);
+  const measurementLineOffset = useMotionValue(0); // Separate offset for measurement line movement
+  const clipPathWidth = useMotionValue(0); // Separate motion value for clip path
+  const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
   const x = useTransform(scrollOffset, (value) => -value);
 
   // Update viewport width on mount and resize
@@ -183,7 +186,8 @@ export default function LandingChart() {
       if (containerRef.current) {
         setViewportWidth(containerRef.current.clientWidth);
         if (viewportWidth && singlePatternWidth) {
-          scrollOffset.set(viewportWidth * -1);
+          scrollOffset.set(viewportWidth * -0.1);
+          clipPathWidth.set(viewportWidth * 0.1); // Initialize clip path to 10%
         }
       }
     };
@@ -195,7 +199,7 @@ export default function LandingChart() {
     window.addEventListener("resize", updateWidth);
 
     return () => window.removeEventListener("resize", updateWidth);
-  }, []);
+  }, [viewportWidth, scrollOffset, clipPathWidth]);
 
   const singlePatternWidth = stablePriceData.length * pointSpacing;
 
@@ -203,11 +207,23 @@ export default function LandingChart() {
   const unstablePhaseWidth = useMemo(() => getSegmentWidth(unstablePriceData, pointSpacing), []);
   const stablePhaseWidth = useMemo(() => getSegmentWidth(stablePriceData, pointSpacing), []);
 
-  // Memoize generateCompletePath result, only recalculating if pointSpacing or priceData changes
-  const { path, beziers, transactionMarkers, totalWidth } = useMemo(() => generateCompletePath(pointSpacing), []);
+  // Assign farmers to price data and generate path
+  const { path, beziers, transactionMarkers } = useMemo(() => {
+    // Assign a unique farmer icon to each non-null txType price point
+    const assignedFarmers = personIcons.slice();
+    let farmerIdx = 0;
+    for (let i = 0; i < fullPriceData.length; i++) {
+      if (fullPriceData[i].txType) {
+        fullPriceData[i].farmer = assignedFarmers[farmerIdx % assignedFarmers.length];
+        farmerIdx++;
+      }
+    }
+    return generateCompletePath(pointSpacing);
+  }, []);
 
-  // Memoize measurementX
-  const measurementX = useMemo(() => viewportWidth * 0.75, [viewportWidth]);
+  // Dynamic measurement line position
+  const baseMeasurementX = useMemo(() => viewportWidth * 0.75, [viewportWidth]);
+  const measurementX = useTransform(measurementLineOffset, (offset) => baseMeasurementX + offset);
 
   // Memoize getYOnBezierCurve
   const getYOnBezierCurve = useCallback(
@@ -240,25 +256,30 @@ export default function LandingChart() {
     [beziers],
   );
 
-  // Use Bezier curve for indicator Y
-  const currentY = useTransform(scrollOffset, (currentOffset) => {
-    // Looping logic: after initial phase, loop only the stable segment
-    let xVal = measurementX + currentOffset;
-    if (xVal > unstablePhaseWidth) {
-      // Offset so the stable segment loops seamlessly
-      const stableOffset = (xVal - unstablePhaseWidth) % stablePhaseWidth;
-      xVal = unstablePhaseWidth + stableOffset;
-    }
-    return getYOnBezierCurve(xVal);
-  });
+  // Use Bezier curve for indicator Y - only when price tracking is active
+  const staticY = height * 0.5; // 50% of chart height for neutral position
+  const currentY = useTransform(
+    [scrollOffset, measurementX, priceTrackingActive],
+    ([currentOffset, measX, isActive]) => {
+      // If price tracking is not active, return static position
+      if (isActive < 1) {
+        return staticY;
+      }
 
-  // Get current price and txType at the 75% position
-  const currentIndex = useTransform(scrollOffset, (currentOffset) => {
-    let xVal = measurementX + currentOffset;
-    if (xVal > unstablePhaseWidth) {
-      const stableOffset = (xVal - unstablePhaseWidth) % stablePhaseWidth;
-      xVal = unstablePhaseWidth + stableOffset;
-    }
+      // Looping logic: after initial phase, loop only the stable segment
+      let xVal = measX + currentOffset;
+      if (xVal > unstablePhaseWidth) {
+        // Offset so the stable segment loops seamlessly
+        const stableOffset = (xVal - unstablePhaseWidth) % stablePhaseWidth;
+        xVal = unstablePhaseWidth + stableOffset;
+      }
+      return getYOnBezierCurve(xVal);
+    },
+  );
+
+  // Get current price and txType at the measurement position
+  const currentIndex = useTransform([scrollOffset, measurementX], ([currentOffset, measX]) => {
+    const xVal = measX + currentOffset;
     // Find the closest point index by X
     let minDist = Infinity;
     let idx = 0;
@@ -276,21 +297,11 @@ export default function LandingChart() {
   const [currentTxType, setCurrentTxType] = useState<string | null>(null);
   const [currentFarmer, setCurrentFarmer] = useState<Farmer | undefined>(undefined);
 
-  // Track animation phase and progress
-  type AnimationPhase = "unstable" | "semiStable" | "stable";
-  const [currentPhase, setCurrentPhase] = useState<AnimationPhase>("unstable");
-  const [phaseProgress, setPhaseProgress] = useState(0); // 0 to 1
-
   // Stage message states
   const [showRealStability, setShowRealStability] = useState(false);
   const [showCreditEarned, setShowCreditEarned] = useState(false);
   const [showPintoAlive, setShowPintoAlive] = useState(false);
   const [showMainCTA, setShowMainCTA] = useState(false);
-
-  // Flags to track if messages have been shown (prevent looping)
-  const [realStabilityShown, setRealStabilityShown] = useState(false);
-  const [creditEarnedShown, setCreditEarnedShown] = useState(false);
-  const [pintoAliveShown, setPintoAliveShown] = useState(false);
 
   // Refs to prevent timer interference
   const pintoTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -304,28 +315,8 @@ export default function LandingChart() {
       const newTxType = fullPriceData[i].txType;
       const newFarmer = fullPriceData[i].farmer;
 
-      // Calculate phase and progress
-      let phase: AnimationPhase = "unstable";
-      let progress = 0;
-
-      if (i < unstablePriceData.length) {
-        phase = "unstable";
-        progress = i / (unstablePriceData.length - 1);
-      } else if (i < unstablePriceData.length + semiStablePriceData.length) {
-        phase = "semiStable";
-        const semiStableIndex = i - unstablePriceData.length;
-        progress = semiStableIndex / (semiStablePriceData.length - 1);
-      } else {
-        phase = "stable";
-        const stableIndex = (i - unstablePriceData.length - semiStablePriceData.length) % stablePriceData.length;
-        progress = stableIndex / (stablePriceData.length - 1);
-      }
-
-      setCurrentPhase(phase);
-      setPhaseProgress(progress);
-
-      // Trigger flash effect when txType changes and is not null
-      if (newTxType !== currentTxType && newTxType !== null) {
+      // Trigger flash effect when txType changes and is not null (only if price tracking is active)
+      if (newTxType !== currentTxType && newTxType !== null && priceTrackingActive.get() >= 1) {
         animate(lineStrokeColor, "#00C767", { duration: 0.25, ease: "easeInOut" }).then(() => {
           animate(lineStrokeColor, "#387F5C", { duration: 0.25, ease: "easeInOut" });
         });
@@ -335,46 +326,7 @@ export default function LandingChart() {
       setCurrentFarmer(newFarmer);
     });
     return unsubscribe;
-  }, [currentIndex]);
-
-  // Handle "Real stability takes time" message
-  useEffect(() => {
-    if (currentPhase === "unstable" && phaseProgress >= 0.3 && phaseProgress <= 0.95 && !realStabilityShown) {
-      setShowRealStability(true);
-      setRealStabilityShown(true);
-    } else if (currentPhase !== "unstable" || phaseProgress > 0.95) {
-      setShowRealStability(false);
-    }
-  }, [currentPhase, phaseProgress, realStabilityShown]);
-
-  // Handle "Credit is earned" message
-  useEffect(() => {
-    if (currentPhase === "semiStable" && phaseProgress >= 0.3 && phaseProgress <= 0.95 && !creditEarnedShown) {
-      setShowCreditEarned(true);
-      setCreditEarnedShown(true);
-    } else if (currentPhase !== "semiStable" || phaseProgress > 0.95) {
-      setShowCreditEarned(false);
-    }
-  }, [currentPhase, phaseProgress, creditEarnedShown]);
-
-  // Handle "Pinto is alive" message and MainCTA timing
-  useEffect(() => {
-    if (currentPhase === "stable" && !pintoAliveShown && !pintoTimerRef.current) {
-      console.log("Starting Pinto is alive sequence");
-      setShowPintoAlive(true);
-      setPintoAliveShown(true);
-
-      // Hide "Pinto is alive" after 5 seconds and then show MainCTA
-      pintoTimerRef.current = setTimeout(() => {
-        console.log("Timer fired - Hiding Pinto is alive");
-        setShowPintoAlive(false);
-        ctaTimerRef.current = setTimeout(() => {
-          console.log("Showing MainCTA");
-          setShowMainCTA(true);
-        }, 500); // Small delay for smooth transition
-      }, 5000);
-    }
-  }, [currentPhase, pintoAliveShown]);
+  }, [currentIndex, currentTxType, lineStrokeColor, priceTrackingActive]);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -388,30 +340,89 @@ export default function LandingChart() {
     };
   }, []);
 
-  // Use totalWidth for animation loop
+  // Two-phase animation: measurement line movement, then chart scrolling
   useEffect(() => {
     let controls: ReturnType<typeof animate> | null = null;
-    const pxPerSecond = scrollSpeed * 60;
-    controls = animate(scrollOffset, unstablePhaseWidth, {
-      duration: unstablePhaseWidth / pxPerSecond,
-      ease: "linear",
-      delay: 5.5,
-      onComplete: () => {
-        // Loop only the stable segment
-        controls = animate(scrollOffset, unstablePhaseWidth + stablePhaseWidth, {
-          duration: stablePhaseWidth / pxPerSecond / 2,
-          ease: "linear",
-          repeat: Infinity,
-          repeatType: "loop",
-        });
-      },
-    });
+
+    const startAnimation = async () => {
+      // Phase 1: Move measurement line from 75% to 10% (chart draws behind)
+      const moveToStart = viewportWidth * (0.1 - 0.75); // Negative offset to move left
+      controls = animate(measurementLineOffset, moveToStart, {
+        duration: 3,
+        ease: "easeInOut",
+        delay: 6.5, // After all fade-ins complete
+      });
+
+      await controls;
+
+      // Phase 2: Move measurement line back to 75% AND expand clip path (chart draws)
+      const _clipPathAnimation = animate(clipPathWidth, viewportWidth * 0.75, {
+        duration: 4,
+        ease: "easeIn",
+      });
+
+      controls = animate(measurementLineOffset, 0, {
+        duration: 4,
+        ease: "easeIn",
+      });
+
+      // Activate price tracking at the start of Phase 2
+      priceTrackingActive.set(1);
+
+      // Trigger stage messages during Phase 2
+      setTimeout(() => setShowRealStability(true), 500); // 0.5s into Phase 2
+      setTimeout(() => {
+        setShowRealStability(false);
+        setShowCreditEarned(true);
+      }, 2000); // 2s into Phase 2
+      setTimeout(() => {
+        setShowCreditEarned(false);
+        setShowPintoAlive(true);
+        // Hide "Pinto is alive" after 5 seconds and then show MainCTA
+        pintoTimerRef.current = setTimeout(() => {
+          setShowPintoAlive(false);
+          ctaTimerRef.current = setTimeout(() => {
+            setShowMainCTA(true);
+          }, 500);
+        }, 5000);
+      }, 3500); // 3.5s into Phase 2
+
+      await controls;
+
+      // Phase 3: Resume normal chart scrolling behavior
+      const pxPerSecond = scrollSpeed * 60;
+      const totalInitialWidth = unstablePhaseWidth + getSegmentWidth(semiStablePriceData, pointSpacing);
+      controls = animate(scrollOffset, totalInitialWidth, {
+        duration: totalInitialWidth / pxPerSecond,
+        ease: "linear",
+        onComplete: () => {
+          // Loop only the stable segment
+          controls = animate(scrollOffset, totalInitialWidth + stablePhaseWidth, {
+            duration: stablePhaseWidth / pxPerSecond / 2,
+            ease: "linear",
+            repeat: Infinity,
+            repeatType: "loop",
+          });
+        },
+      });
+    };
+
+    startAnimation();
+
     return () => {
       controls?.stop();
     };
-  }, [scrollOffset, unstablePhaseWidth, stablePhaseWidth]);
+  }, [
+    scrollOffset,
+    measurementLineOffset,
+    unstablePhaseWidth,
+    stablePhaseWidth,
+    viewportWidth,
+    clipPathWidth,
+    priceTrackingActive,
+  ]);
 
-  const [showAnimation, setShowAnimation] = useState<(string | undefined)[]>(() => personIcons.map(() => undefined));
+  const [_showAnimation, setShowAnimation] = useState<(string | undefined)[]>(() => personIcons.map(() => undefined));
 
   useEffect(() => {
     personIcons.forEach((data, index) => {
@@ -426,11 +437,6 @@ export default function LandingChart() {
       }
     });
   }, [currentFarmer, currentTxType]);
-
-  const revealAnimation = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-  };
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full mb-32 gap-10">
@@ -539,7 +545,7 @@ export default function LandingChart() {
             </pattern>
             {/* Clip path to hide line outside viewport */}
             <clipPath id="viewport">
-              <rect x="0" y="0" width={viewportWidth - viewportWidth * 0.25} height={height} />
+              <motion.rect x="0" y="0" width={clipPathWidth} height={height} />
             </clipPath>
           </defs>
           <motion.rect
@@ -551,17 +557,18 @@ export default function LandingChart() {
             animate={{ opacity: 1, clipPath: "inset(0 0 0 0)" }}
             transition={{ duration: 3, ease: "easeInOut", delay: 2 }}
           />
-          {/* Measurement line at 75% */}
+          {/* Measurement line */}
           <motion.path
-            d={`M ${measurementX} 0 L ${measurementX} ${height}`}
+            d={`M ${baseMeasurementX} 0 L ${baseMeasurementX} ${height}`}
             stroke="#387F5C"
             strokeWidth="2"
             strokeDasharray="3,3"
             fill="none"
             mask="url(#fadeMask)"
+            style={{ x: measurementLineOffset }}
             initial={{ clipPath: "inset(0 0 100% 0)" }}
             animate={{ clipPath: "inset(0 0 0 0)" }}
-            transition={{ duration: 4, ease: "easeInOut", delay: 4.5 }}
+            transition={{ duration: 2, ease: "easeInOut", delay: 3 }}
           />
           {/* Scrolling price line */}
           <g clipPath="url(#viewport)">
@@ -575,7 +582,7 @@ export default function LandingChart() {
               style={{ x }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 5.5 }}
+              transition={{ duration: 0.5, delay: 5.2 }}
             />
             {/* Static transaction floaters */}
             {transactionMarkers.map((marker) => {
@@ -632,7 +639,7 @@ export default function LandingChart() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, scale: [1, 1.1, 1] }}
           transition={{
-            opacity: { duration: 0.25, delay: 5.75 },
+            opacity: { duration: 0.25, delay: 5.9 },
             scale: { duration: 1, repeat: Infinity, ease: "easeInOut" },
           }}
         >
@@ -660,14 +667,4 @@ export default function LandingChart() {
       </div>
     </div>
   );
-}
-
-// Assign a unique farmer icon to each non-null txType price point
-const assignedFarmers = personIcons.slice();
-let farmerIdx = 0;
-for (let i = 0; i < fullPriceData.length; i++) {
-  if (fullPriceData[i].txType) {
-    fullPriceData[i].farmer = assignedFarmers[farmerIdx % assignedFarmers.length];
-    farmerIdx++;
-  }
 }
