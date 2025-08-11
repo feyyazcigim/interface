@@ -178,6 +178,7 @@ export default function LandingChart() {
   const measurementLineOffset = useMotionValue(0); // Separate offset for measurement line movement
   const clipPathWidth = useMotionValue(0); // Separate motion value for clip path
   const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
+  const floatersOpacity = useTransform(priceTrackingActive, (active) => (active >= 1 ? 1 : 0));
   const x = useTransform(scrollOffset, (value) => -value);
 
   // Update viewport width on mount and resize
@@ -584,7 +585,7 @@ export default function LandingChart() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 5.2 }}
             />
-            {/* Static transaction floaters */}
+            {/* Static transaction floaters - only show during price tracking */}
             {transactionMarkers.map((marker) => {
               // Use marker.index for robust placement
               let positionAbove = false;
@@ -605,7 +606,7 @@ export default function LandingChart() {
                   y={positionAbove ? marker.y - 40 : marker.y + 10}
                   width={80}
                   height={40}
-                  style={{ pointerEvents: "none", x }}
+                  style={{ pointerEvents: "none", x, opacity: floatersOpacity }}
                 >
                   <TxFloater
                     from={marker.farmer ? <FarmerProfile icon={marker.farmer.icon} bg={marker.farmer.bg} /> : null}
@@ -645,13 +646,14 @@ export default function LandingChart() {
         >
           <div className="w-full h-full rounded-full bg-white" />
         </motion.div>
-        {/* Floating emoji + image marker above the animated circle */}
+        {/* Floating emoji + image marker above the animated circle - only show during price tracking */}
         <motion.div
           className="absolute -ml-[1.25rem] -mt-[5rem]"
           style={{
             left: measurementX,
             top: currentY,
             pointerEvents: "none",
+            opacity: floatersOpacity,
           }}
         >
           <TxFloater
