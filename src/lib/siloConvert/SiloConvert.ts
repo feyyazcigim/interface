@@ -371,7 +371,18 @@ export class SiloConvert {
         return s.strategy instanceof DefaultConvertStrategy && s.strategy.grownStalkPenaltyExpected;
       });
 
-    // If the route incurs a penalty, sort the crates by stem to minimize grown stalk loss. Otherwise, sort by bdv
+    /**
+     * In the case where the user is incurring a grown stalk penalty,
+     * we want to sort the crates by stem to minimize grown stalk loss.
+     * Otherwise, we want to sort the crates by bdv.
+     *
+     * For any given deposit,
+     * As the grown stalk per deposit increases,
+     * the amount of grown stalk lost increases.
+     *
+     * Therefore, we want to sort the crates by stem in descending order.
+     */
+
     const sortBy = incursGSPenalty ? "stem" : "bdv";
     const sortOrder = sortBy === "stem" ? "desc" : "asc";
 
