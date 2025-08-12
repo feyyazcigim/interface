@@ -25,7 +25,6 @@ const POSITION_CONFIGS: Variants = {
     transformPerspective: 600,
     y: 50,
     maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
-    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
   },
   left: {
     scale: 0.8,
@@ -35,7 +34,6 @@ const POSITION_CONFIGS: Variants = {
     transformPerspective: 600,
     y: 50,
     maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
-    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
   },
   center: {
     scale: 1.25,
@@ -45,7 +43,6 @@ const POSITION_CONFIGS: Variants = {
     transformPerspective: 600,
     y: 100,
     maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 90%)",
-    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 90%)",
   },
   right: {
     scale: 0.8,
@@ -55,7 +52,6 @@ const POSITION_CONFIGS: Variants = {
     transformPerspective: 600,
     y: 50,
     maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
-    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
   },
   rightmost: {
     scale: 0.6,
@@ -65,7 +61,6 @@ const POSITION_CONFIGS: Variants = {
     transformPerspective: 600,
     y: 50,
     maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
-    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
   },
 };
 
