@@ -344,7 +344,7 @@ export default function LandingChart() {
 
   const scrollOffset = useMotionValue(0);
   const measurementLineOffset = useMotionValue(75); // Separate offset for measurement line movement (percentage)
-  const clipPathWidth = useMotionValue(0); // Separate motion value for clip path
+  const clipPathWidth = useMotionValue(ANIMATION_CONFIG.clipPath.initial); // Separate motion value for clip path (decimal 0-1)
   const horizontalLineClipPath = useMotionValue(viewportWidth); // For horizontal line reveal animation (starts hidden from right)
   const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
   const floatersOpacity = useTransform(priceTrackingActive, (active) => (active >= 1 ? 1 : 0));
@@ -556,7 +556,7 @@ export default function LandingChart() {
 
       await controls;
 
-      const _clipPathAnimation = animate(clipPathWidth, positions.clipPath.final, {
+      const _clipPathAnimation = animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
         duration: phase2Duration,
         ease: "easeIn",
       });
@@ -779,7 +779,12 @@ export default function LandingChart() {
             </pattern>
             {/* Clip path to hide line outside viewport */}
             <clipPath id="viewport">
-              <motion.rect x="0" y="0" width={clipPathWidth} height={height} />
+              <motion.rect
+                x="0"
+                y="0"
+                width={useTransform(clipPathWidth, (pct) => pct * viewportWidth)}
+                height={height}
+              />
             </clipPath>
           </defs>
           <motion.rect
