@@ -41,28 +41,36 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="flex flex-col">
-      <div className="flex flex-col mt-9 overflow-clip">
-        <div>
-          <LandingChart />
+    <div
+      className="sm:max-w-[1920px] place-self-center"
+      style={{
+        mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
+        WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
+      }}
+    >
+      <div className="flex flex-col">
+        <div className="flex flex-col mt-9 overflow-clip">
+          <div>
+            <LandingChart />
+          </div>
         </div>
-      </div>
-      <div className="flex flex-col overflow-clip gap-14" style={{ height: `${initialHeightRem + 8}rem` }}>
-        <SecondaryCTAValues />
-        <SecondaryCTA />
-        <SecondaryCTAProperties />
-      </div>
-      <div className="flex flex-col gap-12 overflow-clip" style={{ height: `${initialHeightRem}rem` }}>
-        <ProjectStats />
-      </div>
-      <div className="flex flex-col gap-4 overflow-clip mb-8" style={{ height: `${initialHeightRem + 8}rem` }}>
-        <BugBounty />
-        {/* 
+        <div className="flex flex-col overflow-clip gap-14 h-[67.5rem] max-h-[67.5rem]">
+          <SecondaryCTAValues />
+          <SecondaryCTA />
+          <SecondaryCTAProperties />
+        </div>
+        <div className="flex flex-col gap-12 overflow-clip h-[67.5rem] max-h-[67.5rem]">
+          <ProjectStats />
+        </div>
+        <div className="flex flex-col gap-4 overflow-clip mb-8 h-[67.5rem] max-h-[67.5rem]">
+          <BugBounty />
+          {/* 
         <AuditsList />
         */}
-      </div>
-      <div className="flex flex-col gap-12" style={{ height: `${initialHeightRem + navBarHeightRem / 3}rem` }}>
-        <Resources />
+        </div>
+        <div className="flex flex-col gap-12 h-[67.5rem] max-h-[67.5rem]">
+          <Resources />
+        </div>
       </div>
     </div>
   );
