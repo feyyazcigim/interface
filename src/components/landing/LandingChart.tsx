@@ -343,7 +343,7 @@ export default function LandingChart() {
   const singlePatternWidth = useMemo(() => stablePriceData.length * pointSpacing, []);
 
   const scrollOffset = useMotionValue(0);
-  const measurementLineOffset = useMotionValue(0); // Separate offset for measurement line movement
+  const measurementLineOffset = useMotionValue(75); // Separate offset for measurement line movement (percentage)
   const clipPathWidth = useMotionValue(0); // Separate motion value for clip path
   const horizontalLineClipPath = useMotionValue(viewportWidth); // For horizontal line reveal animation (starts hidden from right)
   const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
@@ -365,7 +365,7 @@ export default function LandingChart() {
         horizontalLineClipPath.set(newViewportWidth); // Start fully clipped from right (invisible)
 
         // Reset measurement line offset to baseline for responsive changes
-        measurementLineOffset.set(0);
+        measurementLineOffset.set(75);
       }
     };
 
@@ -402,9 +402,8 @@ export default function LandingChart() {
     return generateCompletePath(pointSpacing);
   }, []);
 
-  // Dynamic measurement line position using calculated baseline
-  const baseMeasurementX = useMemo(() => positions.measurementLine.initial, [positions.measurementLine.initial]);
-  const measurementX = useTransform(measurementLineOffset, (offset) => baseMeasurementX + offset);
+  // Dynamic measurement line position using percentage
+  const measurementX = useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth);
 
   // Memoize getYOnBezierCurve
   const getYOnBezierCurve = useCallback(
@@ -539,7 +538,7 @@ export default function LandingChart() {
       });
 
       // Phase 1: Move measurement line to 10% position
-      controls = animate(measurementLineOffset, positions.measurementLine.moveToMinimumOffset, {
+      controls = animate(measurementLineOffset, 10, {
         duration: measurementLineDuration,
         ease: "easeInOut",
         delay: measurementLineStartDelay,
@@ -563,7 +562,7 @@ export default function LandingChart() {
         ease: "easeIn",
       });
 
-      controls = animate(measurementLineOffset, positions.measurementLine.moveToFinalOffset, {
+      controls = animate(measurementLineOffset, 75, {
         duration: phase2Duration,
         ease: "easeIn",
       });
@@ -617,7 +616,7 @@ export default function LandingChart() {
     const unsubscribe = scrollOffset.on("change", (currentScrollOffset) => {
       // Calculate where the measurement line intersects the data
       // This accounts for both the scroll offset and measurement line position
-      const measurementLineX = positions.measurementLine.initial + measurementLineOffset.get();
+      const measurementLineX = (measurementLineOffset.get() / 100) * viewportWidth;
       const dataPosition = measurementLineX + currentScrollOffset;
 
       // Real Stability message - during unstable phase (30-90%)
@@ -808,13 +807,15 @@ export default function LandingChart() {
           />
           {/* Measurement line */}
           <motion.path
-            d={`M ${baseMeasurementX} 0 L ${baseMeasurementX} ${height}`}
+            d={`M 0 0 L 0 ${height}`}
             stroke="#387F5C"
             strokeWidth="2"
             strokeDasharray="3,3"
             fill="none"
             mask="url(#fadeMask)"
-            style={{ x: measurementLineOffset }}
+            style={{
+              x: useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth),
+            }}
             initial={{ clipPath: "inset(0 0 100% 0)" }}
             animate={{ clipPath: "inset(0 0 0.01% 0)" }}
             transition={{
