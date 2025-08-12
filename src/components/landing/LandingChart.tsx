@@ -680,7 +680,7 @@ export default function LandingChart() {
           {showRealStability && (
             <motion.span
               key="real-stability"
-              className="text-2xl leading-[1.4] font-thin text-pinto-gray-4 text-center"
+              className="pinto-h2 text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -692,7 +692,7 @@ export default function LandingChart() {
           {!showRealStability && showCreditEarned && (
             <motion.span
               key="credit-earned"
-              className="text-2xl leading-[1.4] font-thin text-pinto-gray-4 text-center"
+              className="pinto-h2 text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -704,7 +704,7 @@ export default function LandingChart() {
           {!showRealStability && !showCreditEarned && showPintoAlive && (
             <motion.span
               key="pinto-alive"
-              className="text-2xl leading-[1.4] font-thin text-pinto-gray-4 text-center"
+              className="pinto-h2 text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
