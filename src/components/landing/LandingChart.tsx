@@ -348,7 +348,7 @@ export default function LandingChart() {
   const horizontalLineClipPath = useMotionValue(viewportWidth); // For horizontal line reveal animation (starts hidden from right)
   const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
   const floatersOpacity = useTransform(priceTrackingActive, (active) => (active >= 1 ? 1 : 0));
-  const x = useTransform(scrollOffset, (value) => -value);
+  const x = useTransform(scrollOffset, (value) => viewportWidth * ANIMATION_CONFIG.clipPath.initial - value);
 
   // Update viewport width on mount and resize with ResizeObserver for better performance
   useEffect(() => {
@@ -448,7 +448,7 @@ export default function LandingChart() {
 
       // Looping logic: after initial phase (unstable + semi-stable), loop only the stable segment
       // @ts-ignore-next-line
-      let xVal = measX + currentOffset;
+      let xVal = measX + currentOffset - viewportWidth * ANIMATION_CONFIG.clipPath.initial; // Account for price line offset
       const totalInitialWidth = positions.segments.totalInitial; // unstable + semi-stable
       if (xVal > totalInitialWidth) {
         // Offset so the stable segment loops seamlessly
