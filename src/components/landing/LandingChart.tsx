@@ -350,49 +350,43 @@ export default function LandingChart() {
   const floatersOpacity = useTransform(priceTrackingActive, (active) => (active >= 1 ? 1 : 0));
   const x = useTransform(scrollOffset, (value) => -value);
 
-  // Update viewport width on mount and resize with responsive recalculation
+  // Update viewport width on mount and resize with ResizeObserver for better performance
   useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        const newViewportWidth = containerRef.current.clientWidth;
-        setViewportWidth(newViewportWidth);
+    const updateWidth = (newViewportWidth: number) => {
+      setViewportWidth(newViewportWidth);
 
-        // Recalculate positions for new viewport width
-        const newPositions = calculatePositions(newViewportWidth, height);
+      // Recalculate positions for new viewport width
+      const newPositions = calculatePositions(newViewportWidth, height);
 
-        if (newViewportWidth && singlePatternWidth) {
-          // Reset motion values with new calculated positions
-          scrollOffset.set(newViewportWidth * -ANIMATION_CONFIG.clipPath.initial);
-          clipPathWidth.set(newPositions.clipPath.initial);
-          horizontalLineClipPath.set(newViewportWidth); // Start fully clipped from right (invisible)
+      if (newViewportWidth && singlePatternWidth) {
+        // Reset motion values with new calculated positions
+        scrollOffset.set(newViewportWidth * -ANIMATION_CONFIG.clipPath.initial);
+        clipPathWidth.set(newPositions.clipPath.initial);
+        horizontalLineClipPath.set(newViewportWidth); // Start fully clipped from right (invisible)
 
-          // Reset measurement line offset to baseline for responsive changes
-          measurementLineOffset.set(0);
-        }
+        // Reset measurement line offset to baseline for responsive changes
+        measurementLineOffset.set(0);
       }
     };
 
-    // Initial measurement
-    updateWidth();
+    // Use ResizeObserver for more efficient resize detection
+    const resizeObserver = new ResizeObserver((entries) => {
+      const { width } = entries[0].contentRect;
+      updateWidth(width);
+    });
 
-    // Listen for resize events with debouncing for performance
-    let resizeTimeout: NodeJS.Timeout;
-    const debouncedResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(updateWidth, 150); // 150ms debounce
-    };
+    if (containerRef.current) {
+      // Initial measurement
+      updateWidth(containerRef.current.clientWidth);
 
-    window.addEventListener("resize", debouncedResize);
+      // Start observing
+      resizeObserver.observe(containerRef.current);
+    }
 
     return () => {
-      window.removeEventListener("resize", debouncedResize);
-      clearTimeout(resizeTimeout);
+      resizeObserver.disconnect();
     };
   }, [scrollOffset, clipPathWidth, horizontalLineClipPath, measurementLineOffset, singlePatternWidth]);
-
-  // Calculate compressed widths for unstable and stable segments
-  const unstablePhaseWidth = useMemo(() => getSegmentWidth(unstablePriceData, pointSpacing), []);
-  const stablePhaseWidth = useMemo(() => getSegmentWidth(stablePriceData, pointSpacing), []);
 
   // Assign farmers to price data and generate path
   const { path, beziers, transactionMarkers } = useMemo(() => {
