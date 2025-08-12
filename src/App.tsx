@@ -20,13 +20,17 @@ import Whitepaper from "./pages/Whitepaper";
 import NewUserView from "./pages/overview/NewUserView";
 
 import TourOfTheFarm from "@/components/TourOfTheFarm";
+import { useLocation } from "react-router-dom";
 import { useMetaCRM } from "./utils/meta-crm";
 
 function AppLayout({ children }) {
+  const location = useLocation();
+  const isLandingPage = location.pathname === "/";
+
   return (
     <div className="min-h-screen">
       <Navbar />
-      <TourOfTheFarm />
+      {!isLandingPage && <TourOfTheFarm />}
       <ScrollToTop />
       <div className={cn("relative z-[1] w-screen")}>{children}</div>
     </div>
