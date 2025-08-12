@@ -574,7 +574,8 @@ export default function LandingChart() {
       // No need for setTimeout-based messages anymore - they're handled by position monitoring
 
       // Phase 3: Start continuous scrolling through all data
-      const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60;
+      const speedScale = viewportWidth / 1920; // Scale speed based on viewport width (1920 = base)
+      const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
       const totalDataWidth = positions.segments.unstable + positions.segments.semiStable;
 
       // Scroll through initial segments (unstable + semi-stable)
