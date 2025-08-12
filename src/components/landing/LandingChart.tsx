@@ -356,16 +356,15 @@ export default function LandingChart() {
       setViewportWidth(newViewportWidth);
 
       // Recalculate positions for new viewport width
-      const newPositions = calculatePositions(newViewportWidth, height);
+      // const newPositions = calculatePositions(newViewportWidth, height);
 
       if (newViewportWidth && singlePatternWidth) {
         // Reset motion values with new calculated positions
-        scrollOffset.set(newViewportWidth * -ANIMATION_CONFIG.clipPath.initial);
-        clipPathWidth.set(newPositions.clipPath.initial);
-        horizontalLineClipPath.set(newViewportWidth); // Start fully clipped from right (invisible)
-
+        // scrollOffset.set(newViewportWidth * -ANIMATION_CONFIG.clipPath.initial);
+        // clipPathWidth.set(newPositions.clipPath.initial);
+        // horizontalLineClipPath.set(newViewportWidth); // Start fully clipped from right (invisible)
         // Reset measurement line offset to baseline for responsive changes
-        measurementLineOffset.set(75);
+        // measurementLineOffset.set(75);
       }
     };
 
@@ -386,7 +385,7 @@ export default function LandingChart() {
     return () => {
       resizeObserver.disconnect();
     };
-  }, [scrollOffset, clipPathWidth, horizontalLineClipPath, measurementLineOffset, singlePatternWidth]);
+  }, []);
 
   // Assign farmers to price data and generate path
   const { path, beziers, transactionMarkers } = useMemo(() => {
@@ -600,16 +599,7 @@ export default function LandingChart() {
     return () => {
       controls?.stop();
     };
-  }, [
-    scrollOffset,
-    measurementLineOffset,
-    clipPathWidth,
-    horizontalLineClipPath,
-    priceTrackingActive,
-    positions,
-    durations,
-    viewportWidth,
-  ]);
+  }, []);
 
   // Position-based message triggering system
   useEffect(() => {
