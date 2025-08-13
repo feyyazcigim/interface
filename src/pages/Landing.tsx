@@ -42,7 +42,7 @@ export default function Landing() {
 
   return (
     <div
-      className="sm:max-w-[1920px] place-self-center"
+      className="sm:max-w-[1920px] w-full place-self-center"
       style={{
         mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
         WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",

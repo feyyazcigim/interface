@@ -298,11 +298,8 @@ const FarmerProfile = React.memo(function FarmerProfile({
   size = 32,
 }: { icon: string; bg: string; size?: number }) {
   return (
-    <div
-      className="flex items-center justify-center rounded-full border"
-      style={{ backgroundColor: bg, width: size, height: size }}
-    >
-      <span style={{ fontSize: size * 0.75 }}>{icon}</span>
+    <div className="flex items-center justify-center text-2xl">
+      <span>{icon}</span>
     </div>
   );
 });
@@ -830,41 +827,41 @@ export default function LandingChart() {
                 delay: durations.fadeInSequence.priceLine.start,
               }}
             />
-            {/* Static transaction floaters - only show during price tracking */}
-            {transactionMarkers.map((marker) => {
-              // Use marker.index for robust placement
-              let positionAbove = false;
-              if (marker.index > 0) {
-                const prev = fullPriceData[marker.index - 1];
-                const curr = fullPriceData[marker.index];
-                if (curr.value !== prev.value) {
-                  positionAbove = curr.value > prev.value;
-                } else if (marker.index < fullPriceData.length - 1) {
-                  const next = fullPriceData[marker.index + 1];
-                  positionAbove = curr.value > next.value;
-                }
-              }
-              return (
-                <motion.foreignObject
-                  key={`${marker.x}-${marker.y}-${marker.txType}`}
-                  x={marker.x - 20}
-                  y={positionAbove ? marker.y - 40 : marker.y + 10}
-                  width={80}
-                  height={40}
-                  style={{ pointerEvents: "none", x, opacity: floatersOpacity }}
-                >
-                  <TxFloater
-                    from={marker.farmer ? <FarmerProfile icon={marker.farmer.icon} bg={marker.farmer.bg} /> : null}
-                    txType={marker.txType}
-                    viewportWidth={viewportWidth}
-                    x={x}
-                    markerX={marker.x}
-                    isFixed={true}
-                  />
-                </motion.foreignObject>
-              );
-            })}
           </g>
+          {/* Static transaction floaters - only show during price tracking */}
+          {transactionMarkers.map((marker) => {
+            // Use marker.index for robust placement
+            let positionAbove = false;
+            if (marker.index > 0) {
+              const prev = fullPriceData[marker.index - 1];
+              const curr = fullPriceData[marker.index];
+              if (curr.value !== prev.value) {
+                positionAbove = curr.value > prev.value;
+              } else if (marker.index < fullPriceData.length - 1) {
+                const next = fullPriceData[marker.index + 1];
+                positionAbove = curr.value > next.value;
+              }
+            }
+            return (
+              <motion.foreignObject
+                key={`${marker.x}-${marker.y}-${marker.txType}`}
+                x={marker.x - 55}
+                y={positionAbove ? marker.y - 50 : marker.y + 10}
+                width={120}
+                height={60}
+                style={{ pointerEvents: "none", x, opacity: floatersOpacity }}
+              >
+                <TxFloater
+                  from={marker.farmer ? <FarmerProfile icon={marker.farmer.icon} bg={marker.farmer.bg} /> : null}
+                  txType={marker.txType}
+                  viewportWidth={viewportWidth}
+                  x={x}
+                  markerX={marker.x}
+                  isFixed={true}
+                />
+              </motion.foreignObject>
+            );
+          })}
         </svg>
         {/* Current measurement point */}
         <motion.div
@@ -895,6 +892,7 @@ export default function LandingChart() {
           <div className="w-full h-full rounded-full bg-white" />
         </motion.div>
         {/* Floating emoji + image marker above the animated circle - only show during price tracking */}
+        {/* 
         <motion.div
           className="absolute -ml-[1.25rem] -mt-[5rem]"
           style={{
@@ -915,6 +913,7 @@ export default function LandingChart() {
             isFixed={false}
           />
         </motion.div>
+        */}
       </div>
     </div>
   );

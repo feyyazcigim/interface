@@ -20,23 +20,13 @@ const TxIcons: Record<string, string> = {
 };
 
 const bounceInAnimation: AnimationDefinition = {
-  scale: [0, 1, 0.7, 1, 0.84, 1, 0.95, 1],
-  opacity: [0, 1, 1, 1, 1, 1, 1, 1],
+  scale: [0, 1, 0.7, 1, 0.84, 1, 0.95, 1, 1, 0.75],
+  opacity: [0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   transition: {
-    duration: 1,
-    times: [0, 0.38, 0.55, 0.72, 0.81, 0.89, 0.95, 1],
+    duration: 2,
+    times: [0, 0.16, 0.275, 0.36, 0.4, 0.45, 0.49, 0.5, 0.9, 1],
     ease: "easeInOut",
-    repeat: 0, // Ensure no looping
-  },
-};
-
-const shortBounceInAnimation: AnimationDefinition = {
-  scale: [0, 1, 0.9, 1, 1, 0],
-  opacity: [0, 1, 1, 1, 1, 0],
-  transition: {
-    duration: 1,
-    times: [0, 0.25, 0.35, 0.45, 0.95, 1],
-    ease: "easeInOut",
+    repeat: 0,
   },
 };
 
@@ -65,9 +55,9 @@ export default function TxFloater({
   const hasInitialized = useRef(false);
   const hasAnimated = useRef(false);
 
-  // Pop in as the floater crosses 65% of the viewport and stays visible
-  const popInStart = viewportWidth * 0.67;
-  const popInEnd = viewportWidth * 0.65;
+  // Pop in as the floater crosses 75% of the viewport and stays visible
+  const popInStart = viewportWidth * 0.8;
+  const popInEnd = viewportWidth * 0.78;
   const fixedOpacity = useTransform(screenX, [popInStart, popInEnd], [0, 1]);
   const showFixedTx = useTransform(fixedOpacity, (o) => (from && txType ? o : 0));
 
@@ -119,7 +109,7 @@ export default function TxFloater({
     if (currentValidKey !== lastValidKey) {
       // Cancel any existing animation before starting new one
       controls.stop();
-      controls.start(shortBounceInAnimation);
+      // controls.start(shortBounceInAnimation);
 
       // Update last valid values
       lastValidFromRef.current = from;
@@ -131,11 +121,9 @@ export default function TxFloater({
     <motion.div
       initial={{ opacity: 0 }}
       animate={controls}
-      className={`z-10 flex items-center justify-center bg-white border border-pinto-green-4 rounded-full ${
-        isFixed ? "h-8 py-1 gap-1" : "w-[7.75rem] h-[3.25rem] px-3 py-2 gap-2"
-      }`}
+      className={`z-10 flex items-center justify-center bg-white border border-pinto-green-4 rounded-full p-1 gap-1 w-fit`}
     >
-      <div className={`w-8 h-8 ${isFixed ? "scale-75" : "scale-100"}`}>{isFixed ? from : lastValidFromRef.current}</div>
+      <div className={`w-8 h-8`}>{isFixed ? from : lastValidFromRef.current}</div>
       <img
         alt={lastValidTxTypeRef.current || "Transaction Type Icon"}
         src={
@@ -160,7 +148,7 @@ export default function TxFloater({
               ? TxIcons[lastValidTxTypeRef.current]
               : undefined
         }
-        className={`w-8 h-8 ${isFixed ? "scale-[0.85] mr-0.5" : "scale-100"}`}
+        className={`w-8 h-8`}
       />
     </motion.div>
   );
