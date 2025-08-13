@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 import { Separator } from "../ui/Separator";
@@ -19,7 +20,10 @@ export default function SecondaryCTA() {
         </span>
         <div className="flex flex-row gap-4 place-self-center">
           <Link to={"/overview"}>
-            <Button rounded="full">About Values →</Button>
+            <Button rounded="full" className="flex flex-row gap-2 items-center">
+              <span>About Values</span>
+              <PintoRightArrow />
+            </Button>
           </Link>
           <Link to={"/overview"} target="_blank" rel="noopener noreferrer">
             <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">

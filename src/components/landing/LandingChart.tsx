@@ -1,7 +1,7 @@
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { PintoLogo, PintoLogoText } from "../Icons";
+import { PintoLogo, PintoLogoText, PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 import TxFloater from "./TxFloater";
@@ -727,8 +727,9 @@ export default function LandingChart() {
               >
                 <Link to={navLinks.overview}>
                   <motion.div className="rounded-full" style={{ backgroundColor: lineStrokeColor }}>
-                    <Button rounded="full" className="bg-transparent">
-                      Come Seed the Trustless Economy →
+                    <Button rounded="full" className="bg-transparent flex flex-row gap-2 items-center">
+                      <span>Come Seed the Trustless Economy</span>
+                      <PintoRightArrow />
                     </Button>
                   </motion.div>
                 </Link>
