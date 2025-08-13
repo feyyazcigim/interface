@@ -62,10 +62,10 @@ const ANIMATION_CONFIG = {
 
   // Fade-in sequence timing (as percentages of fade-in phase)
   fadeInSequence: {
-    grid: { start: 0.0, duration: 0.2 },
-    measurementLine: { start: 0.0, duration: 0.2 },
+    grid: { start: 0.0, duration: 0.4 },
+    measurementLine: { start: 0.1, duration: 0.2 },
     priceLine: { start: 0.2, duration: 0.4 },
-    priceIndicator: { start: 0.1, duration: 0.1 },
+    priceIndicator: { start: 0.1, duration: 0.2 },
   },
 
   // Price indicator
@@ -187,21 +187,67 @@ interface PricePoint {
   triggerPhase?: string; // Optional phase trigger, for the animation above the chart
 }
 
-const unstablePriceData: PricePoint[] = [
-  { txType: null, value: 1.0 },
-  { txType: null, value: 1.0 },
-  { txType: "harvest", value: 0.993, speed: 0.8, triggerPhase: "unstable" },
-  { txType: "deposit", value: 1.0055, speed: 0.7 },
-  { txType: "withdraw", value: 0.9955, speed: 0.6 },
-  { txType: "convert", value: 1.0025, speed: 0.6 },
-  { txType: "convert", value: 0.9984, speed: 0.6 },
-  { txType: "sow", value: 1.0004, speed: 0.6 },
-  { txType: "withdraw", value: 0.9995, speed: 0.6 },
-];
+// Seeded random number generator using timestamp
+function seededRandom(seed: number): () => number {
+  let x = Math.sin(seed) * 10000;
+  return () => {
+    x = Math.sin(x) * 10000;
+    return x - Math.floor(x);
+  };
+}
+
+// Pole-biased random value between min and max
+function poleBiasedRandom(rng: () => number, min: number, max: number): number {
+  // Use power function to bias toward poles (0 and 1)
+  let u = rng();
+  // Apply bias - values closer to 0 or 1
+  u = u < 0.5 ? Math.pow(u * 2, 0.3) / 2 : 1 - Math.pow((1 - u) * 2, 0.3) / 2;
+  return min + (max - min) * u;
+}
+
+// Generate chaotic unstable data with oscillating pattern
+function generateChaoticUnstableData(pointCount: number = 12): PricePoint[] {
+  // Use page load timestamp as seed for different pattern each reload
+  const seed = Date.now();
+  const rng = seededRandom(seed);
+  
+  const data: PricePoint[] = [
+    { txType: null, value: 1.0 }, // Always start at 1.0
+  ];
+  
+  for (let i = 1; i < pointCount - 1; i++) {
+    // Alternate between above and below 1.0
+    const isAbove = i % 2 === 1;
+    
+    if (isAbove) {
+      // Above 1.0: range from 1.0005 to 1.0095
+      data.push({
+        txType: null,
+        value: poleBiasedRandom(rng, 1.0005, 1.0095),
+        // value: 1.0005 + rng() * (1.0095 - 1.0005),
+        speed: 0.8 + rng() * 0.7, // 0.8 to 1.5
+      });
+    } else {
+      // Below 1.0: range from 0.9995 to 0.9905
+      data.push({
+        txType: null,
+        value: poleBiasedRandom(rng, 0.9905, 0.9995),
+        // value: 0.9905 + rng() * (0.9995 - 0.9905),
+        speed: 0.8 + rng() * 0.7, // 0.8 to 1.5
+      });
+    }
+  }
+  
+  data.push({ txType: null, value: 1.0 }); // Always end at 1.0
+  return data;
+}
+
+const unstablePriceData: PricePoint[] = generateChaoticUnstableData();
 
 const semiStablePriceData: PricePoint[] = [
   { txType: null, value: 0.9998 },
-  { txType: "deposit", value: 1.004, triggerPhase: "semiStable" },
+  { txType: "deposit", value: 1.004, 
+   : "semiStable" },
   { txType: "harvest", value: 0.997 },
   { txType: "deposit", value: 1.003 },
   { txType: "withdraw", value: 0.998 },
@@ -511,8 +557,8 @@ export default function LandingChart() {
     const startAnimation = async () => {
       // Calculate timing for measurement line animations
       const measurementLineStartDelay =
-        durations.fadeInSequence.priceIndicator.start + durations.fadeInSequence.priceIndicator.duration + 1;
-      const measurementLineDuration = 3;
+        durations.fadeInSequence.priceIndicator.start + durations.fadeInSequence.priceIndicator.duration + 0.5;
+      const measurementLineDuration = 1.5;
 
       // Horizontal line Stage 1: Start when measurement line reveals, end halfway through measurement line reveal
       animate(horizontalLineClipPath, viewportWidth * 0.25, {
@@ -524,19 +570,19 @@ export default function LandingChart() {
       // Phase 1: Move measurement line to 10% position
       controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.minimum * 100, {
         duration: measurementLineDuration,
-        ease: "easeInOut",
+        ease: "anticipate",
         delay: measurementLineStartDelay,
       });
 
       // Phase 2: Move measurement line back to 75% and expand clip path
-      const phase2Duration = 4;
-      const phase2StartDelay = measurementLineStartDelay + measurementLineDuration;
+      const phase2Duration = 3;
+      const phase2StartDelay = measurementLineStartDelay + measurementLineDuration - 0.5;
 
       // Horizontal line Stage 2: Start when measurement line begins moving back to left
-      animate(horizontalLineClipPath, 0, {
-        duration: phase2Duration, // Same duration as measurement line return
+      const _horizontalStage2 = animate(horizontalLineClipPath, 0, {
+        duration: 1.5 * phase2Duration, // Same duration as measurement line return
         ease: "easeInOut",
-        delay: phase2StartDelay, // Start when Phase 2 begins
+        delay: phase2StartDelay - 0.5, // Start when Phase 2 begins
       });
 
       await controls;
