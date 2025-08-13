@@ -845,7 +845,7 @@ export default function LandingChart() {
             return (
               <motion.foreignObject
                 key={`${marker.x}-${marker.y}-${marker.txType}`}
-                x={marker.x - 55}
+                x={marker.x - 50}
                 y={positionAbove ? marker.y - 50 : marker.y + 10}
                 width={120}
                 height={60}
