@@ -86,7 +86,6 @@ const ANIMATION_CONFIG = {
 const height = ANIMATION_CONFIG.height;
 const repetitions = ANIMATION_CONFIG.repetitions;
 const pointSpacing = ANIMATION_CONFIG.pointSpacing;
-const _scrollSpeed = ANIMATION_CONFIG.baseSpeed;
 
 // Position calculation system based on data segment widths
 function calculatePositions(viewportWidth: number, chartHeight: number) {
@@ -149,7 +148,6 @@ function calculatePositions(viewportWidth: number, chartHeight: number) {
 
 // Duration calculation system - simplified for fade-in only
 function calculateDurations(_viewportWidth: number) {
-  const _pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60;
   const fadeInDuration = 8; // Fixed fade-in duration in seconds
 
   return {
@@ -341,7 +339,6 @@ export default function LandingChart() {
   // Calculate durations and positions based on current viewport
   const durations = useMemo(() => calculateDurations(viewportWidth), [viewportWidth]);
   const positions = useMemo(() => calculatePositions(viewportWidth, height), [viewportWidth]);
-  const singlePatternWidth = useMemo(() => stablePriceData.length * pointSpacing, []);
 
   const scrollOffset = useMotionValue(0);
   const measurementLineOffset = useMotionValue(75); // Separate offset for measurement line movement (percentage)
@@ -491,7 +488,7 @@ export default function LandingChart() {
 
       setCurrentTxType(newTxType);
       setCurrentFarmer(newFarmer);
-      if (newTriggerPhase && currentTriggerPhase !== "mainCTA") {
+      if (newTriggerPhase && currentTriggerPhase !== "mainCTA" && priceTrackingActive.get() >= 1) {
         setCurrentTriggerPhase(newTriggerPhase);
       }
     });
@@ -518,14 +515,14 @@ export default function LandingChart() {
       const measurementLineDuration = 3;
 
       // Horizontal line Stage 1: Start when measurement line reveals, end halfway through measurement line reveal
-      const _horizontalStage1 = animate(horizontalLineClipPath, viewportWidth * 0.25, {
+      animate(horizontalLineClipPath, viewportWidth * 0.25, {
         duration: durations.fadeInSequence.measurementLine.duration / 2, // Half the measurement line reveal duration
         ease: "easeInOut",
         delay: durations.fadeInSequence.measurementLine.start, // Start when measurement line reveals
       });
 
       // Phase 1: Move measurement line to 10% position
-      controls = animate(measurementLineOffset, 10, {
+      controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.minimum * 100, {
         duration: measurementLineDuration,
         ease: "easeInOut",
         delay: measurementLineStartDelay,
@@ -536,7 +533,7 @@ export default function LandingChart() {
       const phase2StartDelay = measurementLineStartDelay + measurementLineDuration;
 
       // Horizontal line Stage 2: Start when measurement line begins moving back to left
-      const _horizontalStage2 = animate(horizontalLineClipPath, 0, {
+      animate(horizontalLineClipPath, 0, {
         duration: phase2Duration, // Same duration as measurement line return
         ease: "easeInOut",
         delay: phase2StartDelay, // Start when Phase 2 begins
@@ -544,7 +541,7 @@ export default function LandingChart() {
 
       await controls;
 
-      const _clipPathAnimation = animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
+      animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
         duration: phase2Duration,
         ease: "easeIn",
       });
