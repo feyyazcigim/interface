@@ -150,7 +150,7 @@ function calculatePositions(viewportWidth: number, chartHeight: number) {
 // Duration calculation system - simplified for fade-in only
 function calculateDurations(_viewportWidth: number) {
   const _pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60;
-  const fadeInDuration = 8; // Fixed fade-in duration in seconds
+  const fadeInDuration = 2; // Fixed fade-in duration in seconds
 
   return {
     // Fade-in sequence durations only
