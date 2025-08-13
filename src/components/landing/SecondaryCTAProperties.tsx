@@ -35,13 +35,13 @@ export default function SecondaryCTAProperties() {
         .map((info, index) => (
           <div
             key={`dataInfo2_${info.title}_${index}`}
-            className="p-6 w-[23.5rem] h-[18rem] flex-shrink-0 border rounded-2xl bg-pinto-off-white mr-12"
+            className="p-4 sm:p-6 w-[16rem] h-[13rem] sm:w-[23.5rem] sm:h-[18rem] flex-shrink-0 border rounded-2xl bg-pinto-off-white mr-6 sm:mr-12"
           >
-            <div className="h-[18.75rem] flex flex-col gap-6">
-              <img src={info.logo} className="w-24 flex-shrink-0 h-auto" alt={info.title} />
-              <div className="flex flex-col gap-4">
-                <div className="text-lg leading-[1.1] font-thin text-black">{info.title}</div>
-                <div className="text-xl leading-[1.1] font-thin text-pinto-gray-4">{info.description}</div>
+            <div className="flex flex-col gap-4 sm:gap-6">
+              <img src={info.logo} className="w-16 h-16 sm:w-24 sm:h-24 flex-shrink-0" alt={info.title} />
+              <div className="flex flex-col gap-2 sm:gap-4">
+                <div className="text-base sm:text-lg leading-[1.1] font-thin text-black">{info.title}</div>
+                <div className="text-base sm:text-xl leading-[1.1] font-thin text-pinto-gray-4">{info.description}</div>
               </div>
             </div>
           </div>

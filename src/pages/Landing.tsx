@@ -49,28 +49,26 @@ export default function Landing() {
       }}
     >
       <div className="flex flex-col">
-        <div className="flex flex-col mt-9 overflow-clip">
-          <div>
-            <LandingChart />
-          </div>
-        </div>
-        <div className="flex flex-col overflow-clip gap-14 h-[67.5rem] max-h-[67.5rem]">
+        <section className="flex flex-col sm:mt-9 overflow-clip">
+          <LandingChart />
+        </section>
+        <section className="flex flex-col overflow-clip place-content-center gap-14 h-[67.5rem] max-h-[67.5rem]">
           <SecondaryCTAValues />
           <SecondaryCTA />
           <SecondaryCTAProperties />
-        </div>
-        <div className="flex flex-col gap-12 overflow-clip h-[67.5rem] max-h-[67.5rem]">
+        </section>
+        <section className="flex flex-col gap-12 overflow-clip h-[67.5rem] max-h-[67.5rem]">
           <ProjectStats />
-        </div>
-        <div className="flex flex-col gap-4 overflow-clip mb-8 h-[67.5rem] max-h-[67.5rem]">
+        </section>
+        <section className="flex flex-col gap-4 overflow-clip mb-8 h-[67.5rem] max-h-[67.5rem]">
           <BugBounty />
           {/* 
         <AuditsList />
         */}
-        </div>
-        <div className="flex flex-col gap-12 h-[67.5rem] max-h-[67.5rem]">
+        </section>
+        <section className="flex flex-col gap-12 h-[67.5rem] max-h-[67.5rem]">
           <Resources />
-        </div>
+        </section>
       </div>
     </div>
   );

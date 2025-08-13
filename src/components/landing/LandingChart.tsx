@@ -1,3 +1,4 @@
+import useIsMobile from "@/hooks/display/useIsMobile";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -378,6 +379,7 @@ function getSegmentWidth(data: PricePoint[], pointSpacing: number) {
 export default function LandingChart() {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
   const containerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   // Calculate durations and positions based on current viewport
   const durations = useMemo(() => calculateDurations(viewportWidth), [viewportWidth]);
@@ -647,14 +649,14 @@ export default function LandingChart() {
   }, [currentFarmer, currentTxType]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full mb-32 gap-10">
+    <div className="flex flex-col items-center justify-center h-full w-full sm:mb-32 sm:gap-10">
       {/* Stage Messages */}
       <div className="min-h-[200px] flex flex-col items-center justify-center">
         <AnimatePresence mode="wait">
           {currentTriggerPhase === "unstable" && (
             <motion.span
               key="real-stability"
-              className="pinto-h2 text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center"
+              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center w-[70%] sm:w-fit"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -666,7 +668,7 @@ export default function LandingChart() {
           {currentTriggerPhase === "semiStable" && (
             <motion.span
               key="credit-earned"
-              className="pinto-h2 text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center"
+              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center w-[70%] sm:w-fit"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -678,7 +680,7 @@ export default function LandingChart() {
           {currentTriggerPhase === "stable" && (
             <motion.span
               key="pinto-alive"
-              className="pinto-h2 text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center"
+              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center w-[70%] sm:w-fit"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -690,25 +692,25 @@ export default function LandingChart() {
           {/* MainCTA Component */}
           {currentTriggerPhase === "mainCTA" && (
             <motion.div
-              className="flex flex-col gap-8"
+              className="flex flex-col gap-4 sm:gap-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
             >
-              <div className="flex flex-col gap-4 self-stretch items-center">
+              <div className="flex flex-col gap-2 sm:gap-4 self-stretch items-center">
                 <motion.h2
                   className="text-[4rem] leading-[1.1] font-thin text-black"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
                 >
-                  <motion.div className="flex flex-row gap-8 items-center" style={{ color: lineStrokeColor }}>
-                    <PintoLogo className="scale-110 h-20" color="currentColor" />
-                    <PintoLogoText className="scale-110 h-20" color="currentColor" />
+                  <motion.div className="flex flex-row gap-0 sm:gap-8 items-center" style={{ color: lineStrokeColor }}>
+                    <PintoLogo className="scale-75 -mr-3 sm:mr-0 sm:scale-110 h-20" color="currentColor" />
+                    <PintoLogoText className="scale-75 -ml-3 sm:ml-0 sm:scale-110 h-20" color="currentColor" />
                   </motion.div>
                 </motion.h2>
                 <motion.span
-                  className="text-2xl leading-[1.4] font-thin text-pinto-gray-4"
+                  className="text-[1.25rem] sm:text-2xl sm:leading-[1.4] font-thin text-pinto-gray-4 w-[70%] sm:w-fit text-center"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: "easeInOut", delay: 0.4 }}
@@ -717,21 +719,30 @@ export default function LandingChart() {
                 </motion.span>
               </div>
               <motion.div
-                className="flex flex-row gap-4 mx-auto"
+                className="flex flex-col sm:flex-row gap-4 mx-auto items-center"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
               >
                 <Link to={navLinks.overview}>
                   <motion.div className="rounded-full" style={{ backgroundColor: lineStrokeColor }}>
-                    <Button rounded="full" className="bg-transparent flex flex-row gap-2 items-center">
+                    <Button
+                      rounded="full"
+                      size={isMobile ? "sm" : "default"}
+                      className="bg-transparent flex flex-row gap-2 items-center"
+                    >
                       <span>Come Seed the Trustless Economy</span>
-                      <PintoRightArrow />
+                      <PintoRightArrow width={"1rem"} height={"1rem"} />
                     </Button>
                   </motion.div>
                 </Link>
                 <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
+                  <Button
+                    variant="outline"
+                    rounded="full"
+                    size={isMobile ? "sm" : "default"}
+                    className="shadow-none text-pinto-gray-4"
+                  >
                     Read the Docs
                   </Button>
                 </Link>
