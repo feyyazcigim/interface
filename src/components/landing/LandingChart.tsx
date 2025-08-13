@@ -63,9 +63,9 @@ const ANIMATION_CONFIG = {
   // Fade-in sequence timing (as percentages of fade-in phase)
   fadeInSequence: {
     grid: { start: 0.0, duration: 0.4 },
-    measurementLine: { start: 0.2, duration: 0.4 },
+    measurementLine: { start: 0.1, duration: 0.2 },
     priceLine: { start: 0.2, duration: 0.4 },
-    priceIndicator: { start: 0.4, duration: 0.2 },
+    priceIndicator: { start: 0.1, duration: 0.2 },
   },
 
   // Price indicator
@@ -526,8 +526,8 @@ export default function LandingChart() {
     const startAnimation = async () => {
       // Calculate timing for measurement line animations
       const measurementLineStartDelay =
-        durations.fadeInSequence.priceIndicator.start + durations.fadeInSequence.priceIndicator.duration + 1;
-      const measurementLineDuration = 3;
+        durations.fadeInSequence.priceIndicator.start + durations.fadeInSequence.priceIndicator.duration + 0.5;
+      const measurementLineDuration = 1.5;
 
       // Horizontal line Stage 1: Start when measurement line reveals, end halfway through measurement line reveal
       const _horizontalStage1 = animate(horizontalLineClipPath, viewportWidth * 0.25, {
@@ -539,19 +539,19 @@ export default function LandingChart() {
       // Phase 1: Move measurement line to 10% position
       controls = animate(measurementLineOffset, 10, {
         duration: measurementLineDuration,
-        ease: "easeInOut",
+        ease: "anticipate",
         delay: measurementLineStartDelay,
       });
 
       // Phase 2: Move measurement line back to 75% and expand clip path
-      const phase2Duration = 4;
-      const phase2StartDelay = measurementLineStartDelay + measurementLineDuration;
+      const phase2Duration = 3;
+      const phase2StartDelay = measurementLineStartDelay + measurementLineDuration - 0.5;
 
       // Horizontal line Stage 2: Start when measurement line begins moving back to left
       const _horizontalStage2 = animate(horizontalLineClipPath, 0, {
-        duration: phase2Duration, // Same duration as measurement line return
+        duration: 1.5 * phase2Duration, // Same duration as measurement line return
         ease: "easeInOut",
-        delay: phase2StartDelay, // Start when Phase 2 begins
+        delay: phase2StartDelay - 0.5, // Start when Phase 2 begins
       });
 
       await controls;
