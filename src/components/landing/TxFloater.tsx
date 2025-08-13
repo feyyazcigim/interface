@@ -20,11 +20,11 @@ const TxIcons: Record<string, string> = {
 };
 
 const bounceInAnimation: AnimationDefinition = {
-  scale: [0, 1, 0.7, 1, 0.84, 1, 0.95, 1, 1, 0.75],
-  opacity: [0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  scale: [0, 1, 0.7, 1, 0.84, 1, 0.95, 1, 0.75, 0.75],
+  opacity: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   transition: {
     duration: 2,
-    times: [0, 0.16, 0.275, 0.36, 0.4, 0.45, 0.49, 0.5, 0.9, 1],
+    times: [0, 0.05, 0.275, 0.36, 0.4, 0.45, 0.49, 0.5, 0.65, 1],
     ease: "easeInOut",
     repeat: 0,
   },
@@ -56,8 +56,8 @@ export default function TxFloater({
   const hasAnimated = useRef(false);
 
   // Pop in as the floater crosses 75% of the viewport and stays visible
-  const popInStart = viewportWidth * 0.8;
-  const popInEnd = viewportWidth * 0.78;
+  const popInStart = viewportWidth * 0.78;
+  const popInEnd = viewportWidth * 0.75;
   const fixedOpacity = useTransform(screenX, [popInStart, popInEnd], [0, 1]);
   const showFixedTx = useTransform(fixedOpacity, (o) => (from && txType ? o : 0));
 
