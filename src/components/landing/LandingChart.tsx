@@ -212,7 +212,7 @@ function generateChaoticUnstableData(pointCount: number = 12): PricePoint[] {
   const rng = seededRandom(seed);
 
   const data: PricePoint[] = [
-    { txType: null, value: 1.0, triggerPhase: "unstable" }, // Always start at 1.0
+    { txType: null, value: 1.0 }, // Always start at 1.0
   ];
 
   for (let i = 1; i < pointCount - 1; i++) {
@@ -226,6 +226,7 @@ function generateChaoticUnstableData(pointCount: number = 12): PricePoint[] {
         value: poleBiasedRandom(rng, 1.0005, 1.0095),
         // value: 1.0005 + rng() * (1.0095 - 1.0005),
         speed: 0.8 + rng() * 0.7, // 0.8 to 1.5
+        triggerPhase: i === 2 ? "unstable" : undefined,
       });
     } else {
       // Below 1.0: range from 0.9995 to 0.9905
@@ -234,6 +235,7 @@ function generateChaoticUnstableData(pointCount: number = 12): PricePoint[] {
         value: poleBiasedRandom(rng, 0.9905, 0.9995),
         // value: 0.9905 + rng() * (0.9995 - 0.9905),
         speed: 0.8 + rng() * 0.7, // 0.8 to 1.5
+        triggerPhase: i === 2 ? "unstable" : undefined,
       });
     }
   }
