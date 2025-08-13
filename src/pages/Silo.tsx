@@ -341,7 +341,7 @@ const LearnSilo = () => {
           Pinto mints after at least 1 full season has passed. When Pinto is priced over $1, new Pinto are minted, 48.5%
           of which are distributed to Silo depositors. Depositors earn a share of Pinto mints to the Silo based on their
           proportion of the total Stalk supply. A Deposit receives an initial amount of Stalk and Seeds, determined by
-          its token type and value. Seeds grow Stalk every season. All Stalk is forfeit upon a Withdrawal.
+          its token type and value. Seeds grow Stalk every season. All Stalk is forfeited upon Withdrawal.
         </>
       </ReadMoreAccordion>
     </>
