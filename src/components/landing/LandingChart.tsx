@@ -1,8 +1,10 @@
+import PintoLogo from "@/assets/protocol/PintoLogo.svg";
+import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { PintoLogo, PintoLogoText, PintoRightArrow } from "../Icons";
+import { PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 import TxFloater from "./TxFloater";
@@ -704,10 +706,10 @@ export default function LandingChart() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
                 >
-                  <motion.div className="flex flex-row gap-0 sm:gap-8 items-center" style={{ color: lineStrokeColor }}>
-                    <PintoLogo className="scale-75 -mr-3 sm:mr-0 sm:scale-110 h-20" color="currentColor" />
-                    <PintoLogoText className="scale-75 -ml-3 sm:ml-0 sm:scale-110 h-20" color="currentColor" />
-                  </motion.div>
+                  <div className="flex flex-row gap-4 items-center">
+                    <img src={PintoLogo} alt="Pinto Logo" className="h-14 sm:h-20" />
+                    <img src={PintoLogoText} alt="Pinto Logo" className="h-14 sm:h-20" />
+                  </div>
                 </motion.h2>
                 <motion.span
                   className="text-[1.25rem] sm:text-2xl sm:leading-[1.4] font-thin text-pinto-gray-4 w-[70%] sm:w-fit text-center"
