@@ -658,7 +658,7 @@ export default function LandingChart() {
           {currentTriggerPhase === "unstable" && (
             <motion.span
               key="real-stability"
-              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center w-[70%] sm:w-fit"
+              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 sm:text-pinto-gray-4 text-center w-[70%] sm:w-fit"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -670,7 +670,7 @@ export default function LandingChart() {
           {currentTriggerPhase === "semiStable" && (
             <motion.span
               key="credit-earned"
-              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center w-[70%] sm:w-fit"
+              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 sm:text-pinto-gray-4 text-center w-[70%] sm:w-fit"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -682,7 +682,7 @@ export default function LandingChart() {
           {currentTriggerPhase === "stable" && (
             <motion.span
               key="pinto-alive"
-              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center w-[70%] sm:w-fit"
+              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 sm:text-pinto-gray-4 text-center w-[70%] sm:w-fit"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -727,16 +727,15 @@ export default function LandingChart() {
                 transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
               >
                 <Link to={navLinks.overview}>
-                  <motion.div className="rounded-full" style={{ backgroundColor: lineStrokeColor }}>
-                    <Button
-                      rounded="full"
-                      size={isMobile ? "sm" : "default"}
-                      className="bg-transparent flex flex-row gap-2 items-center"
-                    >
-                      <span>Come Seed the Trustless Economy</span>
-                      <PintoRightArrow width={"1rem"} height={"1rem"} />
-                    </Button>
-                  </motion.div>
+                  <Button
+                    rounded="full"
+                    size={isMobile ? "sm" : "default"}
+                    className="flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow duration-[1500]"
+                  >
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
+                    <span className="relative z-10">Come Seed the Trustless Economy</span>
+                    <PintoRightArrow width={"1rem"} height={"1rem"} className="relative z-10" />
+                  </Button>
                 </Link>
                 <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">
                   <Button

@@ -221,6 +221,18 @@ module.exports = {
           from: { transform: "translateY( 0% )" },
           to: { transform: "translateY( -100% )" },
         },
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { 
+            boxShadow: "0 0 20px rgba(36, 102, 69, 0.4)" 
+          },
+          "50%": { 
+            boxShadow: "0 0 30px rgba(36, 102, 69, 0.7)" 
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
