@@ -1,8 +1,7 @@
-import PintoLogo from "@/assets/protocol/PintoLogo.svg";
-import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { PintoLogo, PintoLogoText } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 import TxFloater from "./TxFloater";
@@ -706,10 +705,10 @@ export default function LandingChart() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
                 >
-                  <div className="flex flex-row gap-4 items-center">
-                    <img src={PintoLogo} alt="Pinto Logo" className="h-20" />
-                    <img src={PintoLogoText} alt="Pinto Logo" className="h-20" />
-                  </div>
+                  <motion.div className="flex flex-row gap-8 items-center" style={{ color: lineStrokeColor }}>
+                    <PintoLogo className="scale-110 h-20" color="currentColor" />
+                    <PintoLogoText className="scale-110 h-20" color="currentColor" />
+                  </motion.div>
                 </motion.h2>
                 <motion.span
                   className="text-2xl leading-[1.4] font-thin text-pinto-gray-4"
@@ -727,7 +726,11 @@ export default function LandingChart() {
                 transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
               >
                 <Link to={navLinks.overview}>
-                  <Button rounded="full">Come Seed the Trustless Economy →</Button>
+                  <motion.div className="rounded-full" style={{ backgroundColor: lineStrokeColor }}>
+                    <Button rounded="full" className="bg-transparent">
+                      Come Seed the Trustless Economy →
+                    </Button>
+                  </motion.div>
                 </Link>
                 <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" rounded="full" className="shadow-none text-pinto-gray-4">
