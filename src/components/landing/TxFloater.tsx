@@ -20,11 +20,11 @@ const TxIcons: Record<string, string> = {
 };
 
 const bounceInAnimation: AnimationDefinition = {
-  scale: [0, 1, 0.8, 0.8, 0.8],
+  scale: [0, 1, 0.7, 0.7, 0.7],
   opacity: [1, 1, 1, 1, 1],
   transition: {
-    duration: 2,
-    times: [0, 0.05, 0.1, 0.15, 1],
+    duration: 4,
+    times: [0, 0.1, 0.2, 0.25, 1],
     ease: "easeInOut",
     repeat: 0,
   },
