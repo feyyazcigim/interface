@@ -62,10 +62,10 @@ const ANIMATION_CONFIG = {
 
   // Fade-in sequence timing (as percentages of fade-in phase)
   fadeInSequence: {
-    grid: { start: 0.0, duration: 0.6 },
+    grid: { start: 0.0, duration: 0.4 },
     measurementLine: { start: 0.2, duration: 0.4 },
-    priceLine: { start: 1, duration: 0.2 },
-    priceIndicator: { start: 0.85, duration: 0.15 },
+    priceLine: { start: 0.2, duration: 0.4 },
+    priceIndicator: { start: 0.4, duration: 0.2 },
   },
 
   // Price indicator
@@ -150,7 +150,7 @@ function calculatePositions(viewportWidth: number, chartHeight: number) {
 // Duration calculation system - simplified for fade-in only
 function calculateDurations(_viewportWidth: number) {
   const _pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60;
-  const fadeInDuration = 2; // Fixed fade-in duration in seconds
+  const fadeInDuration = 8; // Fixed fade-in duration in seconds
 
   return {
     // Fade-in sequence durations only
