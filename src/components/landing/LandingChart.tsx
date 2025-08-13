@@ -186,12 +186,13 @@ interface PricePoint {
   value: number;
   farmer?: Farmer;
   speed?: number; // Optional speed for specific transactions
+  triggerPhase?: string; // Optional phase trigger, for the animation above the chart
 }
 
 const unstablePriceData: PricePoint[] = [
   { txType: null, value: 1.0 },
   { txType: null, value: 1.0 },
-  { txType: "harvest", value: 0.993, speed: 0.8 },
+  { txType: "harvest", value: 0.993, speed: 0.8, triggerPhase: "unstable" },
   { txType: "deposit", value: 1.0055, speed: 0.7 },
   { txType: "withdraw", value: 0.9955, speed: 0.6 },
   { txType: "convert", value: 1.0025, speed: 0.6 },
@@ -202,7 +203,7 @@ const unstablePriceData: PricePoint[] = [
 
 const semiStablePriceData: PricePoint[] = [
   { txType: null, value: 0.9998 },
-  { txType: "deposit", value: 1.004 },
+  { txType: "deposit", value: 1.004, triggerPhase: "semiStable" },
   { txType: "harvest", value: 0.997 },
   { txType: "deposit", value: 1.003 },
   { txType: "withdraw", value: 0.998 },
@@ -216,13 +217,13 @@ const stablePriceData: PricePoint[] = [
   { txType: null, value: 0.9994, speed: 3 },
   { txType: "yield", value: 1.005, speed: 3 },
   { txType: "convert", value: 0.995, speed: 1 },
-  { txType: null, value: 1.0004 },
+  { txType: null, value: 1.0004, triggerPhase: "stable" },
   { txType: "deposit", value: 0.9994 },
   { txType: "withdraw", value: 1.0004 },
   { txType: null, value: 0.9994, speed: 3 },
   { txType: "yield", value: 1.005, speed: 3 },
   { txType: "convert", value: 0.995, speed: 1 },
-  { txType: null, value: 1.0004 },
+  { txType: null, value: 1.0004, triggerPhase: "mainCTA" },
 ];
 
 // Combine unstablePriceData once, then stablePriceData repeated for seamless looping
@@ -354,18 +355,6 @@ export default function LandingChart() {
   useEffect(() => {
     const updateWidth = (newViewportWidth: number) => {
       setViewportWidth(newViewportWidth);
-
-      // Recalculate positions for new viewport width
-      // const newPositions = calculatePositions(newViewportWidth, height);
-
-      if (newViewportWidth && singlePatternWidth) {
-        // Reset motion values with new calculated positions
-        // scrollOffset.set(newViewportWidth * -ANIMATION_CONFIG.clipPath.initial);
-        // clipPathWidth.set(newPositions.clipPath.initial);
-        // horizontalLineClipPath.set(newViewportWidth); // Start fully clipped from right (invisible)
-        // Reset measurement line offset to baseline for responsive changes
-        // measurementLineOffset.set(75);
-      }
     };
 
     // Use ResizeObserver for more efficient resize detection
@@ -479,12 +468,7 @@ export default function LandingChart() {
   // Get the current txType and farmer for the floating marker
   const [currentTxType, setCurrentTxType] = useState<string | null>(null);
   const [currentFarmer, setCurrentFarmer] = useState<Farmer | undefined>(undefined);
-
-  // Stage message states
-  const [showRealStability, setShowRealStability] = useState(false);
-  const [showCreditEarned, setShowCreditEarned] = useState(false);
-  const [showPintoAlive, setShowPintoAlive] = useState(false);
-  const [showMainCTA, setShowMainCTA] = useState(false);
+  const [currentTriggerPhase, setCurrentTriggerPhase] = useState<string | undefined>(undefined);
 
   // Refs to prevent timer interference
   const pintoTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -496,6 +480,7 @@ export default function LandingChart() {
       const i = Math.max(0, Math.min(Math.round(idx), fullPriceData.length - 1));
       const newTxType = fullPriceData[i].txType;
       const newFarmer = fullPriceData[i].farmer;
+      const newTriggerPhase = fullPriceData[i].triggerPhase;
 
       // Trigger flash effect when txType changes and is not null (only if price tracking is active)
       if (newTxType !== currentTxType && newTxType !== null && priceTrackingActive.get() >= 1) {
@@ -506,6 +491,9 @@ export default function LandingChart() {
 
       setCurrentTxType(newTxType);
       setCurrentFarmer(newFarmer);
+      if (newTriggerPhase && currentTriggerPhase !== "mainCTA") {
+        setCurrentTriggerPhase(newTriggerPhase);
+      }
     });
     return unsubscribe;
   }, [currentIndex, currentTxType, lineStrokeColor, priceTrackingActive]);
@@ -602,61 +590,6 @@ export default function LandingChart() {
     };
   }, []);
 
-  // Position-based message triggering system
-  useEffect(() => {
-    const unsubscribe = scrollOffset.on("change", (currentScrollOffset) => {
-      // Calculate where the measurement line intersects the data
-      // This accounts for both the scroll offset and measurement line position
-      const measurementLineX = (measurementLineOffset.get() / 100) * viewportWidth;
-      const dataPosition = measurementLineX + currentScrollOffset;
-
-      // Real Stability message - during unstable phase (30-90%)
-      if (
-        dataPosition >= positions.messagePositions.realStability.show &&
-        dataPosition <= positions.messagePositions.realStability.hide
-      ) {
-        if (!showRealStability) {
-          setShowRealStability(true);
-        }
-      } else if (showRealStability) {
-        setShowRealStability(false);
-      }
-
-      // Credit Earned message - during semi-stable phase (30-90%)
-      if (
-        dataPosition >= positions.messagePositions.creditEarned.show &&
-        dataPosition <= positions.messagePositions.creditEarned.hide
-      ) {
-        if (!showCreditEarned) {
-          setShowCreditEarned(true);
-        }
-      } else if (showCreditEarned) {
-        setShowCreditEarned(false);
-      }
-
-      // Pinto Alive message - at start of stable phase (only trigger once)
-      if (dataPosition >= positions.messagePositions.pintoAlive.show && !showPintoAlive && !showMainCTA) {
-        setShowPintoAlive(true);
-
-        // Hide "Pinto is alive" after fixed duration and show MainCTA immediately
-        pintoTimerRef.current = setTimeout(() => {
-          setShowPintoAlive(false);
-          setShowMainCTA(true); // Show MainCTA immediately when Pinto disappears
-        }, positions.messagePositions.pintoAlive.duration);
-      }
-    });
-
-    return unsubscribe;
-  }, [
-    scrollOffset,
-    measurementLineOffset,
-    positions,
-    showRealStability,
-    showCreditEarned,
-    showPintoAlive,
-    showMainCTA,
-  ]);
-
   const [_showAnimation, setShowAnimation] = useState<(string | undefined)[]>(() => personIcons.map(() => undefined));
 
   useEffect(() => {
@@ -678,7 +611,7 @@ export default function LandingChart() {
       {/* Stage Messages */}
       <div className="min-h-[200px] flex flex-col items-center justify-center">
         <AnimatePresence mode="wait">
-          {showRealStability && (
+          {currentTriggerPhase === "unstable" && (
             <motion.span
               key="real-stability"
               className="pinto-h2 text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center"
@@ -690,7 +623,7 @@ export default function LandingChart() {
               Real stability takes time
             </motion.span>
           )}
-          {!showRealStability && showCreditEarned && (
+          {currentTriggerPhase === "semiStable" && (
             <motion.span
               key="credit-earned"
               className="pinto-h2 text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center"
@@ -702,7 +635,7 @@ export default function LandingChart() {
               Credit is earned
             </motion.span>
           )}
-          {!showRealStability && !showCreditEarned && showPintoAlive && (
+          {currentTriggerPhase === "stable" && (
             <motion.span
               key="pinto-alive"
               className="pinto-h2 text-5xl leading-[1.1] font-thin text-pinto-gray-4 text-center"
@@ -714,8 +647,8 @@ export default function LandingChart() {
               Pinto is alive
             </motion.span>
           )}
-          {/* MainCTA Component - Only show after Pinto is alive fades out */}
-          {showMainCTA && (
+          {/* MainCTA Component */}
+          {currentTriggerPhase === "mainCTA" && (
             <motion.div
               className="flex flex-col gap-8"
               initial={{ opacity: 0, y: 30 }}
