@@ -62,10 +62,10 @@ const ANIMATION_CONFIG = {
 
   // Fade-in sequence timing (as percentages of fade-in phase)
   fadeInSequence: {
-    grid: { start: 0.0, duration: 0.4 },
-    measurementLine: { start: 0.2, duration: 0.4 },
+    grid: { start: 0.0, duration: 0.2 },
+    measurementLine: { start: 0.0, duration: 0.2 },
     priceLine: { start: 0.2, duration: 0.4 },
-    priceIndicator: { start: 0.4, duration: 0.2 },
+    priceIndicator: { start: 0.1, duration: 0.1 },
   },
 
   // Price indicator
