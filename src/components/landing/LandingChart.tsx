@@ -201,7 +201,7 @@ function poleBiasedRandom(rng: () => number, min: number, max: number): number {
   // Use power function to bias toward poles (0 and 1)
   let u = rng();
   // Apply bias - values closer to 0 or 1
-  u = u < 0.5 ? Math.pow(u * 2, 0.3) / 2 : 1 - Math.pow((1 - u) * 2, 0.3) / 2;
+  u = u < 0.5 ? (u * 2) ** 0.3 / 2 : 1 - ((1 - u) * 2) ** 0.3 / 2;
   return min + (max - min) * u;
 }
 
@@ -210,15 +210,15 @@ function generateChaoticUnstableData(pointCount: number = 12): PricePoint[] {
   // Use page load timestamp as seed for different pattern each reload
   const seed = Date.now();
   const rng = seededRandom(seed);
-  
+
   const data: PricePoint[] = [
-    { txType: null, value: 1.0 }, // Always start at 1.0
+    { txType: null, value: 1.0, triggerPhase: "unstable" }, // Always start at 1.0
   ];
-  
+
   for (let i = 1; i < pointCount - 1; i++) {
     // Alternate between above and below 1.0
     const isAbove = i % 2 === 1;
-    
+
     if (isAbove) {
       // Above 1.0: range from 1.0005 to 1.0095
       data.push({
@@ -237,7 +237,7 @@ function generateChaoticUnstableData(pointCount: number = 12): PricePoint[] {
       });
     }
   }
-  
+
   data.push({ txType: null, value: 1.0 }); // Always end at 1.0
   return data;
 }
@@ -246,8 +246,7 @@ const unstablePriceData: PricePoint[] = generateChaoticUnstableData();
 
 const semiStablePriceData: PricePoint[] = [
   { txType: null, value: 0.9998 },
-  { txType: "deposit", value: 1.004, 
-   : "semiStable" },
+  { txType: "deposit", value: 1.004, triggerPhase: "semiStable" },
   { txType: "harvest", value: 0.997 },
   { txType: "deposit", value: 1.003 },
   { txType: "withdraw", value: 0.998 },
