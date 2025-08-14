@@ -15,11 +15,11 @@ import TxFloater from "./TxFloater";
 const ANIMATION_CONFIG = {
   // Visual constants
   height: 577,
-  repetitions: 4,
+  repetitions: 6,
   pointSpacing: 140,
 
   // Speed constants
-  baseSpeed: 3, // pixels per frame at 60fps
+  baseSpeed: 2.8, // pixels per frame at 60fps
 
   // Phase proportions and timing
   phases: {
@@ -68,6 +68,7 @@ const ANIMATION_CONFIG = {
     measurementLine: { start: 0.1, duration: 0.2 },
     priceLine: { start: 0.2, duration: 0.4 },
     priceIndicator: { start: 0.1, duration: 0.2 },
+    priceLabels: { start: 0.6, duration: 0.3 }, // Fade in during semi-stable phase
   },
 
   // Price indicator
@@ -81,6 +82,15 @@ const ANIMATION_CONFIG = {
     color: "#D1D5DB", // Light gray
     strokeWidth: 1,
     dashArray: "5,5",
+  },
+
+  // Price labels configuration
+  priceLabels: {
+    staticX: 0.75, // 75% from left (same as measurement line final position)
+    xOffset: 20, // pixels to the right of the line
+    levels: [1.3, 1.2, 1.1, 0.9, 0.8, 0.7], // Removed 1.0 since it overlaps with horizontal line
+    fontSize: 14,
+    color: "#6B7280", // gray-500
   },
 };
 
@@ -171,6 +181,10 @@ function calculateDurations(_viewportWidth: number) {
         start: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceIndicator.start,
         duration: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceIndicator.duration,
       },
+      priceLabels: {
+        start: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceLabels.start,
+        duration: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceLabels.duration,
+      },
     },
   };
 }
@@ -208,18 +222,27 @@ function poleBiasedRandom(rng: () => number, min: number, max: number): number {
 }
 
 // Generate chaotic unstable data with oscillating pattern
-function generateChaoticUnstableData(pointCount: number = 12): PricePoint[] {
+function generateChaoticUnstableData(pointCount: number = 7): PricePoint[] {
   // Use page load timestamp as seed for different pattern each reload
   const seed = Date.now();
   const rng = seededRandom(seed);
 
   const data: PricePoint[] = [
-    { txType: null, value: 1.0 }, // Always start at 1.0
+    { txType: null, value: 1.0, speed: 1.0 }, // Always start at 1.0
   ];
 
   for (let i = 1; i < pointCount - 1; i++) {
     // Alternate between above and below 1.0
     const isAbove = i % 2 === 1;
+
+    // Calculate speed that gradually decreases over time
+    // Start with speed range 0.8 to 1.2 and gradually decrease to 0.95 to 1.05
+    const progress = i / (pointCount - 2); // 0 to 1 progress through random points
+    const startRange = 0.4; // 0.8 to 1.2 = range of 0.4
+    const endRange = 0.1;   // 0.95 to 1.05 = range of 0.1
+    const speedRange = startRange + (endRange - startRange) * progress; // Decrease from 0.4 to 0.1
+    const speedOffset = 1.0 - speedRange / 2; // Center the range around 1.0
+    const randomSpeed = speedOffset + rng() * speedRange;
 
     if (isAbove) {
       // Above 1.0: range from 1.0005 to 1.0095
@@ -227,7 +250,7 @@ function generateChaoticUnstableData(pointCount: number = 12): PricePoint[] {
         txType: null,
         value: poleBiasedRandom(rng, 1.0005, 1.0095),
         // value: 1.0005 + rng() * (1.0095 - 1.0005),
-        speed: 0.8 + rng() * 0.7, // 0.8 to 1.5
+        speed: randomSpeed,
         triggerPhase: i === 2 ? "unstable" : undefined,
       });
     } else {
@@ -236,13 +259,25 @@ function generateChaoticUnstableData(pointCount: number = 12): PricePoint[] {
         txType: null,
         value: poleBiasedRandom(rng, 0.9905, 0.9995),
         // value: 0.9905 + rng() * (0.9995 - 0.9905),
-        speed: 0.8 + rng() * 0.7, // 0.8 to 1.5
+        speed: randomSpeed,
         triggerPhase: i === 2 ? "unstable" : undefined,
       });
     }
   }
 
-  data.push({ txType: null, value: 1.0 }); // Always end at 1.0
+  data.push({ txType: null, value: 1.0, speed: 1.0 }); // Always end at 1.0
+  
+  // Debug: Print all points with their speeds
+  console.log('=== Chaotic Unstable Data Points ===');
+  data.forEach((point, index) => {
+    if (point.speed !== undefined) {
+      console.log(`Point ${index}: value=${point.value}, speed=${point.speed.toFixed(3)}`);
+    } else {
+      console.log(`Point ${index}: value=${point.value}, speed=undefined (start/end point)`);
+    }
+  });
+  console.log('===================================');
+  
   return data;
 }
 
@@ -263,14 +298,22 @@ const semiStablePriceData: PricePoint[] = [
 const stablePriceData: PricePoint[] = [
   { txType: null, value: 0.9994, speed: 3 },
   { txType: "yield", value: 1.005, speed: 3, triggerPhase: "stable" },
-  { txType: "convert", value: 0.995 },
-  { txType: null, value: 1.0004 },
-  { txType: "deposit", value: 0.9994 },
-  { txType: "withdraw", value: 1.0004 },
+  { txType: "withdraw", value: 0.995, speed: 0.85 },
+  { txType: null, value: 1.0004, speed: 0.85 },
+  { txType: null, value: 0.9994, speed: 0.85 },
+  { txType: "deposit", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
   { txType: null, value: 0.9994, speed: 3 },
-  { txType: "yield", value: 1.005, speed: 3 },
-  { txType: "convert", value: 0.995, speed: 1 },
-  { txType: null, value: 1.0004, triggerPhase: "mainCTA" },
+  { txType: "yield", value: 1.005, speed: 3, triggerPhase: "stable" },
+  { txType: null, value: 0.995, speed: 0.85 },
+  { txType: "deposit", value: 1.0004, speed: 0.85 },
+  { txType: null, value: 0.9994, speed: 0.85 },
+  { txType: "deposit", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
+  { txType: "yield", value: 0.9994, speed: 3 },
+  { txType: null, value: 1.005, speed: 3, triggerPhase: "stable" },
+  { txType: "withdraw", value: 0.995, speed: 0.85 },
+  { txType: null, value: 1.0004, speed: 0.85 },
+  { txType: "withdraw", value: 0.9994, speed: 0.85 },
+  { txType: null, value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
 ];
 
 // Combine unstablePriceData once, then stablePriceData repeated for seamless looping
@@ -313,6 +356,15 @@ function priceToY(price: number) {
   const maxPrice = 1.01;
   const minY = height - 0; // Bottom margin
   const maxY = 0; // Top margin
+  return minY - ((price - minPrice) / (maxPrice - minPrice)) * (minY - maxY);
+}
+
+// Convert price to Y coordinate for labels (wider range for better visibility)
+function priceLabelToY(price: number) {
+  const minPrice = 0.7;
+  const maxPrice = 1.3;
+  const minY = height - 50; // Bottom margin
+  const maxY = 50; // Top margin
   return minY - ((price - minPrice) / (maxPrice - minPrice)) * (minY - maxY);
 }
 
@@ -365,7 +417,8 @@ function generateCompletePath(pointSpacing: number) {
   }
 
   // Find all curve extrema (apexes) for better marker positioning
-  const allExtrema: Array<{ x: number; y: number; type: "peak" | "valley"; segmentIndex: number }> = [];
+  type ExtremumPoint = { x: number; y: number; type: "peak" | "valley"; segmentIndex: number };
+  const allExtrema: Array<ExtremumPoint> = [];
   beziers.forEach((segment, index) => {
     const extrema = findBezierExtrema(segment);
     extrema.forEach((extremum) => {
@@ -376,7 +429,7 @@ function generateCompletePath(pointSpacing: number) {
   // Reposition transaction markers to nearest appropriate apex
   const apexTransactionMarkers = transactionMarkers.map((marker) => {
     // Find the closest apex to this transaction marker
-    let closestApex = null;
+    let closestApex: ExtremumPoint | null = null;
     let minDistance = Infinity;
 
     allExtrema.forEach((apex) => {
@@ -390,11 +443,12 @@ function generateCompletePath(pointSpacing: number) {
 
     // If we found a close apex, use it; otherwise keep original position
     if (closestApex) {
+      const apex = closestApex as ExtremumPoint;
       return {
         ...marker,
-        x: closestApex.x,
-        y: closestApex.y,
-        apexType: closestApex.type, // Add metadata for positioning logic
+        x: apex.x,
+        y: apex.y,
+        apexType: apex.type, // Add metadata for positioning logic
       };
     }
 
@@ -467,6 +521,30 @@ function getSegmentWidth(data: PricePoint[], pointSpacing: number) {
   return width;
 }
 
+// Generate price label data with opacity based on distance from 1.0
+function generatePriceLabelData() {
+  return ANIMATION_CONFIG.priceLabels.levels.map(price => {
+    const distance = Math.abs(price - 1.0);
+    let opacity: number;
+    
+    // Mirror opacity based on distance from 1.0
+    if (distance <= 0.1) {
+      opacity = 0.66; // 0.9, 1.1
+    } else if (distance <= 0.2) {
+      opacity = 0.33; // 0.8, 1.2
+    } else {
+      opacity = 0.1; // 0.7, 1.3
+    }
+    
+    return {
+      price,
+      y: priceLabelToY(price),
+      opacity,
+      label: price.toFixed(1),
+    };
+  });
+}
+
 export default function LandingChart() {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
   const containerRef = useRef<HTMLDivElement>(null);
@@ -476,11 +554,19 @@ export default function LandingChart() {
   const durations = useMemo(() => calculateDurations(viewportWidth), [viewportWidth]);
   const positions = useMemo(() => calculatePositions(viewportWidth, height), [viewportWidth]);
 
+  // Generate price label data
+  const priceLabelData = useMemo(() => {
+    const data = generatePriceLabelData();
+    console.log('Price label data:', data);
+    return data;
+  }, []);
+
   const scrollOffset = useMotionValue(0);
   const measurementLineOffset = useMotionValue(75); // Separate offset for measurement line movement (percentage)
   const clipPathWidth = useMotionValue(ANIMATION_CONFIG.clipPath.initial); // Separate motion value for clip path (decimal 0-1)
   const horizontalLineClipPath = useMotionValue(viewportWidth); // For horizontal line reveal animation (starts hidden from right)
   const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
+  const priceLabelsOpacity = useMotionValue(0); // 0 = hidden, 1 = visible
   const floatersOpacity = useTransform(priceTrackingActive, (active) => (active >= 1 ? 1 : 0));
   const x = useTransform(scrollOffset, (value) => viewportWidth * ANIMATION_CONFIG.clipPath.initial - value);
 
@@ -637,6 +723,17 @@ export default function LandingChart() {
     });
     return unsubscribe;
   }, [currentIndex, currentTxType, lineStrokeColor, priceTrackingActive]);
+
+  // Monitor scroll progress to fade in price labels during semi-stable phase
+  useEffect(() => {
+    const unsubscribe = scrollOffset.on("change", (currentOffset) => {
+      // Check if we've reached the semi-stable phase (after unstable phase)
+      if (currentOffset >= positions.segments.unstable && priceLabelsOpacity.get() === 0) {
+        animate(priceLabelsOpacity, 1, { duration: 1, ease: "easeInOut" });
+      }
+    });
+    return unsubscribe;
+  }, [scrollOffset, positions.segments.unstable, priceLabelsOpacity]);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -918,6 +1015,22 @@ export default function LandingChart() {
               clipPath: useTransform(horizontalLineClipPath, (clipX) => `inset(0 ${clipX}px 0 0)`),
             }}
           />
+          {/* Price labels - static positioned to the right of final measurement line position */}
+          {priceLabelData.map((labelData) => (
+            <motion.text
+              key={labelData.price}
+              x={viewportWidth * ANIMATION_CONFIG.priceLabels.staticX + ANIMATION_CONFIG.priceLabels.xOffset}
+              y={labelData.y + 5} // Slight offset for better alignment
+              fontSize={ANIMATION_CONFIG.priceLabels.fontSize}
+              fill={ANIMATION_CONFIG.priceLabels.color}
+              textAnchor="start"
+              style={{
+                opacity: useTransform(priceLabelsOpacity, (globalOpacity) => globalOpacity * labelData.opacity)
+              }}
+            >
+              {labelData.label}
+            </motion.text>
+          ))}
           {/* Scrolling price line */}
           <g clipPath="url(#viewport)">
             <motion.path
