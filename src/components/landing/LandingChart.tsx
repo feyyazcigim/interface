@@ -395,13 +395,11 @@ export default function LandingChart() {
 
   // Assign farmers to price data and generate path
   const { path, beziers, transactionMarkers } = useMemo(() => {
-    // Assign a unique farmer icon to each non-null txType price point
-    const assignedFarmers = personIcons.slice();
-    let farmerIdx = 0;
+    // Assign a random farmer icon to each non-null txType price point
     for (let i = 0; i < fullPriceData.length; i++) {
       if (fullPriceData[i].txType) {
-        fullPriceData[i].farmer = assignedFarmers[farmerIdx % assignedFarmers.length];
-        farmerIdx++;
+        const randomIndex = Math.floor(Math.random() * personIcons.length);
+        fullPriceData[i].farmer = personIcons[randomIndex];
       }
     }
     return generateCompletePath(pointSpacing);
