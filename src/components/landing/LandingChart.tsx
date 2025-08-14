@@ -257,13 +257,13 @@ const semiStablePriceData: PricePoint[] = [
   { txType: null, value: 1.0025 },
   { txType: null, value: 1.0 },
   { txType: "sow", value: 0.9994 },
+  { txType: "harvest", value: 1.0004 },
 ];
 
 const stablePriceData: PricePoint[] = [
-  { txType: "harvest", value: 1.0004 },
   { txType: null, value: 0.9994, speed: 3 },
   { txType: "yield", value: 1.005, speed: 3, triggerPhase: "stable" },
-  { txType: "convert", value: 0.995, speed: 1 },
+  { txType: "convert", value: 0.995 },
   { txType: null, value: 1.0004 },
   { txType: "deposit", value: 0.9994 },
   { txType: "withdraw", value: 1.0004 },
