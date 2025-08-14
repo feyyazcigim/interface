@@ -1,6 +1,7 @@
 import PintoLogo from "@/assets/protocol/PintoLogo.svg";
 import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import { generateChaoticUnstableData } from "@/utils/utils";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -126,90 +127,12 @@ interface Farmer {
   icon: string;
   bg: string;
 }
-interface PricePoint {
+export interface PricePoint {
   txType: string | null;
   value: number;
   farmer?: Farmer;
   speed?: number; // Optional speed for specific transactions
   triggerPhase?: string; // Optional phase trigger, for the animation above the chart
-}
-
-// Seeded random number generator using timestamp
-function seededRandom(seed: number): () => number {
-  let x = Math.sin(seed) * 10000;
-  return () => {
-    x = Math.sin(x) * 10000;
-    return x - Math.floor(x);
-  };
-}
-
-// Pole-biased random value between min and max
-function poleBiasedRandom(rng: () => number, min: number, max: number): number {
-  // Use power function to bias toward poles (0 and 1)
-  let u = rng();
-  // Apply bias - values closer to 0 or 1
-  u = u < 0.5 ? (u * 2) ** 0.3 / 2 : 1 - ((1 - u) * 2) ** 0.3 / 2;
-  return min + (max - min) * u;
-}
-
-// Generate chaotic unstable data with oscillating pattern
-function generateChaoticUnstableData(pointCount: number = 7): PricePoint[] {
-  // Use page load timestamp as seed for different pattern each reload
-  const seed = Date.now();
-  const rng = seededRandom(seed);
-
-  const data: PricePoint[] = [
-    { txType: null, value: 1.0, speed: 1.0 }, // Always start at 1.0
-  ];
-
-  for (let i = 1; i < pointCount - 1; i++) {
-    // Alternate between above and below 1.0
-    const isAbove = i % 2 === 1;
-
-    // Calculate speed that gradually decreases over time
-    // Start with speed range 0.8 to 1.2 and gradually decrease to 0.95 to 1.05
-    const progress = i / (pointCount - 2); // 0 to 1 progress through random points
-    const startRange = 0.4; // 0.8 to 1.2 = range of 0.4
-    const endRange = 0.1; // 0.95 to 1.05 = range of 0.1
-    const speedRange = startRange + (endRange - startRange) * progress; // Decrease from 0.4 to 0.1
-    const speedOffset = 1.0 - speedRange / 2; // Center the range around 1.0
-    const randomSpeed = speedOffset + rng() * speedRange;
-
-    if (isAbove) {
-      // Above 1.0: range from 1.0005 to 1.0095
-      data.push({
-        txType: null,
-        value: poleBiasedRandom(rng, 1.0005, 1.0095),
-        // value: 1.0005 + rng() * (1.0095 - 1.0005),
-        speed: randomSpeed,
-        triggerPhase: i === 2 ? "unstable" : undefined,
-      });
-    } else {
-      // Below 1.0: range from 0.9995 to 0.9905
-      data.push({
-        txType: null,
-        value: poleBiasedRandom(rng, 0.9905, 0.9995),
-        // value: 0.9905 + rng() * (0.9995 - 0.9905),
-        speed: randomSpeed,
-        triggerPhase: i === 2 ? "unstable" : undefined,
-      });
-    }
-  }
-
-  data.push({ txType: null, value: 1.0, speed: 1.0 }); // Always end at 1.0
-
-  // Debug: Print all points with their speeds
-  console.log("=== Chaotic Unstable Data Points ===");
-  data.forEach((point, index) => {
-    if (point.speed !== undefined) {
-      console.log(`Point ${index}: value=${point.value}, speed=${point.speed.toFixed(3)}`);
-    } else {
-      console.log(`Point ${index}: value=${point.value}, speed=undefined (start/end point)`);
-    }
-  });
-  console.log("===================================");
-
-  return data;
 }
 
 const unstablePriceData: PricePoint[] = generateChaoticUnstableData();
