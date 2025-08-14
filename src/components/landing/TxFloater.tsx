@@ -38,7 +38,7 @@ export default function TxFloater({
   markerX,
   isFixed,
 }: {
-  from: ReactNode;
+  from: string;
   txType: string | null;
   viewportWidth: number;
   x: MotionValue<number>; // The shared scroll position
@@ -50,7 +50,7 @@ export default function TxFloater({
 
   // Use animation controls for better control
   const controls = useAnimation();
-  const lastValidFromRef = useRef<ReactNode>(null);
+  const lastValidFromRef = useRef<string | undefined>(undefined);
   const lastValidTxTypeRef = useRef<string | null>(null);
   const hasInitialized = useRef(false);
   const hasAnimated = useRef(false);
@@ -121,9 +121,9 @@ export default function TxFloater({
     <motion.div
       initial={{ opacity: 0 }}
       animate={controls}
-      className={`z-10 flex items-center justify-center bg-white border border-pinto-green-4 rounded-full p-1 gap-1 w-fit`}
+      className={`z-10 flex items-center justify-center bg-white border border-pinto-green-4 rounded-full p-2 gap-2 w-fit`}
     >
-      <div className={`w-8 h-8`}>{isFixed ? from : lastValidFromRef.current}</div>
+      <img className="w-8 h-8" src={isFixed ? from : lastValidFromRef.current} alt="Farmer Icon" />
       <img
         alt={lastValidTxTypeRef.current || "Transaction Type Icon"}
         src={
