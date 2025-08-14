@@ -1,9 +1,9 @@
 import PintoLogo from "@/assets/protocol/PintoLogo.svg";
 import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import { generateChaoticUnstableData } from "@/utils/utils";
+import { cubicBezier, findBezierExtrema, generateChaoticUnstableData } from "@/utils/utils";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
@@ -21,6 +21,9 @@ const ANIMATION_CONFIG = {
 
   // Speed constants
   baseSpeed: 2.8, // pixels per frame at 60fps
+
+  gridSpacing: 72,
+  gridStrokeWidth: 1,
 
   // Measurement line positions (as viewport percentages)
   measurementLine: {
@@ -60,6 +63,7 @@ const ANIMATION_CONFIG = {
   priceLabels: {
     staticX: 0.75, // 75% from left (same as measurement line final position)
     xOffset: 20, // pixels to the right of the line
+    yOffset: 4,
     levels: [1.3, 1.2, 1.1, 0.9, 0.8, 0.7], // Removed 1.0 since it overlaps with horizontal line
     fontSize: 14,
     color: "#9C9C9C", // pinto-gray-4
@@ -198,13 +202,28 @@ function priceToY(price: number) {
   return minY - ((price - minPrice) / (maxPrice - minPrice)) * (minY - maxY);
 }
 
-// Convert price to Y coordinate for labels (wider range for better visibility)
+// Convert price to Y coordinate for labels (aligned to grid lines)
 function priceLabelToY(price: number) {
-  const minPrice = 0.7;
-  const maxPrice = 1.3;
-  const minY = height - 50; // Bottom margin
-  const maxY = 50; // Top margin
-  return minY - ((price - minPrice) / (maxPrice - minPrice)) * (minY - maxY);
+  const middle = height / 2;
+  const gridSpacing = ANIMATION_CONFIG.gridSpacing;
+  const levels = ANIMATION_CONFIG.priceLabels.levels;
+  const fontSize = ANIMATION_CONFIG.priceLabels.fontSize;
+  const yOffset = ANIMATION_CONFIG.priceLabels.yOffset;
+
+  // Find the index of this price in the levels array
+  const index = levels.indexOf(price);
+  if (index === -1) return middle; // Fallback to middle if not found
+
+  // Calculate center reference index based on levels array
+  const totalLevels = levels.length;
+  const centerIndex = Math.ceil((totalLevels - 1) / 2);
+
+  // Adjust index for symmetric spacing (skip center position)
+  const beforeMiddle = index < centerIndex;
+  const adjustedIndex = beforeMiddle ? index : index + 1;
+
+  const gridOffset = (adjustedIndex - centerIndex) * gridSpacing + (beforeMiddle ? yOffset * -1 : fontSize);
+  return middle + gridOffset;
 }
 
 // Generate complete line path with multiple repetitions (Bezier smoothing)
@@ -296,58 +315,6 @@ function generateCompletePath(pointSpacing: number) {
 
   const totalWidth = points.length > 0 ? points[points.length - 1].x : 0;
   return { path, points, totalWidth, beziers, transactionMarkers: apexTransactionMarkers };
-}
-
-// Helper: cubic Bezier at t
-function cubicBezier(p0: number, c1: number, c2: number, p1: number, t: number) {
-  const mt = 1 - t;
-  return mt ** 3 * p0 + 3 * mt ** 2 * t * c1 + 3 * mt * t ** 2 * c2 + t ** 3 * p1;
-}
-
-// Helper: derivative of cubic Bezier at t
-function cubicBezierDerivative(p0: number, c1: number, c2: number, p1: number, t: number) {
-  const mt = 1 - t;
-  return 3 * mt ** 2 * (c1 - p0) + 6 * mt * t * (c2 - c1) + 3 * t ** 2 * (p1 - c2);
-}
-
-// Find extrema (peaks/valleys) of a cubic Bezier curve segment
-function findBezierExtrema(segment: {
-  p0: { x: number; y: number };
-  c1: { x: number; y: number };
-  c2: { x: number; y: number };
-  p1: { x: number; y: number };
-}) {
-  const extrema: { t: number; x: number; y: number; type: "peak" | "valley" }[] = [];
-
-  // Find Y extrema (where dy/dt = 0)
-  const a = 3 * (segment.p1.y - 3 * segment.c2.y + 3 * segment.c1.y - segment.p0.y);
-  const b = 6 * (segment.c2.y - 2 * segment.c1.y + segment.p0.y);
-  const c = 3 * (segment.c1.y - segment.p0.y);
-
-  // Solve quadratic equation at^2 + bt + c = 0
-  const discriminant = b * b - 4 * a * c;
-
-  if (discriminant >= 0 && Math.abs(a) > 1e-10) {
-    const sqrt_d = Math.sqrt(discriminant);
-    const t1 = (-b + sqrt_d) / (2 * a);
-    const t2 = (-b - sqrt_d) / (2 * a);
-
-    [t1, t2].forEach((t) => {
-      if (t > 0.01 && t < 0.99) {
-        // Exclude endpoints, small buffer for stability
-        const x = cubicBezier(segment.p0.x, segment.c1.x, segment.c2.x, segment.p1.x, t);
-        const y = cubicBezier(segment.p0.y, segment.c1.y, segment.c2.y, segment.p1.y, t);
-
-        // Determine if it's a peak or valley by checking second derivative
-        const secondDerivY = 6 * a * t + 2 * b;
-        const type = secondDerivY < 0 ? "peak" : "valley";
-
-        extrema.push({ t, x, y, type });
-      }
-    });
-  }
-
-  return extrema;
 }
 
 // Helper to get width of a price data segment
@@ -545,7 +512,7 @@ export default function LandingChart() {
       }
     });
     return unsubscribe;
-  }, [currentIndex, lineStrokeColor, priceTrackingActive]);
+  }, [currentIndex, currentTriggerPhase, lineStrokeColor, priceTrackingActive]);
 
   // Monitor scroll progress to fade in price labels during semi-stable phase
   useEffect(() => {
@@ -775,8 +742,18 @@ export default function LandingChart() {
             <mask id="priceLabelsOpacityMask" maskUnits="userSpaceOnUse">
               <rect x="0" y="0" width="100%" height={height} fill="url(#priceLabelsGradient)" />
             </mask>
-            <pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse">
-              <path d="M 72 0 L 0 0 0 72" fill="none" stroke="#D9D9D9" strokeWidth="1" />
+            <pattern
+              id="grid"
+              width={ANIMATION_CONFIG.gridSpacing}
+              height={ANIMATION_CONFIG.gridSpacing}
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d={`M ${ANIMATION_CONFIG.gridSpacing} 0 L 0 0 0 ${ANIMATION_CONFIG.gridSpacing}`}
+                fill="none"
+                stroke="#D9D9D9"
+                strokeWidth={ANIMATION_CONFIG.gridStrokeWidth}
+              />
             </pattern>
             {/* Clip path to hide line outside viewport */}
             <clipPath id="viewport">
@@ -833,7 +810,7 @@ export default function LandingChart() {
               <motion.text
                 key={labelData.price}
                 x={viewportWidth * ANIMATION_CONFIG.priceLabels.staticX + ANIMATION_CONFIG.priceLabels.xOffset}
-                y={labelData.y + 5} // Slight offset for better alignment
+                y={labelData.y}
                 fontSize={ANIMATION_CONFIG.priceLabels.fontSize}
                 fill={ANIMATION_CONFIG.priceLabels.color}
                 textAnchor="start"
