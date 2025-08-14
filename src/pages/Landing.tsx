@@ -52,7 +52,7 @@ export default function Landing() {
         <section className="flex flex-col sm:mt-9 overflow-clip">
           <LandingChart />
         </section>
-        <section className="flex flex-col overflow-clip gap-14 h-[67.5rem] max-h-[67.5rem]">
+        <section className="flex flex-col overflow-clip max-sm:place-content-center gap-14 h-[67.5rem] max-h-[67.5rem]">
           <SecondaryCTAValues />
           <SecondaryCTA />
           <SecondaryCTAProperties />
