@@ -277,7 +277,20 @@ const fullPriceData: PricePoint[] = [
 ];
 
 // Array of person icons with different color backgrounds
-const personIcons = ["farmer_1.png", "farmer_2.png", "farmer_3.png"];
+const personIcons = [
+  "farmer_1.png",
+  "farmer_2.png",
+  "farmer_3.png",
+  "farmer_4.png",
+  "farmer_5.png",
+  "farmer_6.png",
+  "farmer_7.png",
+  "farmer_8.png",
+  "farmer_9.png",
+  "farmer_10.png",
+  "farmer_11.png",
+  "farmer_12.png",
+];
 
 // Convert price to Y coordinate (inverted because SVG Y increases downward)
 function priceToY(price: number) {

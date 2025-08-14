@@ -38,7 +38,7 @@ export default function TxFloater({
   markerX,
   isFixed,
 }: {
-  from: string;
+  from: string | undefined;
   txType: string | null;
   viewportWidth: number;
   x: MotionValue<number>; // The shared scroll position
