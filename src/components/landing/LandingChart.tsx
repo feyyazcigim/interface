@@ -376,7 +376,7 @@ function generateCompletePath(pointSpacing: number) {
   // Reposition transaction markers to nearest appropriate apex
   const apexTransactionMarkers = transactionMarkers.map((marker) => {
     // Find the closest apex to this transaction marker
-    let closestApex = null;
+    let closestApex: (typeof allExtrema)[0] | undefined;
     let minDistance = Infinity;
 
     allExtrema.forEach((apex) => {
@@ -1006,37 +1006,7 @@ export default function LandingChart() {
         >
           <div className="w-full h-full rounded-full bg-white" />
         </motion.div>
-        {/* Floating emoji + image marker above the animated circle - only show during price tracking */}
-        {/* 
-        <motion.div
-          className="absolute -ml-[1.25rem] -mt-[5rem]"
-          style={{
-            left: measurementX,
-            top: currentY,
-            pointerEvents: "none",
-            opacity: floatersOpacity,
-          }}
-        >
-          <TxFloater
-            key={"floater"}
-            from={currentFarmer ? <FarmerProfile icon={currentFarmer.icon} bg={currentFarmer.bg} /> : null}
-            txType={currentTxType}
-            viewportWidth={viewportWidth}
-            x={x}
-            // @ts-ignore-next-line
-            markerX={measurementX}
-            isFixed={false}
-          />
-        </motion.div>
-        */}
       </div>
     </div>
   );
 }
-
-// Variable-driven animation system complete:
-// - All timings calculated from ANIMATION_CONFIG percentages
-// - All positions derived from viewport dimensions
-// - Fully responsive with automatic recalculation
-// - Consistent animation speeds across all phases
-// - Timeline-based coordination of all events
