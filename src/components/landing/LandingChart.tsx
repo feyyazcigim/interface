@@ -239,7 +239,7 @@ function generateChaoticUnstableData(pointCount: number = 7): PricePoint[] {
     // Start with speed range 0.8 to 1.2 and gradually decrease to 0.95 to 1.05
     const progress = i / (pointCount - 2); // 0 to 1 progress through random points
     const startRange = 0.4; // 0.8 to 1.2 = range of 0.4
-    const endRange = 0.1;   // 0.95 to 1.05 = range of 0.1
+    const endRange = 0.1; // 0.95 to 1.05 = range of 0.1
     const speedRange = startRange + (endRange - startRange) * progress; // Decrease from 0.4 to 0.1
     const speedOffset = 1.0 - speedRange / 2; // Center the range around 1.0
     const randomSpeed = speedOffset + rng() * speedRange;
@@ -266,9 +266,9 @@ function generateChaoticUnstableData(pointCount: number = 7): PricePoint[] {
   }
 
   data.push({ txType: null, value: 1.0, speed: 1.0 }); // Always end at 1.0
-  
+
   // Debug: Print all points with their speeds
-  console.log('=== Chaotic Unstable Data Points ===');
+  console.log("=== Chaotic Unstable Data Points ===");
   data.forEach((point, index) => {
     if (point.speed !== undefined) {
       console.log(`Point ${index}: value=${point.value}, speed=${point.speed.toFixed(3)}`);
@@ -276,19 +276,19 @@ function generateChaoticUnstableData(pointCount: number = 7): PricePoint[] {
       console.log(`Point ${index}: value=${point.value}, speed=undefined (start/end point)`);
     }
   });
-  console.log('===================================');
-  
+  console.log("===================================");
+
   return data;
 }
 
 const unstablePriceData: PricePoint[] = generateChaoticUnstableData();
 
 const semiStablePriceData: PricePoint[] = [
-  { txType: null, value: 0.9998, triggerPhase: "semiStable" },
+  { txType: null, value: 0.9998, },
   { txType: "withdraw", value: 1.004 },
   { txType: null, value: 0.997 },
   { txType: null, value: 1.003 },
-  { txType: "deposit", value: 0.998 },
+  { txType: "deposit", value: 0.998, triggerPhase: "semiStable" },
   { txType: null, value: 1.0025 },
   { txType: null, value: 1.0 },
   { txType: "sow", value: 0.9994 },
@@ -523,10 +523,10 @@ function getSegmentWidth(data: PricePoint[], pointSpacing: number) {
 
 // Generate price label data with opacity based on distance from 1.0
 function generatePriceLabelData() {
-  return ANIMATION_CONFIG.priceLabels.levels.map(price => {
+  return ANIMATION_CONFIG.priceLabels.levels.map((price) => {
     const distance = Math.abs(price - 1.0);
     let opacity: number;
-    
+
     // Mirror opacity based on distance from 1.0
     if (distance <= 0.1) {
       opacity = 0.66; // 0.9, 1.1
@@ -535,7 +535,7 @@ function generatePriceLabelData() {
     } else {
       opacity = 0.1; // 0.7, 1.3
     }
-    
+
     return {
       price,
       y: priceLabelToY(price),
@@ -557,7 +557,7 @@ export default function LandingChart() {
   // Generate price label data
   const priceLabelData = useMemo(() => {
     const data = generatePriceLabelData();
-    console.log('Price label data:', data);
+    console.log("Price label data:", data);
     return data;
   }, []);
 
@@ -851,37 +851,37 @@ export default function LandingChart() {
           {currentTriggerPhase === "unstable" && (
             <motion.span
               key="real-stability"
-              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 sm:text-pinto-gray-4 text-center w-[70%] sm:w-fit"
+              className="text-[2.5rem] sm:text-6xl leading-[1.1] font-thin text-pinto-gray-5 sm:text-pinto-gray-5 text-center w-[70%] sm:w-fit"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-              Real stability takes time
+              Real stability takes time.
             </motion.span>
           )}
           {currentTriggerPhase === "semiStable" && (
             <motion.span
               key="credit-earned"
-              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 sm:text-pinto-gray-4 text-center w-[70%] sm:w-fit"
+              className="text-[2.5rem] sm:text-6xl leading-[1.1] font-thin text-pinto-gray-5 sm:text-pinto-gray-5 text-center w-[70%] sm:w-fit"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-              Credit is earned
+              Credit is earned.
             </motion.span>
           )}
           {currentTriggerPhase === "stable" && (
             <motion.span
               key="pinto-alive"
-              className="text-[1.75rem] sm:pinto-h2 sm:text-5xl leading-[1.1] font-thin text-pinto-gray-4 sm:text-pinto-gray-4 text-center w-[70%] sm:w-fit"
+              className="text-[2.5rem] sm:text-6xl leading-[1.1] font-thin text-pinto-gray-5 sm:text-pinto-gray-5 text-center w-[70%] sm:w-fit"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-              Pinto is alive
+              Pinto is alive.
             </motion.span>
           )}
           {/* MainCTA Component */}
@@ -1025,7 +1025,7 @@ export default function LandingChart() {
               fill={ANIMATION_CONFIG.priceLabels.color}
               textAnchor="start"
               style={{
-                opacity: useTransform(priceLabelsOpacity, (globalOpacity) => globalOpacity * labelData.opacity)
+                opacity: useTransform(priceLabelsOpacity, (globalOpacity) => globalOpacity * labelData.opacity),
               }}
             >
               {labelData.label}
