@@ -695,7 +695,7 @@ export default function LandingChart() {
                   <Button
                     rounded="full"
                     size={isMobile ? "sm" : "default"}
-                    className="flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow duration-[1500ms]"
+                    className="flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow duration-1500"
                   >
                     <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
                     <span className="relative z-10">Come Seed the Trustless Economy</span>

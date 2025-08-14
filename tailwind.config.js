@@ -249,6 +249,9 @@ module.exports = {
         "3/1": "3 / 1",
         "6/1": "6 / 1",
       },
+      transitionDuration: {
+        "1500": "1500ms",
+      },
       scrollbar: {
         none: {
           "&::-webkit-scrollbar": {
