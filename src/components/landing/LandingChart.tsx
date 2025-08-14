@@ -21,34 +21,6 @@ const ANIMATION_CONFIG = {
   // Speed constants
   baseSpeed: 2.8, // pixels per frame at 60fps
 
-  // Phase proportions and timing
-  phases: {
-    fadeIn: 0.1, // 10% of total experience time
-    phase1: 0.2, // 20% of total time
-    phase2: 0.35, // 35% of total time
-    phase3: 0.4, // 40% of total time (initial scroll)
-  },
-
-  // Stage message positioning (as percentages of data segment widths)
-  stageMessages: {
-    // Messages appear during unstable phase based on position
-    realStability: {
-      phase: "unstable",
-      startPosition: 0.1, // 10% through unstable period
-      endPosition: 0.9, // 90% through unstable period
-    },
-    creditEarned: {
-      phase: "semiStable",
-      startPosition: 0.1, // 10% through semi-stable period
-      endPosition: 0.9, // 90% through semi-stable period
-    },
-    pintoAlive: {
-      phase: "stable",
-      startPosition: 0.3, // 30% through stable period (first loop)
-      duration: 5000, // Fixed 5s duration
-    },
-  },
-
   // Measurement line positions (as viewport percentages)
   measurementLine: {
     initial: 0.75, // 75% from left
@@ -68,7 +40,6 @@ const ANIMATION_CONFIG = {
     measurementLine: { start: 0.1, duration: 0.2 },
     priceLine: { start: 0.2, duration: 0.4 },
     priceIndicator: { start: 0.1, duration: 0.2 },
-    priceLabels: { start: 0.6, duration: 0.3 }, // Fade in during semi-stable phase
   },
 
   // Price indicator
@@ -79,9 +50,9 @@ const ANIMATION_CONFIG = {
   // Horizontal reference line (represents $1.00)
   horizontalReference: {
     position: 0.5, // 50% of chart height
-    color: "#D1D5DB", // Light gray
-    strokeWidth: 1,
-    dashArray: "5,5",
+    color: "#387F5C", // pinto-green-4
+    strokeWidth: 2,
+    dashArray: "10,10",
   },
 
   // Price labels configuration
@@ -90,7 +61,7 @@ const ANIMATION_CONFIG = {
     xOffset: 20, // pixels to the right of the line
     levels: [1.3, 1.2, 1.1, 0.9, 0.8, 0.7], // Removed 1.0 since it overlaps with horizontal line
     fontSize: 14,
-    color: "#6B7280", // gray-500
+    color: "#9C9C9C", // pinto-gray-4
   },
 };
 
@@ -100,7 +71,7 @@ const repetitions = ANIMATION_CONFIG.repetitions;
 const pointSpacing = ANIMATION_CONFIG.pointSpacing;
 
 // Position calculation system based on data segment widths
-function calculatePositions(viewportWidth: number, chartHeight: number) {
+function calculatePositions(chartHeight: number) {
   // Calculate actual widths of each data segment
   const unstableWidth = getSegmentWidth(unstablePriceData, pointSpacing);
   const semiStableWidth = getSegmentWidth(semiStablePriceData, pointSpacing);
@@ -112,43 +83,7 @@ function calculatePositions(viewportWidth: number, chartHeight: number) {
       unstable: unstableWidth,
       semiStable: semiStableWidth,
       stable: stableWidth,
-      // Cumulative positions for each segment start
-      unstableStart: 0,
-      semiStableStart: unstableWidth,
-      stableStart: unstableWidth + semiStableWidth,
       totalInitial: unstableWidth + semiStableWidth,
-    },
-
-    // Stage message trigger positions
-    messagePositions: {
-      realStability: {
-        show: unstableWidth * ANIMATION_CONFIG.stageMessages.realStability.startPosition,
-        hide: unstableWidth * ANIMATION_CONFIG.stageMessages.realStability.endPosition,
-      },
-      creditEarned: {
-        show: unstableWidth + semiStableWidth * ANIMATION_CONFIG.stageMessages.creditEarned.startPosition,
-        hide: unstableWidth + semiStableWidth * ANIMATION_CONFIG.stageMessages.creditEarned.endPosition,
-      },
-      pintoAlive: {
-        show: unstableWidth + semiStableWidth, // Start of stable phase
-        duration: ANIMATION_CONFIG.stageMessages.pintoAlive.duration,
-      },
-    },
-
-    // Measurement line positions
-    measurementLine: {
-      initial: viewportWidth * ANIMATION_CONFIG.measurementLine.initial,
-      minimum: viewportWidth * ANIMATION_CONFIG.measurementLine.minimum,
-      final: viewportWidth * ANIMATION_CONFIG.measurementLine.final,
-      moveToMinimumOffset:
-        viewportWidth * (ANIMATION_CONFIG.measurementLine.minimum - ANIMATION_CONFIG.measurementLine.initial),
-      moveToFinalOffset: 0,
-    },
-
-    // Clip path dimensions
-    clipPath: {
-      initial: viewportWidth * ANIMATION_CONFIG.clipPath.initial,
-      final: viewportWidth * ANIMATION_CONFIG.clipPath.final,
     },
 
     // Price indicator positions
@@ -159,7 +94,7 @@ function calculatePositions(viewportWidth: number, chartHeight: number) {
 }
 
 // Duration calculation system - simplified for fade-in only
-function calculateDurations(_viewportWidth: number) {
+function calculateDurations() {
   const fadeInDuration = 8; // Fixed fade-in duration in seconds
 
   return {
@@ -180,10 +115,6 @@ function calculateDurations(_viewportWidth: number) {
       priceIndicator: {
         start: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceIndicator.start,
         duration: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceIndicator.duration,
-      },
-      priceLabels: {
-        start: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceLabels.start,
-        duration: fadeInDuration * ANIMATION_CONFIG.fadeInSequence.priceLabels.duration,
       },
     },
   };
@@ -284,7 +215,7 @@ function generateChaoticUnstableData(pointCount: number = 7): PricePoint[] {
 const unstablePriceData: PricePoint[] = generateChaoticUnstableData();
 
 const semiStablePriceData: PricePoint[] = [
-  { txType: null, value: 0.9998, },
+  { txType: null, value: 0.9998 },
   { txType: "withdraw", value: 1.004 },
   { txType: null, value: 0.997 },
   { txType: null, value: 1.003 },
@@ -521,25 +452,12 @@ function getSegmentWidth(data: PricePoint[], pointSpacing: number) {
   return width;
 }
 
-// Generate price label data with opacity based on distance from 1.0
+// Generate price label data
 function generatePriceLabelData() {
   return ANIMATION_CONFIG.priceLabels.levels.map((price) => {
-    const distance = Math.abs(price - 1.0);
-    let opacity: number;
-
-    // Mirror opacity based on distance from 1.0
-    if (distance <= 0.1) {
-      opacity = 0.66; // 0.9, 1.1
-    } else if (distance <= 0.2) {
-      opacity = 0.33; // 0.8, 1.2
-    } else {
-      opacity = 0.1; // 0.7, 1.3
-    }
-
     return {
       price,
       y: priceLabelToY(price),
-      opacity,
       label: price.toFixed(1),
     };
   });
@@ -550,9 +468,9 @@ export default function LandingChart() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
-  // Calculate durations and positions based on current viewport
-  const durations = useMemo(() => calculateDurations(viewportWidth), [viewportWidth]);
-  const positions = useMemo(() => calculatePositions(viewportWidth, height), [viewportWidth]);
+  // Calculate durations and positions
+  const durations = useMemo(() => calculateDurations(), []);
+  const positions = useMemo(() => calculatePositions(height), []);
 
   // Generate price label data
   const priceLabelData = useMemo(() => {
@@ -562,13 +480,18 @@ export default function LandingChart() {
   }, []);
 
   const scrollOffset = useMotionValue(0);
-  const measurementLineOffset = useMotionValue(75); // Separate offset for measurement line movement (percentage)
+  const measurementLineOffset = useMotionValue(ANIMATION_CONFIG.measurementLine.initial * 100); // Separate offset for measurement line movement (percentage)
   const clipPathWidth = useMotionValue(ANIMATION_CONFIG.clipPath.initial); // Separate motion value for clip path (decimal 0-1)
   const horizontalLineClipPath = useMotionValue(viewportWidth); // For horizontal line reveal animation (starts hidden from right)
   const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
   const priceLabelsOpacity = useMotionValue(0); // 0 = hidden, 1 = visible
   const floatersOpacity = useTransform(priceTrackingActive, (active) => (active >= 1 ? 1 : 0));
   const x = useTransform(scrollOffset, (value) => viewportWidth * ANIMATION_CONFIG.clipPath.initial - value);
+
+  // Transform values for motion properties (moved from JSX to avoid hook violations)
+  const clipPathRectWidth = useTransform(clipPathWidth, (pct) => pct * viewportWidth);
+  const measurementLineX = useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth);
+  const horizontalLineClipPathStyle = useTransform(horizontalLineClipPath, (clipX) => `inset(0 ${clipX}px 0 0)`);
 
   // Update viewport width on mount and resize with ResizeObserver for better performance
   useEffect(() => {
@@ -768,7 +691,7 @@ export default function LandingChart() {
         delay: measurementLineStartDelay,
       });
 
-      // Phase 2: Move measurement line back to 75% and expand clip path
+      // Phase 2: Move measurement line back to final position and expand clip path
       const phase2Duration = 3;
       const phase2StartDelay = measurementLineStartDelay + measurementLineDuration - 0.5;
 
@@ -786,7 +709,7 @@ export default function LandingChart() {
         ease: "easeIn",
       });
 
-      controls = animate(measurementLineOffset, 75, {
+      controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.final * 100, {
         duration: phase2Duration,
         ease: "easeIn",
       });
@@ -958,17 +881,22 @@ export default function LandingChart() {
             <mask id="fadeMask" maskUnits="userSpaceOnUse">
               <rect width="100%" height="100%" fill="url(#fadeGradient)" />
             </mask>
+            <linearGradient id="priceLabelsGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="white" stopOpacity="0.1" />
+              <stop offset="20%" stopColor="white" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="white" stopOpacity="1" />
+              <stop offset="80%" stopColor="white" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="white" stopOpacity="0.1" />
+            </linearGradient>
+            <mask id="priceLabelsOpacityMask" maskUnits="userSpaceOnUse">
+              <rect x="0" y="0" width="100%" height={height} fill="url(#priceLabelsGradient)" />
+            </mask>
             <pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse">
               <path d="M 72 0 L 0 0 0 72" fill="none" stroke="#D9D9D9" strokeWidth="1" />
             </pattern>
             {/* Clip path to hide line outside viewport */}
             <clipPath id="viewport">
-              <motion.rect
-                x="0"
-                y="0"
-                width={useTransform(clipPathWidth, (pct) => pct * viewportWidth)}
-                height={height}
-              />
+              <motion.rect x="0" y="0" width={clipPathRectWidth} height={height} />
             </clipPath>
           </defs>
           <motion.rect
@@ -993,7 +921,7 @@ export default function LandingChart() {
             fill="none"
             mask="url(#fadeMask)"
             style={{
-              x: useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth),
+              x: measurementLineX,
             }}
             initial={{ clipPath: "inset(0 0 100% 0)" }}
             animate={{ clipPath: "inset(0 0 0.01% 0)" }}
@@ -1006,31 +934,31 @@ export default function LandingChart() {
           {/* Horizontal reference line at $1.00 - Two-stage reveal */}
           <motion.path
             d={`M 0 ${height * ANIMATION_CONFIG.horizontalReference.position} L ${viewportWidth} ${height * ANIMATION_CONFIG.horizontalReference.position}`}
-            stroke="#387F5C"
-            strokeWidth="2"
-            strokeDasharray="10,10"
+            stroke={ANIMATION_CONFIG.horizontalReference.color}
+            strokeWidth={ANIMATION_CONFIG.horizontalReference.strokeWidth}
+            strokeDasharray={ANIMATION_CONFIG.horizontalReference.dashArray}
             fill="none"
             mask="url(#fadeMask)"
             style={{
-              clipPath: useTransform(horizontalLineClipPath, (clipX) => `inset(0 ${clipX}px 0 0)`),
+              clipPath: horizontalLineClipPathStyle,
             }}
           />
           {/* Price labels - static positioned to the right of final measurement line position */}
-          {priceLabelData.map((labelData) => (
-            <motion.text
-              key={labelData.price}
-              x={viewportWidth * ANIMATION_CONFIG.priceLabels.staticX + ANIMATION_CONFIG.priceLabels.xOffset}
-              y={labelData.y + 5} // Slight offset for better alignment
-              fontSize={ANIMATION_CONFIG.priceLabels.fontSize}
-              fill={ANIMATION_CONFIG.priceLabels.color}
-              textAnchor="start"
-              style={{
-                opacity: useTransform(priceLabelsOpacity, (globalOpacity) => globalOpacity * labelData.opacity),
-              }}
-            >
-              {labelData.label}
-            </motion.text>
-          ))}
+          <g mask="url(#priceLabelsOpacityMask)">
+            {priceLabelData.map((labelData) => (
+              <motion.text
+                key={labelData.price}
+                x={viewportWidth * ANIMATION_CONFIG.priceLabels.staticX + ANIMATION_CONFIG.priceLabels.xOffset}
+                y={labelData.y + 5} // Slight offset for better alignment
+                fontSize={ANIMATION_CONFIG.priceLabels.fontSize}
+                fill={ANIMATION_CONFIG.priceLabels.color}
+                textAnchor="start"
+                style={{ opacity: priceLabelsOpacity }}
+              >
+                {labelData.label}
+              </motion.text>
+            ))}
+          </g>
           {/* Scrolling price line */}
           <g clipPath="url(#viewport)">
             <motion.path
