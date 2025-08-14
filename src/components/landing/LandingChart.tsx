@@ -123,14 +123,10 @@ function calculateDurations() {
 
 // Price data with more baseline points to space out peaks and dips
 // Define the type for priceData
-interface Farmer {
-  icon: string;
-  bg: string;
-}
 export interface PricePoint {
   txType: string | null;
   value: number;
-  farmer?: Farmer;
+  farmer?: string; // Farmer is now just a filename string
   speed?: number; // Optional speed for specific transactions
   triggerPhase?: string; // Optional phase trigger, for the animation above the chart
 }
@@ -179,30 +175,19 @@ const fullPriceData: PricePoint[] = [
 
 // Array of person icons with different color backgrounds
 const personIcons = [
-  { icon: "🧑", bg: "#FFD700" }, // gold
-  { icon: "👩", bg: "#FFB6C1" }, // pink
-  { icon: "👨", bg: "#87CEEB" }, // blue
-  { icon: "🧑‍🦱", bg: "#90EE90" }, // green
-  { icon: "👩‍🦰", bg: "#FFA07A" }, // orange
-  { icon: "👨‍🦳", bg: "#D3D3D3" }, // gray
-  { icon: "🧑‍🦰", bg: "#FF8C00" }, // dark orange
-  { icon: "👩‍🦳", bg: "#E6E6FA" }, // lavender
-  { icon: "👨‍🦱", bg: "#20B2AA" }, // teal
-  { icon: "🧑‍🦲", bg: "#F5DEB3" }, // wheat
+  "farmer_1.png",
+  "farmer_2.png",
+  "farmer_3.png",
+  "farmer_4.png",
+  "farmer_5.png",
+  "farmer_6.png",
+  "farmer_7.png",
+  "farmer_8.png",
+  "farmer_9.png",
+  "farmer_10.png",
+  "farmer_11.png",
+  "farmer_12.png",
 ];
-
-// Memoize FarmerProfile to avoid unnecessary re-renders
-const FarmerProfile = React.memo(function FarmerProfile({
-  icon,
-  bg,
-  size = 32,
-}: { icon: string; bg: string; size?: number }) {
-  return (
-    <div className="flex items-center justify-center text-2xl">
-      <span>{icon}</span>
-    </div>
-  );
-});
 
 // Convert price to Y coordinate (inverted because SVG Y increases downward)
 function priceToY(price: number) {
@@ -235,7 +220,7 @@ function generateCompletePath(pointSpacing: number) {
     x: number;
     y: number;
     txType: string;
-    farmer?: Farmer;
+    farmer?: string;
     index: number;
     apexType?: "peak" | "valley";
   }[] = [];
@@ -531,8 +516,6 @@ export default function LandingChart() {
   });
 
   // Get the current txType and farmer for the floating marker
-  const [currentTxType, setCurrentTxType] = useState<string | null>(null);
-  const [currentFarmer, setCurrentFarmer] = useState<Farmer | undefined>(undefined);
   const [currentTriggerPhase, setCurrentTriggerPhase] = useState<string | undefined>(undefined);
 
   // Refs to prevent timer interference
@@ -544,10 +527,6 @@ export default function LandingChart() {
     const unsubscribe = currentIndex.on("change", (idx) => {
       const i = Math.max(0, Math.min(Math.round(idx), fullPriceData.length - 1));
       const newTxType = fullPriceData[i].txType;
-      const newFarmer = fullPriceData[i].farmer;
-      console.log("newTxType", newTxType);
-      console.log("currentTxType", currentTxType);
-      console.log("priceTrackingActive", priceTrackingActive.get());
       const newTriggerPhase = fullPriceData[i].triggerPhase;
 
       // Trigger flash effect when txType is depositing or converting and is not null (only if price tracking is active)
@@ -561,14 +540,12 @@ export default function LandingChart() {
         });
       }
 
-      setCurrentTxType(newTxType);
-      setCurrentFarmer(newFarmer);
       if (newTriggerPhase && currentTriggerPhase !== "mainCTA" && priceTrackingActive.get() >= 1) {
         setCurrentTriggerPhase(newTriggerPhase);
       }
     });
     return unsubscribe;
-  }, [currentIndex, currentTxType, lineStrokeColor, priceTrackingActive]);
+  }, [currentIndex, lineStrokeColor, priceTrackingActive]);
 
   // Monitor scroll progress to fade in price labels during semi-stable phase
   useEffect(() => {
@@ -672,22 +649,6 @@ export default function LandingChart() {
       controls?.stop();
     };
   }, []);
-
-  const [_showAnimation, setShowAnimation] = useState<(string | undefined)[]>(() => personIcons.map(() => undefined));
-
-  useEffect(() => {
-    personIcons.forEach((data, index) => {
-      const isCurrent =
-        currentFarmer && data.icon === currentFarmer.icon && data.bg === currentFarmer.bg && currentTxType;
-      if (isCurrent) {
-        setShowAnimation((prev) => {
-          const next = [...prev];
-          next[index] = currentTxType || undefined;
-          return next;
-        });
-      }
-    });
-  }, [currentFarmer, currentTxType]);
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full sm:mb-32 sm:gap-10">
@@ -931,7 +892,7 @@ export default function LandingChart() {
                 style={{ pointerEvents: "none", x, opacity: floatersOpacity }}
               >
                 <TxFloater
-                  from={marker.farmer ? <FarmerProfile icon={marker.farmer.icon} bg={marker.farmer.bg} /> : null}
+                  from={marker.farmer}
                   txType={marker.txType}
                   viewportWidth={viewportWidth}
                   x={x}
@@ -970,37 +931,7 @@ export default function LandingChart() {
         >
           <div className="w-full h-full rounded-full bg-white" />
         </motion.div>
-        {/* Floating emoji + image marker above the animated circle - only show during price tracking */}
-        {/* 
-        <motion.div
-          className="absolute -ml-[1.25rem] -mt-[5rem]"
-          style={{
-            left: measurementX,
-            top: currentY,
-            pointerEvents: "none",
-            opacity: floatersOpacity,
-          }}
-        >
-          <TxFloater
-            key={"floater"}
-            from={currentFarmer ? <FarmerProfile icon={currentFarmer.icon} bg={currentFarmer.bg} /> : null}
-            txType={currentTxType}
-            viewportWidth={viewportWidth}
-            x={x}
-            // @ts-ignore-next-line
-            markerX={measurementX}
-            isFixed={false}
-          />
-        </motion.div>
-        */}
       </div>
     </div>
   );
 }
-
-// Variable-driven animation system complete:
-// - All timings calculated from ANIMATION_CONFIG percentages
-// - All positions derived from viewport dimensions
-// - Fully responsive with automatic recalculation
-// - Consistent animation speeds across all phases
-// - Timeline-based coordination of all events
