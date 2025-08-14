@@ -249,22 +249,22 @@ function generateChaoticUnstableData(pointCount: number = 12): PricePoint[] {
 const unstablePriceData: PricePoint[] = generateChaoticUnstableData();
 
 const semiStablePriceData: PricePoint[] = [
-  { txType: null, value: 0.9998 },
-  { txType: "deposit", value: 1.004, triggerPhase: "semiStable" },
-  { txType: "harvest", value: 0.997 },
-  { txType: "deposit", value: 1.003 },
-  { txType: "withdraw", value: 0.998 },
-  { txType: "convert", value: 1.0025 },
-  { txType: "yield", value: 1.0 },
+  { txType: null, value: 0.9998, triggerPhase: "semiStable" },
+  { txType: "withdraw", value: 1.004 },
+  { txType: null, value: 0.997 },
+  { txType: null, value: 1.003 },
+  { txType: "deposit", value: 0.998 },
+  { txType: null, value: 1.0025 },
+  { txType: null, value: 1.0 },
+  { txType: "sow", value: 0.9994 },
+  { txType: "harvest", value: 1.0004 },
 ];
 
 const stablePriceData: PricePoint[] = [
-  { txType: "sow", value: 0.9994 },
-  { txType: "harvest", value: 1.0004 },
   { txType: null, value: 0.9994, speed: 3 },
-  { txType: "yield", value: 1.005, speed: 3 },
-  { txType: "convert", value: 0.995, speed: 1 },
-  { txType: null, value: 1.0004, triggerPhase: "stable" },
+  { txType: "yield", value: 1.005, speed: 3, triggerPhase: "stable" },
+  { txType: "convert", value: 0.995 },
+  { txType: null, value: 1.0004 },
   { txType: "deposit", value: 0.9994 },
   { txType: "withdraw", value: 1.0004 },
   { txType: null, value: 0.9994, speed: 3 },
@@ -318,7 +318,6 @@ function priceToY(price: number) {
 
 // Generate complete line path with multiple repetitions (Bezier smoothing)
 function generateCompletePath(pointSpacing: number) {
-  // Per-segment speed compression
   const points: { x: number; y: number; price: number }[] = [];
   const beziers: {
     p0: { x: number; y: number };
@@ -326,7 +325,14 @@ function generateCompletePath(pointSpacing: number) {
     c2: { x: number; y: number };
     p1: { x: number; y: number };
   }[] = [];
-  const transactionMarkers: { x: number; y: number; txType: string; farmer?: Farmer; index: number }[] = [];
+  const transactionMarkers: {
+    x: number;
+    y: number;
+    txType: string;
+    farmer?: Farmer;
+    index: number;
+    apexType?: "peak" | "valley";
+  }[] = [];
 
   let x = 0;
   for (let i = 0; i < fullPriceData.length; i++) {
@@ -358,14 +364,97 @@ function generateCompletePath(pointSpacing: number) {
     beziers.push({ p0, c1: { x: c1x, y: c1y }, c2: { x: c2x, y: c2y }, p1 });
   }
 
+  // Find all curve extrema (apexes) for better marker positioning
+  const allExtrema: Array<{ x: number; y: number; type: "peak" | "valley"; segmentIndex: number }> = [];
+  beziers.forEach((segment, index) => {
+    const extrema = findBezierExtrema(segment);
+    extrema.forEach((extremum) => {
+      allExtrema.push({ ...extremum, segmentIndex: index });
+    });
+  });
+
+  // Reposition transaction markers to nearest appropriate apex
+  const apexTransactionMarkers = transactionMarkers.map((marker) => {
+    // Find the closest apex to this transaction marker
+    let closestApex = null;
+    let minDistance = Infinity;
+
+    allExtrema.forEach((apex) => {
+      const distance = Math.abs(apex.x - marker.x);
+      // Only consider apexes within reasonable range (half segment width)
+      if (distance < pointSpacing * 0.75 && distance < minDistance) {
+        minDistance = distance;
+        closestApex = apex;
+      }
+    });
+
+    // If we found a close apex, use it; otherwise keep original position
+    if (closestApex) {
+      return {
+        ...marker,
+        x: closestApex.x,
+        y: closestApex.y,
+        apexType: closestApex.type, // Add metadata for positioning logic
+      };
+    }
+
+    return marker;
+  });
+
   const totalWidth = points.length > 0 ? points[points.length - 1].x : 0;
-  return { path, points, totalWidth, beziers, transactionMarkers };
+  return { path, points, totalWidth, beziers, transactionMarkers: apexTransactionMarkers };
 }
 
 // Helper: cubic Bezier at t
 function cubicBezier(p0: number, c1: number, c2: number, p1: number, t: number) {
   const mt = 1 - t;
   return mt ** 3 * p0 + 3 * mt ** 2 * t * c1 + 3 * mt * t ** 2 * c2 + t ** 3 * p1;
+}
+
+// Helper: derivative of cubic Bezier at t
+function cubicBezierDerivative(p0: number, c1: number, c2: number, p1: number, t: number) {
+  const mt = 1 - t;
+  return 3 * mt ** 2 * (c1 - p0) + 6 * mt * t * (c2 - c1) + 3 * t ** 2 * (p1 - c2);
+}
+
+// Find extrema (peaks/valleys) of a cubic Bezier curve segment
+function findBezierExtrema(segment: {
+  p0: { x: number; y: number };
+  c1: { x: number; y: number };
+  c2: { x: number; y: number };
+  p1: { x: number; y: number };
+}) {
+  const extrema: { t: number; x: number; y: number; type: "peak" | "valley" }[] = [];
+
+  // Find Y extrema (where dy/dt = 0)
+  const a = 3 * (segment.p1.y - 3 * segment.c2.y + 3 * segment.c1.y - segment.p0.y);
+  const b = 6 * (segment.c2.y - 2 * segment.c1.y + segment.p0.y);
+  const c = 3 * (segment.c1.y - segment.p0.y);
+
+  // Solve quadratic equation at^2 + bt + c = 0
+  const discriminant = b * b - 4 * a * c;
+
+  if (discriminant >= 0 && Math.abs(a) > 1e-10) {
+    const sqrt_d = Math.sqrt(discriminant);
+    const t1 = (-b + sqrt_d) / (2 * a);
+    const t2 = (-b - sqrt_d) / (2 * a);
+
+    [t1, t2].forEach((t) => {
+      if (t > 0.01 && t < 0.99) {
+        // Exclude endpoints, small buffer for stability
+        const x = cubicBezier(segment.p0.x, segment.c1.x, segment.c2.x, segment.p1.x, t);
+        const y = cubicBezier(segment.p0.y, segment.c1.y, segment.c2.y, segment.p1.y, t);
+
+        // Determine if it's a peak or valley by checking second derivative
+        const secondDerivY = 6 * a * t + 2 * b;
+        const type = secondDerivY < 0 ? "peak" : "valley";
+
+        extrema.push({ t, x, y, type });
+      }
+    });
+  }
+
+  return extrema;
 }
 
 // Helper to get width of a price data segment
@@ -524,12 +613,19 @@ export default function LandingChart() {
       const i = Math.max(0, Math.min(Math.round(idx), fullPriceData.length - 1));
       const newTxType = fullPriceData[i].txType;
       const newFarmer = fullPriceData[i].farmer;
+      console.log("newTxType", newTxType);
+      console.log("currentTxType", currentTxType);
+      console.log("priceTrackingActive", priceTrackingActive.get());
       const newTriggerPhase = fullPriceData[i].triggerPhase;
 
-      // Trigger flash effect when txType changes and is not null (only if price tracking is active)
-      if (newTxType !== currentTxType && newTxType !== null && priceTrackingActive.get() >= 1) {
-        animate(lineStrokeColor, "#00C767", { duration: 0.25, ease: "easeInOut" }).then(() => {
-          animate(lineStrokeColor, "#387F5C", { duration: 0.25, ease: "easeInOut" });
+      // Trigger flash effect when txType is depositing or converting and is not null (only if price tracking is active)
+      if (
+        (newTxType === "deposit" || newTxType === "convert") &&
+        newTxType !== null &&
+        priceTrackingActive.get() >= 1
+      ) {
+        animate(lineStrokeColor, "#00C767", { duration: 0.1, ease: "linear" }).then(() => {
+          animate(lineStrokeColor, "#387F5C", { duration: 0.6, ease: "linear" });
         });
       }
 
@@ -842,16 +938,23 @@ export default function LandingChart() {
           </g>
           {/* Static transaction floaters - only show during price tracking */}
           {transactionMarkers.map((marker) => {
-            // Use marker.index for robust placement
+            // Use apex type for smarter positioning, with fallback to original logic
             let positionAbove = false;
-            if (marker.index > 0) {
-              const prev = fullPriceData[marker.index - 1];
-              const curr = fullPriceData[marker.index];
-              if (curr.value !== prev.value) {
-                positionAbove = curr.value > prev.value;
-              } else if (marker.index < fullPriceData.length - 1) {
-                const next = fullPriceData[marker.index + 1];
-                positionAbove = curr.value > next.value;
+
+            if (marker.apexType) {
+              // If positioned at an apex, use the apex type
+              positionAbove = marker.apexType === "valley";
+            } else {
+              // Fallback to original logic for non-apex markers
+              if (marker.index > 0) {
+                const prev = fullPriceData[marker.index - 1];
+                const curr = fullPriceData[marker.index];
+                if (curr.value !== prev.value) {
+                  positionAbove = curr.value > prev.value;
+                } else if (marker.index < fullPriceData.length - 1) {
+                  const next = fullPriceData[marker.index + 1];
+                  positionAbove = curr.value > next.value;
+                }
               }
             }
             return (
