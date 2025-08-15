@@ -287,15 +287,8 @@ export default function Collection() {
               // Show nothing while loading to prevent flash
               <div />
             ) : displayNFTs.length === 0 ? (
-              // <EmptyState />
-              <div className="grid grid-cols-1 place-items-center">
-                <div className="w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw] xl:w-[30vw] max-w-[800px] animate-pop-in">
-                  <div className="bg-gray-100 rounded-xl aspect-square flex items-center justify-center">
-                    {/* <div className="text-gray-400 pinto-h3 lg:pinto-h2 text-center px-4">
-                      No NFT
-                    </div> */}
-                  </div>
-                </div>
+              <div className="flex items-center justify-center py-16">
+                <h1 className="text-6xl font-bold text-black">There is nothing to see here.</h1>
               </div>
             ) : (
               <NFTsGrid
