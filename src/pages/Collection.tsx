@@ -210,7 +210,7 @@ export default function Collection() {
             <Separator />
             <div className="flex flex-col items-center justify-center py-16">
               <div className="text-center">
-                <div className="pinto-body text-gray-500">Connect wallet to view</div>
+                <div className="pinto-h2 text-gray-500">Connect Wallet to view</div>
               </div>
             </div>
           </div>
