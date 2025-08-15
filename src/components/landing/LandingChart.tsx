@@ -708,12 +708,14 @@ export default function LandingChart() {
                   <Button
                     rounded="full"
                     size={isMobile ? "sm" : "default"}
-                    className="flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow duration-1500"
+                    className="hover:bg-pinto-green-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow"
                     id={"come-seed-the-trustless-economy"}
                   >
                     <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
                     <span className="relative z-10">Come Seed the Trustless Economy</span>
-                    <PintoRightArrow width={"1rem"} height={"1rem"} className="relative z-10" />
+                    <div className="relative z-10" style={{ isolation: "isolate" }}>
+                      <PintoRightArrow width={"1rem"} height={"1rem"} />
+                    </div>
                   </Button>
                 </Link>
                 <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">

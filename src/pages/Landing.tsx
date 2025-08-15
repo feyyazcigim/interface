@@ -8,9 +8,11 @@ import Resources from "@/components/landing/Resources";
 import SecondaryCTA from "@/components/landing/SecondaryCTA";
 import SecondaryCTAProperties from "@/components/landing/SecondaryCTAProperties";
 import SecondaryCTAValues from "@/components/landing/SecondaryCTAValues";
+import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import { useEffect, useState } from "react";
+import { WheelEvent, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Landing() {
   const [isCtaVisible, setIsCtaVisible] = useState(false);
@@ -73,6 +75,11 @@ export default function Landing() {
     };
   }, []);
 
+  const handleWheel = (e: WheelEvent<HTMLAnchorElement>) => {
+    e.stopPropagation();
+    document.body.scrollTop += e.deltaY;
+  };
+
   return (
     <div
       className="sm:max-w-[1920px] w-full place-self-center"
@@ -103,25 +110,29 @@ export default function Landing() {
           <Resources />
         </section>
       </div>
-      <div
-        className={`fixed left-1/2 -translate-x-1/2 flex justify-center ${
-          isCtaVisible ? "-bottom-24" : isCtaPresent ? "bottom-6 sm:bottom-12" : "-bottom-24"
-        } transition-all duration-300 ease-in-out`}
-      >
-        <Button
-          rounded="full"
-          size={isMobile ? "xl" : "xxl"}
-          className={`${isMobile ? "scale-100" : "scale-150"} flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow duration-1500`}
+      <Link to={navLinks.overview} onWheelCapture={handleWheel}>
+        <div
+          className={`fixed left-1/2 -translate-x-1/2 flex justify-center ${
+            isCtaVisible ? "-bottom-24" : isCtaPresent ? "bottom-6 sm:bottom-12" : "-bottom-24"
+          } transition-all duration-300 ease-in-out`}
         >
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
-          <span className="relative z-10">Join the Farm</span>
-          <PintoRightArrow
-            width={isMobile ? "1.25rem" : "1.5rem"}
-            height={isMobile ? "1.25rem" : "1.5rem"}
-            className="relative z-10"
-          />
-        </Button>
-      </div>
+          <Button
+            rounded="full"
+            size={isMobile ? "xl" : "xxl"}
+            className={`${isMobile ? "scale-100" : "scale-150"} hover:bg-pinto-green-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow`}
+          >
+            <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
+            <span className="relative z-10">Join the Farm</span>
+            <div className="relative z-10" style={{ isolation: "isolate" }}>
+              <PintoRightArrow
+                width={isMobile ? "1.25rem" : "1.5rem"}
+                height={isMobile ? "1.25rem" : "1.5rem"}
+                className="relative z-10"
+              />
+            </div>
+          </Button>
+        </div>
+      </Link>
     </div>
   );
 }
