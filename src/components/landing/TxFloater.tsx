@@ -37,6 +37,7 @@ export default function TxFloater({
   x,
   markerX,
   isFixed,
+  id,
 }: {
   from: string | undefined;
   txType: string | null;
@@ -44,6 +45,7 @@ export default function TxFloater({
   x: MotionValue<number>; // The shared scroll position
   markerX: number; // The absolute X position of the marker
   isFixed: boolean; // true for static markers on the chart line, false for the floating marker at the measurement point
+  id?: string;
 }) {
   // Compute the floater's current screen X position
   const screenX = useTransform(x, (scrollX) => markerX + scrollX);
@@ -122,6 +124,7 @@ export default function TxFloater({
       initial={{ opacity: 0 }}
       animate={controls}
       className={`z-10 flex items-center justify-center bg-white border border-pinto-green-4 rounded-full p-2 gap-2 w-fit`}
+      id={id}
     >
       <img className="w-8 h-8" src={isFixed ? from : lastValidFromRef.current} alt="Farmer Icon" />
       <img

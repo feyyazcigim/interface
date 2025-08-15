@@ -340,6 +340,7 @@ function generatePriceLabelData() {
 
 export default function LandingChart() {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
+  const [txFloaterWidth, setTxFloaterWidth] = useState(100); // Default width, will be measured
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -391,6 +392,18 @@ export default function LandingChart() {
     return () => {
       resizeObserver.disconnect();
     };
+  }, []);
+
+  // Measure txFloater width
+  useEffect(() => {
+    const measureTxFloater = () => {
+      const txFloaterElement = document.getElementById("txFloater");
+      if (txFloaterElement) {
+        const width = txFloaterElement.getBoundingClientRect().width;
+        setTxFloaterWidth(width);
+      }
+    };
+    measureTxFloater();
   }, []);
 
   // Assign farmers to price data and generate path
@@ -837,7 +850,7 @@ export default function LandingChart() {
             />
           </g>
           {/* Static transaction floaters - only show during price tracking */}
-          {transactionMarkers.map((marker) => {
+          {transactionMarkers.map((marker, i) => {
             // Use apex type for smarter positioning, with fallback to original logic
             let positionAbove = false;
 
@@ -860,7 +873,7 @@ export default function LandingChart() {
             return (
               <motion.foreignObject
                 key={`${marker.x}-${marker.y}-${marker.txType}`}
-                x={marker.x - 50}
+                x={marker.x - txFloaterWidth / 2}
                 y={positionAbove ? marker.y - 50 : marker.y + 10}
                 width={120}
                 height={60}
@@ -873,6 +886,7 @@ export default function LandingChart() {
                   x={x}
                   markerX={marker.x}
                   isFixed={true}
+                  id={i === 0 ? "txFloater" : undefined}
                 />
               </motion.foreignObject>
             );
