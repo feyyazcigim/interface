@@ -342,7 +342,8 @@ export default function WalletButtonPanel({ togglePanel }) {
                 <span className="w-4 h-4">×</span>
               </button>
             )}
-            <NFTProfileDisplay navigate={navigate} togglePanel={togglePanel} />
+            {/* NFT Profile Display - Temporarily disabled. Change 'false &&' to 'true &&' to re-enable */}
+            {false && <NFTProfileDisplay navigate={navigate} togglePanel={togglePanel} />}
           </div>
         </div>
         <BalanceSummary totalBalance={totalBalance} />

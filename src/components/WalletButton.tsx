@@ -51,11 +51,11 @@ const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
             variant="outline-secondary"
             noShrink
             rounded="full"
-            className={`flex flex-row gap-0.5 sm:gap-2 items-center ${isOpen && "border-pinto-green"} ${className} ${hasNFT ? "-ml-8" : ""}`}
+            className={`flex flex-row gap-0.5 sm:gap-2 items-center ${isOpen && "border-pinto-green"} ${className}`}
             ref={ref}
           >
-            {/* Profile picture or question mark */}
-            {address && hasNFT && (
+            {/* NFT Circle Pic - Temporarily disabled. Change 'false &&' to 'true &&' to re-enable */}
+            {false && address && hasNFT && (
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-white flex-shrink-0 flex items-center justify-center">
                 {hideNFTProfile ? (
                   <span className="text-gray-500 font-semibold text-sm">?</span>

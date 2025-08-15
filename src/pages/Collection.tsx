@@ -287,8 +287,8 @@ export default function Collection() {
               // Show nothing while loading to prevent flash
               <div />
             ) : displayNFTs.length === 0 ? (
-              <div className="flex items-center justify-center py-16">
-                <h1 className="text-6xl font-bold text-black">There is nothing to see here.</h1>
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <h1 className="pinto-h1 text-pinto-dark">There is nothing to see here.</h1>
               </div>
             ) : (
               <NFTsGrid
