@@ -1,7 +1,6 @@
 import useIsMobile from "@/hooks/display/useIsMobile";
 import clsx from "clsx";
 import { Link } from "react-router-dom";
-import { PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 import GameOfLife from "./GameOfLife";
@@ -66,7 +65,6 @@ const cardStyles = clsx(
 const buttonStyles = clsx("w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal");
 
 export default function Resources() {
-  const isMobile = useIsMobile();
   return (
     <div className="flex flex-col items-center self-stretch gap-12 mx-auto">
       <h2 className="text-4xl leading-same-h2 font-light text-black">Resources</h2>
@@ -109,15 +107,6 @@ export default function Resources() {
           </div>
         ))}
       </div>
-      <Button
-        rounded="full"
-        size={isMobile ? "xl" : "xxl"}
-        className="mt-16 scale-150 flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow duration-1500"
-      >
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
-        <span className="relative z-10">Become a Farmer</span>
-        <PintoRightArrow width={"1.5rem"} height={"1.5rem"} className="relative z-10" />
-      </Button>
     </div>
   );
 }

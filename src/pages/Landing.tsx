@@ -1,3 +1,4 @@
+import { PintoRightArrow } from "@/components/Icons";
 import AuditsList from "@/components/landing/AuditsList";
 import BugBounty from "@/components/landing/BugBounty";
 import FarmToTable from "@/components/landing/FarmToTable";
@@ -7,36 +8,68 @@ import Resources from "@/components/landing/Resources";
 import SecondaryCTA from "@/components/landing/SecondaryCTA";
 import SecondaryCTAProperties from "@/components/landing/SecondaryCTAProperties";
 import SecondaryCTAValues from "@/components/landing/SecondaryCTAValues";
+import { Button } from "@/components/ui/Button";
+import useIsMobile from "@/hooks/display/useIsMobile";
 import { useEffect, useState } from "react";
 
 export default function Landing() {
-  const [initialHeightRem, setInitialHeightRem] = useState(100);
-  const [initialHeightPx, setInitialHeightPx] = useState(1600);
-  const [navBarHeightRem, setNavBarHeightRem] = useState(3.125);
+  const [isCtaVisible, setIsCtaVisible] = useState(false);
+  const [isCtaPresent, setIsCtaPresent] = useState(false);
 
+  const isMobile = useIsMobile();
+
+  // Intersection observer to track CTA visibility
   useEffect(() => {
-    const calculateHeight = () => {
-      // Get the current rem value based on root font size
-      const remSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    let intersectionObserver: IntersectionObserver | null = null;
+    let mutationObserver: MutationObserver | null = null;
 
-      const elem = document.getElementById("pinto-navbar");
-      if (!elem) return;
+    const setupIntersectionObserver = (targetElement: Element) => {
+      intersectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          setIsCtaVisible(entry.isIntersecting);
+        },
+        {
+          threshold: 0.1, // Trigger when 10% of the element is visible
+        },
+      );
 
-      const windowHeight = window.screen.availHeight - (window.outerHeight - window.innerHeight);
-      const headerOffset = elem.getBoundingClientRect().height;
-      const newHeight = windowHeight - headerOffset;
-
-      // Convert pixel values to rem
-      setInitialHeightRem(newHeight / remSize);
-      setInitialHeightPx(newHeight);
-      setNavBarHeightRem(headerOffset / remSize);
+      intersectionObserver.observe(targetElement);
     };
 
-    calculateHeight();
+    const checkForElement = () => {
+      const targetElement = document.getElementById("come-seed-the-trustless-economy");
+      if (targetElement) {
+        setIsCtaPresent(true);
+        setupIntersectionObserver(targetElement);
+        if (mutationObserver) {
+          mutationObserver.disconnect();
+          mutationObserver = null;
+        }
+        return true;
+      }
+      return false;
+    };
 
-    window.addEventListener("resize", calculateHeight);
+    // Try to find element immediately
+    if (!checkForElement()) {
+      // If not found, watch for DOM changes
+      mutationObserver = new MutationObserver(() => {
+        checkForElement();
+      });
+
+      mutationObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
     return () => {
-      window.removeEventListener("resize", calculateHeight);
+      if (intersectionObserver) {
+        intersectionObserver.disconnect();
+      }
+      if (mutationObserver) {
+        mutationObserver.disconnect();
+      }
     };
   }, []);
 
@@ -69,6 +102,25 @@ export default function Landing() {
         <section className="flex flex-col gap-12 h-[67.5rem] max-h-[67.5rem]">
           <Resources />
         </section>
+      </div>
+      <div
+        className={`fixed left-1/2 -translate-x-1/2 flex justify-center ${
+          isCtaVisible ? "-bottom-24" : isCtaPresent ? "bottom-6 sm:bottom-12" : "-bottom-24"
+        } transition-all duration-300 ease-in-out`}
+      >
+        <Button
+          rounded="full"
+          size={isMobile ? "xl" : "xxl"}
+          className={`${isMobile ? "scale-100" : "scale-150"} flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow duration-1500`}
+        >
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
+          <span className="relative z-10">Join the Farm</span>
+          <PintoRightArrow
+            width={isMobile ? "1.25rem" : "1.5rem"}
+            height={isMobile ? "1.25rem" : "1.5rem"}
+            className="relative z-10"
+          />
+        </Button>
       </div>
     </div>
   );
