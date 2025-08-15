@@ -6,6 +6,7 @@ import PageMetaWrapper from "./components/PageMetaWrapper";
 import ScrollToTop from "./components/ScrollToTop";
 import Navbar from "./components/nav/nav/Navbar";
 import { externalLinks } from "./constants/links";
+import Collection from "./pages/Collection";
 import Error404 from "./pages/Error404";
 import Explorer from "./pages/Explorer";
 import Field from "./pages/Field";
@@ -21,14 +22,12 @@ import NewUserView from "./pages/overview/NewUserView";
 
 import Footer from "@/components/Footer";
 import { MobileActionBarProvider } from "@/components/MobileActionBarContext";
-import TourOfTheFarm from "@/components/TourOfTheFarm";
 import { useMetaCRM } from "./utils/meta-crm";
 
 function AppLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <TourOfTheFarm />
       <ScrollToTop />
       <div className={cn("relative z-[1] w-screen flex-1")}>{children}</div>
       <Footer />
@@ -135,6 +134,14 @@ function ProtectedLayout() {
         element={
           <PageMetaWrapper metaKey="explorer">
             <Explorer />
+          </PageMetaWrapper>
+        }
+      />
+      <Route
+        path="/collection"
+        element={
+          <PageMetaWrapper metaKey="nftCollection">
+            <Collection />
           </PageMetaWrapper>
         }
       />
