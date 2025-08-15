@@ -404,7 +404,7 @@ export default function LandingChart() {
       }
     };
     measureTxFloater();
-  }, []);
+  }, [viewportWidth]);
 
   // Assign farmers to price data and generate path
   const { path, beziers, transactionMarkers } = useMemo(() => {
