@@ -106,15 +106,15 @@ export default function Landing() {
         <AuditsList />
         */}
         </section>
-        <section className="flex flex-col gap-12 h-[67.5rem] max-h-[67.5rem]">
+        <section className="flex flex-col gap-12 h-[60rem] max-h-[60rem]">
           <Resources />
         </section>
       </div>
       <Link to={navLinks.overview} onWheelCapture={handleWheel}>
         <div
           className={`fixed left-1/2 -translate-x-1/2 flex justify-center ${
-            isCtaVisible ? "-bottom-24" : isCtaPresent ? "bottom-6 sm:bottom-12" : "-bottom-24"
-          } transition-all duration-300 ease-in-out`}
+            isCtaVisible ? "-bottom-28" : isCtaPresent ? "bottom-6 sm:bottom-12" : "-bottom-28"
+          } transition-all duration-500 ease-in-out`}
         >
           <Button
             rounded="full"
