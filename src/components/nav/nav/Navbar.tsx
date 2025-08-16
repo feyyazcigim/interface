@@ -319,7 +319,7 @@ export const navLinks = {
   field: "/field",
   swap: "/swap",
   sPinto: "/sPinto",
-  collection: "/collection",
+  collection: "/soon",
   podmarket: "/market/pods",
   explorer: "/explorer",
   explorer_pinto: "/explorer/pinto",

@@ -138,7 +138,7 @@ function ProtectedLayout() {
         }
       />
       <Route
-        path="/collection"
+        path="/soon"
         element={
           <PageMetaWrapper metaKey="nftCollection">
             <Collection />
