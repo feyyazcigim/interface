@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/Button";
 import ContributorMessage from "./ContributorMessage";
 import ContributorProfiles from "./ContributorProfiles";
@@ -14,31 +14,81 @@ interface StatContentProps {
 }
 
 function StatContent({ activeButton }: StatContentProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number>(0);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      const resizeObserver = new ResizeObserver(() => {
+        if (contentRef.current) {
+          setHeight(contentRef.current.scrollHeight);
+        }
+      });
+
+      resizeObserver.observe(contentRef.current);
+      setHeight(contentRef.current.scrollHeight);
+
+      return () => resizeObserver.disconnect();
+    }
+  }, [activeButton]);
+
   return (
     <motion.div
       animate={{
+        height: activeButton ? height : 0,
         opacity: activeButton ? 1 : 0,
         y: activeButton ? 0 : -20,
-        height: activeButton ? "auto" : 0,
       }}
       transition={{ duration: 0.4, ease: "easeInOut" }}
     >
-      <AnimatePresence mode="popLayout">
-        {activeButton && (
-          <motion.div
-            key={activeButton}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            {activeButton === "upgrades" && <ProtocolUpgrades activeButton={activeButton} />}
-            {activeButton === "years" && <ImageCarousel />}
-            {activeButton === "volume" && <LandingVolume />}
-            {activeButton === "contributors" && <ContributorMessage />}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div ref={contentRef}>
+        <AnimatePresence mode="wait" initial={false}>
+          {activeButton === "upgrades" && (
+            <motion.div
+              key="upgrades"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <ProtocolUpgrades activeButton={activeButton} />
+            </motion.div>
+          )}
+          {activeButton === "years" && (
+            <motion.div
+              key="years"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <ImageCarousel />
+            </motion.div>
+          )}
+          {activeButton === "volume" && (
+            <motion.div
+              key="volume"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <LandingVolume />
+            </motion.div>
+          )}
+          {activeButton === "contributors" && (
+            <motion.div
+              key="contributors"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <ContributorMessage />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
