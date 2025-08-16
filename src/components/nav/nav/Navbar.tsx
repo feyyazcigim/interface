@@ -313,13 +313,13 @@ const styles = {
 } as const;
 
 export const navLinks = {
-  about: "/?fromNav=true",
+  about: "/soon?fromNav=true",
   overview: "/overview",
   silo: "/silo",
   field: "/field",
   swap: "/swap",
   sPinto: "/sPinto",
-  collection: "/collection",
+  collection: "/soon",
   podmarket: "/market/pods",
   explorer: "/explorer",
   explorer_pinto: "/explorer/pinto",
