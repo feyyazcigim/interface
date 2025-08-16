@@ -13,6 +13,7 @@ import { CloseIconAlt } from "../Icons";
 import FrameAnimator from "../LoadingSpinner";
 import TooltipSimple from "../TooltipSimple";
 import IconImage from "../ui/IconImage";
+import { Separator } from "../ui/Separator";
 import LineChart, { LineChartData } from "./LineChart";
 import { StrokeGradientFunction, gradientFunctions } from "./chartHelpers";
 
@@ -164,7 +165,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
       const chartData: LineChartData[] = [];
       const tokens: (Token | undefined)[] = [];
       const chartStrokeGradients: StrokeGradientFunction[] = [];
-      for (const token of ["NET", "cbETH", "cbBTC"]) {
+      for (const token of ["NET", "WETH", "cbETH", "cbBTC", "WSOL"]) {
         for (let i = 0; i < allData[token].length; i++) {
           chartData[i] ??= {
             timestamp: allData[token][i].timestamp,
@@ -233,11 +234,12 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
     <div className={cn("rounded-[20px] bg-gray-1", className)}>
       <div className="flex justify-between pt-4 px-4 mb-3 sm:pt-6 sm:px-6">
         <div className="flex flex-row gap-1 items-center">
-          <div className="sm:pinto-body text-pinto-light sm:text-pinto-light">Crypto Market Performance</div>
+          <div className="sm:pinto-body text-pinto-light sm:text-pinto-light flex-1">Crypto Market Performance</div>
           <TooltipSimple
             content="Measures historical fluctuations of non-Pinto value in the ecosystem."
             variant="gray"
           />
+          {/*
           <div className="ml-4 flex items-center gap-1 bg-gray-2 rounded-lg p-0.5 border border-pinto-gray-2">
             {Object.values(DataType).map((type) => (
               <button
@@ -245,7 +247,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
                 type="button"
                 onClick={() => handleChangeDataType(type)}
                 className={cn(
-                  "px-3 pt-0.5 rounded-md text-sm transition-all duration-500",
+                  "sm:px-3 pt-0.5 rounded-md text-sm transition-all duration-500 min-w-14",
                   dataType === type
                     ? "bg-pinto-green-3 text-white shadow-sm"
                     : "text-pinto-gray-2 hover:text-pinto-light hover:bg-gray-1/50",
@@ -255,6 +257,7 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
               </button>
             ))}
           </div>
+          */}
         </div>
         <CalendarButton
           setTimePeriod={handleChangeTimeSelect}
@@ -263,58 +266,78 @@ const MarketPerformanceChart = ({ season, size, className }: MarketPerformanceCh
           storageKeyPrefix="marketPerformanceChart"
         />
       </div>
-      {(!allData || displayIndex === null) && (
-        <>
-          {/* Keep sizing the same as when there is data. Allows centering spinner/error vertically */}
-          <div
-            className={`relative w-full flex items-center justify-center ${size === "small" || size === "huge" ? "aspect-3/1" : "aspect-6/1"}`}
-            style={{
-              paddingBottom: `calc(85px + ${size === "small" || size === "huge" ? "33.33%" : "16.67%"})`,
-              height: "0",
-            }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              {seasonalPerformance.isLoading && !seasonalPerformance.isError && <FrameAnimator size={75} />}
-              {seasonalPerformance.isError && (
-                <>
-                  <CloseIconAlt color={"red"} />
-                  <div className="pinto-body text-pinto-green-3">An error has occurred</div>
-                </>
-              )}
-            </div>
+      {!allData || displayIndex === null ? (
+        <div
+          className={`relative w-full flex items-center justify-center ${size === "small" || size === "huge" ? "aspect-3/1" : "aspect-6/1"}`}
+          style={{
+            paddingBottom: `calc(85px + ${size === "small" || size === "huge" ? "33.33%" : "16.67%"})`,
+            height: size === "huge" ? 550 + 85 : 300 + 85,
+          }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            {seasonalPerformance.isLoading && !seasonalPerformance.isError && <FrameAnimator size={75} />}
+            {seasonalPerformance.isError && (
+              <>
+                <CloseIconAlt color={"red"} />
+                <div className="pinto-body text-pinto-green-3">An error has occurred</div>
+              </>
+            )}
           </div>
-        </>
-      )}
-      {allData && displayIndex !== null && (
+        </div>
+      ) : (
         <>
-          <div className="h-[85px] px-4 sm:px-6">
-            <div className="pinto-body sm:pinto-h3">
-              <div className="flex flex-row items-center gap-3">
-                {chartDataset.tokens.map((token, idx) => {
-                  const tokenSymbol = token?.symbol ?? "NET";
-                  return (
-                    <div key={`${tokenSymbol}-value`} className="flex items-center">
-                      {token && (
-                        <IconImage src={token.logoURI} size={8} alt={token.symbol} className="inline-block mr-2" />
-                      )}
-                      <div style={{ color: token?.color }} className={`mr-2 ${!token?.color && "text-pinto-green-3"}`}>
-                        {tokenSymbol === "NET" && "Total: "}
-                        <p className="inline-block w-[7.1ch] text-right">
-                          {displayValueFormatter(allData[tokenSymbol][displayIndex].value)}
-                        </p>
-                      </div>
-                      {idx < Object.keys(allData).length - 1 && <p className="text-pinto-gray-2 mx-2">|</p>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="flex flex-col gap-0 mt-2 sm:gap-2 sm:mt-3">
+          <div className="h-[85px] px-4 sm:px-6 flex flex-col gap-2 sm:flex-row justify-between">
+            <div className="flex flex-col gap-0 sm:gap-2">
               <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
                 Season {allData.NET[displayIndex].season}
               </div>
               <div className="pinto-xs sm:pinto-sm-light text-pinto-light sm:text-pinto-light">
                 {formatDate(allData.NET[displayIndex].timestamp)}
+              </div>
+            </div>
+            <div className="pinto-sm sm:pinto-body lg:pinto-h3">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 sm:gap-x-0 sm:gap-y-0 sm:flex sm:flex-row sm:items-center">
+                {chartDataset.tokens.map((token, idx) => {
+                  const tokenSymbol = token?.symbol ?? "NET";
+                  const isNetToken = tokenSymbol === "NET";
+                  return (
+                    <div
+                      key={`${tokenSymbol}-value`}
+                      className={`flex items-center justify-between ${isNetToken ? "col-span-2 lg:col-span-1" : ""}`}
+                    >
+                      {token && (
+                        <>
+                          <IconImage
+                            src={token.logoURI}
+                            size={8}
+                            mobileSize={4}
+                            alt={token.symbol}
+                            className="hidden lg:inline-block"
+                          />
+                          <IconImage
+                            src={token.logoURI}
+                            size={6}
+                            mobileSize={4}
+                            alt={token.symbol}
+                            className="inline-block lg:hidden"
+                          />
+                        </>
+                      )}
+                      <div style={{ color: token?.color }} className={`${!token?.color && "text-pinto-green-3"}`}>
+                        {tokenSymbol === "NET" && "Total: "}
+                        <p className="inline-block w-[7.1ch] text-right">
+                          {displayValueFormatter(allData[tokenSymbol][displayIndex].value)}
+                        </p>
+                      </div>
+                      {idx < Object.keys(allData).length - 1 && (
+                        <Separator
+                          className="hidden sm:flex h-[1.5rem] w-[0.5px] lg:h-[2rem] sm:mx-2 lg:mx-4"
+                          orientation={"vertical"}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

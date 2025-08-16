@@ -1,4 +1,5 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { useWalletNFTProfile } from "@/hooks/useWalletNFTProfile";
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { FarmerBalance, useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -23,6 +24,39 @@ import { ScrollArea } from "./ui/ScrollArea";
 import { Separator } from "./ui/Separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
 
+// NFT Profile Display component for right side of header
+interface NFTProfileDisplayProps {
+  navigate: ReturnType<typeof useNavigate>;
+  togglePanel: () => void;
+}
+const NFTProfileDisplay = ({ navigate, togglePanel }: NFTProfileDisplayProps) => {
+  const { hasNFT, profileImageUrl } = useWalletNFTProfile();
+
+  // TEMPORARY: Hide NFT profile images - set to false to show real NFT images
+  const hideNFTProfile = true;
+
+  if (!hasNFT || !profileImageUrl) {
+    return null;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigate("/collection");
+        togglePanel();
+      }}
+      className="w-[11.25rem] h-20 rounded-lg overflow-hidden bg-gray-100 hover:opacity-80 transition-opacity flex-shrink-0 flex items-center justify-center"
+    >
+      {hideNFTProfile ? (
+        <span className="text-gray-500 font-semibold text-2xl">?</span>
+      ) : (
+        <img src={profileImageUrl} alt="NFT Profile" className="w-full h-full object-cover" />
+      )}
+    </button>
+  );
+};
+
 // Wallet header component
 interface WalletHeaderProps {
   address: `0x${string}` | undefined;
@@ -31,29 +65,15 @@ interface WalletHeaderProps {
   disconnect: () => void;
   togglePanel: () => void;
   totalBalance: FarmerBalance;
+  navigate: ReturnType<typeof useNavigate>;
 }
-const WalletHeader = ({ address, ensName, ensAvatar, disconnect, togglePanel, totalBalance }: WalletHeaderProps) => (
+const WalletHeader = ({ address, ensName, ensAvatar, totalBalance }: WalletHeaderProps) => (
   <div className="flex flex-col gap-2 2xl:gap-4">
-    <div className="flex flex-row justify-between items-center h-4">
-      <div className="flex flex-row gap-1">
-        {ensAvatar && <Avatar address={address} size={24} />}
-        <span className="pinto-sm text-pinto-gray-5">
-          {ensName || (address ? `${address.substring(0, 7)}...${address.substring(38, 42)}` : "")}
-        </span>
-      </div>
-      {address && (
-        <button
-          type="button"
-          onClick={() => {
-            disconnect();
-            togglePanel();
-          }}
-          className="flex justify-center items-center gap-1 w-[11.25rem] h-[2.125rem] bg-[#F8F8F8] rounded-full pinto-sm hover:hover:bg-pinto-green hover:text-white"
-        >
-          <span>Disconnect Wallet</span>
-          <span className="w-4 h-4">×</span>
-        </button>
-      )}
+    <div className="flex flex-row gap-1 items-center h-4">
+      {ensAvatar && <Avatar address={address} size={24} />}
+      <span className="pinto-sm text-pinto-gray-5">
+        {ensName || (address ? `${address.substring(0, 7)}...${address.substring(38, 42)}` : "")}
+      </span>
     </div>
     <span className="text-[3rem] leading-[1.1] 2xl:pinto-h1 text-pinto-gray-5">
       {formatter.usd(totalBalance.total, { decimals: totalBalance.total.gt(9999999) ? 0 : 2 })}
@@ -296,14 +316,36 @@ export default function WalletButtonPanel({ togglePanel }) {
       style={{ height: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}
     >
       <CardHeader className="flex flex-col gap-4 p-4 2xl:p-6">
-        <WalletHeader
-          address={address}
-          ensName={ensName}
-          ensAvatar={ensAvatar}
-          disconnect={disconnect}
-          togglePanel={togglePanel}
-          totalBalance={totalBalance}
-        />
+        <div className="flex flex-row justify-between items-start">
+          <div className="flex-1">
+            <WalletHeader
+              address={address}
+              ensName={ensName}
+              ensAvatar={ensAvatar}
+              disconnect={disconnect}
+              togglePanel={togglePanel}
+              totalBalance={totalBalance}
+              navigate={navigate}
+            />
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {address && (
+              <button
+                type="button"
+                onClick={() => {
+                  disconnect();
+                  togglePanel();
+                }}
+                className="flex justify-center items-center gap-1 w-[11.25rem] h-[2.125rem] bg-[#F8F8F8] rounded-full pinto-sm hover:hover:bg-pinto-green hover:text-white"
+              >
+                <span>Disconnect Wallet</span>
+                <span className="w-4 h-4">×</span>
+              </button>
+            )}
+            {/* NFT Profile Display - Temporarily disabled. Change 'false &&' to 'true &&' to re-enable */}
+            {false && <NFTProfileDisplay navigate={navigate} togglePanel={togglePanel} />}
+          </div>
+        </div>
         <BalanceSummary totalBalance={totalBalance} />
         <ActionButtons navigate={navigate} togglePanel={togglePanel} />
       </CardHeader>

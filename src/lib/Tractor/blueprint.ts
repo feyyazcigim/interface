@@ -40,13 +40,14 @@ export function createBlueprint({
   endTime?: bigint;
 }): Blueprint {
   const now = BigInt(Math.floor(Date.now() / 1000));
+  const tenYearsInSeconds = 10n * 365n * 24n * 3600n; // 10 years in seconds
   return {
     publisher: publisher.toLowerCase() as Address,
     data,
     operatorPasteInstrs,
     maxNonce,
     startTime: startTime ?? now - 24n * 3600n, // Default 24 hours before now, this makes testing easier
-    endTime: endTime ?? BigInt(2) ** BigInt(256) - BigInt(1), // Default uint256 max
+    endTime: endTime ?? now + tenYearsInSeconds, // Default 10 years from now
   };
 }
 

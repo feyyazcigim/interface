@@ -468,8 +468,10 @@ export function useFarmerSilo(address?: `0x${string}`) {
         convertibleDeposits,
       });
 
+      const bdvToUse = token.isWhitelisted ? currentBDV : depositBDV;
+
       _depositsBDV = _depositsBDV.add(depositBDV);
-      _depositsUSD = _depositsUSD.add(token.isMain ? currentBDV.mul(currPrice) : currentBDV.mul(poolPrice));
+      _depositsUSD = _depositsUSD.add(token.isMain ? bdvToUse.mul(currPrice) : bdvToUse.mul(poolPrice));
       _activeSeeds = _activeSeeds.add(totalSeeds);
       _totalGerminatingStalk = _totalGerminatingStalk.add(totalGerminatingStalk);
     });

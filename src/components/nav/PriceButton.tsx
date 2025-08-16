@@ -4,6 +4,7 @@ import { TokenValue } from "@/classes/TokenValue";
 import { Button } from "@/components/ui/Button";
 import IconImage from "@/components/ui/IconImage";
 import Panel from "@/components/ui/Panel";
+import useIsExtraSmall from "@/hooks/display/useIsExtraSmall";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { usePriceData, useTwaDeltaBLPQuery, useTwaDeltaBQuery } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
@@ -456,6 +457,7 @@ export interface IPriceButton extends HTMLAttributes<HTMLButtonElement> {
 const PriceTrigger = ({ isOpen, togglePanel, ...props }: IPriceButton) => {
   const priceData = usePriceData();
   const isMobile = useIsMobile();
+  const isExtraSmall = useIsExtraSmall();
 
   return (
     <Button
@@ -473,7 +475,7 @@ const PriceTrigger = ({ isOpen, togglePanel, ...props }: IPriceButton) => {
       ) : (
         <>${Number(priceData.price.toHuman()).toFixed(isMobile ? 3 : 4)}</>
       )}
-      <IconImage src={chevronDown} size={4} mobileSize={2.5} alt="chevron down" />
+      {!isExtraSmall && <IconImage src={chevronDown} size={4} mobileSize={2.5} alt="chevron down" />}
     </Button>
   );
 };

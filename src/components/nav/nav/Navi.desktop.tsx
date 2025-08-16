@@ -80,6 +80,9 @@ const AppNavi = () => {
           <NavigationMenuItem>
             <Link href={navLinks.sPinto}>sPinto</Link>
           </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href={navLinks.collection}>?</Link>
+          </NavigationMenuItem>
           {isDev() && (
             <NavigationMenuItem>
               <Link href="/dev">Dev</Link>
@@ -163,51 +166,6 @@ const LearnNavi = ({ setNaviTab }) => {
   );
 };
 
-const MoreNavi = ({ setNaviTab }) => {
-  return (
-    <motion.div
-      onMouseLeave={() => setNaviTab("home")}
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.2 }}
-    >
-      <NavigationMenu>
-        <NavigationMenuList>
-          <NavigationMenuItem>
-            <Link href={navLinks.about}>About</Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.discord} rel="noopener noreferrer" target="_blank">
-              Discord
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.twitter} rel="noopener noreferrer" target="_blank">
-              X
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.github} rel="noopener noreferrer" target="_blank">
-              GitHub
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.disclosures} rel="noopener noreferrer" target="_blank">
-              Terms of Service
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.exchange} rel="noopener noreferrer" target="_blank">
-              Exchange
-            </Link>
-          </NavigationMenuItem>
-        </NavigationMenuList>
-      </NavigationMenu>
-    </motion.div>
-  );
-};
-
 export default function Navi() {
   const [naviTab, setNaviTab] = useState("home");
 
@@ -230,11 +188,6 @@ export default function Navi() {
               Data
             </Link>
           </NavigationMenuItem>
-          <NavigationMenuItem onMouseEnter={() => setNaviTab("more")}>
-            <Link active={naviTab === "more"} topMenu>
-              More
-            </Link>
-          </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
 
@@ -242,7 +195,6 @@ export default function Navi() {
         {naviTab === "home" && <AppNavi />}
         {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
         {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
-        {naviTab === "more" && <MoreNavi setNaviTab={setNaviTab} />}
       </AnimatePresence>
     </div>
   );

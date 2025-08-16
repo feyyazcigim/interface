@@ -39,7 +39,6 @@ interface IMobileNavi extends IMobileNavTrigger {
 
 const MobileNavi = ({ isOpen, mounted, close, unmount, togglePanel }: IMobileNavi) => {
   const [isLearnOpen, setLearnOpen] = useState(false);
-  const [isMoreOpen, setMoreOpen] = useState(false);
 
   const isTablet = useIsTablet();
   const isMobile = useIsMobile();
@@ -47,10 +46,9 @@ const MobileNavi = ({ isOpen, mounted, close, unmount, togglePanel }: IMobileNav
   useEffect(() => {
     if (!isTablet && isOpen) {
       setLearnOpen(false);
-      setMoreOpen(false);
       close();
     }
-  }, [isTablet, isOpen]);
+  }, [isTablet, isOpen, close]);
 
   const showMobile = isMobile && mounted;
   const showTablet = isTablet && !isMobile && mounted;
@@ -64,14 +62,7 @@ const MobileNavi = ({ isOpen, mounted, close, unmount, togglePanel }: IMobileNav
             className={`fixed top-[5rem] flex flex-col w-[24rem] overflow-clip h-[calc(100vh-6rem)] bg-white/100 z-[51] transition-all ${isOpen ? "right-[1.5rem]" : "-right-[38rem]"}`}
           >
             <div className="overflow-y-auto">
-              <MobileNavContent
-                learnOpen={isLearnOpen}
-                moreOpen={isMoreOpen}
-                setLearnOpen={setLearnOpen}
-                setMoreOpen={setMoreOpen}
-                unmount={unmount}
-                close={close}
-              />
+              <MobileNavContent learnOpen={isLearnOpen} setLearnOpen={setLearnOpen} unmount={unmount} close={close} />
             </div>
           </Card>
         ) : null}
@@ -85,14 +76,7 @@ const MobileNavi = ({ isOpen, mounted, close, unmount, togglePanel }: IMobileNav
           >
             {" "}
             <div className="flex flex-col w-screen h-screen bg-pinto-mobile-navi overflow-y-auto">
-              <MobileNavContent
-                learnOpen={isLearnOpen}
-                moreOpen={isMoreOpen}
-                setLearnOpen={setLearnOpen}
-                setMoreOpen={setMoreOpen}
-                unmount={unmount}
-                close={close}
-              />
+              <MobileNavContent learnOpen={isLearnOpen} setLearnOpen={setLearnOpen} unmount={unmount} close={close} />
             </div>
           </motion.div>
         ) : null}
@@ -105,20 +89,17 @@ export default MobileNavi;
 
 interface IMobileNavContent {
   learnOpen: boolean;
-  moreOpen: boolean;
   setLearnOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setMoreOpen: React.Dispatch<React.SetStateAction<boolean>>;
   unmount?: () => void;
   close: () => void;
 }
 
-function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmount, close }: IMobileNavContent) {
+function MobileNavContent({ learnOpen, setLearnOpen, unmount, close }: IMobileNavContent) {
   const isMobile = useIsMobile();
 
   const unmountAndClose = () => {
     close();
     setLearnOpen(false);
-    setMoreOpen(false);
     unmount?.();
   };
 
@@ -177,16 +158,14 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
           <MobileNavLink href={navLinks.sPinto} onClick={unmountAndClose}>
             sPinto
           </MobileNavLink>
+          <MobileNavLink href={navLinks.collection} onClick={unmountAndClose}>
+            ?
+          </MobileNavLink>
         </div>
         <hr className=" border-pinto-gray-2" />
         <div className="flex flex-col gap-6 pl-4">
           <div
-            onClick={() =>
-              setLearnOpen((prev) => {
-                setMoreOpen(false);
-                return !prev;
-              })
-            }
+            onClick={() => setLearnOpen((prev) => !prev)}
             className="pinto-h3 flex flex-row gap-2 items-center w-full cursor-pointer"
           >
             Learn
@@ -214,50 +193,6 @@ function MobileNavContent({ learnOpen, moreOpen, setLearnOpen, setMoreOpen, unmo
                 </MobileNavLink>
                 <MobileNavLink variant="h4" nested external href={navLinks.whitepaper} onClick={unmountAndClose}>
                   Whitepaper
-                </MobileNavLink>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-          <div
-            onClick={() =>
-              setMoreOpen((prev) => {
-                setLearnOpen(false);
-                return !prev;
-              })
-            }
-            className="pinto-h3 flex flex-row gap-2 items-center w-full cursor-pointer"
-          >
-            More
-            <div className="mt-[4px]">
-              <IconImage size={6} src={moreOpen ? ChevronUpIcon : ChevronDownIcon} />
-            </div>
-          </div>
-          <AnimatePresence>
-            {moreOpen ? (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="flex flex-col gap-6 pl-4 overflow-hidden"
-              >
-                <MobileNavLink variant="h4" nested href="/?fromNav=true" onClick={close}>
-                  About
-                </MobileNavLink>
-                <MobileNavLink variant="h4" nested href={navLinks.discord} onClick={unmountAndClose}>
-                  Discord
-                </MobileNavLink>
-                <MobileNavLink variant="h4" nested href={navLinks.twitter} onClick={unmountAndClose}>
-                  X
-                </MobileNavLink>
-                <MobileNavLink variant="h4" nested href={navLinks.github} onClick={unmountAndClose}>
-                  GitHub
-                </MobileNavLink>
-                <MobileNavLink variant="h4" nested href={navLinks.disclosures} onClick={unmountAndClose}>
-                  Terms of Service
-                </MobileNavLink>
-                <MobileNavLink variant="h4" nested href={navLinks.exchange} onClick={unmountAndClose}>
-                  Pinto Exchange
                 </MobileNavLink>
               </motion.div>
             ) : null}

@@ -66,6 +66,7 @@ export default function ModifyTractorOrderDialog({
 
   // Effects. Pre-fill form with existing order data
   const [didPrefill, setDidPrefill] = useState(false);
+
   useEffect(() => {
     if (didPrefill || getStrategyProps.isLoading || !existingOrder.decodedData) return;
 
@@ -139,10 +140,8 @@ export default function ModifyTractorOrderDialog({
                   </div>
                 </DialogTitle>
                 <DialogDescription className="pinto-sm-light text-pinto-light pt-2">
-                  <p>
-                    Update your existing Tractor Order. The current order will be cancelled and a new one will be
-                    created with your updated conditions.
-                  </p>
+                  Update your existing Tractor Order. The current order will be cancelled and a new one will be created
+                  with your updated conditions.
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
@@ -377,24 +376,28 @@ function ModifyTractorOrderReviewDialog({
                 <div className="pinto-body font-medium text-pinto-secondary">Review Order Modification</div>
               </DialogTitle>
               <DialogDescription className="pinto-sm-light text-pinto-light pt-2">
-                <div>
-                  Your existing Tractor Order will be cancelled and replaced with this new order. This happens in a
-                  single transaction to ensure atomicity.
-                </div>
+                <div>Your existing Tractor Order will be cancelled and replaced with this new order.</div>
               </DialogDescription>
             </DialogHeader>
             <div>
               {/* Show a comparison of old vs new */}
-              {/* <h3 className="pinto-body mb-2 text-pinto-secondary">Order Changes</h3> */}
               <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <div className="space-y-2 text-sm">
-                  {/* Show differences between old and new order */}
-                  {valueDiffs.length ? (
-                    <Col className="gap-2 pinto-sm-light">
-                      {valueDiffs.map(([key, value]) => {
-                        return <RenderValueDiff key={`sow-v0-diff-${key}`} {...value} />;
-                      })}
-                    </Col>
+                <div className="space-y-4 text-sm">
+                  {/* Show all order parameters in single New Order table */}
+                  {valueDiffs.modifications.length || valueDiffs.constants.length ? (
+                    <div>
+                      <h4 className="pinto-body font-medium text-pinto-secondary mb-2">New Order</h4>
+                      <Col className="gap-2 pinto-sm-light">
+                        {/* Show modifications first */}
+                        {valueDiffs.modifications.map(([key, value]) => {
+                          return <RenderValueDiff key={`sow-v0-diff-${key}`} {...value} />;
+                        })}
+                        {/* Show constants after modifications */}
+                        {valueDiffs.constants.map(([key, value]) => {
+                          return <RenderConstantParam key={`sow-v0-constant-${key}`} {...value} />;
+                        })}
+                      </Col>
+                    </div>
                   ) : (
                     <div className="pinto-body text-pinto-light text-center h-[2rem] flex items-center justify-center">
                       No changes
@@ -420,7 +423,7 @@ function ModifyTractorOrderReviewDialog({
                     size="xl"
                     rounded="full"
                     onClick={handleSignBlueprint}
-                    disabled={isSigning || !valueDiffs.length}
+                    disabled={isSigning || !valueDiffs.modifications.length}
                     className="flex-1 ml-2"
                   >
                     {isSigning ? "Signing..." : "Sign New Order"}
@@ -431,7 +434,7 @@ function ModifyTractorOrderReviewDialog({
                     size="xl"
                     rounded="full"
                     onClick={handleModifyOrder}
-                    disabled={submitting || !valueDiffs.length}
+                    disabled={submitting || !valueDiffs.modifications.length}
                     className="flex-1 ml-2"
                   >
                     {submitting ? "Modifying..." : "Modify Order"}
@@ -462,6 +465,43 @@ const RenderValueDiff = (props: ValueDiff<unknown>) => {
           curr={curr as ExtendedTractorTokenStrategy}
         />
       ) : null}
+    </Row>
+  );
+};
+
+const RenderConstantParam = (props: ValueDiff<unknown>) => {
+  const { label, prev } = props;
+
+  const getConstantParamValue = () => {
+    try {
+      if (typeof prev === "string") {
+        return prev;
+      } else if (typeof prev === "boolean") {
+        return prev ? "Yes" : "No";
+      } else if (prev instanceof TokenValue) {
+        return formatter.number(prev);
+      } else if (prev && typeof prev === "object" && "type" in prev) {
+        const strategy = prev as ExtendedTractorTokenStrategy;
+        switch (true) {
+          case strategy.type === "SPECIFIC_TOKEN":
+            return strategy.token?.symbol ?? "Unknown Token";
+          case strategy.type === "LOWEST_PRICE":
+            return "Token with lowest price";
+          default:
+            return "Token with lowest Seeds";
+        }
+      }
+    } catch (e) {
+      console.debug("Error getting render constant param", e);
+    }
+
+    return null;
+  };
+
+  return (
+    <Row key={`constant-${label}`} className="justify-between items-center">
+      <div className="text-pinto-secondary">{label}</div>
+      <div className="text-pinto-light">{getConstantParamValue()}</div>
     </Row>
   );
 };
@@ -576,12 +616,17 @@ type ValueDiff<T = unknown> = {
 };
 
 const getDiffs = (mapping: ReturnType<typeof getMapping>) => {
-  const diffs: Record<string, ValueDiff> = {};
+  const modifications: Record<string, ValueDiff> = {};
+  const constants: Record<string, ValueDiff> = {};
 
   for (const [key, { label, prev, curr }] of Object.entries(mapping ?? {})) {
+    let hasChanged = false;
+    let valueDiff: ValueDiff | null = null;
+
     if (prev instanceof TokenValue && curr instanceof TokenValue) {
       if (!prev.eq(curr)) {
-        diffs[key] = {
+        hasChanged = true;
+        valueDiff = {
           label,
           prev: prev,
           curr: curr,
@@ -589,7 +634,8 @@ const getDiffs = (mapping: ReturnType<typeof getMapping>) => {
       }
     } else if (typeof prev === "boolean" && typeof curr === "boolean") {
       if (prev !== curr) {
-        diffs[key] = {
+        hasChanged = true;
+        valueDiff = {
           label,
           prev: prev ? "Yes" : "No",
           curr: curr ? "Yes" : "No",
@@ -601,14 +647,29 @@ const getDiffs = (mapping: ReturnType<typeof getMapping>) => {
         prev.type !== current.type ||
         (prev.type === "SPECIFIC_TOKEN" && current.type === "SPECIFIC_TOKEN" && !tokensEqual(prev.token, current.token))
       ) {
-        diffs[key] = {
+        hasChanged = true;
+        valueDiff = {
           label,
           prev: prev,
           curr: current,
         };
       }
     }
+
+    if (hasChanged && valueDiff) {
+      modifications[key] = valueDiff;
+    } else {
+      // Add to constants section to show unchanged values
+      constants[key] = {
+        label,
+        prev: prev,
+        curr: curr,
+      };
+    }
   }
 
-  return Object.entries(diffs);
+  return {
+    modifications: Object.entries(modifications),
+    constants: Object.entries(constants),
+  };
 };
