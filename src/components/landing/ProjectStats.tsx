@@ -108,20 +108,20 @@ export default function ProjectStats() {
     >
       <span className="flex flex-row gap-6 items-center">
         <span
-          className={`text-[4rem] leading-[1.4] text-black transition-opacity duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
+          className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
         >
           89
         </span>
         <Button
           variant="outline-rounded"
-          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer hover:bg-gray-50 transition-opacity duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
+          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
           onClick={() => setActiveButton(activeButton === "upgrades" ? null : "upgrades")}
         >
           🔨 protocol upgrades
         </Button>
-        <span className={`transition-opacity duration-300 ${getElementOpacity(false)}`}>from</span>
+        <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>from</span>
         <span
-          className={`text-[4rem] leading-[1.4] text-black transition-opacity duration-300 ${getElementOpacity(activeButton === "contributors")}`}
+          className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
         >
           51
         </span>
@@ -142,36 +142,36 @@ export default function ProjectStats() {
           </AnimatePresence>
           <Button
             variant="outline-rounded"
-            className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer hover:bg-gray-50 transition-opacity duration-300 ${getElementOpacity(activeButton === "contributors")}`}
+            className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
             onClick={() => setActiveButton(activeButton === "contributors" ? null : "contributors")}
           >
             🧑‍🌾 contributors
           </Button>
         </span>
-        <span className={`transition-opacity duration-300 ${getElementOpacity(false)}`}>over</span>
+        <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>over</span>
       </span>
       <span className="flex flex-row gap-6 items-center">
         <span
-          className={`text-[4rem] leading-[1.4] text-black transition-opacity duration-300 ${getElementOpacity(activeButton === "years")}`}
+          className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
         >
           5+
         </span>
         <Button
           variant="outline-rounded"
-          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer hover:bg-gray-50 transition-opacity duration-300 ${getElementOpacity(activeButton === "years")}`}
+          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
           onClick={() => setActiveButton(activeButton === "years" ? null : "years")}
         >
           📝 years
         </Button>
-        <span className={`transition-opacity duration-300 ${getElementOpacity(false)}`}>to facilitate</span>
+        <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>to facilitate</span>
         <span
-          className={`text-[4rem] leading-[1.4] text-black transition-opacity duration-300 ${getElementOpacity(activeButton === "volume")}`}
+          className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
         >
           $1b+
         </span>
         <Button
           variant="outline-rounded"
-          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer hover:bg-gray-50 transition-opacity duration-300 ${getElementOpacity(activeButton === "volume")}`}
+          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
           onClick={() => setActiveButton(activeButton === "volume" ? null : "volume")}
         >
           📈 in cumulative volume
