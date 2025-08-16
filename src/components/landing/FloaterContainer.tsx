@@ -12,7 +12,6 @@ interface FloaterContainerProps {
   };
   x: MotionValue<number>;
   viewportWidth: number;
-  txFloaterWidth: number;
   floatersOpacity: MotionValue<1 | 0>;
   positionAbove: boolean;
   isFirst: boolean;
@@ -22,12 +21,11 @@ export default function FloaterContainer({
   marker,
   x,
   viewportWidth,
-  txFloaterWidth,
   floatersOpacity,
   positionAbove,
   isFirst,
 }: FloaterContainerProps) {
-  const leftPosition = useTransform(x, (scrollX) => marker.x - txFloaterWidth / 2 + scrollX);
+  const leftPosition = useTransform(x, (scrollX) => marker.x + scrollX);
 
   return (
     <motion.div
@@ -37,6 +35,7 @@ export default function FloaterContainer({
         opacity: floatersOpacity,
         left: leftPosition,
         top: positionAbove ? marker.y - 50 : marker.y + 10,
+        transform: "translateX(-50%)",
       }}
     >
       <TxFloater

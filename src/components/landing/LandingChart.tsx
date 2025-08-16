@@ -340,7 +340,6 @@ function generatePriceLabelData() {
 
 export default function LandingChart() {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
-  const [txFloaterWidth, _setTxFloaterWidth] = useState(114); // Default width
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -393,20 +392,6 @@ export default function LandingChart() {
       resizeObserver.disconnect();
     };
   }, []);
-
-  // Measure txFloater width
-  /*
-  useEffect(() => {
-    const measureTxFloater = () => {
-      const txFloaterElement = document.getElementById("txFloater");
-      if (txFloaterElement) {
-        const width = txFloaterElement.getBoundingClientRect().width;
-        setTxFloaterWidth(width);
-      }
-    };
-    measureTxFloater();
-  }, []);
-  */
 
   // Assign farmers to price data and generate path
   const { path, beziers, transactionMarkers } = useMemo(() => {
@@ -882,7 +867,6 @@ export default function LandingChart() {
               marker={marker}
               x={x}
               viewportWidth={viewportWidth}
-              txFloaterWidth={txFloaterWidth}
               floatersOpacity={floatersOpacity}
               positionAbove={positionAbove}
               isFirst={i === 0}
