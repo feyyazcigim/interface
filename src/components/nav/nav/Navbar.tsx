@@ -313,7 +313,7 @@ const styles = {
 } as const;
 
 export const navLinks = {
-  about: "/soon?fromNav=true",
+  about: "/fromNav=true",
   overview: "/overview",
   silo: "/silo",
   field: "/field",
