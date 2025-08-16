@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
-import TxFloater from "./TxFloater";
+import FloaterContainer from "./FloaterContainer";
 
 // Master animation configuration - Variable-driven system
 // This configuration drives all animations through percentages and proportions
@@ -852,49 +852,41 @@ export default function LandingChart() {
               }}
             />
           </g>
-          {/* Static transaction floaters - only show during price tracking */}
-          {transactionMarkers.map((marker, i) => {
-            // Use apex type for smarter positioning, with fallback to original logic
-            let positionAbove = false;
+        </svg>
+        {/* Static transaction floaters - only show during price tracking */}
+        {transactionMarkers.map((marker, i) => {
+          // Use apex type for smarter positioning, with fallback to original logic
+          let positionAbove = false;
 
-            if (marker.apexType) {
-              // If positioned at an apex, use the apex type
-              positionAbove = marker.apexType === "valley";
-            } else {
-              // Fallback to original logic for non-apex markers
-              if (marker.index > 0) {
-                const prev = fullPriceData[marker.index - 1];
-                const curr = fullPriceData[marker.index];
-                if (curr.value !== prev.value) {
-                  positionAbove = curr.value > prev.value;
-                } else if (marker.index < fullPriceData.length - 1) {
-                  const next = fullPriceData[marker.index + 1];
-                  positionAbove = curr.value > next.value;
-                }
+          if (marker.apexType) {
+            // If positioned at an apex, use the apex type
+            positionAbove = marker.apexType === "valley";
+          } else {
+            // Fallback to original logic for non-apex markers
+            if (marker.index > 0) {
+              const prev = fullPriceData[marker.index - 1];
+              const curr = fullPriceData[marker.index];
+              if (curr.value !== prev.value) {
+                positionAbove = curr.value > prev.value;
+              } else if (marker.index < fullPriceData.length - 1) {
+                const next = fullPriceData[marker.index + 1];
+                positionAbove = curr.value > next.value;
               }
             }
-            return (
-              <motion.foreignObject
-                key={`${marker.x}-${marker.y}-${marker.txType}`}
-                x={marker.x - txFloaterWidth / 2}
-                y={positionAbove ? marker.y - 50 : marker.y + 10}
-                width={120}
-                height={60}
-                style={{ pointerEvents: "none", x, opacity: floatersOpacity }}
-              >
-                <TxFloater
-                  from={marker.farmer}
-                  txType={marker.txType}
-                  viewportWidth={viewportWidth}
-                  x={x}
-                  markerX={marker.x}
-                  isFixed={true}
-                  id={i === 0 ? "txFloater" : undefined}
-                />
-              </motion.foreignObject>
-            );
-          })}
-        </svg>
+          }
+          return (
+            <FloaterContainer
+              key={`${marker.x}-${marker.y}-${marker.txType}`}
+              marker={marker}
+              x={x}
+              viewportWidth={viewportWidth}
+              txFloaterWidth={txFloaterWidth}
+              floatersOpacity={floatersOpacity}
+              positionAbove={positionAbove}
+              isFirst={i === 0}
+            />
+          );
+        })}
         {/* Current measurement point */}
         <motion.div
           className="absolute -ml-[0.625rem] -mt-[0.625rem] z-10 rounded-full w-5 h-5 shadow-lg"
