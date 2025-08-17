@@ -227,10 +227,10 @@ module.exports = {
         },
         "pulse-glow": {
           "0%, 100%": { 
-            boxShadow: "0 0 20px rgba(36, 102, 69, 0.4)" 
+            boxShadow: "0 0 20px var(--glow-color, rgba(36, 102, 69, 0.4))" 
           },
           "50%": { 
-            boxShadow: "0 0 30px rgba(36, 102, 69, 0.7)" 
+            boxShadow: "0 0 30px var(--glow-color, rgba(36, 102, 69, 0.7))" 
           },
         },
       },
@@ -244,6 +244,7 @@ module.exports = {
         "vertical-marquee": "vertical-marquee 36s linear infinite",
         "vertical-marquee-reverse": "vertical-marquee-reverse 54s linear infinite",
         "vertical-marquee-small": "vertical-marquee-small 80s linear infinite",
+        "pulse-glow": "pulse-glow 8s ease-in-out infinite",
       },
       aspectRatio: {
         "3/1": "3 / 1",

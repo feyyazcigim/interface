@@ -101,11 +101,8 @@ export default function ProjectStats() {
     return isActive ? "opacity-100" : "opacity-50";
   };
 
-  return (
-    <motion.div
-      className="flex flex-col items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-    >
+  function Upgrades() {
+    return (
       <span className="flex flex-row gap-6 items-center">
         <span
           className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
@@ -114,11 +111,21 @@ export default function ProjectStats() {
         </span>
         <Button
           variant="outline-rounded"
-          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
+          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all hover:animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(25,25,25,0.6)] duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
           onClick={() => setActiveButton(activeButton === "upgrades" ? null : "upgrades")}
+          glow
+          glowOnHover
+          glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
         >
           🔨 protocol upgrades
         </Button>
+      </span>
+    );
+  }
+
+  function Contributors() {
+    return (
+      <span className="flex flex-row gap-6 items-center">
         <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>from</span>
         <span
           className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
@@ -144,13 +151,22 @@ export default function ProjectStats() {
             variant="outline-rounded"
             className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
             onClick={() => setActiveButton(activeButton === "contributors" ? null : "contributors")}
+            glow
+            glowOnHover
+            glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
           >
             🧑‍🌾 contributors
           </Button>
         </span>
-        <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>over</span>
+        <span className={`transition-all duration-300 ${getElementOpacity(false)} max-sm:hidden`}>over</span>
       </span>
+    );
+  }
+
+  function Years() {
+    return (
       <span className="flex flex-row gap-6 items-center">
+        <span className={`transition-all duration-300 ${getElementOpacity(false)} sm:hidden`}>over</span>
         <span
           className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
         >
@@ -160,9 +176,19 @@ export default function ProjectStats() {
           variant="outline-rounded"
           className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
           onClick={() => setActiveButton(activeButton === "years" ? null : "years")}
+          glow
+          glowOnHover
+          glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
         >
           📝 years
         </Button>
+      </span>
+    );
+  }
+
+  function Volume() {
+    return (
+      <span className="flex flex-row gap-6 items-center">
         <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>to facilitate</span>
         <span
           className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
@@ -173,9 +199,28 @@ export default function ProjectStats() {
           variant="outline-rounded"
           className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
           onClick={() => setActiveButton(activeButton === "volume" ? null : "volume")}
+          glow
+          glowOnHover
+          glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
         >
           📈 in cumulative volume
         </Button>
+      </span>
+    );
+  }
+
+  return (
+    <motion.div
+      className="flex flex-col items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+    >
+      <span className="flex flex-row gap-6 items-center">
+        <Upgrades />
+        <Contributors />
+      </span>
+      <span className="flex flex-row gap-6 items-center">
+        <Years />
+        <Volume />
       </span>
       <StatContent activeButton={activeButton} />
     </motion.div>

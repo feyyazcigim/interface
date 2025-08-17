@@ -75,9 +75,6 @@ const buttonVariants = cva(
       noPadding: {
         true: "p-0 sm:p-0",
       },
-      glow: {
-        true: "animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)]",
-      },
     },
     defaultVariants: {
       variant: "default",
@@ -92,8 +89,10 @@ export interface ButtonProps
   asChild?: boolean;
   glow?: boolean;
   glowColor?: string;
+  glowOnHover?: boolean;
   shimmer?: boolean;
   shimmerColor?: string;
+  shimmerOnHover?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -109,21 +108,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       width = "default",
       glow = false,
       glowColor = "rgba(36, 102, 69, 0.6)",
+      glowOnHover = false,
       shimmer = false,
       shimmerColor = "rgba(0, 199, 103, 0.5)",
+      shimmerOnHover = false,
       ...props
     },
     ref,
   ) => {
     const Comp = asChild ? Slot : "button";
-
-    // Custom glow styles
-    const customGlowStyle = glow
-      ? {
-          animation: "pulse-glow 3s ease-in-out infinite",
-          boxShadow: `0 0 30px ${glowColor}`,
-        }
-      : {};
 
     return (
       <Comp
@@ -135,13 +128,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             noPadding,
             rounded,
             width,
-            glow: false, // Disable CSS glow since we're using custom
           }),
-          glow && "animate-[pulse-glow_3s_ease-in-out_infinite]",
+          glow &&
+            (glowOnHover
+              ? `hover:[animation:pulse-glow_3s_ease-in-out_infinite] transition-shadow`
+              : `[animation:pulse-glow_3s_ease-in-out_infinite]`),
           className,
         )}
         style={{
-          ...customGlowStyle,
+          ...(glow && { "--glow-color": glowColor }),
           ...props.style,
         }}
         ref={ref}
@@ -149,7 +144,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {shimmer && (
           <div
-            className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent to-transparent"
+            className={cn(
+              "absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent to-transparent",
+              shimmerOnHover
+                ? "opacity-0 hover:opacity-100 hover:animate-[shimmer_2s_infinite] transition-opacity duration-300"
+                : "animate-[shimmer_2s_infinite]",
+            )}
             style={{
               background: `linear-gradient(to right, transparent, ${shimmerColor}, transparent)`,
             }}
