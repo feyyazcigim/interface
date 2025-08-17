@@ -98,7 +98,6 @@ const AppNavi = () => {
 const LearnNavi = ({ setNaviTab }) => {
   return (
     <motion.div
-      onMouseLeave={() => setNaviTab("home")}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
