@@ -88,25 +88,25 @@ export default function Landing() {
         WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
       }}
     >
-      <div className="flex flex-col">
-        <section className="flex flex-col sm:mt-4 overflow-clip">
+      <div className="flex flex-col h-screen overflow-y-auto snap-y snap-mandatory scrollbar-none">
+        <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
           <LandingChart />
         </section>
-        <section className="flex flex-col overflow-clip max-sm:place-content-center gap-14 h-[67.5rem] max-h-[67.5rem]">
+        <section className="flex flex-col overflow-clip place-content-center gap-14 min-h-screen snap-center">
           <SecondaryCTAValues />
           <SecondaryCTA />
           <SecondaryCTAProperties />
         </section>
-        <section className="flex flex-col gap-12 overflow-clip h-[67.5rem] max-h-[67.5rem]">
+        <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
           <ProjectStats />
         </section>
-        <section className="flex flex-col gap-4 overflow-clip mb-8 h-[67.5rem] max-h-[67.5rem]">
+        <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
           <BugBounty />
           {/* 
         <AuditsList />
         */}
         </section>
-        <section className="flex flex-col gap-12 h-[60rem] max-h-[60rem]">
+        <section className="flex flex-col place-content-center min-h-screen snap-center">
           <Resources />
         </section>
       </div>

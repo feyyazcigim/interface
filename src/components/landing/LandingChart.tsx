@@ -616,7 +616,7 @@ export default function LandingChart() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full sm:mb-32 sm:gap-10">
+    <div className="flex flex-col items-center justify-center h-full w-full sm:mt-10  sm:gap-10">
       {/* Stage Messages */}
       <div className="min-h-[200px] flex flex-col items-center justify-center">
         <AnimatePresence mode="wait">

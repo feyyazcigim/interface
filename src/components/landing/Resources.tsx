@@ -66,7 +66,7 @@ const buttonStyles = clsx("w-full flex p-4 justify-center items-center gap-2.5 h
 
 export default function Resources() {
   return (
-    <div className="flex flex-col items-center self-stretch gap-12 mx-auto">
+    <div className="flex flex-col items-center self-stretch gap-12 mx-auto mb-28">
       <h2 className="text-4xl leading-same-h2 font-light text-black">Resources</h2>
       <div className="flex flex-row gap-8">
         {resourceCards.map((card, index) => (

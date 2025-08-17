@@ -29,7 +29,7 @@ function AppLayout({ children }) {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      {!isLandingPage && <Navbar />}
       {!isLandingPage && <TourOfTheFarm />}
       <ScrollToTop />
       <div className={cn("relative z-[1] w-screen")}>{children}</div>
