@@ -1,8 +1,8 @@
-import wpBasin from "@/assets/landing/wp_basin.jpg";
-import wpBean from "@/assets/landing/wp_bean.jpg";
-import wpMultiflow from "@/assets/landing/wp_multiflow.jpg";
-import wpPinto from "@/assets/landing/wp_pinto.jpg";
-import wpPipeline from "@/assets/landing/wp_pipeline.jpg";
+import wpBasin from "@/assets/landing/wp_basin.png";
+import wpBean from "@/assets/landing/wp_bean.png";
+import wpMultiflow from "@/assets/landing/wp_multiflow.png";
+import wpPinto from "@/assets/landing/wp_pinto.png";
+import wpPipeline from "@/assets/landing/wp_pipeline.png";
 import { AnimatePresence, Variants, motion } from "framer-motion";
 import { useState } from "react";
 
