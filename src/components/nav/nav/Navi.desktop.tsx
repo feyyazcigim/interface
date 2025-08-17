@@ -59,6 +59,7 @@ const AppNavi = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.2 }}
+      className="pt-2"
     >
       <NavigationMenu>
         <NavigationMenuList>
@@ -102,6 +103,7 @@ const LearnNavi = ({ setNaviTab }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.2 }}
+      className="pt-2"
     >
       <NavigationMenu>
         <NavigationMenuList>
@@ -137,7 +139,7 @@ export default function Navi() {
   const isOnExplorer = location.pathname.startsWith("/explorer");
 
   return (
-    <div className="flex flex-col items-center justify-center gap-5 z-[2]">
+    <div className="flex flex-col items-center justify-center gap-2 z-[2]">
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem onMouseEnter={() => setNaviTab("home")}>
