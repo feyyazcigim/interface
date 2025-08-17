@@ -94,41 +94,6 @@ const AppNavi = () => {
   );
 };
 
-const DataNavi = ({ setNaviTab }) => {
-  return (
-    <motion.div
-      onMouseLeave={() => setNaviTab("home")}
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.2 }}
-    >
-      <NavigationMenu>
-        <NavigationMenuList>
-          <NavigationMenuItem>
-            <Link href={navLinks.explorer_pinto}>Pinto</Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.explorer_silo}>Silo</Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.explorer_field}>Field</Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.explorer_farmer}>Farmer</Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.explorer_seasons}>Seasons</Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.explorer_all}>All</Link>
-          </NavigationMenuItem>
-        </NavigationMenuList>
-      </NavigationMenu>
-    </motion.div>
-  );
-};
-
 const LearnNavi = ({ setNaviTab }) => {
   return (
     <motion.div
@@ -183,8 +148,8 @@ export default function Navi() {
               Learn
             </Link>
           </NavigationMenuItem>
-          <NavigationMenuItem onMouseEnter={() => setNaviTab("data")}>
-            <Link active={naviTab === "data"} href={navLinks.explorer} topMenu>
+          <NavigationMenuItem>
+            <Link href={navLinks.explorer} topMenu>
               Data
             </Link>
           </NavigationMenuItem>
@@ -193,7 +158,6 @@ export default function Navi() {
 
       <AnimatePresence mode="wait">
         {naviTab === "home" && <AppNavi />}
-        {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
         {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
       </AnimatePresence>
     </div>
