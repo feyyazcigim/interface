@@ -694,8 +694,8 @@ export default function LandingChart() {
                 <Link to={navLinks.overview}>
                   <Button
                     rounded="full"
-                    size={isMobile ? "sm" : "default"}
-                    className="hover:bg-pinto-green-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow"
+                    size="xxl"
+                    className="hover:bg-pinto-green-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow !font-[340] !tracking-[-0.025rem]"
                     id={"come-seed-the-trustless-economy"}
                   >
                     <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
@@ -703,16 +703,6 @@ export default function LandingChart() {
                     <div className="relative z-10" style={{ isolation: "isolate" }}>
                       <PintoRightArrow width={"1rem"} height={"1rem"} />
                     </div>
-                  </Button>
-                </Link>
-                <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">
-                  <Button
-                    variant="outline"
-                    rounded="full"
-                    size={isMobile ? "sm" : "default"}
-                    className="shadow-none text-pinto-gray-4"
-                  >
-                    Read the Docs
                   </Button>
                 </Link>
               </motion.div>
