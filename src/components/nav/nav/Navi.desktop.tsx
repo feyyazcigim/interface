@@ -95,6 +95,41 @@ const AppNavi = () => {
   );
 };
 
+const DataNavi = ({ setNaviTab }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2 }}
+      className="pt-2"
+    >
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <Link href={navLinks.explorer_pinto}>Pinto</Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href={navLinks.explorer_silo}>Silo</Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href={navLinks.explorer_field}>Field</Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href={navLinks.explorer_farmer}>Farmer</Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href={navLinks.explorer_seasons}>Seasons</Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href={navLinks.explorer_all}>All</Link>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+    </motion.div>
+  );
+};
+
 const LearnNavi = ({ setNaviTab }) => {
   return (
     <motion.div
@@ -134,8 +169,6 @@ const LearnNavi = ({ setNaviTab }) => {
 
 export default function Navi() {
   const [naviTab, setNaviTab] = useState("home");
-  const location = useLocation();
-  const isOnExplorer = location.pathname.startsWith("/explorer");
 
   return (
     <div className="flex flex-col items-center justify-center gap-2 z-[2]">
@@ -151,8 +184,8 @@ export default function Navi() {
               Learn
             </Link>
           </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={navLinks.explorer} topMenu>
+          <NavigationMenuItem onMouseEnter={() => setNaviTab("data")}>
+            <Link active={naviTab === "data"} href={navLinks.explorer} topMenu>
               Data
             </Link>
           </NavigationMenuItem>
@@ -161,8 +194,9 @@ export default function Navi() {
 
       <div className="h-[60px]">
         <AnimatePresence mode="wait">
-          {!isOnExplorer && naviTab === "home" && <AppNavi />}
-          {!isOnExplorer && naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
+          {naviTab === "home" && <AppNavi />}
+          {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
+          {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
         </AnimatePresence>
       </div>
     </div>
