@@ -116,15 +116,15 @@ function PriceButtonPanel() {
           <div className="flex flex-col gap-2 w-full">
             <div className="flex flex-row justify-between items-center">
               <div className="pinto-sm sm:pinto-body">Price of Pinto</div>
-              <div className="flex items-center gap-2">
-                <div className="pinto-xs text-pinto-light">Display TWA values</div>
-                <Switch checked={useTwa} onCheckedChange={setUseTwa} variant="default" />
-                <div className="pinto-xs text-pinto-light">Display ΔP and liquidity on Wells</div>
-                <Switch checked={expandAll} onCheckedChange={setExpandAll} variant="default" />
-              </div>
             </div>
             <div className="pinto-xs sm:pinto-body-light text-pinto-light sm:text-pinto-light">
               The Pinto price is determined by the ratio and value of assets in each liquidity pool.
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="pinto-xs text-pinto-light">Display TWA values</div>
+              <Switch checked={useTwa} onCheckedChange={setUseTwa} variant="default" />
+              <div className="pinto-xs text-pinto-light">Display ΔP and liquidity on Wells</div>
+              <Switch checked={expandAll} onCheckedChange={setExpandAll} variant="default" />
             </div>
           </div>
           <div className="flex flex-row justify-between items-center mt-6">
