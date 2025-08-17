@@ -5,19 +5,22 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/NavigationMenu";
+import { stringEq } from "@/utils/string";
 import { isDev } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useRef, useState } from "react";
 import { Link as ReactLink, useLocation } from "react-router-dom";
-import { navLinks } from "./Navbar";
+import { navLinks, navPathNameToTopMenu } from "./Navbar";
 
 const Link = ({
+  topMenuSlug = "home",
   href,
   active,
   topMenu,
   className,
   ...props
 }: {
+  topMenuSlug?: string;
   href?: string;
   active?: boolean;
   topMenu?: boolean;
@@ -25,9 +28,21 @@ const Link = ({
   [x: string]: any;
 }) => {
   const location = useLocation();
-  const topMenuCheck = href ? location.pathname.includes(href?.substring(1)) : false;
+  const pathSlug = location.pathname.split("/")?.[1];
+
   const bottomMenuCheck = href ? location.pathname.startsWith(href) : false;
-  const isActive = active || (href === "/" ? href === location.pathname : topMenu ? topMenuCheck : bottomMenuCheck);
+
+  const getIsActive = () => {
+    if (topMenu && href) {
+      return stringEq(topMenuSlug, navPathNameToTopMenu[pathSlug]) || active;
+    }
+
+    if (href) {
+      return active || (href === "/" ? href === location.pathname : bottomMenuCheck);
+    }
+  };
+
+  const isActive = getIsActive();
 
   if (href) {
     return (
@@ -196,17 +211,17 @@ export default function Navi() {
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem onMouseEnter={() => handleMouseEnter("home")} onMouseLeave={handleMouseLeave}>
-            <Link href={navLinks.overview} topMenu>
+            <Link href={navLinks.overview} topMenu topMenuSlug="home">
               Home
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem onMouseEnter={() => handleMouseEnter("learn")} onMouseLeave={handleMouseLeave}>
-            <Link active={naviTab === "learn"} topMenu>
+            <Link active={naviTab === "learn"} topMenu topMenuSlug="learn">
               Learn
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem onMouseEnter={() => handleMouseEnter("data")} onMouseLeave={handleMouseLeave}>
-            <Link active={naviTab === "data"} href={navLinks.explorer} topMenu>
+            <Link active={naviTab === "data"} href={navLinks.explorer} topMenu topMenuSlug="data">
               Data
             </Link>
           </NavigationMenuItem>
