@@ -24,7 +24,7 @@ export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogOverlay className="bg-white/30 backdrop-blur-md" />
+      <DialogOverlay className="bg-pinto-morning-yellow-0/80" />
       <DialogContent
         className={cn(
           "w-[90vw] h-[60vh] sm:w-[60rem] sm:h-[35rem]",
