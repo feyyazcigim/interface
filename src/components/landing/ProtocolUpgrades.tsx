@@ -1032,7 +1032,11 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
   return (
     <div
       ref={scrollContainerRef}
-      className={`relative w-screen -mx-6 overflow-x-auto p-6 scrollbar-none ${isVisible ? "opacity-100" : "opacity-0"} transition-all transform-gpu`}
+      className={`relative w-screen overflow-x-auto p-6 scrollbar-none ${isVisible ? "opacity-100" : "opacity-0"} transition-all transform-gpu`}
+      style={{
+        marginLeft: `calc(-50vw + 50%)`,
+        marginRight: `calc(-50vw + 50%)`,
+      }}
     >
       <div className="flex flex-row min-w-max items-center gap-4">
         {sortedAudits.map((audit, index) => {
