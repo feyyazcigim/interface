@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/NavigationMenu";
 import { isDev } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Link as ReactLink, useLocation } from "react-router-dom";
 import { navLinks } from "./Navbar";
 
@@ -169,22 +169,43 @@ const LearnNavi = ({ setNaviTab }) => {
 
 export default function Navi() {
   const [naviTab, setNaviTab] = useState("home");
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = useCallback((tab: string) => {
+    // Clear any existing timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    // Set timeout for 100ms before activating sub-nav
+    hoverTimeoutRef.current = setTimeout(() => {
+      setNaviTab(tab);
+    }, 100);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    // Cancel the timeout if user moves away before 100ms
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center gap-2 z-[2]">
       <NavigationMenu>
         <NavigationMenuList>
-          <NavigationMenuItem onMouseEnter={() => setNaviTab("home")}>
+          <NavigationMenuItem onMouseEnter={() => handleMouseEnter("home")} onMouseLeave={handleMouseLeave}>
             <Link href={navLinks.overview} topMenu>
               Home
             </Link>
           </NavigationMenuItem>
-          <NavigationMenuItem onMouseEnter={() => setNaviTab("learn")}>
+          <NavigationMenuItem onMouseEnter={() => handleMouseEnter("learn")} onMouseLeave={handleMouseLeave}>
             <Link active={naviTab === "learn"} topMenu>
               Learn
             </Link>
           </NavigationMenuItem>
-          <NavigationMenuItem onMouseEnter={() => setNaviTab("data")}>
+          <NavigationMenuItem onMouseEnter={() => handleMouseEnter("data")} onMouseLeave={handleMouseLeave}>
             <Link active={naviTab === "data"} href={navLinks.explorer} topMenu>
               Data
             </Link>
