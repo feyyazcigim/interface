@@ -228,7 +228,7 @@ export default function Navi() {
         </NavigationMenuList>
       </NavigationMenu>
 
-      <div className="h-[60px]">
+      <div className="h-[3.75rem]">
         <AnimatePresence mode="wait">
           {naviTab === "home" && <AppNavi />}
           {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
