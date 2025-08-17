@@ -133,13 +133,15 @@ const LearnNavi = ({ setNaviTab }) => {
 
 export default function Navi() {
   const [naviTab, setNaviTab] = useState("home");
+  const location = useLocation();
+  const isOnExplorer = location.pathname.startsWith("/explorer");
 
   return (
     <div className="flex flex-col items-center justify-center gap-5 z-[2]">
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem onMouseEnter={() => setNaviTab("home")}>
-            <Link active={naviTab === "home"} href={navLinks.overview} topMenu>
+            <Link href={navLinks.overview} topMenu>
               Home
             </Link>
           </NavigationMenuItem>
@@ -156,10 +158,12 @@ export default function Navi() {
         </NavigationMenuList>
       </NavigationMenu>
 
-      <AnimatePresence mode="wait">
-        {naviTab === "home" && <AppNavi />}
-        {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
-      </AnimatePresence>
+      <div className="h-[60px]">
+        <AnimatePresence mode="wait">
+          {!isOnExplorer && naviTab === "home" && <AppNavi />}
+          {!isOnExplorer && naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
