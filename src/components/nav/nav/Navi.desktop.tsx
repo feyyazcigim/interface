@@ -5,19 +5,22 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/NavigationMenu";
+import { stringEq } from "@/utils/string";
 import { isDev } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Link as ReactLink, useLocation } from "react-router-dom";
-import { navLinks } from "./Navbar";
+import { navLinks, navPathNameToTopMenu } from "./Navbar";
 
 const Link = ({
+  topMenuSlug = "home",
   href,
   active,
   topMenu,
   className,
   ...props
 }: {
+  topMenuSlug?: string;
   href?: string;
   active?: boolean;
   topMenu?: boolean;
@@ -25,9 +28,21 @@ const Link = ({
   [x: string]: any;
 }) => {
   const location = useLocation();
-  const topMenuCheck = href ? location.pathname.includes(href?.substring(1)) : false;
+  const pathSlug = location.pathname.split("/")?.[1];
+
   const bottomMenuCheck = href ? location.pathname.startsWith(href) : false;
-  const isActive = active || (href === "/" ? href === location.pathname : topMenu ? topMenuCheck : bottomMenuCheck);
+
+  const getIsActive = () => {
+    if (topMenu && href) {
+      return stringEq(topMenuSlug, navPathNameToTopMenu[pathSlug]) || active;
+    }
+
+    if (href) {
+      return active || (href === "/" ? href === location.pathname : bottomMenuCheck);
+    }
+  };
+
+  const isActive = getIsActive();
 
   if (href) {
     return (
@@ -59,6 +74,7 @@ const AppNavi = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.2 }}
+      className="pt-2"
     >
       <NavigationMenu>
         <NavigationMenuList>
@@ -97,11 +113,11 @@ const AppNavi = () => {
 const DataNavi = ({ setNaviTab }) => {
   return (
     <motion.div
-      onMouseLeave={() => setNaviTab("home")}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.2 }}
+      className="pt-2"
     >
       <NavigationMenu>
         <NavigationMenuList>
@@ -132,11 +148,11 @@ const DataNavi = ({ setNaviTab }) => {
 const LearnNavi = ({ setNaviTab }) => {
   return (
     <motion.div
-      onMouseLeave={() => setNaviTab("home")}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.2 }}
+      className="pt-2"
     >
       <NavigationMenu>
         <NavigationMenuList>
@@ -168,34 +184,57 @@ const LearnNavi = ({ setNaviTab }) => {
 
 export default function Navi() {
   const [naviTab, setNaviTab] = useState("home");
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = useCallback((tab: string) => {
+    // Clear any existing timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    // Set timeout for 100ms before activating sub-nav
+    hoverTimeoutRef.current = setTimeout(() => {
+      setNaviTab(tab);
+    }, 100);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    // Cancel the timeout if user moves away before 100ms
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-5 z-[2]">
+    <div className="flex flex-col items-center justify-center gap-2 z-[2]">
       <NavigationMenu>
         <NavigationMenuList>
-          <NavigationMenuItem onMouseEnter={() => setNaviTab("home")}>
-            <Link active={naviTab === "home"} href={navLinks.overview} topMenu>
+          <NavigationMenuItem onMouseEnter={() => handleMouseEnter("home")} onMouseLeave={handleMouseLeave}>
+            <Link href={navLinks.overview} topMenu topMenuSlug="home">
               Home
             </Link>
           </NavigationMenuItem>
-          <NavigationMenuItem onMouseEnter={() => setNaviTab("learn")}>
-            <Link active={naviTab === "learn"} topMenu>
+          <NavigationMenuItem onMouseEnter={() => handleMouseEnter("learn")} onMouseLeave={handleMouseLeave}>
+            <Link active={naviTab === "learn"} topMenu topMenuSlug="learn">
               Learn
             </Link>
           </NavigationMenuItem>
-          <NavigationMenuItem onMouseEnter={() => setNaviTab("data")}>
-            <Link active={naviTab === "data"} href={navLinks.explorer} topMenu>
+          <NavigationMenuItem onMouseEnter={() => handleMouseEnter("data")} onMouseLeave={handleMouseLeave}>
+            <Link active={naviTab === "data"} href={navLinks.explorer} topMenu topMenuSlug="data">
               Data
             </Link>
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
 
-      <AnimatePresence mode="wait">
-        {naviTab === "home" && <AppNavi />}
-        {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
-        {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
-      </AnimatePresence>
+      <div className="h-[3.75rem]">
+        <AnimatePresence mode="wait">
+          {naviTab === "home" && <AppNavi />}
+          {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
+          {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
