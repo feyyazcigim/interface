@@ -1,3 +1,8 @@
+import wpBasin from "@/assets/landing/wp_basin.jpg";
+import wpBean from "@/assets/landing/wp_bean.jpg";
+import wpMultiflow from "@/assets/landing/wp_multiflow.jpg";
+import wpPinto from "@/assets/landing/wp_pinto.jpg";
+import wpPipeline from "@/assets/landing/wp_pipeline.jpg";
 import { AnimatePresence, Variants, motion } from "framer-motion";
 import { useState } from "react";
 
@@ -65,11 +70,11 @@ const POSITION_CONFIGS: Variants = {
 };
 
 const wallpaperImages: CarouselItem[] = [
-  { src: "/wp_multiflow.png", alt: "Multi Flow Pump Whitepaper", href: "https://basin.exchange/multi-flow-pump.pdf" },
-  { src: "/wp_basin.png", alt: "Basin Whitepaper", href: "https://basin.exchange/basin.pdf" },
-  { src: "/wp_bean.png", alt: "Beanstalk Whitepaper", href: "https://bean.money/beanstalk.pdf" },
-  { src: "/wp_pinto.png", alt: "Pinto Whitepaper", href: "https://pinto.money/pinto.pdf" },
-  { src: "/wp_pipeline.png", alt: "Pipeline Whitepaper", href: "https://evmpipeline.org/pipeline.pdf" },
+  { src: wpMultiflow, alt: "Multi Flow Pump Whitepaper", href: "https://basin.exchange/multi-flow-pump.pdf" },
+  { src: wpBasin, alt: "Basin Whitepaper", href: "https://basin.exchange/basin.pdf" },
+  { src: wpBean, alt: "Beanstalk Whitepaper", href: "https://bean.money/beanstalk.pdf" },
+  { src: wpPinto, alt: "Pinto Whitepaper", href: "https://pinto.money/pinto.pdf" },
+  { src: wpPipeline, alt: "Pipeline Whitepaper", href: "https://evmpipeline.org/pipeline.pdf" },
 ];
 
 export default function ImageCarousel() {
