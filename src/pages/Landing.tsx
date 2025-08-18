@@ -97,7 +97,7 @@ export default function Landing() {
           <SecondaryCTA />
           <SecondaryCTAProperties />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
+        <section className="flex flex-col overflow-clip place-content-center min-h-[400vh] sm:min-h-screen snap-center">
           <ProjectStats />
         </section>
         <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
