@@ -119,7 +119,7 @@ export default function Landing() {
           <Button
             rounded="full"
             size={isMobile ? "xl" : "xxl"}
-            className={`${isMobile ? "scale-100" : "scale-150"} hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden`}
+            className={`${isMobile ? "scale-100" : "scale-150"} hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
             shimmer
             glow
           >

@@ -717,8 +717,8 @@ export default function LandingChart() {
                 <Link to={navLinks.overview}>
                   <Button
                     rounded="full"
-                    size={isMobile ? "sm" : "default"}
-                    className="hover:bg-pinto-green-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden"
+                    size="xxl"
+                    className="hover:bg-pinto-green-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]"
                     id={"come-seed-the-trustless-economy"}
                     shimmer
                     glow
@@ -728,16 +728,6 @@ export default function LandingChart() {
                     <div className="relative z-10" style={{ isolation: "isolate" }}>
                       <PintoRightArrow width={"1rem"} height={"1rem"} />
                     </div>
-                  </Button>
-                </Link>
-                <Link to={navLinks.docs} target="_blank" rel="noopener noreferrer">
-                  <Button
-                    variant="outline"
-                    rounded="full"
-                    size={isMobile ? "sm" : "default"}
-                    className="shadow-none text-pinto-gray-4"
-                  >
-                    Read the Docs
                   </Button>
                 </Link>
               </motion.div>

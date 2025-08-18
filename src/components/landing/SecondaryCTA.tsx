@@ -21,27 +21,8 @@ export default function SecondaryCTA() {
         <span className="text-xl sm:text-lg sm:leading-[1.4] font-thin text-pinto-gray-4 text-center">
           Printed directly to the people. Founded on decentralized credit.
         </span>
-        <div className="flex flex-row gap-4 place-self-center">
-          <Link to={"/overview"}>
-            <Button rounded="full" size={isMobile ? "sm" : "default"} className="flex flex-row gap-2 items-center">
-              <span>About Values</span>
-              <PintoRightArrow width={"1rem"} height={"1rem"} />
-            </Button>
-          </Link>
-          <Link to={"/overview"} target="_blank" rel="noopener noreferrer">
-            <Button
-              variant="outline"
-              rounded="full"
-              size={isMobile ? "sm" : "default"}
-              className="shadow-none text-pinto-gray-4"
-            >
-              About Properties
-            </Button>
-          </Link>
-        </div>
       </div>
       <Separator className="w-[20%] mt-10 mb-6" />
-      <Separator className="w-[10%]" />
     </div>
   );
 }
