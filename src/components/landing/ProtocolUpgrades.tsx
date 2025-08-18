@@ -1032,13 +1032,13 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
   return (
     <div
       ref={scrollContainerRef}
-      className={`relative w-screen overflow-x-auto p-6 scrollbar-none ${isVisible ? "opacity-100" : "opacity-0"} transition-all transform-gpu`}
+      className={`relative w-screen overflow-x-auto p-0 sm:p-6 scrollbar-none ${isVisible ? "opacity-100" : "opacity-0"} transition-all transform-gpu`}
       style={{
         marginLeft: `calc(-50vw + 50%)`,
         marginRight: `calc(-50vw + 50%)`,
       }}
     >
-      <div className="flex flex-row min-w-max items-center gap-4">
+      <div className="flex flex-row min-w-max items-center gap-3 sm:gap-4">
         {sortedAudits.map((audit, index) => {
           const { before, after } = calculateConnectingLines(index);
           const hasDescription =
@@ -1051,24 +1051,27 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
               {/* Before lines for first entry */}
               {before > 0 &&
                 Array.from({ length: before }).map((_, i) => (
-                  <div key={`before-${index}-${i}`} className="w-[1px] h-24 bg-pinto-gray-2 mt-4 mb-[0.375rem]" />
+                  <div
+                    key={`before-${index}-${i}`}
+                    className="w-[1px] h-[5rem] sm:h-24 bg-pinto-gray-2 mt-4 mb-[0.375rem]"
+                  />
                 ))}
 
               <div key={audit.name} className="relative flex flex-col items-center flex-shrink-0">
                 {audit.isYearMarker ? (
                   <>
                     {/* Year marker */}
-                    <span className="text-xl font-light text-black text-center items-center justify-center absolute bottom-0 w-20">
+                    <span className="text-base sm:text-xl font-light text-black text-center items-center justify-center absolute bottom-0 w-20">
                       {audit.name}
                     </span>
                     {/* Year connecting line - thicker */}
-                    <div className="w-[1px] h-36 bg-black mt-10 mb-8" />
+                    <div className="w-[1px] h-28 sm:h-36 bg-black mt-10 mb-8" />
                   </>
                 ) : (
                   <>
                     {audit.isCombined ? (
                       <div className="flex flex-col gap-0.5 absolute top-0 group text-center items-center justify-center py-2 px-4">
-                        <span className="text-xl font-light text-pinto-green-4 absolute top-0 group-hover:-top-6 whitespace-nowrap transition-all transform-gpu">
+                        <span className="text-base sm:text-xl font-light text-pinto-green-4 absolute top-0 group-hover:-top-6 whitespace-nowrap transition-all transform-gpu">
                           {audit.name}
                         </span>
                         <div className="flex flex-row gap-2 whitespace-nowrap">
@@ -1082,7 +1085,9 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
                                 rel="noopener noreferrer"
                                 className="flex flex-row gap-0.5 text-pinto-green-4 hover:underline decoration-1 opacity-0 group-hover:opacity-100 transition-all transform-gpu text-center items-center justify-center"
                               >
-                                <span className="text-xl font-light text-pinto-green-4">{description}</span>
+                                <span className="text-base sm:text-xl font-light text-pinto-green-4">
+                                  {description}
+                                </span>
                                 <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
                               </Link>
                             );
@@ -1098,7 +1103,7 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
                           rel="noopener noreferrer"
                           className={`flex flex-row gap-0.5 text-pinto-green-4 peer hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 transition-all transform-gpu`}
                         >
-                          <span className="text-xl font-light text-pinto-green-4">{audit.name}</span>
+                          <span className="text-base sm:text-xl font-light text-pinto-green-4">{audit.name}</span>
                           <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
                         </Link>
                         {hasDescription && (
@@ -1110,9 +1115,9 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
                     )}
 
                     {/* Connecting line */}
-                    <div className="w-[1px] h-[7.5rem] bg-pinto-green-4 mt-10 mb-6" />
+                    <div className="w-[1px] h-[5rem] sm:h-[7.5rem] bg-pinto-green-4 mt-8 sm:mt-10 mb-6" />
                     {/* Date */}
-                    <span className="text-base font-light text-pinto-gray-4 absolute bottom-0 w-20 text-center">
+                    <span className="text-xs sm:text-base font-light text-pinto-gray-4 absolute bottom-0 w-20 text-center">
                       {formatDate(audit.date)}
                     </span>
                   </>
@@ -1122,7 +1127,10 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
               {/* After lines */}
               {after > 0 &&
                 Array.from({ length: after }).map((_, i) => (
-                  <div key={`after-${index}-${i}`} className="w-[1px] h-24 bg-pinto-gray-2 mt-4 mb-[0.375rem]" />
+                  <div
+                    key={`after-${index}-${i}`}
+                    className="w-[1px] h-20 sm:h-24 bg-pinto-gray-2 mt-4 mb-[0.375rem]"
+                  />
                 ))}
             </>
           );

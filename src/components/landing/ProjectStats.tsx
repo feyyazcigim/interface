@@ -1,3 +1,4 @@
+import useIsMobile from "@/hooks/display/useIsMobile";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/Button";
@@ -94,34 +95,48 @@ function StatContent({ activeButton }: StatContentProps) {
 }
 
 export default function ProjectStats() {
+  const isMobile = useIsMobile();
   const [activeButton, setActiveButton] = useState<ActiveButton>(null);
 
   const getElementOpacity = (isActive: boolean) => {
-    if (activeButton === null) return "opacity-100";
+    if (activeButton === null || isMobile) return "opacity-100";
     return isActive ? "opacity-100" : "opacity-50";
   };
 
-  return (
-    <motion.div
-      className="flex flex-col items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-    >
-      <span className="flex flex-row gap-6 items-center">
+  useEffect(() => {
+    if (isMobile) {
+      setActiveButton("contributors");
+    }
+  }, [isMobile]);
+
+  function Upgrades() {
+    return (
+      <span className="flex flex-row gap-3 sm:gap-6 items-center">
         <span
-          className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
+          className={`text-[3rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
         >
           89
         </span>
         <Button
           variant="outline-rounded"
-          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
+          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all hover:animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(25,25,25,0.6)] duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
           onClick={() => setActiveButton(activeButton === "upgrades" ? null : "upgrades")}
+          glow
+          glowOnHover
+          glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
         >
           🔨 protocol upgrades
         </Button>
+      </span>
+    );
+  }
+
+  function Contributors() {
+    return (
+      <span className="flex flex-row gap-3 sm:gap-6 items-center">
         <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>from</span>
         <span
-          className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
+          className={`text-[3rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
         >
           51
         </span>
@@ -134,7 +149,7 @@ export default function ProjectStats() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="absolute left-24 -top-20"
+                className="absolute left-10 sm:left-24 -top-20"
               >
                 <ContributorProfiles />
               </motion.div>
@@ -142,42 +157,103 @@ export default function ProjectStats() {
           </AnimatePresence>
           <Button
             variant="outline-rounded"
-            className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
+            className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
             onClick={() => setActiveButton(activeButton === "contributors" ? null : "contributors")}
+            glow
+            glowOnHover
+            glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
           >
             🧑‍🌾 contributors
           </Button>
         </span>
-        <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>over</span>
+        <span className={`transition-all duration-300 ${getElementOpacity(false)} max-sm:hidden`}>over</span>
       </span>
-      <span className="flex flex-row gap-6 items-center">
+    );
+  }
+
+  function Years() {
+    return (
+      <span className="flex flex-row gap-3 sm:gap-6 items-center">
+        <span className={`transition-all duration-300 ${getElementOpacity(false)} sm:hidden`}>over</span>
         <span
-          className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
+          className={`text-[3rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
         >
           5+
         </span>
         <Button
           variant="outline-rounded"
-          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
+          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
           onClick={() => setActiveButton(activeButton === "years" ? null : "years")}
+          glow
+          glowOnHover
+          glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
         >
           📝 years
         </Button>
+      </span>
+    );
+  }
+
+  function Volume() {
+    return (
+      <span className="flex flex-col sm:flex-row gap-0 sm:gap-6 items-center">
         <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>to facilitate</span>
         <span
-          className={`text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
+          className={`text-[3rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
         >
           $1b+
         </span>
         <Button
           variant="outline-rounded"
-          className={`text-pinto-gray-5 text-4xl font-thin h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
+          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
           onClick={() => setActiveButton(activeButton === "volume" ? null : "volume")}
+          glow
+          glowOnHover
+          glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
         >
           📈 in cumulative volume
         </Button>
       </span>
-      <StatContent activeButton={activeButton} />
-    </motion.div>
+    );
+  }
+
+  return (
+    <div>
+      <motion.div
+        className="flex flex-col max-sm:hidden items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      >
+        <span className="flex flex-row gap-6 items-center">
+          <Upgrades />
+          <Contributors />
+        </span>
+        <span className="flex flex-row gap-6 items-center">
+          <Years />
+          <Volume />
+        </span>
+        <StatContent activeButton={activeButton} />
+      </motion.div>
+      <motion.div
+        className="flex flex-col w-screen sm:hidden mx-auto my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      >
+        <div className="flex flex-col gap-4 place-content-center items-center min-h-screen">
+          <Upgrades />
+          <StatContent activeButton={"upgrades"} />
+        </div>
+        <div className="flex flex-col gap-4 place-content-center items-center min-h-screen">
+          <Contributors />
+          <StatContent activeButton={"contributors"} />
+        </div>
+        <div className="flex flex-col gap-8 place-content-center items-center min-h-screen">
+          <Years />
+          <StatContent activeButton={"years"} />
+        </div>
+        <div className="flex flex-col gap-4 place-content-center items-center min-h-screen">
+          <Volume />
+          <StatContent activeButton={"volume"} />
+        </div>
+      </motion.div>
+    </div>
   );
 }

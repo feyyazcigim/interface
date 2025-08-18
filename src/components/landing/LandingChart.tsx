@@ -194,17 +194,17 @@ const personIcons = [
 ];
 
 // Convert price to Y coordinate (inverted because SVG Y increases downward)
-function priceToY(price: number) {
+function priceToY(price: number, chartHeight = ANIMATION_CONFIG.height) {
   const minPrice = 0.99;
   const maxPrice = 1.01;
-  const minY = height - 0; // Bottom margin
+  const minY = chartHeight - 0; // Bottom margin
   const maxY = 0; // Top margin
   return minY - ((price - minPrice) / (maxPrice - minPrice)) * (minY - maxY);
 }
 
 // Convert price to Y coordinate for labels (aligned to grid lines)
-function priceLabelToY(price: number) {
-  const middle = height / 2;
+function priceLabelToY(price: number, chartHeight = ANIMATION_CONFIG.height) {
+  const middle = chartHeight / 2;
   const gridSpacing = ANIMATION_CONFIG.gridSpacing;
   const levels = ANIMATION_CONFIG.priceLabels.levels;
   const fontSize = ANIMATION_CONFIG.priceLabels.fontSize;
@@ -227,7 +227,7 @@ function priceLabelToY(price: number) {
 }
 
 // Generate complete line path with multiple repetitions (Bezier smoothing)
-function generateCompletePath(pointSpacing: number) {
+function generateCompletePath(pointSpacing: number, chartHeight = ANIMATION_CONFIG.height) {
   const points: { x: number; y: number; price: number }[] = [];
   const beziers: {
     p0: { x: number; y: number };
@@ -246,7 +246,7 @@ function generateCompletePath(pointSpacing: number) {
 
   let x = 0;
   for (let i = 0; i < fullPriceData.length; i++) {
-    const y = priceToY(fullPriceData[i].value);
+    const y = priceToY(fullPriceData[i].value, chartHeight);
     points.push({ x, y, price: fullPriceData[i].value });
     if (fullPriceData[i].txType) {
       const txType = fullPriceData[i].txType as string;
@@ -328,11 +328,11 @@ function getSegmentWidth(data: PricePoint[], pointSpacing: number) {
 }
 
 // Generate price label data
-function generatePriceLabelData() {
+function generatePriceLabelData(chartHeight = ANIMATION_CONFIG.height) {
   return ANIMATION_CONFIG.priceLabels.levels.map((price) => {
     return {
       price,
-      y: priceLabelToY(price),
+      y: priceLabelToY(price, chartHeight),
       label: price.toFixed(1),
     };
   });
@@ -340,19 +340,20 @@ function generatePriceLabelData() {
 
 export default function LandingChart() {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
+  const [dynamicHeight, setDynamicHeight] = useState(ANIMATION_CONFIG.height); // Default to config height
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
   // Calculate durations and positions
   const durations = useMemo(() => calculateDurations(), []);
-  const positions = useMemo(() => calculatePositions(height), []);
+  const positions = useMemo(() => calculatePositions(dynamicHeight), [dynamicHeight]);
 
   // Generate price label data
   const priceLabelData = useMemo(() => {
-    const data = generatePriceLabelData();
+    const data = generatePriceLabelData(dynamicHeight);
     console.log("Price label data:", data);
     return data;
-  }, []);
+  }, [dynamicHeight]);
 
   const scrollOffset = useMotionValue(0);
   const measurementLineOffset = useMotionValue(ANIMATION_CONFIG.measurementLine.initial * 100); // Separate offset for measurement line movement (percentage)
@@ -368,30 +369,52 @@ export default function LandingChart() {
   const measurementLineX = useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth);
   const horizontalLineClipPathStyle = useTransform(horizontalLineClipPath, (clipX) => `inset(0 ${clipX}px 0 0)`);
 
-  // Update viewport width on mount and resize with ResizeObserver for better performance
+  // Update viewport width and dynamic height on mount and resize
   useEffect(() => {
-    const updateWidth = (newViewportWidth: number) => {
-      setViewportWidth(newViewportWidth);
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const newViewportWidth = containerRef.current.clientWidth;
+        setViewportWidth(newViewportWidth);
+      }
+
+      // Calculate dynamic height
+      const ctaHeaderElement = document.getElementById("cta-header");
+      if (ctaHeaderElement) {
+        const ctaHeaderHeight = ctaHeaderElement.offsetHeight;
+        const screenHeight = window.innerHeight;
+        const availableHeight = screenHeight - ctaHeaderHeight;
+
+        // Apply maximum constraint of the current default height (577px)
+        const newHeight = Math.min(availableHeight, ANIMATION_CONFIG.height);
+
+        // Only update if the new height is significantly different and positive
+        if (newHeight > 200 && Math.abs(newHeight - dynamicHeight) > 10) {
+          setDynamicHeight(newHeight);
+        }
+      }
     };
 
     // Use ResizeObserver for more efficient resize detection
-    const resizeObserver = new ResizeObserver((entries) => {
-      const { width } = entries[0].contentRect;
-      updateWidth(width);
+    const resizeObserver = new ResizeObserver(() => {
+      updateDimensions();
     });
 
     if (containerRef.current) {
       // Initial measurement
-      updateWidth(containerRef.current.clientWidth);
+      updateDimensions();
 
       // Start observing
       resizeObserver.observe(containerRef.current);
     }
 
+    // Also listen to window resize for screen height changes
+    window.addEventListener("resize", updateDimensions);
+
     return () => {
       resizeObserver.disconnect();
+      window.removeEventListener("resize", updateDimensions);
     };
-  }, []);
+  }, [dynamicHeight]);
 
   // Assign farmers to price data and generate path
   const { path, beziers, transactionMarkers } = useMemo(() => {
@@ -402,8 +425,8 @@ export default function LandingChart() {
         fullPriceData[i].farmer = personIcons[randomIndex];
       }
     }
-    return generateCompletePath(pointSpacing);
-  }, []);
+    return generateCompletePath(pointSpacing, dynamicHeight);
+  }, [dynamicHeight]);
 
   // Dynamic measurement line position using percentage
   const measurementX = useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth);
@@ -616,9 +639,9 @@ export default function LandingChart() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full sm:mt-10  sm:gap-10">
+    <div className="flex flex-col items-center justify-center h-full w-full">
       {/* Stage Messages */}
-      <div className="min-h-[200px] flex flex-col items-center justify-center">
+      <div className="min-h-[300px] flex flex-col items-center justify-center pt-24 sm:pt-10 pb-10" id={"cta-header"}>
         <AnimatePresence mode="wait">
           {currentTriggerPhase === "unstable" && (
             <motion.span
@@ -695,8 +718,10 @@ export default function LandingChart() {
                   <Button
                     rounded="full"
                     size="xxl"
-                    className="hover:bg-pinto-green-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(36,102,69,0.6)] transition-shadow !font-[340] !tracking-[-0.025rem]"
+                    className="hover:bg-pinto-green-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]"
                     id={"come-seed-the-trustless-economy"}
+                    shimmer
+                    glow
                   >
                     <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
                     <span className="relative z-10">Come Seed the Trustless Economy</span>
@@ -711,8 +736,13 @@ export default function LandingChart() {
         </AnimatePresence>
       </div>
       {/* Chart Component */}
-      <div ref={containerRef} className="w-full relative">
-        <svg width="100%" height={height} viewBox={`0 0 ${viewportWidth} ${height}`} style={{ overflow: "visible" }}>
+      <div ref={containerRef} className="w-full relative" id={"cta-chart"}>
+        <svg
+          width="100%"
+          height={dynamicHeight}
+          viewBox={`0 0 ${viewportWidth} ${dynamicHeight}`}
+          style={{ overflow: "visible" }}
+        >
           <defs>
             <linearGradient id="fadeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="white" stopOpacity="0" />
@@ -731,7 +761,7 @@ export default function LandingChart() {
               <stop offset="100%" stopColor="white" stopOpacity="0.1" />
             </linearGradient>
             <mask id="priceLabelsOpacityMask" maskUnits="userSpaceOnUse">
-              <rect x="0" y="0" width="100%" height={height} fill="url(#priceLabelsGradient)" />
+              <rect x="0" y="0" width="100%" height={dynamicHeight} fill="url(#priceLabelsGradient)" />
             </mask>
             <pattern
               id="grid"
@@ -748,7 +778,7 @@ export default function LandingChart() {
             </pattern>
             {/* Clip path to hide line outside viewport */}
             <clipPath id="viewport">
-              <motion.rect x="0" y="0" width={clipPathRectWidth} height={height} />
+              <motion.rect x="0" y="0" width={clipPathRectWidth} height={dynamicHeight} />
             </clipPath>
           </defs>
           <motion.rect
@@ -766,7 +796,7 @@ export default function LandingChart() {
           />
           {/* Measurement line */}
           <motion.path
-            d={`M 0 0 L 0 ${height}`}
+            d={`M 0 0 L 0 ${dynamicHeight}`}
             stroke="#387F5C"
             strokeWidth="2"
             strokeDasharray="3,3"
@@ -785,7 +815,7 @@ export default function LandingChart() {
           />
           {/* Horizontal reference line at $1.00 - Two-stage reveal */}
           <motion.path
-            d={`M 0 ${height * ANIMATION_CONFIG.horizontalReference.position} L ${viewportWidth} ${height * ANIMATION_CONFIG.horizontalReference.position}`}
+            d={`M 0 ${dynamicHeight * ANIMATION_CONFIG.horizontalReference.position} L ${viewportWidth} ${dynamicHeight * ANIMATION_CONFIG.horizontalReference.position}`}
             stroke={ANIMATION_CONFIG.horizontalReference.color}
             strokeWidth={ANIMATION_CONFIG.horizontalReference.strokeWidth}
             strokeDasharray={ANIMATION_CONFIG.horizontalReference.dashArray}
