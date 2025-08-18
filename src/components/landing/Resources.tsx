@@ -60,18 +60,20 @@ const resourceCards = [
 ];
 
 const cardStyles = clsx(
-  "border border-pinto-gray-2 rounded-[1.25rem] w-[32rem] flex flex-col gap-8 overflow-clip bg-white",
+  "border border-pinto-gray-2 rounded-[1.25rem] sm:w-[32rem] flex flex-col gap-2 sm:gap-8 overflow-clip bg-white",
 );
-const buttonStyles = clsx("w-full flex p-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal");
+const buttonStyles = clsx(
+  "w-full flex p-2 pr-3 sm:p-4 sm:pr-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal",
+);
 
 export default function Resources() {
   return (
-    <div className="flex flex-col items-center self-stretch gap-12 mx-auto mb-28">
-      <h2 className="text-4xl leading-same-h2 font-light text-black">Resources</h2>
-      <div className="flex flex-row gap-8">
+    <div className="flex flex-col items-center self-stretch gap-8 sm:gap-12 sm:mx-auto max-sm:w-screen mb-24 sm:mb-28">
+      <h2 className="text-2xl sm:text-4xl leading-same-h2 font-light text-black">Resources</h2>
+      <div className="flex flex-col max-sm:w-screen sm:flex-row gap-6 sm:gap-8 max-sm:px-4">
         {resourceCards.map((card, index) => (
           <div key={index} className={cardStyles}>
-            <div className="overflow-hidden relative h-[24rem] flex justify-center items-center">
+            <div className="overflow-hidden relative h-[16rem] sm:h-[24rem] flex justify-center items-center">
               <div
                 className={`flex transition-transform duration-1000 ease-in-out transform-gpu`}
                 style={{
@@ -87,16 +89,24 @@ export default function Resources() {
                 <GameOfLife startingPattern={card.pattern} />
               </div>
             </div>
-            <div className="flex flex-col gap-8 mx-6 mb-6">
+            <div className="flex flex-col gap-4 sm:gap-8 mx-4 mb-4 sm:mx-6 sm:mb-6">
               <div className="flex flex-col gap-4">
-                <span className="text-[2rem] font-light text-black">{card.title}</span>
-                <span className="text-[1.5rem] font-light text-pinto-gray-4 h-24">{card.description}</span>
+                <span className="text-[1.5rem] sm:text-[2rem] font-light text-black">{card.title}</span>
+                <span className="text-[1rem] sm:text-[1.5rem] font-light text-pinto-gray-4 h-20 sm:h-24">
+                  {card.description}
+                </span>
               </div>
-              <div className={`flex flex-row gap-4 ${card.buttons.length === 1 ? "" : ""}`}>
+              <div className={`flex flex-col sm:flex-row gap-4 ${card.buttons.length === 1 ? "" : ""}`}>
                 {card.buttons.map((button, buttonIndex) => (
                   <Link key={buttonIndex} to={button.href} target="_blank" rel="noopener noreferrer" className="flex-1">
                     <Button variant="outline-white" className={buttonStyles}>
-                      {button.icon && <img src={button.icon} className="w-8 h-8 min-w-8 min-h-8" alt={button.label} />}
+                      {button.icon && (
+                        <img
+                          src={button.icon}
+                          className="w-6 h-6 min-w-6 min-h-6 sm:w-8 sm:h-8 sm:min-w-8 sm:min-h-8"
+                          alt={button.label}
+                        />
+                      )}
                       <span className="w-full text-start">{button.label}</span>
                       <span>→</span>
                     </Button>
