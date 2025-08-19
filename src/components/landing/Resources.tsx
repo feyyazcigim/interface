@@ -60,7 +60,8 @@ const resourceCards = [
 ];
 
 const cardStyles = clsx(
-  "border border-pinto-gray-2 rounded-[1.25rem] sm:w-full sm:max-w-[32rem] flex flex-col gap-2 sm:gap-8 overflow-clip bg-white",
+  "border border-pinto-gray-2 rounded-[1.25rem] flex flex-col gap-2 sm:gap-8 overflow-clip bg-white",
+  "w-[95%] flex-shrink-0 snap-center sm:w-full sm:max-w-[32rem] sm:flex-shrink sm:snap-align-none",
 );
 const buttonStyles = clsx(
   "w-full flex p-2 pr-3 sm:p-4 sm:pr-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal",
@@ -68,9 +69,9 @@ const buttonStyles = clsx(
 
 export default function Resources() {
   return (
-    <div className="flex flex-col items-center self-stretch gap-8 sm:gap-12 max-sm:w-screen mb-24 sm:mb-28">
+    <div className="flex flex-col items-center self-stretch gap-8 sm:gap-12 max-sm:mt-16 mb-24 sm:mb-28">
       <h2 className="text-2xl sm:text-4xl leading-same-h2 font-light text-black">Resources</h2>
-      <div className="flex flex-col w-full justify-center max-sm:w-screen sm:flex-row gap-6 lg:gap-8 max-2xl:px-4">
+      <div className="flex flex-row w-full overflow-x-auto scrollbar-none snap-x snap-mandatory sm:flex-row sm:justify-center sm:overflow-x-visible sm:snap-none gap-2 lg:gap-8 max-2xl:px-4 sm:max-2xl:px-4">
         {resourceCards.map((card, index) => (
           <div key={index} className={cardStyles}>
             <div className="overflow-hidden relative h-[16rem] sm:h-[24rem] flex justify-center items-center">

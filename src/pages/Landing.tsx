@@ -106,7 +106,7 @@ export default function Landing() {
         <AuditsList />
         */}
         </section>
-        <section className="flex flex-col overflow-clip place-content-center min-h-fit sm:min-h-screen snap-center">
+        <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
           <Resources />
         </section>
       </div>
