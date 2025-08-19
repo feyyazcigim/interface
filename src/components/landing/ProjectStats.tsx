@@ -243,13 +243,15 @@ export default function ProjectStats() {
           <Upgrades />
           <StatContent activeButton={"upgrades"} />
         </div>
-        <div className="flex flex-col gap-4 mt-24 place-content-center items-center min-h-fit">
+        <div className="flex flex-col gap-4 mt-28 place-content-center items-center min-h-fit">
           <Contributors />
           <StatContent activeButton={"contributors"} />
         </div>
-        <div className="flex flex-col gap-8 place-content-center items-center min-h-fit">
+        <div className="flex flex-col place-content-center items-center min-h-fit">
           <Years />
-          <StatContent activeButton={"years"} />
+          <div className="-mt-12 -mb-12">
+            <StatContent activeButton={"years"} />
+          </div>
         </div>
         <div className="flex flex-col gap-4 mb-24 place-content-center items-center min-h-fit">
           <Volume />
