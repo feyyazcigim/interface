@@ -38,6 +38,13 @@ export const contributors = [
     description:
       "We want sustainable growth and functionality over the long term. We want a new money. Not in the hands of the government, but in the hands of those using the money, and only by their choice.",
   },
+  {
+    id: 6,
+    name: "burr",
+    avatar: "/burr.jpg",
+    description:
+      "This isn’t just about rebuilding. It’s about fulfilling the long-term vision: creating Leviathan-free, low-volatility money that can make the promise of Bitcoin work for the world. I look forward to seeing it through.",
+  },
 ];
 
 export type Contributor = (typeof contributors)[0];
