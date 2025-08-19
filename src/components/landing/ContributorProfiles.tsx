@@ -61,7 +61,11 @@ export default function ContributorProfiles() {
   const [selectedContributor, setSelectedContributor] = useAtom(selectedContributorAtom);
 
   // Get random contributors on component mount
-  const displayedContributors = useMemo(() => getRandomContributors(5), []);
+  const displayedContributors = useMemo(() => {
+    const random = getRandomContributors(5);
+    setSelectedContributor(random[0]);
+    return random;
+  }, []);
 
   const handleContributorClick = (contributor: Contributor) => {
     setSelectedContributor(contributor);
