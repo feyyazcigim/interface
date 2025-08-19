@@ -125,7 +125,10 @@ export default function ProjectStats() {
           glowOnHover
           glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
         >
-          🔨 protocol upgrades
+          <span className="flex items-center gap-2">
+            <img src="/hammer.png" alt="hammer" className="w-6 h-6 sm:w-8 sm:h-8" />
+            protocol upgrades
+          </span>
         </Button>
       </span>
     );
@@ -163,7 +166,10 @@ export default function ProjectStats() {
             glowOnHover
             glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
           >
-            🧑‍🌾 contributors
+            <span className="flex items-center gap-2">
+              <img src="/farmer_1.png" alt="farmer" className="w-6 h-6 sm:w-8 sm:h-8" />
+              contributors
+            </span>
           </Button>
         </span>
         <span className={`transition-all duration-300 ${getElementOpacity(false)} max-sm:hidden`}>over</span>
@@ -188,7 +194,10 @@ export default function ProjectStats() {
           glowOnHover
           glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
         >
-          📝 years
+          <span className="flex items-center gap-2">
+            <img src="/memo.png" alt="memo" className="w-6 h-6 sm:w-8 sm:h-8" />
+            years
+          </span>
         </Button>
       </span>
     );
@@ -213,7 +222,10 @@ export default function ProjectStats() {
           glowOnHover
           glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
         >
-          📈 in cumulative volume
+          <span className="flex items-center gap-2">
+            <img src="/chart-increasing.png" alt="chart" className="w-6 h-6 sm:w-8 sm:h-8" />
+            in cumulative volume
+          </span>
         </Button>
       </span>
     );
