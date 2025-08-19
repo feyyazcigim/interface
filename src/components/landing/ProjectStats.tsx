@@ -197,7 +197,9 @@ export default function ProjectStats() {
   function Volume() {
     return (
       <span className="flex flex-col sm:flex-row gap-0 sm:gap-6 items-center">
-        <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>to facilitate</span>
+        <span className={`transition-all duration-300 whitespace-nowrap ${getElementOpacity(false)}`}>
+          to facilitate
+        </span>
         <span
           className={`text-[3rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
         >
@@ -220,7 +222,7 @@ export default function ProjectStats() {
   return (
     <div>
       <motion.div
-        className="flex flex-col max-sm:hidden items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
+        className="flex flex-col max-[850px]:scale-90 max-sm:hidden items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
         <span className="flex flex-row gap-6 items-center">
