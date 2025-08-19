@@ -63,11 +63,11 @@ export default function ContributorProfiles() {
   // W shape positions with random variations: left peak, left valley, center peak, right valley, right peak
   const wPositions = useMemo(
     () => [
-      { x: 0 + (Math.random() * 5 - 2.5), y: 80 + (Math.random() * 5 - 2.5) }, // left peak
-      { x: 40 + (Math.random() * 5 - 2.5), y: 10 + (Math.random() * 5 - 2.5) }, // left valley
-      { x: 80 + (Math.random() * 5 - 2.5), y: 80 + (Math.random() * 5 - 2.5) }, // center peak
-      { x: 120 + (Math.random() * 5 - 2.5), y: 10 + (Math.random() * 5 - 2.5) }, // right valley
-      { x: 160 + (Math.random() * 5 - 2.5), y: 80 + (Math.random() * 5 - 2.5) }, // right peak
+      { x: 0 + (Math.random() * 0.3125 - 0.15625), y: 5 + (Math.random() * 0.3125 - 0.15625) }, // left peak
+      { x: 2.5 + (Math.random() * 0.3125 - 0.15625), y: 0.625 + (Math.random() * 0.3125 - 0.15625) }, // left valley
+      { x: 5 + (Math.random() * 0.3125 - 0.15625), y: 5 + (Math.random() * 0.3125 - 0.15625) }, // center peak
+      { x: 7.5 + (Math.random() * 0.3125 - 0.15625), y: 0.625 + (Math.random() * 0.3125 - 0.15625) }, // right valley
+      { x: 10 + (Math.random() * 0.3125 - 0.15625), y: 5 + (Math.random() * 0.3125 - 0.15625) }, // right peak
     ],
     [],
   );
@@ -107,8 +107,8 @@ export default function ContributorProfiles() {
             }}
             className="absolute"
             style={{
-              left: `${wPositions[index].x}px`,
-              top: `${wPositions[index].y}px`,
+              left: `${wPositions[index].x}rem`,
+              top: `${wPositions[index].y}rem`,
             }}
             whileHover={{
               scale: 1.1,

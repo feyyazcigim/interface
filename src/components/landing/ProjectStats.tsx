@@ -234,22 +234,22 @@ export default function ProjectStats() {
         <StatContent activeButton={activeButton} />
       </motion.div>
       <motion.div
-        className="flex flex-col w-screen sm:hidden mx-auto my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
+        className="flex flex-col gap-16 w-screen sm:hidden mx-auto my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
-        <div className="flex flex-col gap-4 place-content-center items-center min-h-screen">
+        <div className="flex flex-col gap-4 mt-24 place-content-center items-center min-h-fit">
           <Upgrades />
           <StatContent activeButton={"upgrades"} />
         </div>
-        <div className="flex flex-col gap-4 place-content-center items-center min-h-screen">
+        <div className="flex flex-col gap-4 mt-24 place-content-center items-center min-h-fit">
           <Contributors />
           <StatContent activeButton={"contributors"} />
         </div>
-        <div className="flex flex-col gap-8 place-content-center items-center min-h-screen">
+        <div className="flex flex-col gap-8 place-content-center items-center min-h-fit">
           <Years />
           <StatContent activeButton={"years"} />
         </div>
-        <div className="flex flex-col gap-4 place-content-center items-center min-h-screen">
+        <div className="flex flex-col gap-4 mb-24 place-content-center items-center min-h-fit">
           <Volume />
           <StatContent activeButton={"volume"} />
         </div>
