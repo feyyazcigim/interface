@@ -641,7 +641,7 @@ export default function LandingChart() {
   return (
     <div className="flex flex-col items-center justify-center h-full w-full">
       {/* Stage Messages */}
-      <div className="min-h-[300px] flex flex-col items-center justify-center pt-24 sm:pt-10 pb-10" id={"cta-header"}>
+      <div className="min-h-[300px] flex flex-col items-center justify-center pt-16 sm:pt-10 pb-10" id={"cta-header"}>
         <AnimatePresence mode="wait">
           {currentTriggerPhase === "unstable" && (
             <motion.span
@@ -717,7 +717,7 @@ export default function LandingChart() {
                 <Link to={navLinks.overview}>
                   <Button
                     rounded="full"
-                    size="xxl"
+                    size={isMobile ? "xl" : "xxl"}
                     className="hover:bg-pinto-green-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]"
                     id={"come-seed-the-trustless-economy"}
                     shimmer
