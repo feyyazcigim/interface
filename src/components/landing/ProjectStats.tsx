@@ -118,8 +118,8 @@ export default function ProjectStats() {
           89
         </span>
         <Button
-          variant="outline-rounded"
-          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all hover:animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(25,25,25,0.6)] duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
+          variant={isMobile ? "ghost" : "outline-rounded"}
+          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] pointer-events-none sm:pointer-events-auto cursor-pointer transition-all hover:animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(25,25,25,0.6)] duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
           onClick={() => setActiveButton(activeButton === "upgrades" ? null : "upgrades")}
           glow
           glowOnHover
@@ -146,7 +146,7 @@ export default function ProjectStats() {
         {/* Contributors floating above the button */}
         <span className="relative">
           <AnimatePresence>
-            {activeButton === "contributors" && (
+            {(activeButton === "contributors" || isMobile) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -187,8 +187,8 @@ export default function ProjectStats() {
           5+
         </span>
         <Button
-          variant="outline-rounded"
-          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
+          variant={isMobile ? "ghost" : "outline-rounded"}
+          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] pointer-events-none sm:pointer-events-auto cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
           onClick={() => setActiveButton(activeButton === "years" ? null : "years")}
           glow
           glowOnHover
@@ -215,8 +215,8 @@ export default function ProjectStats() {
           $1b+
         </span>
         <Button
-          variant="outline-rounded"
-          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
+          variant={isMobile ? "ghost" : "outline-rounded"}
+          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] pointer-events-none sm:pointer-events-auto cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
           onClick={() => setActiveButton(activeButton === "volume" ? null : "volume")}
           glow
           glowOnHover
