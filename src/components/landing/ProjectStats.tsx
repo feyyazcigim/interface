@@ -248,10 +248,10 @@ export default function ProjectStats() {
         <StatContent activeButton={activeButton} />
       </motion.div>
       <motion.div
-        className="flex flex-col gap-16 w-screen sm:hidden mx-auto my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
+        className="flex flex-col justify-around gap-16 w-screen sm:hidden mx-auto my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
-        <div className="flex flex-col gap-4 mt-24 place-content-center items-center">
+        <div className="flex flex-col gap-4 mt-4 place-content-center items-center">
           <Upgrades />
           <StatContent activeButton={"upgrades"} />
         </div>
