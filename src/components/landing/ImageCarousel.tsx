@@ -27,8 +27,6 @@ const POSITION_CONFIGS: Variants = {
     scale: 0.6,
     opacity: 0,
     zIndex: 1,
-    rotateY: 45,
-    transformPerspective: 600,
     y: 50,
     maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
   },
@@ -36,8 +34,6 @@ const POSITION_CONFIGS: Variants = {
     scale: 0.8,
     opacity: 0.5,
     zIndex: 2,
-    rotateY: 25,
-    transformPerspective: 600,
     y: 50,
     maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
   },
@@ -45,8 +41,6 @@ const POSITION_CONFIGS: Variants = {
     scale: 1.25,
     opacity: 1,
     zIndex: 5,
-    rotateY: 0,
-    transformPerspective: 600,
     y: 100,
     maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 90%)",
   },
@@ -54,8 +48,6 @@ const POSITION_CONFIGS: Variants = {
     scale: 0.8,
     opacity: 0.5,
     zIndex: 2,
-    rotateY: -25,
-    transformPerspective: 600,
     y: 50,
     maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
   },
@@ -63,8 +55,6 @@ const POSITION_CONFIGS: Variants = {
     scale: 0.6,
     opacity: 0,
     zIndex: 1,
-    rotateY: -45,
-    transformPerspective: 600,
     y: 50,
     maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
   },
@@ -176,7 +166,7 @@ export default function ImageCarousel() {
 
   return (
     <div
-      className="flex flex-shrink-0 min-w-[1920px] sm:w-[1920px] justify-center overflow-x-clip"
+      className="flex gap-4 flex-shrink-0 min-w-[1920px] sm:w-[1920px] justify-center overflow-x-clip"
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
