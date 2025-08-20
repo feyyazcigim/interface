@@ -11,14 +11,44 @@ import SecondaryCTAValues from "@/components/landing/SecondaryCTAValues";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import { WheelEvent, useEffect, useState } from "react";
+import { WheelEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Landing() {
   const [isCtaVisible, setIsCtaVisible] = useState(false);
   const [isCtaPresent, setIsCtaPresent] = useState(false);
+  const [projectStatsSnapClass, setProjectStatsSnapClass] = useState("snap-start");
+
+  const lastScrollTop = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const isMobile = useIsMobile();
+
+  // Track scroll direction for ProjectStats snap behavior
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      const currentScrollTop = scrollContainer.scrollTop;
+      const scrollDirection = currentScrollTop > lastScrollTop.current ? "down" : "up";
+
+      // Update snap class based on scroll direction
+      if (scrollDirection === "down") {
+        setProjectStatsSnapClass("snap-start");
+      } else {
+        setProjectStatsSnapClass("snap-end");
+      }
+
+      lastScrollTop.current = currentScrollTop;
+    };
+
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   // Intersection observer to track CTA visibility
   useEffect(() => {
@@ -88,7 +118,10 @@ export default function Landing() {
         WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
       }}
     >
-      <div className="flex flex-col h-screen overflow-y-auto snap-y snap-mandatory scrollbar-none">
+      <div
+        ref={scrollContainerRef}
+        className="flex flex-col h-screen overflow-y-auto snap-y snap-mandatory scrollbar-none"
+      >
         <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
           <LandingChart />
         </section>
@@ -97,7 +130,9 @@ export default function Landing() {
           <SecondaryCTA />
           <SecondaryCTAProperties />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center min-h-fit sm:min-h-screen snap-start">
+        <section
+          className={`flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen ${projectStatsSnapClass}`}
+        >
           <ProjectStats />
         </section>
         <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">

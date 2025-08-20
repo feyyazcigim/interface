@@ -251,21 +251,21 @@ export default function ProjectStats() {
         className="flex flex-col gap-16 w-screen sm:hidden mx-auto my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
-        <div className="flex flex-col gap-4 mt-24 place-content-center items-center min-h-fit">
+        <div className="flex flex-col gap-4 mt-24 place-content-center items-center">
           <Upgrades />
           <StatContent activeButton={"upgrades"} />
         </div>
-        <div className="flex flex-col gap-4 mt-28 place-content-center items-center min-h-fit">
+        <div className="flex flex-col gap-4 mt-28 place-content-center items-center">
           <Contributors />
           <StatContent activeButton={"contributors"} />
         </div>
-        <div className="flex flex-col place-content-center items-center min-h-fit">
+        <div className="flex flex-col place-content-center items-center">
           <Years />
           <div className="-mt-12 -mb-12">
             <StatContent activeButton={"years"} />
           </div>
         </div>
-        <div className="flex flex-col gap-4 mb-24 place-content-center items-center min-h-fit">
+        <div className="flex flex-col gap-4 mb-24 place-content-center items-center">
           <Volume />
           <StatContent activeButton={"volume"} />
         </div>
