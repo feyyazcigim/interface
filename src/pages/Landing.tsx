@@ -16,12 +16,10 @@ import { WheelEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Landing() {
-  const [isCtaVisible, setIsCtaVisible] = useState(false);
-  const [isCtaPresent, setIsCtaPresent] = useState(false);
-
   const lastScrollTop = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const projectStatsSectionRef = useRef<HTMLElement>(null);
+  const bottomCtaRef = useRef<HTMLDivElement>(null);
 
   const isMobile = useIsMobile();
 
@@ -29,20 +27,29 @@ export default function Landing() {
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
     const projectStatsSection = projectStatsSectionRef.current;
-    if (!scrollContainer || !projectStatsSection) return;
+    const bottomCta = bottomCtaRef.current;
+    if (!scrollContainer || !projectStatsSection || !bottomCta) return;
 
     const handleScroll = () => {
       const currentScrollTop = scrollContainer.scrollTop;
       const scrollDirection = currentScrollTop > lastScrollTop.current ? "down" : "up";
 
       // Directly update the className without causing re-renders
-      const baseClasses = clsx("flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen");
-
+      const projectStatsSectionClasses = clsx(
+        "flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen",
+      );
       if (scrollDirection === "down") {
-        projectStatsSection.className = `${baseClasses} snap-start`;
+        projectStatsSection.className = `${projectStatsSectionClasses} snap-start`;
       } else {
-        projectStatsSection.className = `${baseClasses} snap-end`;
+        projectStatsSection.className = `${projectStatsSectionClasses} snap-end`;
       }
+
+      const bottomCtaClasses = clsx(
+        `fixed left-1/2 -translate-x-1/2 flex justify-center ${
+          currentScrollTop >= window.innerHeight / 2 ? "bottom-6 sm:bottom-12" : "-bottom-28"
+        } transition-all duration-500 ease-in-out`,
+      );
+      bottomCta.className = bottomCtaClasses;
 
       lastScrollTop.current = currentScrollTop;
     };
@@ -51,61 +58,6 @@ export default function Landing() {
 
     return () => {
       scrollContainer.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  // Intersection observer to track CTA visibility
-  useEffect(() => {
-    let intersectionObserver: IntersectionObserver | null = null;
-    let mutationObserver: MutationObserver | null = null;
-
-    const setupIntersectionObserver = (targetElement: Element) => {
-      intersectionObserver = new IntersectionObserver(
-        ([entry]) => {
-          setIsCtaVisible(entry.isIntersecting);
-        },
-        {
-          threshold: 0.1, // Trigger when 10% of the element is visible
-        },
-      );
-
-      intersectionObserver.observe(targetElement);
-    };
-
-    const checkForElement = () => {
-      const targetElement = document.getElementById("come-seed-the-trustless-economy");
-      if (targetElement) {
-        setIsCtaPresent(true);
-        setupIntersectionObserver(targetElement);
-        if (mutationObserver) {
-          mutationObserver.disconnect();
-          mutationObserver = null;
-        }
-        return true;
-      }
-      return false;
-    };
-
-    // Try to find element immediately
-    if (!checkForElement()) {
-      // If not found, watch for DOM changes
-      mutationObserver = new MutationObserver(() => {
-        checkForElement();
-      });
-
-      mutationObserver.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-    }
-
-    return () => {
-      if (intersectionObserver) {
-        intersectionObserver.disconnect();
-      }
-      if (mutationObserver) {
-        mutationObserver.disconnect();
-      }
     };
   }, []);
 
@@ -153,9 +105,8 @@ export default function Landing() {
       </div>
       <Link to={navLinks.overview} onWheelCapture={handleWheel}>
         <div
-          className={`fixed left-1/2 -translate-x-1/2 flex justify-center ${
-            isCtaVisible ? "-bottom-28" : isCtaPresent ? "bottom-6 sm:bottom-12" : "-bottom-28"
-          } transition-all duration-500 ease-in-out`}
+          ref={bottomCtaRef}
+          className={`fixed left-1/2 -translate-x-1/2 flex justify-center -bottom-28 transition-all duration-500 ease-in-out`}
         >
           <Button
             rounded="full"
