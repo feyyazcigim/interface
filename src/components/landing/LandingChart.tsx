@@ -361,6 +361,8 @@ export default function LandingChart() {
   const horizontalLineClipPath = useMotionValue(viewportWidth); // For horizontal line reveal animation (starts hidden from right)
   const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
   const priceLabelsOpacity = useMotionValue(0); // 0 = hidden, 1 = visible
+  const priceLineOpacity = useMotionValue(1); // 0 = hidden, 1 = visible
+  const horizontalLineOpacity = useMotionValue(1); // 0 = hidden, 1 = visible
   const floatersOpacity = useTransform(priceTrackingActive, (active) => (active >= 1 ? 1 : 0));
   const x = useTransform(scrollOffset, (value) => viewportWidth * ANIMATION_CONFIG.clipPath.initial - value);
 
@@ -508,6 +510,7 @@ export default function LandingChart() {
 
   // Refs to prevent timer interference
   const pintoTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const animationControlsRef = useRef<ReturnType<typeof animate> | null>(null);
 
   const lineStrokeColor = useMotionValue("#387F5C");
 
@@ -555,39 +558,40 @@ export default function LandingChart() {
     };
   }, []);
 
-  // Position-based animation system: start scrolling and track position for messages
-  useEffect(() => {
-    let controls: ReturnType<typeof animate> | null = null;
-
-    const startAnimation = async () => {
+  // Start animation function
+  const startAnimation = useCallback(
+    async (isRestart = false) => {
       // Calculate timing for measurement line animations
-      const measurementLineStartDelay =
-        durations.fadeInSequence.priceIndicator.start + durations.fadeInSequence.priceIndicator.duration + 0.5;
+      const measurementLineStartDelay = isRestart
+        ? 0
+        : durations.fadeInSequence.priceIndicator.start + durations.fadeInSequence.priceIndicator.duration + 0.5;
       const measurementLineDuration = 1.5;
 
       // Horizontal line Stage 1: Start when measurement line reveals, end halfway through measurement line reveal
       animate(horizontalLineClipPath, viewportWidth * 0.25, {
         duration: durations.fadeInSequence.measurementLine.duration / 2, // Half the measurement line reveal duration
         ease: "easeInOut",
-        delay: durations.fadeInSequence.measurementLine.start, // Start when measurement line reveals
+        delay: isRestart ? 0 : durations.fadeInSequence.measurementLine.start, // Start when measurement line reveals
       });
 
       // Phase 1: Move measurement line to 10% position
-      controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.minimum * 100, {
+      let controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.minimum * 100, {
         duration: measurementLineDuration,
         ease: "anticipate",
         delay: measurementLineStartDelay,
       });
+      animationControlsRef.current = controls;
 
       // Phase 2: Move measurement line back to final position and expand clip path
       const phase2Duration = 3;
       const phase2StartDelay = measurementLineStartDelay + measurementLineDuration - 0.5;
 
       // Horizontal line Stage 2: Start when measurement line begins moving back to left
+      const horizontalStage2Delay = isRestart ? measurementLineDuration - 0.5 : phase2StartDelay - 0.5;
       const _horizontalStage2 = animate(horizontalLineClipPath, 0, {
         duration: 1.5 * phase2Duration, // Same duration as measurement line return
         ease: "easeInOut",
-        delay: phase2StartDelay - 0.5, // Start when Phase 2 begins
+        delay: horizontalStage2Delay, // Start when Phase 2 begins
       });
 
       await controls;
@@ -601,6 +605,7 @@ export default function LandingChart() {
         duration: phase2Duration,
         ease: "easeIn",
       });
+      animationControlsRef.current = controls;
 
       // Activate price tracking at the start of Phase 2
       priceTrackingActive.set(1);
@@ -627,22 +632,104 @@ export default function LandingChart() {
             repeat: Infinity,
             repeatType: "loop",
           });
+          animationControlsRef.current = controls;
         },
       });
-    };
+      animationControlsRef.current = controls;
+    },
+    [
+      durations,
+      measurementLineOffset,
+      horizontalLineClipPath,
+      viewportWidth,
+      clipPathWidth,
+      priceTrackingActive,
+      scrollOffset,
+      positions,
+    ],
+  );
 
+  // Function to restart the animation
+  const restartAnimation = useCallback(async () => {
+    // Stop current animation
+    if (animationControlsRef.current) {
+      animationControlsRef.current.stop();
+    }
+
+    // Fade out visible elements and move measurement point to center
+    await Promise.all([
+      animate(priceLineOpacity, 0, {
+        duration: 0.3,
+        ease: "easeOut",
+      }),
+      animate(horizontalLineOpacity, 0, {
+        duration: 0.3,
+        ease: "easeOut",
+      }),
+      animate(priceLabelsOpacity, 0, {
+        duration: 0.3,
+        ease: "easeOut",
+      }),
+      // Move measurement point to 50% height (center)
+      animate(currentY, dynamicHeight * 0.5, {
+        duration: 0.3,
+        ease: "easeOut",
+      }),
+    ]);
+
+    // Reset all motion values to initial state
+    scrollOffset.set(0);
+    measurementLineOffset.set(ANIMATION_CONFIG.measurementLine.initial * 100);
+    clipPathWidth.set(ANIMATION_CONFIG.clipPath.initial);
+    horizontalLineClipPath.set(viewportWidth);
+    priceTrackingActive.set(0);
+    priceLabelsOpacity.set(0);
+    lineStrokeColor.set("#387F5C");
+    priceLineOpacity.set(1); // Reset price line opacity
+    horizontalLineOpacity.set(1); // Reset horizontal line opacity
+    setCurrentTriggerPhase(undefined);
+
+    // Start the animation again with restart flag
+    startAnimation(true);
+  }, [
+    scrollOffset,
+    measurementLineOffset,
+    clipPathWidth,
+    horizontalLineClipPath,
+    priceTrackingActive,
+    priceLabelsOpacity,
+    priceLineOpacity,
+    horizontalLineOpacity,
+    lineStrokeColor,
+    viewportWidth,
+    dynamicHeight,
+    startAnimation,
+  ]);
+
+  // Click handler for chart during stable phase
+  const handleChartClick = useCallback(() => {
+    if (currentTriggerPhase === "mainCTA") {
+      console.log("RESTARTING");
+      restartAnimation();
+    }
+  }, [currentTriggerPhase, restartAnimation]);
+
+  // Position-based animation system: start scrolling and track position for messages
+  useEffect(() => {
     startAnimation();
 
     return () => {
-      controls?.stop();
+      if (animationControlsRef.current) {
+        animationControlsRef.current.stop();
+      }
     };
-  }, []);
+  }, [startAnimation]);
 
   return (
     <div className="flex flex-col items-center justify-around h-full w-full">
       {/* Stage Messages */}
       <div
-        className="min-h-[250px] flex flex-col items-center justify-center pt-6 pb-6 sm:pt-10 sm:pb-10"
+        className="min-h-[250px] sm:min-h-[300px] flex flex-col items-center justify-center pt-6 pb-6 sm:pt-10 sm:pb-10"
         id={"cta-header"}
       >
         <AnimatePresence mode="wait">
@@ -739,7 +826,12 @@ export default function LandingChart() {
         </AnimatePresence>
       </div>
       {/* Chart Component */}
-      <div ref={containerRef} className="w-full relative" id={"cta-chart"}>
+      <div
+        ref={containerRef}
+        className={`w-full relative ${currentTriggerPhase === "stable" ? "cursor-pointer" : ""}`}
+        id={"cta-chart"}
+        onClick={handleChartClick}
+      >
         <svg
           width="100%"
           height={dynamicHeight}
@@ -826,10 +918,11 @@ export default function LandingChart() {
             mask="url(#fadeMask)"
             style={{
               clipPath: horizontalLineClipPathStyle,
+              opacity: horizontalLineOpacity,
             }}
           />
           {/* Price labels - static positioned to the right of final measurement line position */}
-          <g mask="url(#priceLabelsOpacityMask)">
+          <motion.g mask="url(#priceLabelsOpacityMask)" style={{ opacity: priceLabelsOpacity }}>
             {priceLabelData.map((labelData) => (
               <motion.text
                 key={labelData.price}
@@ -838,12 +931,11 @@ export default function LandingChart() {
                 fontSize={ANIMATION_CONFIG.priceLabels.fontSize}
                 fill={ANIMATION_CONFIG.priceLabels.color}
                 textAnchor="start"
-                style={{ opacity: priceLabelsOpacity }}
               >
                 {labelData.label}
               </motion.text>
             ))}
-          </g>
+          </motion.g>
           {/* Scrolling price line */}
           <g clipPath="url(#viewport)">
             <motion.path
@@ -853,7 +945,7 @@ export default function LandingChart() {
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{ x }}
+              style={{ x, opacity: priceLineOpacity }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{
