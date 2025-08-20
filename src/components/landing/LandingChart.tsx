@@ -641,7 +641,7 @@ export default function LandingChart() {
   return (
     <div className="flex flex-col items-center justify-center h-full w-full">
       {/* Stage Messages */}
-      <div className="min-h-[300px] flex flex-col items-center justify-center pt-16 sm:pt-10 pb-10" id={"cta-header"}>
+      <div className="min-h-[300px] flex flex-col items-center justify-center pt-8 sm:pt-10 pb-10" id={"cta-header"}>
         <AnimatePresence mode="wait">
           {currentTriggerPhase === "unstable" && (
             <motion.span
