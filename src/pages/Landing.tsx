@@ -121,6 +121,7 @@ export default function Landing() {
       <div
         ref={scrollContainerRef}
         className="flex flex-col h-screen overflow-y-auto snap-y snap-mandatory scrollbar-none"
+        data-scroll-container="true"
       >
         <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
           <LandingChart />

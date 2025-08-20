@@ -1,6 +1,6 @@
 import useIsMobile from "@/hooks/display/useIsMobile";
 import clsx from "clsx";
-import { useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
@@ -69,48 +69,41 @@ const buttonStyles = clsx(
 );
 
 export default function Resources() {
-  const touchStart = useRef({ x: 0, y: 0 });
-  const [isScrollingHorizontally, setIsScrollingHorizontally] = useState(false);
+  const touchStartRef = useRef({ x: 0, y: 0 });
+  const isScrollingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStart.current = {
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartRef.current = {
       x: e.touches[0].clientX,
       y: e.touches[0].clientY,
     };
-    setIsScrollingHorizontally(false);
-  };
+    isScrollingRef.current = false;
+  }, []);
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart.current) return;
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (isScrollingRef.current) return;
 
-    const deltaX = Math.abs(e.touches[0].clientX - touchStart.current.x);
-    const deltaY = Math.abs(e.touches[0].clientY - touchStart.current.y);
+    const deltaX = Math.abs(e.touches[0].clientX - touchStartRef.current.x);
+    const deltaY = Math.abs(e.touches[0].clientY - touchStartRef.current.y);
 
-    // Determine scroll direction on first significant movement
-    if (deltaX > 10 || deltaY > 10) {
-      const isHorizontal = deltaX > deltaY;
-      setIsScrollingHorizontally(isHorizontal);
+    // Only act if there's significant movement
+    if (deltaX > 20 || deltaY > 20) {
+      isScrollingRef.current = true;
 
-      // If scrolling vertically, prevent horizontal scroll and allow event to bubble
-      if (!isHorizontal) {
-        if (containerRef.current) {
-          containerRef.current.style.touchAction = "pan-y";
-        }
-      } else {
-        if (containerRef.current) {
-          containerRef.current.style.touchAction = "pan-x";
+      // If vertical movement is dominant, pass the event to the parent
+      if (deltaY > deltaX) {
+        // Get the main scroll container
+        const mainScrollContainer = document.querySelector('[data-scroll-container="true"]') as HTMLElement;
+        if (mainScrollContainer) {
+          const scrollDirection = e.touches[0].clientY > touchStartRef.current.y ? -1 : 1;
+          const scrollAmount = deltaY * scrollDirection * 2;
+          mainScrollContainer.scrollBy({ top: scrollAmount, behavior: "smooth" });
         }
       }
+      // For horizontal movement, let the container handle it naturally
     }
-  };
-
-  const handleTouchEnd = () => {
-    setIsScrollingHorizontally(false);
-    if (containerRef.current) {
-      containerRef.current.style.touchAction = "auto";
-    }
-  };
+  }, []);
 
   return (
     <div className="flex flex-col items-center self-stretch gap-8 sm:gap-12 max-sm:mt-16 mb-24 sm:mb-28">
@@ -120,7 +113,6 @@ export default function Resources() {
         className="flex flex-row w-full overflow-x-auto scrollbar-none snap-x snap-mandatory sm:flex-row sm:justify-center sm:overflow-x-visible sm:snap-none gap-2 lg:gap-8 max-2xl:px-4 sm:max-2xl:px-4"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         {resourceCards.map((card, index) => (
           <div key={index} className={cardStyles}>
