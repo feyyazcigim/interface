@@ -734,7 +734,8 @@ export default function LandingChart() {
         animationControlsRef.current.stop();
       }
     };
-  }, [startAnimation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   return (
     <div className="flex flex-col items-center justify-around h-full w-full">
