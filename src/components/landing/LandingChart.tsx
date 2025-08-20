@@ -2,7 +2,7 @@ import PintoLogo from "@/assets/protocol/PintoLogo.svg";
 import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { cubicBezier, findBezierExtrema, generateChaoticUnstableData } from "@/utils/utils";
-import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
+import { AnimatePresence, MotionValue, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
@@ -363,7 +363,12 @@ export default function LandingChart() {
   const priceLabelsOpacity = useMotionValue(0); // 0 = hidden, 1 = visible
   const priceLineOpacity = useMotionValue(1); // 0 = hidden, 1 = visible
   const horizontalLineOpacity = useMotionValue(1); // 0 = hidden, 1 = visible
-  const floatersOpacity = useTransform(priceTrackingActive, (active) => (active >= 1 ? 1 : 0));
+  const transactionMarkersOpacity = useMotionValue<number>(1); // 0 = hidden, 1 = visible
+  const baseFloatersOpacity = useTransform(priceTrackingActive, (active: number) => (active >= 1 ? 1 : 0) as number);
+  const floatersOpacity = useTransform(
+    [baseFloatersOpacity, transactionMarkersOpacity],
+    ([base, restart]: number[]) => base * restart,
+  ) as MotionValue<0 | 1>;
   const x = useTransform(scrollOffset, (value) => viewportWidth * ANIMATION_CONFIG.clipPath.initial - value);
 
   // Transform values for motion properties (moved from JSX to avoid hook violations)
@@ -670,6 +675,10 @@ export default function LandingChart() {
         duration: 0.3,
         ease: "easeOut",
       }),
+      animate(transactionMarkersOpacity, 0, {
+        duration: 0.3,
+        ease: "easeOut",
+      }),
       // Move measurement point to 50% height (center)
       animate(currentY, dynamicHeight * 0.5, {
         duration: 0.3,
@@ -687,6 +696,7 @@ export default function LandingChart() {
     lineStrokeColor.set("#387F5C");
     priceLineOpacity.set(1); // Reset price line opacity
     horizontalLineOpacity.set(1); // Reset horizontal line opacity
+    transactionMarkersOpacity.set(1); // Reset transaction markers opacity
     setCurrentTriggerPhase(undefined);
 
     // Start the animation again with restart flag
@@ -700,6 +710,7 @@ export default function LandingChart() {
     priceLabelsOpacity,
     priceLineOpacity,
     horizontalLineOpacity,
+    transactionMarkersOpacity,
     lineStrokeColor,
     viewportWidth,
     dynamicHeight,
