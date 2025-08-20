@@ -11,33 +11,37 @@ import SecondaryCTAValues from "@/components/landing/SecondaryCTAValues";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import clsx from "clsx";
 import { WheelEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Landing() {
   const [isCtaVisible, setIsCtaVisible] = useState(false);
   const [isCtaPresent, setIsCtaPresent] = useState(false);
-  const [projectStatsSnapClass, setProjectStatsSnapClass] = useState("snap-start");
 
   const lastScrollTop = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const projectStatsSectionRef = useRef<HTMLElement>(null);
 
   const isMobile = useIsMobile();
 
   // Track scroll direction for ProjectStats snap behavior
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
+    const projectStatsSection = projectStatsSectionRef.current;
+    if (!scrollContainer || !projectStatsSection) return;
 
     const handleScroll = () => {
       const currentScrollTop = scrollContainer.scrollTop;
       const scrollDirection = currentScrollTop > lastScrollTop.current ? "down" : "up";
 
-      // Update snap class based on scroll direction
+      // Directly update the className without causing re-renders
+      const baseClasses = clsx("flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen");
+
       if (scrollDirection === "down") {
-        setProjectStatsSnapClass("snap-start");
+        projectStatsSection.className = `${baseClasses} snap-start`;
       } else {
-        setProjectStatsSnapClass("snap-end");
+        projectStatsSection.className = `${baseClasses} snap-end`;
       }
 
       lastScrollTop.current = currentScrollTop;
@@ -132,7 +136,8 @@ export default function Landing() {
           <SecondaryCTAProperties />
         </section>
         <section
-          className={`flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen ${projectStatsSnapClass}`}
+          ref={projectStatsSectionRef}
+          className="flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen snap-start"
         >
           <ProjectStats />
         </section>
