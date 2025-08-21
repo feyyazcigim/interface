@@ -33,7 +33,7 @@ const NFTProfileDisplay = ({ navigate, togglePanel }: NFTProfileDisplayProps) =>
   const { hasNFT, profileImageUrl } = useWalletNFTProfile();
 
   // TEMPORARY: Hide NFT profile images - set to false to show real NFT images
-  const hideNFTProfile = true;
+  const hideNFTProfile = false;
 
   if (!hasNFT || !profileImageUrl) {
     return null;
@@ -51,7 +51,12 @@ const NFTProfileDisplay = ({ navigate, togglePanel }: NFTProfileDisplayProps) =>
       {hideNFTProfile ? (
         <span className="text-gray-500 font-semibold text-2xl">?</span>
       ) : (
-        <img src={profileImageUrl} alt="NFT Profile" className="w-full h-full object-cover" />
+        <img
+          src={profileImageUrl}
+          alt="NFT Profile"
+          className="w-full h-full object-cover"
+          style={{ objectPosition: "50% 10%" }}
+        />
       )}
     </button>
   );
@@ -342,8 +347,10 @@ export default function WalletButtonPanel({ togglePanel }) {
                 <span className="w-4 h-4">×</span>
               </button>
             )}
-            {/* NFT Profile Display - Temporarily disabled. Change 'false &&' to 'true &&' to re-enable */}
-            {false && <NFTProfileDisplay navigate={navigate} togglePanel={togglePanel} />}
+            {/* NFT Profile Display - Hidden on mobile */}
+            <div className="hidden sm:block">
+              <NFTProfileDisplay navigate={navigate} togglePanel={togglePanel} />
+            </div>
           </div>
         </div>
         <BalanceSummary totalBalance={totalBalance} />

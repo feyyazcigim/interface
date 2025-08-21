@@ -97,7 +97,7 @@ const AppNavi = () => {
             <Link href={navLinks.sPinto}>sPinto</Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link href={navLinks.collection}>?</Link>
+            <Link href={navLinks.collection}>Collection</Link>
           </NavigationMenuItem>
           {isDev() && (
             <NavigationMenuItem>
