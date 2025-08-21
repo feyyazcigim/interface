@@ -404,6 +404,19 @@ export default function Collection() {
                 ) : (
                   <NFTCarousel nfts={displayNFTs} viewMode={viewMode} userNFTs={userNFTs} onNFTClick={handleNFTClick} />
                 )}
+
+                {/* Centered Text Below NFTs - Always Visible */}
+                <div className="text-center mt-16">
+                  <p className="text-gray-500 max-w-4xl mx-auto pinto-body leading-relaxed px-4 italic">
+                    And it came to pass, in the dry Seasons of yore, when the river was made thin and volatility crept
+                    in, when the Farm was yearning for mints, that the Pinto Beavers did not depart. Whether tending
+                    unto their crops in the Silo, Sowing in the Field, or dwelling in the quiet leisure of the Farm,
+                    their steadfast faith and enterprise preserved the Pinto experiment, that it might endure.
+                    <br />
+                    Yea, the Farm remembers.
+                  </p>
+                </div>
+
                 {isGridMode && viewMode === "all" && (
                   <PaginationControls
                     currentPage={currentPage}
