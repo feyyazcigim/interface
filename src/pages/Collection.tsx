@@ -411,8 +411,9 @@ export default function Collection() {
                     And it came to pass, in the dry Seasons of yore, when the river was made thin and volatility crept
                     in, when the Farm was yearning for mints, that the Pinto Beavers did not depart. Whether tending
                     unto their crops in the Silo, Sowing in the Field, or dwelling in the quiet leisure of the Farm,
-                    their steadfast faith and enterprise preserved the Pinto experiment, that it might endure. Yea, the
-                    Farm remembers.
+                    their steadfast faith and enterprise preserved the Pinto experiment, that it might endure.
+                    <br />
+                    Yea, the Farm remembers.
                   </p>
                 </div>
 
