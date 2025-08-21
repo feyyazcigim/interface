@@ -239,7 +239,7 @@ export const NFTCarousel = ({ nfts, viewMode, userNFTs, onNFTClick }: NFTCarouse
       )}
 
       {/* Jump to Token ID */}
-      <div className="flex items-center justify-center gap-2 mt-8">
+      {/* <div className="flex items-center justify-center gap-2 mt-8">
         <span className="text-sm text-gray-400">Jump to</span>
         <input
           type="text"
@@ -256,7 +256,7 @@ export const NFTCarousel = ({ nfts, viewMode, userNFTs, onNFTClick }: NFTCarouse
         >
           Go
         </button>
-      </div>
+      </div> */}
 
       {/* Dot Indicators */}
       {nfts.length > 1 && (
