@@ -118,33 +118,37 @@ export default function Landing() {
       <Link
         to={navLinks.overview}
         onWheelCapture={handleWheel}
-        className={`${isAtTop && reachedMainCta ? "pointer-events-none" : "pointer-events-auto"}`}
+        className={`${isAtTop && reachedMainCta ? "pointer-events-none" : "pointer-events-auto"} z-20`}
       >
         <div
-          className={`fixed left-1/2 -translate-x-1/2 flex justify-center ${
+          className={`fixed left-1/2 -translate-x-1/2 flex z-20 justify-center ${
             reachedMainCta ? "bottom-6 sm:bottom-12" : "-bottom-28"
           } transition-all duration-500 ease-in-out`}
         >
           <Button
             rounded="full"
-            size={isMobile || (isAtTop && reachedMainCta) ? "xl" : "xxl"}
-            className={`${isMobile || (isAtTop && reachedMainCta) ? "scale-100" : "scale-150"} hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+            size={isAtTop && reachedMainCta ? (isMobile ? "md" : "xl") : "xxl"}
+            className={`${isMobile || (isAtTop && reachedMainCta) ? "scale-100" : "scale-150"} z-20 hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
             shimmer={!isAtTop}
             glow={!isAtTop}
           >
             {/* Conditionally show text based on scroll position */}
             <span
-              className={`relative z-10 transition-opacity ${isAtTop && reachedMainCta ? "w-0 opacity-0 -ml-2 text-pinto-green-4" : "w-auto opacity-100 ml-0 text-white"}`}
+              className={`relative transition-opacity ${isAtTop && reachedMainCta ? "w-0 opacity-0 -ml-2 text-pinto-green-4" : "w-auto opacity-100 ml-0 text-white"}`}
             >
               Join the Farm
             </span>
             <div
-              className={`relative z-10 transition-transform transform duration-300 ${
+              className={`relative transition-transform transform duration-300 ${
                 isAtTop && reachedMainCta ? "rotate-90" : "rotate-0"
               }`}
               style={{ isolation: "isolate" }}
             >
-              <PintoRightArrow width={isMobile ? "1.25rem" : "1.5rem"} height={isMobile ? "1.25rem" : "1.5rem"} />
+              <PintoRightArrow
+                width={isMobile ? (isAtTop && reachedMainCta ? "1.5rem" : "1.25rem") : "1.5rem"}
+                height={isMobile ? (isAtTop && reachedMainCta ? "1.5rem" : "1.25rem") : "1.5rem"}
+                className="transition-all"
+              />
             </div>
           </Button>
         </div>
