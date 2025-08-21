@@ -241,10 +241,10 @@ export const NFTCarousel = ({ nfts, viewMode, userNFTs, onNFTClick }: NFTCarouse
       {/* Centered Text Below Image */}
       <div className="text-center mt-16">
         <p className="text-gray-500 max-w-4xl mx-auto pinto-body leading-relaxed px-4 italic">
-          And it came to pass, in the dry Seasons, when the river was made thin and volatility crept in, when the Farm
-          was yearning for mints, that the Pinto Beavers did not depart. By tending unto their crops in the Silo and
-          Sowing in the Field, dwelling in the quiet leisure of the Farm, their steadfast faith and enterprise preserved
-          and persisted the Pinto experiment. Yea, the Farm remembers.
+          And it came to pass, in the dry Seasons of yore, when the river was made thin and volatility crept in, when
+          the Farm was yearning for mints, that the Pinto Beavers did not depart. Whether tending unto their crops in
+          the Silo, Sowing in the Field, or dwelling in the quiet leisure of the Farm, their steadfast faith and
+          enterprise preserved the Pinto experiment, that it might endure. Yea, the Farm remembers.
         </p>
 
         {/* Jump to Token ID */}
