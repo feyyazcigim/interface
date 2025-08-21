@@ -19,6 +19,7 @@ export default function Landing() {
 
   const isMobile = useIsMobile();
   const [currentTriggerPhase, setCurrentTriggerPhase] = useState<string | undefined>(undefined);
+  const [reachedMainCta, setReachedMainCta] = useState<boolean>(false);
   const [isAtTop, setIsAtTop] = useState<boolean>(true); // Track if scroll is at very top
 
   // Track first-time visitor status
@@ -35,6 +36,13 @@ export default function Landing() {
     }
     // For returning visitors, sectionsVisible remains true by default
   }, []);
+
+  // Trigger bottom cta once we reach mainCTA for the first time
+  useEffect(() => {
+    if (currentTriggerPhase === "mainCTA" && !reachedMainCta) {
+      setReachedMainCta(true);
+    }
+  }, [currentTriggerPhase, reachedMainCta]);
 
   // Show sections when mainCTA phase is reached for first-time visitors
   useEffect(() => {
@@ -68,8 +76,6 @@ export default function Landing() {
     e.stopPropagation();
     document.body.scrollTop += e.deltaY;
   };
-
-  const isMainCta = currentTriggerPhase === "mainCTA";
 
   return (
     <div
@@ -112,29 +118,29 @@ export default function Landing() {
       <Link
         to={navLinks.overview}
         onWheelCapture={handleWheel}
-        className={`${isAtTop && isMainCta ? "pointer-events-none" : "pointer-events-auto"}`}
+        className={`${isAtTop && reachedMainCta ? "pointer-events-none" : "pointer-events-auto"}`}
       >
         <div
           className={`fixed left-1/2 -translate-x-1/2 flex justify-center ${
-            isMainCta ? "bottom-6 sm:bottom-12" : "-bottom-28"
+            reachedMainCta ? "bottom-6 sm:bottom-12" : "-bottom-28"
           } transition-all duration-500 ease-in-out`}
         >
           <Button
             rounded="full"
-            size={isMobile || (isAtTop && isMainCta) ? "xl" : "xxl"}
-            className={`${isMobile || (isAtTop && isMainCta) ? "scale-100" : "scale-150"} hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+            size={isMobile || (isAtTop && reachedMainCta) ? "xl" : "xxl"}
+            className={`${isMobile || (isAtTop && reachedMainCta) ? "scale-100" : "scale-150"} hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
             shimmer={!isAtTop}
             glow={!isAtTop}
           >
             {/* Conditionally show text based on scroll position */}
             <span
-              className={`relative z-10 transition-opacity ${isAtTop && isMainCta ? "w-0 opacity-0 -ml-2 text-pinto-green-4" : "w-auto opacity-100 ml-0 text-white"}`}
+              className={`relative z-10 transition-opacity ${isAtTop && reachedMainCta ? "w-0 opacity-0 -ml-2 text-pinto-green-4" : "w-auto opacity-100 ml-0 text-white"}`}
             >
               Join the Farm
             </span>
             <div
               className={`relative z-10 transition-transform transform duration-300 ${
-                isAtTop && isMainCta ? "rotate-90" : "rotate-0"
+                isAtTop && reachedMainCta ? "rotate-90" : "rotate-0"
               }`}
               style={{ isolation: "isolate" }}
             >
