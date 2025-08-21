@@ -273,7 +273,7 @@ export default function Collection() {
     setActiveFilter(activeFilter === filter ? "all" : filter);
   };
 
-  const handleNFTClick = useCallback((nft: NFT) => {
+  const handleNFTClick = useCallback((nft: NFTData) => {
     setSelectedNFT(nft);
     setIsModalOpen(true);
   }, []);

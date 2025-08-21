@@ -59,7 +59,7 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
         {/* Desktop Layout */}
         <div className="hidden lg:flex flex-1 min-h-0 relative">
           {/* Left Panel - NFT Image */}
-          <div className="flex-shrink-0 w-[65%] h-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6">
+          <div className="flex-shrink-0 w-[65%] h-full flex items-center justify-center p-6">
             {selectedImageUrl && !selectedLoading && (
               <img
                 src={selectedImageUrl}
