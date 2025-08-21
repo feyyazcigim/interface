@@ -1,20 +1,95 @@
 import openSeaLogo from "@/assets/misc/opensea-logo.svg";
 import { NFTCard } from "@/components/NFTCard";
 import { NFTCardFlipReveal } from "@/components/NFTCardFlipReveal";
+import { NFTCarousel } from "@/components/NFTCarousel";
 import { NFTDetailModal } from "@/components/NFTDetailModal";
 import { Button } from "@/components/ui/Button";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import { Switch } from "@/components/ui/Switch";
 import { NFT_COLLECTION_1_CONTRACT } from "@/constants/address";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
 import { useCardFlipAnimation } from "@/hooks/useCardFlipAnimation";
 import { type NFTData, type ViewMode, useNFTData } from "@/state/useNFTData";
+import { ChevronLeftIcon, ChevronRightIcon, GridIcon, StackIcon } from "@radix-ui/react-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAccount } from "wagmi";
 
 type CollectionFilter = "all" | "genesis";
+
+const ITEMS_PER_PAGE = 50;
+
+interface PaginationControlsProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  totalItems: number;
+}
+
+function PaginationControls({ currentPage, totalPages, onPageChange, totalItems }: PaginationControlsProps) {
+  if (totalPages <= 1) return null;
+
+  const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+      <div className="pinto-sm text-pinto-light">
+        Showing {startItem}-{endItem} of {totalItems} items
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="rounded-lg"
+        >
+          <ChevronLeftIcon className="w-4 h-4" />
+          Previous
+        </Button>
+        <div className="flex items-center gap-1">
+          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+            let pageNum: number;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+
+            return (
+              <Button
+                key={pageNum}
+                variant={currentPage === pageNum ? "default" : "outline"}
+                size="sm"
+                onClick={() => onPageChange(pageNum)}
+                className="w-10 h-10 rounded-lg"
+              >
+                {pageNum}
+              </Button>
+            );
+          })}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="rounded-lg"
+        >
+          Next
+          <ChevronRightIcon className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 interface NFTsGridProps {
   nfts: NFTData[];
@@ -60,14 +135,6 @@ function NFTsGrid({
 }: NFTsGridProps) {
   let displayNFTs = [...nfts];
 
-  console.log("🔍 NFTsGrid render - hasNFTs:", hasNFTs, "hasSeenAnimation:", hasSeenAnimation, "viewMode:", viewMode);
-  console.log("🔍 Initial displayNFTs length:", displayNFTs.length);
-
-  // Log IPFS data for displayed NFTs
-  displayNFTs.forEach((nft) => {
-    console.log("🔗 NFT #" + nft.id + " contract: " + nft.contractAddress + " - will load IPFS metadata");
-  });
-
   // Temporary pop-in animation for cards - only when data is loaded and ready
   const shouldShowPopAnimation =
     hasNFTs && !hasSeenAnimation && !animationCompleted && viewMode === "owned" && nfts.length > 0;
@@ -83,10 +150,9 @@ function NFTsGrid({
   }, [shouldShowPopAnimation, onAnimationComplete]);
 
   // Hide NFTs from grid if user hasn't seen the reveal animation yet
-  // if (hasNFTs && !hasSeenAnimation && !animationCompleted && viewMode === "owned") {
-  //   console.log("🔍 Hiding NFTs because animation not seen yet");
-  //   displayNFTs = [];
-  // }
+  if (hasNFTs && !hasSeenAnimation && !animationCompleted && viewMode === "owned") {
+    displayNFTs = [];
+  }
 
   // Temporarily limit to first NFT for owned view
   if (viewMode === "owned" && displayNFTs.length > 0) {
@@ -114,7 +180,7 @@ function NFTsGrid({
           <div
             key={`${nft.contractAddress}-${nft.id}`}
             className={`
-              ${isSingleCard ? "w-[80vw] sm:w-[60vw] md:w-[50vw] lg:w-[40vw] xl:w-[30vw] max-w-[800px]" : ""}
+              ${isSingleCard ? "w-[min(80vw,60vh)] sm:w-[min(60vw,60vh)] md:w-[min(50vw,60vh)] lg:w-[min(40vw,60vh)] xl:w-[min(30vw,60vh)] max-w-[min(800px,60vh)]" : ""}
               ${shouldShowPopAnimation ? "animate-pop-in" : ""}
             `}
             style={{ animationDelay: `${index * 150}ms` }}
@@ -135,11 +201,21 @@ function NFTsGrid({
 
 export default function Collection() {
   const { address } = useAccount();
-  const [activeFilter, setActiveFilter] = useState<CollectionFilter>("all");
+  const [activeFilter, setActiveFilter] = useState<CollectionFilter>("genesis");
   const [viewMode, setViewMode] = useState<ViewMode>("owned");
   const [selectedNFT, setSelectedNFT] = useState<NFTData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [animationCompleted, setAnimationCompleted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isGridMode, setIsGridMode] = useState(() => {
+    const saved = localStorage.getItem("nft-grid-mode");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // Persist grid mode preference
+  useEffect(() => {
+    localStorage.setItem("nft-grid-mode", JSON.stringify(isGridMode));
+  }, [isGridMode]);
 
   const { userNFTs, allNFTs, displayNFTs, balance, totalSupply, loading, error } = useNFTData({
     contractAddress: NFT_COLLECTION_1_CONTRACT,
@@ -152,32 +228,21 @@ export default function Collection() {
 
   const { shouldShowAnimation, hasSeenAnimation, resetAnimation } = useCardFlipAnimation(address, !!hasNFTs);
 
-  // Debug: Log when hasSeenAnimation changes
-  useEffect(() => {
-    console.log("🔍 hasSeenAnimation changed to:", hasSeenAnimation);
-  }, [hasSeenAnimation]);
-
   // Refresh all NFT data after animation completes
   const handleAnimationComplete = useCallback(() => {
-    console.log("🎯 Animation complete callback triggered!");
-    console.log("🎯 Current userNFTs length:", userNFTs.length);
-    console.log("🎯 Current balance:", balance?.toString());
-    console.log("🎯 Setting animationCompleted to true to force re-render");
-
     // Force re-render by updating local state
     setAnimationCompleted(true);
   }, [userNFTs.length, balance]);
 
-  // Log wallet connection status
-  console.log("Collection page - Connected address:", address);
-  console.log("Collection page - Pinto NFTs contract:", NFT_COLLECTION_1_CONTRACT);
-
   const handleFilterToggle = (filter: CollectionFilter) => {
+    // Genesis filter is always active and cannot be toggled off
+    if (filter === "genesis") {
+      return;
+    }
     setActiveFilter(activeFilter === filter ? "all" : filter);
   };
 
   const handleNFTClick = useCallback((nft: any) => {
-    console.log("NFT clicked:", nft);
     setSelectedNFT(nft);
     setIsModalOpen(true);
   }, []);
@@ -193,8 +258,20 @@ export default function Collection() {
   const handleViewModeToggle = () => {
     const newMode = viewMode === "owned" ? "all" : "owned";
     setViewMode(newMode);
-    console.log("View mode changed to:", newMode);
+    setCurrentPage(1); // Reset to first page when switching modes
   };
+
+  // Pagination logic
+  const totalPages = Math.ceil(displayNFTs.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedNFTs = displayNFTs.slice(startIndex, endIndex);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   if (!address) {
     return (
@@ -202,10 +279,10 @@ export default function Collection() {
         <div className="flex flex-col w-full mt-4 sm:mt-0">
           <div className="flex flex-col self-center w-full gap-4 mb-20 sm:mb-0 sm:gap-8">
             <div className="flex flex-col gap-y-3">
-              {/* <div className="pinto-h2 sm:pinto-h1">My Pinto Beavers</div> */}
-              {/* <div className="pinto-sm sm:pinto-body-light text-pinto-light">
+              <div className="pinto-h2 sm:pinto-h1">My Pinto Beavers</div>
+              <div className="pinto-sm sm:pinto-body-light text-pinto-light">
                 Connect your wallet to view your collection of Pinto Beavers.
-              </div> */}
+              </div>
             </div>
             <Separator />
             <div className="flex flex-col items-center justify-center py-16">
@@ -221,84 +298,89 @@ export default function Collection() {
 
   return (
     <PageContainer variant="xl">
-      <div className="flex flex-col w-full mt-4 sm:mt-0">
-        <div className="flex flex-col self-center w-full gap-4 mb-20 sm:mb-0 sm:gap-8">
-          <div className="flex flex-col gap-y-3">
+      <div className="flex flex-col w-full mt-0">
+        <div className="flex flex-col self-center w-full gap-2 mb-4 sm:mb-0 sm:gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-end">
             <div className="pinto-h2 sm:pinto-h1">
               {viewMode === "owned"
-                ? /* "My Pinto Beavers" */ null
+                ? balance === 1
+                  ? "My Pinto Beaver"
+                  : "My Pinto Beavers"
                 : `${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s Collection`}
             </div>
-            <div className="pinto-sm sm:pinto-body-light text-pinto-light">
-              {viewMode === "owned"
-                ? /* "My Collection of Pinto Beaver NFTs" */ null
-                : `Browse all ${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s.`}
-            </div>
-          </div>
-          {/*
-          <div className="flex flex-wrap gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => handleFilterToggle("genesis")}
-              className={`rounded-full font-medium px-6 py-2 ${
-                activeFilter === "genesis"
-                  ? "bg-pinto-green-1 text-pinto-green-3 border-pinto-green-3 hover:bg-pinto-green-1/90"
-                  : "hover:bg-pinto-green-1/50 hover:text-pinto-gray-4"
-              }`}
-            >
-              {getCollectionName(NFT_COLLECTION_1_CONTRACT)}s
-            </Button>
-            {viewMode === "owned" && (
-              <Button
-                variant="outline"
-                onClick={() => handleFilterToggle("all")}
-                className={`rounded-full font-medium px-6 py-2 ${
-                  activeFilter === "all"
-                    ? "bg-pinto-green-1 text-pinto-green-3 border-pinto-green-3 hover:bg-pinto-green-1/90"
-                    : "hover:bg-pinto-green-1/50 hover:text-pinto-gray-4"
-                }`}
-              >
-                All
-              </Button>
-            )}
-          </div>
-*/}
-          {/* Toggle link above separator */}
-          {/*}
-          {activeFilter === "genesis" && (
-            <div className="flex justify-end">
+            <div className="flex items-center gap-4">
+              {displayNFTs.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <StackIcon className="w-4 h-4 text-pinto-light" />
+                  <Switch checked={isGridMode} onCheckedChange={setIsGridMode} className="h-5 w-9" />
+                  <GridIcon className="w-4 h-4 text-pinto-light" />
+                </div>
+              )}
               <Button
                 variant="ghost"
                 onClick={handleViewModeToggle}
-                className="text-pinto-green-4 hover:text-pinto-green-3 pinto-sm font-medium p-0 h-auto"
+                className="text-pinto-green-4 hover:text-pinto-green-3 hover:bg-transparent pinto-sm font-medium p-0 h-auto"
+              >
+                {viewMode === "owned" ? "View Entire Collection" : "View My Beavers"}
+              </Button>
+            </div>
+          </div>
+          {/* TODO: Uncomment this section once we have multiple NFT collections to choose from */}
+          {/* Collection filter buttons - currently commented out since we only have one collection */}
+          {/*
+          <div className="flex flex-wrap justify-between items-center gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => handleFilterToggle("genesis")}
+              className="rounded-full font-medium px-6 py-2 bg-pinto-green-1 text-pinto-green-3 border-pinto-green-3 hover:bg-pinto-green-1/90 cursor-default"
+            >
+              {getCollectionName(NFT_COLLECTION_1_CONTRACT)}s
+            </Button>
+            {activeFilter === "genesis" && (
+              <Button
+                variant="ghost"
+                onClick={handleViewModeToggle}
+                className="text-pinto-green-4 hover:text-pinto-green-3 hover:bg-transparent pinto-sm font-medium p-0 h-auto"
               >
                 {viewMode === "owned" ? "View All in Collection" : "View My Collection"}
               </Button>
-            </div>
-          )}
-            */}
+            )}
+          </div>
+          */}
 
           <Separator />
 
-          <div className="mt-4">
+          <div className="mt-2">
             {loading ? (
               // Show nothing while loading to prevent flash
               <div />
             ) : displayNFTs.length === 0 ? (
-              <div className="flex items-center justify-center min-h-[60vh]">
-                <h1 className="pinto-h1 text-pinto-dark">There is nothing to see here.</h1>
-              </div>
+              <EmptyState />
             ) : (
-              <NFTsGrid
-                nfts={displayNFTs}
-                viewMode={viewMode}
-                userNFTs={userNFTs}
-                onNFTClick={handleNFTClick}
-                hasNFTs={!!hasNFTs}
-                hasSeenAnimation={hasSeenAnimation}
-                animationCompleted={animationCompleted}
-                onAnimationComplete={handleAnimationComplete}
-              />
+              <>
+                {isGridMode ? (
+                  <NFTsGrid
+                    nfts={paginatedNFTs}
+                    viewMode={viewMode}
+                    userNFTs={userNFTs}
+                    onNFTClick={handleNFTClick}
+                    hasNFTs={!!hasNFTs}
+                    hasSeenAnimation={hasSeenAnimation}
+                    animationCompleted={animationCompleted}
+                    onAnimationComplete={handleAnimationComplete}
+                  />
+                ) : (
+                  <NFTCarousel nfts={displayNFTs} viewMode={viewMode} userNFTs={userNFTs} onNFTClick={handleNFTClick} />
+                )}
+                {isGridMode && viewMode === "all" && (
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    totalItems={displayNFTs.length}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

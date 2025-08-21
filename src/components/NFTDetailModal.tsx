@@ -69,39 +69,12 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
                       /*selectedMetadata?.name || */ `${getCollectionName(selectedNFT.contractAddress)} #${selectedNFT.id}`
                     }
                   </h1>
-                  <p className="pinto-xs sm:pinto-sm text-pinto-light">
-                    {getCollectionName(selectedNFT.contractAddress)}
-                  </p>
                 </div>
               </div>
             </div>
 
             {/* Content */}
             <div className="flex flex-col pl-3 pt-3 sm:pl-4 sm:pt-4 lg:pl-6 lg:pt-6 gap-6">
-              <Separator />
-
-              {/* Action Section */}
-              <div className="space-y-3 sm:space-y-4">
-                <Button
-                  asChild
-                  variant="default"
-                  size="lg"
-                  className="w-full py-3 sm:py-4 text-sm sm:text-base font-semibold bg-[#0086FF] hover:bg-[#0074E0] text-white border-[#0086FF] hover:border-[#0074E0]"
-                >
-                  <Link
-                    to={externalLinks.nftMarketplace}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 sm:gap-3 text-white"
-                  >
-                    <img src={openSeaLogo} alt="OpenSea" className="w-4 h-4 sm:w-5 sm:h-5" />
-                    Trade on OpenSea
-                  </Link>
-                </Button>
-              </div>
-
-              <Separator />
-
               {/* Traits */}
               <TraitsCard attributes={selectedMetadata?.attributes} />
 
@@ -141,6 +114,28 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
                   </div>
                 </CardContent>
               </Card>
+              <Separator />
+              {/* Action Section */}
+              <div className="space-y-3 sm:space-y-4">
+                <Button
+                  asChild
+                  variant="default"
+                  size="lg"
+                  className="w-full py-3 sm:py-4 text-sm sm:text-base font-semibold bg-[#0086FF] hover:bg-[#0074E0] text-white border-[#0086FF] hover:border-[#0074E0]"
+                >
+                  <Link
+                    to={externalLinks.nftMarketplace}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 sm:gap-3 text-white"
+                  >
+                    <img src={openSeaLogo} alt="OpenSea" className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Trade on OpenSea
+                  </Link>
+                </Button>
+              </div>
+
+              <Separator />
             </div>
           </div>
         </div>

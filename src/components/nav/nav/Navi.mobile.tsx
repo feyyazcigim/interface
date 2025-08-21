@@ -159,7 +159,7 @@ function MobileNavContent({ learnOpen, setLearnOpen, unmount, close }: IMobileNa
             sPinto
           </MobileNavLink>
           <MobileNavLink href={navLinks.collection} onClick={unmountAndClose}>
-            ?
+            Collection
           </MobileNavLink>
         </div>
         <hr className=" border-pinto-gray-2" />
