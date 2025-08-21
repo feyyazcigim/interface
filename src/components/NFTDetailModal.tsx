@@ -33,15 +33,18 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[80vw] h-[90vh] max-w-[80vw] max-h-[90vh] rounded-2xl border bg-white backdrop-blur-sm">
-        <div className="flex flex-col lg:flex-row h-full overflow-y-scroll scrollbar-none">
+      <DialogContent
+        className="w-[95vw] sm:w-[90vw] lg:w-[80vw] max-w-6xl max-h-[85vh] lg:h-[95vh] rounded-2xl border bg-white backdrop-blur-sm p-0"
+        hideCloseButton
+      >
+        <div className="flex flex-col lg:flex-row h-full relative">
           {/* Left Panel - NFT Image */}
-          <div className="flex aspect-square bg-gradient-to-br from-gray-50 to-gray-100 items-center justify-center">
+          <div className="flex-shrink-0 w-full h-[35vh] lg:w-1/2 lg:h-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
             {selectedImageUrl && !selectedLoading && (
               <img
                 src={selectedImageUrl}
                 alt={selectedMetadata?.name || `NFT #${selectedNFT.id}`}
-                className="w-full h-full object-cover rounded-2xl"
+                className="w-full h-full object-cover lg:rounded-l-2xl"
               />
             )}
 
@@ -59,12 +62,12 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
           </div>
 
           {/* Right Panel - NFT Details */}
-          <div className="flex-1 lg:flex-[2] bg-white flex flex-col h-auto overflow-y-auto scrollbar-none">
+          <div className="flex-1 bg-white flex flex-col min-h-0">
             {/* Header */}
-            <div className="sticky top-0 bg-white z-10 pl-3 pt-3 sm:pl-4 sm:pt-4 lg:pl-6 lg:pt-6">
+            <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-3 lg:px-6 lg:py-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <h1 className="pinto-h3 sm:pinto-h2 text-pinto-dark mb-1 truncate">
+                  <h1 className="pinto-h4 sm:pinto-h3 lg:pinto-h2 text-pinto-dark truncate">
                     {
                       /*selectedMetadata?.name || */ `${getCollectionName(selectedNFT.contractAddress)} #${selectedNFT.id}`
                     }
@@ -73,8 +76,11 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
               </div>
             </div>
 
-            {/* Content */}
-            <div className="flex flex-col pl-3 pt-3 sm:pl-4 sm:pt-4 lg:pl-6 lg:pt-6 gap-6">
+            {/* Scrollable Content */}
+            <div
+              className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 lg:px-6 lg:py-4 space-y-4 pb-20 lg:pb-6"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
               {/* Traits */}
               <TraitsCard attributes={selectedMetadata?.attributes} />
 
@@ -114,7 +120,9 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
                   </div>
                 </CardContent>
               </Card>
+
               <Separator />
+
               {/* Action Section */}
               <div className="space-y-3 sm:space-y-4">
                 <Button
@@ -134,9 +142,21 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
                   </Link>
                 </Button>
               </div>
-
-              <Separator />
             </div>
+          </div>
+
+          {/* Mobile Close Button */}
+          <div className="lg:hidden absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-white border border-gray-200 rounded-full p-3 shadow-lg hover:bg-gray-50 transition-colors"
+              aria-label="Close modal"
+            >
+              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
       </DialogContent>

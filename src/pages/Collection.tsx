@@ -19,20 +19,42 @@ import { useAccount } from "wagmi";
 
 type CollectionFilter = "all" | "genesis";
 
-const ITEMS_PER_PAGE = 50;
+// Hook to detect mobile screen size
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+
+    checkIsMobile();
+    window.addEventListener("resize", checkIsMobile);
+    return () => window.removeEventListener("resize", checkIsMobile);
+  }, []);
+
+  return isMobile;
+}
 
 interface PaginationControlsProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
   totalItems: number;
+  itemsPerPage: number;
 }
 
-function PaginationControls({ currentPage, totalPages, onPageChange, totalItems }: PaginationControlsProps) {
+function PaginationControls({
+  currentPage,
+  totalPages,
+  onPageChange,
+  totalItems,
+  itemsPerPage,
+}: PaginationControlsProps) {
   if (totalPages <= 1) return null;
 
-  const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
@@ -201,6 +223,7 @@ function NFTsGrid({
 
 export default function Collection() {
   const { address } = useAccount();
+  const isMobile = useIsMobile();
   const [activeFilter, setActiveFilter] = useState<CollectionFilter>("genesis");
   const [viewMode, setViewMode] = useState<ViewMode>("owned");
   const [selectedNFT, setSelectedNFT] = useState<NFTData | null>(null);
@@ -212,29 +235,37 @@ export default function Collection() {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
+  // Dynamic items per page based on screen size
+  const itemsPerPage = isMobile ? 20 : 50;
+
+  // Reset current page when items per page changes (screen size change)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, []);
+
   // Persist grid mode preference
   useEffect(() => {
     localStorage.setItem("nft-grid-mode", JSON.stringify(isGridMode));
   }, [isGridMode]);
 
-  const { userNFTs, allNFTs, displayNFTs, balance, totalSupply, loading, error } = useNFTData({
+  const { userNFTs, displayNFTs, balance, loading } = useNFTData({
     contractAddress: NFT_COLLECTION_1_CONTRACT,
     viewMode,
   });
 
   // Check if user has NFTs and setup reveal animation
   const hasNFTs = balance && Number(balance) > 0;
-  const firstNFT = userNFTs[0];
+  const _firstNFT = userNFTs[0];
 
-  const { shouldShowAnimation, hasSeenAnimation, resetAnimation } = useCardFlipAnimation(address, !!hasNFTs);
+  const { hasSeenAnimation } = useCardFlipAnimation(address, !!hasNFTs);
 
   // Refresh all NFT data after animation completes
   const handleAnimationComplete = useCallback(() => {
     // Force re-render by updating local state
     setAnimationCompleted(true);
-  }, [userNFTs.length, balance]);
+  }, []);
 
-  const handleFilterToggle = (filter: CollectionFilter) => {
+  const _handleFilterToggle = (filter: CollectionFilter) => {
     // Genesis filter is always active and cannot be toggled off
     if (filter === "genesis") {
       return;
@@ -242,7 +273,7 @@ export default function Collection() {
     setActiveFilter(activeFilter === filter ? "all" : filter);
   };
 
-  const handleNFTClick = useCallback((nft: any) => {
+  const handleNFTClick = useCallback((nft: NFT) => {
     setSelectedNFT(nft);
     setIsModalOpen(true);
   }, []);
@@ -262,9 +293,9 @@ export default function Collection() {
   };
 
   // Pagination logic
-  const totalPages = Math.ceil(displayNFTs.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const totalPages = Math.ceil(displayNFTs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
   const paginatedNFTs = displayNFTs.slice(startIndex, endIndex);
 
   const handlePageChange = useCallback((page: number) => {
@@ -378,6 +409,7 @@ export default function Collection() {
                     totalPages={totalPages}
                     onPageChange={handlePageChange}
                     totalItems={displayNFTs.length}
+                    itemsPerPage={itemsPerPage}
                   />
                 )}
               </>
