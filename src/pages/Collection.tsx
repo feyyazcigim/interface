@@ -310,7 +310,7 @@ export default function Collection() {
         <div className="flex flex-col w-full mt-4 sm:mt-0">
           <div className="flex flex-col self-center w-full gap-4 mb-20 sm:mb-0 sm:gap-8">
             <div className="flex flex-col gap-y-3">
-              <div className="pinto-h2 sm:pinto-h1">My Pinto Beavers</div>
+              <div className="pinto-h2 sm:pinto-h1">My Genesis Pinto Beavers</div>
             </div>
             <Separator />
             <div className="flex flex-col items-center justify-center py-16">
@@ -332,8 +332,8 @@ export default function Collection() {
             <div className="pinto-h2 sm:pinto-h1">
               {viewMode === "owned"
                 ? balance === 1
-                  ? "My Pinto Beaver"
-                  : "My Pinto Beavers"
+                  ? "My Genesis Pinto Beaver"
+                  : "My Genesis Pinto Beavers"
                 : `${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s Collection`}
             </div>
             <div className="flex items-center gap-4">

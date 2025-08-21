@@ -90,7 +90,21 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
                   <h1 className="text-3xl font-bold text-gray-900 truncate">
                     {`${getCollectionName(selectedNFT.contractAddress)} #${selectedNFT.id}`}
                   </h1>
-                  <p className="text-gray-600 mt-1">Owned by {formatOwner(owner)}</p>
+                  <p className="text-gray-600 mt-1">
+                    Owned by{" "}
+                    {owner ? (
+                      <Link
+                        to={`https://basescan.org/address/${owner}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline font-mono"
+                      >
+                        {formatOwner(owner)}
+                      </Link>
+                    ) : (
+                      "Loading..."
+                    )}
+                  </p>
                 </div>
               </div>
             </div>
@@ -103,13 +117,13 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
                   <span className="text-gray-600">Token ID</span>
                   <span className="font-medium text-gray-900">#{selectedNFT.id}</span>
                 </div>
-                <div className="flex justify-between items-start gap-2 py-2">
+                <div className="flex justify-between items-center py-2">
                   <span className="text-gray-600 flex-shrink-0">Contract Address</span>
                   <Link
                     to={`https://basescan.org/address/${selectedNFT.contractAddress}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 font-mono hover:underline text-right min-w-0"
+                    className="text-sm text-blue-600 font-mono hover:underline font-medium"
                   >
                     {`${selectedNFT.contractAddress.slice(0, 10)}...${selectedNFT.contractAddress.slice(-4)}`}
                   </Link>
@@ -142,8 +156,24 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
           {/* Top Navigation with Title */}
           <div className="flex-shrink-0 flex items-center justify-between p-4">
             <div className="flex-1">
-              <h1 className="text-xl text-gray-900">Pinto NFT #{selectedNFT.id}</h1>
-              <p className="text-gray-600 text-sm mt-1">Owned by {formatOwner(owner)}</p>
+              <h1 className="text-xl text-gray-900">
+                {getCollectionName(selectedNFT.contractAddress)} #{selectedNFT.id}
+              </h1>
+              <p className="text-gray-600 text-sm mt-1">
+                Owned by{" "}
+                {owner ? (
+                  <Link
+                    to={`https://basescan.org/address/${owner}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline font-mono"
+                  >
+                    {formatOwner(owner)}
+                  </Link>
+                ) : (
+                  "Loading..."
+                )}
+              </p>
             </div>
             <button
               type="button"
@@ -182,13 +212,32 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
 
           {/* Bottom Content */}
           <div className="flex-1 bg-white rounded-t-3xl min-h-0 flex flex-col">
-            {/* Header */}
-            <div className="flex-shrink-0 px-6 pt-6 pb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Details</h2>
-            </div>
-
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6" style={{ WebkitOverflowScrolling: "touch" }}>
+              {/* Traits */}
+              <TraitsCard attributes={selectedMetadata?.attributes} />
+
+              {/* Details */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Details</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-600">Token ID</span>
+                    <span className="font-medium text-gray-900">#{selectedNFT.id}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-600 flex-shrink-0">Contract Address</span>
+                    <Link
+                      to={`https://basescan.org/address/${selectedNFT.contractAddress}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 font-mono hover:underline font-medium"
+                    >
+                      {`${selectedNFT.contractAddress.slice(0, 10)}...${selectedNFT.contractAddress.slice(-4)}`}
+                    </Link>
+                  </div>
+                </div>
+              </div>
               {/* Action Button */}
               <div>
                 <Button
@@ -205,31 +254,6 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
                     View on OpenSea
                   </Link>
                 </Button>
-              </div>
-
-              {/* Traits */}
-              <TraitsCard attributes={selectedMetadata?.attributes} />
-
-              {/* Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Details</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-600">Token ID</span>
-                    <span className="font-medium text-gray-900">#{selectedNFT.id}</span>
-                  </div>
-                  <div className="flex justify-between items-start gap-2 py-2">
-                    <span className="text-gray-600 flex-shrink-0">Contract Address</span>
-                    <Link
-                      to={`https://basescan.org/address/${selectedNFT.contractAddress}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 font-mono hover:underline text-right min-w-0"
-                    >
-                      {`${selectedNFT.contractAddress.slice(0, 10)}...${selectedNFT.contractAddress.slice(-4)}`}
-                    </Link>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
