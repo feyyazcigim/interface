@@ -19,6 +19,10 @@ export const NFTCarousel = ({ nfts, viewMode, userNFTs, onNFTClick }: NFTCarouse
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Touch/Swipe state
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
   // Calculate opacity based on distance from active index
   const getOpacity = (index: number) => {
     const distance = Math.abs(index - activeIndex);
@@ -53,6 +57,35 @@ export const NFTCarousel = ({ nfts, viewMode, userNFTs, onNFTClick }: NFTCarouse
       setActiveIndex(activeIndex - 1);
     }
   }, [activeIndex]);
+
+  // Touch handlers for swipe functionality
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null); // Reset touchEnd
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      goToNext();
+    }
+    if (isRightSwipe) {
+      goToPrevious();
+    }
+
+    // Reset touch state
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
 
   // Keyboard navigation
   useEffect(() => {
@@ -92,7 +125,14 @@ export const NFTCarousel = ({ nfts, viewMode, userNFTs, onNFTClick }: NFTCarouse
 
       {/* Carousel Container */}
       <div className="relative">
-        <div ref={containerRef} className="flex items-center justify-center" style={{ minHeight: "min(80vw, 60vh)" }}>
+        <div
+          ref={containerRef}
+          className="flex items-center justify-center"
+          style={{ minHeight: "min(80vw, 60vh)" }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
           {nfts.map((nft, index) => {
             const isOwned = viewMode === "all" && userNFTs.some((owned) => owned.id === nft.id);
             const distance = Math.abs(index - activeIndex);

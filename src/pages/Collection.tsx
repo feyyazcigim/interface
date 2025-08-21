@@ -311,9 +311,6 @@ export default function Collection() {
           <div className="flex flex-col self-center w-full gap-4 mb-20 sm:mb-0 sm:gap-8">
             <div className="flex flex-col gap-y-3">
               <div className="pinto-h2 sm:pinto-h1">My Pinto Beavers</div>
-              <div className="pinto-sm sm:pinto-body-light text-pinto-light">
-                Connect your wallet to view your collection of Pinto Beavers.
-              </div>
             </div>
             <Separator />
             <div className="flex flex-col items-center justify-center py-16">
