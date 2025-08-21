@@ -11,50 +11,53 @@ import SecondaryCTAValues from "@/components/landing/SecondaryCTAValues";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import clsx from "clsx";
 import { WheelEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Landing() {
-  const lastScrollTop = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const projectStatsSectionRef = useRef<HTMLElement>(null);
-  const bottomCtaRef = useRef<HTMLDivElement>(null);
 
   const isMobile = useIsMobile();
+  const [currentTriggerPhase, setCurrentTriggerPhase] = useState<string | undefined>(undefined);
+  const [isAtTop, setIsAtTop] = useState<boolean>(true); // Track if scroll is at very top
 
-  // Track scroll direction for ProjectStats snap behavior
+  // Track first-time visitor status
+  const [isFirstTimeVisitor, setIsFirstTimeVisitor] = useState<boolean>(false);
+  const [sectionsVisible, setSectionsVisible] = useState<boolean>(true); // Default to visible
+
+  // Check if user is a first-time visitor
+  useEffect(() => {
+    const hasVisited = localStorage.getItem("pinto-has-visited");
+    if (!hasVisited) {
+      setIsFirstTimeVisitor(true);
+      setSectionsVisible(false); // Hide sections for first-time visitors
+      localStorage.setItem("pinto-has-visited", "true");
+    }
+    // For returning visitors, sectionsVisible remains true by default
+  }, []);
+
+  // Show sections when mainCTA phase is reached for first-time visitors
+  useEffect(() => {
+    if (isFirstTimeVisitor && currentTriggerPhase === "mainCTA" && !sectionsVisible) {
+      setSectionsVisible(true);
+    }
+  }, [isFirstTimeVisitor, currentTriggerPhase, sectionsVisible]);
+
+  // Track scroll position to determine if at top
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
-    const projectStatsSection = projectStatsSectionRef.current;
-    const bottomCta = bottomCtaRef.current;
-    if (!scrollContainer || !projectStatsSection || !bottomCta) return;
+    if (!scrollContainer) return;
 
     const handleScroll = () => {
       const currentScrollTop = scrollContainer.scrollTop;
-      const scrollDirection = currentScrollTop > lastScrollTop.current ? "down" : "up";
-
-      // Directly update the className without causing re-renders
-      const projectStatsSectionClasses = clsx(
-        "flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen",
-      );
-      if (scrollDirection === "down") {
-        projectStatsSection.className = `${projectStatsSectionClasses} snap-start`;
-      } else {
-        projectStatsSection.className = `${projectStatsSectionClasses} snap-end`;
-      }
-
-      const bottomCtaClasses = clsx(
-        `fixed left-1/2 -translate-x-1/2 flex justify-center ${
-          currentScrollTop >= window.innerHeight / 2 ? "bottom-6 sm:bottom-12" : "-bottom-28"
-        } transition-all duration-500 ease-in-out`,
-      );
-      bottomCta.className = bottomCtaClasses;
-
-      lastScrollTop.current = currentScrollTop;
+      const halfScreenHeight = window.innerHeight / 2;
+      setIsAtTop(currentScrollTop < halfScreenHeight);
     };
 
     scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+
+    // Check initial position
+    handleScroll();
 
     return () => {
       scrollContainer.removeEventListener("scroll", handleScroll);
@@ -66,6 +69,8 @@ export default function Landing() {
     document.body.scrollTop += e.deltaY;
   };
 
+  const isMainCta = currentTriggerPhase === "mainCTA";
+
   return (
     <div
       className="sm:max-w-[1920px] w-full place-self-center"
@@ -75,53 +80,65 @@ export default function Landing() {
       }}
     >
       <div
-        ref={scrollContainerRef}
         className="flex flex-col h-screen overflow-y-auto snap-y snap-mandatory scrollbar-none"
         data-scroll-container="true"
+        ref={scrollContainerRef}
       >
         <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
-          <LandingChart />
+          <LandingChart currentTriggerPhase={currentTriggerPhase} setCurrentTriggerPhase={setCurrentTriggerPhase} />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen snap-center">
-          <SecondaryCTAValues />
-          <SecondaryCTA />
-          <SecondaryCTAProperties />
-        </section>
-        <section
-          ref={projectStatsSectionRef}
-          className="flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen snap-start"
-        >
-          <ProjectStats />
-        </section>
-        <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
-          <BugBounty />
-          {/* 
-        <AuditsList />
-        */}
-        </section>
-        <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
-          <Resources />
-        </section>
+        {sectionsVisible && (
+          <>
+            <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen sm:snap-center">
+              <SecondaryCTAValues />
+              <SecondaryCTA />
+              <SecondaryCTAProperties />
+            </section>
+            <section className="flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen sm:snap-center">
+              <ProjectStats />
+            </section>
+            <section className="flex flex-col overflow-clip place-content-center min-h-screen sm:snap-center">
+              <BugBounty />
+              {/* 
+            <AuditsList />
+            */}
+            </section>
+            <section className="flex flex-col overflow-clip place-content-center min-h-screen sm:snap-center">
+              <Resources />
+            </section>
+          </>
+        )}
       </div>
-      <Link to={navLinks.overview} onWheelCapture={handleWheel}>
+      <Link
+        to={navLinks.overview}
+        onWheelCapture={handleWheel}
+        className={`${isAtTop && isMainCta ? "pointer-events-none" : "pointer-events-auto"}`}
+      >
         <div
-          ref={bottomCtaRef}
-          className={`fixed left-1/2 -translate-x-1/2 flex justify-center -bottom-28 transition-all duration-500 ease-in-out`}
+          className={`fixed left-1/2 -translate-x-1/2 flex justify-center ${
+            isMainCta ? "bottom-6 sm:bottom-12" : "-bottom-28"
+          } transition-all duration-500 ease-in-out`}
         >
           <Button
             rounded="full"
-            size={isMobile ? "xl" : "xxl"}
-            className={`${isMobile ? "scale-100" : "scale-150"} hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
-            shimmer
-            glow
+            size={isMobile || (isAtTop && isMainCta) ? "xl" : "xxl"}
+            className={`${isMobile || (isAtTop && isMainCta) ? "scale-100" : "scale-150"} hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+            shimmer={!isAtTop}
+            glow={!isAtTop}
           >
-            <span className="relative z-10">Join the Farm</span>
-            <div className="relative z-10" style={{ isolation: "isolate" }}>
-              <PintoRightArrow
-                width={isMobile ? "1.25rem" : "1.5rem"}
-                height={isMobile ? "1.25rem" : "1.5rem"}
-                className="relative z-10"
-              />
+            {/* Conditionally show text based on scroll position */}
+            <span
+              className={`relative z-10 transition-opacity ${isAtTop && isMainCta ? "w-0 opacity-0 -ml-2 text-pinto-green-4" : "w-auto opacity-100 ml-0 text-white"}`}
+            >
+              Join the Farm
+            </span>
+            <div
+              className={`relative z-10 transition-transform transform duration-300 ${
+                isAtTop && isMainCta ? "rotate-90" : "rotate-0"
+              }`}
+              style={{ isolation: "isolate" }}
+            >
+              <PintoRightArrow width={isMobile ? "1.25rem" : "1.5rem"} height={isMobile ? "1.25rem" : "1.5rem"} />
             </div>
           </Button>
         </div>

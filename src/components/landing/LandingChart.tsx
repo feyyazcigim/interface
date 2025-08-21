@@ -338,7 +338,12 @@ function generatePriceLabelData(chartHeight = ANIMATION_CONFIG.height) {
   });
 }
 
-export default function LandingChart() {
+interface LandingChartProps {
+  currentTriggerPhase: string | undefined;
+  setCurrentTriggerPhase: (phase: string | undefined) => void;
+}
+
+export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPhase }: LandingChartProps) {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
   const [dynamicHeight, setDynamicHeight] = useState(ANIMATION_CONFIG.height); // Default to config height
   const containerRef = useRef<HTMLDivElement>(null);
@@ -510,8 +515,7 @@ export default function LandingChart() {
     return idx;
   });
 
-  // Get the current txType and farmer for the floating marker
-  const [currentTriggerPhase, setCurrentTriggerPhase] = useState<string | undefined>(undefined);
+  // currentTriggerPhase and setCurrentTriggerPhase are now passed as props
 
   // Refs to prevent timer interference
   const pintoTimerRef = useRef<NodeJS.Timeout | null>(null);
