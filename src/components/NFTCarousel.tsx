@@ -238,34 +238,24 @@ export const NFTCarousel = ({ nfts, viewMode, userNFTs, onNFTClick }: NFTCarouse
         </button>
       )}
 
-      {/* Centered Text Below Image */}
-      <div className="text-center mt-16">
-        <p className="text-gray-500 max-w-4xl mx-auto pinto-body leading-relaxed px-4 italic">
-          And it came to pass, in the dry Seasons of yore, when the river was made thin and volatility crept in, when
-          the Farm was yearning for mints, that the Pinto Beavers did not depart. Whether tending unto their crops in
-          the Silo, Sowing in the Field, or dwelling in the quiet leisure of the Farm, their steadfast faith and
-          enterprise preserved the Pinto experiment, that it might endure. Yea, the Farm remembers.
-        </p>
-
-        {/* Jump to Token ID */}
-        <div className="flex items-center justify-center gap-2 mt-4">
-          <span className="text-sm text-gray-400">Jump to</span>
-          <input
-            type="text"
-            value={jumpToValue}
-            onChange={handleInputChange}
-            onKeyPress={handleJumpToKeyPress}
-            placeholder="#"
-            className="w-14 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-pinto-green-3 text-center"
-          />
-          <button
-            type="button"
-            onClick={handleJumpTo}
-            className="px-3 py-1 text-sm border border-gray-300 text-gray-600 rounded hover:border-pinto-green-3 hover:text-pinto-green-3 transition-colors"
-          >
-            Go
-          </button>
-        </div>
+      {/* Jump to Token ID */}
+      <div className="flex items-center justify-center gap-2 mt-8">
+        <span className="text-sm text-gray-400">Jump to</span>
+        <input
+          type="text"
+          value={jumpToValue}
+          onChange={handleInputChange}
+          onKeyPress={handleJumpToKeyPress}
+          placeholder="#"
+          className="w-14 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-pinto-green-3 text-center"
+        />
+        <button
+          type="button"
+          onClick={handleJumpTo}
+          className="px-3 py-1 text-sm border border-gray-300 text-gray-600 rounded hover:border-pinto-green-3 hover:text-pinto-green-3 transition-colors"
+        >
+          Go
+        </button>
       </div>
 
       {/* Dot Indicators */}
