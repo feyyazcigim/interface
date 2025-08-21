@@ -51,7 +51,12 @@ const NFTProfileDisplay = ({ navigate, togglePanel }: NFTProfileDisplayProps) =>
       {hideNFTProfile ? (
         <span className="text-gray-500 font-semibold text-2xl">?</span>
       ) : (
-        <img src={profileImageUrl} alt="NFT Profile" className="w-full h-full object-cover" />
+        <img
+          src={profileImageUrl}
+          alt="NFT Profile"
+          className="w-full h-full object-cover"
+          style={{ objectPosition: "50% 10%" }}
+        />
       )}
     </button>
   );

@@ -278,6 +278,10 @@ export default function Collection() {
     setIsModalOpen(true);
   }, []);
 
+  const handleNFTNavigate = useCallback((nft: NFTData) => {
+    setSelectedNFT(nft);
+  }, []);
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     // Delay clearing the selected NFT to prevent text flicker during modal close animation
@@ -415,7 +419,14 @@ export default function Collection() {
         </div>
       </div>
 
-      <NFTDetailModal isOpen={isModalOpen} onClose={handleCloseModal} selectedNFT={selectedNFT} />
+      <NFTDetailModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        selectedNFT={selectedNFT}
+        nftCollection={displayNFTs}
+        onNavigate={handleNFTNavigate}
+        isGridMode={isGridMode}
+      />
 
       {/* NFT Card Flip Reveal Animation Overlay */}
       {/* {shouldShowAnimation && firstNFT && (

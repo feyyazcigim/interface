@@ -9,6 +9,8 @@ import { abiSnippets } from "@/constants/abiSnippets";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
 import { useNFTImage } from "@/hooks/useNFTImage";
+import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useReadContract } from "wagmi";
 
@@ -21,9 +23,19 @@ interface NFTDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedNFT: NFTData | null;
+  nftCollection?: NFTData[];
+  onNavigate?: (nft: NFTData) => void;
+  isGridMode?: boolean;
 }
 
-export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalProps) => {
+export const NFTDetailModal = ({
+  isOpen,
+  onClose,
+  selectedNFT,
+  nftCollection = [],
+  onNavigate,
+  isGridMode = true,
+}: NFTDetailModalProps) => {
   // Load selected NFT image data for modal
   const {
     imageUrl: selectedImageUrl,
@@ -48,6 +60,51 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
+  // Navigation logic
+  const currentIndex = selectedNFT
+    ? nftCollection.findIndex((nft) => nft.id === selectedNFT.id && nft.contractAddress === selectedNFT.contractAddress)
+    : -1;
+  const canNavigateLeft = currentIndex > 0;
+  const canNavigateRight = currentIndex < nftCollection.length - 1;
+
+  const navigateLeft = () => {
+    if (canNavigateLeft && onNavigate) {
+      onNavigate(nftCollection[currentIndex - 1]);
+    }
+  };
+
+  const navigateRight = () => {
+    if (canNavigateRight && onNavigate) {
+      onNavigate(nftCollection[currentIndex + 1]);
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        navigateLeft();
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        navigateRight();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, currentIndex, nftCollection, onNavigate, onClose]);
+
   if (!selectedNFT) return null;
 
   return (
@@ -58,6 +115,33 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
       >
         {/* Desktop Layout */}
         <div className="hidden lg:flex flex-1 min-h-0 relative">
+          {/* Navigation Arrows - only show in grid mode */}
+          {nftCollection.length > 1 && isGridMode && (
+            <>
+              {/* Left Arrow */}
+              <button
+                type="button"
+                onClick={navigateLeft}
+                disabled={!canNavigateLeft}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/90 hover:bg-white rounded-full shadow-lg border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/90"
+                aria-label="Previous NFT"
+              >
+                <ChevronLeftIcon className="w-6 h-6 text-gray-700" />
+              </button>
+
+              {/* Right Arrow */}
+              <button
+                type="button"
+                onClick={navigateRight}
+                disabled={!canNavigateRight}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/90 hover:bg-white rounded-full shadow-lg border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/90"
+                aria-label="Next NFT"
+              >
+                <ChevronRightIcon className="w-6 h-6 text-gray-700" />
+              </button>
+            </>
+          )}
+
           {/* Left Panel - NFT Image */}
           <div className="flex-shrink-0 w-[65%] h-full flex items-center justify-center p-6">
             {selectedImageUrl && !selectedLoading && (
@@ -153,6 +237,33 @@ export const NFTDetailModal = ({ isOpen, onClose, selectedNFT }: NFTDetailModalP
 
         {/* Mobile Layout */}
         <div className="lg:hidden flex flex-col h-full relative">
+          {/* Navigation Arrows - only show in grid mode */}
+          {nftCollection.length > 1 && isGridMode && (
+            <>
+              {/* Left Arrow */}
+              <button
+                type="button"
+                onClick={navigateLeft}
+                disabled={!canNavigateLeft}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/90"
+                aria-label="Previous NFT"
+              >
+                <ChevronLeftIcon className="w-5 h-5 text-gray-700" />
+              </button>
+
+              {/* Right Arrow */}
+              <button
+                type="button"
+                onClick={navigateRight}
+                disabled={!canNavigateRight}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/90"
+                aria-label="Next NFT"
+              >
+                <ChevronRightIcon className="w-5 h-5 text-gray-700" />
+              </button>
+            </>
+          )}
+
           {/* Top Navigation with Title */}
           <div className="flex-shrink-0 flex items-center justify-between p-4">
             <div className="flex-1">
