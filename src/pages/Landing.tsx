@@ -86,7 +86,7 @@ export default function Landing() {
       }}
     >
       <div
-        className="flex flex-col h-screen overflow-y-auto snap-y snap-mandatory scrollbar-none"
+        className="flex flex-col h-screen overflow-y-auto snap-y snap-proximity sm:snap-mandatory scrollbar-none"
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
@@ -95,21 +95,21 @@ export default function Landing() {
         </section>
         {sectionsVisible && (
           <>
-            <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen sm:snap-center">
+            <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen snap-center">
               <SecondaryCTAValues />
               <SecondaryCTA />
               <SecondaryCTAProperties />
             </section>
-            <section className="flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen sm:snap-center">
+            <section className="flex flex-col overflow-clip place-content-center min-h-[125rem] sm:min-h-screen snap-center">
               <ProjectStats />
             </section>
-            <section className="flex flex-col overflow-clip place-content-center min-h-screen sm:snap-center">
+            <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
               <BugBounty />
               {/* 
             <AuditsList />
             */}
             </section>
-            <section className="flex flex-col overflow-clip place-content-center min-h-screen sm:snap-center">
+            <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
               <Resources />
             </section>
           </>
