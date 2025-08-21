@@ -140,7 +140,7 @@ export default function Landing() {
             </span>
             <div
               className={`relative transition-transform transform duration-300 ${
-                isAtTop && reachedMainCta ? "rotate-90" : "rotate-0"
+                isAtTop && reachedMainCta ? `rotate-90 ${!isMobile ? "-mx-1" : ""}` : "rotate-0"
               }`}
               style={{ isolation: "isolate" }}
             >
