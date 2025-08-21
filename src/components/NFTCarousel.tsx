@@ -15,7 +15,8 @@ interface NFTCarouselProps {
 }
 
 export const NFTCarousel = ({ nfts, viewMode, userNFTs, onNFTClick }: NFTCarouselProps) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(() => (nfts.length > 0 ? Math.floor(Math.random() * nfts.length) : 0));
+  const [jumpToValue, setJumpToValue] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -57,6 +58,45 @@ export const NFTCarousel = ({ nfts, viewMode, userNFTs, onNFTClick }: NFTCarouse
       setActiveIndex(activeIndex - 1);
     }
   }, [activeIndex]);
+
+  // Handle input change with number validation and capping
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      // Only allow numbers
+      if (value === "" || /^\d+$/.test(value)) {
+        let numValue = parseInt(value);
+        if (!Number.isNaN(numValue) && nfts.length > 0) {
+          // Cap at max token ID
+          const maxTokenId = Math.max(...nfts.map((nft) => nft.id));
+          numValue = Math.min(numValue, maxTokenId);
+        }
+        setJumpToValue(Number.isNaN(numValue) ? value : numValue.toString());
+      }
+    },
+    [nfts],
+  );
+
+  // Handle jump to specific token ID
+  const handleJumpTo = useCallback(() => {
+    const tokenId = parseInt(jumpToValue.trim());
+    if (Number.isNaN(tokenId)) return;
+
+    const targetIndex = nfts.findIndex((nft) => nft.id === tokenId);
+    if (targetIndex !== -1) {
+      setActiveIndex(targetIndex);
+      setJumpToValue("");
+    }
+  }, [jumpToValue, nfts]);
+
+  const handleJumpToKeyPress = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") {
+        handleJumpTo();
+      }
+    },
+    [handleJumpTo],
+  );
 
   // Touch handlers for swipe functionality
   const onTouchStart = (e: React.TouchEvent) => {
@@ -206,6 +246,26 @@ export const NFTCarousel = ({ nfts, viewMode, userNFTs, onNFTClick }: NFTCarouse
           Sowing in the Field, dwelling in the quiet leisure of the Farm, their steadfast faith and enterprise preserved
           and persisted the Pinto experiment. Yea, the Farm remembers.
         </p>
+
+        {/* Jump to Token ID */}
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <span className="text-sm text-gray-400">Jump to</span>
+          <input
+            type="text"
+            value={jumpToValue}
+            onChange={handleInputChange}
+            onKeyPress={handleJumpToKeyPress}
+            placeholder="#"
+            className="w-14 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-pinto-green-3 text-center"
+          />
+          <button
+            type="button"
+            onClick={handleJumpTo}
+            className="px-3 py-1 text-sm border border-gray-300 text-gray-600 rounded hover:border-pinto-green-3 hover:text-pinto-green-3 transition-colors"
+          >
+            Go
+          </button>
+        </div>
       </div>
 
       {/* Dot Indicators */}

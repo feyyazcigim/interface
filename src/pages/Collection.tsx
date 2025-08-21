@@ -338,7 +338,7 @@ export default function Collection() {
                 ? balance === 1
                   ? "My Genesis Pinto Beaver"
                   : "My Genesis Pinto Beavers"
-                : `${getCollectionName(NFT_COLLECTION_1_CONTRACT)}s Collection`}
+                : `${getCollectionName(NFT_COLLECTION_1_CONTRACT)} Collection`}
             </div>
             <div className="flex items-center gap-4">
               {displayNFTs.length > 1 && (
