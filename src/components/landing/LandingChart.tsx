@@ -226,6 +226,147 @@ function priceLabelToY(price: number, chartHeight = ANIMATION_CONFIG.height) {
   return middle + gridOffset;
 }
 
+// Generate stable-only path for secondary lines (Bezier smoothing)
+function generateStableOnlyPath(pointSpacing: number, chartHeight = ANIMATION_CONFIG.height, loops = 5) {
+  const points: { x: number; y: number; price: number }[] = [];
+  const beziers: {
+    p0: { x: number; y: number };
+    c1: { x: number; y: number };
+    c2: { x: number; y: number };
+    p1: { x: number; y: number };
+  }[] = [];
+
+  // Create repeated stable data for continuous looping
+  const repeatedStableData: PricePoint[] = Array.from({ length: loops }).flatMap(() => stablePriceData);
+
+  let x = 0;
+  for (let i = 0; i < repeatedStableData.length; i++) {
+    const y = priceToY(repeatedStableData[i].value, chartHeight);
+    points.push({ x, y, price: repeatedStableData[i].value });
+    // If this segment has a speed, compress the next segment's width
+    const segSpeed = repeatedStableData[i].speed || 1;
+    x += pointSpacing / segSpeed;
+  }
+
+  if (points.length === 0) return { path: "", points: [], totalWidth: 0, beziers: [] };
+
+  let path = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const prev = points[i - 2] || p0;
+    const next = points[i + 1] || p1;
+    // Calculate control points
+    const c1x = p0.x + (p1.x - prev.x) / 6;
+    const c1y = p0.y + (p1.y - prev.y) / 6;
+    const c2x = p1.x - (next.x - p0.x) / 6;
+    const c2y = p1.y - (next.y - p0.y) / 6;
+    path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p1.x} ${p1.y}`;
+    beziers.push({ p0, c1: { x: c1x, y: c1y }, c2: { x: c2x, y: c2y }, p1 });
+  }
+
+  const totalWidth = points.length > 0 ? points[points.length - 1].x : 0;
+  return { path, points, totalWidth, beziers };
+}
+
+// Generate single cycle path for the first line (Bezier smoothing)
+function generateSingleCyclePath(pointSpacing: number, chartHeight = ANIMATION_CONFIG.height) {
+  const points: { x: number; y: number; price: number }[] = [];
+  const beziers: {
+    p0: { x: number; y: number };
+    c1: { x: number; y: number };
+    c2: { x: number; y: number };
+    p1: { x: number; y: number };
+  }[] = [];
+  const transactionMarkers: {
+    x: number;
+    y: number;
+    txType: string;
+    farmer?: string;
+    index: number;
+    apexType?: "peak" | "valley";
+  }[] = [];
+
+  // Use unstable + semi-stable + one cycle of stable data
+  const singleCycleData: PricePoint[] = [
+    ...unstablePriceData,
+    ...semiStablePriceData,
+    ...stablePriceData, // Only one cycle
+  ];
+
+  let x = 0;
+  for (let i = 0; i < singleCycleData.length; i++) {
+    const y = priceToY(singleCycleData[i].value, chartHeight);
+    points.push({ x, y, price: singleCycleData[i].value });
+    if (singleCycleData[i].txType) {
+      const txType = singleCycleData[i].txType as string;
+      transactionMarkers.push({ x, y, txType, farmer: singleCycleData[i].farmer, index: i });
+    }
+    // If this segment has a speed, compress the next segment's width
+    const segSpeed = singleCycleData[i].speed || 1;
+    x += pointSpacing / segSpeed;
+  }
+
+  if (points.length === 0) return { path: "", points: [], totalWidth: 0, beziers: [], transactionMarkers: [] };
+
+  let path = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const prev = points[i - 2] || p0;
+    const next = points[i + 1] || p1;
+    // Calculate control points
+    const c1x = p0.x + (p1.x - prev.x) / 6;
+    const c1y = p0.y + (p1.y - prev.y) / 6;
+    const c2x = p1.x - (next.x - p0.x) / 6;
+    const c2y = p1.y - (next.y - p0.y) / 6;
+    path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p1.x} ${p1.y}`;
+    beziers.push({ p0, c1: { x: c1x, y: c1y }, c2: { x: c2x, y: c2y }, p1 });
+  }
+
+  // Find all curve extrema (apexes) for better marker positioning
+  type ExtremumPoint = { x: number; y: number; type: "peak" | "valley"; segmentIndex: number };
+  const allExtrema: Array<ExtremumPoint> = [];
+  beziers.forEach((segment, index) => {
+    const extrema = findBezierExtrema(segment);
+    extrema.forEach((extremum) => {
+      allExtrema.push({ ...extremum, segmentIndex: index });
+    });
+  });
+
+  // Reposition transaction markers to nearest appropriate apex
+  const apexTransactionMarkers = transactionMarkers.map((marker) => {
+    // Find the closest apex to this transaction marker
+    let closestApex: ExtremumPoint | null = null;
+    let minDistance = Infinity;
+
+    allExtrema.forEach((apex) => {
+      const distance = Math.abs(apex.x - marker.x);
+      // Only consider apexes within reasonable range (half segment width)
+      if (distance < pointSpacing * 0.75 && distance < minDistance) {
+        minDistance = distance;
+        closestApex = apex;
+      }
+    });
+
+    // If we found a close apex, use it; otherwise keep original position
+    if (closestApex) {
+      const apex = closestApex as ExtremumPoint;
+      return {
+        ...marker,
+        x: apex.x,
+        y: apex.y,
+        apexType: apex.type, // Add metadata for positioning logic
+      };
+    }
+
+    return marker;
+  });
+
+  const totalWidth = points.length > 0 ? points[points.length - 1].x : 0;
+  return { path, points, totalWidth, beziers, transactionMarkers: apexTransactionMarkers };
+}
+
 // Generate complete line path with multiple repetitions (Bezier smoothing)
 function generateCompletePath(pointSpacing: number, chartHeight = ANIMATION_CONFIG.height) {
   const points: { x: number; y: number; price: number }[] = [];
@@ -428,7 +569,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     };
   }, [dynamicHeight]);
 
-  // Assign farmers to price data and generate path
+  // Assign farmers to price data and generate paths
   const { path, beziers, transactionMarkers } = useMemo(() => {
     // Assign a random farmer icon to each non-null txType price point
     for (let i = 0; i < fullPriceData.length; i++) {
@@ -437,7 +578,12 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         fullPriceData[i].farmer = personIcons[randomIndex];
       }
     }
-    return generateCompletePath(pointSpacing, dynamicHeight);
+    return generateSingleCyclePath(pointSpacing, dynamicHeight);
+  }, [dynamicHeight]);
+
+  // Generate stable-only path for secondary lines
+  const { path: stablePath, totalWidth: stablePathWidth } = useMemo(() => {
+    return generateStableOnlyPath(pointSpacing, dynamicHeight, 2);
   }, [dynamicHeight]);
 
   // Dynamic measurement line position using percentage
@@ -629,29 +775,34 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       const speedScale = viewportWidth / 1920; // Scale speed based on viewport width (1920 = base)
       const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
       const totalDataWidth = positions.segments.unstable + positions.segments.semiStable;
-      const singleLineWidth = totalDataWidth + positions.segments.stable;
-      const secondLineStart = singleLineWidth;
-      const thirdLineEnd = singleLineWidth * 3; // End of third line
+      const firstLineWidth = totalDataWidth + positions.segments.stable;
+      const secondLineStart = firstLineWidth;
+      const thirdLineStart = firstLineWidth + stablePathWidth;
+      const thirdLineEnd = thirdLineStart + stablePathWidth; // End of third line
+
+      // Calculate when third line end reaches measurement line
+      const measurementLinePosition = viewportWidth * ANIMATION_CONFIG.measurementLine.final; // 75% from left
+      const loopTriggerOffset = thirdLineEnd - measurementLinePosition;
 
       // Scroll through initial segments (unstable + semi-stable)
       controls = animate(scrollOffset, totalDataWidth, {
         duration: totalDataWidth / pxPerSecond,
         ease: "linear",
         onComplete: () => {
-          // Continue scrolling through all three lines
-          const remainingDistance = thirdLineEnd - totalDataWidth;
+          // Continue scrolling until third line end reaches measurement line
+          const remainingDistance = loopTriggerOffset - totalDataWidth;
           const remainingDuration = remainingDistance / pxPerSecond;
 
-          controls = animate(scrollOffset, thirdLineEnd, {
+          controls = animate(scrollOffset, loopTriggerOffset, {
             duration: remainingDuration,
             ease: "linear",
             onComplete: () => {
               // Loop: jump back to start of second line and continue infinitely
               scrollOffset.set(secondLineStart);
-              const loopDistance = singleLineWidth * 2; // From second line start to third line end
+              const loopDistance = loopTriggerOffset - secondLineStart; // From second line start to loop trigger point
               const loopDuration = loopDistance / pxPerSecond;
 
-              controls = animate(scrollOffset, thirdLineEnd, {
+              controls = animate(scrollOffset, loopTriggerOffset, {
                 duration: loopDuration,
                 ease: "linear",
                 repeat: Infinity,
@@ -992,16 +1143,20 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
                 delay: durations.fadeInSequence.priceLine.start,
               }}
             />
-            {/* Second price line - positioned to the right of first line */}
+            {/* Second price line - positioned to continue from end of first line */}
             <motion.path
-              d={path}
+              d={stablePath}
               fill="none"
-              stroke={lineStrokeColor}
+              stroke={"blue"}
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{
-                x: useTransform(x, (value) => value + positions.segments.totalInitial + positions.segments.stable),
+                x: useTransform(x, (value) => {
+                  // Position at the end of the full first line path
+                  const firstLineEnd = positions.segments.totalInitial + positions.segments.stable;
+                  return value + firstLineEnd;
+                }),
                 opacity: priceLineOpacity,
               }}
               initial={{ opacity: 0 }}
@@ -1011,19 +1166,20 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
                 delay: durations.fadeInSequence.priceLine.start,
               }}
             />
-            {/* Third price line - positioned further to the right */}
+            {/* Third price line - positioned to continue from end of second line */}
             <motion.path
-              d={path}
+              d={stablePath}
               fill="none"
-              stroke={lineStrokeColor}
+              stroke={"red"}
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{
-                x: useTransform(
-                  x,
-                  (value) => value + (positions.segments.totalInitial + positions.segments.stable) * 2,
-                ),
+                x: useTransform(x, (value) => {
+                  // Position at the end of first line + width of stable path
+                  const firstLineEnd = positions.segments.totalInitial + positions.segments.stable;
+                  return value + firstLineEnd + stablePathWidth;
+                }),
                 opacity: priceLineOpacity,
               }}
               initial={{ opacity: 0 }}
