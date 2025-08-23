@@ -227,7 +227,13 @@ function priceLabelToY(price: number, chartHeight = ANIMATION_CONFIG.height) {
 }
 
 // Generate stable-only path for secondary lines (Bezier smoothing)
-function generateStableOnlyPath(pointSpacing: number, chartHeight = ANIMATION_CONFIG.height, loops = 5) {
+function generateStableOnlyPath(
+  pointSpacing: number,
+  chartHeight = ANIMATION_CONFIG.height,
+  loops = 5,
+  lineType: "second" | "third" = "second",
+  startX = 0,
+) {
   const points: { x: number; y: number; price: number }[] = [];
   const beziers: {
     p0: { x: number; y: number };
@@ -236,10 +242,30 @@ function generateStableOnlyPath(pointSpacing: number, chartHeight = ANIMATION_CO
     p1: { x: number; y: number };
   }[] = [];
 
-  // Create repeated stable data for continuous looping
-  const repeatedStableData: PricePoint[] = Array.from({ length: loops }).flatMap(() => stablePriceData);
+  // Create repeated stable data for continuous looping with boundary points
+  let repeatedStableData: PricePoint[] = [];
 
-  let x = 0;
+  if (lineType === "second") {
+    // Second line: first line's last point + stable data + third line's first point
+    const firstLineLastPoint = stablePriceData[stablePriceData.length - 1]; // Last point of first line
+    const thirdLineFirstPoint = stablePriceData[0]; // First point of third line
+    repeatedStableData = [
+      firstLineLastPoint,
+      ...Array.from({ length: loops }).flatMap(() => stablePriceData),
+      thirdLineFirstPoint,
+    ];
+  } else {
+    // Third line: second line's last point + stable data + second line's first point (for loop)
+    const secondLineLastPoint = stablePriceData[stablePriceData.length - 1]; // Last point of second line
+    const secondLineFirstPoint = stablePriceData[0]; // First point of second line (for loop)
+    repeatedStableData = [
+      secondLineLastPoint,
+      ...Array.from({ length: loops }).flatMap(() => stablePriceData),
+      secondLineFirstPoint,
+    ];
+  }
+
+  let x = startX; // Start from the provided X position
   for (let i = 0; i < repeatedStableData.length; i++) {
     const y = priceToY(repeatedStableData[i].value, chartHeight);
     points.push({ x, y, price: repeatedStableData[i].value });
@@ -251,7 +277,20 @@ function generateStableOnlyPath(pointSpacing: number, chartHeight = ANIMATION_CO
   if (points.length === 0) return { path: "", points: [], totalWidth: 0, beziers: [] };
 
   let path = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 1; i < points.length; i++) {
+  let startIndex = 1;
+  let endIndex = points.length;
+
+  if (lineType === "second") {
+    // Exclude first bezier (from first line's last point) and last bezier (to third line's first point)
+    startIndex = 2;
+    endIndex = points.length - 1;
+  } else {
+    // Third line: exclude only first bezier (from second line's last point)
+    startIndex = 2;
+    endIndex = points.length;
+  }
+
+  for (let i = startIndex; i < endIndex; i++) {
     const p0 = points[i - 1];
     const p1 = points[i];
     const prev = points[i - 2] || p0;
@@ -265,8 +304,23 @@ function generateStableOnlyPath(pointSpacing: number, chartHeight = ANIMATION_CO
     beziers.push({ p0, c1: { x: c1x, y: c1y }, c2: { x: c2x, y: c2y }, p1 });
   }
 
-  const totalWidth = points.length > 0 ? points[points.length - 1].x : 0;
-  return { path, points, totalWidth, beziers };
+  // Total width excludes boundary points
+  const actualStartPoint = lineType === "second" ? points[1] : points[1]; // Skip the borrowed point
+  const actualEndPoint = lineType === "second" ? points[points.length - 2] : points[points.length - 1]; // For second line, exclude transition point
+  const totalWidth = actualEndPoint.x - actualStartPoint.x;
+
+  // Debug info
+  console.log(`${lineType} line debug:`, {
+    totalPoints: points.length,
+    firstPointX: points[0]?.x,
+    lastPointX: points[points.length - 1]?.x,
+    actualStartPointX: actualStartPoint.x,
+    actualEndPointX: actualEndPoint.x,
+    calculatedWidth: totalWidth,
+    startX,
+  });
+
+  return { path, points, totalWidth, beziers, actualEndX: actualEndPoint.x };
 }
 
 // Generate single cycle path for the first line (Bezier smoothing)
@@ -287,18 +341,20 @@ function generateSingleCyclePath(pointSpacing: number, chartHeight = ANIMATION_C
     apexType?: "peak" | "valley";
   }[] = [];
 
-  // Use unstable + semi-stable + one cycle of stable data
+  // Use unstable + semi-stable + one cycle of stable data + first point of second line
   const singleCycleData: PricePoint[] = [
     ...unstablePriceData,
     ...semiStablePriceData,
     ...stablePriceData, // Only one cycle
+    stablePriceData[0], // Add second line's first point for smooth transition
   ];
 
   let x = 0;
   for (let i = 0; i < singleCycleData.length; i++) {
     const y = priceToY(singleCycleData[i].value, chartHeight);
     points.push({ x, y, price: singleCycleData[i].value });
-    if (singleCycleData[i].txType) {
+    if (singleCycleData[i].txType && i < singleCycleData.length - 1) {
+      // Exclude transaction markers for the added transition point
       const txType = singleCycleData[i].txType as string;
       transactionMarkers.push({ x, y, txType, farmer: singleCycleData[i].farmer, index: i });
     }
@@ -310,7 +366,8 @@ function generateSingleCyclePath(pointSpacing: number, chartHeight = ANIMATION_C
   if (points.length === 0) return { path: "", points: [], totalWidth: 0, beziers: [], transactionMarkers: [] };
 
   let path = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 1; i < points.length; i++) {
+  for (let i = 1; i < points.length - 1; i++) {
+    // Exclude the final segment (to second line's first point)
     const p0 = points[i - 1];
     const p1 = points[i];
     const prev = points[i - 2] || p0;
@@ -363,7 +420,8 @@ function generateSingleCyclePath(pointSpacing: number, chartHeight = ANIMATION_C
     return marker;
   });
 
-  const totalWidth = points.length > 0 ? points[points.length - 1].x : 0;
+  // Total width is the second-to-last point (excluding the transition point)
+  const totalWidth = points.length > 1 ? points[points.length - 2].x : 0;
   return { path, points, totalWidth, beziers, transactionMarkers: apexTransactionMarkers };
 }
 
@@ -586,10 +644,23 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     return generateSingleCyclePath(pointSpacing, dynamicHeight);
   }, [dynamicHeight]);
 
-  // Generate stable-only path for secondary lines
-  const { path: stablePath, totalWidth: stablePathWidth } = useMemo(() => {
-    return generateStableOnlyPath(pointSpacing, dynamicHeight, 2);
-  }, [dynamicHeight]);
+  // Generate stable-only paths for secondary lines
+  const {
+    path: secondLinePath,
+    totalWidth: secondLineWidth,
+    actualEndX: secondLineActualEndX,
+  } = useMemo(() => {
+    return generateStableOnlyPath(pointSpacing, dynamicHeight, 2, "second", firstLineActualWidth);
+  }, [dynamicHeight, firstLineActualWidth]);
+
+  const { path: thirdLinePath, totalWidth: thirdLineWidth } = useMemo(() => {
+    console.log("Third line positioning:", {
+      calculatedStart: firstLineActualWidth + secondLineWidth,
+      actualSecondLineEnd: secondLineActualEndX,
+      difference: firstLineActualWidth + secondLineWidth - secondLineActualEndX,
+    });
+    return generateStableOnlyPath(pointSpacing, dynamicHeight, 2, "third", secondLineActualEndX);
+  }, [dynamicHeight, firstLineActualWidth, secondLineWidth, secondLineActualEndX]);
 
   // Dynamic measurement line position using percentage
   const measurementX = useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth);
@@ -781,8 +852,8 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
       const totalDataWidth = positions.segments.unstable + positions.segments.semiStable;
       const secondLineStart = firstLineActualWidth;
-      const thirdLineStart = firstLineActualWidth + stablePathWidth;
-      const thirdLineEnd = thirdLineStart + stablePathWidth; // End of third line
+      const thirdLineStart = firstLineActualWidth + secondLineWidth;
+      const thirdLineEnd = thirdLineStart + thirdLineWidth; // End of third line
 
       // Calculate when third line end reaches measurement line
       const measurementLinePosition = viewportWidth * ANIMATION_CONFIG.measurementLine.final; // 75% from left
@@ -1149,17 +1220,14 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
             />
             {/* Second price line - positioned to continue from end of first line */}
             <motion.path
-              d={stablePath}
+              d={secondLinePath}
               fill="none"
               stroke={"blue"}
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{
-                x: useTransform(x, (value) => {
-                  // Position at the end of the actual first line path
-                  return value + firstLineActualWidth;
-                }),
+                x: x, // No additional transform needed - path has correct X coordinates
                 opacity: priceLineOpacity,
               }}
               initial={{ opacity: 0 }}
@@ -1171,17 +1239,14 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
             />
             {/* Third price line - positioned to continue from end of second line */}
             <motion.path
-              d={stablePath}
+              d={thirdLinePath}
               fill="none"
               stroke={"red"}
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{
-                x: useTransform(x, (value) => {
-                  // Position at the end of first line + width of stable path
-                  return value + firstLineActualWidth + stablePathWidth;
-                }),
+                x: x, // No additional transform needed - path has correct X coordinates
                 opacity: priceLineOpacity,
               }}
               initial={{ opacity: 0 }}
