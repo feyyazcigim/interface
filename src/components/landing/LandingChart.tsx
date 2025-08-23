@@ -485,12 +485,14 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         return staticY;
       }
 
-      // Looping logic: after initial phase (unstable + semi-stable), loop only the stable segment
+      // Extended looping logic: cycle through all three lines
       // @ts-ignore-next-line
       let xVal = measX + currentOffset - viewportWidth * ANIMATION_CONFIG.clipPath.initial; // Account for price line offset
       const totalInitialWidth = positions.segments.totalInitial; // unstable + semi-stable
+      const singleLineWidth = totalInitialWidth + positions.segments.stable;
+
       if (xVal > totalInitialWidth) {
-        // Offset so the stable segment loops seamlessly
+        // We're in the stable/looping section - map to appropriate line segment
         const stableOffset = (xVal - totalInitialWidth) % positions.segments.stable;
         xVal = totalInitialWidth + stableOffset;
       }
@@ -623,23 +625,43 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
 
       // No need for setTimeout-based messages anymore - they're handled by position monitoring
 
-      // Phase 3: Start continuous scrolling through all data
+      // Phase 3: Start continuous scrolling through all three lines
       const speedScale = viewportWidth / 1920; // Scale speed based on viewport width (1920 = base)
       const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
       const totalDataWidth = positions.segments.unstable + positions.segments.semiStable;
+      const singleLineWidth = totalDataWidth + positions.segments.stable;
+      const secondLineStart = singleLineWidth;
+      const thirdLineEnd = singleLineWidth * 3; // End of third line
 
       // Scroll through initial segments (unstable + semi-stable)
       controls = animate(scrollOffset, totalDataWidth, {
         duration: totalDataWidth / pxPerSecond,
         ease: "linear",
         onComplete: () => {
-          // Loop only the stable segment with consistent speed
-          const loopDuration = positions.segments.stable / pxPerSecond;
-          controls = animate(scrollOffset, totalDataWidth + positions.segments.stable, {
-            duration: loopDuration,
+          // Continue scrolling through all three lines
+          const remainingDistance = thirdLineEnd - totalDataWidth;
+          const remainingDuration = remainingDistance / pxPerSecond;
+
+          controls = animate(scrollOffset, thirdLineEnd, {
+            duration: remainingDuration,
             ease: "linear",
-            repeat: Infinity,
-            repeatType: "loop",
+            onComplete: () => {
+              // Loop: jump back to start of second line and continue infinitely
+              scrollOffset.set(secondLineStart);
+              const loopDistance = singleLineWidth * 2; // From second line start to third line end
+              const loopDuration = loopDistance / pxPerSecond;
+
+              controls = animate(scrollOffset, thirdLineEnd, {
+                duration: loopDuration,
+                ease: "linear",
+                repeat: Infinity,
+                repeatType: "loop",
+                onRepeat: () => {
+                  scrollOffset.set(secondLineStart);
+                },
+              });
+              animationControlsRef.current = controls;
+            },
           });
           animationControlsRef.current = controls;
         },
@@ -952,8 +974,9 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               </motion.text>
             ))}
           </motion.g>
-          {/* Scrolling price line */}
+          {/* Scrolling price lines - three lines positioned to feel like one continuous line */}
           <g clipPath="url(#viewport)">
+            {/* Main price line */}
             <motion.path
               d={path}
               fill="none"
@@ -962,6 +985,47 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{ x, opacity: priceLineOpacity }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: durations.fadeInSequence.priceLine.duration,
+                delay: durations.fadeInSequence.priceLine.start,
+              }}
+            />
+            {/* Second price line - positioned to the right of first line */}
+            <motion.path
+              d={path}
+              fill="none"
+              stroke={lineStrokeColor}
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                x: useTransform(x, (value) => value + positions.segments.totalInitial + positions.segments.stable),
+                opacity: priceLineOpacity,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: durations.fadeInSequence.priceLine.duration,
+                delay: durations.fadeInSequence.priceLine.start,
+              }}
+            />
+            {/* Third price line - positioned further to the right */}
+            <motion.path
+              d={path}
+              fill="none"
+              stroke={lineStrokeColor}
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                x: useTransform(
+                  x,
+                  (value) => value + (positions.segments.totalInitial + positions.segments.stable) * 2,
+                ),
+                opacity: priceLineOpacity,
+              }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{
