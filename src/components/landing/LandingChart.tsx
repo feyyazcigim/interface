@@ -570,7 +570,12 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   }, [dynamicHeight]);
 
   // Assign farmers to price data and generate paths
-  const { path, beziers, transactionMarkers } = useMemo(() => {
+  const {
+    path,
+    beziers,
+    transactionMarkers,
+    totalWidth: firstLineActualWidth,
+  } = useMemo(() => {
     // Assign a random farmer icon to each non-null txType price point
     for (let i = 0; i < fullPriceData.length; i++) {
       if (fullPriceData[i].txType) {
@@ -775,9 +780,8 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       const speedScale = viewportWidth / 1920; // Scale speed based on viewport width (1920 = base)
       const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
       const totalDataWidth = positions.segments.unstable + positions.segments.semiStable;
-      const firstLineWidth = totalDataWidth + positions.segments.stable;
-      const secondLineStart = firstLineWidth;
-      const thirdLineStart = firstLineWidth + stablePathWidth;
+      const secondLineStart = firstLineActualWidth;
+      const thirdLineStart = firstLineActualWidth + stablePathWidth;
       const thirdLineEnd = thirdLineStart + stablePathWidth; // End of third line
 
       // Calculate when third line end reaches measurement line
@@ -1153,9 +1157,8 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               strokeLinejoin="round"
               style={{
                 x: useTransform(x, (value) => {
-                  // Position at the end of the full first line path
-                  const firstLineEnd = positions.segments.totalInitial + positions.segments.stable;
-                  return value + firstLineEnd;
+                  // Position at the end of the actual first line path
+                  return value + firstLineActualWidth;
                 }),
                 opacity: priceLineOpacity,
               }}
@@ -1177,8 +1180,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               style={{
                 x: useTransform(x, (value) => {
                   // Position at the end of first line + width of stable path
-                  const firstLineEnd = positions.segments.totalInitial + positions.segments.stable;
-                  return value + firstLineEnd + stablePathWidth;
+                  return value + firstLineActualWidth + stablePathWidth;
                 }),
                 opacity: priceLineOpacity,
               }}
