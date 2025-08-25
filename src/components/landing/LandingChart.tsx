@@ -183,7 +183,14 @@ const stablePriceData: PricePoint[] = [
 
 // Generate randomized stable data with slight variations (0.1%)
 function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
-  // First pass: randomize values and speeds
+  // Transaction types for different price movements
+  const bullishTxTypes = ["deposit", "convert", "sow"];
+  const bearishTxTypes = ["withdraw", "convert", "yield", "harvest"];
+
+  // Count original non-null txTypes
+  const originalTxTypeCount = baseData.filter((point) => point.txType !== null).length;
+
+  // First pass: randomize values and speeds, clear all txTypes
   const randomizedData = baseData.map((point) => {
     // Determine price randomization direction based on original price relative to $1.00
     let priceMultiplier: number;
@@ -201,9 +208,42 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
     return {
       ...point,
       value: point.value * priceMultiplier,
+      txType: null, // Clear all txTypes initially
       farmer: undefined, // Clear farmer assignment so new batch gets fresh farmers
       speed: (point.speed || 1) + (Math.random() - 0.5) * 0.1, // ±0.05 randomization
     };
+  });
+
+  // Second pass: randomly assign txTypes to maintain the same count
+  const availableIndices = randomizedData.map((_, index) => index);
+
+  // Shuffle and pick random indices for transactions
+  for (let i = availableIndices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [availableIndices[i], availableIndices[j]] = [availableIndices[j], availableIndices[i]];
+  }
+
+  const selectedIndices = availableIndices.slice(0, originalTxTypeCount);
+
+  // Assign appropriate txTypes based on price movement
+  selectedIndices.forEach((index) => {
+    if (index < randomizedData.length - 1) {
+      const currentPoint = randomizedData[index];
+      const nextPoint = randomizedData[index + 1];
+      const priceIncreases = nextPoint.value > currentPoint.value;
+
+      if (priceIncreases) {
+        // Choose from bullish transaction types
+        randomizedData[index].txType = bullishTxTypes[Math.floor(Math.random() * bullishTxTypes.length)];
+      } else {
+        // Choose from bearish transaction types
+        randomizedData[index].txType = bearishTxTypes[Math.floor(Math.random() * bearishTxTypes.length)];
+      }
+    } else {
+      // For the last point, randomly choose any transaction type
+      const allTxTypes = [...bullishTxTypes, ...bearishTxTypes];
+      randomizedData[index].txType = allTxTypes[Math.floor(Math.random() * allTxTypes.length)];
+    }
   });
 
   // Calculate total speed deviation and balance it
