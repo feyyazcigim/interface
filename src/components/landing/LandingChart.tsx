@@ -184,8 +184,8 @@ const stablePriceData: PricePoint[] = [
 // Generate randomized stable data with slight variations (0.1%)
 function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
   // Transaction types for different price movements
-  const bullishTxTypes = ["deposit", "convert", "sow"];
-  const bearishTxTypes = ["withdraw", "convert", "yield", "harvest"];
+  const priceUpTxTypes = ["deposit", "convert", "sow"];
+  const priceDownTxTypes = ["withdraw", "convert", "yield", "harvest"];
 
   // Count original non-null txTypes
   const originalTxTypeCount = baseData.filter((point) => point.txType !== null).length;
@@ -234,14 +234,14 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
 
       if (priceIncreases) {
         // Choose from bullish transaction types
-        randomizedData[index].txType = bullishTxTypes[Math.floor(Math.random() * bullishTxTypes.length)];
+        randomizedData[index].txType = priceUpTxTypes[Math.floor(Math.random() * priceUpTxTypes.length)];
       } else {
         // Choose from bearish transaction types
-        randomizedData[index].txType = bearishTxTypes[Math.floor(Math.random() * bearishTxTypes.length)];
+        randomizedData[index].txType = priceDownTxTypes[Math.floor(Math.random() * priceDownTxTypes.length)];
       }
     } else {
       // For the last point, randomly choose any transaction type
-      const allTxTypes = [...bullishTxTypes, ...bearishTxTypes];
+      const allTxTypes = [...priceUpTxTypes, ...priceDownTxTypes];
       randomizedData[index].txType = allTxTypes[Math.floor(Math.random() * allTxTypes.length)];
     }
   });
