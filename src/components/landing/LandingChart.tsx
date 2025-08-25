@@ -161,7 +161,7 @@ const semiStablePriceData: PricePoint[] = [
 ];
 
 const stablePriceData: PricePoint[] = [
-  { txType: null, value: 1, speed: 3 },
+  { txType: null, value: 0.9994, speed: 3 },
   { txType: "yield", value: 1.005, speed: 3, triggerPhase: "stable" },
   { txType: "withdraw", value: 0.995, speed: 0.85 },
   { txType: null, value: 1.0004, speed: 0.85 },
