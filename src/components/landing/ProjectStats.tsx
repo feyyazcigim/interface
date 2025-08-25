@@ -1,4 +1,3 @@
-import useIsMobile from "@/hooks/display/useIsMobile";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/Button";
@@ -95,31 +94,24 @@ function StatContent({ activeButton }: StatContentProps) {
 }
 
 export default function ProjectStats() {
-  const isMobile = useIsMobile();
   const [activeButton, setActiveButton] = useState<ActiveButton>(null);
 
   const getElementOpacity = (isActive: boolean) => {
-    if (activeButton === null || isMobile) return "opacity-100";
+    if (activeButton === null) return "opacity-100";
     return isActive ? "opacity-100" : "opacity-50";
   };
-
-  useEffect(() => {
-    if (isMobile) {
-      setActiveButton("contributors");
-    }
-  }, [isMobile]);
 
   function Upgrades() {
     return (
       <span className="flex flex-row gap-3 sm:gap-6 items-center">
         <span
-          className={`text-[3rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
+          className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
         >
           89
         </span>
         <Button
-          variant={isMobile ? "ghost" : "outline-rounded"}
-          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] pointer-events-none sm:pointer-events-auto cursor-pointer transition-all hover:animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(25,25,25,0.6)] duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
+          variant={"outline-rounded"}
+          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all hover:animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(25,25,25,0.6)] duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
           onClick={() => setActiveButton(activeButton === "upgrades" ? null : "upgrades")}
           glow
           glowOnHover
@@ -139,14 +131,14 @@ export default function ProjectStats() {
       <span className="flex flex-row gap-3 sm:gap-6 items-center">
         <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>from</span>
         <span
-          className={`text-[3rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
+          className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
         >
           51
         </span>
         {/* Contributors floating above the button */}
         <span className="relative">
           <AnimatePresence>
-            {(activeButton === "contributors" || isMobile) && (
+            {activeButton === "contributors" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -182,13 +174,13 @@ export default function ProjectStats() {
       <span className="flex flex-row gap-3 sm:gap-6 items-center">
         <span className={`transition-all duration-300 ${getElementOpacity(false)} sm:hidden`}>over</span>
         <span
-          className={`text-[3rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
+          className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
         >
           5+
         </span>
         <Button
-          variant={isMobile ? "ghost" : "outline-rounded"}
-          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] pointer-events-none sm:pointer-events-auto cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
+          variant={"outline-rounded"}
+          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
           onClick={() => setActiveButton(activeButton === "years" ? null : "years")}
           glow
           glowOnHover
@@ -210,13 +202,13 @@ export default function ProjectStats() {
           to facilitate
         </span>
         <span
-          className={`text-[3rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
+          className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
         >
           $1b+
         </span>
         <Button
-          variant={isMobile ? "ghost" : "outline-rounded"}
-          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] pointer-events-none sm:pointer-events-auto cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
+          variant={"outline-rounded"}
+          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
           onClick={() => setActiveButton(activeButton === "volume" ? null : "volume")}
           glow
           glowOnHover
@@ -234,41 +226,18 @@ export default function ProjectStats() {
   return (
     <div>
       <motion.div
-        className="flex flex-col max-[850px]:scale-90 max-sm:hidden items-center mx-auto my-auto text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
+        className="flex flex-col max-sm:gap-3 max-[850px]:scale-90 items-center sm:mx-auto sm:my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
-        <span className="flex flex-row gap-6 items-center">
+        <span className="flex flex-col sm:flex-row gap-3 sm:gap-6 items-center">
           <Upgrades />
           <Contributors />
         </span>
-        <span className="flex flex-row gap-6 items-center">
+        <span className="flex flex-col sm:flex-row gap-3 sm:gap-6 items-center">
           <Years />
           <Volume />
         </span>
         <StatContent activeButton={activeButton} />
-      </motion.div>
-      <motion.div
-        className="flex flex-col justify-around gap-16 w-screen sm:hidden mx-auto my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
-        transition={{ duration: 0.4, ease: "easeInOut" }}
-      >
-        <div className="flex flex-col gap-4 mt-4 place-content-center items-center">
-          <Upgrades />
-          <StatContent activeButton={"upgrades"} />
-        </div>
-        <div className="flex flex-col gap-4 mt-28 place-content-center items-center">
-          <Contributors />
-          <StatContent activeButton={"contributors"} />
-        </div>
-        <div className="flex flex-col place-content-center items-center">
-          <Years />
-          <div className="-mt-12 -mb-12">
-            <StatContent activeButton={"years"} />
-          </div>
-        </div>
-        <div className="flex flex-col gap-4 mb-24 place-content-center items-center">
-          <Volume />
-          <StatContent activeButton={"volume"} />
-        </div>
       </motion.div>
     </div>
   );
