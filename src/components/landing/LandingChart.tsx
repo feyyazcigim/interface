@@ -183,10 +183,24 @@ const stablePriceData: PricePoint[] = [
 
 // Generate randomized stable data with slight variations (0.1%)
 function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
-  return baseData.map((point) => ({
+  // First pass: randomize values and speeds
+  const randomizedData = baseData.map((point) => ({
     ...point,
     value: point.value * (1 + (Math.random() - 0.5) * 0.002), // ±0.1% randomization
     farmer: undefined, // Clear farmer assignment so new batch gets fresh farmers
+    speed: (point.speed || 1) + (Math.random() - 0.5) * 0.1, // ±0.05 randomization
+  }));
+
+  // Calculate total speed deviation and balance it
+  const originalTotalSpeed = baseData.reduce((sum, point) => sum + (point.speed || 1), 0);
+  const randomizedTotalSpeed = randomizedData.reduce((sum, point) => sum + point.speed, 0);
+  const speedDeviation = randomizedTotalSpeed - originalTotalSpeed;
+
+  // Distribute the correction across all points
+  const correctionPerPoint = speedDeviation / randomizedData.length;
+  return randomizedData.map((point) => ({
+    ...point,
+    speed: Math.max(0.1, point.speed - correctionPerPoint), // Ensure speed never goes below 0.1
   }));
 }
 
