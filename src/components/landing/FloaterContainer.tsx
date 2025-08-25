@@ -1,15 +1,10 @@
 import { MotionValue, motion, useTransform } from "framer-motion";
+import { memo } from "react";
+import { TransactionMarker } from "./LandingChart";
 import TxFloater from "./TxFloater";
 
 interface FloaterContainerProps {
-  marker: {
-    x: number;
-    y: number;
-    txType: string;
-    farmer?: string;
-    index: number;
-    apexType?: "peak" | "valley";
-  };
+  marker: TransactionMarker;
   x: MotionValue<number>;
   viewportWidth: number;
   floatersOpacity: MotionValue<1 | 0>;
@@ -17,7 +12,7 @@ interface FloaterContainerProps {
   isFirst: boolean;
 }
 
-export default function FloaterContainer({
+function FloaterContainer({
   marker,
   x,
   viewportWidth,
@@ -50,3 +45,41 @@ export default function FloaterContainer({
     </motion.div>
   );
 }
+
+// Custom comparison function to prevent unnecessary re-renders
+function arePropsEqual(prevProps: FloaterContainerProps, nextProps: FloaterContainerProps): boolean {
+  // Compare marker properties
+  const prevMarker = prevProps.marker;
+  const nextMarker = nextProps.marker;
+
+  // First check the stable ID - if it's the same, compare other properties
+  if (prevMarker.id !== nextMarker.id) {
+    return false;
+  }
+
+  if (
+    prevMarker.x !== nextMarker.x ||
+    prevMarker.y !== nextMarker.y ||
+    prevMarker.txType !== nextMarker.txType ||
+    prevMarker.farmer !== nextMarker.farmer ||
+    prevMarker.index !== nextMarker.index ||
+    prevMarker.apexType !== nextMarker.apexType
+  ) {
+    return false;
+  }
+
+  // Compare other props (excluding MotionValues which should be stable references)
+  if (
+    prevProps.viewportWidth !== nextProps.viewportWidth ||
+    prevProps.positionAbove !== nextProps.positionAbove ||
+    prevProps.isFirst !== nextProps.isFirst ||
+    prevProps.x !== nextProps.x ||
+    prevProps.floatersOpacity !== nextProps.floatersOpacity
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+export default memo(FloaterContainer, arePropsEqual);

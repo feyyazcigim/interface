@@ -135,6 +135,17 @@ export interface PricePoint {
   triggerPhase?: string; // Optional phase trigger, for the animation above the chart
 }
 
+// Define transaction marker with stable ID
+export interface TransactionMarker {
+  id: string; // Stable unique identifier
+  x: number;
+  y: number;
+  txType: string;
+  farmer?: string;
+  index: number;
+  apexType?: "peak" | "valley";
+}
+
 const unstablePriceData: PricePoint[] = generateChaoticUnstableData();
 
 const semiStablePriceData: PricePoint[] = [
@@ -234,11 +245,129 @@ function priceLabelToY(price: number, chartHeight = ANIMATION_CONFIG.height) {
   return middle + gridOffset;
 }
 
-// Generate complete line path with multiple repetitions (Bezier smoothing)
-function generateCompletePath(
+// Generate stable ID for transaction marker based on data content (not index)
+function generateMarkerId(txType: string, value: number, farmer?: string, speed?: number): string {
+  // Create a content-based hash that's independent of array position
+  const contentHash = `${txType}-${value.toFixed(6)}-${farmer || "default"}-${speed || 1}`;
+  return `marker-${contentHash}`;
+}
+
+// Update markers incrementally based on data changes
+function updateMarkersIncremental(
+  currentData: PricePoint[],
+  previousData: PricePoint[],
+  existingMarkers: Map<string, TransactionMarker>,
+  pointSpacing: number,
+  chartHeight: number,
+): Map<string, TransactionMarker> {
+  const updatedMarkers = new Map<string, TransactionMarker>();
+
+  // If this is the first run (no previous data), generate all markers from scratch
+  if (previousData.length === 0 || existingMarkers.size === 0) {
+    let x = 0;
+    for (let i = 0; i < currentData.length; i++) {
+      const dataPoint = currentData[i];
+      if (dataPoint.txType) {
+        const markerId = generateMarkerId(dataPoint.txType, dataPoint.value, dataPoint.farmer, dataPoint.speed);
+        const y = priceToY(dataPoint.value, chartHeight);
+        updatedMarkers.set(markerId, {
+          id: markerId,
+          x,
+          y,
+          txType: dataPoint.txType,
+          farmer: dataPoint.farmer,
+          index: i,
+        });
+      }
+      const segSpeed = dataPoint.speed || 1;
+      x += pointSpacing / segSpeed;
+    }
+    return updatedMarkers;
+  }
+
+  // Find the common prefix length (unchanged data at the beginning)
+  let commonPrefixLength = 0;
+  const minLength = Math.min(currentData.length, previousData.length);
+
+  for (let i = 0; i < minLength; i++) {
+    const current = currentData[i];
+    const previous = previousData[i];
+
+    // Compare data points for equality (including farmer to maintain consistency)
+    if (
+      current.txType === previous.txType &&
+      current.value === previous.value &&
+      current.speed === previous.speed &&
+      current.triggerPhase === previous.triggerPhase &&
+      current.farmer === previous.farmer
+    ) {
+      commonPrefixLength++;
+    } else {
+      break;
+    }
+  }
+
+  // Preserve markers from unchanged prefix
+  let x = 0;
+  for (let i = 0; i < commonPrefixLength; i++) {
+    const dataPoint = currentData[i];
+    if (dataPoint.txType) {
+      const markerId = generateMarkerId(dataPoint.txType, dataPoint.value, dataPoint.farmer, dataPoint.speed);
+      const existingMarker = existingMarkers.get(markerId);
+      if (existingMarker) {
+        // Update position but preserve the marker object identity
+        updatedMarkers.set(markerId, {
+          ...existingMarker,
+          x, // Update x position in case spacing changed
+          y: priceToY(dataPoint.value, chartHeight),
+          index: i, // Update index to reflect current position
+        });
+      } else {
+        // Fallback: create new marker if existing not found
+        const y = priceToY(dataPoint.value, chartHeight);
+        updatedMarkers.set(markerId, {
+          id: markerId,
+          x,
+          y,
+          txType: dataPoint.txType,
+          farmer: dataPoint.farmer,
+          index: i,
+        });
+      }
+    }
+    const segSpeed = dataPoint.speed || 1;
+    x += pointSpacing / segSpeed;
+  }
+
+  // Generate new markers for changed/added data
+  for (let i = commonPrefixLength; i < currentData.length; i++) {
+    const dataPoint = currentData[i];
+    if (dataPoint.txType) {
+      const markerId = generateMarkerId(dataPoint.txType, dataPoint.value, dataPoint.farmer, dataPoint.speed);
+      const y = priceToY(dataPoint.value, chartHeight);
+      updatedMarkers.set(markerId, {
+        id: markerId,
+        x,
+        y,
+        txType: dataPoint.txType,
+        farmer: dataPoint.farmer,
+        index: i,
+      });
+    }
+    const segSpeed = dataPoint.speed || 1;
+    x += pointSpacing / segSpeed;
+  }
+
+  return updatedMarkers;
+}
+
+// Generate complete line path with incremental marker updates
+function generateCompletePathWithIncrementalMarkers(
   pointSpacing: number,
   chartHeight = ANIMATION_CONFIG.height,
   priceData = initialFullPriceData,
+  previousData: PricePoint[] = [],
+  existingMarkers: Map<string, TransactionMarker> = new Map(),
 ) {
   const points: { x: number; y: number; price: number }[] = [];
   const beziers: {
@@ -247,29 +376,26 @@ function generateCompletePath(
     c2: { x: number; y: number };
     p1: { x: number; y: number };
   }[] = [];
-  const transactionMarkers: {
-    x: number;
-    y: number;
-    txType: string;
-    farmer?: string;
-    index: number;
-    apexType?: "peak" | "valley";
-  }[] = [];
+
+  // Update markers incrementally instead of regenerating all
+  const transactionMarkers = updateMarkersIncremental(
+    priceData,
+    previousData,
+    existingMarkers,
+    pointSpacing,
+    chartHeight,
+  );
 
   let x = 0;
   for (let i = 0; i < priceData.length; i++) {
     const y = priceToY(priceData[i].value, chartHeight);
     points.push({ x, y, price: priceData[i].value });
-    if (priceData[i].txType) {
-      const txType = priceData[i].txType as string;
-      transactionMarkers.push({ x, y, txType, farmer: priceData[i].farmer, index: i });
-    }
     // If this segment has a speed, compress the next segment's width
     const segSpeed = priceData[i].speed || 1;
     x += pointSpacing / segSpeed;
   }
 
-  if (points.length === 0) return { path: "", points: [], totalWidth: 0, beziers: [], transactionMarkers: [] };
+  if (points.length === 0) return { path: "", points: [], totalWidth: 0, beziers: [], transactionMarkers: new Map() };
 
   let path = `M ${points[0].x} ${points[0].y}`;
   for (let i = 1; i < points.length; i++) {
@@ -297,7 +423,9 @@ function generateCompletePath(
   });
 
   // Reposition transaction markers to nearest appropriate apex
-  const apexTransactionMarkers = transactionMarkers.map((marker) => {
+  const apexTransactionMarkers = new Map<string, TransactionMarker>();
+
+  transactionMarkers.forEach((marker, id) => {
     // Find the closest apex to this transaction marker
     let closestApex: ExtremumPoint | null = null;
     let minDistance = Infinity;
@@ -314,15 +442,15 @@ function generateCompletePath(
     // If we found a close apex, use it; otherwise keep original position
     if (closestApex) {
       const apex = closestApex as ExtremumPoint;
-      return {
+      apexTransactionMarkers.set(id, {
         ...marker,
         x: apex.x,
         y: apex.y,
         apexType: apex.type, // Add metadata for positioning logic
-      };
+      });
+    } else {
+      apexTransactionMarkers.set(id, marker);
     }
-
-    return marker;
   });
 
   const totalWidth = points.length > 0 ? points[points.length - 1].x : 0;
@@ -363,6 +491,10 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
 
   // Dynamic price data that gets updated
   const [fullPriceData, setFullPriceData] = useState<PricePoint[]>(initialFullPriceData);
+
+  // Persistent marker cache that survives data updates
+  const persistentMarkersRef = useRef<Map<string, TransactionMarker>>(new Map());
+  const previousDataRef = useRef<PricePoint[]>(initialFullPriceData);
 
   // Calculate durations and positions
   const durations = useMemo(() => calculateDurations(), []);
@@ -443,22 +575,62 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     };
   }, [dynamicHeight]);
 
-  // Assign farmers to price data and generate path
-  const { path, beziers, transactionMarkers } = useMemo(() => {
+  // Assign farmers to price data and generate path with incremental markers
+  const { path, beziers, transactionMarkersMap } = useMemo(() => {
     // Create a working copy to avoid mutating state
     const workingData = [...fullPriceData];
-    // Assign a random farmer icon to each non-null txType price point
+
+    // Assign farmer icons consistently - check existing markers for assignments
     for (let i = 0; i < workingData.length; i++) {
-      if (workingData[i].txType) {
-        const randomIndex = Math.floor(Math.random() * personIcons.length);
-        workingData[i].farmer = personIcons[randomIndex];
+      if (workingData[i].txType !== null && !workingData[i].farmer) {
+        // Look for existing marker with same content pattern
+        let existingMarker: TransactionMarker | undefined;
+        for (const [id, marker] of persistentMarkersRef.current) {
+          if (
+            id.includes(workingData[i].txType) &&
+            id.includes(workingData[i].value.toFixed(6)) &&
+            id.includes(`${workingData[i].speed || 1}`)
+          ) {
+            existingMarker = marker;
+            break;
+          }
+        }
+
+        if (existingMarker) {
+          // Reuse farmer from existing marker
+          workingData[i].farmer = existingMarker.farmer;
+        } else {
+          // Generate new farmer assignment
+          const randomIndex = Math.floor(Math.random() * personIcons.length);
+          workingData[i].farmer = personIcons[randomIndex];
+        }
       }
     }
-    return generateCompletePath(pointSpacing, dynamicHeight, workingData);
+
+    const result = generateCompletePathWithIncrementalMarkers(
+      pointSpacing,
+      dynamicHeight,
+      workingData,
+      previousDataRef.current,
+      persistentMarkersRef.current,
+    );
+
+    // Update persistent cache and previous data reference
+    persistentMarkersRef.current = result.transactionMarkers;
+    previousDataRef.current = workingData;
+
+    return { ...result, transactionMarkersMap: result.transactionMarkers };
   }, [dynamicHeight, fullPriceData]);
+
+  // Convert Map to array for rendering while maintaining stable order
+  const transactionMarkers = useMemo(() => {
+    return Array.from(transactionMarkersMap.values()).sort((a, b) => a.index - b.index);
+  }, [transactionMarkersMap]);
 
   // Dynamic measurement line position using percentage
   const measurementX = useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth);
+
+  console.log("transactionmarkers: ", transactionMarkers);
 
   // Memoize getYOnBezierCurve
   const getYOnBezierCurve = useCallback(
@@ -1174,7 +1346,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
           }
           return (
             <FloaterContainer
-              key={`${marker.x}-${marker.y}-${marker.txType}`}
+              key={marker.id}
               marker={marker}
               x={x}
               viewportWidth={viewportWidth}
