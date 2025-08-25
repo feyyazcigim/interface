@@ -586,8 +586,10 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         // Look for existing marker with same content pattern
         let existingMarker: TransactionMarker | undefined;
         for (const [id, marker] of persistentMarkersRef.current) {
+          const txType = workingData[i].txType;
           if (
-            id.includes(workingData[i].txType) &&
+            txType &&
+            id.includes(txType) &&
             id.includes(workingData[i].value.toFixed(6)) &&
             id.includes(`${workingData[i].speed || 1}`)
           ) {
