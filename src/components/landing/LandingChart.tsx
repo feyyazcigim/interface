@@ -16,7 +16,7 @@ import FloaterContainer from "./FloaterContainer";
 const ANIMATION_CONFIG = {
   // Visual constants
   height: 577,
-  repetitions: 1,
+  repetitions: 2,
   pointSpacing: 140,
 
   // Speed constants
@@ -161,7 +161,7 @@ const semiStablePriceData: PricePoint[] = [
 ];
 
 const stablePriceData: PricePoint[] = [
-  { txType: null, value: 0.9994, speed: 3 },
+  { txType: null, value: 1, speed: 3 },
   { txType: "yield", value: 1.005, speed: 3, triggerPhase: "stable" },
   { txType: "withdraw", value: 0.995, speed: 0.85 },
   { txType: null, value: 1.0004, speed: 0.85 },
@@ -208,7 +208,7 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
     return {
       ...point,
       value: point.value * priceMultiplier,
-      txType: null, // Clear all txTypes initially
+      txType: null as string | null, // Clear all txTypes initially
       farmer: undefined, // Clear farmer assignment so new batch gets fresh farmers
       speed: (point.speed || 1) + (Math.random() - 0.5) * 0.1, // ±0.05 randomization
     };
@@ -559,8 +559,27 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
+  // Check if user has seen the full animation before
+  const [hasSeenFullAnimation, setHasSeenFullAnimation] = useState(() => {
+    try {
+      return localStorage.getItem("pinto-landing-animation-completed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
   // Dynamic price data that gets updated
-  const [fullPriceData, setFullPriceData] = useState<PricePoint[]>(initialFullPriceData);
+  const [fullPriceData, setFullPriceData] = useState<PricePoint[]>(() => {
+    // For returning users, start with only stable data
+    if (hasSeenFullAnimation) {
+      return [
+        { txType: null, value: 1, speed: 0.85 },
+        { txType: null, value: 1.0005, speed: 0.85 },
+        ...Array.from({ length: repetitions }).flatMap(() => stablePriceData),
+      ];
+    }
+    return initialFullPriceData;
+  });
 
   // Persistent marker cache that survives data updates
   const persistentMarkersRef = useRef<Map<string, TransactionMarker>>(new Map());
@@ -803,10 +822,20 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
 
       if (newTriggerPhase && currentTriggerPhase !== "mainCTA" && priceTrackingActive.get() >= 1) {
         setCurrentTriggerPhase(newTriggerPhase);
+
+        // Mark animation as completed when mainCTA phase is reached for the first time
+        if (newTriggerPhase === "mainCTA" && !hasSeenFullAnimation) {
+          try {
+            localStorage.setItem("pinto-landing-animation-completed", "true");
+            setHasSeenFullAnimation(true);
+          } catch {
+            // Ignore localStorage errors
+          }
+        }
       }
     });
     return unsubscribe;
-  }, [currentIndex, currentTriggerPhase, lineStrokeColor, priceTrackingActive]);
+  }, [currentIndex, currentTriggerPhase, lineStrokeColor, priceTrackingActive, hasSeenFullAnimation]);
 
   // Monitor scroll progress to fade in price labels during semi-stable phase
   // Track if we've reached stable phase to know when to remove initial segments
@@ -974,6 +1003,94 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   // Start animation function
   const startAnimation = useCallback(
     async (isRestart = false) => {
+      // Skip intro phases for returning users, unless it's a restart
+      if (hasSeenFullAnimation && !isRestart) {
+        // Set up initial positions for returning users
+        measurementLineOffset.set(ANIMATION_CONFIG.measurementLine.minimum * 100); // Start at 10%
+        clipPathWidth.set(ANIMATION_CONFIG.clipPath.initial); // Start at 0.1
+        horizontalLineClipPath.set(viewportWidth); // Start hidden from right
+        priceLabelsOpacity.set(1);
+        priceLineOpacity.set(0); // Start price line hidden
+        priceTrackingActive.set(0); // Start price tracking inactive
+
+        // Start directly at mainCTA phase
+        setCurrentTriggerPhase("mainCTA");
+
+        // For returning users, start at the beginning since we only have stable data
+        scrollOffset.set(0);
+
+        // Reveal animations first (similar to full animation sequence)
+
+        // Start with price line reveal animation
+        animate(priceLineOpacity, 1, {
+          duration: durations.fadeInSequence.priceLine.duration,
+          ease: "easeInOut",
+        });
+
+        // Wait for reveals to complete before starting movement
+        await new Promise((resolve) =>
+          setTimeout(
+            resolve,
+            Math.max(
+              durations.fadeInSequence.priceLine.duration * 1000,
+              durations.fadeInSequence.priceIndicator.duration * 1000,
+            ),
+          ),
+        );
+
+        // Now animate to final positions like the full animation does
+        const phase2Duration = 3;
+
+        // Horizontal line: Reveal during position animations
+        animate(horizontalLineClipPath, 0, {
+          duration: phase2Duration, // Same duration as full animation
+          ease: "easeInOut",
+        });
+
+        animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
+          duration: phase2Duration,
+          ease: "easeIn",
+        });
+
+        const controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.final * 100, {
+          duration: phase2Duration,
+          ease: "easeIn",
+        });
+        animationControlsRef.current = controls;
+
+        // Activate price tracking at the start of phase 2
+        priceTrackingActive.set(1);
+
+        await controls;
+
+        // Start continuous scrolling after animation completes
+        const speedScale = viewportWidth / 1920;
+        const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
+
+        const startContinuousScroll = () => {
+          const currentDataWidth = fullPriceData.reduce((width, point) => {
+            const segSpeed = point.speed || 1;
+            return width + pointSpacing / segSpeed;
+          }, 0);
+
+          const currentOffset = scrollOffset.get();
+          const remainingWidth = currentDataWidth - currentOffset;
+          const scrollDuration = remainingWidth / pxPerSecond;
+
+          const controls = animate(scrollOffset, currentDataWidth, {
+            duration: scrollDuration,
+            ease: "linear",
+            onComplete: () => {
+              setTimeout(startContinuousScroll, 0);
+            },
+          });
+          animationControlsRef.current = controls;
+        };
+
+        startContinuousScroll();
+        return;
+      }
+
       // Calculate timing for measurement line animations
       const measurementLineStartDelay = isRestart
         ? 0
@@ -1077,6 +1194,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       positions,
       fullPriceData,
       pointSpacing,
+      hasSeenFullAnimation,
     ],
   );
 
@@ -1124,6 +1242,9 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     horizontalLineOpacity.set(1); // Reset horizontal line opacity
     transactionMarkersOpacity.set(1); // Reset transaction markers opacity
     setCurrentTriggerPhase(undefined);
+
+    // Reset to full data for restarts (always show complete story arc)
+    setFullPriceData(initialFullPriceData);
 
     // Start the animation again with restart flag
     startAnimation(true);
