@@ -16,7 +16,7 @@ import FloaterContainer from "./FloaterContainer";
 const ANIMATION_CONFIG = {
   // Visual constants
   height: 577,
-  repetitions: 2,
+  repetitions: 1,
   pointSpacing: 140,
 
   // Speed constants
@@ -575,7 +575,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       return [
         { txType: null, value: 1, speed: 0.85 },
         { txType: null, value: 1.0005, speed: 0.85 },
-        ...Array.from({ length: repetitions }).flatMap(() => stablePriceData),
+        ...Array.from({ length: repetitions * 2 }).flatMap(() => stablePriceData),
       ];
     }
     return initialFullPriceData;
