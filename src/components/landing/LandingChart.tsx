@@ -186,6 +186,7 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
   return baseData.map((point) => ({
     ...point,
     value: point.value * (1 + (Math.random() - 0.5) * 0.002), // ±0.1% randomization
+    farmer: undefined, // Clear farmer assignment so new batch gets fresh farmers
   }));
 }
 
