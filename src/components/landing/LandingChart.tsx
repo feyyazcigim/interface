@@ -1009,7 +1009,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         measurementLineOffset.set(ANIMATION_CONFIG.measurementLine.minimum * 100); // Start at 10%
         clipPathWidth.set(ANIMATION_CONFIG.clipPath.initial); // Start at 0.1
         horizontalLineClipPath.set(viewportWidth); // Start hidden from right
-        priceLabelsOpacity.set(1);
+        priceLabelsOpacity.set(0);
         priceLineOpacity.set(0); // Start price line hidden
         priceTrackingActive.set(0); // Start price tracking inactive
 
@@ -1062,6 +1062,9 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         priceTrackingActive.set(1);
 
         await controls;
+
+        // Fade in price labels only after measurement line reaches final position
+        animate(priceLabelsOpacity, 1, { duration: 1, ease: "easeInOut" });
 
         // Start continuous scrolling after animation completes
         const speedScale = 1; // viewportWidth / 1920;
