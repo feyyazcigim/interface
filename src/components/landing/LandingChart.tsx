@@ -603,7 +603,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   // Generate price label data
   const priceLabelData = useMemo(() => {
     const data = generatePriceLabelData(dynamicHeight);
-    console.log("Price label data:", data);
+    // console.log("Price label data:", data);
     return data;
   }, [dynamicHeight]);
 
@@ -732,7 +732,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   // Dynamic measurement line position using percentage
   const measurementX = useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth);
 
-  console.log("transactionmarkers: ", transactionMarkers);
+  // console.log("transactionmarkers: ", transactionMarkers);
 
   // Memoize getYOnBezierCurve
   const getYOnBezierCurve = useCallback(
@@ -830,9 +830,9 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
           const tolerance = 0.0005; // Much smaller tolerance (0.05% of price range)
 
           if (priceDifference <= tolerance) {
-            console.log(
+            /* console.log(
               `🔥 Flash triggered! Current price: ${currentPrice.toFixed(6)}, Target: ${dataPoint.value.toFixed(6)}, Diff: ${priceDifference.toFixed(6)}`,
-            );
+            ); */
 
             // Trigger flash effect
             animate(lineStrokeColor, "#00C767", { duration: 0.1, ease: "linear" }).then(() => {
@@ -889,7 +889,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       const stableThreshold = positions.segments.unstable + positions.segments.semiStable;
       if (currentOffset >= stableThreshold && !hasReachedStable) {
         setHasReachedStable(true);
-        console.log("🎯 Reached stable phase - initial story arc complete");
+        // console.log("🎯 Reached stable phase - initial story arc complete");
       }
 
       // Calculate total data width for progress tracking
@@ -908,7 +908,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       const timeSinceLastExtension = now - lastExtensionRef.current;
 
       if (progress >= 0.8 && timeSinceLastExtension > 2000) {
-        console.log("🔄 Extending price data at 80% progress");
+        // console.log("🔄 Extending price data at 80% progress");
         lastExtensionRef.current = now;
 
         // Stop current animation
@@ -963,13 +963,13 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               const newScrollOffset = Math.max(0, currentOffset - actualRemovedWidth);
               scrollOffset.set(newScrollOffset);
 
-              console.log(
+              /* console.log(
                 `📊 Safely removed ${maxPointsToRemove} off-screen points, added ${newStableData.length} new points`,
-              );
+              );*/
               return newData;
             } else {
               // If we can't safely remove points, just add new ones
-              console.log("📊 Added new data without removing (not safe to remove yet)");
+              // console.log("📊 Added new data without removing (not safe to remove yet)");
               return [...currentData, ...newStableData];
             }
           } else {
@@ -1303,7 +1303,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   // Click handler for chart during stable phase
   const handleChartClick = useCallback(() => {
     if (currentTriggerPhase === "mainCTA") {
-      console.log("RESTARTING");
+      // console.log("RESTARTING");
       restartAnimation();
     }
   }, [currentTriggerPhase, restartAnimation]);
