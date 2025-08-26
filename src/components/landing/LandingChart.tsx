@@ -10,6 +10,19 @@ import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 import FloaterContainer from "./FloaterContainer";
 
+// Function to calculate grid offset so measurement line aligns with grid lines
+function calculateGridOffset(viewportWidth: number) {
+  const defaultWidth = 1920; // Grid is aligned at this width
+  const measurementLinePercentage = ANIMATION_CONFIG.measurementLine.final; // 75%
+
+  // Calculate the difference in measurement line position between default and current width
+  const defaultMeasurementPosition = defaultWidth * measurementLinePercentage;
+  const currentMeasurementPosition = viewportWidth * measurementLinePercentage;
+  const offset = currentMeasurementPosition - defaultMeasurementPosition;
+
+  return offset;
+}
+
 // Master animation configuration - Variable-driven system
 // This configuration drives all animations through percentages and proportions
 // instead of hardcoded values, making the entire system responsive and scalable
@@ -303,9 +316,12 @@ function yToPrice(y: number, chartHeight = ANIMATION_CONFIG.height) {
 }
 
 // Convert price to Y coordinate for labels (aligned to grid lines)
-function priceLabelToY(price: number, chartHeight = ANIMATION_CONFIG.height) {
+function priceLabelToY(
+  price: number,
+  chartHeight = ANIMATION_CONFIG.height,
+  gridSpacing = ANIMATION_CONFIG.gridSpacing,
+) {
   const middle = chartHeight / 2;
-  const gridSpacing = ANIMATION_CONFIG.gridSpacing;
   const levels = ANIMATION_CONFIG.priceLabels.levels;
   const fontSize = ANIMATION_CONFIG.priceLabels.fontSize;
   const yOffset = ANIMATION_CONFIG.priceLabels.yOffset;
@@ -567,6 +583,7 @@ interface LandingChartProps {
 export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPhase }: LandingChartProps) {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
   const [dynamicHeight, setDynamicHeight] = useState(ANIMATION_CONFIG.height); // Default to config height
+  const [gridOffset, setGridOffset] = useState(() => calculateGridOffset(1920)); // Grid offset to align with measurement line
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -631,8 +648,9 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   // Update viewport width and dynamic height on mount and resize
   useEffect(() => {
     const updateDimensions = () => {
+      let newViewportWidth = viewportWidth;
       if (containerRef.current) {
-        const newViewportWidth = containerRef.current.clientWidth;
+        newViewportWidth = containerRef.current.clientWidth;
         setViewportWidth(newViewportWidth);
       }
 
@@ -651,12 +669,24 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
           setDynamicHeight(newHeight);
         }
       }
+
+      // Recalculate grid offset when viewport width changes
+      if (newViewportWidth !== viewportWidth) {
+        const newGridOffset = calculateGridOffset(newViewportWidth);
+        setGridOffset(newGridOffset);
+      }
     };
 
     // Use ResizeObserver for more efficient resize detection
     const resizeObserver = new ResizeObserver(() => {
       updateDimensions();
     });
+
+    // Also add a direct window resize listener to catch maximize/minimize events
+    const handleWindowResize = () => {
+      // Use a small delay to ensure the window has finished resizing
+      setTimeout(updateDimensions, 10);
+    };
 
     if (containerRef.current) {
       // Initial measurement
@@ -666,14 +696,20 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       resizeObserver.observe(containerRef.current);
     }
 
-    // Also listen to window resize for screen height changes
-    window.addEventListener("resize", updateDimensions);
+    // Listen to window resize events (for maximize/minimize and other window operations)
+    window.addEventListener("resize", handleWindowResize);
 
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", updateDimensions);
+      window.removeEventListener("resize", handleWindowResize);
     };
-  }, [dynamicHeight]);
+  }, [dynamicHeight, viewportWidth]);
+
+  // Update grid offset when viewportWidth changes
+  useEffect(() => {
+    const newGridOffset = calculateGridOffset(viewportWidth);
+    setGridOffset(newGridOffset);
+  }, [viewportWidth]);
 
   // Assign farmers to price data and generate path with incremental markers
   const { path, beziers, transactionMarkersMap } = useMemo(() => {
@@ -1458,6 +1494,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               width={ANIMATION_CONFIG.gridSpacing}
               height={ANIMATION_CONFIG.gridSpacing}
               patternUnits="userSpaceOnUse"
+              x={gridOffset}
             >
               <path
                 d={`M ${ANIMATION_CONFIG.gridSpacing} 0 L 0 0 0 ${ANIMATION_CONFIG.gridSpacing}`}
