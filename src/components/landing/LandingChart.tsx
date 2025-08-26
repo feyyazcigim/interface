@@ -133,6 +133,7 @@ export interface PricePoint {
   farmer?: string; // Farmer is now just a filename string
   speed?: number; // Optional speed for specific transactions
   triggerPhase?: string; // Optional phase trigger, for the animation above the chart
+  triggerPulse?: boolean; // Trigger price line pulse
 }
 
 // Define transaction marker with stable ID
@@ -162,20 +163,20 @@ const semiStablePriceData: PricePoint[] = [
 
 const stablePriceData: PricePoint[] = [
   { txType: null, value: 0.9994, speed: 3 },
-  { txType: "yield", value: 1.005, speed: 3, triggerPhase: "stable" },
-  { txType: "withdraw", value: 0.995, speed: 0.85 },
+  { txType: "yield", value: 1.005, speed: 3, triggerPulse: true, triggerPhase: "stable" },
+  { txType: "withdraw", value: 0.995, speed: 0.85, triggerPulse: true },
   { txType: null, value: 1.0004, speed: 0.85 },
   { txType: null, value: 0.9994, speed: 0.85 },
   { txType: "deposit", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
   { txType: null, value: 0.9994, speed: 3 },
-  { txType: "yield", value: 1.005, speed: 3, triggerPhase: "stable" },
-  { txType: null, value: 0.995, speed: 0.85 },
+  { txType: "yield", value: 1.005, speed: 3, triggerPulse: true, triggerPhase: "stable" },
+  { txType: null, value: 0.995, speed: 0.85, triggerPulse: true },
   { txType: "deposit", value: 1.0004, speed: 0.85 },
   { txType: null, value: 0.9994, speed: 0.85 },
   { txType: "deposit", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
   { txType: "yield", value: 0.9994, speed: 3 },
-  { txType: null, value: 1.005, speed: 3, triggerPhase: "stable" },
-  { txType: "withdraw", value: 0.995, speed: 0.85 },
+  { txType: null, value: 1.005, speed: 3, triggerPulse: true, triggerPhase: "stable" },
+  { txType: "withdraw", value: 0.995, speed: 0.85, triggerPulse: true },
   { txType: null, value: 1.0004, speed: 0.85 },
   { txType: "withdraw", value: 0.9994, speed: 0.85 },
   { txType: null, value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
@@ -289,6 +290,16 @@ function priceToY(price: number, chartHeight = ANIMATION_CONFIG.height) {
   const minY = chartHeight - 0; // Bottom margin
   const maxY = 0; // Top margin
   return minY - ((price - minPrice) / (maxPrice - minPrice)) * (minY - maxY);
+}
+
+// Convert Y coordinate back to price (inverse of priceToY)
+function yToPrice(y: number, chartHeight = ANIMATION_CONFIG.height) {
+  const minPrice = 0.99;
+  const maxPrice = 1.01;
+  const minY = chartHeight - 0; // Bottom margin
+  const maxY = 0; // Top margin
+  const normalizedY = (minY - y) / (minY - maxY);
+  return minPrice + normalizedY * (maxPrice - minPrice);
 }
 
 // Convert price to Y coordinate for labels (aligned to grid lines)
@@ -787,8 +798,8 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     let idx = 0;
     for (let i = 0; i < beziers.length; i++) {
       const seg = beziers[i];
-      if (Math.abs(seg.p0.x - xVal) < minDist) {
-        minDist = Math.abs(seg.p0.x - xVal);
+      if (Math.abs(seg.p1.x - xVal) < minDist) {
+        minDist = Math.abs(seg.p1.x - xVal);
         idx = i;
       }
     }
@@ -803,22 +814,44 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
 
   const lineStrokeColor = useMotionValue("#387F5C");
 
+  // Price-based flash trigger system
+  useEffect(() => {
+    const unsubscribe = currentY.on("change", (yPosition) => {
+      if (priceTrackingActive.get() < 1) return;
+
+      // Convert current Y position to price
+      const currentPrice = yToPrice(yPosition, dynamicHeight);
+
+      // Find trigger points that should activate based on current price
+      for (const dataPoint of fullPriceData) {
+        if (dataPoint.triggerPulse) {
+          // Check if we've crossed this trigger price (within a small tolerance)
+          const priceDifference = Math.abs(currentPrice - dataPoint.value);
+          const tolerance = 0.0005; // Much smaller tolerance (0.05% of price range)
+
+          if (priceDifference <= tolerance) {
+            console.log(
+              `🔥 Flash triggered! Current price: ${currentPrice.toFixed(6)}, Target: ${dataPoint.value.toFixed(6)}, Diff: ${priceDifference.toFixed(6)}`,
+            );
+
+            // Trigger flash effect
+            animate(lineStrokeColor, "#00C767", { duration: 0.1, ease: "linear" }).then(() => {
+              animate(lineStrokeColor, "#387F5C", { duration: 0.1, ease: "linear" });
+            });
+
+            break; // Only trigger one flash per change
+          }
+        }
+      }
+    });
+    return unsubscribe;
+  }, [currentY, lineStrokeColor, priceTrackingActive, fullPriceData, dynamicHeight]);
+
+  // Phase trigger system (still based on position/index)
   useEffect(() => {
     const unsubscribe = currentIndex.on("change", (idx) => {
       const i = Math.max(0, Math.min(Math.round(idx), fullPriceData.length - 1));
-      const newTxType = fullPriceData[i].txType;
       const newTriggerPhase = fullPriceData[i].triggerPhase;
-
-      // Trigger flash effect when txType is depositing or converting and is not null (only if price tracking is active)
-      if (
-        (newTxType === "deposit" || newTxType === "convert") &&
-        newTxType !== null &&
-        priceTrackingActive.get() >= 1
-      ) {
-        animate(lineStrokeColor, "#00C767", { duration: 0.1, ease: "linear" }).then(() => {
-          animate(lineStrokeColor, "#387F5C", { duration: 0.6, ease: "linear" });
-        });
-      }
 
       if (newTriggerPhase && currentTriggerPhase !== "mainCTA" && priceTrackingActive.get() >= 1) {
         setCurrentTriggerPhase(newTriggerPhase);
@@ -835,7 +868,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       }
     });
     return unsubscribe;
-  }, [currentIndex, currentTriggerPhase, lineStrokeColor, priceTrackingActive, hasSeenFullAnimation]);
+  }, [currentIndex, currentTriggerPhase, priceTrackingActive, hasSeenFullAnimation]);
 
   // Monitor scroll progress to fade in price labels during semi-stable phase
   // Track if we've reached stable phase to know when to remove initial segments
