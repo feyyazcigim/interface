@@ -10,8 +10,8 @@ import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 import FloaterContainer from "./FloaterContainer";
 
-// Function to calculate grid offset so measurement line aligns with grid lines
-function calculateGridOffset(viewportWidth: number) {
+// Function to calculate grid X offset so measurement line aligns with grid lines
+function calculateGridXOffset(viewportWidth: number) {
   const defaultWidth = 1920; // Grid is aligned at this width
   const measurementLinePercentage = ANIMATION_CONFIG.measurementLine.final; // 75%
 
@@ -19,6 +19,19 @@ function calculateGridOffset(viewportWidth: number) {
   const defaultMeasurementPosition = defaultWidth * measurementLinePercentage;
   const currentMeasurementPosition = viewportWidth * measurementLinePercentage;
   const offset = currentMeasurementPosition - defaultMeasurementPosition;
+
+  return offset;
+}
+
+// Function to calculate grid Y offset so price line aligns with grid lines
+function calculateGridYOffset(chartHeight: number) {
+  const defaultHeight = ANIMATION_CONFIG.height; // Grid is aligned at this height (577)
+  const priceLinePercentage = ANIMATION_CONFIG.horizontalReference.position; // 50%
+
+  // Calculate the difference in price line position between default and current height
+  const defaultPricePosition = defaultHeight * priceLinePercentage;
+  const currentPricePosition = chartHeight * priceLinePercentage;
+  const offset = currentPricePosition - defaultPricePosition;
 
   return offset;
 }
@@ -583,7 +596,8 @@ interface LandingChartProps {
 export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPhase }: LandingChartProps) {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
   const [dynamicHeight, setDynamicHeight] = useState(ANIMATION_CONFIG.height); // Default to config height
-  const [gridOffset, setGridOffset] = useState(() => calculateGridOffset(1920)); // Grid offset to align with measurement line
+  const [gridXOffset, setGridXOffset] = useState(() => calculateGridXOffset(1920)); // Grid X offset to align with measurement line
+  const [gridYOffset, setGridYOffset] = useState(() => calculateGridYOffset(ANIMATION_CONFIG.height)); // Grid Y offset to align with price line
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -670,10 +684,10 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         }
       }
 
-      // Recalculate grid offset when viewport width changes
+      // Recalculate grid X offset when viewport width changes
       if (newViewportWidth !== viewportWidth) {
-        const newGridOffset = calculateGridOffset(newViewportWidth);
-        setGridOffset(newGridOffset);
+        const newGridXOffset = calculateGridXOffset(newViewportWidth);
+        setGridXOffset(newGridXOffset);
       }
     };
 
@@ -705,11 +719,17 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     };
   }, [dynamicHeight, viewportWidth]);
 
-  // Update grid offset when viewportWidth changes
+  // Update grid X offset when viewportWidth changes
   useEffect(() => {
-    const newGridOffset = calculateGridOffset(viewportWidth);
-    setGridOffset(newGridOffset);
+    const newGridXOffset = calculateGridXOffset(viewportWidth);
+    setGridXOffset(newGridXOffset);
   }, [viewportWidth]);
+
+  // Update grid Y offset when dynamicHeight changes
+  useEffect(() => {
+    const newGridYOffset = calculateGridYOffset(dynamicHeight);
+    setGridYOffset(newGridYOffset);
+  }, [dynamicHeight]);
 
   // Assign farmers to price data and generate path with incremental markers
   const { path, beziers, transactionMarkersMap } = useMemo(() => {
@@ -1494,7 +1514,8 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               width={ANIMATION_CONFIG.gridSpacing}
               height={ANIMATION_CONFIG.gridSpacing}
               patternUnits="userSpaceOnUse"
-              x={gridOffset}
+              x={gridXOffset}
+              y={gridYOffset}
             >
               <path
                 d={`M ${ANIMATION_CONFIG.gridSpacing} 0 L 0 0 0 ${ANIMATION_CONFIG.gridSpacing}`}
