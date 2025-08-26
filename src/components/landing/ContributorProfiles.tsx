@@ -1,3 +1,4 @@
+import useIsMobile from "@/hooks/display/useIsMobile";
 import { motion } from "framer-motion";
 import { atom, useAtom } from "jotai";
 import { useMemo } from "react";
@@ -59,6 +60,7 @@ function getRandomContributors(count: number = 5): Contributor[] {
 
 export default function ContributorProfiles() {
   const [selectedContributor, setSelectedContributor] = useAtom(selectedContributorAtom);
+  const isMobile = useIsMobile();
 
   // Get random contributors on component mount
   const displayedContributors = useMemo(() => {
@@ -82,6 +84,21 @@ export default function ContributorProfiles() {
     ],
     [],
   );
+
+  // Line shape positions for mobile: evenly spaced horizontally with slight random variation
+  const linePositions = useMemo(
+    () => [
+      { x: 0 + (Math.random() * 0.3125 - 0.15625), y: 2.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 5 + (Math.random() * 0.3125 - 0.15625), y: 2.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 10 + (Math.random() * 0.3125 - 0.15625), y: 2.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 15 + (Math.random() * 0.3125 - 0.15625), y: 2.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 20 + (Math.random() * 0.3125 - 0.15625), y: 2.5 + (Math.random() * 0.3125 - 0.15625) },
+    ],
+    [],
+  );
+
+  // Use line positions on mobile, W positions on desktop
+  const positions = isMobile ? linePositions : wPositions;
 
   // Memoize random animation values to prevent restarts on re-render
   const animationValues = useMemo(
@@ -118,8 +135,8 @@ export default function ContributorProfiles() {
             }}
             className="absolute"
             style={{
-              left: `${wPositions[index].x}rem`,
-              top: `${wPositions[index].y}rem`,
+              left: `${positions[index].x}rem`,
+              top: `${positions[index].y}rem`,
             }}
             whileHover={{
               scale: 1.1,

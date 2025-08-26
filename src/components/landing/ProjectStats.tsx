@@ -1,3 +1,4 @@
+import useIsMobile from "@/hooks/display/useIsMobile";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/Button";
@@ -127,6 +128,7 @@ export default function ProjectStats() {
   }
 
   function Contributors() {
+    const isMobile = useIsMobile();
     return (
       <span className="flex flex-row gap-3 sm:gap-6 items-center">
         <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>from</span>
@@ -140,11 +142,11 @@ export default function ProjectStats() {
           <AnimatePresence>
             {activeButton === "contributors" && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: isMobile ? -10 : 20 }}
+                animate={{ opacity: 1, y: isMobile ? -30 : 0 }}
+                exit={{ opacity: 0, y: isMobile ? -10 : 20 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="absolute left-10 sm:left-24 -top-20"
+                className="absolute -left-[4.5rem] sm:left-24 -top-20"
               >
                 <ContributorProfiles />
               </motion.div>
@@ -197,14 +199,16 @@ export default function ProjectStats() {
 
   function Volume() {
     return (
-      <span className="flex flex-col sm:flex-row gap-0 sm:gap-6 items-center">
-        <span className={`transition-all duration-300 whitespace-nowrap ${getElementOpacity(false)}`}>
-          to facilitate
-        </span>
-        <span
-          className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
-        >
-          $1b+
+      <span className="flex flex-col sm:flex-row gap-3 sm:gap-6 items-center">
+        <span className="flex flex-row gap-3 sm:gap-6 items-center">
+          <span className={`transition-all duration-300 whitespace-nowrap ${getElementOpacity(false)}`}>
+            to facilitate
+          </span>
+          <span
+            className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
+          >
+            $1b+
+          </span>
         </span>
         <Button
           variant={"outline-rounded"}
