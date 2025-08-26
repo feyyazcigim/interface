@@ -77,6 +77,22 @@ export default function Landing() {
     document.body.scrollTop += e.deltaY;
   };
 
+  const handleArrowClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    // Find the next section to scroll to
+    const viewportHeight = window.innerHeight;
+
+    scrollContainer.scrollTo({
+      top: viewportHeight,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <div
       className="sm:max-w-[1920px] w-full place-self-center"
@@ -116,9 +132,10 @@ export default function Landing() {
         )}
       </div>
       <Link
-        to={navLinks.overview}
+        to={isAtTop && reachedMainCta ? "" : navLinks.overview}
         onWheelCapture={handleWheel}
-        className={`${isAtTop && reachedMainCta ? "pointer-events-none" : "pointer-events-auto"} z-20`}
+        onClick={isAtTop && reachedMainCta ? handleArrowClick : undefined}
+        className={`z-20`}
       >
         <div
           className={`fixed left-1/2 -translate-x-1/2 flex z-20 justify-center ${
@@ -129,8 +146,8 @@ export default function Landing() {
             rounded="full"
             size={isAtTop && reachedMainCta ? (isMobile ? "md" : "xl") : "xxl"}
             className={`${isMobile || (isAtTop && reachedMainCta) ? "scale-100" : "scale-150"} z-20 hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
-            shimmer={!isAtTop}
-            glow={!isAtTop}
+            shimmer={true}
+            glow={true}
           >
             {/* Conditionally show text based on scroll position */}
             <span
