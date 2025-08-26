@@ -954,7 +954,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         });
 
         // Restart the continuous scroll with new data immediately
-        const speedScale = viewportWidth / 1920;
+        const speedScale = 1; // viewportWidth / 1920;
         const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
 
         // Use requestAnimationFrame for smoother restart
@@ -1064,7 +1064,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         await controls;
 
         // Start continuous scrolling after animation completes
-        const speedScale = viewportWidth / 1920;
+        const speedScale = 1; // viewportWidth / 1920;
         const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
 
         const startContinuousScroll = () => {
@@ -1145,7 +1145,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       // No need for setTimeout-based messages anymore - they're handled by position monitoring
 
       // Phase 3: Start continuous scrolling through all data
-      const speedScale = viewportWidth / 1920; // Scale speed based on viewport width (1920 = base)
+      const speedScale = 1; // viewportWidth / 1920; // Scale speed based on viewport width (1920 = base)
       const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
       const totalDataWidth = positions.segments.unstable + positions.segments.semiStable;
 
