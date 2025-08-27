@@ -1444,18 +1444,6 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         <AnimatePresence mode="wait">
           {currentTriggerPhase === "unstable" && (
             <motion.span
-              key="real-stability"
-              className="text-[2.5rem] sm:text-6xl leading-[1.1] font-thin text-pinto-gray-5 sm:text-pinto-gray-5 text-center w-[70%] sm:w-fit"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-            >
-              Real stability takes time.
-            </motion.span>
-          )}
-          {currentTriggerPhase === "semiStable" && (
-            <motion.span
               key="credit-earned"
               className="text-[2.5rem] sm:text-6xl leading-[1.1] font-thin text-pinto-gray-5 sm:text-pinto-gray-5 text-center w-[70%] sm:w-fit"
               initial={{ opacity: 0, y: 20 }}
@@ -1464,6 +1452,18 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
               Credit is earned.
+            </motion.span>
+          )}
+          {currentTriggerPhase === "semiStable" && (
+            <motion.span
+              key="real-stability"
+              className="text-[2.5rem] sm:text-6xl leading-[1.1] font-thin text-pinto-gray-5 sm:text-pinto-gray-5 text-center w-[70%] sm:w-fit"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              Real stability takes time.
             </motion.span>
           )}
           {currentTriggerPhase === "stable" && (
