@@ -1380,7 +1380,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     <div className="flex flex-col items-center justify-around h-full w-full">
       {/* Stage Messages */}
       <div
-        className="min-h-[250px] sm:min-h-[300px] flex flex-col items-center justify-center pt-6 pb-6 sm:pt-10 sm:pb-10"
+        className="min-h-[250px] sm:min-h-[300px] flex flex-col items-center justify-center pt-4 pb-2 sm:pt-8 sm:pb-4"
         id={"cta-header"}
       >
         <AnimatePresence mode="wait">
@@ -1479,7 +1479,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       {/* Chart Component */}
       <div
         ref={containerRef}
-        className={`w-full relative ${currentTriggerPhase === "stable" ? "cursor-pointer" : ""}`}
+        className={`w-full relative ${currentTriggerPhase === "stable" ? "cursor-pointer" : ""} mb-10`}
         id={"cta-chart"}
         onClick={handleChartClick}
       >
