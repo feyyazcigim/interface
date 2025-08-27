@@ -208,7 +208,7 @@ body {
   -ms-overflow-style: none; /* IE 10+ */
   overscroll-behavior-x: auto; /* allow navigation swiping */
 
-  background: linear-gradient(90deg,
+  background-color: linear-gradient(90deg,
         rgba(233, 231, 224, 0.1) 0%,
         rgba(254, 225, 140, 0.1) 52.5%,
         rgba(241, 248, 140, 0.1) 100%), linear-gradient(0deg, #ffffff, #ffffff);
