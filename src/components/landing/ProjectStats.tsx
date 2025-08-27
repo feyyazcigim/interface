@@ -112,11 +112,12 @@ export default function ProjectStats() {
         </span>
         <Button
           variant={"outline-rounded"}
-          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all hover:animate-[pulse-glow_3s_ease-in-out_infinite] hover:shadow-[0_0_30px_rgba(25,25,25,0.6)] duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
+          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
           onClick={() => setActiveButton(activeButton === "upgrades" ? null : "upgrades")}
-          glow
-          glowOnHover
-          glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
+          glow={activeButton === "upgrades"}
+          shimmer={!activeButton || activeButton === "upgrades"}
+          shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
+          glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
         >
           <span className="flex items-center gap-2">
             <img src="/hammer.png" alt="hammer" className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -156,9 +157,10 @@ export default function ProjectStats() {
             variant="outline-rounded"
             className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
             onClick={() => setActiveButton(activeButton === "contributors" ? null : "contributors")}
-            glow
-            glowOnHover
-            glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
+            glow={activeButton === "contributors"}
+            shimmer={!activeButton || activeButton === "contributors"}
+            shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
+            glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
           >
             <span className="flex items-center gap-2">
               <img src="/farmer_1.png" alt="farmer" className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -184,9 +186,10 @@ export default function ProjectStats() {
           variant={"outline-rounded"}
           className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
           onClick={() => setActiveButton(activeButton === "years" ? null : "years")}
-          glow
-          glowOnHover
-          glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
+          glow={activeButton === "years"}
+          shimmer={!activeButton || activeButton === "years"}
+          shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
+          glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
         >
           <span className="flex items-center gap-2">
             <img src="/memo.png" alt="memo" className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -214,9 +217,10 @@ export default function ProjectStats() {
           variant={"outline-rounded"}
           className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
           onClick={() => setActiveButton(activeButton === "volume" ? null : "volume")}
-          glow
-          glowOnHover
-          glowColor="rgba(156, 156, 156, 0.6)" // pinto-gray-4
+          glow={activeButton === "volume"}
+          shimmer={!activeButton || activeButton === "volume"}
+          shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
+          glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
         >
           <span className="flex items-center gap-2">
             <img src="/chart-increasing.png" alt="chart" className="w-6 h-6 sm:w-8 sm:h-8" />
