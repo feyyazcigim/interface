@@ -23,13 +23,14 @@ export default function SecondaryCTA() {
         <Link to={navLinks.printsToThePeople}>
           <Button
             rounded="full"
+            variant={"defaultAlt"}
             size={isMobile ? "md" : "xl"}
-            className={`z-20 hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+            className={`z-20 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
             shimmer={true}
             glow={true}
           >
-            <span>Prints to the people</span>
-            <span className="text-white">
+            <span>Why is this so valuable?</span>
+            <span className="text-pinto-green-4">
               <PintoRightArrow
                 width={isMobile ? "1.25rem" : "1.5rem"}
                 height={isMobile ? "1.25rem" : "1.5rem"}
