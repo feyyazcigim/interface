@@ -102,7 +102,7 @@ export default function Landing() {
       }}
     >
       <div
-        className="flex flex-col h-screen overflow-y-auto snap-y snap-mandatory scrollbar-none"
+        className="flex flex-col h-screen overflow-y-auto snap-y snap-proximity scrollbar-none"
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
