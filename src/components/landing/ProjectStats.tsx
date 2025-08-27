@@ -96,6 +96,36 @@ function StatContent({ activeButton }: StatContentProps) {
 
 export default function ProjectStats() {
   const [activeButton, setActiveButton] = useState<ActiveButton>(null);
+  const [isAutoCycling, setIsAutoCycling] = useState(true);
+  const [manuallySelected, setManuallySelected] = useState(false);
+
+  // Array of buttons to cycle through
+  const buttons: ActiveButton[] = ["upgrades", "contributors", "years", "volume"];
+
+  // Auto-cycling effect
+  useEffect(() => {
+    if (!isAutoCycling || manuallySelected) return;
+
+    const interval = setInterval(() => {
+      setActiveButton((current) => {
+        if (current === null) {
+          return buttons[0];
+        }
+        const currentIndex = buttons.indexOf(current);
+        const nextIndex = (currentIndex + 1) % buttons.length;
+        return buttons[nextIndex];
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isAutoCycling, manuallySelected]);
+
+  // Handle manual button selection
+  const handleButtonClick = (buttonType: ActiveButton) => {
+    setManuallySelected(true);
+    setIsAutoCycling(false);
+    setActiveButton(activeButton === buttonType ? null : buttonType);
+  };
 
   const getElementOpacity = (isActive: boolean) => {
     if (activeButton === null) return "opacity-100";
@@ -113,7 +143,7 @@ export default function ProjectStats() {
         <Button
           variant={"outline-rounded"}
           className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
-          onClick={() => setActiveButton(activeButton === "upgrades" ? null : "upgrades")}
+          onClick={() => handleButtonClick("upgrades")}
           glow={activeButton === "upgrades"}
           shimmer={!activeButton || activeButton === "upgrades"}
           shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
@@ -156,7 +186,7 @@ export default function ProjectStats() {
           <Button
             variant="outline-rounded"
             className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
-            onClick={() => setActiveButton(activeButton === "contributors" ? null : "contributors")}
+            onClick={() => handleButtonClick("contributors")}
             glow={activeButton === "contributors"}
             shimmer={!activeButton || activeButton === "contributors"}
             shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
@@ -185,7 +215,7 @@ export default function ProjectStats() {
         <Button
           variant={"outline-rounded"}
           className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
-          onClick={() => setActiveButton(activeButton === "years" ? null : "years")}
+          onClick={() => handleButtonClick("years")}
           glow={activeButton === "years"}
           shimmer={!activeButton || activeButton === "years"}
           shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
@@ -210,13 +240,13 @@ export default function ProjectStats() {
           <span
             className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
           >
-            $1b+
+            $1B+
           </span>
         </span>
         <Button
           variant={"outline-rounded"}
           className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
-          onClick={() => setActiveButton(activeButton === "volume" ? null : "volume")}
+          onClick={() => handleButtonClick("volume")}
           glow={activeButton === "volume"}
           shimmer={!activeButton || activeButton === "volume"}
           shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
