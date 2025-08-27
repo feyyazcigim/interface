@@ -20,7 +20,7 @@ const TxIcons: Record<string, string> = {
 };
 
 const bounceInAnimation: AnimationDefinition = {
-  scale: [0, 1, 0.7],
+  scale: [0, 1, 0.8],
   opacity: [1, 1, 1],
   transition: {
     duration: 0.8,
