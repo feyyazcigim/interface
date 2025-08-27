@@ -20,7 +20,7 @@ export default function SecondaryCTA() {
         <span className="text-xl lg:text-lg lg:leading-[1.4] font-thin text-pinto-gray-4 text-center">
           Printed directly to the people. Founded on decentralized credit.
         </span>
-        <Link to={navLinks.printsToThePeople}>
+        <Link to={navLinks.printsToThePeople} target="_blank" rel="noopener noreferrer">
           <Button
             rounded="full"
             variant={"defaultAlt"}
