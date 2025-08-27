@@ -320,6 +320,27 @@ const personIcons = [
   "farmer_12.png",
 ];
 
+// Helper function to get group index (farmers 1&2 = group 0, farmers 3&4 = group 1, etc.)
+function getFarmerGroup(farmerFilename: string): number {
+  const farmerNumber = parseInt(farmerFilename.replace(/\D/g, ""), 10);
+  return Math.floor((farmerNumber - 1) / 2);
+}
+
+// Helper function to select a farmer that doesn't have the same group as the previous one
+function selectFarmer(previousFarmer?: string): string {
+  if (!previousFarmer) {
+    // First farmer, can be any
+    const randomIndex = Math.floor(Math.random() * personIcons.length);
+    return personIcons[randomIndex];
+  }
+
+  const previousGroup = getFarmerGroup(previousFarmer);
+  const availableFarmers = personIcons.filter((farmer) => getFarmerGroup(farmer) !== previousGroup);
+
+  const randomIndex = Math.floor(Math.random() * availableFarmers.length);
+  return availableFarmers[randomIndex];
+}
+
 // Convert price to Y coordinate (inverted because SVG Y increases downward)
 function priceToY(price: number, chartHeight = ANIMATION_CONFIG.height) {
   const minPrice = 0.99;
@@ -748,6 +769,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     const workingData = [...fullPriceData];
 
     // Assign farmer icons consistently - check existing markers for assignments
+    let lastAssignedFarmer: string | undefined;
     for (let i = 0; i < workingData.length; i++) {
       if (workingData[i].txType !== null && !workingData[i].farmer) {
         // Look for existing marker with same content pattern
@@ -768,11 +790,15 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         if (existingMarker) {
           // Reuse farmer from existing marker
           workingData[i].farmer = existingMarker.farmer;
+          lastAssignedFarmer = existingMarker.farmer;
         } else {
-          // Generate new farmer assignment
-          const randomIndex = Math.floor(Math.random() * personIcons.length);
-          workingData[i].farmer = personIcons[randomIndex];
+          // Generate new farmer assignment avoiding same group as previous
+          workingData[i].farmer = selectFarmer(lastAssignedFarmer);
+          lastAssignedFarmer = workingData[i].farmer;
         }
+      } else if (workingData[i].farmer) {
+        // Track existing farmer assignments
+        lastAssignedFarmer = workingData[i].farmer;
       }
     }
 
