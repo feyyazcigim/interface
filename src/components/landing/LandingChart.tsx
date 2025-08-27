@@ -181,7 +181,7 @@ const semiStablePriceData: PricePoint[] = [
   { txType: null, value: 0.997 },
   { txType: null, value: 1.003 },
   { txType: "deposit", value: 0.998, triggerPhase: "semiStable" },
-  { txType: null, value: 1.0025 },
+  { txType: null, value: 1.0025, triggerPulse: true },
   { txType: null, value: 1.0 },
   { txType: "sow", value: 0.9994 },
   { txType: "harvest", value: 1.0004 },
@@ -870,38 +870,50 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
 
   const lineStrokeColor = useMotionValue("#387F5C");
 
-  // Price-based flash trigger system
+  // Combined position and price-based flash trigger system
   useEffect(() => {
     const unsubscribe = currentY.on("change", (yPosition) => {
       if (priceTrackingActive.get() < 1) return;
 
+      // Get current position index to determine nearby datapoints
+      const currentIdx = currentIndex.get();
+      const currentIndexValue = Math.max(0, Math.min(Math.round(currentIdx), fullPriceData.length - 1));
+
+      // Define a range around current position (±2 indices to account for bezier curve quirks)
+      const rangeSize = 2;
+      const startIdx = Math.max(0, currentIndexValue - rangeSize);
+      const endIdx = Math.min(fullPriceData.length - 1, currentIndexValue + rangeSize);
+
       // Convert current Y position to price
       const currentPrice = yToPrice(yPosition, dynamicHeight);
 
-      // Find trigger points that should activate based on current price
-      for (const dataPoint of fullPriceData) {
-        if (dataPoint.triggerPulse) {
+      // Only check datapoints within the current range
+      for (let i = startIdx; i <= endIdx; i++) {
+        const dataPoint = fullPriceData[i];
+        if (dataPoint?.triggerPulse === true) {
           // Check if we've crossed this trigger price (within a small tolerance)
           const priceDifference = Math.abs(currentPrice - dataPoint.value);
           const tolerance = 0.0005; // Much smaller tolerance (0.05% of price range)
 
           if (priceDifference <= tolerance) {
-            /* console.log(
-              `🔥 Flash triggered! Current price: ${currentPrice.toFixed(6)}, Target: ${dataPoint.value.toFixed(6)}, Diff: ${priceDifference.toFixed(6)}`,
-            ); */
+            /*
+            console.log(
+              `🔥 Flash triggered at index ${i} (current: ${currentIndexValue})! Current price: ${currentPrice.toFixed(6)}, Target: ${dataPoint.value.toFixed(6)}, Diff: ${priceDifference.toFixed(6)}`,
+            );
+            */
 
             // Trigger flash effect
             animate(lineStrokeColor, "#00C767", { duration: 0.1, ease: "linear" }).then(() => {
               animate(lineStrokeColor, "#387F5C", { duration: 0.1, ease: "linear" });
             });
 
-            break; // Only trigger one flash per change
+            return; // Exit early after first trigger to avoid multiple flashes
           }
         }
       }
     });
     return unsubscribe;
-  }, [currentY, lineStrokeColor, priceTrackingActive, fullPriceData, dynamicHeight]);
+  }, [currentY, currentIndex, lineStrokeColor, priceTrackingActive, fullPriceData, dynamicHeight]);
 
   // Phase trigger system (still based on position/index)
   useEffect(() => {
