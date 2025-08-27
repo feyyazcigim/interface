@@ -649,8 +649,8 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   const transactionMarkersOpacity = useMotionValue<number>(1); // 0 = hidden, 1 = visible
   const baseFloatersOpacity = useTransform(priceTrackingActive, (active: number) => (active >= 1 ? 1 : 0) as number);
   const floatersOpacity = useTransform(
-    [baseFloatersOpacity, transactionMarkersOpacity],
-    ([base, restart]: number[]) => base * restart,
+    [baseFloatersOpacity, transactionMarkersOpacity, priceLineOpacity],
+    ([base, restart, priceLineOpac]: number[]) => base * restart * priceLineOpac,
   ) as MotionValue<0 | 1>;
   const x = useTransform(scrollOffset, (value) => viewportWidth * ANIMATION_CONFIG.clipPath.initial - value);
 
