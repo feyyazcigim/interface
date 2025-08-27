@@ -1379,8 +1379,8 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         ease: "easeOut",
       }),
       animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.minimum * 100, {
-        duration: 0.3,
-        ease: "easeOut",
+        duration: 1,
+        ease: "anticipate",
       }),
     ]);
 
