@@ -25,12 +25,12 @@ export default function SecondaryCTA() {
             rounded="full"
             variant={"defaultAlt"}
             size={isMobile ? "md" : "xl"}
-            className={`z-20 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+            className={`z-20 hover:bg-pinto-green-2 hover:text-white group transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
             shimmer={true}
             glow={true}
           >
             <span>Why is this so valuable?</span>
-            <span className="text-pinto-green-4">
+            <span className="text-pinto-green-4 group-hover:text-white transition-all duration-300 ease-in-out">
               <PintoRightArrow
                 width={isMobile ? "1.25rem" : "1.5rem"}
                 height={isMobile ? "1.25rem" : "1.5rem"}
