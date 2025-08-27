@@ -867,7 +867,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   // Refs to prevent timer interference
   const pintoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const animationControlsRef = useRef<ReturnType<typeof animate> | null>(null);
-
+  const clipPathControlsRef = useRef<ReturnType<typeof animate> | null>(null);
   const lineStrokeColor = useMotionValue("#387F5C");
 
   // Combined position and price-based flash trigger system
@@ -1148,10 +1148,11 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
           ease: "easeInOut",
         });
 
-        animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
+        const clipPathControls = animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
           duration: phase2Duration,
           ease: "easeIn",
         });
+        clipPathControlsRef.current = clipPathControls;
 
         const controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.final * 100, {
           duration: phase2Duration,
@@ -1308,6 +1309,13 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     if (animationControlsRef.current) {
       animationControlsRef.current.stop();
     }
+    if (clipPathControlsRef.current) {
+      clipPathControlsRef.current.stop();
+    }
+
+    priceTrackingActive.set(0);
+    scrollOffset.set(0);
+    clipPathWidth.set(ANIMATION_CONFIG.clipPath.initial);
 
     // Fade out visible elements and move measurement point to center
     await Promise.all([
@@ -1332,14 +1340,14 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         duration: 0.3,
         ease: "easeOut",
       }),
+      animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.minimum * 100, {
+        duration: 0.3,
+        ease: "easeOut",
+      }),
     ]);
 
     // Reset all motion values to initial state
-    scrollOffset.set(0);
-    measurementLineOffset.set(ANIMATION_CONFIG.measurementLine.initial * 100);
-    clipPathWidth.set(ANIMATION_CONFIG.clipPath.initial);
     horizontalLineClipPath.set(viewportWidth);
-    priceTrackingActive.set(0);
     priceLabelsOpacity.set(0);
     lineStrokeColor.set("#387F5C");
     priceLineOpacity.set(1); // Reset price line opacity
