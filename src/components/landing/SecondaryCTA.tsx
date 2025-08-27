@@ -26,8 +26,6 @@ export default function SecondaryCTA() {
             variant={"defaultAlt"}
             size={isMobile ? "md" : "xl"}
             className={`z-20 hover:bg-pinto-green-2/50 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
-            shimmer={true}
-            glow={true}
           >
             <span>Why is this so valuable?</span>
             <span className="text-pinto-green-4 transition-all duration-300 ease-in-out">
