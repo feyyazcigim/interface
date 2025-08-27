@@ -341,7 +341,7 @@ export const navLinks = {
   explorer_seasons: "/explorer/seasons",
   explorer_all: "/explorer/all",
   whitepaper: "/whitepaper",
-  twitter: "https://x.com/pintocommunity",
+  twitter: "https://x.com/pintodotmoney",
   docs: "https://docs.pinto.money/",
   discord: "https://pinto.money/discord",
   github: "https://github.com/pinto-org",

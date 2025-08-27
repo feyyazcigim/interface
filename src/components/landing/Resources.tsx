@@ -53,7 +53,7 @@ const resourceCards = [
     finalScale: 1.1,
     buttons: [
       {
-        href: navLinks.discord,
+        href: navLinks.overview,
         label: "Dashboard",
       },
     ],
