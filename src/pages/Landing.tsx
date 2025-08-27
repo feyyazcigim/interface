@@ -112,9 +112,11 @@ export default function Landing() {
         {sectionsVisible && (
           <>
             <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen snap-center">
-              <SecondaryCTAValues />
-              <SecondaryCTA />
-              <SecondaryCTAProperties />
+              <div className="mb-[2.5%]">
+                <SecondaryCTAValues />
+                <SecondaryCTA />
+                <SecondaryCTAProperties />
+              </div>
             </section>
             <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
               <ProjectStats />
@@ -139,13 +141,13 @@ export default function Landing() {
       >
         <div
           className={`fixed left-1/2 -translate-x-1/2 flex z-20 justify-center ${
-            reachedMainCta ? "bottom-6 sm:bottom-12" : "-bottom-28"
+            reachedMainCta ? "bottom-[3%]" : "-bottom-28"
           } transition-all duration-500 ease-in-out`}
         >
           <Button
             rounded="full"
-            size={isAtTop && reachedMainCta ? (isMobile ? "md" : "xl") : "xxl"}
-            className={`${isMobile || (isAtTop && reachedMainCta) ? "scale-100" : "scale-150"} z-20 hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+            size={"md"}
+            className={`scale-150 md:scale-100 2xl:scale-150 z-20 hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
             shimmer={true}
             glow={true}
           >
@@ -161,11 +163,7 @@ export default function Landing() {
               }`}
               style={{ isolation: "isolate" }}
             >
-              <PintoRightArrow
-                width={isMobile ? (isAtTop && reachedMainCta ? "1.5rem" : "1.25rem") : "1.5rem"}
-                height={isMobile ? (isAtTop && reachedMainCta ? "1.5rem" : "1.25rem") : "1.5rem"}
-                className="transition-all"
-              />
+              <PintoRightArrow width={"1.25rem"} height={"1.25rem"} className="transition-all" />
             </div>
           </Button>
         </div>

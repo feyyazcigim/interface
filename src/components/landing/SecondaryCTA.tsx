@@ -9,7 +9,7 @@ export default function SecondaryCTA() {
   const isMobile = useIsMobile();
   return (
     <div className="flex flex-col items-center">
-      <Separator className="w-[80%] sm:w-[50%] mt-2 mb-4 lg:mt-6 lg:mb-8" />
+      <Separator className="w-[80%] sm:w-[50%] my-2 lg:my-4" />
       <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 lg:w-full sm:max-w-[25rem] lg:max-w-[50rem] mx-auto">
         <h2 className="text-[1.75rem] lg:pinto-h2 lg:text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center text-center">
           <span>
@@ -40,7 +40,7 @@ export default function SecondaryCTA() {
           </Button>
         </Link>
       </div>
-      <Separator className="w-[40%] sm:w-[20%] mt-4 mb-2 lg:mt-8 lg:mb-6" />
+      <Separator className="w-[40%] sm:w-[20%] my-2 lg:my-4" />
     </div>
   );
 }

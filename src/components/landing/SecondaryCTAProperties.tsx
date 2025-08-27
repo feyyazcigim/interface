@@ -74,14 +74,14 @@ export default function SecondaryCTAProperties() {
           .map((info, index) => (
             <div
               key={`dataInfo2_${info.title}_${index}`}
-              className="p-4 lg:p-4 w-[16rem] h-[13rem] lg:w-[23.5rem] lg:h-[16rem] flex-shrink-0 border rounded-2xl bg-pinto-off-white mr-6 lg:mr-12 cursor-pointer transition-transform sm:hover:scale-105 sm:active:scale-95"
+              className="p-4 2xl:p-4 w-[16rem] h-[13rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 border rounded-2xl bg-pinto-off-white mr-6 2xl:mr-12 cursor-pointer transition-transform sm:hover:scale-105 sm:active:scale-95"
               onClick={() => handleCardClick(info)}
             >
-              <div className="flex flex-col gap-4 lg:gap-6">
-                <img src={info.logo} className="w-16 h-16 lg:w-20 lg:h-20 flex-shrink-0" alt={info.title} />
-                <div className="flex flex-col gap-2 lg:gap-4">
-                  <div className="text-base lg:text-lg leading-[1.1] font-thin text-black">{info.title}</div>
-                  <div className="text-base lg:text-xl leading-[1.1] font-thin text-pinto-gray-4">
+              <div className="flex flex-col gap-4 2xl:gap-6">
+                <img src={info.logo} className="w-16 h-16 2xl:w-20 2xl:h-20 flex-shrink-0" alt={info.title} />
+                <div className="flex flex-col gap-2 2xl:gap-4">
+                  <div className="text-base 2xl:text-xl leading-[1.1] font-thin text-black">{info.title}</div>
+                  <div className="text-base 2xl:text-xl leading-[1.1] font-thin text-pinto-gray-4">
                     {info.pintoImplementation}
                   </div>
                 </div>
