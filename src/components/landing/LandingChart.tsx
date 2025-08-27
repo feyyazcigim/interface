@@ -208,8 +208,19 @@ const stablePriceData: PricePoint[] = [
   { txType: null, value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
 ];
 
+// Track amplitude calls for progressive dampening
+let amplitudeCallCount = 0;
+
 // Generate randomized stable data with slight variations (0.1%)
 function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
+  // Increment call count for progressive amplitude reduction
+  amplitudeCallCount++;
+
+  // Calculate amplitude modifier (decreases price movement over time)
+  // Starts at 1.0 (full amplitude) and can reduce to 0.5 (50% amplitude)
+  const maxReduction = 0.5; // 50% reduction maximum
+  const reductionRate = 0.05; // 5% reduction per call
+  const amplitudeModifier = Math.max(maxReduction, 1.0 - (amplitudeCallCount - 1) * reductionRate);
   // Transaction types for different price movements
   const priceUpTxTypes = ["deposit", "convert", "sow"];
   const priceDownTxTypes = ["withdraw", "convert", "yield", "harvest"];
@@ -223,13 +234,13 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
     let priceMultiplier: number;
     if (point.value > 1.0) {
       // Price is above $1.00, only allow upward movement
-      priceMultiplier = 1 + Math.random() * 0.002; // 0% to +0.2%
+      priceMultiplier = 1 + Math.random() * 0.002 * amplitudeModifier; // 0% to +0.2% * amplitude
     } else if (point.value < 1.0) {
       // Price is below $1.00, only allow downward movement
-      priceMultiplier = 1 - Math.random() * 0.002; // -0.2% to 0%
+      priceMultiplier = 1 - Math.random() * 0.002 * amplitudeModifier; // -0.2% to 0% * amplitude
     } else {
       // Price is exactly $1.00, allow small movement in either direction
-      priceMultiplier = 1 + (Math.random() - 0.5) * 0.002; // ±0.1%
+      priceMultiplier = 1 + (Math.random() - 0.5) * 0.002 * amplitudeModifier; // ±0.1% * amplitude
     }
 
     return {
@@ -237,7 +248,7 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
       value: point.value * priceMultiplier,
       txType: null as string | null, // Clear all txTypes initially
       farmer: undefined, // Clear farmer assignment so new batch gets fresh farmers
-      speed: (point.speed || 1) + (Math.random() - 0.5) * 0.1, // ±0.05 randomization
+      speed: (point.speed || 1) + (Math.random() - 0.5) * 0.1 * amplitudeModifier, // ±0.05 randomization * amplitude
     };
   });
 
@@ -290,7 +301,7 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
 const initialFullPriceData: PricePoint[] = [
   ...unstablePriceData,
   ...semiStablePriceData,
-  ...Array.from({ length: repetitions }).flatMap(() => stablePriceData),
+  ...Array.from({ length: repetitions }).flatMap(() => generateRandomizedStableData(stablePriceData)),
 ];
 
 // Array of person icons with different color backgrounds
@@ -617,7 +628,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       return [
         { txType: null, value: 1, speed: 0.85 },
         { txType: null, value: 1.0005, speed: 0.85 },
-        ...Array.from({ length: repetitions * 2 }).flatMap(() => stablePriceData),
+        ...Array.from({ length: repetitions * 2 }).flatMap(() => generateRandomizedStableData(stablePriceData)),
       ];
     }
     return initialFullPriceData;
@@ -1316,6 +1327,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     priceTrackingActive.set(0);
     scrollOffset.set(0);
     clipPathWidth.set(ANIMATION_CONFIG.clipPath.initial);
+    amplitudeCallCount = 0; // Reset amplitude for fresh randomization
 
     // Fade out visible elements and move measurement point to center
     await Promise.all([
