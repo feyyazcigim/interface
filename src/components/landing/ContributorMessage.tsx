@@ -2,6 +2,18 @@ import { useAtom } from "jotai";
 import { Link } from "react-router-dom";
 import { selectedContributorAtom } from "./ContributorProfiles";
 
+function getBackgroundPosition(contributorName: string): string {
+  switch (contributorName) {
+    case "natto":
+      return "bg-[center_top_0.5rem]";
+    case "Ryan":
+    case "burr":
+      return "bg-[center_bottom_0.25rem]";
+    default:
+      return "bg-center";
+  }
+}
+
 export default function ContributorMessage() {
   const [selectedContributor] = useAtom(selectedContributorAtom);
 
@@ -16,7 +28,7 @@ export default function ContributorMessage() {
         "{selectedContributor.description}" - {selectedContributor.name}
       </p>
       <div
-        className="sm:h-[400px] sm:w-[900px] h-[80px] w-[300px] place-self-center bg-cover bg-center bg-no-repeat rounded-lg"
+        className={`sm:h-[400px] sm:w-[900px] h-[80px] w-[300px] place-self-center bg-cover ${getBackgroundPosition(selectedContributor.name)} bg-no-repeat rounded-lg`}
         style={{
           backgroundImage: `url(/${selectedContributor.name}-bg.png)`,
           maskImage:
