@@ -28,6 +28,7 @@ export default function Landing() {
   // Track first-time visitor status
   const [isFirstTimeVisitor, setIsFirstTimeVisitor] = useState<boolean>(false);
   const [sectionsVisible, setSectionsVisible] = useState<boolean>(true); // Default to visible
+  const scrollAttemptCountRef = useRef(0);
 
   // Check if user is a first-time visitor
   useEffect(() => {
@@ -156,6 +157,11 @@ export default function Landing() {
     if (!scrollContainer) return;
 
     const handleScroll = () => {
+      // If sections are not visible, ignore all scroll events
+      if (!sectionsVisible) {
+        return;
+      }
+
       const currentScrollTop = scrollContainer.scrollTop;
       const halfScreenHeight = window.innerHeight / 2;
       setIsAtTop(currentScrollTop < halfScreenHeight);
@@ -164,18 +170,32 @@ export default function Landing() {
       handleScrollEnd();
     };
 
+    const handleWheel = (e: globalThis.WheelEvent) => {
+      if (!sectionsVisible) {
+        scrollAttemptCountRef.current += 1;
+
+        // Enable scrolling after 2 attempts
+        if (scrollAttemptCountRef.current >= 2) {
+          setSectionsVisible(true);
+          setReachedMainCta(true);
+        }
+      }
+    };
+
     scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+    scrollContainer.addEventListener("wheel", handleWheel, { passive: true });
 
     // Check initial position
     handleScroll();
 
     return () => {
       scrollContainer.removeEventListener("scroll", handleScroll);
+      scrollContainer.removeEventListener("wheel", handleWheel);
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [handleScrollEnd]);
+  }, [handleScrollEnd, sectionsVisible]);
 
   const handleWheel = (e: WheelEvent<HTMLAnchorElement>) => {
     e.stopPropagation();
@@ -207,36 +227,32 @@ export default function Landing() {
       }}
     >
       <div
-        className="flex flex-col h-screen overflow-y-auto overflow-scroll"
+        className={`flex flex-col h-screen ${sectionsVisible ? "overflow-y-auto overflow-scroll" : "overflow-hidden"}`}
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
         <section className="flex flex-col overflow-clip place-content-center min-h-screen">
           <LandingChart currentTriggerPhase={currentTriggerPhase} setCurrentTriggerPhase={setCurrentTriggerPhase} />
         </section>
-        {sectionsVisible && (
-          <>
-            <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen">
-              <div className="mb-[2.5%]">
-                <SecondaryCTAValues />
-                <SecondaryCTA />
-                <SecondaryCTAProperties />
-              </div>
-            </section>
-            <section className="flex flex-col overflow-clip place-content-center min-h-screen">
-              <ProjectStats />
-            </section>
-            <section className="flex flex-col overflow-clip place-content-center min-h-screen">
-              <BugBounty />
-              {/* 
+        <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen">
+          <div className="mb-[2.5%]">
+            <SecondaryCTAValues />
+            <SecondaryCTA />
+            <SecondaryCTAProperties />
+          </div>
+        </section>
+        <section className="flex flex-col overflow-clip place-content-center min-h-screen">
+          <ProjectStats />
+        </section>
+        <section className="flex flex-col overflow-clip place-content-center min-h-screen">
+          <BugBounty />
+          {/* 
             <AuditsList />
             */}
-            </section>
-            <section className="flex flex-col overflow-clip place-content-center h-fit sm:h-screen">
-              <Resources />
-            </section>
-          </>
-        )}
+        </section>
+        <section className="flex flex-col overflow-clip place-content-center h-fit sm:h-screen">
+          <Resources />
+        </section>
       </div>
       <Link
         to={isAtTop && reachedMainCta ? "" : navLinks.overview}
