@@ -54,6 +54,17 @@ export default function Landing() {
     }
   }, [isFirstTimeVisitor, currentTriggerPhase, sectionsVisible]);
 
+  // Initialize lastSnappedSectionRef to first section on mount
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      const sections = scrollContainer.querySelectorAll("section");
+      if (sections.length > 0) {
+        lastSnappedSectionRef.current = sections[0];
+      }
+    }
+  }, [sectionsVisible]);
+
   // Scroll snapping functionality
   const snapToNearestSection = useCallback(() => {
     const scrollContainer = scrollContainerRef.current;
