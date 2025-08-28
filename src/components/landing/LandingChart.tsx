@@ -1177,7 +1177,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         );
 
         // Now animate to final positions like the full animation does
-        const phase2Duration = 6;
+        const phase2Duration = 3;
 
         // Horizontal line: Reveal during position animations
         animate(horizontalLineClipPath, 0, {
