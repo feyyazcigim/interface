@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     // also change in src/utils/theme/breakpoints.ts
     screens: {
-      sm: "768px",
+      sm: "767px",
       md: "900px",
       lg: "1100px",
       xl: "1200px",
@@ -19,7 +19,7 @@ module.exports = {
       center: true,
       padding: "2rem",
       screens: {
-        sm: "768px",
+        sm: "767px",
         md: "900px",
         lg: "1100px",
         xl: "1200px",
