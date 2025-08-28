@@ -23,6 +23,7 @@ export default function Landing() {
   const [isAtTop, setIsAtTop] = useState<boolean>(true); // Track if scroll is at very top
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isScrollingRef = useRef(false);
+  const lastSnappedSectionRef = useRef<Element | null>(null);
 
   // Track first-time visitor status
   const [isFirstTimeVisitor, setIsFirstTimeVisitor] = useState<boolean>(false);
@@ -97,6 +98,15 @@ export default function Landing() {
 
     if (nearestSection) {
       const sectionTop = (nearestSection as HTMLElement).offsetTop;
+      const firstSection = sections[0] as HTMLElement;
+      const isNearestSectionFirst = nearestSection === firstSection;
+
+      const wasLastSnappedFirst = lastSnappedSectionRef.current === firstSection;
+
+      // Prevent snapping from first section to first section
+      if (isNearestSectionFirst && wasLastSnappedFirst) {
+        return;
+      }
 
       // All sections snap to top alignment
       const targetScrollTop = sectionTop;
@@ -105,6 +115,7 @@ export default function Landing() {
       const currentDistance = Math.abs(currentScrollTop - targetScrollTop);
       if (currentDistance > 50) {
         isScrollingRef.current = true;
+        lastSnappedSectionRef.current = nearestSection;
         scrollContainer.scrollTo({
           top: targetScrollTop,
           behavior: "smooth",
