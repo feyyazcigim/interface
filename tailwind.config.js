@@ -108,6 +108,7 @@ module.exports = {
           "green-2": "#00C767",
           "green-3": "#246645",
           "green-4": "#387F5C",
+          "orange-1": "#FFF2E0",
           "off-green": "#9A9F6C",
           "off-green-bg": "#EFEEDF",
           "gray-1": "#F8F8F8",

@@ -128,7 +128,7 @@ export default function SecondaryCTAValues() {
             <Button
               key={`dataInfo1_${info.title}_${index}`}
               variant="outline-white"
-              className="flex flex-col hover:bg-pinto-green-1 gap-4 items-start 2xl:gap-6 p-4 2xl:p-4 w-[16rem] h-[13rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl bg-pinto-off-white mr-6 2xl:mr-12 transition-transform sm:hover:scale-105 sm:active:scale-95"
+              className="flex flex-col hover:bg-pinto-orange-1 gap-4 items-start 2xl:gap-6 p-4 2xl:p-4 w-[16rem] h-[13rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl bg-pinto-off-white mr-6 2xl:mr-12 transition-transform sm:hover:scale-105 sm:active:scale-95"
               onClick={() => handleCardClick(info)}
             >
               <img src={info.logo} className="w-16 h-16 2xl:w-20 2xl:h-20 flex-shrink-0 text-left" alt={info.title} />
