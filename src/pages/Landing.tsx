@@ -11,7 +11,7 @@ import SecondaryCTAValues from "@/components/landing/SecondaryCTAValues";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import { WheelEvent, useEffect, useRef, useState } from "react";
+import { WheelEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Landing() {
@@ -21,6 +21,8 @@ export default function Landing() {
   const [currentTriggerPhase, setCurrentTriggerPhase] = useState<string | undefined>(undefined);
   const [reachedMainCta, setReachedMainCta] = useState<boolean>(false);
   const [isAtTop, setIsAtTop] = useState<boolean>(true); // Track if scroll is at very top
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isScrollingRef = useRef(false);
 
   // Track first-time visitor status
   const [isFirstTimeVisitor, setIsFirstTimeVisitor] = useState<boolean>(false);
@@ -51,6 +53,81 @@ export default function Landing() {
     }
   }, [isFirstTimeVisitor, currentTriggerPhase, sectionsVisible]);
 
+  // Scroll snapping functionality
+  const snapToNearestSection = useCallback(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || isScrollingRef.current) return;
+
+    const sections = scrollContainer.querySelectorAll("section");
+    if (sections.length === 0) return;
+
+    const viewportHeight = window.innerHeight;
+    const currentScrollTop = scrollContainer.scrollTop;
+    const containerHeight = scrollContainer.scrollHeight;
+
+    // Check if we're currently in the Resources section (last section)
+    const resourcesSection = sections[sections.length - 1] as HTMLElement;
+    const resourcesSectionTop = resourcesSection.offsetTop;
+    const resourcesSectionBottom = resourcesSectionTop + resourcesSection.offsetHeight;
+    const viewportTop = currentScrollTop;
+    const viewportBottom = currentScrollTop + viewportHeight;
+
+    // If we're within the Resources section, disable snapping
+    if (viewportTop >= resourcesSectionTop - 100 && viewportBottom <= resourcesSectionBottom + 100) {
+      return;
+    }
+
+    let nearestSection: Element | null = null;
+    let smallestDistance = Infinity;
+
+    sections.forEach((section, index) => {
+      const sectionTop = (section as HTMLElement).offsetTop;
+
+      // All sections use top alignment
+      const targetPoint = sectionTop;
+      const viewportReference = currentScrollTop;
+
+      const distance = Math.abs(targetPoint - viewportReference);
+
+      if (distance < smallestDistance) {
+        smallestDistance = distance;
+        nearestSection = section;
+      }
+    });
+
+    if (nearestSection) {
+      const sectionTop = (nearestSection as HTMLElement).offsetTop;
+
+      // All sections snap to top alignment
+      const targetScrollTop = sectionTop;
+
+      // Only snap if we're not already close to the target
+      const currentDistance = Math.abs(currentScrollTop - targetScrollTop);
+      if (currentDistance > 50) {
+        isScrollingRef.current = true;
+        scrollContainer.scrollTo({
+          top: targetScrollTop,
+          behavior: "smooth",
+        });
+
+        // Reset scrolling flag after animation completes
+        setTimeout(() => {
+          isScrollingRef.current = false;
+        }, 800);
+      }
+    }
+  }, []);
+
+  const handleScrollEnd = useCallback(() => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      snapToNearestSection();
+    }, 150); // Wait 150ms after scroll stops
+  }, [snapToNearestSection]);
+
   // Track scroll position to determine if at top
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
@@ -60,6 +137,9 @@ export default function Landing() {
       const currentScrollTop = scrollContainer.scrollTop;
       const halfScreenHeight = window.innerHeight / 2;
       setIsAtTop(currentScrollTop < halfScreenHeight);
+
+      // Trigger scroll end detection
+      handleScrollEnd();
     };
 
     scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
@@ -69,8 +149,11 @@ export default function Landing() {
 
     return () => {
       scrollContainer.removeEventListener("scroll", handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
     };
-  }, []);
+  }, [handleScrollEnd]);
 
   const handleWheel = (e: WheelEvent<HTMLAnchorElement>) => {
     e.stopPropagation();
@@ -102,32 +185,32 @@ export default function Landing() {
       }}
     >
       <div
-        className="flex flex-col h-screen overflow-y-auto snap-y snap-proximity scrollbar-none"
+        className="flex flex-col h-screen overflow-y-auto overflow-scroll"
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
-        <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
+        <section className="flex flex-col overflow-clip place-content-center min-h-screen">
           <LandingChart currentTriggerPhase={currentTriggerPhase} setCurrentTriggerPhase={setCurrentTriggerPhase} />
         </section>
         {sectionsVisible && (
           <>
-            <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen snap-center">
+            <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen">
               <div className="mb-[2.5%]">
                 <SecondaryCTAValues />
                 <SecondaryCTA />
                 <SecondaryCTAProperties />
               </div>
             </section>
-            <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
+            <section className="flex flex-col overflow-clip place-content-center min-h-screen">
               <ProjectStats />
             </section>
-            <section className="flex flex-col overflow-clip place-content-center min-h-screen snap-center">
+            <section className="flex flex-col overflow-clip place-content-center min-h-screen">
               <BugBounty />
               {/* 
             <AuditsList />
             */}
             </section>
-            <section className="flex flex-col overflow-clip place-content-center h-fit sm:h-screen snap-center">
+            <section className="flex flex-col overflow-clip place-content-center h-fit sm:h-screen">
               <Resources />
             </section>
           </>
@@ -147,7 +230,7 @@ export default function Landing() {
           <Button
             rounded="full"
             size={"md"}
-            className={`scale-150 md:scale-100 2xl:scale-150 z-20 hover:bg-pinto-green-4 hover:brightness-125 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+            className={`scale-150 md:scale-100 2xl:scale-150 z-20 hover:bg-pinto-green-4 hover:brightness-125 transition-all [transition:transform_300ms_cubic-bezier(0.4,0,0.2,1)] ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
             shimmer={true}
             glow={true}
           >
