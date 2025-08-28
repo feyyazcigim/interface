@@ -16,6 +16,7 @@ interface StatContentProps {
 
 function StatContent({ activeButton }: StatContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const [height, setHeight] = useState<number>(0);
 
   useEffect(() => {
@@ -36,11 +37,12 @@ function StatContent({ activeButton }: StatContentProps) {
   return (
     <motion.div
       animate={{
-        height: activeButton ? height : 0,
+        height: activeButton ? (isMobile ? 250 : 400) : 0,
         opacity: activeButton ? 1 : 0,
         y: activeButton ? 0 : -20,
       }}
       transition={{ duration: 0.4, ease: "easeInOut" }}
+      className="flex items-center"
     >
       <div ref={contentRef}>
         <AnimatePresence mode="wait" initial={false}>
@@ -173,11 +175,11 @@ export default function ProjectStats() {
           <AnimatePresence>
             {activeButton === "contributors" && (
               <motion.div
-                initial={{ opacity: 0, y: isMobile ? -10 : 20 }}
-                animate={{ opacity: 1, y: isMobile ? -30 : 0 }}
-                exit={{ opacity: 0, y: isMobile ? -10 : 20 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="absolute -left-[4.5rem] sm:left-24 -top-20"
+                className="absolute -left-[4.5rem] sm:left-24 sm:-top-20 -top-40"
               >
                 <ContributorProfiles />
               </motion.div>

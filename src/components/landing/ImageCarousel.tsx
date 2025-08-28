@@ -10,6 +10,7 @@ interface CarouselItem {
   src: string;
   alt: string;
   href: string;
+  date: string;
 }
 
 const POSITIONS = ["leftmost", "left", "center", "right", "rightmost"] as const;
@@ -61,11 +62,11 @@ const POSITION_CONFIGS: Variants = {
 };
 
 const wallpaperImages: CarouselItem[] = [
-  { src: wpMultiflow, alt: "Multi Flow Pump Whitepaper", href: "https://basin.exchange/multi-flow-pump.pdf" },
-  { src: wpBasin, alt: "Basin Whitepaper", href: "https://basin.exchange/basin.pdf" },
-  { src: wpBean, alt: "Beanstalk Whitepaper", href: "https://bean.money/beanstalk.pdf" },
-  { src: wpPinto, alt: "Pinto Whitepaper", href: "https://pinto.money/pinto.pdf" },
-  { src: wpPipeline, alt: "Pipeline Whitepaper", href: "https://evmpipeline.org/pipeline.pdf" },
+  { src: wpBean, alt: "Beanstalk", href: "https://bean.money/beanstalk.pdf", date: "August 2021" },
+  { src: wpPipeline, alt: "Pipeline", href: "https://evmpipeline.org/pipeline.pdf", date: "November 2022" },
+  { src: wpBasin, alt: "Basin", href: "https://basin.exchange/basin.pdf", date: "August 2023" },
+  { src: wpMultiflow, alt: "Multi Flow Pump", href: "https://basin.exchange/multi-flow-pump.pdf", date: "August 2023" },
+  { src: wpPinto, alt: "Pinto", href: "https://pinto.money/pinto.pdf", date: "April 2025" },
 ];
 
 export default function ImageCarousel() {

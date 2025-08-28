@@ -10,6 +10,8 @@ export const contributors = [
     avatar: "/Ryan.jpg",
     description:
       "I believe a decentralized, pseudonymous group of creditors and value providers all around the world can work together to create stable value on the internet.",
+    article:
+      "https://mirror.xyz/0xe7731147bBe1BEBe5CF1Ab101C6EceD384dAbD07/hBE2TBv3KPE-w-TWdzn5EX-1e9hWE-jVeSaCWkU8vPU",
   },
   {
     id: 2,
@@ -17,6 +19,8 @@ export const contributors = [
     avatar: "/DefaultJuice.jpg",
     description:
       "Living through a financial crisis showed me the underbelly of a centralized fiat currency system. I'm building a decentralized one.",
+    article:
+      "https://mirror.xyz/0xe7731147bBe1BEBe5CF1Ab101C6EceD384dAbD07/jvXg-a4qKjs7SzQS86DAx6VgMAUFmI5RUfLrocPLPAs",
   },
   {
     id: 3,
@@ -24,6 +28,8 @@ export const contributors = [
     avatar: "/PintoPirate.jpg",
     description:
       "I don't want others to be aware of my financial activities, nor am I comfortable having a centralized custodian managing or holding my wealth and potentially restricting my access to it.",
+    article:
+      "https://mirror.xyz/0xe7731147bBe1BEBe5CF1Ab101C6EceD384dAbD07/g8Mq9ov6MYU3Eqbd5Scbfcfmtq9Lgi5UOnoa93RaAK8",
   },
   {
     id: 4,
@@ -31,6 +37,8 @@ export const contributors = [
     avatar: "/natto.jpg",
     description:
       "Pinto is a push back against 'good enough' — it openly continues to experiment and will bring the industry one step closer to the scalable and decentralized money that we need.",
+    article:
+      "https://mirror.xyz/0xe7731147bBe1BEBe5CF1Ab101C6EceD384dAbD07/49D2MXRWcWhNx1_XnQHairfoXsQV_EI3S67aL3wKNio",
   },
   {
     id: 5,
@@ -38,6 +46,8 @@ export const contributors = [
     avatar: "/FordPinto.jpg",
     description:
       "We want sustainable growth and functionality over the long term. We want a new money. Not in the hands of the government, but in the hands of those using the money, and only by their choice.",
+    article:
+      "https://mirror.xyz/0xe7731147bBe1BEBe5CF1Ab101C6EceD384dAbD07/bHDzAxNNJxpjbrbQu1HK5nJG7KImkHn6T0_ZLB68tss",
   },
   {
     id: 6,
@@ -45,6 +55,8 @@ export const contributors = [
     avatar: "/burr.jpg",
     description:
       "This isn’t just about rebuilding. It’s about fulfilling the long-term vision: creating Leviathan-free, low-volatility money that can make the promise of Bitcoin work for the world. I look forward to seeing it through.",
+    article:
+      "https://mirror.xyz/0xe7731147bBe1BEBe5CF1Ab101C6EceD384dAbD07/UwlJoyWsUPyzct4IHT4Drlaea2PhtWsxyhSGJaoJqw8",
   },
 ];
 
@@ -88,11 +100,11 @@ export default function ContributorProfiles() {
   // Line shape positions for mobile: evenly spaced horizontally with slight random variation
   const linePositions = useMemo(
     () => [
-      { x: 0 + (Math.random() * 0.3125 - 0.15625), y: 2.5 + (Math.random() * 0.3125 - 0.15625) },
-      { x: 5 + (Math.random() * 0.3125 - 0.15625), y: 2.5 + (Math.random() * 0.3125 - 0.15625) },
-      { x: 10 + (Math.random() * 0.3125 - 0.15625), y: 2.5 + (Math.random() * 0.3125 - 0.15625) },
-      { x: 15 + (Math.random() * 0.3125 - 0.15625), y: 2.5 + (Math.random() * 0.3125 - 0.15625) },
-      { x: 20 + (Math.random() * 0.3125 - 0.15625), y: 2.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 0 + (Math.random() * 0.3125 - 0.15625), y: 6.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 5 + (Math.random() * 0.3125 - 0.15625), y: 6.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 10 + (Math.random() * 0.3125 - 0.15625), y: 6.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 15 + (Math.random() * 0.3125 - 0.15625), y: 6.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 20 + (Math.random() * 0.3125 - 0.15625), y: 6.5 + (Math.random() * 0.3125 - 0.15625) },
     ],
     [],
   );
@@ -111,8 +123,8 @@ export default function ContributorProfiles() {
   );
 
   return (
-    <div className="flex justify-center items-center relative -top-20 -left-20 pointer-events-none">
-      <div className="relative w-80 h-32">
+    <div className="flex justify-center items-center relative -top-20 -left-20 pointer-events-none h-0">
+      <div className="relative w-80 h-0">
         {displayedContributors.map((contributor, index) => (
           <motion.div
             key={contributor.id}
