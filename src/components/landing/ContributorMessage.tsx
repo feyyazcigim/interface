@@ -24,7 +24,7 @@ export default function ContributorMessage() {
       rel="noopener noreferrer"
       className="group flex flex-col place-self-center text-center mt-4 sm:mt-8 w-screen px-4 sm:px-0 sm:w-[65%] h-[250px] sm:h-[400px]"
     >
-      <p className="text-xl sm:text-4xl font-light underline text-pinto-green-4 group-hover:text-pinto-green-3 group-hover:brightness-150 transition-all duration-300 mb-4">
+      <p className="text-xl sm:text-4xl font-light text-pinto-gray-5 mb-4">
         "{selectedContributor.description}" - {selectedContributor.name}
       </p>
       <div
