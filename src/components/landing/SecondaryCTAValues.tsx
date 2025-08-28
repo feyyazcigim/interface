@@ -1,10 +1,10 @@
 import ValueCensorshipResistance from "@/assets/misc/Value_Censorship_Resistance.svg";
-import ValueCommunityRun from "@/assets/misc/Value_Community_Run.svg";
 import ValueFairness from "@/assets/misc/Value_Fairness.svg";
 import ValueOpenSource from "@/assets/misc/Value_Open_Source.svg";
 import ValuePermissionlessness from "@/assets/misc/Value_Permissionlessness.svg";
 import ValueTrustless from "@/assets/misc/Value_Trustlessness.svg";
 import { useState } from "react";
+import { Button } from "../ui/Button";
 import CardModal from "./CardModal";
 
 const data = [
@@ -125,19 +125,20 @@ export default function SecondaryCTAValues() {
           .fill(data)
           .flat()
           .map((info, index) => (
-            <div
+            <Button
               key={`dataInfo1_${info.title}_${index}`}
-              className="p-4 2xl:p-4 w-[16rem] h-[13rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 border rounded-2xl bg-pinto-off-white mr-6 2xl:mr-12 cursor-pointer transition-transform sm:hover:scale-105 sm:active:scale-95"
+              variant="outline-white"
+              className="flex flex-col hover:bg-pinto-green-1 gap-4 items-start 2xl:gap-6 p-4 2xl:p-4 w-[16rem] h-[13rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl bg-pinto-off-white mr-6 2xl:mr-12 transition-transform sm:hover:scale-105 sm:active:scale-95"
               onClick={() => handleCardClick(info)}
             >
-              <div className="flex flex-col gap-4 2xl:gap-6">
-                <img src={info.logo} className="w-16 h-16 2xl:w-20 2xl:h-20 flex-shrink-0" alt={info.title} />
-                <div className="flex flex-col gap-2 2xl:gap-4">
-                  <div className="text-base leading-[1.1] font-thin text-black">{info.title}</div>
-                  <div className="text-xs sm:text-base leading-[1.1] font-thin text-pinto-gray-4">{info.subtitle}</div>
+              <img src={info.logo} className="w-16 h-16 2xl:w-20 2xl:h-20 flex-shrink-0 text-left" alt={info.title} />
+              <div className="flex flex-col flex-1 gap-2 2xl:gap-4">
+                <div className="text-base text-left leading-[1.1] font-thin text-black">{info.title}</div>
+                <div className="text-xs sm:text-base leading-[1.1] font-thin text-pinto-gray-4 whitespace-normal text-left">
+                  {info.subtitle}
                 </div>
               </div>
-            </div>
+            </Button>
           ))}
       </div>
       <CardModal isOpen={isModalOpen} onOpenChange={handleModalClose} cardData={selectedCard} />

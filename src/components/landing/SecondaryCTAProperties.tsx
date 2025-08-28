@@ -2,6 +2,7 @@ import PropertyLowVolatility from "@/assets/misc/Property_Low_Volatility.svg";
 import PropertyMediumOfExchange from "@/assets/misc/Property_Medium_of_Exchange.svg";
 import PropertyScalable from "@/assets/misc/Property_Scalable.svg";
 import PropertyUnitOfAccount from "@/assets/misc/Property_Unit_of_Account.svg";
+import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import CardModal from "./CardModal";
 
@@ -74,19 +75,20 @@ export default function SecondaryCTAProperties() {
           .fill(data)
           .flat()
           .map((info, index) => (
-            <div
+            <Button
               key={`dataInfo2_${info.title}_${index}`}
-              className="p-4 2xl:p-4 w-[16rem] h-[13rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 border rounded-2xl bg-pinto-off-white mr-6 2xl:mr-12 cursor-pointer transition-transform sm:hover:scale-105 sm:active:scale-95"
+              variant="outline-white"
+              className="flex flex-col hover:bg-pinto-green-1 gap-4 items-start 2xl:gap-6 p-4 2xl:p-4 w-[16rem] h-[13rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl bg-pinto-off-white mr-6 2xl:mr-12 transition-transform sm:hover:scale-105 sm:active:scale-95"
               onClick={() => handleCardClick(info)}
             >
-              <div className="flex flex-col gap-4 2xl:gap-6">
-                <img src={info.logo} className="w-16 h-16 2xl:w-20 2xl:h-20 flex-shrink-0" alt={info.title} />
-                <div className="flex flex-col gap-2 2xl:gap-4">
-                  <div className="text-base leading-[1.1] font-thin text-black">{info.title}</div>
-                  <div className="text-xs sm:text-base leading-[1.1] font-thin text-pinto-gray-4">{info.subtitle}</div>
+              <img src={info.logo} className="w-16 h-16 2xl:w-20 2xl:h-20 flex-shrink-0 text-left" alt={info.title} />
+              <div className="flex flex-col flex-1 gap-2 2xl:gap-4">
+                <div className="text-base text-left leading-[1.1] font-thin text-black">{info.title}</div>
+                <div className="text-xs sm:text-base leading-[1.1] font-thin text-pinto-gray-4 whitespace-normal text-left">
+                  {info.subtitle}
                 </div>
               </div>
-            </div>
+            </Button>
           ))}
       </div>
 
