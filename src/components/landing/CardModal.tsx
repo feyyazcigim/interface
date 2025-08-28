@@ -61,7 +61,7 @@ export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalP
             <div>
               <div className="flex flex-row gap-4 sm:gap-6 flex-1">
                 <div className="flex flex-col gap-4">
-                  <div className="flex justify-center sm:justify-start">
+                  <div className="flex justify-start">
                     <img src={cardData.logo} className="w-20 h-20 sm:w-32 sm:h-32 flex-shrink-0" alt={cardData.title} />
                   </div>
                   <h2 className="text-lg sm:text-3xl leading-[1.1] font-thin text-black">{cardData.title}</h2>

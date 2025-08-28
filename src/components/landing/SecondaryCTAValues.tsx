@@ -134,7 +134,7 @@ export default function SecondaryCTAValues() {
                 <img src={info.logo} className="w-16 h-16 2xl:w-20 2xl:h-20 flex-shrink-0" alt={info.title} />
                 <div className="flex flex-col gap-2 2xl:gap-4">
                   <div className="text-base leading-[1.1] font-thin text-black">{info.title}</div>
-                  <div className="text-base leading-[1.1] font-thin text-pinto-gray-4">{info.subtitle}</div>
+                  <div className="text-xs sm:text-base leading-[1.1] font-thin text-pinto-gray-4">{info.subtitle}</div>
                 </div>
               </div>
             </div>
