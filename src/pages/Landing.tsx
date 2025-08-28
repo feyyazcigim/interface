@@ -170,20 +170,29 @@ export default function Landing() {
       handleScrollEnd();
     };
 
-    const handleWheel = (e: globalThis.WheelEvent) => {
+    const handleScrollAttempt = () => {
       if (!sectionsVisible) {
         scrollAttemptCountRef.current += 1;
 
         // Enable scrolling after 2 attempts
-        if (scrollAttemptCountRef.current >= 2) {
+        if (scrollAttemptCountRef.current > 2) {
           setSectionsVisible(true);
           setReachedMainCta(true);
         }
       }
     };
 
+    const handleWheel = (e: globalThis.WheelEvent) => {
+      handleScrollAttempt();
+    };
+
+    const handleTouchStart = (e: globalThis.TouchEvent) => {
+      handleScrollAttempt();
+    };
+
     scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
     scrollContainer.addEventListener("wheel", handleWheel, { passive: true });
+    scrollContainer.addEventListener("touchstart", handleTouchStart, { passive: true });
 
     // Check initial position
     handleScroll();
@@ -191,6 +200,7 @@ export default function Landing() {
     return () => {
       scrollContainer.removeEventListener("scroll", handleScroll);
       scrollContainer.removeEventListener("wheel", handleWheel);
+      scrollContainer.removeEventListener("touchstart", handleTouchStart);
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
