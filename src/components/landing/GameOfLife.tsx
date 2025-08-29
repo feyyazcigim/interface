@@ -53,7 +53,7 @@ const renderGrid = (canvas, grid) => {
   ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
   // Set color for alive cells
-  ctx.fillStyle = "#10b981"; // Green color
+  ctx.fillStyle = "#00C767"; // Pinto green-2
 
   // Batch render alive cells
   for (let x = 0; x < GRID_SIZE; x++) {

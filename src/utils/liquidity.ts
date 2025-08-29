@@ -150,7 +150,7 @@ The current distribution of underlying liquidity is:
 - ${wormhole.percentage}% WSOL ![WSOL](${WSOLIcon}), which is censorable by Wormhole ![Wormhole](${WormholeLogo}).
 
 
-Future upgrades to the Deposit whitelist will incentivize converting assets censorable by Circle/Coinbase into assets censorable by other entities, further decentralizing the risk of censorship within the protocol.
+Future upgrades to the Deposit whitelist will incentivize Converting assets censorable by Circle/Coinbase into assets censorable by other entities, further decentralizing the risk of censorship within the protocol.
 
 `;
 }

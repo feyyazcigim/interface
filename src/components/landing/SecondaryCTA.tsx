@@ -82,7 +82,7 @@ Pinto is open for anyone to participate.`,
     logo: ValueFairness,
     title: "Fairness",
     subtitle: "The Pinto printer is designed to be free from capture.",
-    definition: "**Fair:** Treating all parties impartially according to agreed upon rules and standards.",
+    definition: "**Fair:** treating all parties impartially according to agreed upon rules and standards.",
     description: `In a fair market, informed participants act freely and compete on a playing field with the following properties:
 
 - existing competitive advantages are difficult to entrench. 'Capture' is difficult, restricted to product or strategy alpha rather than privileged access or anti-competitive techniques.
@@ -95,12 +95,10 @@ Pinto functions according to explicitly defined rules. While Pinto rewards older
     logo: ValueOpenSource,
     title: "Open-Source",
     subtitle: "From code to plain language write-ups, Pinto is accessible to everyone.",
-    definition: "**Open Source:** Artifacts (e.g Designs, Code, Documentation) with key freedoms:",
-    description: `Anyone can:
-1. **Run** an Artifact without restriction.
-2. **Study** an Artifact and understand how it works.
-3. **Modify** an Artifact and create new Artifacts from it.
-4. **Distribute** an Artifact in its original or modified form.
+    definition: "**Open Source:** software that is freely available for anyone to:",
+    description: `1. run;
+2. study and modify;
+3. redistribute in original and modified form.
 
 The protocol is [completely open-source](https://github.com/pinto-org), and tremendous effort has gone into defining it and putting it into context, from rigorous technical documentation (*i.e.*, [the whitepaper](https://pinto.money/pinto.pdf)) to plain language [explainers](https://mirror.xyz/0x8F02813a0AC20affC2C7568e0CB9a7cE5288Ab27).`,
   },
@@ -112,7 +110,7 @@ const propertiesData = [
     logo: PropertyScalable,
     title: "Scalable",
     subtitle: "Pinto can grow infinitely to meet market demand for trustless low-volatility currency.",
-    definition: "**Scalable:** Competitive volatility and carrying costs can be sustained at arbitrary supply.",
+    definition: "**Scalable:** competitive volatility and carrying costs can be sustained at arbitrary supply.",
     description: `Collateralized stablecoins are limited by the amount of available collateral. Due to the lack of crypto-native collateral, collateralized stablecoins have been forced to sacrifice Bitcoin's values and use centralized collateral in order to scale to meet demand. Instead of collateral, Pinto uses credit, which is infinitely scalable and network-native, enabling Pinto to grow to meet arbitrary demand without compromising on Bitcoin's values.`,
   },
   {
@@ -120,7 +118,7 @@ const propertiesData = [
     title: "Low Volatility",
     subtitle:
       "Pinto seeks to minimize the volatility of its value through thoughtful incentives instead of trying to maintain a perfect peg.",
-    definition: "**Low Volatility:** Purchasing power varies minimally over time.",
+    definition: "**Low Volatility:** purchasing power varies minimally over time.",
     description: `The stablecoin trilemma states that a stablecoin cannot be stable, scalable and decentralized. Pinto strikes the optimal balance within this trilemma by sacrificing perfect stability in favor of low volatility, thereby enabling it to scale to meet arbitrary demand without sacrificing the benefits of decentralization – which is not an end in and of itself – namely trustlessness, permissionlessness, censorship resistance and fairness.`,
   },
   {
@@ -128,15 +126,15 @@ const propertiesData = [
     title: "Medium of Exchange",
     subtitle:
       "Prioritizing low volatility and yield over upward price movement makes Pinto the optimal crypto-native MoE",
-    definition: "**Medium of Exchange:** An asset widely accepted as payment, enabling trade without direct barter.",
+    definition: "**Medium of Exchange:** an asset widely accepted as payment, enabling trade without direct barter.",
     description: `Pinto has the unique combination of being low in volatility and generating native yield, which makes an optimal medium of exchange between various types of value. sPinto, the fungible yield-bearing ERC-20 wrapper of Pinto Deposits, offers the ability to integrate Pinto into existing DeFi primitives and distribute yield to liquidity providers with minimal friction.`,
   },
   {
     logo: PropertyUnitOfAccount,
     title: "Unit of Account",
     subtitle:
-      "Low volatility and algorithmic distribution of newly minted currency make Pinto the optimal crypto-native UoA for loans.",
-    definition: "**Unit of Account:** A monetary standard used to price and compare value.",
+      "Low volatility and algorithmic distribution of new mints make Pinto the optimal crypto-native UoA for loans.",
+    definition: "**Unit of Account:** a monetary standard used to price and compare value.",
     description: `Unlike centralized fiat currencies, in which new currency is printed and distributed arbitrarily, often devaluing the wealth of the respective system's participants and the purchasing power of each unit of the currency, Pinto autonomously distributes newly minted currency directly to its holders. Combined with its native volatility-minimization mechanisms, the protocol creates a currency designed to serve as a unit of account for value and loans of value.`,
   },
 ];
@@ -169,11 +167,11 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, hoverBgCol
     <Button
       key={`${keyPrefix}_${data.title}_${index}`}
       variant="outline-white"
-      className={`flex flex-col ${hoverBgColor} gap-4 items-start 2xl:gap-6 p-4 2xl:p-4 w-[16rem] h-[13rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl bg-pinto-off-white mr-6 2xl:mr-12 sm:hover:scale-105 sm:active:scale-95 ${
+      className={`flex flex-col ${hoverBgColor} gap-3 sm:gap-4 items-start lg:gap-5 2xl:gap-6 p-3 sm:p-4 lg:p-5 2xl:p-4 w-[14rem] sm:w-[16rem] lg:w-[20rem] xl:w-[22rem] h-[12rem] sm:h-[13rem] lg:h-[15rem] xl:h-[15.5rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl bg-pinto-off-white mr-4 sm:mr-6 lg:mr-8 xl:mr-10 2xl:mr-12 sm:hover:scale-105 sm:active:scale-95 ${
         isGlowing
           ? glowColor === "orange"
-            ? "shadow-[0_0_20px_rgba(255,166,77,0.6),0_0_40px_rgba(255,166,77,0.4)] scale-[1.02]"
-            : "shadow-[0_0_20px_rgba(56,127,92,0.6),0_0_40px_rgba(56,127,92,0.4)] scale-[1.02]"
+            ? "shadow-[0_0_15px_rgba(255,186,107,0.6),0_0_25px_rgba(255,186,107,0.4)] scale-[1.02]"
+            : "shadow-[0_0_15px_rgba(56,127,92,0.6),0_0_25px_rgba(56,127,92,0.4)] scale-[1.02]"
           : ""
       }`}
       style={
@@ -193,10 +191,16 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, hoverBgCol
       }
       onClick={() => onClick(data)}
     >
-      <img src={data.logo} className="w-16 h-16 2xl:w-20 2xl:h-20 flex-shrink-0 text-left" alt={data.title} />
-      <div className="flex flex-col flex-1 gap-2 2xl:gap-4">
-        <div className="text-base text-left leading-[1.1] font-thin text-black">{data.title}</div>
-        <div className="text-xs sm:text-base leading-[1.1] font-thin text-pinto-gray-4 whitespace-normal text-left">
+      <img
+        src={data.logo}
+        className="w-12 h-12 sm:w-16 sm:h-16 lg:w-18 lg:h-18 xl:w-20 xl:h-20 2xl:w-22 2xl:h-22 flex-shrink-0 text-left object-contain"
+        alt={data.title}
+      />
+      <div className="flex flex-col flex-1 gap-1 sm:gap-2 lg:gap-3 2xl:gap-4">
+        <div className="text-sm sm:text-base lg:text-lg xl:text-lg text-left leading-[1.1] font-thin text-black">
+          {data.title}
+        </div>
+        <div className="text-xs sm:text-sm lg:text-base xl:text-base leading-[1.1] font-thin text-pinto-gray-4 whitespace-normal text-left">
           {data.subtitle}
         </div>
       </div>
