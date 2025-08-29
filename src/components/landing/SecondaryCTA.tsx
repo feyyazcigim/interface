@@ -171,7 +171,11 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, hoverBgCol
       key={`${keyPrefix}_${data.title}_${index}`}
       variant="outline-white"
       className={`flex flex-col ${hoverBgColor} gap-4 items-start 2xl:gap-6 p-4 2xl:p-4 w-[16rem] h-[13rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl bg-pinto-off-white mr-6 2xl:mr-12 sm:hover:scale-105 sm:active:scale-95 ${
-        isGlowing ? `shadow-[0_0_20px_${glowColor},0_0_40px_${glowColor.replace("0.6", "0.4")}] scale-[1.02]` : ""
+        isGlowing
+          ? glowColor === "orange"
+            ? "shadow-[0_0_20px_rgba(255,166,77,0.6),0_0_40px_rgba(255,166,77,0.4)] scale-[1.02]"
+            : "shadow-[0_0_20px_rgba(56,127,92,0.6),0_0_40px_rgba(56,127,92,0.4)] scale-[1.02]"
+          : ""
       }`}
       style={
         {
@@ -311,7 +315,7 @@ export default function SecondaryCTA() {
     <>
       <div className="flex flex-col items-center">
         {/* Values Carousel */}
-        <div className="w-fit flex flex-row items-center animate-long-marquee">
+        <div className="w-fit flex flex-row items-center animate-long-marquee place-self-start">
           {Array(8)
             .fill(valuesData)
             .flat()
@@ -327,7 +331,7 @@ export default function SecondaryCTA() {
                   index={index}
                   keyPrefix="dataInfo1"
                   isGlowing={isGlowing}
-                  glowColor="rgba(255,166,77,0.6)"
+                  glowColor="orange"
                   hoverBgColor="hover:bg-pinto-orange-1"
                   onClick={handleCardClick}
                 />
@@ -385,7 +389,7 @@ export default function SecondaryCTA() {
                   index={index}
                   keyPrefix="dataInfo2"
                   isGlowing={isGlowing}
-                  glowColor="rgba(56,127,92,0.6)"
+                  glowColor="green"
                   hoverBgColor="hover:bg-pinto-green-1"
                   onClick={handleCardClick}
                 />
