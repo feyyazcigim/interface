@@ -32,7 +32,7 @@ Censorship can take the form of:
 
 While Pinto trades against a variety of value which is subject to censorship, the currency itself is designed to be free from censorship. Due to the lack of censorship resistant value on chain (besides ETH), Pinto must manage the risk of censorship by minimizing the concentration of risk of censorship by any one party. Instances where some of the value Pinto trades against is censored, Pinto's price and liquidity would fall, but the integrity of the protocol as a whole would be maintained. 
 
-The current distribution of liquidity is X% ETH, which is censorship resistant, Ya% cbETH, Yb% cbBTC and Yc% USDC, all of which are censorable by Circle/Coinbase, and Z% WSOL, which is censorable by Wormhole. An upgrade in the near future will incentivize converting cbETH exposure into wstETH, which is censorable by Lido, further decentralizing the risk of censorship within the protocol.
+The current distribution of liquidity is X% ETH, which is censorship resistant, Ya% cbETH, Yb% cbBTC and Yc% USDC, all of which are censorable by Circle/Coinbase, and Z% WSOL, which is censorable by Wormhole. Future upgrades to the Deposit whitelist will incentivize converting assets censorable by Circle/Coinbase into assets censorable by other entities, further decentralizing the risk of censorship within the protocol.
 
 A future blacklist mitigation mechanism will extend the censorship resistance of the protocol by pushing the risk of holding censorable value within the protocol onto the holders of that value, instead of the protocol as a whole, by automatically freezing the Pinto in the censored pool. In this case, even if one of the non-Pinto assets in a Pinto liquidity pool is censored, while total liquidity would decrease, the value in all the other pools and pure Pinto would be protected. This design will safeguard the health of the protocol and encourage participants to favor Depositing value that increases overall censorship resistance.`,
   },
@@ -50,9 +50,9 @@ A future blacklist mitigation mechanism will extend the censorship resistance of
 - **Incorruptibility:** resistance to unauthorized change
     - Incorruptible systems prevent rules from being manipulated and tampered with. Change occurs only through explicitly defined mechanisms and authorized processes, ensuring the system's integrity cannot be compromised.
 - **Verifiability:** the ability to independently validate correctness
-    - A system is verifiable to a participant if they can confirm correctness without trusting any party. Verification is typically enabled by transparency, reproducibility, or zero-knowledge proofs.
+    - A system is verifiable to a participant if they can confirm correctness without trusting any party. Verification is typically enabled by transparency, reproducibility, or cryptographic proofs (*e.g.*, zero-knowledge proofs, merkle proofs, SNARKs, STARKs, etc.).
 
-Pinto functions autonomously according to verifiable rules and parameters, which the Pinto Community Multisig (PCM) upgrades transparently to improve the protocol. At 500M supply, the PCM will forfeit governance of Pinto, with the exception of fixing security vulnerabilities and bugs. In its place, a permissionless fork system will enable continued improvements while protecting participants from having the code underlying their currency ever changed without their consent.`,
+Pinto functions autonomously according to verifiable rules and parameters, which the Pinto Community Multisig (PCM) upgrades transparently to improve the protocol. Two weeks after the protocol reaches 500M supply, the PCM will forfeit governance of Pinto, with the exception of fixing security vulnerabilities and bugs. In its place, a permissionless fork system will enable continued improvements while protecting participants from having the code underlying their currency ever changed without their consent.`,
   },
   {
     logo: ValuePermissionlessness,
