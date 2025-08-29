@@ -190,19 +190,19 @@ const semiStablePriceData: PricePoint[] = [
 const stablePriceData: PricePoint[] = [
   { txType: null, value: 0.9994, speed: 3 },
   { txType: "yield", value: 1.005, speed: 3, triggerPulse: true, triggerPhase: "stable" },
-  { txType: "withdraw", value: 0.995, speed: 0.85, triggerPulse: true },
+  { txType: "withdraw", value: 0.995, speed: 0.85 },
   { txType: null, value: 1.0004, speed: 0.85 },
   { txType: null, value: 0.9994, speed: 0.85 },
   { txType: "deposit", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
   { txType: null, value: 0.9994, speed: 3 },
   { txType: "yield", value: 1.005, speed: 3, triggerPulse: true, triggerPhase: "stable" },
-  { txType: null, value: 0.995, speed: 0.85, triggerPulse: true },
+  { txType: null, value: 0.995, speed: 0.85 },
   { txType: "deposit", value: 1.0004, speed: 0.85 },
   { txType: null, value: 0.9994, speed: 0.85 },
   { txType: "deposit", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
   { txType: "yield", value: 0.9994, speed: 3 },
   { txType: null, value: 1.005, speed: 3, triggerPulse: true, triggerPhase: "stable" },
-  { txType: "withdraw", value: 0.995, speed: 0.85, triggerPulse: true },
+  { txType: "withdraw", value: 0.995, speed: 0.85 },
   { txType: null, value: 1.0004, speed: 0.85 },
   { txType: "withdraw", value: 0.9994, speed: 0.85 },
   { txType: null, value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
@@ -217,8 +217,8 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
   amplitudeCallCount++;
 
   // Calculate amplitude modifier (decreases price movement over time)
-  // Starts at 1.0 (full amplitude) and can reduce to 0.5 (50% amplitude)
-  const maxReduction = 0.5; // 50% reduction maximum
+  // Starts at 1.0 (full amplitude) and can reduce to 0.2 (20% amplitude)
+  const maxReduction = 0.2; // 80% reduction maximum
   const reductionRate = 0.05; // 5% reduction per call
   const amplitudeModifier = Math.max(maxReduction, 1.0 - (amplitudeCallCount - 1) * reductionRate);
   // Transaction types for different price movements
