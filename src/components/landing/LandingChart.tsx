@@ -219,7 +219,7 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
   // Calculate amplitude modifier (decreases price movement over time)
   // Starts at 1.0 (full amplitude) and can reduce to 0.2 (20% amplitude)
   const maxReduction = 0.2; // 80% reduction maximum
-  const reductionRate = 0.05; // 5% reduction per call
+  const reductionRate = 0.1; // 10% reduction per call
   const amplitudeModifier = Math.max(maxReduction, 1.0 - (amplitudeCallCount - 1) * reductionRate);
   // Transaction types for different price movements
   const priceUpTxTypes = ["deposit", "convert", "sow"];
@@ -910,7 +910,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   // Track if animations are paused due to page visibility or component visibility
   const isPausedRef = useRef(false);
   const componentRef = useRef<HTMLDivElement>(null);
-  const [isComponentVisible, setIsComponentVisible] = useState(false);
+  const isComponentVisibleRef = useRef(false);
 
   // Combined position and price-based flash trigger system
   useEffect(() => {
@@ -1437,7 +1437,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     const observer = new IntersectionObserver(
       ([entry]) => {
         const isVisible = entry.isIntersecting;
-        setIsComponentVisible(isVisible);
+        isComponentVisibleRef.current = isVisible;
 
         if (!isVisible && !isPausedRef.current) {
           // Component scrolled out of view - pause animations
@@ -1488,7 +1488,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
           clipPathControlsRef.current.pause();
         }
         // Note: setTimeout/setInterval will be throttled by browser automatically
-      } else if (isComponentVisible) {
+      } else if (isComponentVisibleRef.current) {
         // Page is now visible AND component is visible - resume animations
         setTimeout(() => {
           isPausedRef.current = false;
@@ -1504,7 +1504,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [isComponentVisible]);
+  }, []);
 
   // Position-based animation system: start scrolling and track position for messages
   useEffect(() => {
