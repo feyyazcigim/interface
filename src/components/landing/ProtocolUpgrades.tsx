@@ -1,6 +1,8 @@
+import { useSetAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DiagonalRightArrowIcon } from "../Icons";
+import { isAutoCyclingAtom } from "./ProjectStats";
 
 type ActiveButton = "upgrades" | "contributors" | "years" | "volume" | null;
 
@@ -911,6 +913,7 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hasScrolledRef = useRef(false);
   const [isVisible, setIsVisible] = useState(false);
+  const setIsAutoCycling = useSetAtom(isAutoCyclingAtom);
 
   // Create year markers for each year between the first and last audit
   const createYearMarkers = () => {
@@ -1010,6 +1013,9 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
     if (!scrollContainer) return;
 
     const handleWheel = (e: WheelEvent) => {
+      // Disable auto-cycling when user scrolls
+      setIsAutoCycling(false);
+
       // Handle horizontal trackpad swipes (deltaX) and convert vertical scroll to horizontal (deltaY)
       if (e.deltaX !== 0) {
         // Direct horizontal scrolling from trackpad swipes
@@ -1084,6 +1090,7 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex flex-row gap-0.5 text-pinto-green-4 hover:underline decoration-1 opacity-0 group-hover:opacity-100 transition-all transform-gpu text-center items-center justify-center"
+                                onClick={() => setIsAutoCycling(false)}
                               >
                                 <span className="text-base sm:text-xl font-light text-pinto-green-4">
                                   {description}
@@ -1102,6 +1109,7 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
                           target="_blank"
                           rel="noopener noreferrer"
                           className={`flex flex-row gap-0.5 text-pinto-green-4 peer hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 transition-all transform-gpu`}
+                          onClick={() => setIsAutoCycling(false)}
                         >
                           <span className="text-base sm:text-xl font-light text-pinto-green-4">{audit.name}</span>
                           <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
