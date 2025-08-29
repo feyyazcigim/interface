@@ -280,7 +280,7 @@ export default function Landing() {
           >
             {/* Conditionally show text based on scroll position */}
             {!(isAtTop && reachedMainCta) && (
-              <span className={`relative transition-opacity w-auto opacity-100 ml-0 text-white`}>Join the Farm</span>
+              <span className={`relative transition-opacity w-auto opacity-100 ml-0 text-white`}>Start Farming</span>
             )}
             <div
               className={`relative transition-transform transform duration-300 ${
