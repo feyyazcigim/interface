@@ -1,5 +1,6 @@
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { AnimatePresence, motion } from "framer-motion";
+import { atom, useAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/Button";
 import ContributorMessage from "./ContributorMessage";
@@ -9,6 +10,9 @@ import LandingVolume from "./LandingVolume";
 import ProtocolUpgrades from "./ProtocolUpgrades";
 
 type ActiveButton = "upgrades" | "contributors" | "years" | "volume" | null;
+
+// Create isAutoCycling atom
+export const isAutoCyclingAtom = atom(true);
 
 interface StatContentProps {
   activeButton: ActiveButton;
@@ -98,7 +102,7 @@ function StatContent({ activeButton }: StatContentProps) {
 
 export default function ProjectStats() {
   const [activeButton, setActiveButton] = useState<ActiveButton>(null);
-  const [isAutoCycling, setIsAutoCycling] = useState(true);
+  const [isAutoCycling, setIsAutoCycling] = useAtom(isAutoCyclingAtom);
   const [manuallySelected, setManuallySelected] = useState(false);
 
   // Array of buttons to cycle through
@@ -161,7 +165,6 @@ export default function ProjectStats() {
   }
 
   function Contributors() {
-    const isMobile = useIsMobile();
     return (
       <span className="flex flex-row gap-3 sm:gap-6 items-center">
         <span className={`transition-all duration-300 ${getElementOpacity(false)}`}>from</span>

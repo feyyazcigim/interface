@@ -1,7 +1,8 @@
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { motion } from "framer-motion";
 import { atom, useAtom } from "jotai";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { isAutoCyclingAtom } from "./ProjectStats";
 
 export const contributors = [
   {
@@ -64,21 +65,40 @@ export type Contributor = (typeof contributors)[0];
 
 export const selectedContributorAtom = atom<Contributor>(contributors[0]);
 
-// Function to randomly select 5 contributors
-function getRandomContributors(count: number = 5): Contributor[] {
-  const shuffled = [...contributors].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
+// Function to randomly select contributors, ensuring selected contributor is always included
+function getRandomContributors(count: number = 5, selectedContributor?: Contributor): Contributor[] {
+  if (selectedContributor) {
+    // Get all contributors except the selected one
+    const others = contributors.filter((c) => c.id !== selectedContributor.id);
+    // Shuffle the others and take (count - 1)
+    const shuffledOthers = others.sort(() => 0.5 - Math.random()).slice(0, count - 1);
+    // Return selected contributor plus random others
+    return [selectedContributor, ...shuffledOthers];
+  } else {
+    // Original behavior when no selected contributor
+    const shuffled = [...contributors].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  }
 }
 
 export default function ContributorProfiles() {
   const [selectedContributor, setSelectedContributor] = useAtom(selectedContributorAtom);
+  const [isAutoCycling] = useAtom(isAutoCyclingAtom);
   const isMobile = useIsMobile();
+  const hasAutoSelected = useRef(false);
 
-  // Get random contributors on component mount
+  // Auto-select a contributor only once on first render, and only if auto-cycling is on
+  useEffect(() => {
+    if (!hasAutoSelected.current && isAutoCycling) {
+      const randomContributor = contributors[Math.floor(Math.random() * contributors.length)];
+      setSelectedContributor(randomContributor);
+      hasAutoSelected.current = true;
+    }
+  }, [setSelectedContributor, isAutoCycling]);
+
+  // Get random contributors, always including the selected contributor
   const displayedContributors = useMemo(() => {
-    const random = getRandomContributors(5);
-    setSelectedContributor(random[0]);
-    return random;
+    return getRandomContributors(5, selectedContributor);
   }, []);
 
   const handleContributorClick = (contributor: Contributor) => {
