@@ -1,6 +1,17 @@
 import { TokenValue } from "@/classes/TokenValue";
 import { Token } from "@/utils/types";
 
+// Import token images
+import ETHIcon from "@/assets/tokens/ETH.png";
+import USDCIcon from "@/assets/tokens/USDC.png";
+import WSOLIcon from "@/assets/tokens/WSOL.png";
+import cbBTCIcon from "@/assets/tokens/cbBTC.png";
+import cbETHIcon from "@/assets/tokens/cbETH.png";
+
+// Import misc images
+import CoinbaseLogo from "@/assets/misc/coinbase-logo.svg";
+import WormholeLogo from "@/assets/misc/portal-bridge-logo.svg";
+
 export interface LiquidityDistribution {
   eth: {
     percentage: number;
@@ -134,9 +145,9 @@ export function formatLiquidityDistributionText(distribution: LiquidityDistribut
 
 The current distribution of underlying liquidity is:
 
-- ${eth.percentage}% ETH ![ETH](src/assets/tokens/ETH.png), which is censorship resistant.
-- ${circleConinbase.breakdown.cbETH.percentage}% cbETH ![cbETH](src/assets/tokens/cbETH.png), ${circleConinbase.breakdown.cbBTC.percentage}% cbBTC ![cbBTC](src/assets/tokens/cbBTC.png) and ${circleConinbase.breakdown.usdc.percentage}% USDC ![USDC](src/assets/tokens/USDC.png), all of which are censorable by Circle/Coinbase ![Coinbase](src/assets/misc/coinbase-logo.svg).
-- ${wormhole.percentage}% WSOL ![WSOL](src/assets/tokens/WSOL.png), which is censorable by Wormhole ![Wormhole](src/assets/misc/portal-bridge-logo.svg).
+- ${eth.percentage}% ETH ![ETH](${ETHIcon}), which is censorship resistant.
+- ${circleConinbase.breakdown.cbETH.percentage}% cbETH ![cbETH](${cbETHIcon}), ${circleConinbase.breakdown.cbBTC.percentage}% cbBTC ![cbBTC](${cbBTCIcon}) and ${circleConinbase.breakdown.usdc.percentage}% USDC ![USDC](${USDCIcon}), all of which are censorable by Circle/Coinbase ![Coinbase](${CoinbaseLogo}).
+- ${wormhole.percentage}% WSOL ![WSOL](${WSOLIcon}), which is censorable by Wormhole ![Wormhole](${WormholeLogo}).
 
 
 Future upgrades to the Deposit whitelist will incentivize converting assets censorable by Circle/Coinbase into assets censorable by other entities, further decentralizing the risk of censorship within the protocol.
