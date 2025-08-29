@@ -41,7 +41,7 @@ function StatContent({ activeButton }: StatContentProps) {
   return (
     <motion.div
       animate={{
-        height: activeButton ? (isMobile ? 250 : 400) : 0,
+        height: activeButton ? (isMobile ? 270 : 400) : 0,
         opacity: activeButton ? 1 : 0,
         y: activeButton ? 0 : -20,
       }}
@@ -215,7 +215,7 @@ export default function ProjectStats() {
         <span
           className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
         >
-          5+
+          4+
         </span>
         <Button
           variant={"outline-rounded"}

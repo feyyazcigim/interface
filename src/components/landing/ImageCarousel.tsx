@@ -3,213 +3,183 @@ import wpBean from "@/assets/landing/wp_bean.png";
 import wpMultiflow from "@/assets/landing/wp_multiflow.png";
 import wpPinto from "@/assets/landing/wp_pinto.png";
 import wpPipeline from "@/assets/landing/wp_pipeline.png";
-import { AnimatePresence, Variants, motion } from "framer-motion";
-import { useCallback, useRef, useState } from "react";
+import { EmblaCarouselType } from "embla-carousel";
+import AutoPlay from "embla-carousel-autoplay";
+import ClassNames from "embla-carousel-class-names";
+import { useAtom } from "jotai";
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../ui/Carousel";
+import { isAutoCyclingAtom } from "./ProjectStats";
 
-interface CarouselItem {
+interface CarouselData {
   src: string;
   alt: string;
   href: string;
   date: string;
+  name: string;
+  description: string;
 }
 
-const POSITIONS = ["leftmost", "left", "center", "right", "rightmost"] as const;
-type Position = (typeof POSITIONS)[number];
-
-// Configuration constants
-const CAROUSEL_CONFIG = {
-  VISIBLE_ITEMS: 5,
-  ENTER_EXIT_OFFSET: 50,
-} as const;
-
-// Position configurations
-const POSITION_CONFIGS: Variants = {
-  leftmost: {
-    scale: 0.6,
-    opacity: 0,
-    zIndex: 1,
-    y: 50,
-    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
+const whitepaperImages: CarouselData[] = [
+  {
+    src: wpBean,
+    alt: "Beanstalk",
+    href: "https://bean.money/beanstalk.pdf",
+    date: "August 2021",
+    name: "Beanstalk",
+    description: "The OG paper that started it all.",
   },
-  left: {
-    scale: 0.8,
-    opacity: 0.5,
-    zIndex: 2,
-    y: 50,
-    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
+  {
+    src: wpPipeline,
+    alt: "Pipeline",
+    href: "https://evmpipeline.org/pipeline.pdf",
+    date: "November 2022",
+    name: "Pipeline and Depot",
+    description: "One transaction to do anything in DeFi.",
   },
-  center: {
-    scale: 1.25,
-    opacity: 1,
-    zIndex: 5,
-    y: 100,
-    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 90%)",
+  {
+    src: wpBasin,
+    alt: "Basin",
+    href: "https://basin.exchange/basin.pdf",
+    date: "August 2023",
+    name: "Basin",
+    description: "Fee-less swaps for hyper efficient peg maintenance.",
   },
-  right: {
-    scale: 0.8,
-    opacity: 0.5,
-    zIndex: 2,
-    y: 50,
-    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
+  {
+    src: wpMultiflow,
+    alt: "Multi Flow Pump",
+    href: "https://basin.exchange/multi-flow-pump.pdf",
+    date: "August 2023",
+    name: "Multi-flow",
+    description: "On-chain manipulation resistant oracle.",
   },
-  rightmost: {
-    scale: 0.6,
-    opacity: 0,
-    zIndex: 1,
-    y: 50,
-    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
+  {
+    src: wpPinto,
+    alt: "Pinto",
+    href: "https://pinto.money/pinto.pdf",
+    date: "April 2025",
+    name: "Pinto",
+    description: "A new generation of crypto fiat.",
   },
-};
-
-const wallpaperImages: CarouselItem[] = [
-  { src: wpBean, alt: "Beanstalk", href: "https://bean.money/beanstalk.pdf", date: "August 2021" },
-  { src: wpPipeline, alt: "Pipeline", href: "https://evmpipeline.org/pipeline.pdf", date: "November 2022" },
-  { src: wpBasin, alt: "Basin", href: "https://basin.exchange/basin.pdf", date: "August 2023" },
-  { src: wpMultiflow, alt: "Multi Flow Pump", href: "https://basin.exchange/multi-flow-pump.pdf", date: "August 2023" },
-  { src: wpPinto, alt: "Pinto", href: "https://pinto.money/pinto.pdf", date: "April 2025" },
 ];
 
 export default function ImageCarousel() {
-  // Track which item should be in the center position
-  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const [api, setApi] = useState<CarouselApi>();
+  const [currentWp, setCurrentWp] = useState<CarouselData>(whitepaperImages[0]);
+  const [autoplayActive, setAutoplayActive] = useState(true);
+  const [_, setIsAutoCycling] = useAtom(isAutoCyclingAtom);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Touch/swipe state
-  const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
-
-  // Throttle for scroll events
-  const scrollThrottle = useRef<boolean>(false);
-
-  const VISIBLE_ITEMS = CAROUSEL_CONFIG.VISIBLE_ITEMS;
-
-  // Convert any activeIndex (including negatives) to valid array index (0 to length-1)
-  // Formula handles negative numbers: (-2 % 5 + 5) % 5 = 3
-  const indexInArrayScope = ((activeIndex % wallpaperImages.length) + wallpaperImages.length) % wallpaperImages.length;
-
-  // Create infinite loop by doubling the array and slicing consecutive items
-  // 5 items (leftmost, left, center, right, rightmost)
-  const visibleItems = [...wallpaperImages, ...wallpaperImages].slice(
-    indexInArrayScope,
-    indexInArrayScope + VISIBLE_ITEMS,
-  );
-
-  // Determine position for desktop layout
-  const getItemPosition = (item: CarouselItem): Position => {
-    const index = visibleItems.indexOf(item);
-    // 5 items (leftmost=0, left=1, center=2, right=3, rightmost=4)
-    return POSITIONS[index] || "center";
-  };
-
-  // Navigation functions
-  const navigateLeft = useCallback(() => {
-    setActiveIndex((prevIndex) => prevIndex - 1);
-  }, []);
-
-  const navigateRight = useCallback(() => {
-    setActiveIndex((prevIndex) => prevIndex + 1);
-  }, []);
-
-  // Handle click interactions: center item opens PDF, side items navigate carousel
-  const handleClick = (item: CarouselItem): void => {
-    const position = getItemPosition(item);
-    // Click left side items to move carousel left (decrease activeIndex)
-    if (position === "leftmost" || position === "left") {
-      navigateLeft();
-      // Click right side items to move carousel right (increase activeIndex)
-    } else if (position === "rightmost" || position === "right") {
-      navigateRight();
+  useEffect(() => {
+    if (!api) {
+      return;
     }
-    // Center item clicks are handled by the <a> tag href (opens PDF)
-  };
 
-  // Handle wheel scroll
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (scrollThrottle.current) return;
+    let manualSelectionTimeout: NodeJS.Timeout;
 
-      scrollThrottle.current = true;
-      setTimeout(() => {
-        scrollThrottle.current = false;
-      }, 300);
+    api.on("select", () => {
+      const selectedIndex = api.selectedScrollSnap();
+      setCurrentIndex(selectedIndex);
+      setCurrentWp(whitepaperImages[selectedIndex]);
 
-      if (e.deltaY > 0) {
-        navigateRight();
-      } else {
-        navigateLeft();
-      }
-    },
-    [navigateLeft, navigateRight],
-  );
+      // Set a timeout to check if this was a manual selection
+      clearTimeout(manualSelectionTimeout);
+      manualSelectionTimeout = setTimeout(() => {
+        // Manual selection detected - stopping autoplay
+        setAutoplayActive(false);
+        setIsAutoCycling(false);
+      }, 0);
+    });
 
-  // Handle touch start
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.changedTouches[0].screenX;
-  }, []);
+    api.on("autoplay:select", () => {
+      // Clear the timeout since this was an autoplay selection
+      clearTimeout(manualSelectionTimeout);
+    });
 
-  // Handle touch end
-  const handleTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
-      touchEndX.current = e.changedTouches[0].screenX;
-
-      const swipeThreshold = 50;
-      const swipeDistance = touchStartX.current - touchEndX.current;
-
-      if (Math.abs(swipeDistance) > swipeThreshold) {
-        if (swipeDistance > 0) {
-          navigateRight(); // Swipe left -> go right
-        } else {
-          navigateLeft(); // Swipe right -> go left
-        }
-      }
-    },
-    [navigateLeft, navigateRight],
-  );
+    return () => {
+      clearTimeout(manualSelectionTimeout);
+    };
+  }, [api, setIsAutoCycling]);
 
   return (
-    <div
-      className="flex gap-4 flex-shrink-0 min-w-[1920px] sm:w-[1920px] justify-center overflow-x-clip"
-      onWheel={handleWheel}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* AnimatePresence handles smooth enter/exit animations when items change positions */}
-      <AnimatePresence mode="popLayout" initial={false}>
-        {visibleItems.map((item) => {
-          const position = getItemPosition(item);
-          const isCenter = position === "center";
-
-          return (
-            <a
-              // Only center item is clickable link to PDF
-              href={isCenter ? item.href : undefined}
-              target={isCenter ? "_blank" : undefined}
-              rel={isCenter ? "noopener noreferrer" : undefined}
-              key={item.alt}
-              className="block"
-              onClick={
-                // Side items navigate carousel instead of opening link
-                !isCenter
-                  ? (e) => {
-                      e.preventDefault(); // Prevent link navigation
-                      handleClick(item); // Trigger carousel navigation
-                    }
-                  : undefined
-              }
-            >
-              {/* Animated image with position-based transformations */}
-              <motion.img
-                className="w-[15rem] min-[400px]:w-[16rem] min-[500px]:w-[20rem] sm:w-[24rem] border-t border-x rounded-md"
-                src={item.src}
-                alt={item.alt}
-                layout
-                variants={POSITION_CONFIGS} // Use predefined position animations
-                animate={position} // Animate to current position
-                transition={{ type: "spring", stiffness: 100, damping: 20 }}
-              />
-            </a>
-          );
-        })}
-      </AnimatePresence>
-    </div>
+    <>
+      <div className="flex flex-col text-center gap-1 text-xs sm:text-xl mt-4">
+        <span>Pinto rigorously builds and documents its work</span>
+        <span>Pinto is the culmination of more than four years of rigorous development on Ethereum.</span>
+      </div>
+      <Carousel
+        opts={{
+          align: "center",
+          loop: true,
+          containScroll: "trimSnaps",
+        }}
+        plugins={[AutoPlay({ delay: 3000, stopOnInteraction: true, active: autoplayActive }), ClassNames()]}
+        className="w-full max-w-full"
+        setApi={setApi}
+      >
+        <CarouselContent className="overflow-y-visible">
+          {whitepaperImages.map((image, index) => {
+            const isSelected = currentIndex === index;
+            return (
+              <CarouselItem
+                key={image.name}
+                className={`overflow-y-visible basis-[70%] sm:basis-[33%] xl:basis-[33%] flex justify-center items-center opacity-[0.50] transition-[padding] pt-10 duration-300 [&.is-snapped]:opacity-100 [&.is-snapped]:pt-0`}
+              >
+                {!isSelected ? (
+                  <div
+                    className="w-full bg-top border-t border-x rounded-md object-cover object-top h-[10rem] sm:h-[15rem] xl:h-[18rem] cursor-default"
+                    style={{
+                      maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
+                    }}
+                  >
+                    <img src={image.src} alt={image.alt} />
+                  </div>
+                ) : (
+                  <Link
+                    to={image.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-top border-t border-x rounded-md object-cover object-top h-[10rem] sm:h-[15rem] xl:h-[18rem]"
+                    style={{
+                      maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
+                    }}
+                  >
+                    <img src={image.src} alt={image.alt} />
+                  </Link>
+                )}
+              </CarouselItem>
+            );
+          })}
+        </CarouselContent>
+        <CarouselPrevious
+          variant="ghost"
+          className="scale-[2.0]"
+          onClick={() => {
+            setAutoplayActive(false);
+            setIsAutoCycling(false);
+            if (api) {
+              api?.scrollPrev();
+            }
+          }}
+        />
+        <CarouselNext
+          variant="ghost"
+          className="scale-[2.0]"
+          onClick={() => {
+            setAutoplayActive(false);
+            setIsAutoCycling(false);
+            if (api) {
+              api?.scrollNext();
+            }
+          }}
+        />
+      </Carousel>
+      <div className="flex flex-col text-center gap-1 -mt-4 text-xs sm:text-xl">
+        <span>
+          {currentWp.name}: {currentWp.description}
+        </span>
+      </div>
+    </>
   );
 }
