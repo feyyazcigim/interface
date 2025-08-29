@@ -34,29 +34,19 @@ export enum CensorshipRisk {
 export function getTokenCensorshipRisk(token: Token): CensorshipRisk {
   const symbol = token.symbol.toLowerCase();
 
-  console.log(`🔍 Getting censorship risk for token:`, {
-    originalSymbol: token.symbol,
-    lowerSymbol: symbol,
-    address: token.address,
-  });
-
   if (symbol === "weth" || symbol === "eth") {
-    console.log(`  ✅ Categorized as CENSORSHIP_RESISTANT`);
     return CensorshipRisk.CENSORSHIP_RESISTANT;
   }
 
   if (symbol === "cbeth" || symbol === "cbbtc" || symbol === "usdc") {
-    console.log(`  ✅ Categorized as CIRCLE_COINBASE`);
     return CensorshipRisk.CIRCLE_COINBASE;
   }
 
   if (symbol === "wsol") {
-    console.log(`  ✅ Categorized as WORMHOLE`);
     return CensorshipRisk.WORMHOLE;
   }
 
   // Default to censorship resistant for unknown tokens
-  console.log(`  ⚠️ Unknown token, defaulting to CENSORSHIP_RESISTANT`);
   return CensorshipRisk.CENSORSHIP_RESISTANT;
 }
 
@@ -71,8 +61,6 @@ export function calculateLiquidityDistribution(tokenUsdValues: Map<Token, TokenV
   let usdcUsd = TokenValue.ZERO;
   let wsolUsd = TokenValue.ZERO;
 
-  console.log("🧮 Calculating liquidity distribution for", tokenUsdValues.size, "tokens");
-
   // Sum up USD values by token category
   for (const [token, usdValue] of tokenUsdValues) {
     totalUsd = totalUsd.add(usdValue);
@@ -80,40 +68,20 @@ export function calculateLiquidityDistribution(tokenUsdValues: Map<Token, TokenV
     const risk = getTokenCensorshipRisk(token);
     const symbol = token.symbol.toLowerCase();
 
-    console.log(`  🏷️ Categorizing ${token.symbol}:`, {
-      symbol,
-      risk,
-      usdValue: usdValue.toHuman(),
-    });
-
     if (risk === CensorshipRisk.CENSORSHIP_RESISTANT) {
       ethUsd = ethUsd.add(usdValue);
-      console.log(`    ✅ Added to ETH category: $${ethUsd.toHuman()}`);
     } else if (risk === CensorshipRisk.CIRCLE_COINBASE) {
       if (symbol === "cbeth") {
         cbETHUsd = cbETHUsd.add(usdValue);
-        console.log(`    ✅ Added to cbETH category: $${cbETHUsd.toHuman()}`);
       } else if (symbol === "cbbtc") {
         cbBTCUsd = cbBTCUsd.add(usdValue);
-        console.log(`    ✅ Added to cbBTC category: $${cbBTCUsd.toHuman()}`);
       } else if (symbol === "usdc") {
         usdcUsd = usdcUsd.add(usdValue);
-        console.log(`    ✅ Added to USDC category: $${usdcUsd.toHuman()}`);
       }
     } else if (risk === CensorshipRisk.WORMHOLE) {
       wsolUsd = wsolUsd.add(usdValue);
-      console.log(`    ✅ Added to WSOL category: $${wsolUsd.toHuman()}`);
     }
   }
-
-  console.log("📊 Final category totals:", {
-    total: totalUsd.toHuman(),
-    eth: ethUsd.toHuman(),
-    cbETH: cbETHUsd.toHuman(),
-    cbBTC: cbBTCUsd.toHuman(),
-    usdc: usdcUsd.toHuman(),
-    wsol: wsolUsd.toHuman(),
-  });
 
   // Calculate total Circle/Coinbase exposure
   const circleCoinbaseUsd = cbETHUsd.add(cbBTCUsd).add(usdcUsd);
