@@ -127,7 +127,7 @@ const propertiesData = [
     logo: PropertyMediumOfExchange,
     title: "Medium of Exchange",
     subtitle:
-      "Prioritizing low volatility and yield generation over upward price movement, Pinto is the optimal crypto-native medium of exchange.",
+      "Prioritizing low volatility and yield over upward price movement makes Pinto the optimal crypto-native MoE",
     definition: "**Medium of Exchange:** An asset widely accepted as payment, enabling trade without direct barter.",
     description: `Pinto has the unique combination of being low in volatility and generating native yield, which makes an optimal medium of exchange between various types of value. sPinto, the fungible yield-bearing ERC-20 wrapper of Pinto Deposits, offers the ability to integrate Pinto into existing DeFi primitives and distribute yield to liquidity providers with minimal friction.`,
   },
@@ -135,7 +135,7 @@ const propertiesData = [
     logo: PropertyUnitOfAccount,
     title: "Unit of Account",
     subtitle:
-      "Due to its low volatility and algorithmic distribution of newly minted currency, Pinto is the optimal crypto-native unit of account for loans.",
+      "Low volatility and algorithmic distribution of newly minted currency make Pinto the optimal crypto-native UoA for loans.",
     definition: "**Unit of Account:** A monetary standard used to price and compare value.",
     description: `Unlike centralized fiat currencies, in which new currency is printed and distributed arbitrarily, often devaluing the wealth of the respective system's participants and the purchasing power of each unit of the currency, Pinto autonomously distributes newly minted currency directly to its holders. Combined with its native volatility-minimization mechanisms, the protocol creates a currency designed to serve as a unit of account for value and loans of value.`,
   },
