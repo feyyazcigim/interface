@@ -70,8 +70,9 @@ Pinto functions autonomously according to verifiable rules and parameters, which
     logo: ValuePermissionlessness,
     title: "Permissionlessness",
     subtitle: "Anyone with an internet connection and funds on the Ethereum network can participate in Pinto.",
-    definition: "**Permissionlessness:** the absence of approval requirements for participation.",
-    description: `**Permissioned**: the quality of requiring approval for participation
+    definition:
+      "**Permissionlessness:** the absence of approval requirements for participation. \n\n **Permissioned:** the quality of requiring approval for participation",
+    description: `
 
 Note: Barriers of strict technical capacity do not constitute permissions (*e.g.,* internet connection, gas payment).
 
@@ -95,10 +96,11 @@ Pinto functions according to explicitly defined rules. While Pinto rewards older
     title: "Open-Source",
     subtitle: "From code to plain language write-ups, Pinto is accessible to everyone.",
     definition: "**Open Source:** Artifacts (e.g Designs, Code, Documentation) with key freedoms:",
-    description: `1. **Run:** anyone can use an Artifact without restriction.
-2. **Study:** anyone can study an Artifact and understand how it works.
-3. **Modify:** anyone can modify an Artifact and create new Artifacts from it.
-4. **Distribute:** anyone can distribute an Artifact in its original or modified form. 
+    description: `Anyone can:
+1. **Run** an Artifact without restriction.
+2. **Study** an Artifact and understand how it works.
+3. **Modify** an Artifact and create new Artifacts from it.
+4. **Distribute** an Artifact in its original or modified form.
 
 The protocol is [completely open-source](https://github.com/pinto-org), and tremendous effort has gone into defining it and putting it into context, from rigorous technical documentation (*i.e.*, [the whitepaper](https://pinto.money/pinto.pdf)) to plain language [explainers](https://mirror.xyz/0x8F02813a0AC20affC2C7568e0CB9a7cE5288Ab27).`,
   },
