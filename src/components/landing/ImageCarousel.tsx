@@ -102,6 +102,18 @@ export default function ImageCarousel() {
     };
   }, [api, setIsAutoCycling]);
 
+  useEffect(() => {
+    const autoplay = api?.plugins()?.autoplay;
+    if (!autoplay || autoplay.isPlaying()) return;
+    autoplay.play();
+  }, [api]);
+
+  const turnOffAutoplay = useCallback(() => {
+    const autoplay = api?.plugins()?.autoplay;
+    if (!autoplay || autoplay.isPlaying()) return;
+    autoplay.stop();
+  }, [api]);
+
   return (
     <>
       <div className="flex flex-col text-center gap-1 text-xs sm:text-xl mt-4">
@@ -114,7 +126,7 @@ export default function ImageCarousel() {
           loop: true,
           containScroll: "trimSnaps",
         }}
-        plugins={[AutoPlay({ delay: 3000, stopOnInteraction: true, active: autoplayActive }), ClassNames()]}
+        plugins={[AutoPlay({ delay: 3000, stopOnInteraction: true, playOnInit: false }), ClassNames()]}
         className="w-[90%] max-w-[90%] mx-4 sm:mx-6 sm:w-[95%] sm:max-w-[95%] place-self-center"
         setApi={setApi}
       >
@@ -135,6 +147,7 @@ export default function ImageCarousel() {
                     onClick={() => {
                       setAutoplayActive(false);
                       setIsAutoCycling(false);
+                      turnOffAutoplay();
                       if (api) {
                         api.scrollTo(index);
                       }
@@ -147,7 +160,7 @@ export default function ImageCarousel() {
                     to={image.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full bg-top border-t border-x rounded-md object-cover object-top h-[10rem] sm:h-[15rem] xl:h-[18rem]"
+                    className="w-full bg-top border-t border-x overflow-clip rounded-md object-cover object-top h-[10rem] sm:h-[15rem] xl:h-[18rem]"
                     style={{
                       maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
                     }}
@@ -166,6 +179,7 @@ export default function ImageCarousel() {
           onClick={() => {
             setAutoplayActive(false);
             setIsAutoCycling(false);
+            turnOffAutoplay();
             if (api) {
               api?.scrollPrev();
             }
