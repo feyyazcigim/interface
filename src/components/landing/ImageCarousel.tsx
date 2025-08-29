@@ -128,9 +128,16 @@ export default function ImageCarousel() {
               >
                 {!isSelected ? (
                   <div
-                    className="w-full bg-top border-t border-x rounded-md object-cover object-top h-[10rem] sm:h-[15rem] xl:h-[18rem] cursor-default"
+                    className="w-full bg-top border-t border-x rounded-md object-cover object-top h-[10rem] sm:h-[15rem] xl:h-[18rem] cursor-pointer"
                     style={{
                       maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
+                    }}
+                    onClick={() => {
+                      setAutoplayActive(false);
+                      setIsAutoCycling(false);
+                      if (api) {
+                        api.scrollTo(index);
+                      }
                     }}
                   >
                     <img src={image.src} alt={image.alt} />
@@ -179,7 +186,7 @@ export default function ImageCarousel() {
       </Carousel>
       <div className="flex flex-col text-center gap-1 -mt-4 text-xs sm:text-xl">
         <span>
-          {currentWp.name}: {currentWp.description}
+          <span className="font-bold">{currentWp.name}:</span> {currentWp.description}
         </span>
       </div>
     </>

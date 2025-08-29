@@ -8,6 +8,7 @@ import ValueOpenSource from "@/assets/misc/Value_Open_Source.svg";
 import ValuePermissionlessness from "@/assets/misc/Value_Permissionlessness.svg";
 import ValueTrustless from "@/assets/misc/Value_Trustlessness.svg";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import { useLiquidityDistribution } from "@/hooks/useLiquidityDistribution";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
@@ -16,15 +17,14 @@ import { Button } from "../ui/Button";
 import { Separator } from "../ui/Separator";
 import CardModal from "./CardModal";
 
-// Values data (Bitcoin values - orange glow)
-const valuesData = [
+// Function to create values data with dynamic liquidity distribution
+const createValuesData = (liquidityDistributionText: string) => [
   {
     logo: ValueCensorshipResistance,
     title: "Censorship Resistance",
     subtitle: "Pinto is designed to be maximally resistant to censorship.",
-    description: `**Censorship Resistant:** resilient to the prevention of valid actions from being executed reliably. 
-
-Censorship can take the form of: 
+    definition: "**Censorship Resistant:** resilient to the prevention of valid actions from being executed reliably.",
+    description: `Censorship can take the form of: 
 
 1. **Communication failures:** single or coordinated actors blocking or delaying information sharing
 2. **Availability failures**
@@ -42,7 +42,7 @@ Censorship can take the form of:
 
 While Pinto trades against a variety of value which is subject to censorship, the currency itself is designed to be free from censorship. Due to the lack of censorship resistant value on chain (besides ETH), Pinto must manage the risk of censorship by minimizing the concentration of risk of censorship by any one party. Instances where some of the value Pinto trades against is censored, Pinto's price and liquidity would fall, but the integrity of the protocol as a whole would be maintained. 
 
-The current distribution of liquidity is X% ETH, which is censorship resistant, Ya% cbETH, Yb% cbBTC and Yc% USDC, all of which are censorable by Circle/Coinbase, and Z% WSOL, which is censorable by Wormhole. Future upgrades to the Deposit whitelist will incentivize converting assets censorable by Circle/Coinbase into assets censorable by other entities, further decentralizing the risk of censorship within the protocol.
+${liquidityDistributionText || "Loading liquidity distribution data..."}
 
 A future blacklist mitigation mechanism will extend the censorship resistance of the protocol by pushing the risk of holding censorable value within the protocol onto the holders of that value, instead of the protocol as a whole, by automatically freezing the Pinto in the censored pool. In this case, even if one of the non-Pinto assets in a Pinto liquidity pool is censored, while total liquidity would decrease, the value in all the other pools and pure Pinto would be protected. This design will safeguard the health of the protocol and encourage participants to favor Depositing value that increases overall censorship resistance.`,
   },
@@ -51,16 +51,18 @@ A future blacklist mitigation mechanism will extend the censorship resistance of
     title: "Trustlessness",
     subtitle:
       "Pinto is building fiat currency free from the risk of arbitrary money printing and interest rate manipulation.",
-    description: `**Trustlessness:** reliability is assured through autonomy, incorruptibility, and verifiability rather than trust
+    definition:
+      "**Trustlessness:** reliability is assured through autonomy, incorruptibility, and verifiability rather than trust.",
+    description: `Key components of trustlessness include:
 
-- **Reliability:** consistent and correct performance
+- **Reliability:** consistent and correct performance.
     - Reliable systems function as expected over time under both normal and adverse conditions.
-- **Autonomy:** rule compliance guaranteed by internal mechanisms
+- **Autonomy:** rule compliance guaranteed by internal mechanisms.
     - A system is autonomous if its rules are upheld by protocol design and crypto-economics without arbitrary or subjective judgement.
-- **Incorruptibility:** resistance to unauthorized change
+- **Incorruptibility:** resistance to unauthorized change.
     - Incorruptible systems prevent rules from being manipulated and tampered with. Change occurs only through explicitly defined mechanisms and authorized processes, ensuring the system's integrity cannot be compromised.
-- **Verifiability:** the ability to independently validate correctness
-    - A system is verifiable to a participant if they can confirm correctness without trusting any party. Verification is typically enabled by transparency, reproducibility, or cryptographic proofs (*e.g.*, zero-knowledge proofs, merkle proofs, SNARKs, STARKs, etc.).
+- **Verifiability:** the ability to independently validate correctness.
+    - A system is verifiable to a participant if they can confirm correctness without trusting any party. Verification is typically enabled by transparency, reproducibility, or cryptographic proofs.
 
 Pinto functions autonomously according to verifiable rules and parameters, which the Pinto Community Multisig (PCM) upgrades transparently to improve the protocol. Two weeks after the protocol reaches 500M supply, the PCM will forfeit governance of Pinto, with the exception of fixing security vulnerabilities and bugs. In its place, a permissionless fork system will enable continued improvements while protecting participants from having the code underlying their currency ever changed without their consent.`,
   },
@@ -68,9 +70,9 @@ Pinto functions autonomously according to verifiable rules and parameters, which
     logo: ValuePermissionlessness,
     title: "Permissionlessness",
     subtitle: "Anyone with an internet connection and funds on the Ethereum network can participate in Pinto.",
-    description: `**Permissionlessness:** the absence of approval requirements for participation
-
-**Permissioned**: the quality of requiring approval for participation
+    definition:
+      "**Permissionlessness:** the absence of approval requirements for participation. \n\n **Permissioned:** the quality of requiring approval for participation",
+    description: `
 
 Note: Barriers of strict technical capacity do not constitute permissions (*e.g.,* internet connection, gas payment).
 
@@ -80,9 +82,8 @@ Pinto is open for anyone to participate.`,
     logo: ValueFairness,
     title: "Fairness",
     subtitle: "The Pinto printer is designed to be free from capture.",
-    description: `**Fair:** Treating all parties impartially according to agreed upon rules and standards.
-
-In a fair market, informed participants act freely and compete on a playing field with the following properties:
+    definition: "**Fair:** Treating all parties impartially according to agreed upon rules and standards.",
+    description: `In a fair market, informed participants act freely and compete on a playing field with the following properties:
 
 - existing competitive advantages are difficult to entrench. 'Capture' is difficult, restricted to product or strategy alpha rather than privileged access or anti-competitive techniques.
 - while participants can spend to achieve certain advantages over others, each additional marginal increase in advantage over other participants has increasing marginal costs.
@@ -94,11 +95,12 @@ Pinto functions according to explicitly defined rules. While Pinto rewards older
     logo: ValueOpenSource,
     title: "Open-Source",
     subtitle: "From code to plain language write-ups, Pinto is accessible to everyone.",
-    description: `Software is open source if it is freely available for anyone to:
-
-1. run;
-2. study and modify;
-3. redistribute in original and modified form.
+    definition: "**Open Source:** Artifacts (e.g Designs, Code, Documentation) with key freedoms:",
+    description: `Anyone can:
+1. **Run** an Artifact without restriction.
+2. **Study** an Artifact and understand how it works.
+3. **Modify** an Artifact and create new Artifacts from it.
+4. **Distribute** an Artifact in its original or modified form.
 
 The protocol is [completely open-source](https://github.com/pinto-org), and tremendous effort has gone into defining it and putting it into context, from rigorous technical documentation (*i.e.*, [the whitepaper](https://pinto.money/pinto.pdf)) to plain language [explainers](https://mirror.xyz/0x8F02813a0AC20affC2C7568e0CB9a7cE5288Ab27).`,
   },
@@ -110,36 +112,32 @@ const propertiesData = [
     logo: PropertyScalable,
     title: "Scalable",
     subtitle: "Pinto can grow infinitely to meet market demand for trustless low-volatility currency.",
-    description: `**Scalable:** Competitive volatility and carrying costs can be sustained at arbitrary supply. 
-
-Collateralized stablecoins are limited by the amount of available collateral. Due to the lack of crypto-native collateral, collateralized stablecoins have been forced to sacrifice Bitcoin's values and use centralized collateral in order to scale to meet demand. Instead of collateral, Pinto uses credit, which is infinitely scalable and network-native, enabling Pinto to grow to meet arbitrary demand without compromising on Bitcoin's values.`,
+    definition: "**Scalable:** Competitive volatility and carrying costs can be sustained at arbitrary supply.",
+    description: `Collateralized stablecoins are limited by the amount of available collateral. Due to the lack of crypto-native collateral, collateralized stablecoins have been forced to sacrifice Bitcoin's values and use centralized collateral in order to scale to meet demand. Instead of collateral, Pinto uses credit, which is infinitely scalable and network-native, enabling Pinto to grow to meet arbitrary demand without compromising on Bitcoin's values.`,
   },
   {
     logo: PropertyLowVolatility,
     title: "Low Volatility",
     subtitle:
       "Pinto seeks to minimize the volatility of its value through thoughtful incentives instead of trying to maintain a perfect peg.",
-    description: `**Low Volatility:** Purchasing power varies minimally over time.
-
-The stablecoin trilemma states that a stablecoin cannot be stable, scalable and decentralized. Pinto strikes the optimal balance within this trilemma by sacrificing perfect stability in favor of low volatility, thereby enabling it to scale to meet arbitrary demand without sacrificing the benefits of decentralization – which is not an end in and of itself – namely trustlessness, permissionlessness, censorship resistance and fairness.`,
+    definition: "**Low Volatility:** Purchasing power varies minimally over time.",
+    description: `The stablecoin trilemma states that a stablecoin cannot be stable, scalable and decentralized. Pinto strikes the optimal balance within this trilemma by sacrificing perfect stability in favor of low volatility, thereby enabling it to scale to meet arbitrary demand without sacrificing the benefits of decentralization – which is not an end in and of itself – namely trustlessness, permissionlessness, censorship resistance and fairness.`,
   },
   {
     logo: PropertyMediumOfExchange,
     title: "Medium of Exchange",
     subtitle:
       "Prioritizing low volatility and yield generation over upward price movement, Pinto is the optimal crypto-native medium of exchange.",
-    description: `**Medium of Exchange:** An asset widely accepted as payment, enabling trade without direct barter.
-
-Pinto has the unique combination of being low in volatility and generating native yield, which makes an optimal medium of exchange between various types of value. sPinto, the fungible yield-bearing ERC-20 wrapper of Pinto Deposits, offers the ability to integrate Pinto into existing DeFi primitives and distribute yield to liquidity providers with minimal friction.`,
+    definition: "**Medium of Exchange:** An asset widely accepted as payment, enabling trade without direct barter.",
+    description: `Pinto has the unique combination of being low in volatility and generating native yield, which makes an optimal medium of exchange between various types of value. sPinto, the fungible yield-bearing ERC-20 wrapper of Pinto Deposits, offers the ability to integrate Pinto into existing DeFi primitives and distribute yield to liquidity providers with minimal friction.`,
   },
   {
     logo: PropertyUnitOfAccount,
     title: "Unit of Account",
     subtitle:
       "Due to its low volatility and algorithmic distribution of newly minted currency, Pinto is the optimal crypto-native unit of account for loans.",
-    description: `**Unit of Account:** A monetary standard used to price and compare value.
-
-Unlike centralized fiat currencies, in which new currency is printed and distributed arbitrarily, often devaluing the wealth of the respective system's participants and the purchasing power of each unit of the currency, Pinto autonomously distributes newly minted currency directly to its holders. Combined with its native volatility-minimization mechanisms, the protocol creates a currency designed to serve as a unit of account for value and loans of value.`,
+    definition: "**Unit of Account:** A monetary standard used to price and compare value.",
+    description: `Unlike centralized fiat currencies, in which new currency is printed and distributed arbitrarily, often devaluing the wealth of the respective system's participants and the purchasing power of each unit of the currency, Pinto autonomously distributes newly minted currency directly to its holders. Combined with its native volatility-minimization mechanisms, the protocol creates a currency designed to serve as a unit of account for value and loans of value.`,
   },
 ];
 
@@ -152,6 +150,7 @@ interface CardData {
   logo: string;
   title: string;
   subtitle: string;
+  definition: string;
   description: string;
 }
 
@@ -207,6 +206,10 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, hoverBgCol
 
 export default function SecondaryCTA() {
   const isMobile = useIsMobile();
+  const { formattedText: liquidityDistributionText, loading: liquidityLoading } = useLiquidityDistribution();
+
+  // Create valuesData with dynamic liquidity distribution
+  const valuesData = createValuesData(liquidityDistributionText);
 
   // Modal state
   const [selectedCard, setSelectedCard] = useState<(typeof valuesData)[0] | null>(null);
@@ -235,17 +238,10 @@ export default function SecondaryCTA() {
       // HEAVILY center-weighted selection - strongly prefer middle cards for visibility
       const centerIndex = Math.floor(cardCount / 2);
 
-      // Heavily weighted random: 85% chance for center area, 15% for any card
-      let selectedIndex: number;
-      if (Math.random() < 0.85) {
-        // Always select from center area (±1 from center for all card counts)
-        const centerStart = Math.max(0, centerIndex - 1);
-        const centerEnd = Math.min(cardCount - 1, centerIndex + 1);
-        selectedIndex = centerStart + Math.floor(Math.random() * (centerEnd - centerStart + 1));
-      } else {
-        // 15% chance: select any card (including outer cards)
-        selectedIndex = Math.floor(Math.random() * cardCount);
-      }
+      // Always select from center area (±1 from center for all card counts)
+      const centerStart = Math.max(0, centerIndex - 1);
+      const centerEnd = Math.min(cardCount - 1, centerIndex + 1);
+      const selectedIndex: number = centerStart + Math.floor(Math.random() * (centerEnd - centerStart + 1));
 
       return {
         component: nextComponent,
