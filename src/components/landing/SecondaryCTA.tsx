@@ -64,15 +64,15 @@ A future blacklist mitigation mechanism will extend the censorship resistance of
 - **Verifiability:** the ability to independently validate correctness.
     - A system is verifiable to a participant if they can confirm correctness without trusting any party. Verification is typically enabled by transparency, reproducibility, or cryptographic proofs.
 
+
 Pinto functions autonomously according to verifiable rules and parameters, which the Pinto Community Multisig (PCM) upgrades transparently to improve the protocol. Two weeks after the protocol reaches 500M supply, the PCM will forfeit governance of Pinto, with the exception of fixing security vulnerabilities and bugs. In its place, a permissionless fork system will enable continued improvements while protecting participants from having the code underlying their currency ever changed without their consent.`,
   },
   {
     logo: ValuePermissionlessness,
     title: "Permissionlessness",
     subtitle: "Anyone with an internet connection and funds on the Ethereum network can participate in Pinto.",
-    definition:
-      "**Permissionlessness:** the absence of approval requirements for participation. \n\n **Permissioned:** the quality of requiring approval for participation",
-    description: `
+    definition: "**Permissionlessness:** the absence of approval requirements for participation.",
+    description: `**Permissioned:** the quality of requiring approval for participation.
 
 Note: Barriers of strict technical capacity do not constitute permissions (*e.g.,* internet connection, gas payment).
 
