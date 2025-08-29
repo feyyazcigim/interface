@@ -6,18 +6,11 @@ import LandingChart from "@/components/landing/LandingChart";
 import ProjectStats from "@/components/landing/ProjectStats";
 import Resources from "@/components/landing/Resources";
 import SecondaryCTA from "@/components/landing/SecondaryCTA";
-import SecondaryCTAProperties from "@/components/landing/SecondaryCTAProperties";
-import SecondaryCTAValues from "@/components/landing/SecondaryCTAValues";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { WheelEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-
-interface GlowingCard {
-  component: "values" | "properties";
-  cardIndex: number;
-}
 
 export default function Landing() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -30,53 +23,10 @@ export default function Landing() {
   const isScrollingRef = useRef(false);
   const lastSnappedSectionRef = useRef<Element | null>(null);
 
-  // Glow effect state management
-  const [glowingCard, setGlowingCard] = useState<GlowingCard | null>(null);
-  const glowTimerRef = useRef<NodeJS.Timeout | null>(null);
-
   // Track first-time visitor status
   const [isFirstTimeVisitor, setIsFirstTimeVisitor] = useState<boolean>(false);
   const [sectionsVisible, setSectionsVisible] = useState<boolean>(true); // Default to visible
   const scrollAttemptCountRef = useRef(0);
-
-  // Constants for glow effect
-  const GLOW_DURATION = 2000; // 2 second glow
-  const GAP_DURATION = 1500; // 1 second gap with no glow
-  const TOTAL_CYCLE_TIME = GLOW_DURATION + GAP_DURATION; // 3 seconds total
-  const TOTAL_VALUES_CARDS = 5; // Number of cards in SecondaryCTAValues
-  const TOTAL_PROPERTIES_CARDS = 4; // Number of cards in SecondaryCTAProperties
-
-  // Flip-flop selection logic with center-weighted preference for better visibility
-  const selectRandomCard = useCallback(
-    (currentCard: GlowingCard | null): GlowingCard => {
-      // Determine which component to use next (flip-flop between values and properties)
-      const nextComponent: "values" | "properties" = currentCard?.component === "values" ? "properties" : "values";
-
-      // Get the appropriate card count for the next component
-      const cardCount = nextComponent === "values" ? TOTAL_VALUES_CARDS : TOTAL_PROPERTIES_CARDS;
-
-      // HEAVILY center-weighted selection - strongly prefer middle cards for visibility
-      const centerIndex = Math.floor(cardCount / 2);
-
-      // Heavily weighted random: 85% chance for center area, 15% for any card
-      let selectedIndex: number;
-      if (Math.random() < 0.85) {
-        // Always select from center area (±1 from center for all card counts)
-        const centerStart = Math.max(0, centerIndex - 1);
-        const centerEnd = Math.min(cardCount - 1, centerIndex + 1);
-        selectedIndex = centerStart + Math.floor(Math.random() * (centerEnd - centerStart + 1));
-      } else {
-        // 15% chance: select any card (including outer cards)
-        selectedIndex = Math.floor(Math.random() * cardCount);
-      }
-
-      return {
-        component: nextComponent,
-        cardIndex: selectedIndex,
-      };
-    },
-    [TOTAL_VALUES_CARDS, TOTAL_PROPERTIES_CARDS],
-  );
 
   // Check if user is a first-time visitor
   useEffect(() => {
@@ -102,52 +52,6 @@ export default function Landing() {
       setSectionsVisible(true);
     }
   }, [isFirstTimeVisitor, currentTriggerPhase, sectionsVisible]);
-
-  // Glow effect timer - start when sections become visible
-  useEffect(() => {
-    if (!sectionsVisible) return;
-
-    let currentGlowingCard: GlowingCard | null = null;
-    let mainInterval: NodeJS.Timeout | null = null;
-    let glowClearTimeout: NodeJS.Timeout | null = null;
-
-    const runGlowCycle = () => {
-      // Start glow phase - select next card
-      currentGlowingCard = selectRandomCard(currentGlowingCard);
-      setGlowingCard(currentGlowingCard);
-
-      // Clear glow after GLOW_DURATION
-      glowClearTimeout = setTimeout(() => {
-        setGlowingCard(null);
-      }, GLOW_DURATION);
-    };
-
-    // Start immediately with first glow
-    runGlowCycle();
-
-    // Set up recurring cycle (glow + gap = total cycle time)
-    mainInterval = setInterval(runGlowCycle, TOTAL_CYCLE_TIME);
-
-    // Store reference for cleanup
-    glowTimerRef.current = mainInterval;
-
-    // Cleanup function
-    return () => {
-      if (mainInterval) {
-        clearInterval(mainInterval);
-        mainInterval = null;
-      }
-      if (glowClearTimeout) {
-        clearTimeout(glowClearTimeout);
-        glowClearTimeout = null;
-      }
-      if (glowTimerRef.current) {
-        clearInterval(glowTimerRef.current);
-        glowTimerRef.current = null;
-      }
-      setGlowingCard(null);
-    };
-  }, [sectionsVisible, selectRandomCard, GLOW_DURATION, TOTAL_CYCLE_TIME]);
 
   // Initialize lastSnappedSectionRef to first section on mount
   useEffect(() => {
@@ -340,11 +244,7 @@ export default function Landing() {
         </section>
         <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen">
           <div className="mb-[2.5%]">
-            <SecondaryCTAValues glowingCardIndex={glowingCard?.component === "values" ? glowingCard.cardIndex : -1} />
             <SecondaryCTA />
-            <SecondaryCTAProperties
-              glowingCardIndex={glowingCard?.component === "properties" ? glowingCard.cardIndex : -1}
-            />
           </div>
         </section>
         <section className="flex flex-col overflow-clip place-content-center min-h-screen">
