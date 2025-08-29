@@ -133,6 +133,11 @@ export default function ProjectStats() {
     setActiveButton(activeButton === buttonType ? null : buttonType);
   };
 
+  const handleProfileSelection = () => {
+    setManuallySelected(true);
+    setIsAutoCycling(false);
+  };
+
   const getElementOpacity = (isActive: boolean) => {
     if (activeButton === null) return "opacity-100";
     return isActive ? "opacity-100" : "opacity-50";
@@ -183,6 +188,7 @@ export default function ProjectStats() {
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="absolute -left-[4.5rem] sm:left-24 sm:-top-20 -top-40"
+                onClick={() => handleProfileSelection()}
               >
                 <ContributorProfiles />
               </motion.div>

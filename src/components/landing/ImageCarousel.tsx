@@ -140,7 +140,7 @@ export default function ImageCarousel() {
               >
                 {!isSelected ? (
                   <div
-                    className="w-full bg-top border-t border-x rounded-md object-cover object-top h-[10rem] sm:h-[15rem] xl:h-[18rem] cursor-pointer"
+                    className="w-full overflow-clip bg-top border-t border-x rounded-md object-cover object-top h-[10rem] sm:h-[15rem] xl:h-[18rem] cursor-pointer"
                     style={{
                       maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
                     }}

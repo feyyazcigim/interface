@@ -1,6 +1,6 @@
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { motion } from "framer-motion";
-import { atom, useAtom } from "jotai";
+import { atom, useAtom, useAtomValue } from "jotai";
 import { useEffect, useMemo, useRef } from "react";
 import { isAutoCyclingAtom } from "./ProjectStats";
 
@@ -83,7 +83,7 @@ function getRandomContributors(count: number = 5, selectedContributor?: Contribu
 
 export default function ContributorProfiles() {
   const [selectedContributor, setSelectedContributor] = useAtom(selectedContributorAtom);
-  const [isAutoCycling] = useAtom(isAutoCyclingAtom);
+  const isAutoCycling = useAtomValue(isAutoCyclingAtom);
   const isMobile = useIsMobile();
   const hasAutoSelected = useRef(false);
 
