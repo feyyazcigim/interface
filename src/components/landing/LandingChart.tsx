@@ -907,10 +907,15 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   const clipPathControlsRef = useRef<ReturnType<typeof animate> | null>(null);
   const lineStrokeColor = useMotionValue("#387F5C");
 
+  // Track if animations are paused due to page visibility or component visibility
+  const isPausedRef = useRef(false);
+  const componentRef = useRef<HTMLDivElement>(null);
+  const [isComponentVisible, setIsComponentVisible] = useState(false);
+
   // Combined position and price-based flash trigger system
   useEffect(() => {
     const unsubscribe = currentY.on("change", (yPosition) => {
-      if (priceTrackingActive.get() < 1) return;
+      if (priceTrackingActive.get() < 1 || isPausedRef.current) return;
 
       // Get current position index to determine nearby datapoints
       const currentIdx = currentIndex.get();
@@ -955,6 +960,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   // Phase trigger system (still based on position/index)
   useEffect(() => {
     const unsubscribe = currentIndex.on("change", (idx) => {
+      if (isPausedRef.current) return;
       const i = Math.max(0, Math.min(Math.round(idx), fullPriceData.length - 1));
       const newTriggerPhase = fullPriceData[i].triggerPhase;
 
@@ -985,6 +991,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   // Monitor scroll progress to fade in price labels and extend data
   useEffect(() => {
     const unsubscribe = scrollOffset.on("change", (currentOffset) => {
+      if (isPausedRef.current) return;
       // Check if we've reached the semi-stable phase (after unstable phase)
       if (currentOffset >= positions.segments.unstable && priceLabelsOpacity.get() === 0) {
         animate(priceLabelsOpacity, 1, { duration: 1, ease: "easeInOut" });
@@ -1422,6 +1429,83 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     }
   }, [currentTriggerPhase, restartAnimation]);
 
+  // Handle component visibility with Intersection Observer
+  useEffect(() => {
+    const currentComponent = componentRef.current;
+    if (!currentComponent) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const isVisible = entry.isIntersecting;
+        setIsComponentVisible(isVisible);
+
+        if (!isVisible && !isPausedRef.current) {
+          // Component scrolled out of view - pause animations
+          isPausedRef.current = true;
+          if (animationControlsRef.current) {
+            animationControlsRef.current.pause();
+          }
+          if (clipPathControlsRef.current) {
+            clipPathControlsRef.current.pause();
+          }
+        } else if (isVisible && isPausedRef.current && !document.hidden) {
+          // Component scrolled into view and page is visible - resume animations
+          setTimeout(() => {
+            isPausedRef.current = false;
+            if (animationControlsRef.current) {
+              animationControlsRef.current.play();
+            }
+            if (clipPathControlsRef.current) {
+              clipPathControlsRef.current.play();
+            }
+          }, 100);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "0px",
+        threshold: 0.1, // Trigger when 10% of component is visible
+      },
+    );
+
+    observer.observe(currentComponent);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // Handle page visibility changes to pause/resume animations properly
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Page is now hidden - pause all animations
+        isPausedRef.current = true;
+        if (animationControlsRef.current) {
+          animationControlsRef.current.pause();
+        }
+        if (clipPathControlsRef.current) {
+          clipPathControlsRef.current.pause();
+        }
+        // Note: setTimeout/setInterval will be throttled by browser automatically
+      } else if (isComponentVisible) {
+        // Page is now visible AND component is visible - resume animations
+        setTimeout(() => {
+          isPausedRef.current = false;
+          if (animationControlsRef.current) {
+            animationControlsRef.current.play();
+          }
+          if (clipPathControlsRef.current) {
+            clipPathControlsRef.current.play();
+          }
+        }, 100);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isComponentVisible]);
+
   // Position-based animation system: start scrolling and track position for messages
   useEffect(() => {
     startAnimation();
@@ -1435,7 +1519,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   }, []); // Only run once on mount
 
   return (
-    <div className="flex flex-col items-center justify-around h-full w-full">
+    <div ref={componentRef} className="flex flex-col items-center justify-around h-full w-full">
       {/* Stage Messages */}
       <div
         className="min-h-[250px] sm:min-h-[300px] flex flex-col items-center justify-center pt-4 pb-2 sm:pt-8 sm:pb-4"
