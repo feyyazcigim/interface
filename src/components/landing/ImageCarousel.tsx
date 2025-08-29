@@ -115,7 +115,7 @@ export default function ImageCarousel() {
           containScroll: "trimSnaps",
         }}
         plugins={[AutoPlay({ delay: 3000, stopOnInteraction: true, active: autoplayActive }), ClassNames()]}
-        className="w-full max-w-full"
+        className="w-[90%] max-w-[90%] mx-4 sm:mx-6 sm:w-[95%] sm:max-w-[95%] place-self-center"
         setApi={setApi}
       >
         <CarouselContent className="overflow-y-visible">
@@ -154,7 +154,8 @@ export default function ImageCarousel() {
         </CarouselContent>
         <CarouselPrevious
           variant="ghost"
-          className="scale-[2.0]"
+          noPadding={true}
+          className="[&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-8 sm:[&>svg]:h-8"
           onClick={() => {
             setAutoplayActive(false);
             setIsAutoCycling(false);
@@ -165,7 +166,8 @@ export default function ImageCarousel() {
         />
         <CarouselNext
           variant="ghost"
-          className="scale-[2.0]"
+          noPadding={true}
+          className="[&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-8 sm:[&>svg]:h-8"
           onClick={() => {
             setAutoplayActive(false);
             setIsAutoCycling(false);

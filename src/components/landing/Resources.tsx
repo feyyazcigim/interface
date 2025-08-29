@@ -7,7 +7,8 @@ import GameOfLife from "./GameOfLife";
 const resourceCards = [
   {
     title: "Learn",
-    description: "Learn more about the incentives that coordinate the farm.",
+    description:
+      "Uncover the mission and history driving Pinto, and how protocol-native incentives coordinate participants to minimize the volatility of Pinto's price without collateral.",
     pattern: "pufferfishCompanion",
     initialScale: 2.4,
     finalScale: 1.1,
@@ -26,7 +27,8 @@ const resourceCards = [
   },
   {
     title: "Engage",
-    description: "Ask questions, participate in discussion about protocol improvements and connect with other farmers.",
+    description:
+      "Join the community to ask questions, participate in discussion about protocol improvements and connect with other farmers.",
     pattern: "trafficCircle",
     initialScale: 1.5,
     finalScale: 1.5,
@@ -45,7 +47,7 @@ const resourceCards = [
   },
   {
     title: "Participate",
-    description: "Plant your own crops and join the movement.",
+    description: "Deposit value into or lend to the protocol to benefit from the future growth of Pinto.",
     pattern: "tenCell",
     initialScale: 6,
     finalScale: 1.1,

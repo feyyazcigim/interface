@@ -57,24 +57,25 @@ export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalP
           }}
         >
           {/* Header section - fixed height */}
-          <div className="flex flex-row gap-4 flex-shrink-0">
-            <div>
-              <div className="flex flex-row gap-4 sm:gap-6 flex-1">
-                <div className="flex flex-col gap-4">
-                  <div className="flex justify-start">
-                    <img src={cardData.logo} className="w-20 h-20 sm:w-32 sm:h-32 flex-shrink-0" alt={cardData.title} />
-                  </div>
-                  <h2 className="text-lg sm:text-3xl leading-[1.1] font-thin text-black">{cardData.title}</h2>
-                </div>
-              </div>
+          <div className="flex flex-col gap-8 flex-shrink-0">
+            <div className="flex flex-row items-center gap-6 sm:gap-8">
+              <img src={cardData.logo} className="w-20 h-20 sm:w-32 sm:h-32 flex-shrink-0" alt={cardData.title} />
+              <h2 className="text-2xl sm:text-4xl leading-[1.1] font-thin text-black">{cardData.title}</h2>
+            </div>
+            <div className="text-base sm:text-lg md:text-xl lg:text-2xl leading-[1.1] font-thin text-pinto-gray-4">
+              {cardData.subtitle}
             </div>
           </div>
 
           {/* Description section - fills remaining space */}
-          <div className="flex flex-col gap-2 sm:gap-3 flex-1 min-h-0">
-            <div className="text-base sm:text-lg prose-p:leading-[1.1] prose-a:text-pinto-green-4 hover:prose-a:text-pinto-green-2 prose-a:transition-all prose-a:duration-300 prose-a:after:content-['↗'] prose-a:after:ml-1 prose-a:after:inline-block font-thin text-black overflow-y-auto h-full prose prose-neutral max-w-none prose-h2:font-normal prose-h2:sm:text-lg prose-h2:text-sm prose-h2:text-pinto-gray-4">
+          <div className="flex flex-col gap-1 sm:gap-2 flex-1 min-h-0 relative">
+            <div className="text-base sm:text-lg prose-p:leading-[1.3] prose-a:text-pinto-green-4 hover:prose-a:text-pinto-green-2 prose-a:transition-all prose-a:duration-300 prose-a:after:content-['↗'] prose-a:after:ml-1 prose-a:after:inline-block font-thin text-black overflow-y-auto h-full prose prose-neutral max-w-none prose-h2:font-normal prose-h2:sm:text-lg prose-h2:text-sm prose-h2:text-pinto-gray-4 pt-2">
               <Markdown>{cardData.description}</Markdown>
             </div>
+            {/* Fade overlay at top */}
+            <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-pinto-off-white to-transparent pointer-events-none" />
+            {/* Fade overlay at bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-pinto-off-white to-transparent pointer-events-none" />
           </div>
         </motion.div>
       </DialogContent>

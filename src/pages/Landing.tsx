@@ -6,8 +6,6 @@ import LandingChart from "@/components/landing/LandingChart";
 import ProjectStats from "@/components/landing/ProjectStats";
 import Resources from "@/components/landing/Resources";
 import SecondaryCTA from "@/components/landing/SecondaryCTA";
-import SecondaryCTAProperties from "@/components/landing/SecondaryCTAProperties";
-import SecondaryCTAValues from "@/components/landing/SecondaryCTAValues";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import useIsMobile from "@/hooks/display/useIsMobile";
@@ -76,7 +74,7 @@ export default function Landing() {
 
     const viewportHeight = window.innerHeight;
     const currentScrollTop = scrollContainer.scrollTop;
-    const containerHeight = scrollContainer.scrollHeight;
+    const _containerHeight = scrollContainer.scrollHeight;
 
     // Check if we're currently in the Resources section (last section)
     const resourcesSection = sections[sections.length - 1] as HTMLElement;
@@ -93,7 +91,7 @@ export default function Landing() {
     let nearestSection: Element | null = null;
     let smallestDistance = Infinity;
 
-    sections.forEach((section, index) => {
+    sections.forEach((section, _index) => {
       const sectionTop = (section as HTMLElement).offsetTop;
 
       // All sections use top alignment
@@ -182,11 +180,11 @@ export default function Landing() {
       }
     };
 
-    const handleWheel = (e: globalThis.WheelEvent) => {
+    const handleWheel = (_e: globalThis.WheelEvent) => {
       handleScrollAttempt();
     };
 
-    const handleTouchStart = (e: globalThis.TouchEvent) => {
+    const handleTouchStart = (_e: globalThis.TouchEvent) => {
       handleScrollAttempt();
     };
 
@@ -246,9 +244,7 @@ export default function Landing() {
         </section>
         <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen">
           <div className="mb-[2.5%]">
-            <SecondaryCTAValues />
             <SecondaryCTA />
-            <SecondaryCTAProperties />
           </div>
         </section>
         <section className="flex flex-col overflow-clip place-content-center min-h-screen">

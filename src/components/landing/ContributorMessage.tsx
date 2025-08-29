@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { Link } from "react-router-dom";
 import { selectedContributorAtom } from "./ContributorProfiles";
@@ -18,24 +19,48 @@ export default function ContributorMessage() {
   const [selectedContributor] = useAtom(selectedContributorAtom);
 
   return (
-    <Link
-      to={selectedContributor.article}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex flex-col place-self-center text-center mt-4 sm:mt-8 w-screen px-4 sm:px-0 sm:w-[65%] h-[250px] sm:h-[400px]"
-    >
-      <p className="text-xl sm:text-4xl font-light text-pinto-gray-5 mb-4">
-        "{selectedContributor.description}" - {selectedContributor.name}
-      </p>
-      <div
-        className={`sm:h-[400px] sm:w-[900px] h-[80px] w-[300px] place-self-center bg-cover ${getBackgroundPosition(selectedContributor.name)} bg-no-repeat rounded-lg`}
-        style={{
-          backgroundImage: `url(/${selectedContributor.name}-bg.png)`,
-          maskImage:
-            "linear-gradient(to right, rgba(0,0,0,0) 5%, rgba(0,0,0,1) 7%, rgba(0,0,0,1) 93%, rgba(0,0,0,0) 95%), linear-gradient(to bottom, rgba(0,0,0,0) 5%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 95%)",
-          maskComposite: "intersect",
-        }}
-      />
-    </Link>
+    <div className="flex flex-col place-self-center text-center mt-4 sm:mt-8 w-screen px-4 sm:px-0 sm:w-[65%] h-[250px] sm:h-[400px]">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={selectedContributor.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{
+            duration: 0.4,
+            ease: [0.16, 1, 0.3, 1], // Custom ease for smooth feel
+          }}
+          className="flex flex-col h-full"
+        >
+          <Link
+            to={selectedContributor.article}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex flex-col h-full"
+          >
+            <motion.p
+              className="text-xl sm:text-4xl font-light text-pinto-gray-5 mb-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              "{selectedContributor.description}" - {selectedContributor.name}
+            </motion.p>
+            <motion.div
+              className={`sm:h-[400px] sm:w-[900px] h-[80px] w-[300px] place-self-center bg-cover ${getBackgroundPosition(selectedContributor.name)} bg-no-repeat rounded-lg`}
+              style={{
+                backgroundImage: `url(/${selectedContributor.name}-bg.png)`,
+                maskImage:
+                  "linear-gradient(to right, rgba(0,0,0,0) 5%, rgba(0,0,0,1) 7%, rgba(0,0,0,1) 93%, rgba(0,0,0,0) 95%), linear-gradient(to bottom, rgba(0,0,0,0) 5%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 95%)",
+                maskComposite: "intersect",
+              }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            />
+          </Link>
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 }
