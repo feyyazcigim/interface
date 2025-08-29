@@ -279,14 +279,12 @@ export default function Landing() {
             glow={true}
           >
             {/* Conditionally show text based on scroll position */}
-            <span
-              className={`relative transition-opacity ${isAtTop && reachedMainCta ? "w-0 opacity-0 -ml-2 text-pinto-green-4" : "w-auto opacity-100 ml-0 text-white"}`}
-            >
-              Join the Farm
-            </span>
+            {!(isAtTop && reachedMainCta) && (
+              <span className={`relative transition-opacity w-auto opacity-100 ml-0 text-white`}>Join the Farm</span>
+            )}
             <div
               className={`relative transition-transform transform duration-300 ${
-                isAtTop && reachedMainCta ? `rotate-90 ${!isMobile ? "-mx-1" : ""}` : "rotate-0"
+                isAtTop && reachedMainCta ? `rotate-90 ${!isMobile ? "-mx-1.5" : "mx-0.5"}` : "rotate-0"
               }`}
               style={{ isolation: "isolate" }}
             >
