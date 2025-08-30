@@ -1069,7 +1069,7 @@ export default function ProtocolUpgrades() {
                   {/* Before lines for first entry */}
                   {before > 0 &&
                     Array.from({ length: before }).map((_, i) => (
-                      <div key={`before-${index}-${i}`} className="w-[1px] h-16 sm:h-24 bg-pinto-gray-2" />
+                      <div key={`before-${index}-${i}`} className="w-[0.5px] h-16 sm:h-24 bg-pinto-gray-2" />
                     ))}
 
                   <div key={audit.name} className="relative flex flex-col items-center flex-shrink-0">
