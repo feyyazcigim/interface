@@ -1,6 +1,6 @@
 import { WheelGesturesPlugin } from "embla-carousel-wheel-gestures";
 import { AnimatePresence, motion } from "framer-motion";
-import { useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DiagonalRightArrowIcon } from "../Icons";
@@ -914,7 +914,7 @@ const audits: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...regularAud
 
 export default function ProtocolUpgrades() {
   const [api, setApi] = useState<CarouselApi>();
-  const setIsAutoCycling = useSetAtom(isAutoCyclingAtom);
+  const [isAutoCycling, setIsAutoCycling] = useAtom(isAutoCyclingAtom);
 
   const [carouselCenterData, setCarouselCenterData] = useState<Audit | null>(null);
   const [hoveredData, setHoveredData] = useState<Audit | null>(null);
@@ -994,6 +994,13 @@ export default function ProtocolUpgrades() {
     return { before: Math.round(lines / 2), after: Math.round(lines / 2) };
   };
 
+  // Handle carousel navigation
+  const handleCarouselChange = useCallback(() => {
+    if (isAutoCycling === true) {
+      setIsAutoCycling(false);
+    }
+  }, [setIsAutoCycling, isAutoCycling]);
+
   useEffect(() => {
     // Navigate to the last item in the carousel
     if (api) {
@@ -1006,20 +1013,17 @@ export default function ProtocolUpgrades() {
         // Handle carousel item selection
         if (!selected.isYearMarker) {
           setCarouselCenterData(selected);
+          handleCarouselChange();
         }
       });
 
       api.on("settle", () => {
         const selectedIndex = api.selectedScrollSnap();
         api.scrollTo(selectedIndex);
+        handleCarouselChange();
       });
     }
-  }, [api, sortedAudits.length]);
-
-  // Handle carousel navigation
-  const handleCarouselChange = useCallback(() => {
-    setIsAutoCycling(false);
-  }, [setIsAutoCycling]);
+  }, [api, sortedAudits.length, handleCarouselChange]);
 
   useEffect(() => {
     // Update selected data when hovered data changes
@@ -1062,7 +1066,7 @@ export default function ProtocolUpgrades() {
         className="w-full"
         setApi={setApi}
       >
-        <CarouselContent className="">
+        <CarouselContent>
           {sortedAudits.map((audit, index) => {
             const { before, after } = calculateConnectingLines(index);
             return (
