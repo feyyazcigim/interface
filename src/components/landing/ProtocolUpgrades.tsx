@@ -1,7 +1,9 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useSetAtom } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DiagonalRightArrowIcon } from "../Icons";
+import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../ui/Carousel";
 import { isAutoCyclingAtom } from "./ProjectStats";
 
 type ActiveButton = "upgrades" | "contributors" | "years" | "volume" | null;
@@ -839,7 +841,7 @@ const regularAudits: Audit[] = [
     timestamp: new Date("December 13, 2022").getTime(),
     auditHash: "6699e071626a17283facc67242536037989ecd91",
     auditor: "halborn",
-    customLines: { before: 6, after: 10 },
+    customLines: { before: 14, after: 14 },
   },
   {
     name: "Trail Of Bits Audit",
@@ -909,11 +911,13 @@ const audits: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...regularAud
   return a.name.localeCompare(b.name);
 });
 
-export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const hasScrolledRef = useRef(false);
-  const [isVisible, setIsVisible] = useState(false);
+export default function ProtocolUpgrades() {
+  const [api, setApi] = useState<CarouselApi>();
   const setIsAutoCycling = useSetAtom(isAutoCyclingAtom);
+
+  const [carouselCenterData, setCarouselCenterData] = useState<Audit | null>(null);
+  const [hoveredData, setHoveredData] = useState<Audit | null>(null);
+  const [highlightedData, setHighlightedData] = useState<Audit | null>(null);
 
   // Create year markers for each year between the first and last audit
   const createYearMarkers = () => {
@@ -952,8 +956,8 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
 
     // Check if current audit has custom lines specified
     if (currentAudit.customLines) {
-      const customBefore = currentAudit.customLines.before ?? 0;
-      const customAfter = currentAudit.customLines.after ?? 10;
+      const customBefore = currentAudit.customLines.before ?? 5;
+      const customAfter = currentAudit.customLines.after ?? 5;
 
       // For first entry, use custom before value
       if (index === 0) return { before: customBefore, after: customAfter };
@@ -986,164 +990,171 @@ export default function ProtocolUpgrades({ activeButton }: ProtocolUpgradesProps
     // Scale lines based on time difference (1 line per day, with minimum and maximum)
     const lines = Math.min(Math.max(Math.round(daysDifference / 1), minimumLines), 15);
 
-    return { before: 0, after: lines };
+    return { before: Math.round(lines / 2), after: Math.round(lines / 2) };
   };
 
-  // Scroll to the rightmost side when activeButton becomes "upgrades"
   useEffect(() => {
-    if (activeButton === "upgrades" && !hasScrolledRef.current) {
-      const scrollToEnd = () => {
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
-          hasScrolledRef.current = true;
-          setIsVisible(true);
+    // Navigate to the last item in the carousel
+    if (api) {
+      api.scrollTo(sortedAudits.length - 1);
+
+      api.on("select", () => {
+        const selectedIndex = api.selectedScrollSnap();
+
+        const selected = sortedAudits[selectedIndex];
+        // Handle carousel item selection
+        if (!selected.isYearMarker) {
+          setCarouselCenterData(selected);
         }
-      };
+      });
 
-      // Try after a short delay to ensure content is rendered
-      const timeoutId = setTimeout(scrollToEnd, 150);
-
-      return () => clearTimeout(timeoutId);
+      api.on("settle", () => {
+        const selectedIndex = api.selectedScrollSnap();
+        api.scrollTo(selectedIndex);
+      });
     }
-  }, [activeButton]);
+  }, [api, sortedAudits.length]);
 
-  // Add horizontal scroll wheel functionality and trackpad gestures
+  // Handle carousel navigation
+  const handleCarouselChange = useCallback(() => {
+    setIsAutoCycling(false);
+  }, [setIsAutoCycling]);
+
   useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      // Disable auto-cycling when user scrolls
-      setIsAutoCycling(false);
-
-      // Handle horizontal trackpad swipes (deltaX) and convert vertical scroll to horizontal (deltaY)
-      if (e.deltaX !== 0) {
-        // Direct horizontal scrolling from trackpad swipes
-        e.preventDefault();
-        scrollContainer.scrollLeft += e.deltaX;
-      } else if (e.deltaY !== 0) {
-        // Convert vertical scroll wheel to horizontal scroll
-        e.preventDefault();
-        scrollContainer.scrollLeft += e.deltaY;
-      }
-    };
-
-    scrollContainer.addEventListener("wheel", handleWheel, { passive: false });
-
-    return () => {
-      scrollContainer.removeEventListener("wheel", handleWheel);
-    };
-  }, []);
+    // Update selected data when hovered data changes
+    if (hoveredData) {
+      setHighlightedData(hoveredData);
+    } else if (carouselCenterData) {
+      setHighlightedData(carouselCenterData);
+    }
+  }, [hoveredData, carouselCenterData]);
 
   return (
-    <div
-      ref={scrollContainerRef}
-      className={`relative w-screen overflow-x-auto p-0 sm:p-6 scrollbar-none ${isVisible ? "opacity-100" : "opacity-0"} transition-all transform-gpu`}
-      style={{
-        marginLeft: `calc(-50vw + 50%)`,
-        marginRight: `calc(-50vw + 50%)`,
-      }}
-    >
-      <div className="flex flex-row min-w-max items-center gap-3 sm:gap-4">
-        {sortedAudits.map((audit, index) => {
-          const { before, after } = calculateConnectingLines(index);
-          const hasDescription =
-            (audit.name.startsWith("BIP-") || audit.name.startsWith("PI-") || audit.name.startsWith("EBIP-")) &&
-            audit.description &&
-            audit.description.length > 0;
+    <div className={`relative w-screen p-0 sm:p-6 transition-all transform-gpu items-center`}>
+      <AnimatePresence mode="wait">
+        <div className="h-14">
+          {highlightedData && (
+            <motion.div
+              key={highlightedData.name}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{
+                duration: 0.4,
+                ease: [0.16, 1, 0.3, 1], // Custom ease for smooth feel
+              }}
+              className="text-base sm:text-lg text-center w-full place-content-center text-pinto-gray-5"
+            >
+              {`${highlightedData.date}: ${highlightedData.name} ${highlightedData.description ? `- ${highlightedData.description}` : ""}`}
+            </motion.div>
+          )}
+        </div>
+      </AnimatePresence>
+      <Carousel
+        opts={{
+          align: "center",
+          loop: true,
+          containScroll: "trimSnaps",
+          dragFree: true,
+        }}
+        className="w-full"
+        setApi={setApi}
+      >
+        <CarouselContent className="">
+          {sortedAudits.map((audit, index) => {
+            const { before, after } = calculateConnectingLines(index);
+            return (
+              <CarouselItem key={audit.name} className="pl-2 md:pl-4 basis-auto pb-4 pt-4">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  {/* Before lines for first entry */}
+                  {before > 0 &&
+                    Array.from({ length: before }).map((_, i) => (
+                      <div key={`before-${index}-${i}`} className="w-[1px] h-16 sm:h-24 bg-pinto-gray-2" />
+                    ))}
 
-          return (
-            <>
-              {/* Before lines for first entry */}
-              {before > 0 &&
-                Array.from({ length: before }).map((_, i) => (
-                  <div
-                    key={`before-${index}-${i}`}
-                    className="w-[1px] h-[5rem] sm:h-24 bg-pinto-gray-2 mt-4 mb-[0.375rem]"
-                  />
-                ))}
-
-              <div key={audit.name} className="relative flex flex-col items-center flex-shrink-0">
-                {audit.isYearMarker ? (
-                  <>
-                    {/* Year marker */}
-                    <span className="text-base sm:text-xl font-light text-black text-center items-center justify-center absolute bottom-0 w-20">
-                      {audit.name}
-                    </span>
-                    {/* Year connecting line - thicker */}
-                    <div className="w-[1px] h-28 sm:h-36 bg-black mt-10 mb-8" />
-                  </>
-                ) : (
-                  <>
-                    {audit.isCombined ? (
-                      <div className="flex flex-col gap-0.5 absolute top-0 group text-center items-center justify-center py-2 px-4">
-                        <span className="text-base sm:text-xl font-light text-pinto-green-4 absolute top-0 group-hover:-top-6 whitespace-nowrap transition-all transform-gpu">
+                  <div key={audit.name} className="relative flex flex-col items-center flex-shrink-0">
+                    {audit.isYearMarker ? (
+                      <>
+                        {/* Year marker */}
+                        <span className="text-base sm:text-xl font-light text-black text-center items-center justify-center absolute -bottom-3 w-20">
                           {audit.name}
                         </span>
-                        <div className="flex flex-row gap-2 whitespace-nowrap">
-                          {audit.descriptions?.map((description, index) => {
-                            if (!audit.combinedLinks) return;
-                            return (
-                              <Link
-                                key={index}
-                                to={audit.combinedLinks[index]}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex flex-row gap-0.5 text-pinto-green-4 hover:underline decoration-1 opacity-0 group-hover:opacity-100 transition-all transform-gpu text-center items-center justify-center"
-                                onClick={() => setIsAutoCycling(false)}
-                              >
-                                <span className="text-base sm:text-xl font-light text-pinto-green-4">
-                                  {description}
-                                </span>
-                                <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      </div>
+                        {/* Year connecting line */}
+                        <div className="w-[0.5px] h-28 sm:h-36 bg-black mt-4 mb-2 sm:mt-6 sm:mb-4" />
+                      </>
                     ) : (
-                      /* Audit name */
-                      <div className="flex flex-col-reverse gap-0.5 absolute top-0 text-center items-center justify-center py-2 px-4">
-                        <Link
-                          to={audit.githubLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`flex flex-row gap-0.5 text-pinto-green-4 peer hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 transition-all transform-gpu`}
-                          onClick={() => setIsAutoCycling(false)}
-                        >
-                          <span className="text-base sm:text-xl font-light text-pinto-green-4">{audit.name}</span>
-                          <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
-                        </Link>
-                        {hasDescription && (
-                          <span className="text-sm font-light text-pinto-green-4 text-center whitespace-nowrap opacity-0 peer-hover:opacity-100 peer-hover:underline peer-hover:cursor-pointer absolute top-0 peer-hover:-top-6 transition-all transform-gpu pointer-events-none">
-                            {audit.description}
-                          </span>
+                      <>
+                        {audit.isCombined ? (
+                          <div className="flex flex-col gap-0.5 absolute top-0 group text-center items-center justify-center py-2 px-4">
+                            <span
+                              onMouseEnter={() => setHoveredData(audit)}
+                              onMouseLeave={() => setHoveredData(null)}
+                              className="text-base sm:text-xl font-light text-pinto-green-4 absolute top-0 group-hover:-top-6 whitespace-nowrap transition-all transform-gpu"
+                            >
+                              {audit.name}
+                            </span>
+                            <div className="flex flex-row gap-2 whitespace-nowrap">
+                              {audit.descriptions?.map((description, index) => {
+                                if (!audit.combinedLinks) return;
+                                return (
+                                  <Link
+                                    key={index}
+                                    to={audit.combinedLinks[index]}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex flex-row gap-0.5 text-pinto-green-4 hover:underline decoration-1 opacity-0 group-hover:opacity-100 transition-all transform-gpu text-center items-center justify-center"
+                                    onClick={() => setIsAutoCycling(false)}
+                                  >
+                                    <span className="text-base sm:text-xl font-light text-pinto-green-4">
+                                      {description}
+                                    </span>
+                                    <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          /* Audit name */
+                          <div
+                            onMouseEnter={() => setHoveredData(audit)}
+                            onMouseLeave={() => setHoveredData(null)}
+                            className="flex flex-col-reverse gap-0.5 absolute top-0 text-center items-center justify-center py-2 px-4"
+                          >
+                            <Link
+                              to={audit.githubLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`flex flex-row gap-0.5 text-pinto-green-4 peer hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 transition-all transform-gpu`}
+                              onClick={() => setIsAutoCycling(false)}
+                            >
+                              <span className="text-base sm:text-xl font-light text-pinto-green-4">{audit.name}</span>
+                              <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
+                            </Link>
+                          </div>
                         )}
-                      </div>
+
+                        {/* Connecting line */}
+                        <div className="w-[0.5px] h-[5rem] sm:h-[7.5rem] bg-pinto-green-4 mt-8 sm:mt-10 mb-6" />
+                        {/* Date */}
+                        <span className="text-xs sm:text-base font-light text-pinto-gray-4 absolute bottom-0 w-20 text-center">
+                          {formatDate(audit.date)}
+                        </span>
+                      </>
                     )}
+                  </div>
 
-                    {/* Connecting line */}
-                    <div className="w-[1px] h-[5rem] sm:h-[7.5rem] bg-pinto-green-4 mt-8 sm:mt-10 mb-6" />
-                    {/* Date */}
-                    <span className="text-xs sm:text-base font-light text-pinto-gray-4 absolute bottom-0 w-20 text-center">
-                      {formatDate(audit.date)}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* After lines */}
-              {after > 0 &&
-                Array.from({ length: after }).map((_, i) => (
-                  <div
-                    key={`after-${index}-${i}`}
-                    className="w-[1px] h-20 sm:h-24 bg-pinto-gray-2 mt-4 mb-[0.375rem]"
-                  />
-                ))}
-            </>
-          );
-        })}
-      </div>
+                  {/* After lines */}
+                  {after > 0 &&
+                    Array.from({ length: after }).map((_, i) => (
+                      <div key={`after-${index}-${i}`} className="w-[0.5px] h-16 sm:h-24 bg-pinto-gray-2" />
+                    ))}
+                </div>
+              </CarouselItem>
+            );
+          })}
+        </CarouselContent>
+      </Carousel>
     </div>
   );
 }

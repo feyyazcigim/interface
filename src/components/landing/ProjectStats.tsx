@@ -58,7 +58,7 @@ function StatContent({ activeButton }: StatContentProps) {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <ProtocolUpgrades activeButton={activeButton} />
+              <ProtocolUpgrades />
             </motion.div>
           )}
           {activeButton === "years" && (
