@@ -1,3 +1,4 @@
+import { WheelGesturesPlugin } from "embla-carousel-wheel-gestures";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -1057,6 +1058,7 @@ export default function ProtocolUpgrades() {
           containScroll: "trimSnaps",
           dragFree: true,
         }}
+        plugins={[WheelGesturesPlugin()]}
         className="w-full"
         setApi={setApi}
       >
