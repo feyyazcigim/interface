@@ -3,7 +3,6 @@ import wpBean from "@/assets/landing/wp_bean.png";
 import wpMultiflow from "@/assets/landing/wp_multiflow.png";
 import wpPinto from "@/assets/landing/wp_pinto.png";
 import wpPipeline from "@/assets/landing/wp_pipeline.png";
-import { EmblaCarouselType } from "embla-carousel";
 import AutoPlay from "embla-carousel-autoplay";
 import ClassNames from "embla-carousel-class-names";
 import { useAtom } from "jotai";

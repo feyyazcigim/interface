@@ -7,11 +7,20 @@ import { DiagonalRightArrowIcon } from "../Icons";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../ui/Carousel";
 import { isAutoCyclingAtom } from "./ProjectStats";
 
-type ActiveButton = "upgrades" | "contributors" | "years" | "volume" | null;
-
-interface ProtocolUpgradesProps {
-  activeButton: ActiveButton;
-}
+type TimelineEventType =
+  | "event"
+  | "modelImprovement"
+  | "parametrization"
+  | "utility"
+  | "infrastructure"
+  | "budget"
+  | "security"
+  | "governance"
+  | "didNotPass"
+  | "bugFix"
+  | "emergencyBugFix"
+  | "yearMarker"
+  | "audit";
 
 interface Audit {
   name: string;
@@ -28,6 +37,7 @@ interface Audit {
   combinedLinks?: string[];
   descriptions?: string[];
   customLines?: { before?: number; after?: number };
+  type: TimelineEventType[];
 }
 
 // Pinto Improvement Proposals
@@ -41,6 +51,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("July 31, 2025").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["modelImprovement", "utility"],
   },
   {
     name: "PI-10",
@@ -51,6 +62,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("June 19, 2025").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["modelImprovement", "parametrization"],
   },
   {
     name: "PI-9",
@@ -61,6 +73,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("April 18, 2025").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["bugFix"],
   },
   {
     name: "PI-8",
@@ -71,6 +84,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("April 17, 2025").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["modelImprovement", "parametrization", "utility"],
   },
   {
     name: "PI-7",
@@ -81,6 +95,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("March 25, 2025").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["modelImprovement", "parametrization"],
   },
   {
     name: "PI-6",
@@ -91,6 +106,8 @@ const piAudits: Audit[] = [
     timestamp: new Date("March 12, 2025").getTime(),
     auditHash: "",
     auditor: "cantina",
+    customLines: { before: 6, after: 6 },
+    type: ["parametrization", "infrastructure", "modelImprovement"],
   },
   {
     name: "PI-5",
@@ -101,6 +118,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("January 2, 2025").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["parametrization", "infrastructure"],
   },
   {
     name: "PI-4",
@@ -111,6 +129,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("December 8, 2024").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["parametrization"],
   },
   {
     name: "PI-3",
@@ -121,6 +140,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("December 4, 2024").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["parametrization", "utility"],
   },
   {
     name: "PI-2",
@@ -131,6 +151,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("November 27, 2024").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["emergencyBugFix"],
   },
   {
     name: "PI-1",
@@ -141,6 +162,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("November 26, 2024").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["parametrization", "utility"],
   },
   {
     name: "PI-0",
@@ -151,6 +173,7 @@ const piAudits: Audit[] = [
     timestamp: new Date("November 19, 2024").getTime(),
     auditHash: "",
     auditor: "cantina",
+    type: ["parametrization", "bugFix"],
   },
 ];
 
@@ -165,6 +188,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("October 8, 2024").getTime(),
     auditHash: "4e0ad0b964f74a1b4880114f4dd5b339bc69cd3e",
     auditor: "codehawks",
+    type: ["modelImprovement", "infrastructure", "parametrization", "event"],
   },
   {
     name: "BIP-49",
@@ -175,6 +199,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("August 5, 2024").getTime(),
     auditHash: "0552609b63f76a69190015b7e2abfded60a30960",
     auditor: "codehawks",
+    type: ["parametrization", "utility"],
   },
   {
     name: "BIP-48",
@@ -185,6 +210,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("July 26, 2024").getTime(),
     auditHash: "9b77984f43a1fd47f5617006502f28b8528962a3",
     auditor: "codehawks",
+    type: ["utility"],
   },
   {
     name: "BIP-47",
@@ -195,6 +221,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("May 29, 2024").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["governance"],
   },
   {
     name: "BIP-46",
@@ -205,6 +232,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("May 21, 2024").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["security"],
   },
   {
     name: "BIP-45",
@@ -215,6 +243,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("May 21, 2024").getTime(),
     auditHash: "a3658861af8f5126224718af494d02352fbb3ea5",
     auditor: "codehawks",
+    type: ["modelImprovement"],
   },
   {
     name: "BIP-44",
@@ -225,6 +254,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("May 8, 2024").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["modelImprovement", "didNotPass"],
   },
   {
     name: "BIP-43",
@@ -235,6 +265,18 @@ const bipAudits: Audit[] = [
     timestamp: new Date("May 8, 2024").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["security", "didNotPass"],
+  },
+  {
+    name: "BIP-42",
+    description: "Seed Gauge",
+    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/722",
+    hashLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/722/commits/cbef4ff3330ed2642081e35a9e2435f442e628ae",
+    date: "May 1, 2024",
+    timestamp: new Date("May 1, 2024").getTime(),
+    auditHash: "",
+    auditor: "bean",
+    type: ["modelImprovement", "didNotPass"],
   },
   {
     name: "BIP-41",
@@ -245,6 +287,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("February 26, 2024").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["security"],
   },
   {
     name: "BIP-40",
@@ -255,6 +298,18 @@ const bipAudits: Audit[] = [
     timestamp: new Date("February 26, 2024").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
+  },
+  {
+    name: "BIP-39",
+    description: "Beanstalk Farms 2024 Development Budget",
+    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/756",
+    hashLink: "",
+    date: "January 31, 2024",
+    timestamp: new Date("January 31, 2024").getTime(),
+    auditHash: "",
+    auditor: "bean",
+    type: ["budget", "didNotPass"],
   },
   {
     name: "BIP-38",
@@ -265,6 +320,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("October 20, 2023").getTime(),
     auditHash: "76066733bcddb944b9af8f29acf150c02a5b8437",
     auditor: "cyfrin",
+    type: ["event"],
   },
   {
     name: "BIP-37",
@@ -275,6 +331,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("August 30, 2023").getTime(),
     auditHash: "78d7045a4e6900dfbdc5f1119b202b4f30ff6ab8",
     auditor: "halborn",
+    type: ["infrastructure", "utility"],
   },
   {
     name: "BIP-36",
@@ -285,6 +342,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("July 10, 2023").getTime(),
     auditHash: "24bf3d33355f516648b02780b4b232181afde200",
     auditor: "halborn",
+    type: ["infrastructure", "modelImprovement"],
   },
   {
     name: "BIP-35",
@@ -295,6 +353,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("May 3, 2023").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["governance"],
   },
   {
     name: "BIP-34",
@@ -305,6 +364,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("May 3, 2023").getTime(),
     auditHash: "f37cb42809fb8dfc9a0f2891db1ad96a1b848a4c",
     auditor: "halborn",
+    type: ["modelImprovement"],
   },
   {
     name: "BIP-33",
@@ -315,6 +375,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("February 8, 2023").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-32",
@@ -325,6 +386,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("January 7, 2023").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["security"],
   },
   {
     name: "BIP-31",
@@ -335,6 +397,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("January 7, 2023").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-30",
@@ -345,6 +408,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("December 1, 2022").getTime(),
     auditHash: "e193bdf747e804c13280453f3dbb52ebc797091b",
     auditor: "halborn",
+    type: ["utility"],
   },
   {
     name: "BIP-29",
@@ -355,6 +419,18 @@ const bipAudits: Audit[] = [
     timestamp: new Date("November 11, 2022").getTime(),
     auditHash: "0bdd376263b0fe94af84aaf4adb6391b39fa80ab",
     auditor: "halborn",
+    type: ["utility"],
+  },
+  {
+    name: "BIP-28",
+    description: "Pod Market Price Functions",
+    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/87",
+    hashLink: "https://github.com/BeanstalkFarms/Beanstalk/commit/b6a567d842e72c73176099ffd8ddb04cae2232e6",
+    date: "November 1, 2022",
+    timestamp: new Date("November 1, 2022").getTime(),
+    auditHash: "0bdd376263b0fe94af84aaf4adb6391b39fa80ab",
+    auditor: "halborn",
+    type: ["didNotPass"],
   },
   {
     name: "BIP-27",
@@ -365,6 +441,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("October 6, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-26",
@@ -375,6 +452,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("October 6, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["security"],
   },
   {
     name: "BIP-25",
@@ -385,6 +463,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("October 5, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-24",
@@ -395,6 +474,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("October 5, 2022").getTime(),
     auditHash: "6699e071626a17283facc67242536037989ecd91",
     auditor: "halborn",
+    type: ["utility"],
   },
   {
     name: "BIP-23",
@@ -405,6 +485,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("August 16, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-22",
@@ -415,6 +496,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("August 16, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-21",
@@ -425,6 +507,8 @@ const bipAudits: Audit[] = [
     timestamp: new Date("August 5, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    customLines: { before: 6, after: 6 },
+    type: ["event"],
   },
   {
     name: "BIP-20",
@@ -435,6 +519,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("June 21, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["event"],
   },
   {
     name: "Governance Exploit Response",
@@ -450,6 +535,7 @@ const bipAudits: Audit[] = [
     auditor: "bean",
     isCombined: true,
     customLines: { after: 12 },
+    type: ["event"],
   },
   {
     name: "BIP-17",
@@ -460,6 +546,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("April 22, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-16",
@@ -470,6 +557,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("April 13, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["utility"],
   },
   {
     name: "BIP-15",
@@ -480,6 +568,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("April 11, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["modelImprovement"],
   },
   {
     name: "BIP-14",
@@ -490,6 +579,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("April 10, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-13",
@@ -500,6 +590,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("March 11, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["parametrization"],
   },
   {
     name: "BIP-12",
@@ -510,6 +601,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("February 19, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["infrastructure", "utility"],
   },
   {
     name: "BIP-11",
@@ -520,6 +612,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("February 10, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["utility"],
   },
   {
     name: "BIP-10",
@@ -531,6 +624,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("February 3, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["security"],
   },
   {
     name: "BIP-9",
@@ -541,6 +635,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("January 11, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["parametrization"],
   },
   {
     name: "BIP-8",
@@ -551,6 +646,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("January 6, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-7",
@@ -561,6 +657,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("December 19, 2021").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["modelImprovement"],
   },
   {
     name: "BIP-6",
@@ -571,6 +668,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("December 9, 2021").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["parametrization"],
   },
   {
     name: "BIP-5",
@@ -581,6 +679,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("December 4, 2021").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["security"],
   },
   {
     name: "BIP-4",
@@ -591,6 +690,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("December 4, 2021").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget", "security"],
   },
   {
     name: "BIP-3",
@@ -601,6 +701,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("November 25, 2021").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget", "didNotPass"],
   },
   {
     name: "BIP-2",
@@ -611,6 +712,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("November 10, 2021").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-1",
@@ -621,6 +723,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("October 20, 2021").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["budget"],
   },
   {
     name: "BIP-0",
@@ -631,6 +734,7 @@ const bipAudits: Audit[] = [
     timestamp: new Date("August 25, 2021").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["bugFix", "utility"],
   },
 ];
 
@@ -645,6 +749,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("July 16, 2024").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-16",
@@ -655,6 +760,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("June 2, 2024").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-15",
@@ -665,6 +771,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("May 24, 2024").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-14",
@@ -675,6 +782,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("February 5, 2024").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-13",
@@ -685,6 +793,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("November 9, 2023").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-12",
@@ -696,6 +805,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("November 8, 2023").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-11",
@@ -706,6 +816,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("October 30, 2023").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-10",
@@ -716,6 +827,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("October 23, 2023").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-9",
@@ -726,6 +838,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("October 20, 2023").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-8",
@@ -736,6 +849,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("May 13, 2023").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-7",
@@ -746,6 +860,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("December 9, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-6",
@@ -756,6 +871,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("November 15, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-5",
@@ -767,6 +883,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("November 14, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-4",
@@ -778,6 +895,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("November 12, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-3",
@@ -788,6 +906,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("October 25, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-2",
@@ -798,6 +917,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("September 13, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-1",
@@ -808,6 +928,7 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("September 5, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
   {
     name: "EBIP-0",
@@ -818,10 +939,12 @@ const ebipAudits: Audit[] = [
     timestamp: new Date("August 10, 2022").getTime(),
     auditHash: "",
     auditor: "bean",
+    type: ["emergencyBugFix"],
   },
 ];
 
 // Audits
+/*
 const regularAudits: Audit[] = [
   {
     name: "Cyfrin Complete Audit",
@@ -832,6 +955,7 @@ const regularAudits: Audit[] = [
     timestamp: new Date("September 12, 2023").getTime(),
     auditHash: "c7a20e56a0a6659c09314a877b440198eff0cd81",
     auditor: "cyfrin",
+    type: ["audit"]
   },
   {
     name: "Beanstalk Halborn Report #2",
@@ -843,6 +967,7 @@ const regularAudits: Audit[] = [
     auditHash: "6699e071626a17283facc67242536037989ecd91",
     auditor: "halborn",
     customLines: { before: 14, after: 14 },
+    type: ["audit"]
   },
   {
     name: "Trail Of Bits Audit",
@@ -863,6 +988,7 @@ const regularAudits: Audit[] = [
     auditHash: "",
     auditor: "trailOfBits",
     isCombined: true,
+    type: ["audit"]
   },
   {
     name: "Omniscia Audit",
@@ -873,6 +999,7 @@ const regularAudits: Audit[] = [
     timestamp: new Date("April 2, 2022").getTime(),
     auditHash: "ee4720cdb449d5b6ff2b789083792c4395628674",
     auditor: "omniscia",
+    type: ["audit"]
   },
   {
     name: "Halborn Audit",
@@ -883,12 +1010,155 @@ const regularAudits: Audit[] = [
     timestamp: new Date("July 13, 2022").getTime(),
     auditHash: "1447fa2c0d42c73345a38edb4f4dad076392f429",
     auditor: "halborn",
+    type: ["audit"]
+  },
+];
+*/
+
+interface FilterButtonProps {
+  type: string;
+  label: string;
+  isSelected: boolean;
+  hasNoFilters: boolean;
+  colorClass: string;
+  onClick: () => void;
+}
+
+function FilterButton({ type, label, isSelected, hasNoFilters, colorClass, onClick }: FilterButtonProps) {
+  const opacity = hasNoFilters || isSelected ? "opacity-100" : "opacity-40";
+
+  return (
+    <button
+      key={type}
+      onClick={onClick}
+      type="button"
+      className={`flex items-center gap-1 px-1 py-0.5 sm:gap-2 sm:px-2 sm:py-1 rounded text-xs transition-all hover:bg-pinto-gray-1/20 ${opacity} ${
+        isSelected ? "bg-pinto-gray-5/20 hover:bg-pinto-gray-5/10" : ""
+      }`}
+    >
+      <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${colorClass}`} />
+      <span className="text-pinto-gray-5 mt-0.5">{label}</span>
+    </button>
+  );
+}
+
+const events: Audit[] = [
+  {
+    name: "sPinto/Cream Integration",
+    description: "",
+    githubLink: "",
+    hashLink: "",
+    date: "March 5, 2025",
+    timestamp: new Date("March 5, 2025").getTime(),
+    auditHash: "",
+    auditor: "",
+    type: ["event"],
+  },
+  {
+    name: "Beavers",
+    description: "",
+    githubLink: "",
+    hashLink: "",
+    date: "August 20, 2025",
+    timestamp: new Date("August 20, 2025").getTime(),
+    auditHash: "",
+    auditor: "",
+    type: ["event"],
+  },
+  {
+    name: "Sow Blueprint/Tractor",
+    description: "",
+    githubLink: "",
+    hashLink: "",
+    date: "April 22, 2025",
+    timestamp: new Date("April 22, 2025").getTime(),
+    auditHash: "",
+    auditor: "",
+    type: ["event"],
+  },
+  {
+    name: "Spectra Integration",
+    description: "",
+    githubLink: "",
+    hashLink: "",
+    date: "March 19, 2025",
+    timestamp: new Date("March 19, 2025").getTime(),
+    auditHash: "",
+    auditor: "",
+    type: ["event"],
+  },
+  {
+    name: "Root Deployment",
+    description: "",
+    githubLink: "",
+    hashLink: "",
+    date: "July 26, 2022",
+    timestamp: new Date("July 26, 2022").getTime(),
+    auditHash: "",
+    auditor: "",
+    customLines: { before: 8, after: 8 },
+    type: ["event"],
+  },
+  {
+    name: "Paradox Deployment",
+    description: "",
+    githubLink: "",
+    hashLink: "",
+    date: "November 19, 2022",
+    timestamp: new Date("November 19, 2022").getTime(),
+    auditHash: "",
+    auditor: "",
+    type: ["event"],
+  },
+  {
+    name: "BeaNFT Genesis Launch",
+    description: "",
+    githubLink: "",
+    hashLink: "",
+    date: "September 25, 2021",
+    timestamp: new Date("September 25, 2021").getTime(),
+    auditHash: "",
+    auditor: "",
+    type: ["event"],
+  },
+  {
+    name: "BeaNFT Winter Launch",
+    description: "",
+    githubLink: "",
+    hashLink: "",
+    date: "December 22, 2021",
+    timestamp: new Date("December 22, 2021").getTime(),
+    auditHash: "",
+    auditor: "",
+    type: ["event"],
+  },
+  {
+    name: "BeaNFT Barn Raise Launch",
+    description: "",
+    githubLink: "",
+    hashLink: "",
+    date: "July 27, 2022",
+    timestamp: new Date("July 27, 2022").getTime(),
+    auditHash: "",
+    auditor: "",
+    type: ["event"],
+  },
+  {
+    name: "BeaNFT Basin Launch",
+    description: "",
+    githubLink: "",
+    hashLink: "",
+    date: "August 29, 2023",
+    timestamp: new Date("August 29, 2023").getTime(),
+    auditHash: "",
+    auditor: "",
+    type: ["event"],
   },
 ];
 
 // Combine all audits and sort by timestamp (most recent first)
 // If timestamps are equal, sort by audit number (lowest number first)
-const audits: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...regularAudits].sort((a, b) => {
+const audits: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...events].sort((a, b) => {
   // Primary sort: timestamp (most recent first)
   if (a.timestamp !== b.timestamp) {
     return b.timestamp - a.timestamp;
@@ -919,6 +1189,7 @@ export default function ProtocolUpgrades() {
   const [carouselCenterData, setCarouselCenterData] = useState<Audit | null>(null);
   const [hoveredData, setHoveredData] = useState<Audit | null>(null);
   const [highlightedData, setHighlightedData] = useState<Audit | null>(null);
+  const [selectedFilters, setSelectedFilters] = useState<Set<TimelineEventType>>(new Set());
 
   // Create year markers for each year between the first and last audit
   const createYearMarkers = () => {
@@ -938,17 +1209,75 @@ export default function ProtocolUpgrades() {
         auditHash: "",
         auditor: "",
         isYearMarker: true,
+        type: ["yearMarker"],
       });
     }
 
     return [...sortedOriginalAudits, ...yearMarkers];
   };
 
-  const sortedAudits = createYearMarkers().sort((a, b) => a.timestamp - b.timestamp);
+  const allAudits = createYearMarkers().sort((a, b) => a.timestamp - b.timestamp);
+
+  // Filter audits based on selected filters
+  const sortedAudits =
+    selectedFilters.size === 0
+      ? allAudits
+      : allAudits.filter(
+          (audit) => audit && (audit.isYearMarker || audit.type?.some((type) => selectedFilters.has(type))),
+        );
+
+  const toggleFilter = (type: TimelineEventType) => {
+    setSelectedFilters((prev) => {
+      const newFilters = new Set(prev);
+      if (newFilters.has(type)) {
+        newFilters.delete(type);
+      } else {
+        newFilters.add(type);
+      }
+      return newFilters;
+    });
+    // Reset highlighted data when filters change
+    setHighlightedData(null);
+    setCarouselCenterData(null);
+    setHoveredData(null);
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const getTypeColor = (type: TimelineEventType): string => {
+    switch (type) {
+      case "bugFix":
+        return "bg-amber-800"; // brown
+      case "utility":
+        return "bg-pink-400"; // pink
+      case "budget":
+        return "bg-green-300"; // light green
+      case "modelImprovement":
+        return "bg-green-700"; // dark green
+      case "governance":
+        return "bg-red-800"; // dark red
+      case "emergencyBugFix":
+        return "bg-red-300"; // light red
+      case "didNotPass":
+        return "bg-gray-400"; // gray
+      case "security":
+        return "bg-yellow-400"; // yellow
+      case "parametrization":
+        return "bg-orange-400"; // orange
+      case "infrastructure":
+        return "bg-blue-500"; // blue
+      case "event":
+        return "bg-purple-500"; // purple
+      case "audit":
+        return "bg-indigo-500"; // indigo
+      case "yearMarker":
+        return "bg-black"; // black
+      default:
+        return "bg-gray-300"; // fallback
+    }
   };
 
   const calculateConnectingLines = (index: number) => {
@@ -1003,27 +1332,37 @@ export default function ProtocolUpgrades() {
 
   useEffect(() => {
     // Navigate to the last item in the carousel
-    if (api) {
-      api.scrollTo(sortedAudits.length - 1);
+    if (api && sortedAudits.length > 0) {
+      // api.scrollTo(sortedAudits.length - 1);
 
-      api.on("select", () => {
+      const handleSelect = () => {
         const selectedIndex = api.selectedScrollSnap();
-
         const selected = sortedAudits[selectedIndex];
-        // Handle carousel item selection
-        if (!selected.isYearMarker) {
+
+        // Handle carousel item selection with safety check
+        if (selected && !selected.isYearMarker) {
           setCarouselCenterData(selected);
           handleCarouselChange();
         }
-      });
+      };
 
-      api.on("settle", () => {
+      const handleSettle = () => {
         const selectedIndex = api.selectedScrollSnap();
-        api.scrollTo(selectedIndex);
-        handleCarouselChange();
-      });
+        if (selectedIndex < sortedAudits.length) {
+          api.scrollTo(selectedIndex);
+          handleCarouselChange();
+        }
+      };
+
+      api.on("select", handleSelect);
+      api.on("settle", handleSettle);
+
+      return () => {
+        api.off("select", handleSelect);
+        api.off("settle", handleSettle);
+      };
     }
-  }, [api, sortedAudits.length, handleCarouselChange]);
+  }, [api, sortedAudits, handleCarouselChange]);
 
   useEffect(() => {
     // Update selected data when hovered data changes
@@ -1037,7 +1376,7 @@ export default function ProtocolUpgrades() {
   return (
     <div className={`relative w-screen p-0 sm:p-6 transition-all transform-gpu items-center`}>
       <AnimatePresence mode="wait">
-        <div className="h-14">
+        <div className="h-8 sm:h-14 place-content-center">
           {highlightedData && (
             <motion.div
               key={highlightedData.name}
@@ -1055,112 +1394,227 @@ export default function ProtocolUpgrades() {
           )}
         </div>
       </AnimatePresence>
-      <Carousel
-        opts={{
-          align: "center",
-          loop: true,
-          containScroll: "trimSnaps",
-          dragFree: true,
-        }}
-        plugins={[WheelGesturesPlugin()]}
-        className="w-full"
-        setApi={setApi}
-      >
-        <CarouselContent>
-          {sortedAudits.map((audit, index) => {
-            const { before, after } = calculateConnectingLines(index);
-            return (
-              <CarouselItem key={audit.name} className="pl-2 md:pl-4 basis-auto pb-4 pt-4">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  {/* Before lines for first entry */}
-                  {before > 0 &&
-                    Array.from({ length: before }).map((_, i) => (
-                      <div key={`before-${index}-${i}`} className="w-[0.5px] h-16 sm:h-24 bg-pinto-gray-2" />
-                    ))}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`carousel-${Array.from(selectedFilters).sort().join(",")}`} // Key changes when filters change
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{
+            duration: 0.4,
+            ease: [0.16, 1, 0.3, 1], // Custom ease for smooth feel
+          }}
+        >
+          <Carousel
+            opts={{
+              align: "center",
+              loop: true,
+              containScroll: "trimSnaps",
+              dragFree: true,
+            }}
+            plugins={[WheelGesturesPlugin()]}
+            className="w-full"
+            setApi={setApi}
+          >
+            <CarouselContent>
+              {sortedAudits.map((audit, index) => {
+                const { before, after } = calculateConnectingLines(index);
+                return (
+                  <CarouselItem key={audit.name} className="pl-2 md:pl-4 basis-auto pb-4 pt-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      {/* Before lines for first entry */}
+                      {before > 0 &&
+                        Array.from({ length: before }).map((_, i) => (
+                          <div key={`before-${index}-${i}`} className="w-[0.5px] h-16 sm:h-24 bg-pinto-gray-2" />
+                        ))}
 
-                  <div key={audit.name} className="relative flex flex-col items-center flex-shrink-0">
-                    {audit.isYearMarker ? (
-                      <>
-                        {/* Year marker */}
-                        <span className="text-base sm:text-xl font-light text-black text-center items-center justify-center absolute -bottom-3 w-20">
-                          {audit.name}
-                        </span>
-                        {/* Year connecting line */}
-                        <div className="w-[0.5px] h-28 sm:h-36 bg-black mt-4 mb-2 sm:mt-6 sm:mb-4" />
-                      </>
-                    ) : (
-                      <>
-                        {audit.isCombined ? (
-                          <div className="flex flex-col gap-0.5 absolute top-0 group text-center items-center justify-center py-2 px-4">
-                            <span
-                              onMouseEnter={() => setHoveredData(audit)}
-                              onMouseLeave={() => setHoveredData(null)}
-                              className="text-base sm:text-xl font-light text-pinto-green-4 absolute top-0 group-hover:-top-6 whitespace-nowrap transition-all transform-gpu"
-                            >
+                      <div key={audit.name} className="relative flex flex-col items-center flex-shrink-0">
+                        {audit.isYearMarker ? (
+                          <>
+                            {/* Year marker */}
+                            <span className="text-base sm:text-xl font-light text-black text-center items-center justify-center absolute -bottom-3 w-20">
                               {audit.name}
                             </span>
-                            <div className="flex flex-row gap-2 whitespace-nowrap">
-                              {audit.descriptions?.map((description, index) => {
-                                if (!audit.combinedLinks) return;
-                                return (
+                            {/* Year connecting line */}
+                            <div className="w-[0.5px] h-28 sm:h-36 bg-black mt-4 mb-2 sm:mt-6 sm:mb-4" />
+                          </>
+                        ) : (
+                          <>
+                            {audit.isCombined ? (
+                              <div className="flex flex-col gap-0.5 absolute top-0 group text-center items-center justify-center py-2 px-4">
+                                <span
+                                  onMouseEnter={() => setHoveredData(audit)}
+                                  onMouseLeave={() => setHoveredData(null)}
+                                  className="text-base sm:text-xl font-light text-pinto-green-4 absolute top-0 group-hover:-top-6 whitespace-nowrap transition-all transform-gpu"
+                                >
+                                  {audit.name}
+                                </span>
+                                <div className="flex flex-row gap-2 whitespace-nowrap">
+                                  {audit.descriptions?.map((description, index) => {
+                                    if (!audit.combinedLinks) return;
+                                    return (
+                                      <Link
+                                        key={index}
+                                        to={audit.combinedLinks[index]}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex flex-row gap-0.5 text-pinto-green-4 hover:underline decoration-1 opacity-0 group-hover:opacity-100 transition-all transform-gpu text-center items-center justify-center"
+                                        onClick={() => setIsAutoCycling(false)}
+                                      >
+                                        <span className="text-base sm:text-xl font-light text-pinto-green-4">
+                                          {description}
+                                        </span>
+                                        <DiagonalRightArrowIcon
+                                          color="currentColor"
+                                          width={"1.5rem"}
+                                          height={"1.5rem"}
+                                        />
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ) : (
+                              /* Audit name */
+                              <div
+                                onMouseEnter={() => setHoveredData(audit)}
+                                onMouseLeave={() => setHoveredData(null)}
+                                className="flex flex-col-reverse gap-0.5 absolute top-0 text-center items-center justify-center py-2 px-4"
+                              >
+                                {audit.githubLink ? (
                                   <Link
-                                    key={index}
-                                    to={audit.combinedLinks[index]}
+                                    to={audit.githubLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex flex-row gap-0.5 text-pinto-green-4 hover:underline decoration-1 opacity-0 group-hover:opacity-100 transition-all transform-gpu text-center items-center justify-center"
+                                    className={`flex flex-row gap-0.5 text-pinto-green-4 peer hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 transition-all transform-gpu`}
                                     onClick={() => setIsAutoCycling(false)}
                                   >
                                     <span className="text-base sm:text-xl font-light text-pinto-green-4">
-                                      {description}
+                                      {audit.name}
                                     </span>
                                     <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
                                   </Link>
-                                );
-                              })}
+                                ) : (
+                                  <span className="text-base sm:text-xl font-light text-pinto-green-4 whitespace-nowrap text-center absolute top-0">
+                                    {audit.name}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Connecting line */}
+                            <div className="w-[0.5px] h-[5rem] sm:h-[7.5rem] bg-pinto-green-4 mt-8 sm:mt-10 mb-6" />
+
+                            {/* Category circles */}
+                            <div className="flex flex-row gap-1 absolute -bottom-2 justify-center items-center">
+                              {audit.type.map((type, typeIndex) => (
+                                <div
+                                  key={`${audit.name}-${type}-${typeIndex}`}
+                                  className={`w-2 h-2 rounded-full ${getTypeColor(type)}`}
+                                  title={type}
+                                />
+                              ))}
                             </div>
-                          </div>
-                        ) : (
-                          /* Audit name */
-                          <div
-                            onMouseEnter={() => setHoveredData(audit)}
-                            onMouseLeave={() => setHoveredData(null)}
-                            className="flex flex-col-reverse gap-0.5 absolute top-0 text-center items-center justify-center py-2 px-4"
-                          >
-                            <Link
-                              to={audit.githubLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`flex flex-row gap-0.5 text-pinto-green-4 peer hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 transition-all transform-gpu`}
-                              onClick={() => setIsAutoCycling(false)}
-                            >
-                              <span className="text-base sm:text-xl font-light text-pinto-green-4">{audit.name}</span>
-                              <DiagonalRightArrowIcon color="currentColor" width={"1.5rem"} height={"1.5rem"} />
-                            </Link>
-                          </div>
+
+                            {/* Date */}
+                            <span className="text-xs sm:text-base font-light text-pinto-gray-4 absolute bottom-0 w-20 text-center">
+                              {formatDate(audit.date)}
+                            </span>
+                          </>
                         )}
+                      </div>
 
-                        {/* Connecting line */}
-                        <div className="w-[0.5px] h-[5rem] sm:h-[7.5rem] bg-pinto-green-4 mt-8 sm:mt-10 mb-6" />
-                        {/* Date */}
-                        <span className="text-xs sm:text-base font-light text-pinto-gray-4 absolute bottom-0 w-20 text-center">
-                          {formatDate(audit.date)}
-                        </span>
-                      </>
-                    )}
+                      {/* After lines */}
+                      {after > 0 &&
+                        Array.from({ length: after }).map((_, i) => (
+                          <div key={`after-${index}-${i}`} className="w-[0.5px] h-16 sm:h-24 bg-pinto-gray-2" />
+                        ))}
+                    </div>
+                  </CarouselItem>
+                );
+              })}
+              {/* End marker */}
+              <CarouselItem className="pl-2 md:pl-4 basis-auto pb-4 pt-4 place-self-center">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="relative flex flex-col items-center flex-shrink-0">
+                    <div className="flex flex-col items-center text-center py-8">
+                      <div className="text-2xl text-pinto-gray-4 mb-2">◦ ◦ ◦</div>
+                      <div className="flex items-center gap-2 text-base text-pinto-gray-3 mt-2">
+                        <span>← Newer</span>
+                        <span>•</span>
+                        <span>Older →</span>
+                      </div>
+                    </div>
                   </div>
-
-                  {/* After lines */}
-                  {after > 0 &&
-                    Array.from({ length: after }).map((_, i) => (
-                      <div key={`after-${index}-${i}`} className="w-[0.5px] h-16 sm:h-24 bg-pinto-gray-2" />
-                    ))}
                 </div>
               </CarouselItem>
-            );
-          })}
-        </CarouselContent>
-      </Carousel>
+            </CarouselContent>
+          </Carousel>
+        </motion.div>
+      </AnimatePresence>
+      {/* Legend */}
+      <div className="mt-2 sm:mt-8 px-4">
+        <div className="flex flex-col items-center gap-0.5 sm:gap-1">
+          {/* Tier 1 */}
+          <div className="flex flex-nowrap justify-center gap-1 sm:gap-2">
+            {[
+              { type: "event" as TimelineEventType, label: "Event" },
+              { type: "modelImprovement" as TimelineEventType, label: "Model" },
+              { type: "parametrization" as TimelineEventType, label: "Parameters" },
+              { type: "utility" as TimelineEventType, label: "Utility" },
+            ].map(({ type, label }) => (
+              <FilterButton
+                key={type}
+                type={type}
+                label={label}
+                isSelected={selectedFilters.has(type)}
+                hasNoFilters={selectedFilters.size === 0}
+                colorClass={getTypeColor(type)}
+                onClick={() => toggleFilter(type)}
+              />
+            ))}
+          </div>
+
+          {/* Tier 2 */}
+          <div className="flex flex-nowrap justify-center gap-1 sm:gap-2">
+            {[
+              { type: "infrastructure" as TimelineEventType, label: "Infrastructure" },
+              { type: "budget" as TimelineEventType, label: "Budget" },
+              { type: "security" as TimelineEventType, label: "Security" },
+              { type: "governance" as TimelineEventType, label: "Governance" },
+            ].map(({ type, label }) => (
+              <FilterButton
+                key={type}
+                type={type}
+                label={label}
+                isSelected={selectedFilters.has(type)}
+                hasNoFilters={selectedFilters.size === 0}
+                colorClass={getTypeColor(type)}
+                onClick={() => toggleFilter(type)}
+              />
+            ))}
+          </div>
+
+          {/* Tier 3 */}
+          <div className="flex flex-nowrap justify-center gap-1 sm:gap-2">
+            {[
+              { type: "didNotPass" as TimelineEventType, label: "Did Not Pass" },
+              { type: "bugFix" as TimelineEventType, label: "Bug Fix" },
+              { type: "emergencyBugFix" as TimelineEventType, label: "Emergency" },
+            ].map(({ type, label }) => (
+              <FilterButton
+                key={type}
+                type={type}
+                label={label}
+                isSelected={selectedFilters.has(type)}
+                hasNoFilters={selectedFilters.size === 0}
+                colorClass={getTypeColor(type)}
+                onClick={() => toggleFilter(type)}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
