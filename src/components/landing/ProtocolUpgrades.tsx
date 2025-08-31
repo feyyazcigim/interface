@@ -1032,12 +1032,12 @@ function FilterButton({ type, label, isSelected, hasNoFilters, colorClass, onCli
       key={type}
       onClick={onClick}
       type="button"
-      className={`flex items-center gap-1 px-1 py-0.5 sm:gap-2 sm:px-2 sm:py-1 rounded text-xs sm:text-xl transition-all hover:bg-pinto-gray-1/20 ${opacity} ${
-        isSelected ? "bg-pinto-gray-5/20 hover:bg-pinto-gray-5/10" : ""
+      className={`flex items-center gap-1 px-1 py-0.5 sm:gap-2 sm:px-2 sm:py-1 rounded-xl text-xs sm:text-xl transition-all hover:bg-pinto-gray-2/30 ${opacity} ${
+        isSelected ? "bg-pinto-gray-2/40 hover:bg-pinto-gray-2/50" : ""
       }`}
     >
       <div className={`w-2 h-2 sm:w-4 sm:h-4 rounded-full ${colorClass}`} />
-      <span className="text-pinto-gray-5 mt-0.5 sm:mt-0">{label}</span>
+      <span className="text-pinto-gray-5 mt-0.5 sm:mt-0 mr-0.5 sm:mr-1">{label}</span>
     </button>
   );
 }
