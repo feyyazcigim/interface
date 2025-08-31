@@ -627,7 +627,7 @@ interface LandingChartProps {
 
 export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPhase }: LandingChartProps) {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
-  const [showAllLabels, setShowAllLabels] = useState(false); // Global state for showing all farmer labels
+  const [showAllLabels, setShowAllLabels] = useState(true); // Global state for showing all farmer labels
 
   // Toggle function for all farmer labels
   const toggleAllLabels = () => {

@@ -171,8 +171,8 @@ export default function TxFloater({
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         onClick={handlePillClick}
-        whileHover={{ scale: 1.15, borderColor: "#246645" }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.15, borderColor: "#246645", transition: { duration: 0.1 } }}
+        whileTap={{ scale: 0.95, transition: { duration: 0 } }}
       >
         <img className="w-8 h-8" src={isFixed ? from : lastValidFromRef.current} alt="Farmer Icon" />
         <img
