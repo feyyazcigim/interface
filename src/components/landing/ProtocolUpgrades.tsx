@@ -534,7 +534,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     isCombined: true,
-    customLines: { after: 12 },
+    customLines: { before: 6, after: 6 },
     type: ["event"],
   },
   {
@@ -1446,7 +1446,7 @@ export default function ProtocolUpgrades() {
                                 <span
                                   onMouseEnter={() => setHoveredData(audit)}
                                   onMouseLeave={() => setHoveredData(null)}
-                                  className="text-base sm:text-xl font-light text-pinto-green-4 absolute top-0 group-hover:-top-6 whitespace-nowrap transition-all transform-gpu"
+                                  className="text-base sm:text-xl font-light text-pinto-green-4 absolute top-0 group-hover:-top-4 whitespace-nowrap transition-all transform-gpu"
                                 >
                                   {audit.name}
                                 </span>
