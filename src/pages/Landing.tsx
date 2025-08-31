@@ -184,13 +184,13 @@ export default function Landing() {
       handleScrollAttempt();
     };
 
-    const handleTouchStart = (_e: globalThis.TouchEvent) => {
+    const handleTouchEnd = (_e: globalThis.TouchEvent) => {
       handleScrollAttempt();
     };
 
     scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
     scrollContainer.addEventListener("wheel", handleWheel, { passive: true });
-    scrollContainer.addEventListener("touchstart", handleTouchStart, { passive: true });
+    scrollContainer.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     // Check initial position
     handleScroll();
@@ -198,7 +198,7 @@ export default function Landing() {
     return () => {
       scrollContainer.removeEventListener("scroll", handleScroll);
       scrollContainer.removeEventListener("wheel", handleWheel);
-      scrollContainer.removeEventListener("touchstart", handleTouchStart);
+      scrollContainer.removeEventListener("touchend", handleTouchEnd);
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
