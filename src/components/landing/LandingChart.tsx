@@ -627,6 +627,12 @@ interface LandingChartProps {
 
 export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPhase }: LandingChartProps) {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
+  const [showAllLabels, setShowAllLabels] = useState(false); // Global state for showing all farmer labels
+
+  // Toggle function for all farmer labels
+  const toggleAllLabels = () => {
+    setShowAllLabels(!showAllLabels);
+  };
   const [dynamicHeight, setDynamicHeight] = useState(ANIMATION_CONFIG.height); // Default to config height
   const [gridXOffset, setGridXOffset] = useState(() => calculateGridXOffset(1920)); // Grid X offset to align with measurement line
   const [gridYOffset, setGridYOffset] = useState(() => calculateGridYOffset(ANIMATION_CONFIG.height)); // Grid Y offset to align with price line
@@ -1782,6 +1788,8 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               floatersOpacity={floatersOpacity}
               positionAbove={positionAbove}
               isFirst={i === 0}
+              showAllLabels={showAllLabels}
+              toggleAllLabels={toggleAllLabels}
             />
           );
         })}

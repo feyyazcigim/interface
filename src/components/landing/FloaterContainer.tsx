@@ -10,6 +10,8 @@ interface FloaterContainerProps {
   floatersOpacity: MotionValue<1 | 0>;
   positionAbove: boolean;
   isFirst: boolean;
+  showAllLabels: boolean;
+  toggleAllLabels: () => void;
 }
 
 function FloaterContainer({
@@ -19,6 +21,8 @@ function FloaterContainer({
   floatersOpacity,
   positionAbove,
   isFirst,
+  showAllLabels,
+  toggleAllLabels,
 }: FloaterContainerProps) {
   const leftPosition = useTransform(x, (scrollX) => marker.x + scrollX);
 
@@ -26,7 +30,6 @@ function FloaterContainer({
     <motion.div
       className="absolute z-20"
       style={{
-        pointerEvents: "none",
         opacity: floatersOpacity,
         left: leftPosition,
         top: positionAbove ? marker.y - 50 : marker.y + 10,
@@ -41,6 +44,9 @@ function FloaterContainer({
         markerX={marker.x}
         isFixed={true}
         id={isFirst ? "txFloater" : undefined}
+        positionAbove={positionAbove}
+        showAllLabels={showAllLabels}
+        toggleAllLabels={toggleAllLabels}
       />
     </motion.div>
   );
@@ -74,7 +80,9 @@ function arePropsEqual(prevProps: FloaterContainerProps, nextProps: FloaterConta
     prevProps.positionAbove !== nextProps.positionAbove ||
     prevProps.isFirst !== nextProps.isFirst ||
     prevProps.x !== nextProps.x ||
-    prevProps.floatersOpacity !== nextProps.floatersOpacity
+    prevProps.floatersOpacity !== nextProps.floatersOpacity ||
+    prevProps.showAllLabels !== nextProps.showAllLabels ||
+    prevProps.toggleAllLabels !== nextProps.toggleAllLabels
   ) {
     return false;
   }
