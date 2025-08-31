@@ -1032,12 +1032,12 @@ function FilterButton({ type, label, isSelected, hasNoFilters, colorClass, onCli
       key={type}
       onClick={onClick}
       type="button"
-      className={`flex items-center gap-1 px-1 py-0.5 sm:gap-2 sm:px-2 sm:py-1 rounded text-xs transition-all hover:bg-pinto-gray-1/20 ${opacity} ${
+      className={`flex items-center gap-1 px-1 py-0.5 sm:gap-2 sm:px-2 sm:py-1 rounded text-xs sm:text-xl transition-all hover:bg-pinto-gray-1/20 ${opacity} ${
         isSelected ? "bg-pinto-gray-5/20 hover:bg-pinto-gray-5/10" : ""
       }`}
     >
-      <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${colorClass}`} />
-      <span className="text-pinto-gray-5 mt-0.5">{label}</span>
+      <div className={`w-2 h-2 sm:w-4 sm:h-4 rounded-full ${colorClass}`} />
+      <span className="text-pinto-gray-5 mt-0.5 sm:mt-0">{label}</span>
     </button>
   );
 }
@@ -1376,7 +1376,7 @@ export default function ProtocolUpgrades() {
   return (
     <div className={`relative w-screen p-0 sm:p-6 transition-all transform-gpu items-center`}>
       <AnimatePresence mode="wait">
-        <div className="h-8 sm:h-14 place-content-center">
+        <div className="h-12 sm:h-14 place-content-center">
           {highlightedData && (
             <motion.div
               key={highlightedData.name}
@@ -1387,9 +1387,10 @@ export default function ProtocolUpgrades() {
                 duration: 0.4,
                 ease: [0.16, 1, 0.3, 1], // Custom ease for smooth feel
               }}
-              className="text-base sm:text-lg text-center w-full place-content-center text-pinto-gray-5"
+              className="flex flex-col gap-0.5 sm:gap-1 items-center text-base sm:text-lg text-center w-full place-content-center text-pinto-gray-5"
             >
-              {`${highlightedData.date}: ${highlightedData.name} ${highlightedData.description ? `- ${highlightedData.description}` : ""}`}
+              <span>{`${highlightedData.name} ${highlightedData.description ? `- ${highlightedData.description}` : ""}`}</span>
+              <span className="text-xs sm:text-xl text-pinto-gray-3">{highlightedData.date}</span>
             </motion.div>
           )}
         </div>
@@ -1540,9 +1541,9 @@ export default function ProtocolUpgrades() {
                     <div className="flex flex-col items-center text-center py-8">
                       <div className="text-2xl text-pinto-gray-4 mb-2">◦ ◦ ◦</div>
                       <div className="flex items-center gap-2 text-base text-pinto-gray-3 mt-2">
-                        <span>← Newer</span>
+                        <span>← Now</span>
                         <span>•</span>
-                        <span>Older →</span>
+                        <span>Beginning →</span>
                       </div>
                     </div>
                   </div>
