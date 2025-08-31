@@ -1055,7 +1055,7 @@ const events: Audit[] = [
     type: ["event"],
   },
   {
-    name: "Beavers",
+    name: "Genesis Pinto Beaver NFTs",
     description: "",
     githubLink: "",
     hashLink: "",
@@ -1063,6 +1063,7 @@ const events: Audit[] = [
     timestamp: new Date("August 20, 2025").getTime(),
     auditHash: "",
     auditor: "",
+    customLines: { before: 8, after: 8 },
     type: ["event"],
   },
   {

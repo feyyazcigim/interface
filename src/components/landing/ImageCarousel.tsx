@@ -5,6 +5,7 @@ import wpPinto from "@/assets/landing/wp_pinto.png";
 import wpPipeline from "@/assets/landing/wp_pipeline.png";
 import AutoPlay from "embla-carousel-autoplay";
 import ClassNames from "embla-carousel-class-names";
+import WheelGesturesPlugin from "embla-carousel-wheel-gestures";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -125,7 +126,11 @@ export default function ImageCarousel() {
           loop: true,
           containScroll: "trimSnaps",
         }}
-        plugins={[AutoPlay({ delay: 3000, stopOnInteraction: true, playOnInit: false }), ClassNames()]}
+        plugins={[
+          AutoPlay({ delay: 3000, stopOnInteraction: true, playOnInit: false }),
+          ClassNames(),
+          WheelGesturesPlugin(),
+        ]}
         className="w-[90%] max-w-[90%] mx-4 sm:mx-6 sm:w-[95%] sm:max-w-[95%] place-self-center"
         setApi={setApi}
       >
