@@ -219,7 +219,7 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
   // Calculate amplitude modifier (decreases price movement over time)
   // Starts at 1.0 (full amplitude) and can reduce to 0.2 (20% amplitude)
   const maxReduction = 0.2; // 80% reduction maximum
-  const reductionRate = 0.1; // 10% reduction per call
+  const reductionRate = 0.2; // 20% reduction per call
   const amplitudeModifier = Math.max(maxReduction, 1.0 - (amplitudeCallCount - 1) * reductionRate);
   // Transaction types for different price movements
   const priceUpTxTypes = ["deposit", "convert", "sow"];
