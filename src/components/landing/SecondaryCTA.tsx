@@ -168,7 +168,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, hoverBgCol
     <Button
       key={`${keyPrefix}_${data.title}_${index}`}
       variant="outline-white"
-      className={`flex flex-col ${hoverBgColor} gap-3 sm:gap-4 items-start lg:gap-5 2xl:gap-6 p-3 sm:p-4 lg:p-5 2xl:p-4 w-[14rem] sm:w-[16rem] lg:w-[20rem] xl:w-[22rem] h-[12rem] sm:h-[13rem] lg:h-[15rem] xl:h-[15.5rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl bg-pinto-off-white mr-4 sm:mr-6 lg:mr-8 xl:mr-10 2xl:mr-12 sm:hover:scale-105 sm:active:scale-95 ${
+      className={`flex flex-col ${hoverBgColor} gap-3 sm:gap-4 items-start lg:gap-5 2xl:gap-6 p-3 sm:p-4 lg:p-5 2xl:p-4 w-[14rem] sm:w-[16rem] lg:w-[20rem] xl:w-[22rem] h-[10rem] sm:h-[13rem] lg:h-[15rem] xl:h-[15.5rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl bg-pinto-off-white mr-4 sm:mr-6 lg:mr-8 xl:mr-10 2xl:mr-12 sm:hover:scale-105 sm:active:scale-95 ${
         isGlowing
           ? glowColor === "orange"
             ? "shadow-[0_0_15px_rgba(255,186,107,0.6),0_0_25px_rgba(255,186,107,0.4)] scale-[1.02]"
@@ -357,13 +357,13 @@ export default function SecondaryCTA() {
               rounded="full"
               variant={"defaultAlt"}
               size={isMobile ? "md" : "xl"}
-              className={`z-20 hover:bg-pinto-green-2/50 transition-all duration-300 ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+              className={`z-20 hover:bg-pinto-green-2/50 transition-all duration-300 ease-in-out flex flex-row gap-1 sm:gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
             >
               <span>Why is this so valuable?</span>
               <span className="text-pinto-green-4 transition-all duration-300 ease-in-out">
                 <PintoRightArrow
-                  width={isMobile ? "1.25rem" : "1.5rem"}
-                  height={isMobile ? "1.25rem" : "1.5rem"}
+                  width={isMobile ? "1rem" : "1.25rem"}
+                  height={isMobile ? "1rem" : "1.25rem"}
                   className="transition-all"
                   color="currentColor"
                 />

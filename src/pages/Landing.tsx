@@ -284,11 +284,11 @@ export default function Landing() {
             )}
             <div
               className={`relative transition-transform transform duration-300 ${
-                isAtTop && reachedMainCta ? `rotate-90 ${!isMobile ? "-mx-1.5" : "mx-0.5"}` : "rotate-0"
+                isAtTop && reachedMainCta ? `rotate-90 ${!isMobile ? "-mx-1" : "mx-1"}` : "rotate-0"
               }`}
               style={{ isolation: "isolate" }}
             >
-              <PintoRightArrow width={"1.25rem"} height={"1.25rem"} className="transition-all" />
+              <PintoRightArrow width={"1rem"} height={"1rem"} className="transition-all" />
             </div>
           </Button>
         </div>

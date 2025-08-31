@@ -79,7 +79,11 @@ export default function BugBounty() {
           className="text-pinto-green-4 flex flex-row gap-2 items-center hover:underline"
         >
           <span>Learn More about Audits</span>
-          <PintoRightArrow width={"1rem"} height={"1rem"} color="currentColor" />
+          <PintoRightArrow
+            width={isMobile ? "1rem" : "1.25rem"}
+            height={isMobile ? "1rem" : "1.25rem"}
+            color="currentColor"
+          />
         </Link>
       </div>
     </div>

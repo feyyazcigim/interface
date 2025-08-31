@@ -1609,7 +1609,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
                     <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
                     <span className="relative z-10">Come Seed the Trustless Economy</span>
                     <div className="relative z-10" style={{ isolation: "isolate" }}>
-                      <PintoRightArrow width={"1rem"} height={"1rem"} />
+                      <PintoRightArrow width={isMobile ? "1rem" : "1.25rem"} height={isMobile ? "1rem" : "1.25rem"} />
                     </div>
                   </Button>
                 </Link>
