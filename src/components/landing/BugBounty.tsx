@@ -73,7 +73,7 @@ export default function BugBounty() {
       <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-2 w-full font-light text-base sm:text-2xl mt-[2rem] sm:mt-[4.5rem]">
         <div className="text-pinto-gray-4">{`25 audits to date`}</div>
         <Link
-          to={"Idk"}
+          to={"https://docs.pinto.money/resources/audits"}
           target="_blank"
           rel="noopener noreferrer"
           className="text-pinto-green-4 flex flex-row gap-2 items-center hover:underline"
