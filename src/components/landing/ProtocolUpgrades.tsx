@@ -1541,9 +1541,9 @@ export default function ProtocolUpgrades() {
                     <div className="flex flex-col items-center text-center py-8">
                       <div className="text-2xl text-pinto-gray-4 mb-2">◦ ◦ ◦</div>
                       <div className="flex items-center gap-2 text-base text-pinto-gray-3 mt-2">
-                        <span>← Now</span>
+                        <span>← Present</span>
                         <span>•</span>
-                        <span>Beginning →</span>
+                        <span>Past →</span>
                       </div>
                     </div>
                   </div>
