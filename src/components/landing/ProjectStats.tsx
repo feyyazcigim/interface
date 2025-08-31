@@ -41,7 +41,7 @@ function StatContent({ activeButton }: StatContentProps) {
   return (
     <motion.div
       animate={{
-        height: activeButton ? (isMobile ? 270 : 400) : 0,
+        height: activeButton ? (isMobile ? 300 : 400) : 0,
         opacity: activeButton ? 1 : 0,
         y: activeButton ? 0 : -20,
       }}
