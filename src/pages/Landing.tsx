@@ -118,8 +118,21 @@ export default function Landing() {
         return;
       }
 
-      // All sections snap to top alignment
-      const targetScrollTop = sectionTop;
+      // Calculate target scroll position
+      let targetScrollTop = sectionTop;
+
+      // On mobile, for 2nd and 3rd sections, adjust for CTA button space
+      if (isMobile && reachedMainCta) {
+        const sectionIndex = Array.from(sections).indexOf(nearestSection);
+        const isSecondOrThirdSection = sectionIndex === 1 || sectionIndex === 2;
+
+        if (isSecondOrThirdSection) {
+          // Calculate button height: 3% of viewport + button size (scaled 150% on mobile)
+          const buttonSpace = viewportHeight * 0.03 + 60; // Approximate button height with scaling
+          // Adjust scroll position to move content up, leaving space at bottom for button
+          targetScrollTop = sectionTop + buttonSpace / 2;
+        }
+      }
 
       // Only snap if we're not already close to the target
       const currentDistance = Math.abs(currentScrollTop - targetScrollTop);
@@ -137,7 +150,7 @@ export default function Landing() {
         }, 800);
       }
     }
-  }, []);
+  }, [isMobile, reachedMainCta]);
 
   const handleScrollEnd = useCallback(() => {
     if (scrollTimeoutRef.current) {
