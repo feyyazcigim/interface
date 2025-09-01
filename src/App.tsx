@@ -1,4 +1,3 @@
-import META from "@/constants/meta";
 import { cn, isDev } from "@/utils/utils";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import DevPage from "./components/DevPage";
@@ -22,7 +21,14 @@ import NewUserView from "./pages/overview/NewUserView";
 
 import Footer from "@/components/Footer";
 import { MobileActionBarProvider } from "@/components/MobileActionBarContext";
+import Hypernative from "./pages/Hypernative";
 import { useMetaCRM } from "./utils/meta-crm";
+
+export const RENDER_HYPERNATIVE = true;
+
+function HypernativeActive() {
+  return <Hypernative />;
+}
 
 function AppLayout({ children }) {
   return (
@@ -168,6 +174,10 @@ function ProtectedLayout() {
 
 function App() {
   useMetaCRM();
+
+  if (RENDER_HYPERNATIVE) {
+    return <HypernativeActive />;
+  }
 
   return (
     <BrowserRouter>
