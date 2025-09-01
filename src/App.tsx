@@ -1,4 +1,3 @@
-import META from "@/constants/meta";
 import { cn, isDev } from "@/utils/utils";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import DevPage from "./components/DevPage";
