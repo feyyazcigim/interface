@@ -22,7 +22,14 @@ import NewUserView from "./pages/overview/NewUserView";
 
 import Footer from "@/components/Footer";
 import { MobileActionBarProvider } from "@/components/MobileActionBarContext";
+import Hypernative from "./pages/Hypernative";
 import { useMetaCRM } from "./utils/meta-crm";
+
+export const RENDER_HYPERNATIVE = true;
+
+function HypernativeActive() {
+  return <Hypernative />;
+}
 
 function AppLayout({ children }) {
   return (
@@ -168,6 +175,10 @@ function ProtectedLayout() {
 
 function App() {
   useMetaCRM();
+
+  if (RENDER_HYPERNATIVE) {
+    return <HypernativeActive />;
+  }
 
   return (
     <BrowserRouter>
