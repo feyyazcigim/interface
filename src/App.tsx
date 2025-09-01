@@ -24,7 +24,7 @@ import { MobileActionBarProvider } from "@/components/MobileActionBarContext";
 import Hypernative from "./pages/Hypernative";
 import { useMetaCRM } from "./utils/meta-crm";
 
-export const RENDER_HYPERNATIVE = true;
+export const RENDER_HYPERNATIVE = false;
 
 function HypernativeActive() {
   return <Hypernative />;
