@@ -186,7 +186,9 @@ function CarouselCard({
         isGlowing
           ? glowColor === "orange"
             ? "shadow-[0_0_15px_rgba(255,186,107,0.6),0_0_25px_rgba(255,186,107,0.4)] scale-[1.02]"
-            : "shadow-[0_0_15px_rgba(56,127,92,0.6),0_0_25px_rgba(56,127,92,0.4)] scale-[1.02]"
+            : glowColor === "purple"
+              ? "shadow-[0_0_15px_rgba(201,179,244,0.6),0_0_25px_rgba(201,179,244,0.4)] scale-[1.02]"
+              : "shadow-[0_0_15px_rgba(56,127,92,0.6),0_0_25px_rgba(56,127,92,0.4)] scale-[1.02]"
           : ""
       }`}
       style={
@@ -428,8 +430,8 @@ export default function SecondaryCTA() {
                   index={index}
                   keyPrefix="dataInfo1"
                   isGlowing={isGlowing}
-                  glowColor="orange"
-                  hoverBgColor="hover:bg-pinto-orange-1"
+                  glowColor="purple"
+                  hoverBgColor="hover:bg-pinto-purple-2/30"
                   isHoveredProgrammatically={isHoveredProgrammatically}
                   onClick={handleCardClick}
                 />
@@ -442,7 +444,7 @@ export default function SecondaryCTA() {
         <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 lg:w-full sm:max-w-[25rem] lg:max-w-[50rem] mx-auto">
           <h2 className="text-[1.75rem] lg:pinto-h2 lg:text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center text-center">
             <span>
-              Combining <span className="text-[#F7931A]">the values of BTC</span> with{" "}
+              Combining <span className="text-pinto-purple-2">the values of ETH</span> with{" "}
               <span className="text-pinto-green-4">the properties of USD</span>
             </span>
           </h2>

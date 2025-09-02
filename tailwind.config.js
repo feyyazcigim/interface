@@ -128,6 +128,7 @@ module.exports = {
           "seed-silver": "#7B9387",
           "pod-bronze": "#9F7F54",
           "red-2": "#FF0000",
+          "purple-2": "#C9B3F4",
           morning: "#D9AD0F",
           "morning-orange": "#FBE39B",
           primary: "#000000", // black clsx("text-black"),
