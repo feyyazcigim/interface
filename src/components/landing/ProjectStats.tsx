@@ -130,7 +130,7 @@ export default function ProjectStats() {
   const handleButtonClick = (buttonType: ActiveButton) => {
     setManuallySelected(true);
     setIsAutoCycling(false);
-    setActiveButton(activeButton === buttonType ? null : buttonType);
+    setActiveButton(buttonType);
   };
 
   const handleProfileSelection = () => {
