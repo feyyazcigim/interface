@@ -160,15 +160,29 @@ interface CarouselCardProps {
   isGlowing: boolean;
   glowColor: string;
   hoverBgColor: string;
+  isHoveredProgrammatically: boolean;
   onClick: (cardData: CardData) => void;
 }
 
-function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, hoverBgColor, onClick }: CarouselCardProps) {
+function CarouselCard({
+  data,
+  index,
+  keyPrefix,
+  isGlowing,
+  glowColor,
+  hoverBgColor,
+  isHoveredProgrammatically,
+  onClick,
+}: CarouselCardProps) {
   return (
     <Button
       key={`${keyPrefix}_${data.title}_${index}`}
       variant="outline-white"
-      className={`flex flex-col ${hoverBgColor} gap-3 sm:gap-4 items-start lg:gap-5 2xl:gap-6 p-3 sm:p-4 lg:p-5 2xl:p-4 w-[14rem] sm:w-[16rem] lg:w-[20rem] xl:w-[22rem] h-[10rem] sm:h-[13rem] lg:h-[15rem] xl:h-[15.5rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl bg-pinto-off-white mr-4 sm:mr-6 lg:mr-8 xl:mr-10 2xl:mr-12 sm:hover:scale-105 sm:active:scale-95 ${
+      className={`flex flex-col gap-3 sm:gap-4 items-start lg:gap-5 2xl:gap-6 p-3 sm:p-4 lg:p-5 2xl:p-4 w-[14rem] sm:w-[16rem] lg:w-[20rem] xl:w-[22rem] h-[10rem] sm:h-[13rem] lg:h-[15rem] xl:h-[15.5rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl mr-4 sm:mr-6 lg:mr-8 xl:mr-10 2xl:mr-12 sm:active:scale-95 ${
+        isHoveredProgrammatically
+          ? `${hoverBgColor.replace("hover:", "")} ${hoverBgColor} sm:scale-105`
+          : `bg-pinto-off-white ${hoverBgColor} sm:hover:scale-105`
+      } ${
         isGlowing
           ? glowColor === "orange"
             ? "shadow-[0_0_15px_rgba(255,186,107,0.6),0_0_25px_rgba(255,186,107,0.4)] scale-[1.02]"
@@ -225,6 +239,12 @@ export default function SecondaryCTA() {
   const [isHoveringCarousel, setIsHoveringCarousel] = useState(false);
   const glowTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Mouse tracking for programmatic hover detection
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [hoveredCard, setHoveredCard] = useState<{ component: "values" | "properties"; index: number } | null>(null);
+  const valuesCarouselRef = useRef<HTMLDivElement>(null);
+  const propertiesCarouselRef = useRef<HTMLDivElement>(null);
+
   // Constants for glow effect
   const GLOW_DURATION = 2000; // 2 second glow
   const GAP_DURATION = 1500; // 1.5 second gap with no glow
@@ -256,6 +276,42 @@ export default function SecondaryCTA() {
     },
     [TOTAL_VALUES_CARDS, TOTAL_PROPERTIES_CARDS],
   );
+
+  // Function to detect which card is under the mouse cursor
+  const detectHoveredCard = useCallback(() => {
+    const { x, y } = mousePosition;
+
+    // Check values carousel
+    if (valuesCarouselRef.current) {
+      const buttons = valuesCarouselRef.current.querySelectorAll("button");
+      for (let i = 0; i < buttons.length; i++) {
+        const button = buttons[i];
+        const rect = button.getBoundingClientRect();
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          const originalIndex = i % valuesData.length;
+          setHoveredCard({ component: "values", index: originalIndex });
+          return;
+        }
+      }
+    }
+
+    // Check properties carousel
+    if (propertiesCarouselRef.current) {
+      const buttons = propertiesCarouselRef.current.querySelectorAll("button");
+      for (let i = 0; i < buttons.length; i++) {
+        const button = buttons[i];
+        const rect = button.getBoundingClientRect();
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          const originalIndex = i % propertiesData.length;
+          setHoveredCard({ component: "properties", index: originalIndex });
+          return;
+        }
+      }
+    }
+
+    // If no card is under cursor, clear hover state
+    setHoveredCard(null);
+  }, [mousePosition, valuesData.length, propertiesData.length]);
 
   // Glow effect timer - pauses when hovering over carousels
   useEffect(() => {
@@ -306,6 +362,33 @@ export default function SecondaryCTA() {
     };
   }, [selectRandomCard, GLOW_DURATION, TOTAL_CYCLE_TIME, isHoveringCarousel]);
 
+  // Mouse move listener for tracking cursor position
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    return () => document.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  // Continuously check for hovered cards using animation frame
+  useEffect(() => {
+    let animationId: number;
+
+    const checkHover = () => {
+      if (isHoveringCarousel) {
+        detectHoveredCard();
+      } else {
+        setHoveredCard(null);
+      }
+      animationId = requestAnimationFrame(checkHover);
+    };
+
+    animationId = requestAnimationFrame(checkHover);
+    return () => cancelAnimationFrame(animationId);
+  }, [detectHoveredCard, isHoveringCarousel]);
+
   const handleCardClick = (cardData: (typeof valuesData)[0]) => {
     setSelectedCard(cardData);
     setIsModalOpen(true);
@@ -323,6 +406,7 @@ export default function SecondaryCTA() {
       <div className="flex flex-col items-center">
         {/* Values Carousel */}
         <div
+          ref={valuesCarouselRef}
           className="w-fit flex flex-row items-center animate-long-marquee place-self-start"
           onMouseEnter={() => setIsHoveringCarousel(true)}
           onMouseLeave={() => setIsHoveringCarousel(false)}
@@ -334,6 +418,8 @@ export default function SecondaryCTA() {
               // Calculate original data index for glow effect
               const originalIndex = index % valuesData.length;
               const isGlowing = glowingCard?.component === "values" && glowingCard.cardIndex === originalIndex;
+              const isHoveredProgrammatically =
+                hoveredCard?.component === "values" && hoveredCard.index === originalIndex;
 
               return (
                 <CarouselCard
@@ -344,6 +430,7 @@ export default function SecondaryCTA() {
                   isGlowing={isGlowing}
                   glowColor="orange"
                   hoverBgColor="hover:bg-pinto-orange-1"
+                  isHoveredProgrammatically={isHoveredProgrammatically}
                   onClick={handleCardClick}
                 />
               );
@@ -385,6 +472,7 @@ export default function SecondaryCTA() {
 
         {/* Properties Carousel */}
         <div
+          ref={propertiesCarouselRef}
           className="w-fit flex flex-row items-center animate-long-marquee-reverse place-self-start"
           onMouseEnter={() => setIsHoveringCarousel(true)}
           onMouseLeave={() => setIsHoveringCarousel(false)}
@@ -396,6 +484,8 @@ export default function SecondaryCTA() {
               // Calculate original data index for glow effect
               const originalIndex = index % propertiesData.length;
               const isGlowing = glowingCard?.component === "properties" && glowingCard.cardIndex === originalIndex;
+              const isHoveredProgrammatically =
+                hoveredCard?.component === "properties" && hoveredCard.index === originalIndex;
 
               return (
                 <CarouselCard
@@ -406,6 +496,7 @@ export default function SecondaryCTA() {
                   isGlowing={isGlowing}
                   glowColor="green"
                   hoverBgColor="hover:bg-pinto-green-1"
+                  isHoveredProgrammatically={isHoveredProgrammatically}
                   onClick={handleCardClick}
                 />
               );
