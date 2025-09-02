@@ -1,4 +1,3 @@
-import META from "@/constants/meta";
 import { cn, isDev } from "@/utils/utils";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import DevPage from "./components/DevPage";
@@ -6,6 +5,7 @@ import PageMetaWrapper from "./components/PageMetaWrapper";
 import ScrollToTop from "./components/ScrollToTop";
 import Navbar from "./components/nav/nav/Navbar";
 import { externalLinks } from "./constants/links";
+import Collection from "./pages/Collection";
 import Error404 from "./pages/Error404";
 import Explorer from "./pages/Explorer";
 import Field from "./pages/Field";
@@ -21,14 +21,19 @@ import NewUserView from "./pages/overview/NewUserView";
 
 import Footer from "@/components/Footer";
 import { MobileActionBarProvider } from "@/components/MobileActionBarContext";
-import TourOfTheFarm from "@/components/TourOfTheFarm";
+import Hypernative from "./pages/Hypernative";
 import { useMetaCRM } from "./utils/meta-crm";
+
+export const RENDER_HYPERNATIVE = false;
+
+function HypernativeActive() {
+  return <Hypernative />;
+}
 
 function AppLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <TourOfTheFarm />
       <ScrollToTop />
       <div className={cn("relative z-[1] w-screen flex-1")}>{children}</div>
       <Footer />
@@ -139,6 +144,14 @@ function ProtectedLayout() {
         }
       />
       <Route
+        path="/collection"
+        element={
+          <PageMetaWrapper metaKey="nftCollection">
+            <Collection />
+          </PageMetaWrapper>
+        }
+      />
+      <Route
         path="/404"
         element={
           <PageMetaWrapper metaKey="404">
@@ -161,6 +174,10 @@ function ProtectedLayout() {
 
 function App() {
   useMetaCRM();
+
+  if (RENDER_HYPERNATIVE) {
+    return <HypernativeActive />;
+  }
 
   return (
     <BrowserRouter>

@@ -27,3 +27,5 @@ export const WELL_FUNCTION_ADDRESSES: ChainLookup<{
     cp2: "0xBA510C289fD067EBbA41335afa11F0591940d6fe",
   },
 } as const;
+
+export const NFT_COLLECTION_1_CONTRACT: HashString = "0xBea5e200a087529AA3B62c460040aE94E3651b76";

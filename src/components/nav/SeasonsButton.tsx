@@ -3,6 +3,7 @@ import sunIcon from "@/assets/protocol/Sun.png";
 import pintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import Panel from "@/components/ui/Panel";
+import useIsExtraSmall from "@/hooks/display/useIsExtraSmall";
 import { useDiamondEvalulationParameters } from "@/state/useDiamondEvaluationParameters";
 import useFieldSnapshots from "@/state/useFieldSnapshots";
 import useSiloSnapshots from "@/state/useSiloSnapshots";
@@ -364,6 +365,7 @@ export default function SeasonsButton({ isOpen = false, togglePanel, ...props }:
   const siloSnapshots = useSiloSnapshots();
   const newPintoSupplySnapshots = useSupplySnapshots();
   const evaluationParams = useDiamondEvalulationParameters();
+  const isExtraSmall = useIsExtraSmall();
 
   const hasFloodOrRain = !!newPintoSupplySnapshots.data.find(
     (seasonData) => seasonData.floodFieldBeans.gt(0) || seasonData.floodSiloBeans.gt(0),
@@ -394,7 +396,7 @@ export default function SeasonsButton({ isOpen = false, togglePanel, ...props }:
           ) : (
             <div className="hidden sm:block">Season {season}</div>
           )}
-          <IconImage src={chevronDown} size={4} mobileSize={2.5} />
+          {!isExtraSmall && <IconImage src={chevronDown} size={4} mobileSize={2.5} />}
         </Button>
       }
       toggle={() => togglePanel()}

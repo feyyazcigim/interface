@@ -974,12 +974,56 @@ export default function DevPage() {
           </div>
         </Card>
 
+        {/* NFT Collection Toggle */}
+        <Card className="p-6">
+          <div className="flex flex-col gap-4">
+            <div className="text-lg font-semibold">NFT Collection</div>
+            <NFTCollectionToggle />
+          </div>
+        </Card>
+
         {/* Farmer Silo Deposits section - render component directly */}
         <FarmerSiloDeposits />
       </div>
     </div>
   );
 }
+
+const NFTCollectionToggle = () => {
+  const handleResetCardFlip = () => {
+    console.log("Reset button clicked!"); // Debug log
+
+    // Clear the card flip animation storage for all addresses
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("nft-card-flip-")) {
+        keysToRemove.push(key);
+      }
+    }
+
+    console.log("Keys to remove:", keysToRemove); // Debug log
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    console.log("Keys removed from localStorage"); // Debug log
+
+    toast.success("Card flip animation reset - will replay on next visit");
+    console.log("Toast should have been shown"); // Debug log
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">Reset Card Flip Animation</span>
+          <span className="text-xs text-gray-500">Clears localStorage to allow first-time animation to replay</span>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleResetCardFlip}>
+          Reset Animation
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const MorningAuctionDev = ({
   executeTask,
