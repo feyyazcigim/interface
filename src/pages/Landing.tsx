@@ -19,6 +19,7 @@ export default function Landing() {
   const [currentTriggerPhase, setCurrentTriggerPhase] = useState<string | undefined>(undefined);
   const [reachedMainCta, setReachedMainCta] = useState<boolean>(false);
   const [isAtTop, setIsAtTop] = useState<boolean>(true); // Track if scroll is at very top
+  const [isInLastSection, setIsInLastSection] = useState<boolean>(false); // Track if in last section
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isScrollingRef = useRef(false);
   const lastSnappedSectionRef = useRef<Element | null>(null);
@@ -121,17 +122,21 @@ export default function Landing() {
       // Calculate target scroll position
       let targetScrollTop = sectionTop;
 
-      // On mobile, for 2nd and 3rd sections, adjust for CTA button space
-      if (isMobile && reachedMainCta) {
+      // Adjust for CTA button spaces when they are visible
+      if (reachedMainCta) {
         const sectionIndex = Array.from(sections).indexOf(nearestSection);
-        const isSecondOrThirdSection = sectionIndex === 1 || sectionIndex === 2;
+        const isResourcesSection = sectionIndex === sections.length - 1;
 
-        if (isSecondOrThirdSection) {
-          // Calculate button height: 3% of viewport + button size (scaled 150% on mobile)
-          const buttonSpace = viewportHeight * 0.03 + 60; // Approximate button height with scaling
-          // Adjust scroll position to move content up, leaving space at bottom for button
-          targetScrollTop = sectionTop + buttonSpace / 2;
+        // Calculate CTA button spaces
+        const topCtaSpace = viewportHeight * 0.02; // 2% + button height
+        const bottomCtaSpace = viewportHeight * 0.01 + 32; // 1% + button height
+
+        if (!isResourcesSection) {
+          // For all sections except Resources: center content between both CTAs
+          const ctaOffset = topCtaSpace; // Adjust for CTA size
+          targetScrollTop = sectionTop - ctaOffset;
         }
+        // Resources section: no adjustment needed as CTAs are typically hidden
       }
 
       // Only snap if we're not already close to the target
@@ -177,6 +182,16 @@ export default function Landing() {
       const halfScreenHeight = window.innerHeight / 2;
       setIsAtTop(currentScrollTop < halfScreenHeight);
 
+      // Check if in last section
+      const sections = scrollContainer.querySelectorAll("section");
+      if (sections.length > 0) {
+        const lastSection = sections[sections.length - 1] as HTMLElement;
+        const lastSectionTop = lastSection.offsetTop;
+        const viewportHeight = window.innerHeight;
+        const isInLast = currentScrollTop >= lastSectionTop - viewportHeight / 2;
+        setIsInLastSection(isInLast);
+      }
+
       // Trigger scroll end detection
       handleScrollEnd();
     };
@@ -218,7 +233,7 @@ export default function Landing() {
     };
   }, [handleScrollEnd, sectionsVisible]);
 
-  const handleWheel = (e: WheelEvent<HTMLAnchorElement>) => {
+  const handleWheel = (e: WheelEvent<HTMLElement>) => {
     e.stopPropagation();
     document.body.scrollTop += e.deltaY;
   };
@@ -230,13 +245,40 @@ export default function Landing() {
     const scrollContainer = scrollContainerRef.current;
     if (!scrollContainer) return;
 
-    // Find the next section to scroll to
+    const sections = scrollContainer.querySelectorAll("section");
+    if (sections.length === 0) return;
+
+    const currentScrollTop = scrollContainer.scrollTop;
     const viewportHeight = window.innerHeight;
 
-    scrollContainer.scrollTo({
-      top: viewportHeight,
-      behavior: "smooth",
+    // Find current section
+    let currentSectionIndex = 0;
+    sections.forEach((section, index) => {
+      const sectionTop = (section as HTMLElement).offsetTop;
+      if (currentScrollTop >= sectionTop - viewportHeight / 2) {
+        currentSectionIndex = index;
+      }
     });
+
+    // Get next section
+    const nextSectionIndex = Math.min(currentSectionIndex + 1, sections.length - 1);
+    const nextSection = sections[nextSectionIndex] as HTMLElement;
+
+    if (nextSection) {
+      let targetScrollTop = nextSection.offsetTop;
+
+      // Apply same CTA offset logic as in snapToNearestSection
+      if (reachedMainCta && nextSectionIndex !== sections.length - 1) {
+        const topCtaSpace = viewportHeight * 0.02;
+        const ctaOffset = topCtaSpace;
+        targetScrollTop = targetScrollTop - ctaOffset;
+      }
+
+      scrollContainer.scrollTo({
+        top: targetScrollTop,
+        behavior: "smooth",
+      });
+    }
   };
 
   return (
@@ -248,7 +290,7 @@ export default function Landing() {
       }}
     >
       <div
-        className={`flex flex-col h-screen ${sectionsVisible ? "overflow-y-auto overflow-scroll" : "overflow-hidden"}`}
+        className={`flex flex-col h-screen ${sectionsVisible ? "overflow-y-auto overflow-scroll scrollbar-none" : "overflow-hidden"}`}
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
@@ -273,6 +315,24 @@ export default function Landing() {
           <Resources />
         </section>
       </div>
+      <div
+        className={`fixed left-1/2 -translate-x-1/2 flex z-20 justify-center ${
+          reachedMainCta && !isInLastSection ? "bottom-[1%] sm:bottom-[2%]" : "-bottom-28"
+        } transition-all duration-500 ease-in-out pointer-events-none`}
+        onClick={handleArrowClick}
+      >
+        <Button
+          rounded="full"
+          size={"md"}
+          className={`z-20 h-8 sm:px-2 sm:scale-[1.5] hover:bg-pinto-green-4 hover:brightness-125 transition-all [transition:transform_300ms_cubic-bezier(0.4,0,0.2,1)] ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem] pointer-events-auto`}
+          shimmer={true}
+          glow={true}
+        >
+          <div className="rotate-90">
+            <PintoRightArrow width={"1rem"} height={"1rem"} className="transition-all" />
+          </div>
+        </Button>
+      </div>
       <Link
         to={isAtTop && reachedMainCta ? "" : navLinks.overview}
         onWheelCapture={handleWheel}
@@ -281,27 +341,19 @@ export default function Landing() {
       >
         <div
           className={`fixed left-1/2 -translate-x-1/2 flex z-20 justify-center ${
-            reachedMainCta ? "bottom-[3%]" : "-bottom-28"
+            reachedMainCta && !isAtTop ? "top-[2%]" : "-top-28"
           } transition-all duration-500 ease-in-out`}
         >
           <Button
             rounded="full"
-            size={"md"}
-            className={`scale-150 md:scale-100 2xl:scale-150 z-20 hover:bg-pinto-green-4 hover:brightness-125 transition-all [transition:transform_300ms_cubic-bezier(0.4,0,0.2,1)] ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+            size={isMobile ? "lg" : "xxl"}
+            className={`z-20 hover:bg-pinto-green-4 max-sm:px-4 hover:brightness-125 transition-all [transition:transform_300ms_cubic-bezier(0.4,0,0.2,1)] ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
             shimmer={true}
             glow={true}
           >
-            {/* Conditionally show text based on scroll position */}
-            {!(isAtTop && reachedMainCta) && (
-              <span className={`relative transition-opacity w-auto opacity-100 ml-0 text-white`}>Start Farming</span>
-            )}
-            <div
-              className={`relative transition-transform transform duration-300 ${
-                isAtTop && reachedMainCta ? `rotate-90 ${!isMobile ? "-mx-1" : "mx-1"}` : "rotate-0"
-              }`}
-              style={{ isolation: "isolate" }}
-            >
-              <PintoRightArrow width={"1rem"} height={"1rem"} className="transition-all" />
+            <span className="relative z-10">Come Seed the Leviathan Free Economy</span>
+            <div className="relative z-10" style={{ isolation: "isolate" }}>
+              <PintoRightArrow width={isMobile ? "1rem" : "1.25rem"} height={isMobile ? "1rem" : "1.25rem"} />
             </div>
           </Button>
         </div>

@@ -1607,7 +1607,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
                   <Button
                     rounded="full"
                     size={isMobile ? "lg" : "xxl"}
-                    className="hover:bg-pinto-green-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]"
+                    className="hover:bg-pinto-green-4 max-sm:px-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]"
                     id={"come-seed-the-trustless-economy"}
                     shimmer
                     glow
