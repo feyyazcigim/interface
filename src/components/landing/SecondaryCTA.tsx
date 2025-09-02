@@ -456,9 +456,12 @@ export default function SecondaryCTA() {
               rounded="full"
               variant={"defaultAlt"}
               size={isMobile ? "md" : "xl"}
-              className={`z-20 hover:bg-pinto-green-2/50 transition-all duration-300 ease-in-out flex flex-row gap-1 sm:gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+              className={`z-20 hover:bg-pinto-green-2/50 max-sm:pl-3 max-sm:pr-2 transition-all duration-300 ease-in-out flex flex-row gap-1 sm:gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
             >
-              <span>Why is this so valuable?</span>
+              <span>
+                Why is Pinto the best alternative <br className="block sm:hidden" />
+                to centralized stablecoins?
+              </span>
               <span className="text-pinto-green-4 transition-all duration-300 ease-in-out">
                 <PintoRightArrow
                   width={isMobile ? "1rem" : "1.25rem"}
