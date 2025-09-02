@@ -360,7 +360,7 @@ const patterns = {
   ],
 };
 
-export default function GameOfLife({ startingPattern }) {
+export default function GameOfLife({ startingPattern, autoPlay = false }) {
   const canvasRef = useRef(null);
   const [isRunning, setIsRunning] = useState(false);
   const [generation, setGeneration] = useState(0);
@@ -396,13 +396,19 @@ export default function GameOfLife({ startingPattern }) {
 
   // Memoized reset function
   const resetGrid = useCallback(() => {
+    const wasRunning = isRunning;
     setIsRunning(false);
     setGeneration(0);
     setPattern(startingPattern);
     if (canvasRef.current) {
       renderGrid(canvasRef.current, grids[currentGridIndex]);
     }
-  }, [grids, currentGridIndex, setPattern, startingPattern]);
+
+    // Restart immediately if it was running (for auto-play mode)
+    if (wasRunning || autoPlay) {
+      setTimeout(() => setIsRunning(true), 50);
+    }
+  }, [grids, currentGridIndex, setPattern, startingPattern, isRunning, autoPlay]);
 
   // Optimized animation loop using requestAnimationFrame
   const animate = useCallback(
@@ -424,23 +430,39 @@ export default function GameOfLife({ startingPattern }) {
 
       if (isRunning) {
         animationFrameRef.current = requestAnimationFrame(animate);
+      } else {
+        animationFrameRef.current = 0;
       }
     },
     [isRunning, speed, grids, currentGridIndex],
   );
 
+  // Auto-play when autoPlay prop is true
+  useEffect(() => {
+    if (autoPlay) {
+      setIsRunning(true);
+    }
+  }, [autoPlay]);
+
   // Handle mouse interactions
   const handleMouseEnter = useCallback(() => {
-    setIsRunning(true);
-  }, []);
+    if (autoPlay) {
+      // Restart the pattern when hovering in auto-play mode
+      resetGrid();
+    } else {
+      setIsRunning(true);
+    }
+  }, [autoPlay, resetGrid]);
 
   const handleMouseLeave = useCallback(() => {
-    setIsRunning(false);
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
+    if (!autoPlay) {
+      setIsRunning(false);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      resetGrid();
     }
-    resetGrid();
-  }, [resetGrid]);
+  }, [autoPlay, resetGrid]);
 
   // Initialize pattern on mount
   useEffect(() => {
@@ -454,17 +476,23 @@ export default function GameOfLife({ startingPattern }) {
   // Handle animation
   useEffect(() => {
     if (isRunning) {
+      // Clear any existing animation frame first
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
       lastTimeRef.current = performance.now();
       animationFrameRef.current = requestAnimationFrame(animate);
     } else {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = 0;
       }
     }
 
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = 0;
       }
     };
   }, [isRunning, animate]);

@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
@@ -12,6 +13,7 @@ const resourceCards = [
     pattern: "pufferfishCompanion",
     initialScale: 2.4,
     finalScale: 1.1,
+    transform: "translate(-80px,80px)",
     buttons: [
       {
         href: navLinks.docs,
@@ -69,8 +71,34 @@ const buttonStyles = clsx(
 );
 
 export default function Resources() {
+  const sectionRef = useRef(null);
+  const [isInView, setIsInView] = useState(false);
+
+  // Detect when Resources section is in view
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setIsInView(entry.isIntersecting);
+      },
+      {
+        threshold: 0.2, // When 20% of section is visible
+        rootMargin: "50px",
+      },
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="flex flex-col items-center self-stretch gap-8 2xl:gap-12 mt-8 2xl:mt-16 mb-24 sm:mb-36">
+    <div
+      ref={sectionRef}
+      className="flex flex-col items-center self-stretch gap-8 2xl:gap-12 mt-8 2xl:mt-16 mb-24 sm:mb-36"
+    >
       <h2 className="text-2xl 2xl:text-4xl leading-same-h2 font-light text-black">Resources</h2>
       <div className="flex flex-col w-full sm:flex-row sm:justify-center gap-4 lg:gap-8 max-2xl:px-4 sm:max-2xl:px-4">
         {resourceCards.map((card, index) => (
@@ -79,16 +107,16 @@ export default function Resources() {
               <div
                 className={`flex transition-transform duration-1000 ease-in-out transform-gpu`}
                 style={{
-                  transform: `scale(${card.initialScale})`,
+                  transform: card.transform ? card.transform : `scale(${card.finalScale})`,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = `scale(${card.finalScale})`;
+                  e.currentTarget.style.transform = card.transform ? card.transform : `scale(${card.finalScale})`;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = `scale(${card.initialScale})`;
+                  e.currentTarget.style.transform = card.transform ? card.transform : `scale(${card.finalScale})`;
                 }}
               >
-                <GameOfLife startingPattern={card.pattern} />
+                <GameOfLife startingPattern={card.pattern} autoPlay={isInView} />
               </div>
             </div>
             <div className="flex flex-col justify-between flex-1 gap-4 2xl:gap-8 mx-4 mb-4 2xl:mx-6 2xl:mb-6">
