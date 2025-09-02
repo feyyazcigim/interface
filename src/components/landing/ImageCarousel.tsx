@@ -117,7 +117,6 @@ export default function ImageCarousel() {
   return (
     <>
       <div className="flex flex-col text-center gap-1 text-xs sm:text-xl mt-4">
-        <span>Pinto rigorously builds and documents its work</span>
         <span>Pinto is the culmination of more than four years of rigorous development on Ethereum.</span>
       </div>
       <Carousel
