@@ -28,7 +28,7 @@ const whitepaperImages: CarouselData[] = [
     href: "https://bean.money/beanstalk.pdf",
     date: "August 2021",
     name: "Beanstalk",
-    description: "The OG paper that started it all.",
+    description: "The OG paper that started it all",
   },
   {
     src: wpPipeline,
@@ -36,7 +36,7 @@ const whitepaperImages: CarouselData[] = [
     href: "https://evmpipeline.org/pipeline.pdf",
     date: "November 2022",
     name: "Pipeline and Depot",
-    description: "One transaction to do anything in DeFi.",
+    description: "Do anything in DeFi in one transaction",
   },
   {
     src: wpBasin,
@@ -44,7 +44,7 @@ const whitepaperImages: CarouselData[] = [
     href: "https://basin.exchange/basin.pdf",
     date: "August 2023",
     name: "Basin",
-    description: "Fee-less swaps for hyper efficient peg maintenance.",
+    description: "Fee-less swaps for hyper efficient peg maintenance",
   },
   {
     src: wpMultiflow,
@@ -52,7 +52,7 @@ const whitepaperImages: CarouselData[] = [
     href: "https://basin.exchange/multi-flow-pump.pdf",
     date: "August 2023",
     name: "Multi-flow",
-    description: "On-chain manipulation resistant oracle.",
+    description: "On-chain manipulation resistant oracle",
   },
   {
     src: wpPinto,
@@ -60,7 +60,7 @@ const whitepaperImages: CarouselData[] = [
     href: "https://pinto.money/pinto.pdf",
     date: "April 2025",
     name: "Pinto",
-    description: "A new generation of crypto fiat.",
+    description: "The new generation of crypto fiat",
   },
 ];
 

@@ -1044,7 +1044,7 @@ function FilterButton({ type, label, isSelected, hasNoFilters, colorClass, onCli
 
 const events: Audit[] = [
   {
-    name: "sPinto/Cream Integration",
+    name: "sPinto Launch + Cream Integration",
     description: "",
     githubLink: "",
     hashLink: "",
@@ -1067,7 +1067,7 @@ const events: Audit[] = [
     type: ["event"],
   },
   {
-    name: "Sow Blueprint/Tractor",
+    name: "Tractor Sow Blueprint",
     description: "",
     githubLink: "",
     hashLink: "",

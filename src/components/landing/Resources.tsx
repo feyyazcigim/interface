@@ -54,7 +54,7 @@ const resourceCards = [
     buttons: [
       {
         href: navLinks.overview,
-        label: "Dashboard",
+        label: "Take me to the Farm",
       },
     ],
   },
