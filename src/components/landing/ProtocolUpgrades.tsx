@@ -1048,6 +1048,7 @@ const events: Audit[] = [
     description: "",
     githubLink: "",
     hashLink: "",
+    customLines: { before: 8, after: 8 },
     date: "March 5, 2025",
     timestamp: new Date("March 5, 2025").getTime(),
     auditHash: "",
@@ -1375,7 +1376,7 @@ export default function ProtocolUpgrades() {
   }, [hoveredData, carouselCenterData]);
 
   return (
-    <div className={`relative w-screen p-0 sm:p-6 transition-all transform-gpu items-center`}>
+    <div className={`relative w-screen transition-all transform-gpu items-center`}>
       <AnimatePresence mode="wait">
         <div className="h-12 sm:h-14 place-content-center">
           {highlightedData && (
