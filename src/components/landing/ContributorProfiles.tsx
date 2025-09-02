@@ -106,13 +106,13 @@ export default function ContributorProfiles() {
   };
 
   // W shape positions with random variations: left peak, left valley, center peak, right valley, right peak
-  const wPositions = useMemo(
+  const lineDesktopPositions = useMemo(
     () => [
-      { x: 0 + (Math.random() * 0.3125 - 0.15625), y: 5 + (Math.random() * 0.3125 - 0.15625) }, // left peak
-      { x: 2.5 + (Math.random() * 0.3125 - 0.15625), y: 0.625 + (Math.random() * 0.3125 - 0.15625) }, // left valley
-      { x: 5 + (Math.random() * 0.3125 - 0.15625), y: 5 + (Math.random() * 0.3125 - 0.15625) }, // center peak
-      { x: 7.5 + (Math.random() * 0.3125 - 0.15625), y: 0.625 + (Math.random() * 0.3125 - 0.15625) }, // right valley
-      { x: 10 + (Math.random() * 0.3125 - 0.15625), y: 5 + (Math.random() * 0.3125 - 0.15625) }, // right peak
+      { x: -5 + (Math.random() * 0.3125 - 0.15625), y: 5.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 0 + (Math.random() * 0.3125 - 0.15625), y: 5.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 5 + (Math.random() * 0.3125 - 0.15625), y: 5.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 10 + (Math.random() * 0.3125 - 0.15625), y: 5.5 + (Math.random() * 0.3125 - 0.15625) },
+      { x: 15 + (Math.random() * 0.3125 - 0.15625), y: 5.5 + (Math.random() * 0.3125 - 0.15625) },
     ],
     [],
   );
@@ -130,7 +130,7 @@ export default function ContributorProfiles() {
   );
 
   // Use line positions on mobile, W positions on desktop
-  const positions = isMobile ? linePositions : wPositions;
+  const positions = isMobile ? linePositions : lineDesktopPositions;
 
   // Memoize random animation values to prevent restarts on re-render
   const animationValues = useMemo(

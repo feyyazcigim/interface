@@ -101,7 +101,7 @@ function StatContent({ activeButton }: StatContentProps) {
 }
 
 export default function ProjectStats() {
-  const [activeButton, setActiveButton] = useState<ActiveButton>(null);
+  const [activeButton, setActiveButton] = useState<ActiveButton>("upgrades");
   const [isAutoCycling, setIsAutoCycling] = useAtom(isAutoCyclingAtom);
   const [manuallySelected, setManuallySelected] = useState(false);
 
