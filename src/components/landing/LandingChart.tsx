@@ -1594,7 +1594,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: "easeInOut", delay: 0.4 }}
                 >
-                  An Algorithmic Stablecoin Balanced by Farmers like you.
+                  An Algorithmic Stablecoin Balanced by Farmers Like You.
                 </motion.span>
               </div>
               <motion.div
@@ -1613,7 +1613,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
                     glow
                   >
                     <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
-                    <span className="relative z-10">Come Seed the Trustless Economy</span>
+                    <span className="relative z-10">Come Seed the Leviathan Free Economy</span>
                     <div className="relative z-10" style={{ isolation: "isolate" }}>
                       <PintoRightArrow width={isMobile ? "1rem" : "1.25rem"} height={isMobile ? "1rem" : "1.25rem"} />
                     </div>
