@@ -222,6 +222,7 @@ export default function SecondaryCTA() {
 
   // Glow effect state management
   const [glowingCard, setGlowingCard] = useState<GlowingCard | null>(null);
+  const [isHoveringCarousel, setIsHoveringCarousel] = useState(false);
   const glowTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Constants for glow effect
@@ -256,8 +257,13 @@ export default function SecondaryCTA() {
     [TOTAL_VALUES_CARDS, TOTAL_PROPERTIES_CARDS],
   );
 
-  // Glow effect timer
+  // Glow effect timer - pauses when hovering over carousels
   useEffect(() => {
+    // Don't start glow timer if currently hovering over carousel
+    if (isHoveringCarousel) {
+      return;
+    }
+
     let currentGlowingCard: GlowingCard | null = null;
     let mainInterval: NodeJS.Timeout | null = null;
     let glowClearTimeout: NodeJS.Timeout | null = null;
@@ -298,7 +304,7 @@ export default function SecondaryCTA() {
       }
       setGlowingCard(null);
     };
-  }, [selectRandomCard, GLOW_DURATION, TOTAL_CYCLE_TIME]);
+  }, [selectRandomCard, GLOW_DURATION, TOTAL_CYCLE_TIME, isHoveringCarousel]);
 
   const handleCardClick = (cardData: (typeof valuesData)[0]) => {
     setSelectedCard(cardData);
@@ -316,7 +322,11 @@ export default function SecondaryCTA() {
     <>
       <div className="flex flex-col items-center">
         {/* Values Carousel */}
-        <div className="w-fit flex flex-row items-center animate-long-marquee place-self-start">
+        <div
+          className="w-fit flex flex-row items-center animate-long-marquee place-self-start"
+          onMouseEnter={() => setIsHoveringCarousel(true)}
+          onMouseLeave={() => setIsHoveringCarousel(false)}
+        >
           {Array(8)
             .fill(valuesData)
             .flat()
@@ -374,7 +384,11 @@ export default function SecondaryCTA() {
         <Separator className="w-[40%] sm:w-[20%] my-2 lg:my-4" />
 
         {/* Properties Carousel */}
-        <div className="w-fit flex flex-row items-center animate-long-marquee-reverse place-self-start">
+        <div
+          className="w-fit flex flex-row items-center animate-long-marquee-reverse place-self-start"
+          onMouseEnter={() => setIsHoveringCarousel(true)}
+          onMouseLeave={() => setIsHoveringCarousel(false)}
+        >
           {Array(12)
             .fill(propertiesData)
             .flat()
