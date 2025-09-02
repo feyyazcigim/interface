@@ -1,7 +1,5 @@
 import { PintoRightArrow } from "@/components/Icons";
-import AuditsList from "@/components/landing/AuditsList";
 import BugBounty from "@/components/landing/BugBounty";
-import FarmToTable from "@/components/landing/FarmToTable";
 import LandingChart from "@/components/landing/LandingChart";
 import ProjectStats from "@/components/landing/ProjectStats";
 import Resources from "@/components/landing/Resources";
@@ -63,7 +61,7 @@ export default function Landing() {
         lastSnappedSectionRef.current = sections[0];
       }
     }
-  }, [sectionsVisible]);
+  }, []);
 
   // Scroll snapping functionality
   const snapToNearestSection = useCallback(() => {
@@ -75,7 +73,6 @@ export default function Landing() {
 
     const viewportHeight = window.innerHeight;
     const currentScrollTop = scrollContainer.scrollTop;
-    const _containerHeight = scrollContainer.scrollHeight;
 
     // Check if we're currently in the Resources section (last section)
     const resourcesSection = sections[sections.length - 1] as HTMLElement;
@@ -129,7 +126,6 @@ export default function Landing() {
 
         // Calculate CTA button spaces
         const topCtaSpace = viewportHeight * 0.02; // 2% + button height
-        const bottomCtaSpace = viewportHeight * 0.01 + 32; // 1% + button height
 
         if (!isResourcesSection) {
           // For all sections except Resources: center content between both CTAs
@@ -155,7 +151,7 @@ export default function Landing() {
         }, 800);
       }
     }
-  }, [isMobile, reachedMainCta]);
+  }, [reachedMainCta]);
 
   const handleScrollEnd = useCallback(() => {
     if (scrollTimeoutRef.current) {
