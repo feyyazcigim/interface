@@ -222,8 +222,8 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
   const reductionRate = 0.2; // 20% reduction per call
   const amplitudeModifier = Math.max(maxReduction, 1.0 - (amplitudeCallCount - 1) * reductionRate);
   // Transaction types for different price movements
-  const priceUpTxTypes = ["deposit", "convert", "sow"];
-  const priceDownTxTypes = ["withdraw", "convert", "yield", "harvest"];
+  const priceUpTxTypes = ["deposit", "convertUp", "sow"];
+  const priceDownTxTypes = ["withdraw", "convertDown", "yield", "harvest"];
 
   // Count original non-null txTypes
   const originalTxTypeCount = baseData.filter((point) => point.txType !== null).length;

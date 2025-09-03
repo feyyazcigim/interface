@@ -6,7 +6,8 @@ const TxTypeIcons: Record<string, string> = {
   withdraw: "ReverseDoubleCaret_Landing.svg", // Withdraw transaction type icon
   sow: "DoubleCaret_Landing.svg", // Sow transaction type icon
   harvest: "ReverseDoubleCaret_Landing.svg", // Harvest transaction type icon
-  convert: "SpinningArrows_Landing.svg", // Convert transaction type icon
+  convertUp: "SpinningArrows_Landing.svg", // Convert transaction type icon
+  convertDown: "SpinningArrows_Landing.svg", // Convert transaction type icon
   yield: "Cross_Landing.svg", // Yield transaction type icon
 };
 
@@ -15,7 +16,8 @@ const TxIcons: Record<string, string> = {
   withdraw: "Silo_Landing.svg",
   sow: "Sow_Landing.svg",
   harvest: "Harvest_Landing.svg",
-  convert: "Silo_Landing.svg",
+  convertUp: "Silo_Landing.svg",
+  convertDown: "Silo_Landing.svg",
   yield: "Silo_Landing.svg",
 };
 
@@ -24,7 +26,8 @@ const TxActionLabels: Record<string, string> = {
   withdraw: "Sold",
   sow: "Lent",
   harvest: "Harvested",
-  convert: "Converted",
+  convertUp: "Converted Up",
+  convertDown: "Converted Down",
   yield: "Mint",
 };
 
@@ -152,9 +155,9 @@ export default function TxFloater({
         {actionLabel && showAllLabels && (
           <motion.div
             key="label"
-            className="absolute text-gray-600 text-base font-normal opacity-90 text-center whitespace-nowrap w-full"
+            className="absolute text-pinto-gray-6 text-base font-normal opacity-90 text-center whitespace-nowrap w-full"
             style={{
-              top: positionAbove ? "-28px" : "60px", // When pill is above $1 target, text goes above; when pill is below $1 target, text goes below
+              top: positionAbove ? "-28px" : "50px", // When pill is above $1 target, text goes above; when pill is below $1 target, text goes below
             }}
             initial={{ opacity: 0, y: positionAbove ? 5 : -5 }}
             animate={{ opacity: 0.9, y: 0 }}
