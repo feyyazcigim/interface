@@ -441,12 +441,18 @@ const ReadMoreField = () => {
   return (
     <ReadMoreAccordion defaultOpen={!learnDidVisit.field}>
       <>
-        Pinto can be lent to the protocol in exchange for a fixed interest rate bond, where the rate payback is a
-        function of Pinto supply growth. The debt to the user is represented by Pods, which are defined by their
-        position in the Pod Line. Soil is the amount of Pinto the protocol is willing to purchase on the open market and
-        temperature is the interest rate it will pay. Each season the Soil and maximum Temperature are set based on
-        Protocol state. When Pinto is priced over $1 new Pinto is minted with 48.5% being distributed to lenders in the
-        Field. Loans are paid back in first in first out (FIFO) ordering.
+        Pods can be lent (Sown) to the protocol in exchange for Pods, protocol-native debt issued with a fixed interest
+        rate. Pods function as zero coupon bonds that become redeemable (Harvestable) for 1 Pinto each on a first in,
+        first out (FIFO) basis when new Pinto are minted.
+        <br />
+        <br />
+        When the time-weighted average Pinto price over the previous Season is over $1, new Pinto are minted, 48.5% of
+        which are distributed to Pod holders.
+        <br />
+        <br />
+        Soil is the amount of Pinto the protocol is willing to purchase on the open market and Temperature is the
+        interest rate it will pay. At the beginning of each Season (i.e., the top of each hour), the Soil and maximum
+        Temperature are set based on protocol state.
       </>
     </ReadMoreAccordion>
   );

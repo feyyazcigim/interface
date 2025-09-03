@@ -337,12 +337,15 @@ const LearnSilo = () => {
     <>
       <ReadMoreAccordion defaultOpen={!learnDidVisit.silo}>
         <>
-          Pinto or Pinto-LP can be deposited into the Silo and can be withdrawn at any time. Deposits are eligible to
-          earn Pinto after at least 1 full season has passed. When Pinto is priced over $1, new Pinto is minted with
-          48.5% being distributed to Silo depositors. Depositors earn a share of the Pinto mints to the silo based on
-          their Stalk balance proportional to total Stalk supply. A Deposit is issued an initial amount of Stalk and
-          Seeds, which is determined by token type and value. Seeds grow Stalk every season. All stalk is forfeit upon a
-          withdrawal.
+          Pinto and Pinto-LP can be Deposited into and Withdrawn from the Silo at any time. When the time-weighted
+          average Pinto price over the previous Season is over $1, new Pinto are minted, 48.5% of which are distributed
+          to Deposits.
+          <br />
+          <br />
+          Deposits are eligible to earn a portion of Pinto mints after being Deposited for at least 1 full Season,
+          earning directly based on their proportion of the total Stalk supply. Deposits receive Stalk and Seeds based
+          on token type and Pinto-denominated value at the time of Deposit. Seeds grow Stalk every season. All Stalk and
+          Seeds are forfeited upon Withdrawal.
         </>
       </ReadMoreAccordion>
     </>
