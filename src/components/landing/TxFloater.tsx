@@ -25,7 +25,7 @@ const TxActionLabels: Record<string, string> = {
   sow: "Lent",
   harvest: "Harvested",
   convert: "Converted",
-  yield: "Earned",
+  yield: "Mint",
 };
 
 const bounceInAnimation: AnimationDefinition = {
