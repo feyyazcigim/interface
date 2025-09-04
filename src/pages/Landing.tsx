@@ -160,7 +160,7 @@ export default function Landing() {
 
     scrollTimeoutRef.current = setTimeout(() => {
       snapToNearestSection();
-    }, 150); // Wait 150ms after scroll stops
+    }, 500); // Wait 500ms after scroll stops
   }, [snapToNearestSection]);
 
   // Track scroll position to determine if at top
@@ -212,7 +212,14 @@ export default function Landing() {
       handleScrollAttempt();
     };
 
-    scrollContainer.addEventListener("scrollend", handleScroll, { passive: true });
+    if ("onscrollend" in scrollContainer) {
+      // Use native scrollend if available
+      (scrollContainer as HTMLElement).addEventListener("scrollend", handleScroll, { passive: true });
+    } else {
+      // Fallback to scroll with timeout for WebKit
+      (scrollContainer as HTMLElement).addEventListener("scroll", handleScrollEnd, { passive: true });
+    }
+
     scrollContainer.addEventListener("wheel", handleWheel, { passive: true });
     scrollContainer.addEventListener("touchend", handleTouchEnd, { passive: true });
 
@@ -220,7 +227,11 @@ export default function Landing() {
     handleScroll();
 
     return () => {
-      scrollContainer.removeEventListener("scrollend", handleScroll);
+      if ("onscrollend" in scrollContainer) {
+        (scrollContainer as HTMLElement).removeEventListener("scrollend", handleScroll);
+      } else {
+        (scrollContainer as HTMLElement).removeEventListener("scroll", handleScrollEnd);
+      }
       scrollContainer.removeEventListener("wheel", handleWheel);
       scrollContainer.removeEventListener("touchend", handleTouchEnd);
       if (scrollTimeoutRef.current) {
