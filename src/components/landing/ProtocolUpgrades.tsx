@@ -1350,10 +1350,34 @@ export default function ProtocolUpgrades() {
 
       const handleSettle = () => {
         const selectedIndex = api.selectedScrollSnap();
-        if (selectedIndex < sortedAudits.length) {
+        const selected = sortedAudits[selectedIndex];
+
+        // If we settled on a year marker, find the nearest non-year marker and snap to it
+        if (selected?.isYearMarker) {
+          let nearestIndex = selectedIndex;
+          let minDistance = Infinity;
+
+          // Find the nearest non-year marker
+          sortedAudits.forEach((audit, index) => {
+            if (!audit.isYearMarker) {
+              const distance = Math.abs(index - selectedIndex);
+              if (distance < minDistance) {
+                minDistance = distance;
+                nearestIndex = index;
+              }
+            }
+          });
+
+          // Scroll to the nearest non-year marker
+          if (nearestIndex !== selectedIndex && nearestIndex < sortedAudits.length) {
+            api.scrollTo(nearestIndex);
+          }
+        } else if (selectedIndex < sortedAudits.length) {
+          // Normal case - scroll to the selected index if it's not a year marker
           api.scrollTo(selectedIndex);
-          handleCarouselChange();
         }
+
+        handleCarouselChange();
       };
 
       api.on("select", handleSelect);
