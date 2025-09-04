@@ -161,6 +161,13 @@ export default function Landing() {
     scrollTimeoutRef.current = setTimeout(() => {
       snapToNearestSection();
     }, 500); // Wait 500ms after scroll stops
+
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    const currentScrollTop = scrollContainer.scrollTop;
+    const halfScreenHeight = window.innerHeight / 2;
+    setIsAtTop(currentScrollTop < halfScreenHeight);
   }, [snapToNearestSection]);
 
   // Track scroll position to determine if at top
@@ -318,13 +325,13 @@ export default function Landing() {
             <AuditsList />
             */}
         </section>
-        <section className="flex flex-col overflow-clip place-content-center h-fit sm:h-screen">
+        <section className="flex flex-col overflow-clip place-content-center h-auto min-h-[106rem] sm:h-screen sm:min-h-screen">
           <Resources />
         </section>
       </div>
       <div
         className={`fixed left-1/2 -translate-x-1/2 flex z-20 justify-center ${
-          reachedMainCta && !isInLastSection ? "bottom-[1%] sm:bottom-[2%]" : "-bottom-28"
+          reachedMainCta && !isInLastSection ? "bottom-[1vh] sm:bottom-[2vh]" : "-bottom-28"
         } transition-all duration-500 ease-in-out pointer-events-none`}
         onClick={handleArrowClick}
       >
@@ -348,7 +355,7 @@ export default function Landing() {
       >
         <div
           className={`fixed left-1/2 -translate-x-1/2 flex z-20 justify-center ${
-            reachedMainCta && !isAtTop ? "top-[2%]" : "-top-28"
+            reachedMainCta && !isAtTop ? "top-[2vh]" : "-top-28"
           } transition-all duration-500 ease-in-out`}
         >
           <Button
