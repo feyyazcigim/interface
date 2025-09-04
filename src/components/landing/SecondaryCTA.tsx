@@ -419,7 +419,35 @@ export default function SecondaryCTA() {
             .map((info, index) => {
               // Calculate original data index for glow effect
               const originalIndex = index % valuesData.length;
-              const isGlowing = glowingCard?.component === "values" && glowingCard.cardIndex === originalIndex;
+
+              // Check if this card should glow based on card type
+              const shouldGlow = glowingCard?.component === "values" && glowingCard.cardIndex === originalIndex;
+
+              // If multiple cards should glow, only show the one closest to screen center
+              let isGlowing = false;
+              if (shouldGlow && valuesCarouselRef.current) {
+                const buttons = valuesCarouselRef.current.querySelectorAll("button");
+                const screenCenter = window.innerWidth / 2;
+                let closestDistance = Infinity;
+                let closestIndex = -1;
+
+                // Find all buttons with the same originalIndex and pick the closest to center
+                buttons.forEach((button, buttonIndex) => {
+                  const buttonOriginalIndex = buttonIndex % valuesData.length;
+                  if (buttonOriginalIndex === originalIndex) {
+                    const rect = button.getBoundingClientRect();
+                    const buttonCenter = rect.left + rect.width / 2;
+                    const distance = Math.abs(buttonCenter - screenCenter);
+                    if (distance < closestDistance) {
+                      closestDistance = distance;
+                      closestIndex = buttonIndex;
+                    }
+                  }
+                });
+
+                isGlowing = index === closestIndex;
+              }
+
               const isHoveredProgrammatically =
                 hoveredCard?.component === "values" && hoveredCard.index === originalIndex;
 
@@ -488,7 +516,35 @@ export default function SecondaryCTA() {
             .map((info, index) => {
               // Calculate original data index for glow effect
               const originalIndex = index % propertiesData.length;
-              const isGlowing = glowingCard?.component === "properties" && glowingCard.cardIndex === originalIndex;
+
+              // Check if this card should glow based on card type
+              const shouldGlow = glowingCard?.component === "properties" && glowingCard.cardIndex === originalIndex;
+
+              // If multiple cards should glow, only show the one closest to screen center
+              let isGlowing = false;
+              if (shouldGlow && propertiesCarouselRef.current) {
+                const buttons = propertiesCarouselRef.current.querySelectorAll("button");
+                const screenCenter = window.innerWidth / 2;
+                let closestDistance = Infinity;
+                let closestIndex = -1;
+
+                // Find all buttons with the same originalIndex and pick the closest to center
+                buttons.forEach((button, buttonIndex) => {
+                  const buttonOriginalIndex = buttonIndex % propertiesData.length;
+                  if (buttonOriginalIndex === originalIndex) {
+                    const rect = button.getBoundingClientRect();
+                    const buttonCenter = rect.left + rect.width / 2;
+                    const distance = Math.abs(buttonCenter - screenCenter);
+                    if (distance < closestDistance) {
+                      closestDistance = distance;
+                      closestIndex = buttonIndex;
+                    }
+                  }
+                });
+
+                isGlowing = index === closestIndex;
+              }
+
               const isHoveredProgrammatically =
                 hoveredCard?.component === "properties" && hoveredCard.index === originalIndex;
 
