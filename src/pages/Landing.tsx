@@ -212,7 +212,7 @@ export default function Landing() {
       handleScrollAttempt();
     };
 
-    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+    scrollContainer.addEventListener("scrollend", handleScroll, { passive: true });
     scrollContainer.addEventListener("wheel", handleWheel, { passive: true });
     scrollContainer.addEventListener("touchend", handleTouchEnd, { passive: true });
 
@@ -220,7 +220,7 @@ export default function Landing() {
     handleScroll();
 
     return () => {
-      scrollContainer.removeEventListener("scroll", handleScroll);
+      scrollContainer.removeEventListener("scrollend", handleScroll);
       scrollContainer.removeEventListener("wheel", handleWheel);
       scrollContainer.removeEventListener("touchend", handleTouchEnd);
       if (scrollTimeoutRef.current) {
