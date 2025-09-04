@@ -307,7 +307,7 @@ export function generateChaoticUnstableData(pointCount: number = 7): PricePoint[
 
   if (txTypeCount > 1) {
     // Generate additional indices evenly spaced, avoiding index 1 (flood) and last point
-    const availableIndices = [];
+    const availableIndices: number[] = [];
     for (let i = 2; i < pointCount - 1; i++) {
       // Start from 2 to avoid flood at index 1
       availableIndices.push(i);
