@@ -244,30 +244,30 @@ export default function ProjectStats() {
   function Volume() {
     return (
       <span className="flex flex-col sm:flex-row gap-3 sm:gap-6 items-center">
+        <span className={`transition-all duration-300 whitespace-nowrap ${getElementOpacity(false)}`}>
+          to facilitate
+        </span>
         <span className="flex flex-row gap-3 sm:gap-6 items-center">
-          <span className={`transition-all duration-300 whitespace-nowrap ${getElementOpacity(false)}`}>
-            to facilitate
-          </span>
           <span
             className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
           >
             $1B+
           </span>
+          <Button
+            variant={"outline-rounded"}
+            className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
+            onClick={() => handleButtonClick("volume")}
+            glow={activeButton === "volume"}
+            shimmer={!activeButton || activeButton === "volume"}
+            shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
+            glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
+          >
+            <span className="flex items-center gap-2">
+              <img src="/chart-increasing.png" alt="chart" className="w-6 h-6 sm:w-8 sm:h-8" />
+              in cumulative volume
+            </span>
+          </Button>
         </span>
-        <Button
-          variant={"outline-rounded"}
-          className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
-          onClick={() => handleButtonClick("volume")}
-          glow={activeButton === "volume"}
-          shimmer={!activeButton || activeButton === "volume"}
-          shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
-          glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
-        >
-          <span className="flex items-center gap-2">
-            <img src="/chart-increasing.png" alt="chart" className="w-6 h-6 sm:w-8 sm:h-8" />
-            in cumulative volume
-          </span>
-        </Button>
       </span>
     );
   }
