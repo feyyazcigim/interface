@@ -1,3 +1,4 @@
+import HypernativeLogo from "@/assets/misc/hypernative-logo.png";
 import ImmunefiLogo from "@/assets/misc/immunefi-logo.png";
 import PintoTokenLogo from "@/assets/tokens/PINTO.png";
 import useIsMobile from "@/hooks/display/useIsMobile";
@@ -43,48 +44,94 @@ export default function BugBounty() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center sm:mx-auto sm:my-auto">
-      <div className="flex flex-row gap-2 sm:gap-8 items-center" ref={componentRef}>
-        <img src={PintoTokenLogo} alt={"Pinto Token Icon"} className="h-12 w-12 sm:w-32 sm:h-32" />
-        <NumberFlow
-          value={value}
-          respectMotionPreference={false}
-          trend={+1}
-          format={{ style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2, trailingZeroDisplay: "auto" }}
-          className="text-black font-thin text-[3rem] sm:text-[8rem]"
-        />
+    <div className="flex flex-col gap-0 sm:gap-4">
+      <div className="flex flex-col items-center sm:mx-auto sm:my-auto px-4 sm:px-8 max-w-6xl w-full">
+        {/* Title */}
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="pinto-body sm:pinto-h2 font-light text-black">
+            Pinto is secured by repeated audits, a large bug bounty program and state of the art off-chain security
+            measures.
+          </h2>
+        </div>
       </div>
-      <div className="pinto-body sm:pinto-h2 font-light pt-3 sm:pt-6 flex flex-row gap-2 sm:gap-4 items-center">
-        <span>Bug Bounty through</span>
-        <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-6 sm:h-12" />
-      </div>
-      <div className="flex flex-row gap-2 sm:gap-4 pt-6 sm:pt-9">
-        <Link to={"https://immunefi.com/bug-bounty/pinto/information/"} target="_blank" rel="noopener noreferrer">
-          <Button
-            variant="outline"
-            size={isMobile ? "md" : "default"}
-            rounded="full"
-            className="shadow-none text-pinto-gray-4"
-          >
-            Read about the Bug Bounty Program
-          </Button>
-        </Link>
-      </div>
-      <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-2 w-full font-light text-base sm:text-2xl mt-[2rem] sm:mt-[4.5rem]">
-        <div className="text-pinto-gray-4">{`25 audits to date`}</div>
-        <Link
-          to={"https://docs.pinto.money/resources/audits"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-pinto-green-4 flex flex-row gap-2 items-center hover:underline"
-        >
-          <span>Learn More about Audits</span>
-          <PintoRightArrow
-            width={isMobile ? "1rem" : "1.25rem"}
-            height={isMobile ? "1rem" : "1.25rem"}
-            color="currentColor"
-          />
-        </Link>
+      <div>
+        {/* Three columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-16 w-[90%] mx-auto items-center">
+          {/* Column 1: Audits */}
+          <div className="flex flex-col items-center text-center">
+            <div className="text-2xl sm:text-6xl font-light text-black mb-2 sm:mb-6">25</div>
+            <div className="pinto-body sm:text-2xl font-light text-black mb-2 sm:mb-6">Audits to Date</div>
+            <Link to={"https://docs.pinto.money/resources/audits"} target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline"
+                size={isMobile ? "sm" : "lg"}
+                rounded="full"
+                className="shadow-none text-pinto-gray-4"
+              >
+                Learn More
+              </Button>
+            </Link>
+          </div>
+
+          {/* Column 2: Bug Bounty */}
+          <div className="flex flex-col items-center text-center" ref={componentRef}>
+            <div className="flex flex-row gap-2 sm:gap-4 items-center mb-2 sm:mb-4">
+              <img
+                src={PintoTokenLogo}
+                alt={"Pinto Token Icon"}
+                className="h-8 w-8 min-w-8 min-h-8 sm:w-16 sm:h-16 sm:min-h-16 sm:min-w-16"
+              />
+              <NumberFlow
+                value={value}
+                respectMotionPreference={false}
+                trend={+1}
+                format={{
+                  style: "decimal",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                  trailingZeroDisplay: "auto",
+                }}
+                className="text-black font-thin text-2xl sm:text-6xl"
+              />
+            </div>
+            <div className="pinto-body sm:text-2xl font-light flex flex-row gap-2 sm:gap-4 items-center mb-4 sm:mb-6">
+              <span>Bug Bounty with</span>
+              <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-4 sm:h-8" />
+            </div>
+            <Link to={"https://immunefi.com/bug-bounty/pinto/information/"} target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline"
+                size={isMobile ? "sm" : "lg"}
+                rounded="full"
+                className="shadow-none text-pinto-gray-4"
+              >
+                Learn More
+              </Button>
+            </Link>
+          </div>
+
+          {/* Column 3: Off-chain Monitoring */}
+          <div className="flex flex-col items-center text-center gap-2 sm:gap-6">
+            <img src={HypernativeLogo} alt={"Hypernative"} className="h-10 sm:h-16" />
+            <div className="pinto-body sm:text-2xl font-light text-black">
+              24/7 Real-time off-chain monitoring with Hypernative
+            </div>
+            <Link
+              to={"https://www.hypernative.io/blog/pinto-extends-protocol-security-with-hypernative"}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button
+                variant="outline"
+                size={isMobile ? "sm" : "lg"}
+                rounded="full"
+                className="shadow-none text-pinto-gray-4"
+              >
+                Learn More
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
