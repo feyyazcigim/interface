@@ -291,6 +291,54 @@ export function generateChaoticUnstableData(pointCount: number = 7): PricePoint[
     { txType: null, value: 1.0, speed: 1.0 }, // Always start at 1.0
   ];
 
+  // Calculate how many datapoints should have txType (half, rounded up to get more transactions)
+  const txTypeCount = Math.ceil((pointCount - 2) / 2); // Exclude start/end points, round up
+
+  // Calculate how many transactions should have triggerPulse: true (half, rounded down)
+  const triggerPulseCount = Math.floor((pointCount - 2) / 2); // Exclude start/end points
+
+  // Transaction types based on price movement
+  const priceUpTxTypes = ["deposit", "convertUp", "sow"];
+  const priceDownTxTypes = ["withdraw", "convertDown", "yield", "harvest"];
+
+  // Calculate evenly spaced indices for txTypes (including mandatory flood at index 1)
+  const txTypeIndices = new Set<number>();
+  txTypeIndices.add(1); // Mandatory flood transaction at index 1
+
+  if (txTypeCount > 1) {
+    // Generate additional indices evenly spaced, avoiding index 1 (flood) and last point
+    const availableIndices = [];
+    for (let i = 2; i < pointCount - 1; i++) {
+      // Start from 2 to avoid flood at index 1
+      availableIndices.push(i);
+    }
+
+    // Calculate how many more indices we need (excluding the flood)
+    const additionalIndicesNeeded = Math.min(txTypeCount - 1, availableIndices.length);
+
+    if (additionalIndicesNeeded > 0) {
+      const spacing = availableIndices.length / additionalIndicesNeeded;
+      for (let j = 0; j < additionalIndicesNeeded; j++) {
+        const arrayIndex = Math.round(j * spacing);
+        const actualIndex = availableIndices[Math.min(arrayIndex, availableIndices.length - 1)];
+        txTypeIndices.add(actualIndex);
+      }
+    }
+  }
+
+  // Calculate evenly spaced indices for triggerPulse
+  const triggerPulseIndices = new Set<number>();
+  if (triggerPulseCount > 0) {
+    const spacing = (pointCount - 2) / triggerPulseCount; // Space between trigger pulses
+    for (let j = 0; j < triggerPulseCount; j++) {
+      const index = Math.round(1 + j * spacing); // Start at index 1, evenly space
+      if (index < pointCount - 1) {
+        // Don't include the last point
+        triggerPulseIndices.add(index);
+      }
+    }
+  }
+
   for (let i = 1; i < pointCount - 1; i++) {
     // Alternate between above and below 1.0
     const isAbove = i % 2 === 1;
@@ -304,23 +352,58 @@ export function generateChaoticUnstableData(pointCount: number = 7): PricePoint[
     const speedOffset = 1.0 - speedRange / 2; // Center the range around 1.0
     const randomSpeed = speedOffset + rng() * speedRange;
 
+    // Determine txType
+    let txType: string | null = null;
+    if (txTypeIndices.has(i)) {
+      if (i === 1) {
+        txType = "flood"; // Mandatory flood at index 1
+      } else {
+        // Choose transaction type based on price movement TO THE NEXT POINT
+        // Pattern: odd indices are above 1.0, even indices are below 1.0
+        let priceWillIncrease: boolean;
+
+        if (i < pointCount - 2) {
+          const nextIsAbove = (i + 1) % 2 === 1;
+          // Price increases if going from below 1.0 to above 1.0
+          priceWillIncrease = !isAbove && nextIsAbove;
+        } else {
+          // Last point before end (which is always 1.0)
+          priceWillIncrease = !isAbove; // Will increase if currently below 1.0
+        }
+
+        // Choose transaction type based on direction of price movement
+        if (priceWillIncrease) {
+          // Price increases, so use bullish transaction
+          txType = priceUpTxTypes[Math.floor(rng() * priceUpTxTypes.length)];
+        } else {
+          // Price decreases, so use bearish transaction
+          txType = priceDownTxTypes[Math.floor(rng() * priceDownTxTypes.length)];
+        }
+      }
+    }
+
+    // Check if this index should have triggerPulse: true
+    const triggerPulse = triggerPulseIndices.has(i) ? true : undefined;
+
     if (isAbove) {
       // Above 1.0: range from 1.0005 to 1.0095
       data.push({
-        txType: null,
+        txType,
         value: poleBiasedRandom(rng, 1.0005, 1.0095),
         // value: 1.0005 + rng() * (1.0095 - 1.0005),
         speed: randomSpeed,
         triggerPhase: i === 2 ? "unstable" : undefined,
+        triggerPulse,
       });
     } else {
       // Below 1.0: range from 0.9995 to 0.9905
       data.push({
-        txType: null,
+        txType,
         value: poleBiasedRandom(rng, 0.9905, 0.9995),
         // value: 0.9905 + rng() * (0.9995 - 0.9905),
         speed: randomSpeed,
         triggerPhase: i === 2 ? "unstable" : undefined,
+        triggerPulse,
       });
     }
   }
@@ -331,7 +414,9 @@ export function generateChaoticUnstableData(pointCount: number = 7): PricePoint[
   console.log("=== Chaotic Unstable Data Points ===");
   data.forEach((point, index) => {
     if (point.speed !== undefined) {
-      console.log(`Point ${index}: value=${point.value}, speed=${point.speed.toFixed(3)}`);
+      console.log(
+        `Point ${index}: value=${point.value}, speed=${point.speed.toFixed(3)}, txType=${point.txType}, triggerPulse=${point.triggerPulse}`,
+      );
     } else {
       console.log(`Point ${index}: value=${point.value}, speed=undefined (start/end point)`);
     }

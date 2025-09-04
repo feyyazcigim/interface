@@ -12,6 +12,7 @@ interface FloaterContainerProps {
   isFirst: boolean;
   showAllLabels: boolean;
   toggleAllLabels: () => void;
+  measurementX: MotionValue<number>;
 }
 
 function FloaterContainer({
@@ -23,8 +24,20 @@ function FloaterContainer({
   isFirst,
   showAllLabels,
   toggleAllLabels,
+  measurementX,
 }: FloaterContainerProps) {
-  const leftPosition = useTransform(x, (scrollX) => marker.x + scrollX);
+  const leftPosition = useTransform(x, (scrollX: number) => marker.x + scrollX);
+
+  // Check if this floater is in the early reveal zone (0-75% of viewport)
+  const shouldPopOnReveal = useTransform([measurementX, x], (values: number[]) => {
+    const measX = values[0];
+    const scrollX = values[1];
+    const markerScreenPosition = marker.x + scrollX;
+    const isInEarlyZone = markerScreenPosition <= viewportWidth * 0.75;
+    const shouldTriggerPop = isInEarlyZone && measX >= markerScreenPosition;
+
+    return shouldTriggerPop;
+  });
 
   return (
     <motion.div
@@ -47,6 +60,7 @@ function FloaterContainer({
         positionAbove={positionAbove}
         showAllLabels={showAllLabels}
         toggleAllLabels={toggleAllLabels}
+        shouldPopOnReveal={shouldPopOnReveal}
       />
     </motion.div>
   );
@@ -81,6 +95,7 @@ function arePropsEqual(prevProps: FloaterContainerProps, nextProps: FloaterConta
     prevProps.isFirst !== nextProps.isFirst ||
     prevProps.x !== nextProps.x ||
     prevProps.floatersOpacity !== nextProps.floatersOpacity ||
+    prevProps.measurementX !== nextProps.measurementX ||
     prevProps.showAllLabels !== nextProps.showAllLabels ||
     prevProps.toggleAllLabels !== nextProps.toggleAllLabels
   ) {

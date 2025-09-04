@@ -9,6 +9,7 @@ const TxTypeIcons: Record<string, string> = {
   convertUp: "SpinningArrows_Landing.svg", // Convert transaction type icon
   convertDown: "SpinningArrows_Landing.svg", // Convert transaction type icon
   yield: "Cross_Landing.svg", // Yield transaction type icon
+  flood: "ReverseDoubleCaret_Landing.svg", // Flood transaction type icon
 };
 
 const TxIcons: Record<string, string> = {
@@ -19,16 +20,18 @@ const TxIcons: Record<string, string> = {
   convertUp: "Silo_Landing.svg",
   convertDown: "Silo_Landing.svg",
   yield: "Silo_Landing.svg",
+  flood: "Silo_Landing.svg",
 };
 
 const TxActionLabels: Record<string, string> = {
-  deposit: "Bought",
-  withdraw: "Sold",
+  deposit: "Deposited",
+  withdraw: "Withdrew",
   sow: "Lent",
   harvest: "Harvested",
   convertUp: "Converted Up",
   convertDown: "Converted Down",
   yield: "Mint",
+  flood: "Flood",
 };
 
 const bounceInAnimation: AnimationDefinition = {
@@ -53,6 +56,7 @@ export default function TxFloater({
   positionAbove,
   showAllLabels,
   toggleAllLabels,
+  shouldPopOnReveal,
 }: {
   from: string | undefined;
   txType: string | null;
@@ -64,6 +68,7 @@ export default function TxFloater({
   positionAbove?: boolean; // Whether the pill is positioned above the value target
   showAllLabels?: boolean; // Global state for showing all labels
   toggleAllLabels?: () => void; // Global toggle function
+  shouldPopOnReveal?: MotionValue<boolean>; // Whether to trigger pop animation when revealed
 }) {
   // Compute the floater's current screen X position
   const screenX = useTransform(x, (scrollX) => markerX + scrollX);
@@ -98,6 +103,24 @@ export default function TxFloater({
 
     return unsubscribe;
   }, [isFixed, showFixedTx, controls]);
+
+  // Listen for reveal trigger and play pop animation
+  useEffect(() => {
+    if (!shouldPopOnReveal) return;
+
+    const unsubscribe = shouldPopOnReveal.on("change", (shouldPop) => {
+      if (shouldPop && !hasAnimated.current) {
+        controls.start(bounceInAnimation);
+        hasAnimated.current = true;
+      } else if (!shouldPop && hasAnimated.current) {
+        // Reset when shouldPop becomes false (animation restart)
+        controls.set({ scale: 0, opacity: 0 });
+        hasAnimated.current = false;
+      }
+    });
+
+    return unsubscribe;
+  }, [controls, shouldPopOnReveal]);
 
   // Effect for floating floater data changes
   useEffect(() => {

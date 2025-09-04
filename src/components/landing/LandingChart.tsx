@@ -831,8 +831,6 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   // Dynamic measurement line position using percentage
   const measurementX = useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth);
 
-  // console.log("transactionmarkers: ", transactionMarkers);
-
   // Memoize getYOnBezierCurve
   const getYOnBezierCurve = useCallback(
     (xVal: number) => {
@@ -1790,6 +1788,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               isFirst={i === 0}
               showAllLabels={showAllLabels}
               toggleAllLabels={toggleAllLabels}
+              measurementX={measurementX}
             />
           );
         })}
