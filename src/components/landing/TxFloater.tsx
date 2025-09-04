@@ -178,9 +178,9 @@ export default function TxFloater({
         {actionLabel && showAllLabels && (
           <motion.div
             key="label"
-            className="absolute text-pinto-gray-6 text-base text-[18px] font-normal opacity-90 text-center whitespace-nowrap w-full"
+            className="absolute text-pinto-gray-6 text-base text-[18px] font-normal opacity-90 whitespace-nowrap w-full flex justify-center items-center"
             style={{
-              top: positionAbove ? "-28px" : "50px", // When pill is above $1 target, text goes above; when pill is below $1 target, text goes below
+              top: positionAbove ? "-24px" : "50px", // When pill is above $1 target, text goes above; when pill is below $1 target, text goes below
             }}
             initial={{ opacity: 0, y: positionAbove ? 5 : -5 }}
             animate={{ opacity: 0.9, y: 0 }}
