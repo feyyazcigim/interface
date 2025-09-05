@@ -42,7 +42,7 @@ function calculateGridYOffset(chartHeight: number) {
 const ANIMATION_CONFIG = {
   // Visual constants
   height: 577,
-  repetitions: 1,
+  repetitions: 2,
   pointSpacing: 140,
 
   // Speed constants
@@ -655,7 +655,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       return [
         { txType: null, value: 1, speed: 0.85 },
         { txType: null, value: 1.0005, speed: 0.85 },
-        ...Array.from({ length: repetitions * 2 }).flatMap(() => generateRandomizedStableData(stablePriceData)),
+        ...Array.from({ length: repetitions }).flatMap(() => generateRandomizedStableData(stablePriceData)),
       ];
     }
     return initialFullPriceData;
@@ -873,15 +873,9 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         return staticY;
       }
 
-      // Looping logic: after initial phase (unstable + semi-stable), loop only the stable segment
+      // Direct position calculation without looping to prevent desync
       // @ts-ignore-next-line
-      let xVal = measX + currentOffset - viewportWidth * ANIMATION_CONFIG.clipPath.initial; // Account for price line offset
-      const totalInitialWidth = positions.segments.totalInitial; // unstable + semi-stable
-      if (xVal > totalInitialWidth) {
-        // Offset so the stable segment loops seamlessly
-        const stableOffset = (xVal - totalInitialWidth) % positions.segments.stable;
-        xVal = totalInitialWidth + stableOffset;
-      }
+      const xVal = measX + currentOffset - viewportWidth * ANIMATION_CONFIG.clipPath.initial; // Account for price line offset
       return getYOnBezierCurve(xVal);
     },
   );
