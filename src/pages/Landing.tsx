@@ -18,14 +18,10 @@ export default function Landing() {
   const [reachedMainCta, setReachedMainCta] = useState<boolean>(false);
   const [isAtTop, setIsAtTop] = useState<boolean>(true); // Track if scroll is at very top
   const [isInLastSection, setIsInLastSection] = useState<boolean>(false); // Track if in last section
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isScrollingRef = useRef(false);
-  const lastSnappedSectionRef = useRef<Element | null>(null);
 
   // Track first-time visitor status
   const [isFirstTimeVisitor, setIsFirstTimeVisitor] = useState<boolean>(false);
   const [sectionsVisible, setSectionsVisible] = useState<boolean>(true); // Default to visible
-  const scrollAttemptCountRef = useRef(0);
 
   // Check if user is a first-time visitor
   useEffect(() => {
@@ -52,124 +48,6 @@ export default function Landing() {
     }
   }, [isFirstTimeVisitor, currentTriggerPhase, sectionsVisible]);
 
-  // Initialize lastSnappedSectionRef to first section on mount
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (scrollContainer) {
-      const sections = scrollContainer.querySelectorAll("section");
-      if (sections.length > 0) {
-        lastSnappedSectionRef.current = sections[0];
-      }
-    }
-  }, []);
-
-  // Scroll snapping functionality
-  const snapToNearestSection = useCallback(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer || isScrollingRef.current) return;
-
-    const sections = scrollContainer.querySelectorAll("section");
-    if (sections.length === 0) return;
-
-    const viewportHeight = window.innerHeight;
-    const currentScrollTop = scrollContainer.scrollTop;
-
-    // Check if we're currently in the Resources section (last section)
-    const resourcesSection = sections[sections.length - 1] as HTMLElement;
-    const resourcesSectionTop = resourcesSection.offsetTop;
-    const resourcesSectionBottom = resourcesSectionTop + resourcesSection.offsetHeight;
-    const viewportTop = currentScrollTop;
-    const viewportBottom = currentScrollTop + viewportHeight;
-
-    // If we're within the Resources section, disable snapping
-    if (viewportTop >= resourcesSectionTop - 100 && viewportBottom <= resourcesSectionBottom + 100) {
-      return;
-    }
-
-    let nearestSection: Element | null = null;
-    let smallestDistance = Infinity;
-
-    sections.forEach((section, _index) => {
-      const sectionTop = (section as HTMLElement).offsetTop;
-
-      // All sections use top alignment
-      const targetPoint = sectionTop;
-      const viewportReference = currentScrollTop;
-
-      const distance = Math.abs(targetPoint - viewportReference);
-
-      if (distance < smallestDistance) {
-        smallestDistance = distance;
-        nearestSection = section;
-      }
-    });
-
-    if (nearestSection) {
-      const sectionTop = (nearestSection as HTMLElement).offsetTop;
-      const firstSection = sections[0] as HTMLElement;
-      const isNearestSectionFirst = nearestSection === firstSection;
-
-      const wasLastSnappedFirst = lastSnappedSectionRef.current === firstSection;
-
-      // Prevent snapping from first section to first section
-      if (isNearestSectionFirst && wasLastSnappedFirst) {
-        return;
-      }
-
-      // Calculate target scroll position
-      let targetScrollTop = sectionTop;
-
-      // Adjust for CTA button spaces when they are visible
-      if (reachedMainCta) {
-        const sectionIndex = Array.from(sections).indexOf(nearestSection);
-        const isResourcesSection = sectionIndex === sections.length - 1;
-
-        // Calculate CTA button spaces
-        const topCtaSpace = viewportHeight * 0.02; // 2% + button height
-
-        if (!isResourcesSection) {
-          // For all sections except Resources: center content between both CTAs
-          const ctaOffset = topCtaSpace; // Adjust for CTA size
-          targetScrollTop = sectionTop - ctaOffset;
-        }
-        // Resources section: no adjustment needed as CTAs are typically hidden
-      }
-
-      // Only snap if we're not already close to the target
-      const currentDistance = Math.abs(currentScrollTop - targetScrollTop);
-      if (currentDistance > 50) {
-        isScrollingRef.current = true;
-        lastSnappedSectionRef.current = nearestSection;
-        scrollContainer.scrollTo({
-          top: targetScrollTop,
-          behavior: "smooth",
-        });
-
-        // Reset scrolling flag after animation completes
-        setTimeout(() => {
-          isScrollingRef.current = false;
-        }, 800);
-      }
-    }
-  }, [reachedMainCta]);
-
-  const handleScrollEnd = useCallback(() => {
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-
-    scrollTimeoutRef.current = setTimeout(() => {
-      snapToNearestSection();
-    }, 500); // Wait 500ms after scroll stops
-
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
-
-    const currentScrollTop = scrollContainer.scrollTop;
-    const halfScreenHeight = window.innerHeight / 2;
-    setIsAtTop(currentScrollTop < halfScreenHeight);
-  }, [snapToNearestSection]);
-
   // Track scroll position to determine if at top
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
@@ -183,7 +61,8 @@ export default function Landing() {
 
       const currentScrollTop = scrollContainer.scrollTop;
       const halfScreenHeight = window.innerHeight / 2;
-      setIsAtTop(currentScrollTop < halfScreenHeight);
+      const newIsAtTop = currentScrollTop < halfScreenHeight;
+      setIsAtTop(newIsAtTop);
 
       // Check if in last section
       const sections = scrollContainer.querySelectorAll("section");
@@ -194,63 +73,17 @@ export default function Landing() {
         const isInLast = currentScrollTop >= lastSectionTop - viewportHeight / 2;
         setIsInLastSection(isInLast);
       }
-
-      // Trigger scroll end detection
-      handleScrollEnd();
     };
 
-    const handleScrollAttempt = () => {
-      if (!sectionsVisible) {
-        scrollAttemptCountRef.current += 1;
-
-        // Enable scrolling after 2 attempts
-        if (scrollAttemptCountRef.current > 2) {
-          setSectionsVisible(true);
-          setReachedMainCta(true);
-        }
-      }
-    };
-
-    const handleWheel = (_e: globalThis.WheelEvent) => {
-      handleScrollAttempt();
-    };
-
-    const handleTouchEnd = (_e: globalThis.TouchEvent) => {
-      handleScrollAttempt();
-    };
-
-    if ("onscrollend" in scrollContainer) {
-      // Use native scrollend if available
-      (scrollContainer as HTMLElement).addEventListener("scrollend", handleScroll, { passive: true });
-    } else {
-      // Fallback to scroll with timeout for WebKit
-      (scrollContainer as HTMLElement).addEventListener("scroll", handleScrollEnd, { passive: true });
-    }
-
-    scrollContainer.addEventListener("wheel", handleWheel, { passive: true });
-    scrollContainer.addEventListener("touchend", handleTouchEnd, { passive: true });
+    (scrollContainer as HTMLElement).addEventListener("scroll", handleScroll, { passive: true });
 
     // Check initial position
     handleScroll();
 
     return () => {
-      if ("onscrollend" in scrollContainer) {
-        (scrollContainer as HTMLElement).removeEventListener("scrollend", handleScroll);
-      } else {
-        (scrollContainer as HTMLElement).removeEventListener("scroll", handleScrollEnd);
-      }
-      scrollContainer.removeEventListener("wheel", handleWheel);
-      scrollContainer.removeEventListener("touchend", handleTouchEnd);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
+      (scrollContainer as HTMLElement).removeEventListener("scroll", handleScroll);
     };
-  }, [handleScrollEnd, sectionsVisible]);
-
-  const handleWheel = (e: WheelEvent<HTMLElement>) => {
-    e.stopPropagation();
-    document.body.scrollTop += e.deltaY;
-  };
+  }, [sectionsVisible]);
 
   const handleArrowClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -349,7 +182,6 @@ export default function Landing() {
       </div>
       <Link
         to={isAtTop && reachedMainCta ? "" : navLinks.overview}
-        onWheelCapture={handleWheel}
         onClick={isAtTop && reachedMainCta ? handleArrowClick : undefined}
         className={`z-20`}
       >
