@@ -158,7 +158,7 @@ export default function Landing() {
             <AuditsList />
             */}
         </section>
-        <section className="flex flex-col overflow-clip place-content-center h-auto min-h-[106rem] sm:h-screen sm:min-h-screen">
+        <section className="flex flex-col overflow-clip place-content-center h-auto min-h-[110rem] sm:h-screen sm:min-h-screen">
           <Resources />
         </section>
       </div>
