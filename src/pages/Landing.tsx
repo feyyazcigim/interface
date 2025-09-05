@@ -102,7 +102,7 @@ export default function Landing() {
     let currentSectionIndex = 0;
     sections.forEach((section, index) => {
       const sectionTop = (section as HTMLElement).offsetTop;
-      if (currentScrollTop >= sectionTop - viewportHeight / 2) {
+      if (currentScrollTop >= sectionTop - viewportHeight / 10) {
         currentSectionIndex = index;
       }
     });
