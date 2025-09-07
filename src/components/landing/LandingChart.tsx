@@ -1175,8 +1175,8 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
           setTimeout(
             resolve,
             Math.max(
-              durations.fadeInSequence.priceLine.duration * 1000,
-              durations.fadeInSequence.priceIndicator.duration * 1000,
+              durations.fadeInSequence.priceLine.duration * 1000 * 0.5,
+              durations.fadeInSequence.priceIndicator.duration * 1000 * 0.5,
             ),
           ),
         );
