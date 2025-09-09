@@ -136,7 +136,7 @@ export default function Landing() {
         ref={scrollContainerRef}
       >
         <section
-          className="flex flex-col overflow-clip place-content-center min-h-screen sm:max-w-[1920px]"
+          className="flex flex-col overflow-clip place-content-center min-h-screen sm:max-w-[1920px] sm:w-full"
           style={{
             mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
             WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
