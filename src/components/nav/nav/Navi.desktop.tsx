@@ -184,7 +184,6 @@ const LearnNavi = ({ setNaviTab }) => {
 
 export default function Navi() {
   const [naviTab, setNaviTab] = useState("home");
-  const isHome = useMatch("/");
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleMouseEnter = useCallback((tab: string) => {
@@ -228,15 +227,13 @@ export default function Navi() {
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
-      {!isHome && (
-        <div className="h-[3.75rem]">
-          <AnimatePresence mode="wait">
-            {naviTab === "home" && <AppNavi />}
-            {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
-            {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
-          </AnimatePresence>
-        </div>
-      )}
+      <div className="h-[3.75rem]">
+        <AnimatePresence mode="wait">
+          {naviTab === "home" && <AppNavi />}
+          {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
+          {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
