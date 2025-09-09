@@ -216,7 +216,7 @@ function Field() {
       <div className="flex flex-col lg:flex-row justify-between gap-14 mt-0 sm:mt-0">
         <div className="flex flex-col w-full gap-4 sm:gap-8">
           {showInfos && (
-            <Col className="gap-2">
+            <Col className="gap-4">
               <div className="flex flex-col gap-4">
                 <div className="pinto-h2 sm:pinto-h1">Field</div>
                 <div className="pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
@@ -441,14 +441,12 @@ const ReadMoreField = () => {
   return (
     <ReadMoreAccordion defaultOpen={!learnDidVisit.field}>
       <>
-        Pods can be lent (Sown) to the protocol in exchange for Pods, protocol-native debt issued with a fixed interest
+        Pinto can be lent (Sown) to the protocol in exchange for Pods, protocol-native debt issued with a fixed interest
         rate. Pods function as zero coupon bonds that become redeemable (Harvestable) for 1 Pinto each on a first in,
         first out (FIFO) basis when new Pinto are minted.
         <br />
-        <br />
         When the time-weighted average Pinto price over the previous Season is over $1, new Pinto are minted, 48.5% of
         which are distributed to Pod holders.
-        <br />
         <br />
         Soil is the amount of Pinto the protocol is willing to purchase on the open market and Temperature is the
         interest rate it will pay. At the beginning of each Season (i.e., the top of each hour), the Soil and maximum
