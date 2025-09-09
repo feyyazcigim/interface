@@ -16,6 +16,7 @@ import useIsMobile from "@/hooks/display/useIsMobile";
 import useIsSmallDesktop from "@/hooks/display/useIsSmallDesktop";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
 import useFarmerActions from "@/hooks/useFarmerActions";
+import { useHarvestAndDeposit } from "@/hooks/useHarvestAndDeposit";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerField } from "@/state/useFarmerField";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -47,6 +48,13 @@ const Overview = () => {
 
   const navigate = useNavigate();
   const { submitClaimRewards } = useClaimRewards();
+  const {
+    submitHarvestAndDeposit,
+    isSubmitting: isHarvestSubmitting,
+    hasHarvestablePods,
+    stalkGain: harvestStalkGain,
+    seedGain: harvestSeedGain,
+  } = useHarvestAndDeposit();
 
   const isSmallDesktop = useIsSmallDesktop();
 
@@ -162,7 +170,7 @@ const Overview = () => {
         hoveredButton === "claim"
           ? farmerActions.claimRewards.outputs.bdvGain
           : farmerActions.harvestPods.outputs.bdvGain,
-      showActionValues: hoveredButton === "claim" /* || hoveredButton === "harvest" */,
+      showActionValues: hoveredButton === "claim" || hoveredButton === "harvest",
       isLoading: farmerSilo.isLoading,
     },
     stalk: {
@@ -173,7 +181,9 @@ const Overview = () => {
       mainValueChange:
         hoveredButton === "claim"
           ? farmerActions.claimRewards.outputs.stalkGain.add(farmerActions.updateDeposits.totalGains.stalkGain)
-          : farmerActions.harvestPods.outputs.stalkGain,
+          : hoveredButton === "harvest"
+            ? harvestStalkGain
+            : farmerActions.harvestPods.outputs.stalkGain,
       actionValue: hoveredButton === "claim" ? claimSiloPct.sub(siloPct) : harvestSiloPct.sub(siloPct),
       secondaryValue: siloPct,
       tooltipContent: (
@@ -186,7 +196,7 @@ const Overview = () => {
           </Link>
         </span>
       ),
-      showActionValues: hoveredButton === "claim" /* || hoveredButton === "harvest" */,
+      showActionValues: hoveredButton === "claim" || hoveredButton === "harvest",
       isLoading: farmerSilo.isLoading,
     },
     seeds: {
@@ -198,16 +208,20 @@ const Overview = () => {
           ? farmerActions.convertDeposits.bestConversion.outputs.seedGain
           : hoveredButton === "claim"
             ? farmerActions.claimRewards.outputs.seedGain.add(farmerActions.updateDeposits.totalGains.seedGain)
-            : farmerActions.harvestPods.outputs.seedGain,
+            : hoveredButton === "harvest"
+              ? harvestSeedGain
+              : farmerActions.harvestPods.outputs.seedGain,
       actionValue:
         hoveredButton === "convert"
           ? farmerActions.convertDeposits.bestConversion.outputs.seedGain
           : hoveredButton === "claim"
             ? farmerActions.claimRewards.outputs.seedGain.add(farmerActions.updateDeposits.totalGains.seedGain)
-            : farmerActions.harvestPods.outputs.seedGain,
+            : hoveredButton === "harvest"
+              ? harvestSeedGain
+              : farmerActions.harvestPods.outputs.seedGain,
       secondaryValue: stalkPerSeason,
       tooltipContent: "Seeds grow 1/10,000 Stalk each Season.",
-      showActionValues: hoveredButton !== "" && hoveredButton !== "harvest" && hoveredButton !== "wrap",
+      showActionValues: hoveredButton !== "" && hoveredButton !== "wrap",
       isLoading: farmerSilo.isLoading,
     },
     pods: {
@@ -251,25 +265,34 @@ const Overview = () => {
           <StatPanel {...(hasOnlyPods ? statPanelData.depositedValue : statPanelData.stalk)} />
           <StatPanel {...(hasOnlyPods ? statPanelData.stalk : statPanelData.seeds)} />
           <StatPanel {...(hasOnlyPods ? statPanelData.seeds : statPanelData.pods)} />
-          {(statPanelData.pods.mainValue.eq(0) || (statPanelData.pods.mainValueChange?.lt(0) && !hasOnlyPods)) &&
-            isSoilAvailable && (
-              <HelperLink
-                onClick={() =>
-                  navigate(statPanelData.pods.mainValueChange?.lt(0) ? "/field?action=harvest" : "/field?action=sow")
-                }
-                text={statPanelData.pods.mainValueChange?.lt(0) ? "Harvest Pods" : "Sow (Lend) in the Field for Pods"}
-                className={`absolute -mt-[13.75rem] -right-52 whitespace-break-spaces w-[140px] z-20 2xl:whitespace-normal 2xl:w-auto`}
-                dataTarget="pods-stats"
-                sourceAnchor="left"
-                targetAnchor="right"
-                source90Degree={true}
-                perpLength={10}
-                onMouseEnter={() => {
-                  setHoveredButton(statPanelData.pods.mainValueChange?.gte(0) ? "" : "harvest");
-                }}
-                onMouseLeave={() => setHoveredButton("")}
-              />
-            )}
+          {statPanelData.pods.mainValue.eq(0) && !hasOnlyPods && isSoilAvailable && (
+            <HelperLink
+              onClick={() => navigate("/field?action=sow")}
+              text={"Sow (Lend) in the Field for Pods"}
+              className={`absolute -mt-[13.75rem] w-[120px] min-[1100px]:-right-52 min-[1200px]:-right-40 min-[1300px]:-right-32 min-[1400px]:-right-40 min-[1500px]:-right-28 min-[1600px]:-right-56 min-[1700px]:-right-56 whitespace-break-spaces z-20 2xl:whitespace-normal 2xl:w-auto`}
+              dataTarget="pods-stats"
+              sourceAnchor="left"
+              targetAnchor="right"
+              source90Degree={true}
+              perpLength={10}
+            />
+          )}
+          {statPanelData.pods.mainValue.gt(0) && statPanelData.pods.mainValueChange?.lt(0) && !hasOnlyPods && (
+            <HelperLink
+              onClick={() => submitHarvestAndDeposit()}
+              text={"Harvest Pods"}
+              className={`absolute -mt-[13.75rem] min-[1100px]:-right-48 min-[1200px]:-right-36 min-[1300px]:-right-24 min-[1400px]:-right-0 min-[1500px]:right-8 min-[1600px]:-right-24 min-[1700px]:-right-20 whitespace-break-spaces z-20 2xl:whitespace-normal w-auto opacity-100 transition-opacity ${isHarvestSubmitting ? "opacity-50 pointer-events-none" : ""}`}
+              dataTarget="pods-stats"
+              sourceAnchor="left"
+              targetAnchor="right"
+              source90Degree={true}
+              perpLength={10}
+              onMouseEnter={() => {
+                setHoveredButton("harvest");
+              }}
+              onMouseLeave={() => setHoveredButton("")}
+            />
+          )}
           {/*hasOnlyPods && (
             <HelperLink
               onClick={() => navigate("/silo")}

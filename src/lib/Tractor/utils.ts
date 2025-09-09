@@ -396,19 +396,16 @@ export function decodeSowTractorData(encodedData: `0x${string}`): SowBlueprintDa
       data: encodedData,
     });
 
-    // Step 2: If the encoded data is an advancedPipe call, return the decoded data.
-    if (calls.functionName === "advancedPipe" && calls.args?.[0]) {
-      return handleDecodeSowV0BlueprintFromAdvancedPipe(calls.args[0]);
-    }
-    // Step 3: If the encoded data is an advancedFarm call, decode again.
-    else if (calls.functionName === "advancedFarm" && calls.args[0]) {
+    // Valid tractor orders are encoded as advancedFarm(advancedPipe(callData))
+    // Step 2: If the encoded data is an advancedFarm call, decode again.
+    if (calls.functionName === "advancedFarm" && calls.args[0]) {
       const farmCalls = calls.args[0];
 
       if (!farmCalls.length) {
         console.debug("[Tractor/decodeSowTractorData] No farm calls provided. Returning null.");
         return null;
       }
-      // Step 4: Try to decode the inner call as advancedPipe
+      // Step 3: Try to decode the inner call as advancedPipe
       try {
         const pipeCallData = farmCalls[0].callData;
         const advancedPipeDecoded = decodeFunctionData({
@@ -552,7 +549,7 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
         if (!requisition?.blueprint || !requisition?.blueprintHash || !requisition?.signature) return null;
 
         // Only filter by address if one is provided
-        if (!stringEq(requisition.blueprint.publisher, address)) {
+        if (address && !stringEq(requisition.blueprint.publisher, address)) {
           return null;
         }
 
@@ -1468,4 +1465,33 @@ export const isTractorTokenStrategy = (value: unknown): value is TractorTokenStr
     default:
       return false;
   }
+};
+
+/**
+ * Prepare a requisition event for a transaction by normalizing the blueprint data.
+ * - Fix timestamp values for transaction
+ * - Filter out invalid operator paste instructions
+ * @param req - The requisition event to prepare
+ * @returns The prepared requisition event
+ */
+export const prepareSowOrderV0RequisitionEventForTxn = (req: RequisitionEvent) => {
+  const normalizeEndTime = (endTime: bigint) => {
+    if (endTime === 8640000000000n) {
+      // max uint256
+      return BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
+    }
+    return endTime;
+  };
+
+  return {
+    ...req.requisition,
+    blueprint: {
+      ...req.requisition.blueprint,
+      startTime: req.requisition.blueprint.startTime,
+      endTime: normalizeEndTime(req.requisition.blueprint.endTime),
+      operatorPasteInstrs: req.requisition.blueprint.operatorPasteInstrs.filter(
+        (instr) => instr !== "0x" && instr !== ("" as `0x${string}`),
+      ),
+    },
+  };
 };

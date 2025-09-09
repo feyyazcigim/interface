@@ -122,10 +122,12 @@
 
 @layer components {
   .bg-gradient-light {
-    background: linear-gradient(90deg,
+    background: linear-gradient(
+        90deg,
         rgba(233, 231, 224, 0.1) 0%,
         rgba(254, 225, 140, 0.1) 52.5%,
-        rgba(241, 248, 140, 0.1) 100%), linear-gradient(0deg, #ffffff, #ffffff);
+        rgba(241, 248, 140, 0.1) 100%
+      ), linear-gradient(0deg, #ffffff, #ffffff);
   }
 
   .h1 {
@@ -150,13 +152,14 @@
   }
 
   .bg-morning-light {
-    background: linear-gradient(90deg,
-        rgba(233, 231, 224, 0.2) 0%,
-        rgba(254, 225, 140, 0.2) 0.01%,
-        rgba(241, 248, 140, 0.4) 100%);
-
+    background: linear-gradient(
+      90deg,
+      rgba(233, 231, 224, 0.2) 0%,
+      rgba(254, 225, 140, 0.2) 0.01%,
+      rgba(241, 248, 140, 0.4) 100%
+    );
   }
-  
+
   /* Used for text boxes in Tractor order blueprint visualization */
   .text-box {
     @apply bg-gray-100 px-2 py-1 rounded-lg text-gray-400;
@@ -180,6 +183,23 @@
 
   .text-pinto-body {
     @apply body;
+  }
+
+  .animate-pop-in {
+    animation: pop-in 0.78s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  @keyframes pop-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
 
@@ -215,7 +235,6 @@ body::-webkit-scrollbar {
 
 /* Set 75% font size between 768px and 1600px */
 @media screen and (min-width: 768px) and (max-width: 1600px) {
-
   html,
   body {
     font-size: 75%;
@@ -223,6 +242,6 @@ body::-webkit-scrollbar {
 }
 
 #tsparticles {
-  height: 80vh;
+  height: 100%;
   z-index: 0;
 }

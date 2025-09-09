@@ -332,6 +332,7 @@ export const navLinks = {
   field: "/field",
   swap: "/swap",
   sPinto: "/sPinto",
+  collection: "/collection",
   podmarket: "/market/pods",
   explorer: "/explorer",
   explorer_pinto: "/explorer/pinto",
@@ -351,4 +352,18 @@ export const navLinks = {
   communityBlog: "https://mirror.xyz/0xe7731147bBe1BEBe5CF1Ab101C6EceD384dAbD07",
   printsToThePeople:
     "https://mirror.xyz/0x8F02813a0AC20affC2C7568e0CB9a7cE5288Ab27/VC2bqtuWvmo2EssZhWGCVgGRC1_SR2Bg82voJJxI7MU",
+} as const;
+
+export const navPathNameToTopMenu = {
+  overview: "home",
+  "how-pinto-works": "home",
+  silo: "home",
+  sPinto: "home",
+  field: "home",
+  swap: "home",
+  market: "home",
+  transfer: "home",
+  soon: "home",
+  learn: "learn",
+  data: "explorer",
 } as const;

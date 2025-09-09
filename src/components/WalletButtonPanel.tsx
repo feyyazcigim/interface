@@ -1,4 +1,5 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { useWalletNFTProfile } from "@/hooks/useWalletNFTProfile";
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { FarmerBalance, useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -11,6 +12,7 @@ import { useAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
+import { renderAnnouncement } from "./AnnouncementBanner";
 import ChainButton from "./ChainButton";
 import { BackwardArrowDotsIcon, LeftArrowIcon, UpDownArrowsIcon } from "./Icons";
 import WalletButtonClaim from "./WalletButtonClaim";
@@ -22,6 +24,44 @@ import { ScrollArea } from "./ui/ScrollArea";
 import { Separator } from "./ui/Separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
 
+// NFT Profile Display component for right side of header
+interface NFTProfileDisplayProps {
+  navigate: ReturnType<typeof useNavigate>;
+  togglePanel: () => void;
+}
+const NFTProfileDisplay = ({ navigate, togglePanel }: NFTProfileDisplayProps) => {
+  const { hasNFT, profileImageUrl } = useWalletNFTProfile();
+
+  // TEMPORARY: Hide NFT profile images - set to false to show real NFT images
+  const hideNFTProfile = false;
+
+  if (!hasNFT || !profileImageUrl) {
+    return null;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigate("/collection");
+        togglePanel();
+      }}
+      className="w-[11.25rem] h-20 rounded-lg overflow-hidden bg-gray-100 hover:opacity-80 transition-opacity flex-shrink-0 flex items-center justify-center"
+    >
+      {hideNFTProfile ? (
+        <span className="text-gray-500 font-semibold text-2xl">?</span>
+      ) : (
+        <img
+          src={profileImageUrl}
+          alt="NFT Profile"
+          className="w-full h-full object-cover"
+          style={{ objectPosition: "50% 10%" }}
+        />
+      )}
+    </button>
+  );
+};
+
 // Wallet header component
 interface WalletHeaderProps {
   address: `0x${string}` | undefined;
@@ -30,29 +70,15 @@ interface WalletHeaderProps {
   disconnect: () => void;
   togglePanel: () => void;
   totalBalance: FarmerBalance;
+  navigate: ReturnType<typeof useNavigate>;
 }
-const WalletHeader = ({ address, ensName, ensAvatar, disconnect, togglePanel, totalBalance }: WalletHeaderProps) => (
+const WalletHeader = ({ address, ensName, ensAvatar, totalBalance }: WalletHeaderProps) => (
   <div className="flex flex-col gap-2 2xl:gap-4">
-    <div className="flex flex-row justify-between items-center h-4">
-      <div className="flex flex-row gap-1">
-        {ensAvatar && <Avatar address={address} size={24} />}
-        <span className="pinto-sm text-pinto-gray-5">
-          {ensName || (address ? `${address.substring(0, 7)}...${address.substring(38, 42)}` : "")}
-        </span>
-      </div>
-      {address && (
-        <button
-          type="button"
-          onClick={() => {
-            disconnect();
-            togglePanel();
-          }}
-          className="flex justify-center items-center gap-1 w-[11.25rem] h-[2.125rem] bg-[#F8F8F8] rounded-full pinto-sm hover:hover:bg-pinto-green hover:text-white"
-        >
-          <span>Disconnect Wallet</span>
-          <span className="w-4 h-4">×</span>
-        </button>
-      )}
+    <div className="flex flex-row gap-1 items-center h-4">
+      {ensAvatar && <Avatar address={address} size={24} />}
+      <span className="pinto-sm text-pinto-gray-5">
+        {ensName || (address ? `${address.substring(0, 7)}...${address.substring(38, 42)}` : "")}
+      </span>
     </div>
     <span className="text-[3rem] leading-[1.1] 2xl:pinto-h1 text-pinto-gray-5">
       {formatter.usd(totalBalance.total, { decimals: totalBalance.total.gt(9999999) ? 0 : 2 })}
@@ -290,25 +316,57 @@ export default function WalletButtonPanel({ togglePanel }) {
   }
 
   return (
-    <>
+    <div
+      className="grid grid-rows-[auto_1fr_auto]"
+      style={{ height: `calc(100vh - ${renderAnnouncement ? 7.5 : 5}rem)` }}
+    >
       <CardHeader className="flex flex-col gap-4 p-4 2xl:p-6">
-        <WalletHeader
-          address={address}
-          ensName={ensName}
-          ensAvatar={ensAvatar}
-          disconnect={disconnect}
-          togglePanel={togglePanel}
-          totalBalance={totalBalance}
-        />
+        <div className="flex flex-row justify-between items-start">
+          <div className="flex-1">
+            <WalletHeader
+              address={address}
+              ensName={ensName}
+              ensAvatar={ensAvatar}
+              disconnect={disconnect}
+              togglePanel={togglePanel}
+              totalBalance={totalBalance}
+              navigate={navigate}
+            />
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {address && (
+              <button
+                type="button"
+                onClick={() => {
+                  disconnect();
+                  togglePanel();
+                }}
+                className="flex justify-center items-center gap-1 w-[11.25rem] h-[2.125rem] bg-[#F8F8F8] rounded-full pinto-sm hover:hover:bg-pinto-green hover:text-white"
+              >
+                <span>Disconnect Wallet</span>
+                <span className="w-4 h-4">×</span>
+              </button>
+            )}
+            {/* NFT Profile Display - Hidden on mobile */}
+            <div className="hidden sm:block">
+              <NFTProfileDisplay navigate={navigate} togglePanel={togglePanel} />
+            </div>
+          </div>
+        </div>
         <BalanceSummary totalBalance={totalBalance} />
         <ActionButtons navigate={navigate} togglePanel={togglePanel} />
       </CardHeader>
 
-      <CardContent className="p-0">
+      <CardContent className="p-0 min-h-0">
         <Separator className="w-[40rem] -ml-4" />
-        <div className="p-3 pb-12 2xl:p-6 sm:pb-16">
-          <Tabs defaultValue="combined" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
-            <TabsList className="grid w-full grid-cols-3 h-11 sm:h-12 py-0 px-1 gap-[0.5rem] sm:gap-[0.75rem]">
+        <div className="p-3 2xl:p-6 h-full flex flex-col">
+          <Tabs
+            defaultValue="combined"
+            className="w-full flex-1 min-h-0 flex flex-col"
+            value={currentTab}
+            onValueChange={setCurrentTab}
+          >
+            <TabsList className="grid w-full grid-cols-3 h-11 sm:h-12 py-0 px-1 gap-[0.5rem] sm:gap-[0.75rem] flex-shrink-0">
               <TabsTrigger className="h-9 text-[0.875rem] sm:text-[1rem] hover:bg-pinto-gray-1" value="combined">
                 Combined
               </TabsTrigger>
@@ -320,7 +378,7 @@ export default function WalletButtonPanel({ togglePanel }) {
               </TabsTrigger>
             </TabsList>
 
-            <ScrollArea className="h-[calc(100dvh-28.5rem)] sm:h-[calc(100dvh-32rem)] lg:h-[calc(100dvh-31rem)] 2xl:h-[calc(100dvh-37rem)] -mx-3 px-3">
+            <ScrollArea className="h-full -mx-3 px-3 flex-1 min-h-0">
               <TabsContent value="combined" className="overflow-y-auto overflow-x-clip">
                 {totalBalance.total.eq(0) ? (
                   <EmptyState message="You don't have any value in your Wallet or Farm Balance, Bridge value to Base to get started." />
@@ -367,7 +425,7 @@ export default function WalletButtonPanel({ togglePanel }) {
         </div>
       </CardContent>
 
-      <CardFooter className="absolute bottom-0 mx-auto left-0 right-0 text-center justify-center flex flex-col gap-4">
+      <CardFooter className="bottom-0 mx-auto left-0 right-0 sm:mb-4 text-center justify-center flex flex-col gap-4">
         {ENABLE_SWITCH_CHAINS && !showClaim && <ChainButton />}
         <Button
           variant="default"
@@ -381,6 +439,6 @@ export default function WalletButtonPanel({ togglePanel }) {
         </Button>
         {totalFlood.gt(0) && <WalletButtonClaim />}
       </CardFooter>
-    </>
+    </div>
   );
 }

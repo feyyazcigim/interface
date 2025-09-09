@@ -241,15 +241,19 @@ This project represents a sophisticated DeFi frontend with complex state managem
 ### Pull Request Management
 When working on code changes that result in commits, AI agents must:
 
-1. **Always create a pull request** after pushing commits to a feature branch
-2. **Update PR descriptions** to accurately reflect all changes made, including:
+1. **Always lint and format code** before creating a pull request:
+   - Run `yarn format-and-lint` to auto-format and lint code with Biome
+   - Fix any linting issues specific to the files you've changed
+   - Commit any formatting fixes before creating the PR
+2. **Always create a pull request** after pushing commits to a feature branch
+3. **Update PR descriptions** to accurately reflect all changes made, including:
    - Summary of what was implemented/fixed
    - Technical details of the changes
    - Any new files created or workflows added
    - Testing considerations
-3. **Reference relevant issues** if the PR addresses specific GitHub issues
-4. **Include appropriate labels** for the type of change (feature, bugfix, documentation, etc.)
-5. **Ensure PR title clearly describes the change** using conventional commit format when possible
+4. **Reference relevant issues** if the PR addresses specific GitHub issues
+5. **Include appropriate labels** for the type of change (feature, bugfix, documentation, etc.)
+6. **Ensure PR title clearly describes the change** using conventional commit format when possible
 
 ### Commit Standards
 - Use clear, descriptive commit messages

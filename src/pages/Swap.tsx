@@ -10,17 +10,20 @@ import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import { NATIVE_TOKEN, WSOL_TOKEN } from "@/constants/tokens";
 import { beanstalkAbi } from "@/generated/contractHooks";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useIsWSOL, useTokenMap, useWSOL } from "@/hooks/pinto/useTokenMap";
+import { useTokenMap, useWSOL } from "@/hooks/pinto/useTokenMap";
 import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import { useDestinationBalance } from "@/state/useDestinationBalance";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import useTokenData from "@/state/useTokenData";
+import { getChainConstant } from "@/utils/chain";
 import { stringToNumber } from "@/utils/string";
 import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { FarmFromMode, Token } from "@/utils/types";
@@ -41,27 +44,39 @@ const handleOnError = (e: any) => {
   return false;
 };
 
+const getInitTokenIn = ({ preferredToken, loading }: ReturnType<typeof usePreferredInputToken>) => {
+  const chainId = preferredToken.chainId;
+
+  const ETH = getChainConstant(chainId, NATIVE_TOKEN);
+  const WSOL = getChainConstant(chainId, WSOL_TOKEN);
+
+  // prevent main token from being selected as input since default output token is BEAN.
+  // prevent WSOL from being selected as default input.
+  if (loading || preferredToken.isMain || tokensEqual(preferredToken, WSOL)) {
+    return ETH;
+  }
+
+  return preferredToken;
+};
+
 export default function Swap() {
   const queryClient = useQueryClient();
   const { queryKeys } = useFarmerBalances();
-  const { mainToken: BEAN, nativeToken: ETH, siloWrappedToken, siloWrappedToken3p } = useTokenData();
+  const { mainToken: BEAN } = useTokenData();
   const diamond = useProtocolAddress();
 
-  const isWSOL = useIsWSOL();
   const wsol = useWSOL();
   const account = useAccount();
   const tokenMap = useTokenMap();
 
   const filter = useMemo(() => [wsol], [wsol]);
-  const { preferredToken } = usePreferredInputToken({ filterLP: true, filter });
+  const preferredInput = usePreferredInputToken({ filterLP: true, filter });
 
-  const initToken = isWSOL(preferredToken) ? ETH : preferredToken;
-
-  const [amountIn, setAmountIn] = useState("0");
-  const [tokenIn, setTokenIn] = useState(initToken);
+  const [amountIn, setAmountIn] = useState("");
+  const [tokenIn, setTokenIn] = useState(getInitTokenIn(preferredInput));
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [inputError, setInputError] = useState(false);
-  const [amountOut, setAmountOut] = useState("0");
+  const [amountOut, setAmountOut] = useState("");
   const [tokenOut, setTokenOut] = useState(BEAN);
   const [slippage, setSlippage] = useState(0.1);
   const { balanceTo, setBalanceTo } = useDestinationBalance();
@@ -73,7 +88,19 @@ export default function Swap() {
       }),
     );
     return s;
-  }, [tokenMap, siloWrappedToken, siloWrappedToken3p]);
+  }, [tokenMap]);
+
+  const filterTokensForBuy = useMemo(() => {
+    const buyFilter = new Set(filterTokens);
+    Object.values(tokenMap).forEach((t) => {
+      if (t.symbol.includes("WSOL")) {
+        buyFilter.add(t);
+      }
+    });
+    return buyFilter;
+  }, [filterTokens, tokenMap]);
+
+  const amountInTV = useSafeTokenValue(amountIn, tokenIn);
 
   const {
     data: swapData,
@@ -83,7 +110,7 @@ export default function Swap() {
     tokenIn,
     tokenOut,
     slippage,
-    amountIn: TokenValue.fromHuman(amountIn, tokenIn.decimals),
+    amountIn: amountInTV,
   });
 
   // const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
@@ -110,14 +137,14 @@ export default function Swap() {
 
   // reset the amountout if the amountin is 0
   useEffect(() => {
-    if (stringToNumber(amountIn) <= 0) {
-      setAmountOut("0");
+    if (amountInTV.lte(0)) {
+      setAmountOut("");
     }
-  }, [amountIn]);
+  }, [amountInTV]);
 
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
-    setAmountOut("0");
+    setAmountIn("");
+    setAmountOut("");
     queryKeys.forEach((query) => queryClient.invalidateQueries({ queryKey: query }));
     resetSwap();
   }, [queryClient, queryKeys, resetSwap]);
@@ -133,7 +160,7 @@ export default function Swap() {
   const invertTokens = useCallback(() => {
     const newTokenIn = tokenMap[getTokenIndex(tokenOut)];
     const newAmountIn = amountIn.toString();
-    setAmountOut("0");
+    setAmountOut("");
     setTokenOut(tokenIn);
     setAmountIn(newAmountIn);
     setTokenIn(newTokenIn);
@@ -179,7 +206,7 @@ export default function Swap() {
         abi: beanstalkAbi,
         functionName: "advancedFarm",
         args: [swapBuild.advancedFarm],
-        value: tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals).toBigInt() : 0n,
+        value: tokenIn.isNative ? amountInTV.toBigInt() : 0n,
       });
     } catch (e: any) {
       console.error("Error submitting swap: ", e);
@@ -189,7 +216,7 @@ export default function Swap() {
     } finally {
       setSubmitting(false);
     }
-  }, [swapData, amountIn, tokenIn, account.address, diamond, writeWithEstimateGas, setSubmitting, buildSwap]);
+  }, [swapData, amountInTV, tokenIn, account.address, diamond, writeWithEstimateGas, setSubmitting, buildSwap]);
 
   const swapNotReady = !swapData || !!swapQuery.error;
 
@@ -269,7 +296,7 @@ export default function Swap() {
                 isLoading={swapQuery.isLoading || false}
                 disableInput
                 hideMax
-                filterTokens={filterTokens}
+                filterTokens={filterTokensForBuy}
                 selectKey="buy"
               />
             </div>

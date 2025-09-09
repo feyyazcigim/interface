@@ -1,5 +1,4 @@
 import { TokenValue } from "@/classes/TokenValue";
-import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 import ActionsMenu from "@/components/ActionsMenu";
 import { Col, Row } from "@/components/Container";
 import DonutChart from "@/components/DonutChart";
@@ -17,6 +16,7 @@ import { Card } from "@/components/ui/Card";
 import IconImage from "@/components/ui/IconImage";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import { PINTO_WETH_TOKEN, PINTO_WSOL_TOKEN } from "@/constants/tokens";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import useIsSmallDesktop from "@/hooks/display/useIsSmallDesktop";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
@@ -29,9 +29,10 @@ import { useSeedGauge } from "@/state/useSeedGauge";
 import { useSiloData } from "@/state/useSiloData";
 import { useSeason } from "@/state/useSunData";
 import useTokenData, { useWhitelistedTokens } from "@/state/useTokenData";
+import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
 import { getClaimText } from "@/utils/string";
-import { getTokenIndex } from "@/utils/token";
+import { getTokenIndex, tokensEqual } from "@/utils/token";
 import { StatPanelData, Token } from "@/utils/types";
 import { getSiloConvertUrl } from "@/utils/url";
 import { cn } from "@/utils/utils";
@@ -52,6 +53,9 @@ function Silo() {
   const navigate = useNavigate();
   const isSmallDesktop = useIsSmallDesktop();
 
+  const pintoWETHLP = useChainConstant(PINTO_WETH_TOKEN);
+  const pintoWSOLLP = useChainConstant(PINTO_WSOL_TOKEN);
+
   const [hoveredButton, setHoveredButton] = useState("");
   const enableStatPanels =
     farmerSilo.depositsUSD.gt(0) || farmerSilo.activeStalkBalance.gt(0) || farmerSilo.activeSeedsBalance.gt(0);
@@ -63,7 +67,11 @@ function Silo() {
   const convertEnabled = farmerActions.convertDeposits.enabled && isBelowValueTarget;
   const convertFrom = farmerActions.convertDeposits.bestConversion.from;
   const convertTo = farmerActions.convertDeposits.bestConversion.to;
-  const bestDeposit = farmerActions.optimalDepositToken?.token;
+  const bestDepositToken = farmerActions.optimalDepositToken?.token;
+  const bestDeposit =
+    bestDepositToken && !tokensEqual(bestDepositToken, pintoWETHLP) && !tokensEqual(bestDepositToken, pintoWSOLLP)
+      ? bestDepositToken
+      : undefined;
 
   const claimEnabled =
     farmerActions.claimRewards.outputs.beanGain.gt(0.01) ||
@@ -258,6 +266,7 @@ function Silo() {
                   }
                 />
               )} */}
+              {/*
               {!convertEnabled && bestDeposit && (
                 <TableRowConnector
                   toTarget={`token-row-${bestDeposit.address}`}
@@ -291,19 +300,12 @@ function Silo() {
                   }
                 />
               )}
+              */}
             </div>
           </div>
           <div className="flex flex-col w-full gap-8">
             <div className="w-full">
               <SiloStats />
-            </div>
-            <div className="w-full">
-              <AccordionGroup
-                items={FAQ_ITEMS}
-                allExpanded={false}
-                groupTitle="Frequently Asked Questions"
-                variant="text"
-              />
             </div>
           </div>
         </div>
@@ -335,12 +337,15 @@ const LearnSilo = () => {
     <>
       <ReadMoreAccordion defaultOpen={!learnDidVisit.silo}>
         <>
-          Pinto or Pinto-LP can be deposited into the Silo and can be withdrawn at any time. Deposits are eligible to
-          earn Pinto after at least 1 full season has passed. When Pinto is priced over $1, new Pinto is minted with
-          48.5% being distributed to Silo depositors. Depositors earn a share of the Pinto mints to the silo based on
-          their Stalk balance proportional to total Stalk supply. A Deposit is issued an initial amount of Stalk and
-          Seeds, which is determined by token type and value. Seeds grow Stalk every season. All stalk is forfeit upon a
-          withdrawal.
+          Pinto and Pinto-LP can be Deposited into and Withdrawn from the Silo at any time. When the time-weighted
+          average Pinto price over the previous Season is over $1, new Pinto are minted, 48.5% of which are distributed
+          to Deposits.
+          <br />
+          <br />
+          Deposits are eligible to earn a portion of Pinto mints after being Deposited for at least 1 full Season,
+          earning directly based on their proportion of the total Stalk supply. Deposits receive Stalk and Seeds based
+          on token type and Pinto-denominated value at the time of Deposit. Seeds grow Stalk every season. All Stalk and
+          Seeds are forfeited upon Withdrawal.
         </>
       </ReadMoreAccordion>
     </>
@@ -726,81 +731,3 @@ const useSiloStats = () => {
     };
   }, [totalDepositedBDV, uniqueDepositors.data, silo.totalStalk, byToken, isLoading]);
 };
-
-// ---------- FAQ COPY ----------
-
-const FAQ_ITEMS: IBaseAccordionContent[] = [
-  {
-    key: "what-is-stalk",
-    title: "What is Stalk?",
-    content:
-      "Stalk is a native Pinto asset representing your ownership share of the Silo. When Pinto trades above its value target, the protocol mints additional Pinto tokens and distributes them to the Silo and the Field. The larger your Stalk balance, the greater your share of those mints.",
-  },
-  {
-    key: "how-do-i-get-more-stalk",
-    title: "How do I get more Stalk?",
-    content: (
-      <div className="flex flex-col gap-2 pinto-sm font-thin text-pinto-light">
-        <>There are two ways to increase your Stalk:</>
-        <ul className="flex flex-col gap-1 pl-2 list-disc">
-          <li>
-            - Deposit more value into the Silo — every&nbsp;1 Pinto (or Pinto-denominated value) gives you&nbsp;1 Stalk.
-          </li>
-          <li>
-            - Every season you stay in the silo, you earn Stalk based on the amount of seeds you have. Each seed earns
-            1/10000 stalk. The amount of Seeds you have is based on the amount and token type you deposited in the Silo.
-          </li>
-        </ul>
-      </div>
-    ),
-  },
-  {
-    key: "can-i-lose-stalk",
-    title: "Can I lose Stalk?",
-    content: (
-      <>
-        <span className="font-medium">Yes.</span> When you withdraw from the Silo, you forfeit all Stalk grown on the
-        withdrawn amount, and it cannot be regained.
-      </>
-    ),
-  },
-  {
-    key: "can-i-switch-my-deposit-type",
-    title: "Can I switch my Deposit type?",
-    content:
-      "Yes! Pinto lets you Convert Pinto Deposits to LP Deposits while Pinto is above its value target, and LP Deposits back to Pinto Deposits when Pinto is below the target — all without losing Stalk. You can also Convert between LP types.",
-  },
-  {
-    key: "how-can-i-maximize-stalk-growth",
-    title: "How can I maximize Stalk growth?",
-    content:
-      "Maximize your Seeds. Seeds represent the rate at which Stalk grows. Note that the protocol may adjust Seed rates each Season to incentivize Converts and keep the system balanced.",
-  },
-  {
-    key: "how-can-i-learn-more-about-the-silo",
-    title: "How can I learn more about the Silo?",
-    content: (
-      <>
-        Head to the{" "}
-        <Link
-          className="text-pinto-green-4 hover:underline transition-all"
-          to={`${navLinks.docs}/farm/silo`}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Pinto docs
-        </Link>{" "}
-        for more info, or ask any questions in the{" "}
-        <Link
-          className="text-pinto-green-4 hover:underline transition-all"
-          to={navLinks.discord}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          discord
-        </Link>{" "}
-        community!
-      </>
-    ),
-  },
-] as const;

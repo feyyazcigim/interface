@@ -18,7 +18,7 @@ import { formatter } from "@/utils/format";
 import { stringToNumber, stringToStringNum } from "@/utils/string";
 import { AdvancedFarmCall, FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { useSetAtom } from "jotai";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
 
@@ -35,14 +35,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover
 import { Switch } from "@/components/ui/Switch";
 import siloWithdraw from "@/encoders/silo/withdraw";
 import useDelayedLoading from "@/hooks/display/useDelayedLoading";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { useIsWSOL, useTokenMap } from "@/hooks/pinto/useTokenMap";
 import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useMaxBuy from "@/hooks/swap/useMaxBuy";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputSiloDepositToken, usePreferredInputToken } from "@/hooks/usePreferredInputToken";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { sortAndPickCrates } from "@/utils/convert";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { HashString } from "@/utils/types.generic";
 import { useDebouncedEffect } from "@/utils/useDebounce";
 import { getBalanceFromMode } from "@/utils/utils";
@@ -85,7 +87,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
   const [tokenIn, setTokenIn] = useState<Token>(
     tokenSource === "deposits" ? preferredSiloDepositToken.preferredToken : preferredBalanceToken.preferredToken,
   );
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [slippage, setSlippage] = useState(0.1);
   const [minTemperature, setMinTemperature] = useState(Math.max(temperature.scaled.toNumber(), 1));
 
@@ -106,16 +108,14 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
   const maxBuyQuery = useMaxBuy(tokenIn, slippage, totalSoil);
   const maxBuy = totalSoilLoading ? TV.ZERO : maxBuyQuery.data;
 
-  const amountInTV = useMemo(() => {
-    return TV.fromHuman(stringToStringNum(amountIn), tokenIn.decimals);
-  }, [tokenIn.decimals, amountIn]);
+  const amountInTV = useSafeTokenValue(amountIn, tokenIn);
 
   const swap = useSwap({
     tokenIn: tokenIn,
     tokenOut: mainToken,
     amountIn: tokenIn.isMain ? TV.ZERO : amountInTV,
     slippage,
-    disabled: tokenIn.isMain || stringToNumber(amountIn) <= 0 || maxBuy?.lte(0),
+    disabled: tokenIn.isMain || amountInTV.lte(0) || maxBuy?.lte(0),
   });
 
   const swapSummary = useSwapSummary(swap.data);
@@ -139,7 +139,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
 
   // Transaction
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     resetSwap();
     invalidateField("all");
     farmerField.refetch();
@@ -162,20 +162,19 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
   );
 
   const pods = useMemo(() => {
-    const amount = stringToNumber(amountIn);
-    if (amount <= 0) return;
+    if (amountInTV.lte(0)) return;
 
     const multiplier = currentTemperature.add(100).div(100);
 
     if (isUsingMain) {
-      return multiplier.mul(amount);
+      return multiplier.mul(amountInTV);
     } else if (swap?.data?.buyAmount) {
       const numPinto = swap.data.buyAmount;
       return multiplier.mul(numPinto);
     }
 
     return TV.ZERO;
-  }, [amountIn, currentTemperature, isUsingMain, swap.data?.buyAmount]);
+  }, [amountInTV, currentTemperature, isUsingMain, swap.data?.buyAmount]);
 
   const onSubmit = useCallback(async () => {
     try {
@@ -300,7 +299,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
 
   // Callbacks
   const handleOnCheckedChange = (checked: boolean) => {
-    setAmountIn("0");
+    setAmountIn("");
     const newTokenSource = checked ? "deposits" : "balances";
     if (newTokenSource === "deposits") {
       setTokenIn(preferredSiloDepositToken.preferredToken);
@@ -329,7 +328,7 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: only reset when token in changes
   useEffect(() => {
-    setAmountIn("0");
+    setAmountIn("");
   }, [tokenIn]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: only reset when swap data changes
@@ -346,6 +345,11 @@ function Sow({ isMorning, onShowOrder }: SowProps) {
   useEffect(() => {
     // Update the atom value instead of using localStorage
     setInputExceedsSoil(Boolean(inputExceedsSoil));
+
+    // Reset the atom value when the component unmounts
+    return () => {
+      setInputExceedsSoil(false);
+    };
   }, [inputExceedsSoil, setInputExceedsSoil]);
 
   const initializing = !didSetPreferred || (hasSoil ? maxBuyQuery.isLoading : false);
@@ -583,22 +587,34 @@ type TokenSource = "deposits" | "balances";
 
 const useFilterTokens = (mode: TokenSource) => {
   const tokenMap = useTokenMap();
+  const isWSOL = useIsWSOL();
+
   return useMemo(() => {
     const set = new Set<Token>();
 
     Object.values(tokenMap).forEach((token) => {
       if (mode === "balances") {
-        if (token.isLP || token.isSiloWrapped || token.is3PSiloWrapped) {
+        if (
+          token.isLP || // disable LP tokens
+          token.isSiloWrapped || // disable sPINTO
+          token.is3PSiloWrapped || // disable 3rd party sPINTO tokens
+          isWSOL(token) // disable WSOL
+        ) {
           set.add(token);
         }
       } else if (mode === "deposits") {
-        if (token.isSiloWrapped || token.is3PSiloWrapped || (!token.isLP && !token.isMain)) {
+        if (
+          token.isSiloWrapped || //disable sPINTO
+          token.is3PSiloWrapped || // disable 3rd party sPINTO tokens
+          (!token.isLP && !token.isMain) || // disable non-LP tokens
+          !token.isWhitelisted // disable non-whitelisted LP tokens
+        ) {
           set.add(token);
         }
       }
     });
     return set;
-  }, [tokenMap, mode]);
+  }, [tokenMap, mode, isWSOL]);
 };
 
 const useMapSiloDepositsToAmounts = (deposits: ReturnType<typeof useFarmerSilo>["deposits"]) => {
@@ -632,7 +648,7 @@ const useWithdrawDepositBreakdown = (
 
     // Take the minimum of the amount in and the amount in the deposits
     // If the amount is greater than amount deposited, sortAndPickCrates will throw
-    const amount = TV.min(TV.fromHuman(stringToStringNum(inputAmount ?? "0"), token.decimals), tokenDeposits.amount);
+    const amount = TV.min(toSafeTVFromHuman(inputAmount, token.decimals), tokenDeposits.amount);
 
     return sortAndPickCrates("withdraw", amount, tokenDeposits.deposits);
   }, [deposits, inputAmount, enabled, token]);

@@ -9,13 +9,16 @@ import RoutingAndSlippageInfo from "@/components/RoutingAndSlippageInfo";
 import SiloOutputDisplay from "@/components/SiloOutputDisplay";
 import SlippageButton from "@/components/SlippageButton";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
 import IconImage from "@/components/ui/IconImage";
+import { Label } from "@/components/ui/Label";
 import { Separator } from "@/components/ui/Separator";
 import VerticalAccordion from "@/components/ui/VerticalAccordion";
 import Warning from "@/components/ui/Warning";
 import { diamondABI } from "@/constants/abi/diamondABI";
 import { SEEDS } from "@/constants/internalTokens";
+import { CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER, NO_MAX_CONVERT_AMOUNT } from "@/constants/silo";
 import { MAIN_TOKEN, PINTO_USDC_TOKEN, PINTO_WSOL_TOKEN } from "@/constants/tokens";
 import useDelayedLoading from "@/hooks/display/useDelayedLoading";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
@@ -34,7 +37,7 @@ import useTransaction from "@/hooks/useTransaction";
 import { useDeterminePriceImpactWithResults } from "@/hooks/wells/usePriceImpactSummary";
 import { useWellUnderlying } from "@/hooks/wells/wells";
 import { SiloConvert, SiloConvertSummary } from "@/lib/siloConvert/SiloConvert";
-import { SiloConvertMaxConvertQuoter } from "@/lib/siloConvert/SiloConvert.maxConvertQuoter";
+import { MaxConvertResult } from "@/lib/siloConvert/SiloConvert.maxConvertQuoter";
 import { SiloConvertType } from "@/lib/siloConvert/strategies/core";
 import ConvertProvider, { SiloTokenConvertPath, useConvertState } from "@/state/context/convert.provider";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -49,7 +52,16 @@ import { AddressMap, Token } from "@/utils/types";
 import { useDebounceValue } from "@/utils/useDebounce";
 import { cn, exists, noop } from "@/utils/utils";
 import { UseQueryResult, useQueryClient } from "@tanstack/react-query";
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
@@ -63,6 +75,7 @@ interface ConvertProps extends BaseConvertProps {
   queryClient: ReturnType<typeof useQueryClient>;
   farmerDeposits: ReturnType<typeof useFarmerSilo>["deposits"];
   farmerActiveStalk: TV;
+  averageGrownStalkPerBdvPerSeason: TV;
   deltaP: TV;
   convertExceptions: ReturnType<typeof useConvertExceptions>;
   onSuccess: () => void;
@@ -73,6 +86,7 @@ function ConvertForm({
   siloToken,
   deltaP,
   farmerActiveStalk,
+  averageGrownStalkPerBdvPerSeason,
   convertExceptions,
   farmerDeposits,
   siloConvert,
@@ -83,17 +97,17 @@ function ConvertForm({
   const diamond = useProtocolAddress();
   const pintoToken = useChainConstant(MAIN_TOKEN);
   const account = useAccount();
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [slippage, setSlippage] = useState(0.25);
   const [maxConvert, setMaxConvert] = useState(TV.ZERO);
   const [didInitAmountMax, setDidInitAmountMax] = useState(false);
   const [showMinAmountWarning, setShowMinAmountWarning] = useState(false);
-  const pintoWSOL = useChainConstant(PINTO_WSOL_TOKEN);
+  const [allowStalkPenalty, setAllowStalkPenalty] = useState(false);
 
   const { loading, setLoadingTrue, setLoadingFalse } = useDelayedLoading();
   const clearSiloConvertQueries = useClearSiloConvertQueries();
   const invalidateSun = useInvalidateSun();
-  const { tokenPrices } = usePriceData();
+  const { tokenPrices, pools } = usePriceData();
 
   const minAmountIn = convertExceptions.minAmountIn;
   const isDefaultConvert = siloToken.isMain || targetToken?.isMain;
@@ -103,19 +117,34 @@ function ConvertForm({
   const isDownConvert = Boolean(siloToken.isMain && targetToken?.isLP);
 
   const deposits = farmerDeposits.get(siloToken);
+
   const convertibleDeposits = deposits?.convertibleDeposits;
   const farmerConvertibleAmount = deposits?.convertibleAmount || TV.ZERO;
   const hasConvertible = minAmountIn && farmerConvertibleAmount.gt(0) && farmerConvertibleAmount.gte(minAmountIn);
 
   const hasGerminating = deposits?.amount.gt(0) && !deposits?.amount.eq(deposits.convertibleAmount);
 
-  const { data: maxConvertQueryData = TV.ZERO, ...maxConvertQuery } = useSiloMaxConvertQuery(
+  const maxConvertQuery = useSiloMaxConvertQuery(
     siloConvert,
     deposits,
     siloToken,
     targetToken,
     !!(isDefaultConvert ? hasConvertible && deltaPEnabled : hasConvertible),
   );
+
+  const maxConvertOverall = maxConvertQuery.data?.max ?? TV.ZERO;
+  const maxConvertAtRate = maxConvertQuery.data?.maxAtRate;
+
+  const poolPrice = useMemo(
+    () =>
+      pools.find((pool) => pool.pool.address.toLowerCase() === targetToken?.address.toLowerCase())?.price ?? TV.ZERO,
+    [pools, targetToken],
+  );
+
+  const maxConvertQueryData =
+    (poolPrice.gt(CONVERT_DOWN_PENALTY_RATE_WITH_BUFFER) ? maxConvertAtRate : maxConvertOverall) ?? TV.ZERO;
+
+  const maxConvertLoading = maxConvertQuery.isLoading;
 
   const amountInNum = stringToNumber(amountIn);
   const isValidAmountIn = Boolean(minAmountIn?.gt(0) ? amountInNum >= minAmountIn.toNumber() : amountInNum > 0);
@@ -188,7 +217,7 @@ function ConvertForm({
   // ------------------------------ TXN SUBMISSION ------------------------------
 
   const successCallback = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     setTargetToken(undefined);
     setRouteIndex(undefined);
     siloConvert.clear();
@@ -274,7 +303,7 @@ function ConvertForm({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: Reset amount in when target token changes
   useEffect(() => {
-    setAmountIn("0");
+    setAmountIn("");
     setMaxConvert(TV.ZERO);
     setRouteIndex(undefined);
     setShowMinAmountWarning(false);
@@ -338,6 +367,10 @@ function ConvertForm({
     setTargetToken(pintoToken);
   }, [siloToken.isLP, targetToken, pintoToken, setTargetToken]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Reset stalk penalty toggle when amount in changes
+  useEffect(() => {
+    setAllowStalkPenalty(false);
+  }, [amountIn]);
   // ------------------------------ DERIVED ------------------------------
 
   const canConvert = isDefaultConvert ? hasConvertible && deltaPEnabled : hasConvertible;
@@ -349,7 +382,7 @@ function ConvertForm({
     !siloToken.isLP ||
     !targetToken?.isLP ||
     maxConvertQueryData.lte(0) ||
-    maxConvertQueryData.eq(SiloConvertMaxConvertQuoter.NO_MAX_CONVERT_AMOUNT)
+    maxConvertQueryData.eq(NO_MAX_CONVERT_AMOUNT)
   );
 
   const renderMinAmountWarning = minAmountIn?.gt(0) && !isValidAmountIn;
@@ -372,6 +405,7 @@ function ConvertForm({
     !isValidAmountIn ||
     !hasConvertible ||
     amountOut?.lte(0) ||
+    (renderGrownStalkPenaltyWarning ? !allowStalkPenalty : false) ||
     !account.address ||
     isConfirming ||
     submitting ||
@@ -409,6 +443,7 @@ function ConvertForm({
           {...getAltTextProps()}
           mode="balance"
           disableButton
+          isLoading={targetToken && maxConvertLoading}
         />
       </div>
       {warningRendered ? (
@@ -433,6 +468,9 @@ function ConvertForm({
           <GrownStalkPenaltyWarning
             enabled={!!renderGrownStalkPenaltyWarning}
             summary={exists(routeIndex) ? grownStalkPenaltyQuery.data?.[routeIndex] : undefined}
+            averageGrownStalkPerBdvPerSeason={averageGrownStalkPerBdvPerSeason}
+            allowStalkPenalty={allowStalkPenalty}
+            setAllowStalkPenalty={setAllowStalkPenalty}
           />
         </div>
       ) : null}
@@ -606,7 +644,7 @@ const ConvertSwitch = ({ siloToken }: BaseConvertProps) => {
 
   const farmerSilo = useFarmerSilo();
   const { pools, queryKeys: priceQueryKeys, deltaB } = usePriceData();
-  const { queryKeys: siloQueryKeys } = useSiloData();
+  const { queryKeys: siloQueryKeys, averageGrownStalkPerBdvPerSeason } = useSiloData();
 
   const convertExceptions = useConvertExceptions({ siloToken, pools });
 
@@ -626,6 +664,7 @@ const ConvertSwitch = ({ siloToken }: BaseConvertProps) => {
       deltaP={deltaB}
       convertExceptions={convertExceptions}
       farmerActiveStalk={farmerSilo.activeStalkBalance}
+      averageGrownStalkPerBdvPerSeason={averageGrownStalkPerBdvPerSeason}
     />
   );
 };
@@ -980,7 +1019,7 @@ const ConvertWarning = ({
   farmerConvertibleAmount: TV;
   targetToken: Token | undefined;
   siloToken: Token;
-  maxConvertQuery: Omit<UseQueryResult<TV>, "data"> | undefined;
+  maxConvertQuery: Omit<UseQueryResult<MaxConvertResult>, "data"> | undefined;
   isDefaultConvert: boolean;
   maxConvert: TV;
 }) => {
@@ -1025,13 +1064,55 @@ const GerminatingStalkWarning = ({
 const GrownStalkPenaltyWarning = ({
   enabled,
   summary,
-}: { enabled: boolean; summary: SiloConvertGrownStalkPenaltyBreakdown | undefined }) => {
-  if (!enabled || !summary) return null;
+  averageGrownStalkPerBdvPerSeason,
+  allowStalkPenalty,
+  setAllowStalkPenalty,
+}: {
+  enabled: boolean;
+  summary: SiloConvertGrownStalkPenaltyBreakdown | undefined;
+  averageGrownStalkPerBdvPerSeason: TV;
+  allowStalkPenalty: boolean;
+  setAllowStalkPenalty: Dispatch<SetStateAction<boolean>>;
+}) => {
+  if (!enabled || !summary || averageGrownStalkPerBdvPerSeason.eq(0)) return null;
   const grownStalkPenaltyRatio = summary.penaltyRatio;
 
   if (!grownStalkPenaltyRatio) return null;
 
   const penaltyPct = (grownStalkPenaltyRatio ?? 0) * 100;
 
-  return <Warning variant="warning">This conversion incurs a {formatter.pct(penaltyPct)} Grown Stalk penalty.</Warning>;
+  const expectedGrownStalkPerSeason = averageGrownStalkPerBdvPerSeason.mul(summary.bdv);
+  const seasonsOfGrownStalkConverted = Math.ceil(summary.lossGrownStalk.div(expectedGrownStalkPerSeason).toNumber());
+
+  return (
+    <Warning variant="warning">
+      <div className="flex flex-col gap-2">
+        <span>This conversion incurs a {formatter.pct(penaltyPct)} Grown Stalk penalty.</span>
+        <span>
+          This is ~{seasonsOfGrownStalkConverted.toFixed(0)} Season
+          {seasonsOfGrownStalkConverted > 1 && <span>s</span>} worth of Grown Stalk.
+        </span>
+        <div className="flex flex-row gap-3 items-center mt-2">
+          <Checkbox
+            id="grown-stalk-penalty-notice"
+            className="bg-white"
+            checked={allowStalkPenalty}
+            onCheckedChange={(checked) => {
+              if (checked !== "indeterminate") {
+                setAllowStalkPenalty(checked);
+              } else {
+                setAllowStalkPenalty(false);
+              }
+            }}
+          />
+          <Label
+            htmlFor="grown-stalk-penalty-notice"
+            className="cursor-pointer text-pinto-error text-sm sm:text-sm font-light"
+          >
+            I understand the Grown Stalk penalty
+          </Label>
+        </div>
+      </div>
+    </Warning>
+  );
 };

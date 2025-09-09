@@ -15,10 +15,11 @@ import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
 import { abiSnippets } from "@/constants/abiSnippets";
 import { defaultQuerySettingsQuote } from "@/constants/query";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { useTokenMap, useWSOL } from "@/hooks/pinto/useTokenMap";
 import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import { FarmerBalance, useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
@@ -27,6 +28,7 @@ import useTokenData from "@/state/useTokenData";
 import { pickCratesAsCrates, sortCratesByStem } from "@/utils/convert";
 import { tryExtractErrorMessage } from "@/utils/error";
 import { formatter } from "@/utils/format";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { stringToNumber, stringToStringNum } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
@@ -57,7 +59,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
 
   // Local State
   const [slippage, setSlippage] = useState<number>(0.1);
-  const [amountIn, setAmountIn] = useState<string>("0");
+  const [amountIn, setAmountIn] = useState<string>("");
   const [balanceSource, setBalanceSource] = useState<FarmFromMode>(getPreferredBalanceSource(farmerBalance));
 
   const [toSilo, setToSilo] = useState<boolean>(true);
@@ -70,7 +72,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
 
   // Derived
   const balance = getBalanceFromMode(farmerBalance, balanceSource) ?? TV.ZERO;
-  const amountTV = TV.fromHuman(stringToStringNum(amountIn), siloToken.decimals);
+  const amountTV = useSafeTokenValue(amountIn, siloToken);
   const validAmountIn = amountTV.gt(0);
 
   const txnType = useTxnType(toSilo, tokenOut);
@@ -98,7 +100,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
 
   // Transaction
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     setToMode(undefined);
     setTokenOut(undefined);
     const keys = [...contractBalances.queryKeys, ...farmerBalances.queryKeys, ...farmerDepositsQueryKeys];
@@ -267,6 +269,7 @@ export default function UnwrapToken({ siloToken }: { siloToken: Token }) {
           filterTokens={filterTokens}
           isLoading={!didInitBalanceSource}
           disableInput={txnType !== "redeemToSilo" && !tokenOut}
+          disableClamping={true}
         />
         <div className="flex flex-row w-full justify-between items-center mt-4">
           <div className="pinto-sm sm:pinto-body-light sm:text-pinto-light text-pinto-light">
@@ -426,12 +429,13 @@ const useButtonApprovalProps = (
 const useFilterDestinationTokens = () => {
   const tokenMap = useTokenMap();
   const [tokens, setTokens] = useState<Set<Token>>(new Set());
+  const wsol = useWSOL();
 
   useEffect(() => {
     const tokens = Object.values(tokenMap);
-    const filtered = tokens.filter((t) => t.isSiloWrapped || t.isLP || t.is3PSiloWrapped);
+    const filtered = tokens.filter((t) => t.isSiloWrapped || t.isLP || t.is3PSiloWrapped || tokensEqual(t, wsol));
     setTokens(new Set(filtered));
-  }, [tokenMap]);
+  }, [tokenMap, wsol]);
 
   return tokens;
 };

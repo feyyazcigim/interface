@@ -1,5 +1,5 @@
 import MorningCard from "@/components/MorningCard";
-import { useMorning } from "@/state/useSunData";
+import { useMorning, useSunData } from "@/state/useSunData";
 import { MorningTimer } from "./MorningCountdown";
 
 const MorningPanel = () => {

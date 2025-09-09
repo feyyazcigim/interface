@@ -1,8 +1,10 @@
 import { TokenValue } from "@/classes/TokenValue";
 import OutputDisplay from "@/components/OutputDisplay";
 import { SEEDS, STALK } from "@/constants/internalTokens";
-import { formatter } from "@/utils/format";
+import { formatSeasonsAsTime, formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
+import { Link } from "react-router-dom";
+import Warning from "./ui/Warning";
 
 interface SiloOutputDisplayProps {
   title?: string;
@@ -11,6 +13,8 @@ interface SiloOutputDisplayProps {
   stalk: TokenValue;
   seeds: TokenValue;
   showNegativeDeltas?: boolean;
+  showGrownStalkSeasonsNotice?: boolean;
+  grownStalkSeasons?: number;
 }
 
 export default function SiloOutputDisplay({
@@ -20,6 +24,8 @@ export default function SiloOutputDisplay({
   stalk,
   seeds,
   showNegativeDeltas = false,
+  showGrownStalkSeasonsNotice = false,
+  grownStalkSeasons = 0,
 }: SiloOutputDisplayProps) {
   const deltaMultiplier = showNegativeDeltas ? -1 : 1;
 
@@ -45,6 +51,26 @@ export default function SiloOutputDisplay({
           className="whitespace-nowrap"
         />
       </OutputDisplay.Item>
+      {showGrownStalkSeasonsNotice && grownStalkSeasons > 0 && (
+        <Warning variant="info">
+          <div className="flex flex-col gap-2">
+            <span>
+              It would take ~{formatter.number(grownStalkSeasons.toFixed(0))} Season
+              {grownStalkSeasons > 1 && <span>s</span>}
+              {grownStalkSeasons >= 168 && formatSeasonsAsTime(grownStalkSeasons)} for this much value to grow the
+              amount of Stalk being burned.{" "}
+              <Link
+                to="https://docs.pinto.money/farm/silo#the-stalk-system"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-pinto-green-4 sm:text-pinto-green-4 hover:text-pinto-green-4 hover:underline transition-colors"
+              >
+                Learn More
+              </Link>
+            </span>
+          </div>
+        </Warning>
+      )}
       <OutputDisplay.Item label="Seed">
         <OutputDisplay.Value
           value={formatter.twoDec(seeds)}

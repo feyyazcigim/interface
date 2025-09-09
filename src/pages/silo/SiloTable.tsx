@@ -4,7 +4,7 @@ import seedsIcon from "@/assets/protocol/Seed.png";
 import stalkIcon from "@/assets/protocol/Stalk.png";
 import { TokenValue } from "@/classes/TokenValue";
 import APYTooltip from "@/components/APYTooltip";
-import { InlineCenterSpan } from "@/components/Container";
+import { Col, InlineCenterSpan } from "@/components/Container";
 import { UpArrowIcon } from "@/components/Icons";
 import TooltipSimple from "@/components/TooltipSimple";
 import IconImage from "@/components/ui/IconImage";
@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PINTO } from "@/constants/tokens";
 import { useDenomination } from "@/hooks/useAppSettings";
 import useFarmerActions from "@/hooks/useFarmerActions";
+import { useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
 import { EMAWindows, SiloYieldsByToken, useSiloYieldsByToken } from "@/state/useSiloAPYs";
@@ -23,32 +24,47 @@ import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
 import { stringEq } from "@/utils/string";
 import { getTokenIndex, sortTokensForDeposits } from "@/utils/token";
+import { Token } from "@/utils/types";
 import { AddressLookup } from "@/utils/types.generic";
 import { cn } from "@/utils/utils";
-import { useCallback, useMemo } from "react";
+import { forwardRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 function SiloTable({ hovering }: { hovering: boolean }) {
   const siloData = useSiloData();
   const mainToken = useTokenData().mainToken;
   const farmerSilo = useFarmerSilo();
+  const { balances } = useFarmerBalances();
   const farmerDeposits = farmerSilo.deposits;
-  const SILO_WHITELIST = useTokenData().whitelistedTokens;
+  const { mayBeWhitelistedTokens } = useTokenData();
+
   const priceData = usePriceData();
   const farmerActions = useFarmerActions();
   const { data: apys } = useSiloTableAPYs();
 
   // Sort tokens with PINTO first, then by Seeds
   const sortedTokens = useMemo(() => {
-    return sortTokensForDeposits(
-      SILO_WHITELIST,
+    const sorted = sortTokensForDeposits(
+      mayBeWhitelistedTokens,
       farmerDeposits,
       mainToken,
       priceData.price,
       "rewards",
       siloData.tokenData,
     );
-  }, [farmerDeposits, priceData.price, SILO_WHITELIST, mainToken, siloData.tokenData]);
+
+    const filtered = sorted.filter((token) => {
+      if (token.isWhitelisted) return true;
+
+      // show non-whitelisted tokens if they have deposits or balance
+      const hasDeposits = farmerDeposits.get(token)?.amount?.gt(0);
+      const hasBalance = balances.get(token)?.total?.gt(0);
+
+      return !!hasDeposits || !!hasBalance;
+    });
+
+    return filtered;
+  }, [farmerDeposits, priceData.price, mayBeWhitelistedTokens, mainToken, siloData.tokenData]);
 
   const claimEnabled = farmerActions.claimRewards.enabled;
   const earnedPinto = farmerActions.claimRewards.outputs.beanGain.gt(0.01);
@@ -106,6 +122,11 @@ function SiloTable({ hovering }: { hovering: boolean }) {
             const germinatingBDV = data?.germinatingBDV;
             const totalBDV = depositedBDV?.add(germinatingBDV ?? TokenValue.ZERO);
 
+            // non whitelisted wells have 0 currentBDV
+            const effectiveBDV = !token.isWhitelisted
+              ? userData?.depositBDV ?? TokenValue.ZERO
+              : (userData?.currentBDV.gt(0) ? userData.currentBDV : userData?.depositBDV) ?? TokenValue.ZERO;
+
             const currentBDV = userData ? userData.currentBDV : TokenValue.ZERO;
             const depositBDV = userData ? userData.depositBDV : TokenValue.ZERO;
             const amount = userData ? userData.amount : TokenValue.ZERO;
@@ -117,52 +138,33 @@ function SiloTable({ hovering }: { hovering: boolean }) {
               .get(token)
               ?.deposits.some((deposit) => deposit.isGerminating && !deposit.isPlantDeposit);
 
-            if (!data) return;
+            if (!data) {
+              return null;
+            }
 
             return (
               <TableRow
-                className={`h-[4.5rem] ${hasGerminatingDeposits ? "bg-pinto-off-green/15" : "bg-white"} hover:bg-pinto-green-1/50 hover:cursor-pointer`}
+                className={cn(
+                  `h-[4.5rem] hover:cursor-pointer relative`,
+                  !token.isWhitelisted
+                    ? "bg-gray-100 opacity-60 hover:bg-gray-200"
+                    : hasGerminatingDeposits
+                      ? "bg-pinto-off-green/15 hover:bg-pinto-green-1/50"
+                      : "bg-white hover:bg-pinto-green-1/50",
+                )}
                 key={`silo_table_${token.address}`}
                 onClick={() => navigate(`/silo/${token.address}`)}
                 data-action-target={`token-row-${token.address}`}
               >
-                <TableCell className="text-left pl-2 sm:pl-4 table-cell items-center">
-                  <div className="flex flex-col gap-2">
-                    <div className="inline-flex items-center gap-1 sm:gap-2 whitespace-nowrap">
-                      <IconImage src={token.logoURI} alt={token.name} size={8} />
-                      {token.name}
-                    </div>
-                    <div className="sm:hidden">
-                      <div className="pinto-xs inline-flex gap-0.5">
-                        <span className="text-pinto-gray-4">Value:</span>
-                        {farmerSilo.isLoading ? (
-                          <Skeleton className="w-16 h-4 rounded-[0.75rem]" />
-                        ) : (
-                          <span>
-                            {formatter.usd(
-                              farmerDeposits.get(token)?.currentBDV.mul(token.isMain ? priceData.price : _poolPrice),
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {earnedPinto && token.isMain && (
-                      <div className="sm:hidden">
-                        <div className="pinto-xs inline-flex gap-0.5">
-                          <span className="text-pinto-gray-4">Claimable:</span>
-                          {farmerSilo.isLoading ? (
-                            <Skeleton className="w-16 h-4 rounded-[0.75rem]" />
-                          ) : (
-                            <span className="text-pinto-green">
-                              {formatter.usd(farmerActions.claimRewards.outputs.beanGain.mul(priceData.price))}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="pl-1 pr-2 py-2.5 sm:p-auto ">
+                <TokenCell
+                  token={token}
+                  isLoading={farmerSilo.isLoading}
+                  price={token.isMain ? priceData.price : _poolPrice}
+                  depositedPDV={userData?.currentBDV}
+                  earnedPinto={earnedPinto}
+                  claimableValue={farmerActions.claimRewards.outputs.beanGain.mul(priceData.price)}
+                />
+                <TableCell className="pl-1 pr-2 py-2.5 sm:p-auto">
                   <div className="flex flex-col-reverse place-self-end items-center gap-3 sm:place-self-start sm:flex-row">
                     <div className="inline-flex items-center gap-1 sm:gap-3">
                       <div className="pinto-xs sm:pinto-sm inline-flex items-center gap-1 opacity-70 flex-wrap">
@@ -180,12 +182,16 @@ function SiloTable({ hovering }: { hovering: boolean }) {
                         Seeds
                       </div>
                     </div>
-                    <div className="hidden sm:inline">
-                      <APYCell apys={apy} />
-                    </div>
-                    <div className="sm:hidden">
-                      <APYCell apys={apy} noTooltip />
-                    </div>
+                    {token.isWhitelisted ? (
+                      <>
+                        <div className="hidden sm:inline">
+                          <APYCell apys={apy} />
+                        </div>
+                        <div className="sm:hidden">
+                          <APYCell apys={apy} noTooltip />
+                        </div>
+                      </>
+                    ) : null}
                   </div>
                 </TableCell>
                 <TableCell className="pinto-sm text-right text-pinto-secondary pl-0 opacity-70 hidden sm:table-cell">
@@ -256,7 +262,7 @@ function SiloTable({ hovering }: { hovering: boolean }) {
                                 ) : (
                                   <>
                                     <div className="pinto-sm-thin text-right text-pinto-light">
-                                      {`${denomination === "USD" ? formatter.usd((userData?.currentBDV || TokenValue.ZERO).mul(priceData.price)) : formatter.pdv(userData?.depositBDV)}`}{" "}
+                                      {`${denomination === "USD" ? formatter.usd(effectiveBDV.mul(priceData.price)) : formatter.pdv(effectiveBDV)}`}{" "}
                                       +{" "}
                                     </div>
                                     <div className="pinto-sm-thin text-right text-pinto-green-4">
@@ -271,7 +277,7 @@ function SiloTable({ hovering }: { hovering: boolean }) {
                                 {farmerSilo.isLoading ? (
                                   <Skeleton className="w-20 h-6 rounded-[0.75rem]" />
                                 ) : (
-                                  `${denomination === "USD" ? formatter.usd((userData?.currentBDV || TokenValue.ZERO).mul(priceData.price)) : formatter.pdv(userData?.depositBDV)}`
+                                  `${denomination === "USD" ? formatter.usd(effectiveBDV.mul(priceData.price)) : formatter.pdv(effectiveBDV)}`
                                 )}
                               </div>
                             )}
@@ -295,7 +301,11 @@ function SiloTable({ hovering }: { hovering: boolean }) {
                                 {farmerSilo.isLoading ? (
                                   <Skeleton className="w-20 h-6 rounded-[0.75rem]" />
                                 ) : (
-                                  `${denomination === "USD" ? formatter.usd((userData?.currentBDV || TokenValue.ZERO).mul(token.isMain ? priceData.price : _poolPrice)) : formatter.pdv(userData?.depositBDV)}`
+                                  `${
+                                    denomination === "USD"
+                                      ? formatter.usd(effectiveBDV.mul(token.isMain ? priceData.price : _poolPrice))
+                                      : formatter.pdv(userData?.depositBDV)
+                                  }`
                                 )}
                               </div>
                             </div>
@@ -310,7 +320,6 @@ function SiloTable({ hovering }: { hovering: boolean }) {
           })}
         </TableBody>
       </Table>
-      {/* </ScrollArea> */}
     </div>
   );
 }
@@ -366,6 +375,64 @@ const useSiloTableAPYs = () => {
 
 // ---------------------- components ----------------------
 
+const TokenCell = ({
+  token,
+  isLoading,
+  price,
+  depositedPDV,
+  earnedPinto,
+  claimableValue,
+}: {
+  token: Token;
+  isLoading?: boolean;
+  price?: TokenValue;
+  depositedPDV?: TokenValue;
+  earnedPinto?: boolean;
+  claimableValue?: TokenValue;
+}) => {
+  return (
+    <TableCell className="text-left pl-2 sm:pl-4 table-cell items-center">
+      <div className="flex flex-col gap-2">
+        <Col className="gap-2">
+          <div className="inline-flex items-center gap-1 sm:gap-2 whitespace-nowrap">
+            <IconImage src={token.logoURI} alt={token.name} size={8} mobileSize={6} />
+            <Col className="gap-1">
+              {token.name}
+              {!token.isWhitelisted && (
+                <div className="bg-pinto-gray-2/70 text-pinto-secondary px-[0.1875rem] py-[0.1875rem] rounded-[0.25rem] pinto-xs w-fit leading-none">
+                  Dewhitelisted
+                </div>
+              )}
+            </Col>
+          </div>
+        </Col>
+        <div className="sm:hidden">
+          <div className="pinto-xs inline-flex gap-0.5">
+            <span className="text-pinto-gray-4">Value:</span>
+            {isLoading ? (
+              <Skeleton className="w-16 h-4 rounded-[0.75rem]" />
+            ) : (
+              <span>{formatter.usd(depositedPDV?.mul(price ?? TokenValue.ZERO))}</span>
+            )}
+          </div>
+        </div>
+        {earnedPinto && token.isMain && (
+          <div className="sm:hidden">
+            <div className="pinto-xs inline-flex gap-0.5">
+              <span className="text-pinto-gray-4">Claimable:</span>
+              {isLoading ? (
+                <Skeleton className="w-16 h-4 rounded-[0.75rem]" />
+              ) : (
+                <span className="text-pinto-green">{formatter.usd(claimableValue)}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </TableCell>
+  );
+};
+
 const SeparatorVertical = () => <Separator orientation="vertical" className="bg-pinto-green-4/30 w-[1px] h-4" />;
 
 const APYHeader = ({ hide24h, hide7d, hide30d }: { hide24h: boolean; hide7d: boolean; hide30d: boolean }) => {
@@ -411,6 +478,42 @@ const formatAPY = (apy: number | undefined) => {
     maxDecimals: 1,
   });
 };
+const APYPill = forwardRef<HTMLDivElement, { apys: ExtendSiloTokenYield | undefined }>(({ apys }, ref) => {
+  return (
+    <div ref={ref} className="flex flex-row gap-1 items-center rounded-full bg-pinto-green-1 px-2 py-1">
+      <div className="pinto-xs text-pinto-green-4 flex flex-row gap-1">
+        {Number(apys?.ema24.apy) > 0 && (
+          <>
+            <div className={cn("leading-none", apys?.ema24.notApplicable && "opacity-50")}>
+              {apys?.ema24.notApplicable ? "N/A" : formatAPY(apys?.ema24.apy)}
+            </div>
+            <SeparatorVertical />
+          </>
+        )}
+        {Number(apys?.ema168.apy) > 0 && (
+          <>
+            <div className={cn("leading-none", apys?.ema168.notApplicable && "opacity-50")}>
+              {apys?.ema168.notApplicable ? "N/A" : formatAPY(apys?.ema168.apy)}
+            </div>
+            <SeparatorVertical />
+          </>
+        )}
+        {Number(apys?.ema720.apy) > 0 && (
+          <div className={cn("leading-none", apys?.ema720.notApplicable && "opacity-50")}>
+            {apys?.ema720.notApplicable ? "N/A" : formatAPY(apys?.ema720.apy)}
+          </div>
+        )}
+        {Number(apys?.ema720.apy) === 0 && (
+          <div className={cn("leading-none", apys?.ema2160.notApplicable && "opacity-50")}>
+            {apys?.ema2160.notApplicable ? "N/A" : formatAPY(apys?.ema2160.apy)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
+APYPill.displayName = "APYPill";
 
 const APYCell = ({
   apys,
@@ -419,47 +522,12 @@ const APYCell = ({
   apys: ExtendSiloTokenYield | undefined;
   noTooltip?: boolean;
 }) => {
-  function APYPill() {
-    return (
-      <div className="flex flex-row gap-1 items-center rounded-full bg-pinto-green-1 px-2 py-1">
-        <div className="pinto-xs text-pinto-green-4 flex flex-row gap-1">
-          {Number(apys?.ema24.apy) > 0 && (
-            <>
-              <div className={cn("leading-none", apys?.ema24.notApplicable && "opacity-50")}>
-                {apys?.ema24.notApplicable ? "N/A" : formatAPY(apys?.ema24.apy)}
-              </div>
-              <SeparatorVertical />
-            </>
-          )}
-          {Number(apys?.ema168.apy) > 0 && (
-            <>
-              <div className={cn("leading-none", apys?.ema168.notApplicable && "opacity-50")}>
-                {apys?.ema168.notApplicable ? "N/A" : formatAPY(apys?.ema168.apy)}
-              </div>
-              <SeparatorVertical />
-            </>
-          )}
-          {Number(apys?.ema720.apy) > 0 && (
-            <div className={cn("leading-none", apys?.ema720.notApplicable && "opacity-50")}>
-              {apys?.ema720.notApplicable ? "N/A" : formatAPY(apys?.ema720.apy)}
-            </div>
-          )}
-          {Number(apys?.ema720.apy) === 0 && (
-            <div className={cn("leading-none", apys?.ema2160.notApplicable && "opacity-50")}>
-              {apys?.ema2160.notApplicable ? "N/A" : formatAPY(apys?.ema2160.apy)}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   if (noTooltip) {
-    return <APYPill />;
+    return <APYPill apys={apys} />;
   } else {
     return (
       <TooltipSimple content={<APYTooltip />}>
-        <APYPill />
+        <APYPill apys={apys} />
       </TooltipSimple>
     );
   }

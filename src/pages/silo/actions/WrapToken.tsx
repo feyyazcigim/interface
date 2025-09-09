@@ -15,10 +15,11 @@ import { diamondABI } from "@/constants/abi/diamondABI";
 import { siloedPintoABI } from "@/constants/abi/siloedPintoABI";
 import { MAIN_TOKEN, S_MAIN_TOKEN } from "@/constants/tokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { useTokenMap, useWSOL } from "@/hooks/pinto/useTokenMap";
 import { useBuildSwapQuoteAsync } from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
 import useFarmerDepositAllowance from "@/state/useFarmerDepositAllowance";
@@ -28,6 +29,7 @@ import { useChainConstant } from "@/utils/chain";
 import { extractStemsAndAmountsFromCrates, sortAndPickCrates } from "@/utils/convert";
 import { tryExtractErrorMessage } from "@/utils/error";
 import { formatter } from "@/utils/format";
+import { toSafeTVFromHuman } from "@/utils/number";
 import { isValidAddress, stringToStringNum } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
@@ -53,7 +55,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
   const depositedAmount = deposits?.amount;
 
   const [slippage, setSlippage] = useState<number>(0.1);
-  const [amountIn, setAmountIn] = useState<string>("0");
+  const [amountIn, setAmountIn] = useState<string>("");
   const [inputError, setInputError] = useState<boolean>(false);
   const [balanceFrom, setBalanceFrom] = useState<FarmFromMode>(FarmFromMode.INTERNAL_EXTERNAL);
   const [mode, setMode] = useState<FarmToMode | undefined>(FarmToMode.EXTERNAL);
@@ -68,11 +70,11 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
   const farmerTokenBalance = farmerBalances.balances.get(token);
   const balance = getBalanceFromMode(farmerTokenBalance, balanceFrom);
   const usingDeposits = source === "deposits";
-  const amountInTV = TV.fromHuman(amountIn, mainToken.decimals);
+  const amountInTV = useSafeTokenValue(amountIn, token);
 
   const amountExceedsDeposits = usingDeposits && amountInTV.gt(0) && amountInTV.gt(depositedAmount ?? 0n);
   const amountExceedsBalance = !usingDeposits && amountInTV.gt(0) && amountInTV.gt(balance ?? 0n);
-  const exceedsBalance = usingDeposits ? amountExceedsBalance : amountExceedsDeposits;
+  const exceedsBalance = usingDeposits ? amountExceedsDeposits : amountExceedsBalance;
 
   // Allowance. If wrapping deposits, we need to approve usage of silo deposits.
   const {
@@ -95,7 +97,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
     tokenIn: token,
     tokenOut: siloToken,
     slippage: slippage,
-    amountIn: TV.fromHuman(stringToStringNum(amountIn), token.decimals),
+    amountIn: amountInTV,
     disabled: usingDeposits,
   });
   const swapSummary = useSwapSummary(swap.data);
@@ -107,7 +109,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
 
   // Transaction hooks
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     swap.resetSwap();
     const keys = [
       allowanceQueryKey,
@@ -146,7 +148,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
         throw new Error("Insufficient deposits");
       }
       if (source === "deposits") {
-        const amount = TV.fromHuman(amountIn, mainToken.decimals);
+        const amount = toSafeTVFromHuman(amountIn, mainToken);
         if (!deposits || !deposits.deposits.length) {
           throw new Error("No deposits found");
         }
@@ -165,7 +167,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
         });
       }
 
-      const tokenAmount = TV.fromHuman(amountIn, token.decimals);
+      const tokenAmount = toSafeTVFromHuman(amountIn, token);
       if (tokenAmount.lte(0)) {
         throw new Error("Invalid amount");
       }
@@ -295,7 +297,7 @@ export default function WrapToken({ siloToken }: { siloToken: Token }) {
             <Switch
               checked={source === "deposits"}
               onCheckedChange={() => {
-                setAmountIn("0");
+                setAmountIn("");
                 setSource((prev) => (prev === "deposits" ? "balances" : "deposits"));
               }}
             />
@@ -391,16 +393,18 @@ const useFilterTokens = () => {
 
   const [filter, setFilter] = useState<Set<Token>>(new Set());
 
+  const wsol = useWSOL();
+
   useEffect(() => {
     const filteredSet = Object.values(tokenMap).reduce((prev, curr) => {
-      if (curr.isSiloWrapped || curr.isLP || curr.is3PSiloWrapped) {
+      if (curr.isSiloWrapped || curr.isLP || curr.is3PSiloWrapped || tokensEqual(curr, wsol)) {
         prev.add(curr);
       }
       return prev;
     }, new Set<Token>());
 
     setFilter(filteredSet);
-  }, [tokenMap]);
+  }, [tokenMap, wsol]);
 
   return filter;
 };

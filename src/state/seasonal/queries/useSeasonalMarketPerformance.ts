@@ -1,11 +1,19 @@
 import { subgraphs } from "@/constants/subgraph";
 import {
+  PINTO_CBBTC_TOKEN,
+  PINTO_CBETH_TOKEN,
+  PINTO_USDC_TOKEN,
+  PINTO_WETH_TOKEN,
+  PINTO_WSOL_TOKEN,
+} from "@/constants/tokens";
+import {
   BeanstalkSeasonalMarketPerformanceDocument,
   BeanstalkSeasonalMarketPerformanceQuery,
   MarketPerformanceSeasonal,
 } from "@/generated/gql/pintostalk/graphql";
 import { useLPTokenToNonPintoUnderlyingMap } from "@/hooks/pinto/useTokenMap";
 import useTokenData from "@/state/useTokenData";
+import { useChainConstant } from "@/utils/chain";
 import { PaginationSettings, paginateSubgraph } from "@/utils/paginateSubgraph";
 import {
   SeasonalMarketPerformanceChartData,
@@ -142,7 +150,7 @@ export function useMarketPerformanceCalc(
         }
 
         let tokenIdx = 0;
-        for (const token of season.silo.whitelistedTokens) {
+        for (const token of season.silo.allWhitelistedTokens) {
           // Skip Pinto token
           if (token === mainToken.address) {
             continue;

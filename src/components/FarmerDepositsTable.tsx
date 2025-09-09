@@ -56,8 +56,24 @@ export default function FarmerDepositsTable({
 
   // Sort tokens with PINTO first, then by BDV
   const sortedTokens = useMemo(() => {
-    return sortTokensForDeposits(tokenData.whitelistedTokens, farmerDeposits, mainToken, priceData.price, "value");
-  }, [farmerDeposits, priceData.price, tokenData.whitelistedTokens, mainToken]);
+    const sorted = sortTokensForDeposits(
+      tokenData.mayBeWhitelistedTokens,
+      farmerDeposits,
+      mainToken,
+      priceData.price,
+      "value",
+    );
+    const filtered = sorted.filter((token) => {
+      if (token.isWhitelisted) {
+        return true;
+      }
+      const hasDeposits = farmerDeposits.get(token)?.amount?.gt(0);
+
+      return !!hasDeposits;
+    });
+
+    return filtered;
+  }, [farmerDeposits, priceData.price, tokenData.mayBeWhitelistedTokens, mainToken]);
 
   const claimBeanGain = farmerActions.claimRewards.outputs.beanGain;
   const claimStalkGain = farmerActions.claimRewards.outputs.stalkGain;
@@ -176,7 +192,7 @@ export default function FarmerDepositsTable({
   };
 
   return (
-    <div className={`relative action-container overflow-visible ${hoveringClaim && canClaim && "mb-[4.5rem]"}`}>
+    <div className={`relative action-container overflow-visible`}>
       <div className="border border-pinto-gray-2 rounded-[1rem] overflow-clip">
         <Table>
           <TableHeader className="bg-pinto-gray-1 hover:bg-pinto-gray-1">
@@ -235,12 +251,24 @@ export default function FarmerDepositsTable({
                 stalkGain: data.update?.stalkGain || TokenValue.ZERO,
               };
 
+              const effectiveBDV = !token.isWhitelisted
+                ? userData?.depositBDV
+                : userData?.currentBDV.gt(0)
+                  ? userData?.currentBDV
+                  : userData?.depositBDV;
+
               const addClaimable = token.isMain;
 
               return (
                 <TableRow
                   key={`${token.address}_${i}`}
-                  className={`h-[4.5rem] bg-white hover:bg-pinto-green-1/50 hover:cursor-pointer ${germinatingStalk.gt(0) ? "bg-pinto-off-green/15" : ""} ${(amountOfDeposits === 0 && !addClaimable) || (addClaimable && amountOfDeposits === 0 && !hoveringClaim && beanGain.gt(0)) ? "opacity-70" : "opacity-100"}`}
+                  className={`h-[4.5rem] hover:cursor-pointer ${
+                    !token.isWhitelisted
+                      ? "bg-gray-100 opacity-60 hover:bg-gray-200"
+                      : germinatingStalk.gt(0)
+                        ? "bg-pinto-off-green/15 hover:bg-pinto-green-1/50"
+                        : "bg-white hover:bg-pinto-green-1/50"
+                  } ${(amountOfDeposits === 0 && !addClaimable) || (addClaimable && amountOfDeposits === 0 && !hoveringClaim && beanGain.gt(0)) ? "opacity-70" : "opacity-100"}`}
                   onClick={() => navigate(`/silo/${token.address}`)}
                   data-action-target={`token-row-${token.address}`}
                 >
@@ -249,7 +277,14 @@ export default function FarmerDepositsTable({
                       <div className="inline-flex items-center gap-1.5">
                         <img src={token.logoURI} className="h-8 w-8 min-w-8 max-w-8" alt={`${token.name} logo`} />
                         <div className="flex-row space-y-0.5">
-                          <div className="pinto-sm whitespace-nowrap">{token.name}</div>
+                          <div className="pinto-sm whitespace-nowrap flex flex-col gap-1">
+                            {token.name}
+                            {!token.isWhitelisted && (
+                              <div className="bg-pinto-gray-2/70 text-pinto-secondary px-[0.1875rem] py-[0.1875rem] rounded-[0.25rem] pinto-xs w-fit leading-none">
+                                Dewhitelisted
+                              </div>
+                            )}
+                          </div>
                           <div className="pinto-xs sm:pinto-sm inline-flex items-center align-bottom gap-1 opacity-70 flex-wrap">
                             <span className="inline-flex gap-1 text-pinto-gray-4">
                               <IconImage src={seedIcon} alt={"seeds"} size={4} />
@@ -278,7 +313,7 @@ export default function FarmerDepositsTable({
                           </div>
                           <div className="text-pinto-gray-4 font-[300] text-[1rem]">
                             {denomination === "USD"
-                              ? formatter.usd(userData?.currentBDV.mul(token.isMain ? priceData.price : poolPrice))
+                              ? formatter.usd(effectiveBDV?.mul(token.isMain ? priceData.price : poolPrice))
                               : formatter.pdv(userData?.depositBDV)}
                           </div>
                         </>
@@ -303,8 +338,8 @@ export default function FarmerDepositsTable({
                           >
                             {denomination === "USD"
                               ? formatter.usd(
-                                  userData?.currentBDV
-                                    .add(rewardGains.bdvGain)
+                                  effectiveBDV
+                                    ?.add(rewardGains.bdvGain)
                                     .add(updateGains.bdvGain)
                                     .add(addClaimable ? BDVGain : 0)
                                     .mul(token.isMain ? priceData.price : poolPrice),

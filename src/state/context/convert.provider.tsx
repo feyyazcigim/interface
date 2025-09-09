@@ -73,7 +73,7 @@ const usePrepareConvertContext = () => {
   const overallDeltaP = priceData.deltaB;
   const pools = priceData.pools;
   const maxLPToken = seedGauge.data.maxLPToken;
-  const whitelist = tokenData.whitelistedTokens;
+  const whitelist = tokenData.mayBeWhitelistedTokens;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: run on mount
   useEffect(() => {
@@ -125,28 +125,34 @@ const usePrepareConvertContext = () => {
           deltaSeedRewards: targetState.rewards.seeds.sub(fromState.rewards.seeds),
         };
 
-        // if (fromToken.isLP && target.isLP) {
-        //   data.enabled = false;
-        // }
-
-        // Disable converts from PINTO -> LP when overall deltaB < 0
-        if (fromToken.isMain && target.isLP && overallDeltaP.lte(0)) {
+        // Disable ->  Non-Whitelisted converts
+        if (!target.isWhitelisted) {
           data.enabled = false;
         }
 
-        // Disable converts from LP -> PINTO when overall deltaB > 0
-        if (fromToken.isLP && target.isMain && overallDeltaP.gte(0)) {
-          data.enabled = false;
+        // PINTO -> LP Converts
+        if (fromToken.isMain) {
+          // Disable converts from PINTO -> LP when overall deltaB < 0
+          if (target.isLP && overallDeltaP.lte(0)) {
+            data.enabled = false;
+          }
+
+          // Disable converts from PINTO -> LP when LP pool deltaB < 0
+          if (target.isLP && targetState.pool?.deltaB.lte(0)) {
+            data.enabled = false;
+          }
         }
 
-        // Disable converts from PINTO -> LP when LP pool deltaB < 0
-        if (fromToken.isMain && target.isLP && targetState.pool?.deltaB.lte(0)) {
-          data.enabled = false;
-        }
+        if (fromToken.isLP) {
+          // Disable converts from LP -> PINTO when overall deltaB > 0
+          if (target.isMain && overallDeltaP.gte(0)) {
+            data.enabled = false;
+          }
 
-        // Disable converts LP -> PINTO when pool deltaB < 0
-        if (target.isMain && fromToken.isLP && fromState.pool?.deltaB.gt(0)) {
-          data.enabled = false;
+          // Disable converts LP -> PINTO when pool deltaB < 0
+          if (target.isMain && fromState.pool?.deltaB.gt(0)) {
+            data.enabled = false;
+          }
         }
 
         acc[targetIndex] = data;

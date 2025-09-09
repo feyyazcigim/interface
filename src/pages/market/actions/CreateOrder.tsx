@@ -10,11 +10,12 @@ import { Separator } from "@/components/ui/Separator";
 import { PODS } from "@/constants/internalTokens";
 import createPodOrder from "@/encoders/createPodOrder";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
-import { useTokenMap } from "@/hooks/pinto/useTokenMap";
+import { useIsWSOL, useTokenMap } from "@/hooks/pinto/useTokenMap";
 import useBuildSwapQuote from "@/hooks/swap/useBuildSwapQuote";
 import useSwap from "@/hooks/swap/useSwap";
 import useSwapSummary from "@/hooks/swap/useSwapSummary";
 import { usePreferredInputToken } from "@/hooks/usePreferredInputToken";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import useTransaction from "@/hooks/useTransaction";
 import usePriceImpactSummary from "@/hooks/wells/usePriceImpactSummary";
 import { useFarmerBalances } from "@/state/useFarmerBalances";
@@ -22,7 +23,6 @@ import { useHarvestableIndex, usePodIndex } from "@/state/useFieldData";
 import { useQueryKeys } from "@/state/useQueryKeys";
 import useTokenData from "@/state/useTokenData";
 import { formatter } from "@/utils/format";
-import { stringToNumber } from "@/utils/string";
 import { tokensEqual } from "@/utils/token";
 import { FarmFromMode, FarmToMode, Token } from "@/utils/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -44,17 +44,18 @@ const maxPlaceInLineValidation = {
 
 const useFilterTokens = () => {
   const tokens = useTokenMap();
+  const isWSOL = useIsWSOL();
 
   return useMemo(() => {
     const set = new Set<Token>();
 
     [...Object.values(tokens)].forEach((token) => {
-      if (token.isLP || token.isSiloWrapped || token.is3PSiloWrapped) {
+      if (token.isLP || token.isSiloWrapped || token.is3PSiloWrapped || isWSOL(token)) {
         set.add(token);
       }
     });
     return set;
-  }, [tokens]);
+  }, [tokens, isWSOL]);
 };
 
 export default function CreateOrder() {
@@ -77,12 +78,14 @@ export default function CreateOrder() {
   });
 
   const [didSetPreferred, setDidSetPreferred] = useState(false);
-  const [amountIn, setAmountIn] = useState("0");
+  const [amountIn, setAmountIn] = useState("");
   const [tokenIn, setTokenIn] = useState(preferredToken);
   const [balanceFrom, setBalanceFrom] = useState(FarmFromMode.INTERNAL_EXTERNAL);
   const [slippage, setSlippage] = useState(0.1);
 
   const shouldSwap = !tokensEqual(tokenIn, mainToken);
+
+  const amountInTV = useSafeTokenValue(amountIn, tokenIn);
 
   const {
     data: swapData,
@@ -92,17 +95,17 @@ export default function CreateOrder() {
     tokenIn,
     tokenOut: mainToken,
     slippage,
-    amountIn: TokenValue.fromHuman(amountIn, tokenIn.decimals),
+    amountIn: amountInTV,
     disabled: !shouldSwap || inputError,
   });
 
   const swapBuild = useBuildSwapQuote(swapData, balanceFrom, FarmToMode.INTERNAL);
   const swapSummary = useSwapSummary(swapData);
   const beansInOrder = !shouldSwap
-    ? TokenValue.fromHuman(amountIn, tokenIn.decimals)
+    ? amountInTV
     : swapSummary?.swap.routes[swapSummary?.swap.routes.length - 1].amountOut ?? TV.ZERO;
 
-  const value = tokenIn.isNative ? TokenValue.fromHuman(amountIn, tokenIn.decimals) : undefined;
+  const value = tokenIn.isNative ? amountInTV : undefined;
 
   const priceImpactQuery = usePriceImpactSummary(swapBuild?.advFarm, tokenIn, value);
   const priceImpactSummary = priceImpactQuery?.get(mainToken);
@@ -132,7 +135,7 @@ export default function CreateOrder() {
 
   // invalidate pod orders query
   const onSuccess = useCallback(() => {
-    setAmountIn("0");
+    setAmountIn("");
     setMaxPlaceInLine(undefined);
     setPricePerPod(undefined);
     allQK.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));
@@ -154,9 +157,13 @@ export default function CreateOrder() {
       throw new Error("No quote");
     }
 
+    if (amountInTV.isZero) {
+      throw new Error("Amount required");
+    }
+
     const advFarm = shouldSwap && swapBuild ? [...swapBuild.advancedFarm] : [];
 
-    const _amount = shouldSwap ? TV.ZERO : TokenValue.fromHuman(amountIn, tokenIn.decimals);
+    const _amount = shouldSwap ? TV.ZERO : amountInTV;
     const fromMode = shouldSwap ? FarmFromMode.INTERNAL : balanceFrom;
     const orderClipboard =
       shouldSwap && swapBuild
@@ -203,8 +210,7 @@ export default function CreateOrder() {
     account,
     shouldSwap,
     swapData,
-    amountIn,
-    tokenIn,
+    amountInTV,
     value,
     maxPlaceInLine,
     pricePerPod,
@@ -219,7 +225,7 @@ export default function CreateOrder() {
   const swapDataNotReady = (shouldSwap && (!swapData || !swapBuild)) || !!swapQuery.error;
 
   // ui state
-  const formIsFilled = !!pricePerPod && !!maxPlaceInLine && !!account && !!stringToNumber(amountIn);
+  const formIsFilled = !!pricePerPod && !!maxPlaceInLine && !!account && amountInTV.gt(0);
   const disabled = !formIsFilled || swapDataNotReady;
 
   return (
@@ -263,7 +269,7 @@ export default function CreateOrder() {
           tokenSelectLoading={preferredLoading || !didSetPreferred}
           disableClamping={true}
         />
-        {shouldSwap && stringToNumber(amountIn) > 0 && (
+        {shouldSwap && amountInTV.gt(0) && (
           <RoutingAndSlippageInfo
             title="Total Swap Slippage"
             swapSummary={swapSummary}

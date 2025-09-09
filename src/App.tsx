@@ -1,4 +1,3 @@
-import META from "@/constants/meta";
 import { cn, isDev } from "@/utils/utils";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import DevPage from "./components/DevPage";
@@ -6,6 +5,7 @@ import PageMetaWrapper from "./components/PageMetaWrapper";
 import ScrollToTop from "./components/ScrollToTop";
 import Navbar from "./components/nav/nav/Navbar";
 import { externalLinks } from "./constants/links";
+import Collection from "./pages/Collection";
 import Error404 from "./pages/Error404";
 import Explorer from "./pages/Explorer";
 import Field from "./pages/Field";
@@ -21,18 +21,27 @@ import NewUserView from "./pages/overview/NewUserView";
 
 import TourOfTheFarm from "@/components/TourOfTheFarm";
 import { useLocation } from "react-router-dom";
+import Footer from "@/components/Footer";
+import { MobileActionBarProvider } from "@/components/MobileActionBarContext";
+import Hypernative from "./pages/Hypernative";
 import { useMetaCRM } from "./utils/meta-crm";
+
+export const RENDER_HYPERNATIVE = false;
+
+function HypernativeActive() {
+  return <Hypernative />;
+}
 
 function AppLayout({ children }) {
   const location = useLocation();
   const isLandingPage = location.pathname === "/";
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       {!isLandingPage && <Navbar />}
-      {!isLandingPage && <TourOfTheFarm />}
       <ScrollToTop />
-      <div className={cn("relative z-[1] w-screen")}>{children}</div>
+      <div className={cn("relative z-[1] w-screen flex-1")}>{children}</div>
+      <Footer />
     </div>
   );
 }
@@ -140,6 +149,14 @@ function ProtectedLayout() {
         }
       />
       <Route
+        path="/collection"
+        element={
+          <PageMetaWrapper metaKey="nftCollection">
+            <Collection />
+          </PageMetaWrapper>
+        }
+      />
+      <Route
         path="/404"
         element={
           <PageMetaWrapper metaKey="404">
@@ -163,37 +180,43 @@ function ProtectedLayout() {
 function App() {
   useMetaCRM();
 
+  if (RENDER_HYPERNATIVE) {
+    return <HypernativeActive />;
+  }
+
   return (
     <BrowserRouter>
-      <AppLayout>
-        <Routes>
-          <Route
-            index
-            element={
-              <PageMetaWrapper metaKey="index">
-                <Landing />
-              </PageMetaWrapper>
-            }
-          />
-          <Route
-            path="/how-pinto-works"
-            element={
-              <PageMetaWrapper metaKey="overview">
-                <NewUserView />
-              </PageMetaWrapper>
-            }
-          />
-          <Route path="/whitepaper" element={<Whitepaper />} />
-          <Route path="/*" element={<ProtectedLayout />} />
-          <Route
-            path="/announcing-pinto"
-            Component={() => {
-              window.location.replace(externalLinks.announcingPinto);
-              return null;
-            }}
-          />
-        </Routes>
-      </AppLayout>
+      <MobileActionBarProvider>
+        <AppLayout>
+          <Routes>
+            <Route
+              index
+              element={
+                <PageMetaWrapper metaKey="index">
+                  <Landing />
+                </PageMetaWrapper>
+              }
+            />
+            <Route
+              path="/how-pinto-works"
+              element={
+                <PageMetaWrapper metaKey="overview">
+                  <NewUserView />
+                </PageMetaWrapper>
+              }
+            />
+            <Route path="/whitepaper" element={<Whitepaper />} />
+            <Route path="/*" element={<ProtectedLayout />} />
+            <Route
+              path="/announcing-pinto"
+              Component={() => {
+                window.location.replace(externalLinks.announcingPinto);
+                return null;
+              }}
+            />
+          </Routes>
+        </AppLayout>
+      </MobileActionBarProvider>
     </BrowserRouter>
   );
 }

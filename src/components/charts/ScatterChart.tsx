@@ -43,6 +43,7 @@ export type ScatterChartData = {
   data: Point[];
   color: string;
   pointStyle: PointStyle;
+  pointRadius: number;
 }[];
 
 export type ScatterChartAxisOptions = {
@@ -177,11 +178,13 @@ const ScatterChart = React.memo(
     const chartData = useCallback(
       (ctx: CanvasRenderingContext2D | null): ChartData => {
         return {
-          datasets: data.map(({ label, data, color, pointStyle }) => ({
+          datasets: data.map(({ label, data, color, pointStyle, pointRadius }) => ({
             label,
             data,
             backgroundColor: color,
             pointStyle,
+            pointRadius: pointRadius,
+            hoverRadius: pointRadius + 1,
           })),
         };
       },
@@ -308,15 +311,22 @@ const ScatterChart = React.memo(
           if (!ctx) return;
 
           // Define the function to draw the selection point
-          const drawSelectionPoint = (x: number, y: number, color?: string) => {
+          const drawSelectionPoint = (
+            x: number,
+            y: number,
+            pointRadius: number,
+            pointStyle: PointStyle,
+            color?: string,
+          ) => {
+            console.info("🚀 ~ drawSelectionPoint ~ pointRadius:", pointRadius);
             ctx.save();
             ctx.fillStyle = "transparent";
             ctx.strokeStyle = color || "black";
             ctx.lineWidth = !!color ? 2 : 1;
 
-            const rectWidth = 10;
-            const rectHeight = 10;
-            const cornerRadius = 5;
+            const rectWidth = pointRadius * 2.5 || 10;
+            const rectHeight = pointRadius * 2.5 || 10;
+            const cornerRadius = pointStyle === "rect" ? 0 : pointRadius * 1.5;
 
             ctx.beginPath();
             ctx.moveTo(x - rectWidth / 2 + cornerRadius, y - rectHeight / 2);
@@ -364,7 +374,9 @@ const ScatterChart = React.memo(
 
             if (dataPoint) {
               const { x, y } = dataPoint.getProps(["x", "y"], true);
-              drawSelectionPoint(x, y);
+              const pointRadius = dataPoint.options.radius;
+              const pointStyle = dataPoint.options.pointStyle;
+              drawSelectionPoint(x, y, pointRadius, pointStyle);
             }
           }
 
@@ -374,7 +386,9 @@ const ScatterChart = React.memo(
             const dataPoint = chart.getDatasetMeta(selectedPointDatasetIndex).data[selectedPointIndex];
             if (dataPoint) {
               const { x, y } = dataPoint.getProps(["x", "y"], true);
-              drawSelectionPoint(x, y, "#387F5C");
+              const pointRadius = dataPoint.options.radius;
+              const pointStyle = dataPoint.options.pointStyle;
+              drawSelectionPoint(x, y, pointRadius, pointStyle, "#387F5C");
             }
           }
         },
@@ -391,8 +405,6 @@ const ScatterChart = React.memo(
       }),
       [],
     );
-
-    console.info("xOptions.max", xOptions.max);
 
     const chartOptions: ChartOptions = useMemo(() => {
       return {

@@ -1,8 +1,9 @@
 import { TV } from "@/classes/TokenValue";
+import { diamondABI } from "@/constants/abi/diamondABI";
 import { STALK } from "@/constants/internalTokens";
 import { useProtocolAddress } from "@/hooks/pinto/useProtocolAddress";
 import { Token } from "@/utils/types";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useReadContracts } from "wagmi";
 import { useSiloConvertResult } from "./useSiloConvertResult";
 
@@ -11,9 +12,10 @@ export interface SiloConvertGrownStalkPenaltyBreakdown {
   lossGrownStalk: TV;
   isPenalty: boolean;
   penaltyRatio: number;
+  bdv: TV;
 }
 
-const selectGrownStalkPenalty = (result: readonly [bigint, bigint]) => {
+const selectGrownStalkPenalty = (result: readonly [bigint, bigint], bdv: TV) => {
   const newGrownStalk = TV.fromBigInt(result[0], STALK.decimals);
   const lossGrownStalk = TV.fromBigInt(result[1], STALK.decimals);
 
@@ -27,11 +29,12 @@ const selectGrownStalkPenalty = (result: readonly [bigint, bigint]) => {
     lossGrownStalk,
     isPenalty,
     penaltyRatio,
+    bdv,
   };
 };
 
-const selectGrownStalkPenaltyMultiple = (results: (readonly [bigint, bigint])[]) => {
-  return results.map(selectGrownStalkPenalty);
+const selectGrownStalkPenaltyMultiple = (results: (readonly [bigint, bigint])[], bdvValues: TV[]) => {
+  return results.map((result, index) => selectGrownStalkPenalty(result, bdvValues[index]));
 };
 
 export const useSiloConvertDownPenaltyQuery = (
@@ -45,92 +48,64 @@ export const useSiloConvertDownPenaltyQuery = (
 
   const isConvertDown = Boolean(source.isMain && target?.isLP);
 
-  const { contractArgs, isValidArgs } = useMemo(() => {
-    const args = result?.map((r) => {
-      return {
-        fromGrownStalk: r.fromGrownStalk,
-        fromBdv: r.fromBdv,
-        well: isConvertDown ? target : undefined,
-      };
-    });
+  const bdvValues = useMemo(() => result?.map((r) => r.fromBdv), [result]);
 
-    const allHaveWells = args?.every((r) => r.well);
-    const allHaveBdv = args?.every((r) => r.fromBdv.gt(0));
+  const select = useCallback(
+    (data: (readonly [bigint, bigint])[]) => {
+      return selectGrownStalkPenaltyMultiple(data, bdvValues ?? []);
+    },
+    [bdvValues],
+  );
 
+  const args = result?.map((r) => {
     return {
-      contractArgs: args,
-      isValidArgs: Boolean(allHaveWells && allHaveBdv && args?.length),
+      fromGrownStalk: r.fromGrownStalk,
+      fromBdv: r.fromBdv,
+      well: isConvertDown ? target : undefined,
+      fromAmount: r.fromAmountIn,
     };
-  }, [result]);
+  });
 
-  const queryEnabled = isValidArgs && !!contractArgs?.length && isConvertDown && enabled;
+  const isValidArgs = args?.every((r) => r.well && r.fromBdv.gt(0) && r.fromAmount.gt(0));
+  const queryEnabled = isValidArgs && !!args?.length && isConvertDown && enabled;
 
-  const queries = useReadContracts({
-    contracts: (contractArgs ?? [])?.map((r) => {
+  const { data: queryData, ...queries } = useReadContracts({
+    contracts: (args ?? [])?.map((r) => {
       return {
         address: diamond,
-        abi: abi,
-        functionName: "downPenalizedGrownStalk",
-        args: [r.well?.address ?? "0x", r.fromBdv.toBigInt(), r.fromGrownStalk.toBigInt()],
+        abi: diamondABI,
+        functionName: "downPenalizedGrownStalk" as const,
+        args: [
+          r.well?.address ?? "0x",
+          r.fromBdv.toBigInt(),
+          r.fromGrownStalk.toBigInt(),
+          r.fromAmount.toBigInt(),
+        ] as const,
       };
     }),
     allowFailure: false,
     query: {
       enabled: queryEnabled,
-      select: selectGrownStalkPenaltyMultiple,
+      select,
     },
   });
 
   useEffect(() => {
-    const amts = queries.data?.map((r) => r.lossGrownStalk ?? TV.ZERO);
+    const amts = queryData?.map((r) => r.lossGrownStalk ?? TV.ZERO);
     const structAmts = structs?.map((r) => r.lossGrownStalk ?? TV.ZERO);
 
-    if (amts && structAmts && amts.every((amt, i) => amt.eq(structAmts[i] ?? TV.ZERO))) return;
+    if (amts && structAmts && amts?.every((amt, i) => amt.eq(structAmts?.[i] ?? TV.ZERO))) return;
 
     if (amts?.every((amt, i) => amt.eq(structAmts?.[i] ?? TV.ZERO))) return;
 
-    queries.data && setStructs(queries.data);
-  }, [queries]);
+    queryData && setStructs(queryData);
+  }, [queryData]);
 
-  return {
-    ...queries,
-    data: structs,
-  };
+  return useMemo(
+    () => ({
+      ...queries,
+      data: structs,
+    }),
+    [queries, structs],
+  );
 };
-
-const abi = [
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "well",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "bdvToConvert",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "grownStalkToConvert",
-        type: "uint256",
-      },
-    ],
-    name: "downPenalizedGrownStalk",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "newGrownStalk",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "grownStalkLost",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-] as const;

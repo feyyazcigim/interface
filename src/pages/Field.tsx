@@ -16,7 +16,6 @@ import {
   useUpdateMorningTemperatureOnInterval,
 } from "@/state/protocol/field/field.updater";
 
-import AccordionGroup, { IBaseAccordionContent } from "@/components/AccordionGroup";
 import { Col } from "@/components/Container";
 import CornerBorders from "@/components/CornerBorders";
 import MobileActionBar from "@/components/MobileActionBar";
@@ -132,7 +131,9 @@ function TractorButton({ onClick }: { onClick: () => void }) {
           Set up a Tractor Order to automate Sowing
         </span>
       </button>
-      <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="1rem" />
+      {!inputExceedsSoil && (
+        <CornerBorders rowNumber={0} active={hoveredTractor} standalone={true} cornerRadius="1rem" />
+      )}
     </div>
   );
 }
@@ -215,7 +216,7 @@ function Field() {
       <div className="flex flex-col lg:flex-row justify-between gap-14 mt-0 sm:mt-0">
         <div className="flex flex-col w-full gap-4 sm:gap-8">
           {showInfos && (
-            <Col className="gap-2">
+            <Col className="gap-4">
               <div className="flex flex-col gap-4">
                 <div className="pinto-h2 sm:pinto-h1">Field</div>
                 <div className="pinto-sm sm:pinto-body-light text-pinto-light sm:text-pinto-light">
@@ -376,13 +377,6 @@ function Field() {
               </Button>
             </div>
           )}
-          <AccordionGroup
-            groupTitle="Frequently Asked Questions"
-            items={FieldFAQ}
-            allExpanded={false}
-            size="small"
-            variant="text"
-          />
           {!currentAction && (
             <MobileActionBar>
               <Button
@@ -447,67 +441,17 @@ const ReadMoreField = () => {
   return (
     <ReadMoreAccordion defaultOpen={!learnDidVisit.field}>
       <>
-        Pinto can be lent to the protocol in exchange for a fixed interest rate bond, where the rate payback is a
-        function of Pinto supply growth. The debt to the user is represented by Pods, which are defined by their
-        position in the Pod Line. Soil is the amount of Pinto the protocol is willing to purchase on the open market and
-        temperature is the interest rate it will pay. Each season the Soil and maximum Temperature are set based on
-        Protocol state. When Pinto is priced over $1 new Pinto is minted with 48.5% being distributed to lenders in the
-        Field. Loans are paid back in first in first out (FIFO) ordering.
+        Pinto can be lent (Sown) to the protocol in exchange for Pods, protocol-native debt issued with a fixed interest
+        rate. Pods function as zero coupon bonds that become redeemable (Harvestable) for 1 Pinto each on a first in,
+        first out (FIFO) basis when new Pinto are minted.
+        <br />
+        When the time-weighted average Pinto price over the previous Season is over $1, new Pinto are minted, 48.5% of
+        which are distributed to Pod holders.
+        <br />
+        Soil is the amount of Pinto the protocol is willing to purchase on the open market and Temperature is the
+        interest rate it will pay. At the beginning of each Season (i.e., the top of each hour), the Soil and maximum
+        Temperature are set based on protocol state.
       </>
     </ReadMoreAccordion>
   );
 };
-
-const FieldFAQ: IBaseAccordionContent[] = [
-  {
-    key: "what-are-pods",
-    title: "What are Pods?",
-    content:
-      "Pods are the native debt asset of the Pinto protocol. They are minted when a user Sows Pinto in the Field. Pods are represented by their position in the Pod Line and mature on a first in first out (FIFO) basis. 48.5% of new Pinto mints are used to pay off Pods in the Pod Line.",
-  },
-  {
-    key: "what-is-soil",
-    title: "What is Soil?",
-    content:
-      "Soil is the amount of Pinto the protocol is willing to borrow in a given Season. The protocol issues debt every Season, but the exact Soil available varies with system conditions.",
-  },
-  {
-    key: "what-is-temperature",
-    title: "What is Temperature?",
-    content:
-      "Temperature is the interest rate for Pods. It adjusts incrementally each season based on prior market activity, with no fixed cap to avoid systemic risk.",
-  },
-  {
-    key: "what-is-the-morning-auction",
-    title: "What is the Morning Auction?",
-    content:
-      "The Morning Auction is a Dutch Auction where Temperature increases over the first 10 minutes of each Season. When demand for Soil is high at max Temperature, Farmers may choose to purchase Pods earlier—at lower rates—to avoid a longer pod line as the protocol reduces Temperature over time.",
-  },
-  {
-    key: "how-can-i-learn-more-about-the-field",
-    title: "How can I learn more about the Field?",
-    content: (
-      <>
-        Head to the{" "}
-        <Link
-          className="text-pinto-green-4 hover:underline transition-all"
-          to={`${navLinks.docs}/farm/field`}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Pinto docs
-        </Link>{" "}
-        for more info, or ask any questions in the{" "}
-        <Link
-          className="text-pinto-green-4 hover:underline transition-all"
-          to={navLinks.discord}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          discord
-        </Link>{" "}
-        community!
-      </>
-    ),
-  },
-] as const;

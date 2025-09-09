@@ -22,6 +22,9 @@ yarn install
 # Generate typed contracts, hooks and queries
 yarn generate
 
+# Install git pre-commit hooks
+yarn prepare
+
 # Start dev server on localhost:5173
 yarn dev
 ```
@@ -37,8 +40,6 @@ Create a `.env.local` at the project root. See `.env.example` for more details. 
 ```bash
 # https://www.alchemy.com/
 VITE_ALCHEMY_API_KEY=
-# https://0x.org/
-VITE_ZEROEX_API_KEY=
 # Comma separated list of chain ids. (ex: "1337,8543")
 VITE_CHAINS=
 # base endpoint domain

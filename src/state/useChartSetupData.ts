@@ -1030,6 +1030,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       icon: WETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "WETH Price",
       description: "WETH Price",
+      valueAxis: "ethPrice",
       formatter: usdFormatter,
     }),
     marketEntry({
@@ -1038,6 +1039,7 @@ const createMarketCharts = (mainToken: Token): ChartSetupBase[] => {
       icon: CBETH_TOKEN[mainToken.chainId].logoURI,
       tooltipTitle: "cbETH Price",
       description: "cbETH Price",
+      valueAxis: "ethPrice",
       formatter: usdFormatter,
     }),
     marketEntry({
