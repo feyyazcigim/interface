@@ -1,5 +1,5 @@
 import { AnimatePresence, AnimationDefinition, MotionValue, motion, useAnimation, useTransform } from "framer-motion";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 const TxTypeIcons: Record<string, string> = {
   deposit: "DoubleCaret_Landing.svg", // Deposit transaction type icon
@@ -54,8 +54,6 @@ export default function TxFloater({
   isFixed,
   id,
   positionAbove,
-  showAllLabels,
-  toggleAllLabels,
   shouldPopOnReveal,
 }: {
   from: string | undefined;
@@ -66,8 +64,6 @@ export default function TxFloater({
   isFixed: boolean; // true for static markers on the chart line, false for the floating marker at the measurement point
   id?: string;
   positionAbove?: boolean; // Whether the pill is positioned above the value target
-  showAllLabels?: boolean; // Global state for showing all labels
-  toggleAllLabels?: () => void; // Global toggle function
   shouldPopOnReveal?: MotionValue<boolean>; // Whether to trigger pop animation when revealed
 }) {
   // Compute the floater's current screen X position
@@ -163,19 +159,11 @@ export default function TxFloater({
   const currentTxType = isFixed ? txType : lastValidTxTypeRef.current;
   const actionLabel = currentTxType ? TxActionLabels[currentTxType] : undefined;
 
-  // Handle pill click to toggle all labels globally
-  const handlePillClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent the click from bubbling up to the chart's restart handler
-    if (toggleAllLabels) {
-      toggleAllLabels();
-    }
-  };
-
   return (
     <motion.div initial={{ opacity: 0 }} animate={controls} className="z-10 relative" id={id}>
       {/* Action label positioned above or below based on pill position relative to value target */}
       <AnimatePresence>
-        {actionLabel && showAllLabels && (
+        {actionLabel && (
           <motion.div
             key="label"
             className="absolute text-pinto-gray-6 text-base text-[18px] font-normal opacity-90 whitespace-nowrap w-full flex justify-center items-center"
@@ -196,7 +184,6 @@ export default function TxFloater({
         className="flex items-center justify-center bg-white border border-pinto-green-4 rounded-full p-2 gap-2 w-fit transition-all duration-200"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
-        onClick={handlePillClick}
       >
         <img className="w-8 h-8" src={isFixed ? from : lastValidFromRef.current} alt="Farmer Icon" />
         <img

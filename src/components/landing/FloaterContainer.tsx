@@ -10,8 +10,6 @@ interface FloaterContainerProps {
   floatersOpacity: MotionValue<1 | 0>;
   positionAbove: boolean;
   isFirst: boolean;
-  showAllLabels: boolean;
-  toggleAllLabels: () => void;
   measurementX: MotionValue<number>;
 }
 
@@ -22,8 +20,6 @@ function FloaterContainer({
   floatersOpacity,
   positionAbove,
   isFirst,
-  showAllLabels,
-  toggleAllLabels,
   measurementX,
 }: FloaterContainerProps) {
   const leftPosition = useTransform(x, (scrollX: number) => marker.x + scrollX);
@@ -58,8 +54,6 @@ function FloaterContainer({
         isFixed={true}
         id={isFirst ? "txFloater" : undefined}
         positionAbove={positionAbove}
-        showAllLabels={showAllLabels}
-        toggleAllLabels={toggleAllLabels}
         shouldPopOnReveal={shouldPopOnReveal}
       />
     </motion.div>
@@ -95,9 +89,7 @@ function arePropsEqual(prevProps: FloaterContainerProps, nextProps: FloaterConta
     prevProps.isFirst !== nextProps.isFirst ||
     prevProps.x !== nextProps.x ||
     prevProps.floatersOpacity !== nextProps.floatersOpacity ||
-    prevProps.measurementX !== nextProps.measurementX ||
-    prevProps.showAllLabels !== nextProps.showAllLabels ||
-    prevProps.toggleAllLabels !== nextProps.toggleAllLabels
+    prevProps.measurementX !== nextProps.measurementX
   ) {
     return false;
   }
