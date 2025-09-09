@@ -12,6 +12,8 @@ const TxTypeIcons: Record<string, string> = {
   convertDown: "SpinningArrows_Landing.svg", // Convert transaction type icon
   yield: "Cross_Landing.svg", // Yield transaction type icon
   flood: "ReverseDoubleCaret_Landing.svg", // Flood transaction type icon
+  buy: "DoubleCaret_Landing.svg", // Buy transaction type icon
+  sell: "ReverseDoubleCaret_Landing.svg", // Sell transaction type icon
 };
 
 const TxIcons: Record<string, string> = {
@@ -23,6 +25,8 @@ const TxIcons: Record<string, string> = {
   convertDown: pintoLogo,
   yield: pintoLogo,
   flood: pintoLogo,
+  buy: pintoLogo,
+  sell: pintoLogo,
 };
 
 const TxActionLabels: Record<string, string> = {
@@ -34,6 +38,8 @@ const TxActionLabels: Record<string, string> = {
   convertDown: "Converted Down",
   yield: "Mint",
   flood: "Flood",
+  buy: "Bought",
+  sell: "Sold",
 };
 
 const bounceInAnimation: AnimationDefinition = {

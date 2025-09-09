@@ -171,7 +171,7 @@ export interface PricePoint {
   farmer?: string; // Farmer is now just a filename string
   speed?: number; // Optional speed for specific transactions
   triggerPhase?: string; // Optional phase trigger, for the animation above the chart
-  triggerPulse?: boolean; // Trigger price line pulse
+  mandatoryTx?: boolean; // Optional flag, ensures there's always a txType attached to this datapoint
 }
 
 // Define transaction marker with stable ID
@@ -193,7 +193,7 @@ const semiStablePriceData: PricePoint[] = [
   { txType: null, value: 0.997 },
   { txType: null, value: 1.003 },
   { txType: "deposit", value: 0.998, triggerPhase: "semiStable" },
-  { txType: null, value: 1.0025, triggerPulse: true },
+  { txType: null, value: 1.0025 },
   { txType: null, value: 1.0 },
   { txType: "sow", value: 0.9994 },
   { txType: "harvest", value: 1.0004 },
@@ -201,22 +201,22 @@ const semiStablePriceData: PricePoint[] = [
 
 const stablePriceData: PricePoint[] = [
   { txType: null, value: 0.9994, speed: 3 },
-  { txType: "yield", value: 1.005, speed: 3, triggerPulse: true, triggerPhase: "stable" },
-  { txType: "withdraw", value: 0.995, speed: 0.85 },
+  { txType: "yield", value: 1.005, speed: 3, mandatoryTx: true, triggerPhase: "stable" },
+  { txType: "deposit", value: 0.995, speed: 0.85, mandatoryTx: true },
   { txType: null, value: 1.0004, speed: 0.85 },
   { txType: null, value: 0.9994, speed: 0.85 },
   { txType: "deposit", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
   { txType: null, value: 0.9994, speed: 3 },
-  { txType: "yield", value: 1.005, speed: 3, triggerPulse: true, triggerPhase: "stable" },
-  { txType: null, value: 0.995, speed: 0.85 },
-  { txType: "deposit", value: 1.0004, speed: 0.85 },
-  { txType: null, value: 0.9994, speed: 0.85 },
-  { txType: "deposit", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
-  { txType: "yield", value: 0.9994, speed: 3 },
-  { txType: null, value: 1.005, speed: 3, triggerPulse: true, triggerPhase: "stable" },
-  { txType: "withdraw", value: 0.995, speed: 0.85 },
+  { txType: "convertDown", value: 1.005, speed: 3, mandatoryTx: true, triggerPhase: "stable" },
+  { txType: "sow", value: 0.995, speed: 0.85, mandatoryTx: true },
   { txType: null, value: 1.0004, speed: 0.85 },
-  { txType: "withdraw", value: 0.9994, speed: 0.85 },
+  { txType: null, value: 0.9994, speed: 0.85 },
+  { txType: "yield", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
+  { txType: null, value: 0.9994, speed: 3 },
+  { txType: "withdraw", value: 1.005, speed: 3, mandatoryTx: true, triggerPhase: "stable" },
+  { txType: "deposit", value: 0.995, speed: 0.85, mandatoryTx: true },
+  { txType: null, value: 1.0004, speed: 0.85 },
+  { txType: "sow", value: 0.9994, speed: 0.85 },
   { txType: null, value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
 ];
 
@@ -234,8 +234,8 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
   const reductionRate = 0.2; // 20% reduction per call
   const amplitudeModifier = Math.max(maxReduction, 1.0 - (amplitudeCallCount - 1) * reductionRate);
   // Transaction types for different price movements
-  const priceUpTxTypes = ["deposit", "convertUp", "sow"];
-  const priceDownTxTypes = ["withdraw", "convertDown", "yield", "harvest"];
+  const priceUpTxTypes = ["deposit", "convertUp", "sow", "buy"];
+  const priceDownTxTypes = ["withdraw", "convertDown", "harvest", "sell"];
 
   // Count original non-null txTypes
   const originalTxTypeCount = baseData.filter((point) => point.txType !== null).length;
@@ -266,6 +266,9 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
 
   // Second pass: randomly assign txTypes to maintain the same count
   const availableIndices = randomizedData.map((_, index) => index);
+  const mandatoryIndices = randomizedData
+    .map((point, index) => (point.mandatoryTx ? index : null))
+    .filter((index) => index !== null) as number[];
 
   // Shuffle and pick random indices for transactions
   for (let i = availableIndices.length - 1; i > 0; i--) {
@@ -273,26 +276,21 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
     [availableIndices[i], availableIndices[j]] = [availableIndices[j], availableIndices[i]];
   }
 
-  const selectedIndices = availableIndices.slice(0, originalTxTypeCount);
+  // Ensure mandatory indices are always included in selected indices
+  const selectedIndices = [...new Set([...mandatoryIndices, ...availableIndices.slice(0, originalTxTypeCount)])].slice(
+    0,
+    Math.max(originalTxTypeCount, mandatoryIndices.length),
+  );
 
-  // Assign appropriate txTypes based on price movement
+  // Assign appropriate txTypes based on price relative to $1.00
   selectedIndices.forEach((index) => {
-    if (index < randomizedData.length - 1) {
-      const currentPoint = randomizedData[index];
-      const nextPoint = randomizedData[index + 1];
-      const priceIncreases = nextPoint.value > currentPoint.value;
-
-      if (priceIncreases) {
-        // Choose from bullish transaction types
-        randomizedData[index].txType = priceUpTxTypes[Math.floor(Math.random() * priceUpTxTypes.length)];
-      } else {
-        // Choose from bearish transaction types
-        randomizedData[index].txType = priceDownTxTypes[Math.floor(Math.random() * priceDownTxTypes.length)];
-      }
+    const currentPoint = randomizedData[index];
+    if (currentPoint.value >= 1.0) {
+      // Price above or at $1, use bearish transaction
+      randomizedData[index].txType = priceDownTxTypes[Math.floor(Math.random() * priceDownTxTypes.length)];
     } else {
-      // For the last point, randomly choose any transaction type
-      const allTxTypes = [...priceUpTxTypes, ...priceDownTxTypes];
-      randomizedData[index].txType = allTxTypes[Math.floor(Math.random() * allTxTypes.length)];
+      // Price below $1, use bullish transaction
+      randomizedData[index].txType = priceUpTxTypes[Math.floor(Math.random() * priceUpTxTypes.length)];
     }
   });
 
