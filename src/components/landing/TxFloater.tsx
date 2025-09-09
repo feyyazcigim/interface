@@ -1,3 +1,5 @@
+import podIcon from "@/assets/protocol/Pod.png";
+import pintoLogo from "@/assets/tokens/PINTO.png";
 import { AnimatePresence, AnimationDefinition, MotionValue, motion, useAnimation, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
 
@@ -13,14 +15,14 @@ const TxTypeIcons: Record<string, string> = {
 };
 
 const TxIcons: Record<string, string> = {
-  deposit: "Silo_Landing.svg",
-  withdraw: "Silo_Landing.svg",
-  sow: "Sow_Landing.svg",
-  harvest: "Harvest_Landing.svg",
-  convertUp: "Silo_Landing.svg",
-  convertDown: "Silo_Landing.svg",
-  yield: "Silo_Landing.svg",
-  flood: "Silo_Landing.svg",
+  deposit: pintoLogo,
+  withdraw: pintoLogo,
+  sow: podIcon,
+  harvest: podIcon,
+  convertUp: pintoLogo,
+  convertDown: pintoLogo,
+  yield: pintoLogo,
+  flood: pintoLogo,
 };
 
 const TxActionLabels: Record<string, string> = {

@@ -1,3 +1,15 @@
+import Beaver_1 from "@/assets/landing/Beaver_1.png";
+import Beaver_2 from "@/assets/landing/Beaver_2.png";
+import Beaver_3 from "@/assets/landing/Beaver_3.png";
+import Beaver_4 from "@/assets/landing/Beaver_4.png";
+import Beaver_5 from "@/assets/landing/Beaver_5.png";
+import Beaver_6 from "@/assets/landing/Beaver_6.png";
+import Beaver_7 from "@/assets/landing/Beaver_7.png";
+import Beaver_8 from "@/assets/landing/Beaver_8.png";
+import Beaver_9 from "@/assets/landing/Beaver_9.png";
+import Beaver_10 from "@/assets/landing/Beaver_10.png";
+import Beaver_11 from "@/assets/landing/Beaver_11.png";
+import Beaver_12 from "@/assets/landing/Beaver_12.png";
 import PintoLogo from "@/assets/protocol/PintoLogo.svg";
 import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import useIsMobile from "@/hooks/display/useIsMobile";
@@ -306,18 +318,18 @@ const initialFullPriceData: PricePoint[] = [
 
 // Array of person icons with different color backgrounds
 const personIcons = [
-  "farmer_1.png",
-  "farmer_2.png",
-  "farmer_3.png",
-  "farmer_4.png",
-  "farmer_5.png",
-  "farmer_6.png",
-  "farmer_7.png",
-  "farmer_8.png",
-  "farmer_9.png",
-  "farmer_10.png",
-  "farmer_11.png",
-  "farmer_12.png",
+  Beaver_1,
+  Beaver_2,
+  Beaver_3,
+  Beaver_4,
+  Beaver_5,
+  Beaver_6,
+  Beaver_7,
+  Beaver_8,
+  Beaver_9,
+  Beaver_10,
+  Beaver_11,
+  Beaver_12,
 ];
 
 // Helper function to get group index (farmers 1&2 = group 0, farmers 3&4 = group 1, etc.)
