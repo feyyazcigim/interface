@@ -19,10 +19,10 @@ import Transfer from "./pages/Transfer";
 import Whitepaper from "./pages/Whitepaper";
 import NewUserView from "./pages/overview/NewUserView";
 
-import TourOfTheFarm from "@/components/TourOfTheFarm";
-import { useLocation } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { MobileActionBarProvider } from "@/components/MobileActionBarContext";
+import TourOfTheFarm from "@/components/TourOfTheFarm";
+import { useLocation } from "react-router-dom";
 import Hypernative from "./pages/Hypernative";
 import { useMetaCRM } from "./utils/meta-crm";
 

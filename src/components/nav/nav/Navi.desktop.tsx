@@ -8,11 +8,8 @@ import {
 import { stringEq } from "@/utils/string";
 import { isDev } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-import { Link as ReactLink, useLocation, useMatch } from "react-router-dom";
-import { navLinks } from "./Navbar";
 import { useCallback, useRef, useState } from "react";
-import { Link as ReactLink, useLocation } from "react-router-dom";
+import { Link as ReactLink, useLocation, useMatch } from "react-router-dom";
 import { navLinks, navPathNameToTopMenu } from "./Navbar";
 
 const Link = ({
@@ -232,16 +229,14 @@ export default function Navi() {
         </NavigationMenuList>
       </NavigationMenu>
       {!isHome && (
-      <div className="h-[3.75rem]">
-        <AnimatePresence mode="wait">
-          {naviTab === "home" && <AppNavi />}
-          {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
-          {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
-          {naviTab === "more" && <MoreNavi setNaviTab={setNaviTab} />}
-        </AnimatePresence>
+        <div className="h-[3.75rem]">
+          <AnimatePresence mode="wait">
+            {naviTab === "home" && <AppNavi />}
+            {naviTab === "data" && <DataNavi setNaviTab={setNaviTab} />}
+            {naviTab === "learn" && <LearnNavi setNaviTab={setNaviTab} />}
+          </AnimatePresence>
+        </div>
       )}
-        </AnimatePresence>
-      </div>
     </div>
   );
 }
