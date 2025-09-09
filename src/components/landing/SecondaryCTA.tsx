@@ -1,3 +1,4 @@
+import chevronDown from "@/assets/misc/ChevronDown.svg";
 import PropertyLowVolatility from "@/assets/misc/Property_Low_Volatility.svg";
 import PropertyMediumOfExchange from "@/assets/misc/Property_Medium_of_Exchange.svg";
 import PropertyScalable from "@/assets/misc/Property_Scalable.svg";
@@ -14,7 +15,7 @@ import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
-import { Separator } from "../ui/Separator";
+import IconImage from "../ui/IconImage";
 import CardModal from "./CardModal";
 
 // Function to create values data with dynamic liquidity distribution
@@ -159,30 +160,15 @@ interface CarouselCardProps {
   keyPrefix: string;
   isGlowing: boolean;
   glowColor: string;
-  hoverBgColor: string;
-  isHoveredProgrammatically: boolean;
   onClick: (cardData: CardData) => void;
 }
 
-function CarouselCard({
-  data,
-  index,
-  keyPrefix,
-  isGlowing,
-  glowColor,
-  hoverBgColor,
-  isHoveredProgrammatically,
-  onClick,
-}: CarouselCardProps) {
+function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }: CarouselCardProps) {
   return (
     <Button
       key={`${keyPrefix}_${data.title}_${index}`}
       variant="outline-white"
-      className={`flex flex-col gap-3 sm:gap-4 items-start lg:gap-5 2xl:gap-6 p-3 sm:p-4 lg:p-5 2xl:p-4 w-[14rem] sm:w-[16rem] lg:w-[20rem] xl:w-[22rem] h-[10rem] sm:h-[13rem] lg:h-[15rem] xl:h-[15.5rem] 2xl:w-[23.5rem] 2xl:h-[16rem] flex-shrink-0 rounded-2xl mr-4 sm:mr-6 lg:mr-8 xl:mr-10 2xl:mr-12 sm:active:scale-95 ${
-        isHoveredProgrammatically
-          ? `${hoverBgColor.replace("hover:", "")} ${hoverBgColor} sm:scale-105`
-          : `bg-pinto-off-white ${hoverBgColor} sm:hover:scale-105`
-      } ${
+      className={`flex ${glowColor === "green" ? "border-pinto-green-4/50 bg-[linear-gradient(180deg,#D8F1E2_0%,#FCFCFC_50%)] hover:bg-[linear-gradient(180deg,#D8F1E2_0%,#D8F1E2_0%)]" : "border-pinto-purple-2 bg-[linear-gradient(180deg,#F0EBF6_0%,#FCFCFC_50%)]  hover:bg-[linear-gradient(180deg,#F0EBF6_0%,#F0EBF6_50%)]"} flex-row gap-6 w-full h-auto sm:flex-col sm:gap-4 items-center lg:gap-5 2xl:gap-6 px-4 sm:p-4 lg:p-5 2xl:p-4 sm:w-[13rem] lg:w-[17rem] xl:w-[19rem] sm:h-[13.5rem] lg:h-[15.5rem] xl:h-[16rem] 2xl:w-[20.75rem] 2xl:h-[16.5rem] sm:flex-shrink-0 rounded-2xl sm:active:scale-95 sm:hover:scale-105 ${
         isGlowing
           ? glowColor === "orange"
             ? "shadow-[0_0_15px_rgba(255,186,107,0.6),0_0_25px_rgba(255,186,107,0.4)] scale-[1.02]"
@@ -210,17 +196,18 @@ function CarouselCard({
     >
       <img
         src={data.logo}
-        className="w-12 h-12 sm:w-16 sm:h-16 lg:w-18 lg:h-18 xl:w-20 xl:h-20 2xl:w-22 2xl:h-22 flex-shrink-0 text-left object-contain"
+        className="w-8 h-8 sm:w-16 sm:h-16 lg:w-18 lg:h-18 xl:w-20 xl:h-20 2xl:w-24 2xl:h-24 flex-shrink-0 text-left object-contain"
         alt={data.title}
       />
       <div className="flex flex-col flex-1 gap-1 sm:gap-2 lg:gap-3 2xl:gap-4">
-        <div className="text-sm sm:text-base lg:text-lg xl:text-lg text-left leading-[1.1] font-thin text-black">
+        <div className="text-lg max-sm:whitespace-pre-wrap sm:text-base w-auto lg:text-lg xl:text-lg text-left sm:text-center leading-[1.1] font-thin text-black">
           {data.title}
         </div>
-        <div className="text-xs sm:text-sm lg:text-base xl:text-base leading-[1.1] font-thin text-pinto-gray-4 whitespace-normal text-left">
+        <div className="hidden sm:block text-xs sm:text-sm lg:text-base xl:text-base leading-[1.1] font-normal text-pinto-gray-4 whitespace-normal text-center">
           {data.subtitle}
         </div>
       </div>
+      <IconImage src={chevronDown} size={4} mobileSize={6} className="block sm:hidden" alt="chevron down" />
     </Button>
   );
 }
@@ -241,9 +228,6 @@ export default function SecondaryCTA() {
   const [isHoveringCarousel, setIsHoveringCarousel] = useState(false);
   const glowTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Mouse tracking for programmatic hover detection
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [hoveredCard, setHoveredCard] = useState<{ component: "values" | "properties"; index: number } | null>(null);
   const valuesCarouselRef = useRef<HTMLDivElement>(null);
   const propertiesCarouselRef = useRef<HTMLDivElement>(null);
 
@@ -278,42 +262,6 @@ export default function SecondaryCTA() {
     },
     [TOTAL_VALUES_CARDS, TOTAL_PROPERTIES_CARDS],
   );
-
-  // Function to detect which card is under the mouse cursor
-  const detectHoveredCard = useCallback(() => {
-    const { x, y } = mousePosition;
-
-    // Check values carousel
-    if (valuesCarouselRef.current) {
-      const buttons = valuesCarouselRef.current.querySelectorAll("button");
-      for (let i = 0; i < buttons.length; i++) {
-        const button = buttons[i];
-        const rect = button.getBoundingClientRect();
-        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-          const originalIndex = i % valuesData.length;
-          setHoveredCard({ component: "values", index: originalIndex });
-          return;
-        }
-      }
-    }
-
-    // Check properties carousel
-    if (propertiesCarouselRef.current) {
-      const buttons = propertiesCarouselRef.current.querySelectorAll("button");
-      for (let i = 0; i < buttons.length; i++) {
-        const button = buttons[i];
-        const rect = button.getBoundingClientRect();
-        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-          const originalIndex = i % propertiesData.length;
-          setHoveredCard({ component: "properties", index: originalIndex });
-          return;
-        }
-      }
-    }
-
-    // If no card is under cursor, clear hover state
-    setHoveredCard(null);
-  }, [mousePosition, valuesData.length, propertiesData.length]);
 
   // Glow effect timer - pauses when hovering over carousels
   useEffect(() => {
@@ -364,33 +312,6 @@ export default function SecondaryCTA() {
     };
   }, [selectRandomCard, GLOW_DURATION, TOTAL_CYCLE_TIME, isHoveringCarousel]);
 
-  // Mouse move listener for tracking cursor position
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    return () => document.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  // Continuously check for hovered cards using animation frame
-  useEffect(() => {
-    let animationId: number;
-
-    const checkHover = () => {
-      if (isHoveringCarousel) {
-        detectHoveredCard();
-      } else {
-        setHoveredCard(null);
-      }
-      animationId = requestAnimationFrame(checkHover);
-    };
-
-    animationId = requestAnimationFrame(checkHover);
-    return () => cancelAnimationFrame(animationId);
-  }, [detectHoveredCard, isHoveringCarousel]);
-
   const handleCardClick = (cardData: (typeof valuesData)[0]) => {
     setSelectedCard(cardData);
     setIsModalOpen(true);
@@ -409,74 +330,65 @@ export default function SecondaryCTA() {
         {/* Values Carousel */}
         <div
           ref={valuesCarouselRef}
-          className="w-fit flex flex-row items-center animate-long-marquee place-self-start"
+          className="flex flex-col max-sm:w-[95%] sm:flex-row items-center place-self-center gap-4 lg:gap-6 xl:gap-8 2xl:gap-10"
           onMouseEnter={() => setIsHoveringCarousel(true)}
           onMouseLeave={() => setIsHoveringCarousel(false)}
         >
-          {Array(8)
-            .fill(valuesData)
-            .flat()
-            .map((info, index) => {
-              // Calculate original data index for glow effect
-              const originalIndex = index % valuesData.length;
+          {valuesData.map((info, index) => {
+            // Calculate original data index for glow effect
+            const originalIndex = index % valuesData.length;
 
-              // Check if this card should glow based on card type
-              const shouldGlow = glowingCard?.component === "values" && glowingCard.cardIndex === originalIndex;
+            // Check if this card should glow based on card type
+            const shouldGlow = glowingCard?.component === "values" && glowingCard.cardIndex === originalIndex;
 
-              // If multiple cards should glow, only show the one closest to screen center
-              let isGlowing = false;
-              if (shouldGlow && valuesCarouselRef.current) {
-                const buttons = valuesCarouselRef.current.querySelectorAll("button");
-                const screenCenter = window.innerWidth / 2;
-                let closestDistance = Infinity;
-                let closestIndex = -1;
+            // If multiple cards should glow, only show the one closest to screen center
+            let isGlowing = false;
+            if (shouldGlow && valuesCarouselRef.current) {
+              const buttons = valuesCarouselRef.current.querySelectorAll("button");
+              const screenCenter = window.innerWidth / 2;
+              let closestDistance = Infinity;
+              let closestIndex = -1;
 
-                // Find all buttons with the same originalIndex and pick the closest to center
-                buttons.forEach((button, buttonIndex) => {
-                  const buttonOriginalIndex = buttonIndex % valuesData.length;
-                  if (buttonOriginalIndex === originalIndex) {
-                    const rect = button.getBoundingClientRect();
-                    const buttonCenter = rect.left + rect.width / 2;
-                    const distance = Math.abs(buttonCenter - screenCenter);
-                    if (distance < closestDistance) {
-                      closestDistance = distance;
-                      closestIndex = buttonIndex;
-                    }
+              // Find all buttons with the same originalIndex and pick the closest to center
+              buttons.forEach((button, buttonIndex) => {
+                const buttonOriginalIndex = buttonIndex % valuesData.length;
+                if (buttonOriginalIndex === originalIndex) {
+                  const rect = button.getBoundingClientRect();
+                  const buttonCenter = rect.left + rect.width / 2;
+                  const distance = Math.abs(buttonCenter - screenCenter);
+                  if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestIndex = buttonIndex;
                   }
-                });
+                }
+              });
 
-                isGlowing = index === closestIndex;
-              }
+              isGlowing = index === closestIndex;
+            }
 
-              const isHoveredProgrammatically =
-                hoveredCard?.component === "values" && hoveredCard.index === originalIndex;
-
-              return (
-                <CarouselCard
-                  key={`dataInfo1_${info.title}_${index}`}
-                  data={info}
-                  index={index}
-                  keyPrefix="dataInfo1"
-                  isGlowing={isGlowing}
-                  glowColor="purple"
-                  hoverBgColor="hover:bg-pinto-purple-2/30"
-                  isHoveredProgrammatically={isHoveredProgrammatically}
-                  onClick={handleCardClick}
-                />
-              );
-            })}
+            return (
+              <CarouselCard
+                key={`dataInfo1_${info.title}_${index}`}
+                data={info}
+                index={index}
+                keyPrefix="dataInfo1"
+                isGlowing={isGlowing}
+                glowColor="purple"
+                onClick={handleCardClick}
+              />
+            );
+          })}
         </div>
 
         {/* Middle Content */}
-        <Separator className="w-[80%] sm:w-[50%] my-2 lg:my-4" />
-        <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 lg:w-full sm:max-w-[25rem] lg:max-w-[50rem] mx-auto">
+        <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 lg:w-full sm:max-w-[25rem] lg:max-w-[50rem] mx-auto my-[3.75rem]">
           <h2 className="text-[1.75rem] lg:pinto-h2 lg:text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center text-center">
             <span>
               Combining <span className="text-pinto-purple-2">the values of ETH</span> with{" "}
               <span className="text-pinto-green-4">the properties of USD</span>
             </span>
           </h2>
-          <span className="text-xl lg:text-lg lg:leading-[1.4] font-thin text-pinto-gray-4 text-center">
+          <span className="text-xl lg:text-lg lg:leading-[1.4] font-thin text-black text-center">
             Printed directly to the people. Founded on decentralized credit.
           </span>
           <Link to={navLinks.printsToThePeople} target="_blank" rel="noopener noreferrer">
@@ -484,87 +396,72 @@ export default function SecondaryCTA() {
               rounded="full"
               variant={"defaultAlt"}
               size={isMobile ? "md" : "xl"}
-              className={`z-20 hover:bg-pinto-green-2/50 max-sm:pl-3 max-sm:pr-2 transition-all duration-300 ease-in-out flex flex-row gap-1 sm:gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
+              className={`z-20 hover:bg-pinto-green-2/20 border border-pinto-green-3 bg-pinto-green-1 max-sm:pl-3 max-sm:pr-2 transition-all duration-300 ease-in-out flex flex-row gap-[10px] sm:gap-2 items-center relative overflow-hidden max-sm:px-4 max-sm:py-8 text-xl leading-6 !font-[300]`}
             >
               <span>
                 Why is Pinto the best alternative <br className="block sm:hidden" />
                 to centralized stablecoins?
               </span>
               <span className="text-pinto-green-4 transition-all duration-300 ease-in-out">
-                <PintoRightArrow
-                  width={isMobile ? "1rem" : "1.25rem"}
-                  height={isMobile ? "1rem" : "1.25rem"}
-                  className="transition-all"
-                  color="currentColor"
-                />
+                <PintoRightArrow width={"1rem"} height={"1rem"} className="transition-all" color="currentColor" />
               </span>
             </Button>
           </Link>
         </div>
-        <Separator className="w-[40%] sm:w-[20%] my-2 lg:my-4" />
 
         {/* Properties Carousel */}
         <div
           ref={propertiesCarouselRef}
-          className="w-fit flex flex-row items-center animate-long-marquee-reverse place-self-start"
+          className="flex flex-col max-sm:w-[95%] sm:flex-row items-center place-self-center gap-4 lg:gap-6 xl:gap-8 2xl:gap-10"
           onMouseEnter={() => setIsHoveringCarousel(true)}
           onMouseLeave={() => setIsHoveringCarousel(false)}
         >
-          {Array(12)
-            .fill(propertiesData)
-            .flat()
-            .map((info, index) => {
-              // Calculate original data index for glow effect
-              const originalIndex = index % propertiesData.length;
+          {propertiesData.map((info, index) => {
+            // Calculate original data index for glow effect
+            const originalIndex = index % propertiesData.length;
 
-              // Check if this card should glow based on card type
-              const shouldGlow = glowingCard?.component === "properties" && glowingCard.cardIndex === originalIndex;
+            // Check if this card should glow based on card type
+            const shouldGlow = glowingCard?.component === "properties" && glowingCard.cardIndex === originalIndex;
 
-              // If multiple cards should glow, only show the one closest to screen center
-              let isGlowing = false;
-              if (shouldGlow && propertiesCarouselRef.current) {
-                const buttons = propertiesCarouselRef.current.querySelectorAll("button");
-                const screenCenter = window.innerWidth / 2;
-                let closestDistance = Infinity;
-                let closestIndex = -1;
+            // If multiple cards should glow, only show the one closest to screen center
+            let isGlowing = false;
+            if (shouldGlow && propertiesCarouselRef.current) {
+              const buttons = propertiesCarouselRef.current.querySelectorAll("button");
+              const screenCenter = window.innerWidth / 2;
+              let closestDistance = Infinity;
+              let closestIndex = -1;
 
-                // Find all buttons with the same originalIndex and pick the closest to center
-                buttons.forEach((button, buttonIndex) => {
-                  const buttonOriginalIndex = buttonIndex % propertiesData.length;
-                  if (buttonOriginalIndex === originalIndex) {
-                    const rect = button.getBoundingClientRect();
-                    const buttonCenter = rect.left + rect.width / 2;
-                    const distance = Math.abs(buttonCenter - screenCenter);
-                    if (distance < closestDistance) {
-                      closestDistance = distance;
-                      closestIndex = buttonIndex;
-                    }
+              // Find all buttons with the same originalIndex and pick the closest to center
+              buttons.forEach((button, buttonIndex) => {
+                const buttonOriginalIndex = buttonIndex % propertiesData.length;
+                if (buttonOriginalIndex === originalIndex) {
+                  const rect = button.getBoundingClientRect();
+                  const buttonCenter = rect.left + rect.width / 2;
+                  const distance = Math.abs(buttonCenter - screenCenter);
+                  if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestIndex = buttonIndex;
                   }
-                });
+                }
+              });
 
-                isGlowing = index === closestIndex;
-              }
+              isGlowing = index === closestIndex;
+            }
 
-              const isHoveredProgrammatically =
-                hoveredCard?.component === "properties" && hoveredCard.index === originalIndex;
-
-              return (
-                <CarouselCard
-                  key={`dataInfo2_${info.title}_${index}`}
-                  data={info}
-                  index={index}
-                  keyPrefix="dataInfo2"
-                  isGlowing={isGlowing}
-                  glowColor="green"
-                  hoverBgColor="hover:bg-pinto-green-1"
-                  isHoveredProgrammatically={isHoveredProgrammatically}
-                  onClick={handleCardClick}
-                />
-              );
-            })}
+            return (
+              <CarouselCard
+                key={`dataInfo2_${info.title}_${index}`}
+                data={info}
+                index={index}
+                keyPrefix="dataInfo2"
+                isGlowing={isGlowing}
+                glowColor="green"
+                onClick={handleCardClick}
+              />
+            );
+          })}
         </div>
       </div>
-
       <CardModal isOpen={isModalOpen} onOpenChange={handleModalClose} cardData={selectedCard} />
     </>
   );

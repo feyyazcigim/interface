@@ -7,7 +7,7 @@ import SecondaryCTA from "@/components/landing/SecondaryCTA";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import { WheelEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Landing() {
@@ -129,36 +129,52 @@ export default function Landing() {
   };
 
   return (
-    <div
-      className="sm:max-w-[1920px] w-full place-self-center"
-      style={{
-        mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
-        WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
-      }}
-    >
+    <div className="w-full place-self-center">
       <div
-        className={`flex flex-col h-screen ${sectionsVisible ? "overflow-y-auto overflow-scroll scrollbar-none" : "overflow-hidden"}`}
+        className={`flex flex-col items-center h-screen ${sectionsVisible ? "overflow-y-auto overflow-scroll scrollbar-none" : "overflow-hidden"}`}
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
-        <section className="flex flex-col overflow-clip place-content-center min-h-screen">
+        <section
+          className="flex flex-col overflow-clip place-content-center min-h-screen sm:max-w-[1920px]"
+          style={{
+            mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
+            WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
+          }}
+        >
           <LandingChart currentTriggerPhase={currentTriggerPhase} setCurrentTriggerPhase={setCurrentTriggerPhase} />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-screen">
-          <div className="mb-[2.5%]">
-            <SecondaryCTA />
-          </div>
+        <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-[64rem] sm:w-full sm:min-h-screen bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
+          <SecondaryCTA />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center min-h-screen">
+        <section
+          className="flex flex-col overflow-clip place-content-center sm:w-full min-h-screen sm:max-w-[1920px]"
+          style={{
+            mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
+            WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
+          }}
+        >
           <ProjectStats />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center min-h-screen">
+        <section
+          className="flex flex-col overflow-clip place-content-center sm:w-full min-h-screen sm:max-w-[2200px]"
+          style={{
+            mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
+            WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
+          }}
+        >
           <BugBounty />
           {/* 
             <AuditsList />
             */}
         </section>
-        <section className="flex flex-col overflow-clip place-content-center h-auto min-h-[110rem] sm:h-screen sm:min-h-screen">
+        <section
+          className="flex flex-col overflow-clip place-content-center h-auto min-h-[110rem] sm:w-full sm:h-screen sm:min-h-screen"
+          style={{
+            mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
+            WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
+          }}
+        >
           <Resources />
         </section>
       </div>
