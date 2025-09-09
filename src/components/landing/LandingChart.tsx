@@ -903,57 +903,12 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   const pintoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const animationControlsRef = useRef<ReturnType<typeof animate> | null>(null);
   const clipPathControlsRef = useRef<ReturnType<typeof animate> | null>(null);
-  const lineStrokeColor = useMotionValue("#387F5C");
+  const lineStrokeColor = "#387F5C";
 
   // Track if animations are paused due to page visibility or component visibility
   const isPausedRef = useRef(false);
   const componentRef = useRef<HTMLDivElement>(null);
   const isComponentVisibleRef = useRef(false);
-
-  // Combined position and price-based flash trigger system
-  useEffect(() => {
-    const unsubscribe = currentY.on("change", (yPosition) => {
-      if (priceTrackingActive.get() < 1 || isPausedRef.current) return;
-
-      // Get current position index to determine nearby datapoints
-      const currentIdx = currentIndex.get();
-      const currentIndexValue = Math.max(0, Math.min(Math.round(currentIdx), fullPriceData.length - 1));
-
-      // Define a range around current position (±2 indices to account for bezier curve quirks)
-      const rangeSize = 2;
-      const startIdx = Math.max(0, currentIndexValue - rangeSize);
-      const endIdx = Math.min(fullPriceData.length - 1, currentIndexValue + rangeSize);
-
-      // Convert current Y position to price
-      const currentPrice = yToPrice(yPosition, dynamicHeight);
-
-      // Only check datapoints within the current range
-      for (let i = startIdx; i <= endIdx; i++) {
-        const dataPoint = fullPriceData[i];
-        if (dataPoint?.triggerPulse === true) {
-          // Check if we've crossed this trigger price (within a small tolerance)
-          const priceDifference = Math.abs(currentPrice - dataPoint.value);
-          const tolerance = 0.0005; // Much smaller tolerance (0.05% of price range)
-
-          if (priceDifference <= tolerance) {
-            /*
-            console.log(
-              `🔥 Flash triggered at index ${i} (current: ${currentIndexValue})! Current price: ${currentPrice.toFixed(6)}, Target: ${dataPoint.value.toFixed(6)}, Diff: ${priceDifference.toFixed(6)}`,
-            );
-            */
-
-            // Trigger flash effect
-            animate(lineStrokeColor, "#00C767", { duration: 0.1, ease: "linear" }).then(() => {
-              animate(lineStrokeColor, "#387F5C", { duration: 0.1, ease: "linear" });
-            });
-
-            return; // Exit early after first trigger to avoid multiple flashes
-          }
-        }
-      }
-    });
-    return unsubscribe;
-  }, [currentY, currentIndex, lineStrokeColor, priceTrackingActive, fullPriceData, dynamicHeight]);
 
   // Phase trigger system (still based on position/index)
   useEffect(() => {
@@ -1392,7 +1347,6 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     // Reset all motion values to initial state
     horizontalLineClipPath.set(viewportWidth);
     priceLabelsOpacity.set(0);
-    lineStrokeColor.set("#387F5C");
     priceLineOpacity.set(1); // Reset price line opacity
     horizontalLineOpacity.set(1); // Reset horizontal line opacity
     transactionMarkersOpacity.set(1); // Reset transaction markers opacity
@@ -1413,7 +1367,6 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     priceLineOpacity,
     horizontalLineOpacity,
     transactionMarkersOpacity,
-    lineStrokeColor,
     viewportWidth,
     dynamicHeight,
     startAnimation,
@@ -1797,10 +1750,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
             borderStyle: "solid",
             borderColor: lineStrokeColor,
             backgroundColor: lineStrokeColor,
-            boxShadow: useTransform(
-              lineStrokeColor,
-              (color) => `0 0 10px ${color}, 0 0 4.32px ${color}, 0 0 2.16px ${color}`,
-            ),
+            boxShadow: `0 0 10px ${lineStrokeColor}, 0 0 4.32px ${lineStrokeColor}, 0 0 2.16px ${lineStrokeColor}`,
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, scale: [1, 1.1, 1] }}
