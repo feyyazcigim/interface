@@ -1435,7 +1435,7 @@ export default function ProtocolUpgrades() {
               {sortedAudits.map((audit, index) => {
                 const { before, after } = calculateConnectingLines(index);
                 return (
-                  <CarouselItem key={audit.name} className="pl-2 md:pl-4 basis-auto pb-4 pt-4">
+                  <CarouselItem key={audit.name} className="pl-3 xs:pl-4 basis-auto pb-4 pt-4">
                     <div className="flex items-center gap-3 sm:gap-4">
                       {/* Before lines for first entry */}
                       {before > 0 &&
