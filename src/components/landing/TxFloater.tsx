@@ -193,12 +193,10 @@ export default function TxFloater({
       </AnimatePresence>
       {/* The pill stays in its original position */}
       <motion.div
-        className="flex items-center justify-center bg-white border border-pinto-green-4 rounded-full p-2 gap-2 w-fit cursor-pointer hover:shadow-lg hover:border-pinto-green-5 transition-all duration-200"
+        className="flex items-center justify-center bg-white border border-pinto-green-4 rounded-full p-2 gap-2 w-fit transition-all duration-200"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         onClick={handlePillClick}
-        whileHover={{ scale: 1.15, borderColor: "#246645", transition: { duration: 0.1 } }}
-        whileTap={{ scale: 0.95, transition: { duration: 0 } }}
       >
         <img className="w-8 h-8" src={isFixed ? from : lastValidFromRef.current} alt="Farmer Icon" />
         <img
