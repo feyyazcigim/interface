@@ -1,7 +1,10 @@
+import ChartIncreasing from "@/assets/landing/chart-increasing.png";
+import Farmer_1 from "@/assets/landing/farmer_1.png";
+import Hammer from "@/assets/landing/hammer.png";
+import Memo from "@/assets/landing/memo.png";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { AnimatePresence, motion } from "framer-motion";
-import { atom, useAtom } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../ui/Button";
 import ContributorMessage from "./ContributorMessage";
 import ContributorProfiles from "./ContributorProfiles";
@@ -11,9 +14,6 @@ import ProtocolUpgrades from "./ProtocolUpgrades";
 
 type ActiveButton = "upgrades" | "contributors" | "years" | "volume" | null;
 
-// Create isAutoCycling atom
-export const isAutoCyclingAtom = atom(true);
-
 interface StatContentProps {
   activeButton: ActiveButton;
 }
@@ -21,22 +21,6 @@ interface StatContentProps {
 function StatContent({ activeButton }: StatContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  const [height, setHeight] = useState<number>(0);
-
-  useEffect(() => {
-    if (contentRef.current) {
-      const resizeObserver = new ResizeObserver(() => {
-        if (contentRef.current) {
-          setHeight(contentRef.current.scrollHeight);
-        }
-      });
-
-      resizeObserver.observe(contentRef.current);
-      setHeight(contentRef.current.scrollHeight);
-
-      return () => resizeObserver.disconnect();
-    }
-  }, [activeButton]);
 
   return (
     <motion.div
@@ -102,42 +86,13 @@ function StatContent({ activeButton }: StatContentProps) {
 
 export default function ProjectStats() {
   const [activeButton, setActiveButton] = useState<ActiveButton>("upgrades");
-  const [isAutoCycling, setIsAutoCycling] = useAtom(isAutoCyclingAtom);
-  const [manuallySelected, setManuallySelected] = useState(false);
-
-  // Array of buttons to cycle through
-  const buttons: ActiveButton[] = ["upgrades", "contributors", "years", "volume"];
-
-  // Auto-cycling effect
-  useEffect(() => {
-    if (!isAutoCycling || manuallySelected) return;
-
-    const interval = setInterval(() => {
-      setActiveButton((current) => {
-        if (current === null) {
-          return buttons[0];
-        }
-        const currentIndex = buttons.indexOf(current);
-        const nextIndex = (currentIndex + 1) % buttons.length;
-        return buttons[nextIndex];
-      });
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isAutoCycling, manuallySelected]);
 
   // Handle manual button selection
   const handleButtonClick = (buttonType: ActiveButton) => {
-    setManuallySelected(true);
-    setIsAutoCycling(false);
     setActiveButton(buttonType);
   };
 
-  const handleProfileSelection = () => {
-    setManuallySelected(true);
-    setIsAutoCycling(false);
-  };
-
+  // Helper to determine opacity class
   const getElementOpacity = (isActive: boolean) => {
     if (activeButton === null) return "opacity-100";
     return isActive ? "opacity-100" : "opacity-50";
@@ -161,7 +116,7 @@ export default function ProjectStats() {
           glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
         >
           <span className="flex items-center gap-2">
-            <img src="/hammer.png" alt="hammer" className="w-6 h-6 sm:w-8 sm:h-8" />
+            <img src={Hammer} alt="hammer" className="w-6 h-6 sm:w-8 sm:h-8" />
             protocol upgrades
           </span>
         </Button>
@@ -188,7 +143,6 @@ export default function ProjectStats() {
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="absolute -left-[4.5rem] sm:left-24 sm:-top-20 -top-40"
-                onClick={() => handleProfileSelection()}
               >
                 <ContributorProfiles />
               </motion.div>
@@ -204,7 +158,7 @@ export default function ProjectStats() {
             glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
           >
             <span className="flex items-center gap-2">
-              <img src="/farmer_1.png" alt="farmer" className="w-6 h-6 sm:w-8 sm:h-8" />
+              <img src={Farmer_1} alt="farmer" className="w-6 h-6 sm:w-8 sm:h-8" />
               contributors
             </span>
           </Button>
@@ -233,7 +187,7 @@ export default function ProjectStats() {
           glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
         >
           <span className="flex items-center gap-2">
-            <img src="/memo.png" alt="memo" className="w-6 h-6 sm:w-8 sm:h-8" />
+            <img src={Memo} alt="memo" className="w-6 h-6 sm:w-8 sm:h-8" />
             years
           </span>
         </Button>
@@ -263,7 +217,7 @@ export default function ProjectStats() {
             glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
           >
             <span className="flex items-center gap-2">
-              <img src="/chart-increasing.png" alt="chart" className="w-6 h-6 sm:w-8 sm:h-8" />
+              <img src={ChartIncreasing} alt="chart" className="w-6 h-6 sm:w-8 sm:h-8" />
               in cumulative volume
             </span>
           </Button>

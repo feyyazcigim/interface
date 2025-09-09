@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DiagonalRightArrowIcon } from "../Icons";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../ui/Carousel";
-import { isAutoCyclingAtom } from "./ProjectStats";
 
 type TimelineEventType =
   | "event"
@@ -1186,7 +1185,6 @@ const audits: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...events].so
 
 export default function ProtocolUpgrades() {
   const [api, setApi] = useState<CarouselApi>();
-  const [isAutoCycling, setIsAutoCycling] = useAtom(isAutoCyclingAtom);
 
   const [carouselCenterData, setCarouselCenterData] = useState<Audit | null>(null);
   const [hoveredData, setHoveredData] = useState<Audit | null>(null);
@@ -1325,13 +1323,6 @@ export default function ProtocolUpgrades() {
     return { before: Math.round(lines / 2), after: Math.round(lines / 2) };
   };
 
-  // Handle carousel navigation
-  const handleCarouselChange = useCallback(() => {
-    if (isAutoCycling === true) {
-      setIsAutoCycling(false);
-    }
-  }, [setIsAutoCycling, isAutoCycling]);
-
   useEffect(() => {
     // Navigate to the last item in the carousel
     if (api && sortedAudits.length > 0) {
@@ -1344,7 +1335,6 @@ export default function ProtocolUpgrades() {
         // Handle carousel item selection with safety check
         if (selected && !selected.isYearMarker) {
           setCarouselCenterData(selected);
-          handleCarouselChange();
         }
       };
 
@@ -1376,8 +1366,6 @@ export default function ProtocolUpgrades() {
           // Normal case - scroll to the selected index if it's not a year marker
           api.scrollTo(selectedIndex);
         }
-
-        handleCarouselChange();
       };
 
       api.on("select", handleSelect);
@@ -1388,7 +1376,7 @@ export default function ProtocolUpgrades() {
         api.off("settle", handleSettle);
       };
     }
-  }, [api, sortedAudits, handleCarouselChange]);
+  }, [api, sortedAudits]);
 
   useEffect(() => {
     // Update selected data when hovered data changes
@@ -1486,7 +1474,6 @@ export default function ProtocolUpgrades() {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex flex-row gap-0.5 text-pinto-green-4 hover:underline decoration-1 opacity-0 group-hover:opacity-100 transition-all transform-gpu text-center items-center justify-center"
-                                        onClick={() => setIsAutoCycling(false)}
                                       >
                                         <span className="text-base sm:text-xl font-light text-pinto-green-4">
                                           {description}
@@ -1514,7 +1501,6 @@ export default function ProtocolUpgrades() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={`flex flex-row gap-0.5 text-pinto-green-4 peer hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 transition-all transform-gpu`}
-                                    onClick={() => setIsAutoCycling(false)}
                                   >
                                     <span className="text-base sm:text-xl font-light text-pinto-green-4">
                                       {audit.name}

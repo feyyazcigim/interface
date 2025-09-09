@@ -1,8 +1,7 @@
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { motion } from "framer-motion";
-import { atom, useAtom, useAtomValue } from "jotai";
+import { atom, useAtom } from "jotai";
 import { useEffect, useMemo, useRef } from "react";
-import { isAutoCyclingAtom } from "./ProjectStats";
 
 export const contributors = [
   {
@@ -83,18 +82,17 @@ function getRandomContributors(count: number = 5, selectedContributor?: Contribu
 
 export default function ContributorProfiles() {
   const [selectedContributor, setSelectedContributor] = useAtom(selectedContributorAtom);
-  const isAutoCycling = useAtomValue(isAutoCyclingAtom);
   const isMobile = useIsMobile();
   const hasAutoSelected = useRef(false);
 
-  // Auto-select a contributor only once on first render, and only if auto-cycling is on
+  // Auto-select a contributor only once on first render
   useEffect(() => {
-    if (!hasAutoSelected.current && isAutoCycling) {
+    if (!hasAutoSelected.current) {
       const randomContributor = contributors[Math.floor(Math.random() * contributors.length)];
       setSelectedContributor(randomContributor);
       hasAutoSelected.current = true;
     }
-  }, [setSelectedContributor, isAutoCycling]);
+  }, [setSelectedContributor]);
 
   // Get random contributors, always including the selected contributor
   const displayedContributors = useMemo(() => {

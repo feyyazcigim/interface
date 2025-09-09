@@ -6,11 +6,9 @@ import wpPipeline from "@/assets/landing/wp_pipeline.png";
 import AutoPlay from "embla-carousel-autoplay";
 import ClassNames from "embla-carousel-class-names";
 import WheelGesturesPlugin from "embla-carousel-wheel-gestures";
-import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../ui/Carousel";
-import { isAutoCyclingAtom } from "./ProjectStats";
 
 interface CarouselData {
   src: string;
@@ -68,7 +66,6 @@ export default function ImageCarousel() {
   const [api, setApi] = useState<CarouselApi>();
   const [currentWp, setCurrentWp] = useState<CarouselData>(whitepaperImages[0]);
   const [autoplayActive, setAutoplayActive] = useState(true);
-  const [_, setIsAutoCycling] = useAtom(isAutoCyclingAtom);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -88,7 +85,6 @@ export default function ImageCarousel() {
       manualSelectionTimeout = setTimeout(() => {
         // Manual selection detected - stopping autoplay
         setAutoplayActive(false);
-        setIsAutoCycling(false);
       }, 0);
     });
 
@@ -100,7 +96,7 @@ export default function ImageCarousel() {
     return () => {
       clearTimeout(manualSelectionTimeout);
     };
-  }, [api, setIsAutoCycling]);
+  }, [api]);
 
   useEffect(() => {
     const autoplay = api?.plugins()?.autoplay;
@@ -149,7 +145,6 @@ export default function ImageCarousel() {
                     }}
                     onClick={() => {
                       setAutoplayActive(false);
-                      setIsAutoCycling(false);
                       turnOffAutoplay();
                       if (api) {
                         api.scrollTo(index);
@@ -181,7 +176,6 @@ export default function ImageCarousel() {
           className="[&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-8 sm:[&>svg]:h-8"
           onClick={() => {
             setAutoplayActive(false);
-            setIsAutoCycling(false);
             turnOffAutoplay();
             if (api) {
               api?.scrollPrev();
@@ -194,7 +188,6 @@ export default function ImageCarousel() {
           className="[&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-8 sm:[&>svg]:h-8"
           onClick={() => {
             setAutoplayActive(false);
-            setIsAutoCycling(false);
             if (api) {
               api?.scrollNext();
             }

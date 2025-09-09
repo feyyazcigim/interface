@@ -1,5 +1,5 @@
 import LineChart, { LineChartData, MakeGradientFunction } from "@/components/charts/LineChart";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const makeLineGradients: MakeGradientFunction[] = [
   (ctx: CanvasRenderingContext2D | null) => {
