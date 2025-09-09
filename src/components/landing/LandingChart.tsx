@@ -54,7 +54,7 @@ function calculateGridYOffset(chartHeight: number) {
 const ANIMATION_CONFIG = {
   // Visual constants
   height: 577,
-  repetitions: 2,
+  repetitions: 3,
   pointSpacing: 140,
 
   // Speed constants
