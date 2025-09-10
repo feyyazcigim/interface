@@ -57,9 +57,17 @@ export function trackPageView(title: string, url: string, metaKey: string, custo
     return;
   }
 
+  let pathname: string = "";
   try {
-    const pathname = new URL(url).pathname;
+    pathname = new URL(url).pathname ?? "";
+    if (pathname === "/") {
+      pathname = "/index";
+    }
+  } catch (e) {
+    pathname = url;
+  }
 
+  try {
     if (!window.gtag) {
       console.warn("[Analytics/GA]: gtag function not available");
       return;
