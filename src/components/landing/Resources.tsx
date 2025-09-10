@@ -1,19 +1,17 @@
+import Resources1 from "@/assets/landing/Resources_1.png";
+import Resources2 from "@/assets/landing/Resources_2.png";
+import Resources3 from "@/assets/landing/Resources_3.png";
 import clsx from "clsx";
-import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
-import GameOfLife from "./GameOfLife";
 
 const resourceCards = [
   {
     title: "Learn",
     description:
       "Uncover the mission and history driving Pinto, and how protocol-native incentives coordinate participants to minimize the volatility of Pinto's price without collateral.",
-    pattern: "pufferfishCompanion",
-    initialScale: 2.4,
-    finalScale: 1.1,
-    transform: "translate(-80px,80px)",
+    image: Resources1,
     buttons: [
       {
         href: navLinks.docs,
@@ -31,9 +29,7 @@ const resourceCards = [
     title: "Engage",
     description:
       "Join the community to ask questions, participate in discussion about protocol improvements and connect with other farmers.",
-    pattern: "trafficCircle",
-    initialScale: 1.5,
-    finalScale: 1.5,
+    image: Resources2,
     buttons: [
       {
         href: navLinks.twitter,
@@ -50,9 +46,7 @@ const resourceCards = [
   {
     title: "Participate",
     description: "Deposit value into or lend to the protocol to benefit from the future growth of Pinto.",
-    pattern: "tenCell",
-    initialScale: 6,
-    finalScale: 1.1,
+    image: Resources3,
     buttons: [
       {
         href: navLinks.overview,
@@ -71,53 +65,14 @@ const buttonStyles = clsx(
 );
 
 export default function Resources() {
-  const sectionRef = useRef(null);
-  const [isInView, setIsInView] = useState(false);
-
-  // Detect when Resources section is in view
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        setIsInView(entry.isIntersecting);
-      },
-      {
-        threshold: 0.2, // When 20% of section is visible
-        rootMargin: "50px",
-      },
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <div
-      ref={sectionRef}
-      className="flex flex-col items-center self-stretch gap-8 2xl:gap-12 mt-8 2xl:mt-16 mb-24 sm:mb-36"
-    >
+    <div className="flex flex-col items-center self-stretch gap-8 2xl:gap-12 mt-8 2xl:mt-16 mb-24 sm:mb-36">
       <h2 className="text-2xl 2xl:text-4xl leading-same-h2 font-light text-black">Resources</h2>
       <div className="flex flex-col w-full sm:flex-row sm:justify-center gap-4 lg:gap-8 max-2xl:px-4 sm:max-2xl:px-4">
         {resourceCards.map((card, index) => (
           <div key={index} className={cardStyles}>
             <div className="overflow-hidden relative h-[16rem] 2xl:h-[24rem] flex justify-center items-center">
-              <div
-                className={`flex transition-transform duration-1000 ease-in-out transform-gpu`}
-                style={{
-                  transform: card.transform ? card.transform : `scale(${card.finalScale})`,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = card.transform ? card.transform : `scale(${card.finalScale})`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = card.transform ? card.transform : `scale(${card.finalScale})`;
-                }}
-              >
-                <GameOfLife startingPattern={card.pattern} autoPlay={isInView} />
-              </div>
+              <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col justify-between flex-1 gap-4 2xl:gap-8 mx-4 mb-4 2xl:mx-6 2xl:mb-6">
               <div className="flex flex-col gap-4">
