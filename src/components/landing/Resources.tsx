@@ -67,17 +67,17 @@ const buttonStyles = clsx(
 export default function Resources() {
   return (
     <div className="flex flex-col items-center self-stretch gap-8 2xl:gap-12 mt-8 2xl:mt-16 mb-24 sm:mb-36">
-      <h2 className="text-2xl 2xl:text-4xl leading-same-h2 font-light text-black">Resources</h2>
+      <h2 className="text-2xl sm:text-4xl leading-same-h2 font-light text-black">Resources</h2>
       <div className="flex flex-col w-full sm:flex-row sm:justify-center gap-4 lg:gap-8 max-2xl:px-4 sm:max-2xl:px-4">
         {resourceCards.map((card, index) => (
           <div key={index} className={cardStyles}>
-            <div className="overflow-hidden relative h-[16rem] 2xl:h-[24rem] flex justify-center items-center">
+            <div className="overflow-hidden relative h-[16rem] sm:h-[24rem] flex justify-center items-center">
               <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col justify-between flex-1 gap-4 2xl:gap-8 mx-4 mb-4 2xl:mx-6 2xl:mb-6">
               <div className="flex flex-col gap-4">
-                <span className="text-[1.5rem] 2xl:text-[2rem] font-light text-black">{card.title}</span>
-                <span className="text-[1rem] 2xl:text-[1.5rem] font-light text-pinto-gray-4 h-fit">
+                <span className="text-[1.5rem] sm:text-[2rem] font-light text-black">{card.title}</span>
+                <span className="text-[1rem] sm:text-[1.5rem] font-light text-pinto-gray-4 h-fit">
                   {card.description}
                 </span>
               </div>
