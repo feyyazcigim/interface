@@ -169,7 +169,7 @@ export default function Landing() {
             */}
         </section>
         <section
-          className="flex flex-col overflow-clip place-content-center h-auto min-h-[110rem] sm:w-full sm:h-screen sm:min-h-screen"
+          className="flex flex-col overflow-clip place-content-center h-auto min-h-[110rem] w-full sm:h-screen sm:min-h-screen"
           style={{
             mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
             WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
