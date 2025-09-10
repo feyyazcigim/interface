@@ -135,13 +135,7 @@ export default function Landing() {
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
-        <section
-          className="flex flex-col overflow-clip place-content-center min-h-screen sm:max-w-[1920px] sm:w-full"
-          style={{
-            mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
-            WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
-          }}
-        >
+        <section className="flex flex-col overflow-clip place-content-center min-h-screen sm:max-w-[1920px] sm:w-full bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
           <LandingChart currentTriggerPhase={currentTriggerPhase} setCurrentTriggerPhase={setCurrentTriggerPhase} />
         </section>
         <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-[64rem] sm:w-full sm:min-h-[max(1024px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
