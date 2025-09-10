@@ -35,7 +35,6 @@ export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalP
           "flex flex-col",
           "overflow-clip",
         )}
-        hideCloseButton={true}
       >
         <motion.div
           className="flex flex-col gap-4 flex-1 min-h-0"
