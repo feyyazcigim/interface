@@ -54,7 +54,7 @@ function calculateGridYOffset(chartHeight: number) {
 const ANIMATION_CONFIG = {
   // Visual constants
   height: 577,
-  repetitions: 3,
+  repetitions: 20,
   pointSpacing: 140,
 
   // Speed constants
@@ -206,18 +206,6 @@ const stablePriceData: PricePoint[] = [
   { txType: null, value: 1.0004, speed: 0.85 },
   { txType: null, value: 0.9994, speed: 0.85 },
   { txType: "deposit", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
-  { txType: null, value: 0.9994, speed: 3 },
-  { txType: "convertDown", value: 1.005, speed: 3, mandatoryTx: true, triggerPhase: "stable" },
-  { txType: "sow", value: 0.995, speed: 0.85, mandatoryTx: true },
-  { txType: null, value: 1.0004, speed: 0.85 },
-  { txType: null, value: 0.9994, speed: 0.85 },
-  { txType: "yield", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
-  { txType: null, value: 0.9994, speed: 3 },
-  { txType: "withdraw", value: 1.005, speed: 3, mandatoryTx: true, triggerPhase: "stable" },
-  { txType: "deposit", value: 0.995, speed: 0.85, mandatoryTx: true },
-  { txType: null, value: 1.0004, speed: 0.85 },
-  { txType: "sow", value: 0.9994, speed: 0.85 },
-  { txType: null, value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
 ];
 
 // Track amplitude calls for progressive dampening
@@ -988,7 +976,9 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
 
         setFullPriceData((currentData) => {
           // Generate new randomized stable data
-          const newStableData = generateRandomizedStableData(stablePriceData);
+          const newStableData = Array.from({ length: repetitions }).flatMap(() =>
+            generateRandomizedStableData(stablePriceData),
+          );
 
           if (hasReachedStable) {
             // Story arc is complete - remove oldest stable points from beginning
