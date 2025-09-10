@@ -20,11 +20,11 @@ export default function PageMetaWrapper({ metaKey, children }: PageMetaWrapperPr
   const shouldShowPriceInTitle = !["index", "404"].includes(metaKey);
   const displayTitle = shouldShowPriceInTitle ? dynamicTitle : title;
 
-  const pageViewKey = `${displayTitle}-${metaKey}-page-view`;
+  const pageViewKey = `${title}-${metaKey}-page-view`;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: Only on mount
   useEffect(() => {
-    trackPageView(displayTitle, url, metaKey);
+    trackPageView(title, url, metaKey);
   }, [pageViewKey]);
 
   return (
