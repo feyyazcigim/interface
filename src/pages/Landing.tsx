@@ -144,11 +144,11 @@ export default function Landing() {
         >
           <LandingChart currentTriggerPhase={currentTriggerPhase} setCurrentTriggerPhase={setCurrentTriggerPhase} />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-[64rem] sm:w-full sm:min-h-screen bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
+        <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-[64rem] sm:w-full sm:min-h-[max(1024px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
           <SecondaryCTA />
         </section>
         <section
-          className="flex flex-col overflow-clip place-content-center sm:w-full min-h-screen sm:max-w-[1920px]"
+          className="flex flex-col overflow-clip place-content-center sm:w-full min-h-[50rem] sm:min-h-[max(800px,100vh)] sm:max-w-[1920px]"
           style={{
             mask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
             WebkitMask: "linear-gradient(to right, transparent, white 2%, white 98%, transparent)",
