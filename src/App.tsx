@@ -41,7 +41,7 @@ function AppLayout({ children }) {
       {!isLandingPage && <Navbar />}
       <ScrollToTop />
       <div className={cn("relative z-[1] w-screen flex-1")}>{children}</div>
-      <Footer />
+      {!isLandingPage && <Footer />}
     </div>
   );
 }
