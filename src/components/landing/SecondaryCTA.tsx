@@ -10,6 +10,7 @@ import ValuePermissionlessness from "@/assets/misc/Value_Permissionlessness.svg"
 import ValueTrustless from "@/assets/misc/Value_Trustlessness.svg";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useLiquidityDistribution } from "@/hooks/useLiquidityDistribution";
+import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
@@ -168,15 +169,42 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
     <Button
       key={`${keyPrefix}_${data.title}_${index}`}
       variant="outline-white"
-      className={`flex ${glowColor === "green" ? "border-pinto-green-4/50 bg-[linear-gradient(180deg,#D8F1E2_0%,#FCFCFC_50%)] hover:bg-[linear-gradient(180deg,#D8F1E2_0%,#D8F1E2_0%)]" : "border-pinto-purple-2 bg-[linear-gradient(180deg,#F0EBF6_0%,#FCFCFC_50%)]  hover:bg-[linear-gradient(180deg,#F0EBF6_0%,#F0EBF6_50%)]"} flex-row gap-6 w-full h-auto sm:flex-col sm:gap-4 items-center lg:gap-5 2xl:gap-6 px-4 sm:p-4 lg:p-5 2xl:p-4 sm:w-[13rem] lg:w-[17rem] xl:w-[19rem] sm:h-[13.5rem] lg:h-[15.5rem] xl:h-[16rem] 2xl:w-[20.75rem] 2xl:h-[16.5rem] sm:flex-shrink-0 rounded-2xl sm:active:scale-95 sm:hover:scale-105 ${
-        isGlowing
-          ? glowColor === "orange"
-            ? "shadow-[0_0_15px_rgba(255,186,107,0.6),0_0_25px_rgba(255,186,107,0.4)] scale-[1.02]"
-            : glowColor === "purple"
-              ? "shadow-[0_0_15px_rgba(201,179,244,0.6),0_0_25px_rgba(201,179,244,0.4)] scale-[1.02]"
-              : "shadow-[0_0_15px_rgba(56,127,92,0.6),0_0_25px_rgba(56,127,92,0.4)] scale-[1.02]"
-          : ""
-      }`}
+      className={clsx(
+        // Base styles
+        "flex items-center rounded-2xl",
+
+        // Color & gradient styles
+        glowColor === "green"
+          ? "border-pinto-green-4/50 bg-[linear-gradient(180deg,#D8F1E2_0%,#FCFCFC_50%)] hover:bg-[linear-gradient(180deg,#D8F1E2_0%,#D8F1E2_0%)]"
+          : "border-pinto-purple-2 bg-[linear-gradient(180deg,#F0EBF6_0%,#FCFCFC_50%)] hover:bg-[linear-gradient(180deg,#F0EBF6_0%,#F0EBF6_50%)]",
+
+        // Mobile (default)
+        "flex-row gap-6 w-full h-auto px-4",
+
+        // Small screens and up
+        "md:flex-col md:gap-5 md:p-5 md:w-[14rem] md:h-[18rem] md:flex-shrink-0 md:active:scale-95 md:hover:scale-105",
+
+        // Medium screens
+        "min-[1000px]:w-[16rem] min-[1000px]:h-[17rem]",
+
+        // Large screens
+        "min-[1100px]:w-[17rem] min-[1100px]:h-[17rem]",
+
+        // Extra large screens
+        "xl:w-[19rem] xl:h-[18rem]",
+
+        // 2XL screens
+        "2xl:gap-6 2xl:p-4",
+
+        // Glow effects
+        isGlowing && [
+          glowColor === "orange" &&
+            "shadow-[0_0_15px_rgba(255,186,107,0.6),0_0_25px_rgba(255,186,107,0.4)] scale-[1.02]",
+          glowColor === "purple" &&
+            "shadow-[0_0_15px_rgba(201,179,244,0.6),0_0_25px_rgba(201,179,244,0.4)] scale-[1.02]",
+          glowColor === "green" && "shadow-[0_0_15px_rgba(56,127,92,0.6),0_0_25px_rgba(56,127,92,0.4)] scale-[1.02]",
+        ],
+      )}
       style={
         {
           "--glow-color": isGlowing ? glowColor : undefined,
@@ -196,18 +224,79 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
     >
       <img
         src={data.logo}
-        className="w-8 h-8 sm:w-16 sm:h-16 lg:w-18 lg:h-18 xl:w-20 xl:h-20 2xl:w-24 2xl:h-24 flex-shrink-0 text-left object-contain"
+        className={clsx(
+          // Base styles
+          "flex-shrink-0 object-contain",
+
+          // Mobile (default)
+          "w-8 h-8",
+
+          // Small screens and up
+          "sm:w-16 sm:h-16",
+
+          // Large screens
+          "lg:w-18 lg:h-18",
+
+          // Extra large screens
+          "xl:w-20 xl:h-20",
+
+          // 2XL screens
+          "2xl:w-24 2xl:h-24",
+        )}
         alt={data.title}
       />
-      <div className="flex flex-col flex-1 gap-1 sm:gap-2 lg:gap-3 2xl:gap-4">
-        <div className="text-lg max-sm:whitespace-pre-wrap sm:text-base w-auto lg:text-lg xl:text-lg text-left sm:text-center leading-[1.1] font-thin text-black">
+      <div
+        className={clsx(
+          // Base styles
+          "flex flex-col flex-1",
+
+          // Mobile (default)
+          "gap-1",
+
+          // Small screens and up
+          "sm:gap-2",
+
+          // Large screens
+          "lg:gap-3",
+
+          // 2XL screens
+          "2xl:gap-4",
+        )}
+      >
+        <div
+          className={clsx(
+            // Base styles
+            "leading-[1.1] font-thin text-black",
+
+            // Mobile (default)
+            "text-lg md:text-xl lg:text-lg text-left max-sm:whitespace-pre-wrap",
+
+            // Small screens and up
+            "md:text-center",
+          )}
+        >
           {data.title}
         </div>
-        <div className="hidden sm:block text-xs sm:text-sm lg:text-base xl:text-base leading-[1.1] font-normal text-pinto-gray-4 whitespace-normal text-center">
+        <div
+          className={clsx(
+            // Base styles
+            "leading-[1.1] font-normal text-pinto-gray-4 whitespace-normal text-center",
+
+            // Mobile (default)
+            "hidden",
+
+            // Small screens and up
+            "md:block md:text-base",
+
+            // Large screens
+
+            // Extra large screens
+          )}
+        >
           {data.subtitle}
         </div>
       </div>
-      <IconImage src={chevronDown} size={4} mobileSize={6} className="block sm:hidden" alt="chevron down" />
+      <IconImage src={chevronDown} size={6} className="block md:hidden" alt="chevron down" />
     </Button>
   );
 }
@@ -330,7 +419,7 @@ export default function SecondaryCTA() {
         {/* Values Carousel */}
         <div
           ref={valuesCarouselRef}
-          className="flex flex-col max-sm:w-[95%] sm:flex-row items-center place-self-center gap-4 lg:gap-6 xl:gap-8 2xl:gap-10"
+          className="flex flex-col max-md:w-[95%] md:flex-row items-center place-self-center gap-4 min-[1700px]:gap-8"
           onMouseEnter={() => setIsHoveringCarousel(true)}
           onMouseLeave={() => setIsHoveringCarousel(false)}
         >
@@ -381,8 +470,8 @@ export default function SecondaryCTA() {
         </div>
 
         {/* Middle Content */}
-        <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 lg:w-full sm:max-w-[25rem] lg:max-w-[50rem] mx-auto my-[3.75rem]">
-          <h2 className="text-[1.75rem] lg:pinto-h2 lg:text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center text-center">
+        <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 lg:w-full sm:max-w-[50rem] mx-auto my-[3.75rem]">
+          <h2 className="text-[1.75rem] md:pinto-h2 md:text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center text-center">
             <span>
               Combining <span className="text-pinto-purple-2">the values of ETH</span> with{" "}
               <span className="text-pinto-green-4">the properties of USD</span>
@@ -412,7 +501,7 @@ export default function SecondaryCTA() {
         {/* Properties Carousel */}
         <div
           ref={propertiesCarouselRef}
-          className="flex flex-col max-sm:w-[95%] sm:flex-row items-center place-self-center gap-4 lg:gap-6 xl:gap-8 2xl:gap-10"
+          className="flex flex-col max-md:w-[95%] md:flex-row items-center place-self-center gap-4 min-[1700px]:gap-8"
           onMouseEnter={() => setIsHoveringCarousel(true)}
           onMouseLeave={() => setIsHoveringCarousel(false)}
         >
