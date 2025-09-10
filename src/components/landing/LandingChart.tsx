@@ -1132,7 +1132,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         );
 
         // Now animate to final positions like the full animation does
-        const phase2Duration = 3;
+        const phase2Duration = isMobile ? 1 : 3;
 
         // Horizontal line: Reveal during position animations
         animate(horizontalLineClipPath, 0, {
@@ -1210,7 +1210,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       animationControlsRef.current = controls;
 
       // Phase 2: Move measurement line back to final position and expand clip path
-      const phase2Duration = 3;
+      const phase2Duration = isMobile ? 1 : 3;
       const phase2StartDelay = measurementLineStartDelay + measurementLineDuration - 0.5;
 
       // Horizontal line Stage 2: Start when measurement line begins moving back to left
