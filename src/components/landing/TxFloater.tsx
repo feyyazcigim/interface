@@ -1,5 +1,8 @@
 import podIcon from "@/assets/protocol/Pod.png";
 import pintoLogo from "@/assets/tokens/PINTO.png";
+import pintoUsdcLogo from "@/assets/tokens/PINTO_USDC.png";
+import pintoCbbtcLogo from "@/assets/tokens/PINTO_cbBTC.png";
+import pintoCbethLogo from "@/assets/tokens/PINTO_cbETH.png";
 import { AnimatePresence, AnimationDefinition, MotionValue, motion, useAnimation, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
 
@@ -21,12 +24,23 @@ const TxIcons: Record<string, string> = {
   withdraw: pintoLogo,
   sow: podIcon,
   harvest: podIcon,
-  convertUp: pintoLogo,
-  convertDown: pintoLogo,
+  convertUp: pintoLogo, // Will be overridden by getConvertIcon
+  convertDown: pintoLogo, // Will be overridden by getConvertIcon
   yield: pintoLogo,
   flood: pintoLogo,
   buy: pintoLogo,
   sell: pintoLogo,
+};
+
+// Function to get icon for transaction, with random convert logos
+const getTransactionIcon = (txType: string): string => {
+  if (txType === "convertUp" || txType === "convertDown") {
+    // Pick a random convert logo
+    const randomIndex = Math.floor(Math.random() * convertLogos.length);
+    return convertLogos[randomIndex];
+  }
+
+  return TxIcons[txType] || pintoLogo;
 };
 
 const TxActionLabels: Record<string, string> = {
@@ -52,6 +66,8 @@ const bounceInAnimation: AnimationDefinition = {
     repeat: 0,
   },
 };
+
+const convertLogos = [pintoUsdcLogo, pintoCbbtcLogo, pintoCbethLogo];
 
 export default function TxFloater({
   from,
@@ -218,10 +234,10 @@ export default function TxFloater({
           src={
             isFixed
               ? txType
-                ? TxIcons[txType]
+                ? getTransactionIcon(txType)
                 : undefined
               : lastValidTxTypeRef.current
-                ? TxIcons[lastValidTxTypeRef.current]
+                ? getTransactionIcon(lastValidTxTypeRef.current)
                 : undefined
           }
           className={`w-8 h-8`}
