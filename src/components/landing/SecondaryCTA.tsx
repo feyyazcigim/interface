@@ -114,7 +114,7 @@ const propertiesData = [
     title: "Scalable",
     subtitle: "Pinto can grow infinitely to meet market demand for trustless low-volatility currency.",
     definition: "**Scalable:** competitive volatility and carrying costs can be sustained at arbitrary supply.",
-    description: `Collateralized stablecoins are limited by the amount of available collateral. Due to the lack of crypto-native collateral, collateralized stablecoins have been forced to sacrifice Bitcoin's values and use centralized collateral in order to scale to meet demand. Instead of collateral, Pinto uses credit, which is infinitely scalable and network-native, enabling Pinto to grow to meet arbitrary demand without compromising on Bitcoin's values.`,
+    description: `Collateralized stablecoins are limited by the amount of available collateral. Due to the lack of crypto-native collateral, collateralized stablecoins have been forced to sacrifice Ethereum's values and use centralized collateral in order to scale to meet demand. Instead of collateral, Pinto uses credit, which is infinitely scalable and network-native, enabling Pinto to grow to meet arbitrary demand without compromising on Ethereum's values.`,
   },
   {
     logo: PropertyLowVolatility,
@@ -470,10 +470,10 @@ export default function SecondaryCTA() {
         </div>
 
         {/* Middle Content */}
-        <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 lg:w-full sm:max-w-[50rem] mx-auto my-[3.75rem]">
+        <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 w-full sm:max-w-[53rem] mx-auto my-[3.75rem]">
           <h2 className="text-[1.75rem] md:pinto-h2 md:text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center text-center">
             <span>
-              Combining <span className="text-pinto-purple-2">the values of ETH</span> with{" "}
+              Combining <span className="text-pinto-purple-2">the values of Ethereum</span> with{" "}
               <span className="text-pinto-green-4">the properties of USD</span>
             </span>
           </h2>
