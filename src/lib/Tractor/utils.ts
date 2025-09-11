@@ -1034,8 +1034,6 @@ export async function loadOrderbookData(
       return !req.isCancelled && !completedOrders.has(req.requisition.blueprintHash);
     });
 
-    console.log("activeRequisitions: ", activeRequisitions);
-
     // Decode data and sort requisitions by temperature (lowest first)
     const requisitionsWithTemperature = activeRequisitions.map((requisition) => {
       const decodedData = decodeSowTractorData(requisition.requisition.blueprint.data);
