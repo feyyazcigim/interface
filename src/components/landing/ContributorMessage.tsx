@@ -19,7 +19,7 @@ export default function ContributorMessage() {
   const [selectedContributor] = useAtom(selectedContributorAtom);
 
   return (
-    <div className="flex flex-col mx-auto text-center mt-4 sm:mt-8 w-full max-w-full px-4 sm:px-0 sm:w-[65%] h-[250px] sm:h-[400px]">
+    <div className="flex flex-col mx-auto text-center mt-28 sm:mt-8 w-full max-w-full px-4 sm:px-0 sm:w-[65%] h-[400px] sm:h-[400px]">
       <AnimatePresence mode="wait">
         <motion.div
           key={selectedContributor.id}
@@ -47,7 +47,7 @@ export default function ContributorMessage() {
               "{selectedContributor.description}" - {selectedContributor.name}
             </motion.p>
             <motion.div
-              className={`sm:h-[400px] sm:w-[900px] h-[80px] w-[300px] place-self-center bg-cover ${getBackgroundPosition(selectedContributor.name)} bg-no-repeat rounded-lg`}
+              className={`sm:h-[400px] sm:w-[900px] h-[400px] w-[400px] place-self-center bg-cover ${getBackgroundPosition(selectedContributor.name)} bg-no-repeat rounded-lg`}
               style={{
                 backgroundImage: `url(/${selectedContributor.name}-bg.png)`,
                 maskImage:
