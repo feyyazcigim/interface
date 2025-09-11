@@ -175,8 +175,8 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
 
         // Color & gradient styles
         glowColor === "green"
-          ? "border-pinto-green-4/50 bg-[linear-gradient(180deg,#D8F1E2_0%,#FCFCFC_50%)] hover:bg-[linear-gradient(180deg,#D8F1E2_0%,#D8F1E2_0%)]"
-          : "border-pinto-purple-2 bg-[linear-gradient(180deg,#F0EBF6_0%,#FCFCFC_50%)] hover:bg-[linear-gradient(180deg,#F0EBF6_0%,#F0EBF6_50%)]",
+          ? "border-pinto-green-4/50 bg-[linear-gradient(90deg,#D8F1E2_0%,#FCFCFC_35%)] hover:bg-[linear-gradient(90deg,#D8F1E2_0%,#D8F1E2_35%)] md:bg-[linear-gradient(180deg,#D8F1E2_0%,#FCFCFC_50%)] hover:md:bg-[linear-gradient(180deg,#D8F1E2_0%,#D8F1E2_0%)]"
+          : "border-pinto-purple-2 bg-[linear-gradient(90deg,#F0EBF6_0%,#FCFCFC_35%)] hover:bg-[linear-gradient(90deg,#F0EBF6_0%,#F0EBF6_35%)] md:bg-[linear-gradient(180deg,#F0EBF6_0%,#FCFCFC_50%)] hover:md:bg-[linear-gradient(180deg,#F0EBF6_0%,#F0EBF6_50%)]",
 
         // Mobile (default)
         "flex-row gap-6 w-full h-auto px-4",
