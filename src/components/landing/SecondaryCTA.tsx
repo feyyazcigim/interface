@@ -179,7 +179,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
           : "border-pinto-purple-2 bg-[linear-gradient(90deg,#F0EBF6_0%,#FCFCFC_35%)] hover:bg-[linear-gradient(90deg,#F0EBF6_0%,#F0EBF6_35%)] md:bg-[linear-gradient(180deg,#F0EBF6_0%,#FCFCFC_50%)] hover:md:bg-[linear-gradient(180deg,#F0EBF6_0%,#F0EBF6_50%)]",
 
         // Mobile (default)
-        "flex-row gap-6 w-full h-auto px-4",
+        "flex-row gap-4 w-full h-auto px-4",
 
         // Small screens and up
         "md:flex-col md:gap-5 md:p-5 md:w-[14rem] md:h-[18rem] md:flex-shrink-0 md:active:scale-95 md:hover:scale-105",
@@ -269,7 +269,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
             "leading-[1.1] font-thin text-black",
 
             // Mobile (default)
-            "text-lg md:text-xl lg:text-lg text-left max-sm:whitespace-pre-wrap",
+            "text-[1.25rem] md:text-xl lg:text-lg text-left max-sm:whitespace-pre-wrap",
 
             // Small screens and up
             "md:text-center",
