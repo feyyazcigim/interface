@@ -332,12 +332,6 @@ function ModifyTractorOrderReviewDialog({
 
       const preparedRequisition = prepareRequisitionForTxn(signedRequisition);
 
-      console.log({
-        existingOrder,
-        signedRequisition,
-        preparedRequisition,
-      });
-
       // Create the farm call data that cancels the old order and creates the new one
       const farmCalls = [
         // Cancel the existing order
@@ -350,10 +344,7 @@ function ModifyTractorOrderReviewDialog({
         encodeFunctionData({
           abi: diamondABI,
           functionName: "publishRequisition",
-          args: [
-            // Type cast is okay here since we check signature above
-            preparedRequisition as Required<Requisition>,
-          ],
+          args: [preparedRequisition],
         }),
       ];
 
