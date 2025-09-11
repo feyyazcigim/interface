@@ -55,7 +55,7 @@ export default function BugBounty() {
       </div>
       <div>
         {/* Three columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-16 w-full mx-auto items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 sm:gap-16 w-full mx-auto items-stretch">
           {/* Column 1: Audits */}
           <div className="flex flex-col items-center text-center h-full justify-between">
             {/* Top section - metric */}
@@ -69,7 +69,7 @@ export default function BugBounty() {
             </div>
 
             {/* Bottom section - button */}
-            <div className="flex items-center justify-center h-[2rem] sm:h-[4rem]">
+            <div className="flex items-center justify-center h-[2.5rem] sm:h-[4rem]">
               <Link to={"https://docs.pinto.money/resources/audits"} target="_blank" rel="noopener noreferrer">
                 <Button
                   variant="outline"
@@ -117,7 +117,7 @@ export default function BugBounty() {
             </div>
 
             {/* Bottom section - button */}
-            <div className="flex items-center justify-center h-[2rem] sm:h-[4rem]">
+            <div className="flex items-center justify-center h-[2.5rem] sm:h-[4rem]">
               <Link to={"https://immunefi.com/bug-bounty/pinto/information/"} target="_blank" rel="noopener noreferrer">
                 <Button
                   variant="outline"
@@ -146,7 +146,7 @@ export default function BugBounty() {
             </div>
 
             {/* Bottom section - button */}
-            <div className="flex items-center justify-center h-[2rem] sm:h-[4rem]">
+            <div className="flex items-center justify-center h-[2.5rem] sm:h-[4rem]">
               <Link
                 to={"https://www.hypernative.io/blog/pinto-extends-protocol-security-with-hypernative"}
                 target="_blank"
