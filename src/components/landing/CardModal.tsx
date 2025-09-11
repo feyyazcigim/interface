@@ -25,7 +25,7 @@ export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalP
       <DialogOverlay className="bg-pinto-morning-yellow-0/80" />
       <DialogContent
         className={cn(
-          "w-[90vw] max-h-[90vh] sm:w-[60rem]",
+          "w-[90vw] max-h-[90dvh] sm:w-[60rem]",
           "max-w-none",
           "border border-gray-200 rounded-2xl shadow-2xl",
           "bg-pinto-off-white",
@@ -64,7 +64,7 @@ export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalP
 
           {/* Description section - fills remaining space with scroll */}
           <div className="flex-1 overflow-hidden rounded-lg bg-gray-100 overflow-y-auto">
-            <div className="text-sm sm:text-lg px-8 pt-4 prose-p:leading-[1.3] prose-li:leading-[1.3] prose-a:text-pinto-green-4 hover:prose-a:text-pinto-green-2 prose-a:transition-all prose-a:duration-300 prose-a:after:content-['↗'] prose-a:after:ml-1 prose-a:after:inline-block font-thin text-black overflow-y-auto h-full prose prose-neutral max-w-none prose-h2:font-normal prose-h2:sm:text-lg prose-h2:text-sm prose-h2:text-pinto-gray-4 prose-img:inline prose-img:w-5 prose-img:h-5 sm:prose-img:w-6 sm:prose-img:h-6 prose-img:mx-1 prose-img:align-middle prose-img:-translate-y-0.5 prose-img:!my-0 prose-img:!py-0 prose-ul:!mt-4 prose-ul:!mb-4 prose-ul:!py-0 prose-li:!my-2 prose-li:!py-0 prose-p:!mb-4 prose-p:first:!mt-0 prose-p:last:!mb-0">
+            <div className="text-sm sm:text-lg px-4 pt-0 sm:px-8 sm:pt-4 prose-p:leading-[1.3] prose-li:leading-[1.3] prose-a:text-pinto-green-4 hover:prose-a:text-pinto-green-2 prose-a:transition-all prose-a:duration-300 prose-a:after:content-['↗'] prose-a:after:ml-1 prose-a:after:inline-block font-thin text-black overflow-y-auto h-full prose prose-neutral max-w-none prose-h2:font-normal prose-h2:sm:text-lg prose-h2:text-sm prose-h2:text-pinto-gray-4 prose-img:inline prose-img:w-5 prose-img:h-5 sm:prose-img:w-6 sm:prose-img:h-6 prose-img:mx-1 prose-img:align-middle prose-img:-translate-y-0.5 prose-img:!my-0 prose-img:!py-0 prose-ul:!mt-4 prose-ul:!mb-4 prose-ul:!py-0 prose-li:!my-2 prose-li:!py-0 prose-p:!mb-4 prose-p:first:!mt-0 prose-p:last:!mb-0">
               <Markdown>{cardData.description}</Markdown>
             </div>
             {/* Fade overlay at top of description */}
