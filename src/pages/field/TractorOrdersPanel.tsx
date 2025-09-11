@@ -20,7 +20,7 @@ import {
   RequisitionEvent,
   decodeSowTractorData,
   getSowOrderTokenStrategy,
-  prepareSowOrderV0RequisitionEventForTxn,
+  prepareRequisitionForTxn,
 } from "@/lib/Tractor/utils";
 import usePublisherTractorExecutions from "@/state/tractor/useTractorExecutions";
 import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
@@ -34,7 +34,7 @@ import { format } from "date-fns";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { decodeFunctionData } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 
 interface TractorOrdersPanelProps {
   refreshData?: number; // A value that changes to trigger a refresh
@@ -44,6 +44,8 @@ interface TractorOrdersPanelProps {
 const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelProps) => {
   const { address } = useAccount();
   const protocolAddress = useProtocolAddress();
+
+  const client = usePublicClient();
 
   const getStrategyProps = useGetTractorTokenStrategyWithBlueprint();
 
@@ -82,6 +84,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     filterOutCompleted: false,
     select: selectOrdersWithExecutions,
     enabled: !!address,
+    // chainOnly: true,
   });
 
   // derived
@@ -126,7 +129,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     toast.loading("Cancelling order...");
 
     // Fix timestamp values for transaction
-    const fixedRequisition = prepareSowOrderV0RequisitionEventForTxn(req);
+    const fixedRequisition = prepareRequisitionForTxn(req);
 
     try {
       return writeWithEstimateGas({

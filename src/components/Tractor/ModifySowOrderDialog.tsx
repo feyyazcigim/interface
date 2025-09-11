@@ -21,7 +21,7 @@ import useSowOrderV0Calculations from "@/hooks/tractor/useSowOrderV0Calculations
 import useTransaction from "@/hooks/useTransaction";
 import { useGetBlueprintHash } from "@/lib/Tractor/blueprint";
 import { Blueprint, ExtendedTractorTokenStrategy, Requisition, TractorTokenStrategy } from "@/lib/Tractor/types";
-import { RequisitionEvent } from "@/lib/Tractor/utils";
+import { RequisitionEvent, prepareRequisitionForTxn } from "@/lib/Tractor/utils";
 import useTractorOperatorAverageTipPaid from "@/state/tractor/useTractorOperatorAverageTipPaid";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { formatter } from "@/utils/format";
@@ -330,6 +330,14 @@ function ModifyTractorOrderReviewDialog({
       setSubmitting(true);
       toast.loading("Modifying order...");
 
+      const preparedRequisition = prepareRequisitionForTxn(signedRequisition);
+
+      console.log({
+        existingOrder,
+        signedRequisition,
+        preparedRequisition,
+      });
+
       // Create the farm call data that cancels the old order and creates the new one
       const farmCalls = [
         // Cancel the existing order
@@ -344,7 +352,7 @@ function ModifyTractorOrderReviewDialog({
           functionName: "publishRequisition",
           args: [
             // Type cast is okay here since we check signature above
-            signedRequisition as Required<Requisition>,
+            preparedRequisition as Required<Requisition>,
           ],
         }),
       ];

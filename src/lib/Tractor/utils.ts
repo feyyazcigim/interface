@@ -18,7 +18,7 @@ import { MayArray } from "@/utils/types.generic";
 import { arrayify } from "@/utils/utils";
 import { SignableMessage, decodeEventLog, decodeFunctionData, encodeFunctionData } from "viem";
 import { PublicClient } from "viem";
-import { Requisition, SowOrderTokenStrategy, TractorTokenStrategy } from "./types";
+import { Blueprint, Requisition, SowOrderTokenStrategy, TractorTokenStrategy } from "./types";
 
 // Block number at which Tractor was deployed - use this as starting point for event queries
 export const TRACTOR_DEPLOYMENT_BLOCK = 28930876n;
@@ -1034,6 +1034,8 @@ export async function loadOrderbookData(
       return !req.isCancelled && !completedOrders.has(req.requisition.blueprintHash);
     });
 
+    console.log("activeRequisitions: ", activeRequisitions);
+
     // Decode data and sort requisitions by temperature (lowest first)
     const requisitionsWithTemperature = activeRequisitions.map((requisition) => {
       const decodedData = decodeSowTractorData(requisition.requisition.blueprint.data);
@@ -1467,6 +1469,40 @@ export const isTractorTokenStrategy = (value: unknown): value is TractorTokenStr
   }
 };
 
+const normalizeBPEndTime = (endTime: bigint) => {
+  if (endTime === 8640000000000n) {
+    // max uint256
+    return BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
+  }
+  return endTime;
+};
+
+export const prepareRequisitionForTxn = (req: RequisitionData | RequisitionEvent | Requisition): RequisitionData => {
+  let signature: `0x${string}`;
+
+  const requisition = "requisition" in req ? req.requisition : req;
+  if (!requisition.signature) {
+    throw new Error("Cannot prepare blueprint for transaction, blueprint is not signed");
+  }
+
+  signature = requisition.signature;
+
+  const struct: RequisitionData = {
+    signature,
+    blueprintHash: requisition.blueprintHash,
+    blueprint: {
+      ...requisition.blueprint,
+      startTime: requisition.blueprint.startTime,
+      endTime: normalizeBPEndTime(requisition.blueprint.endTime),
+      operatorPasteInstrs: requisition.blueprint.operatorPasteInstrs.filter(
+        (instr) => instr !== "0x" && instr !== ("" as `0x${string}`),
+      ),
+    },
+  };
+
+  return struct;
+};
+
 /**
  * Prepare a requisition event for a transaction by normalizing the blueprint data.
  * - Fix timestamp values for transaction
@@ -1474,24 +1510,6 @@ export const isTractorTokenStrategy = (value: unknown): value is TractorTokenStr
  * @param req - The requisition event to prepare
  * @returns The prepared requisition event
  */
-export const prepareSowOrderV0RequisitionEventForTxn = (req: RequisitionEvent) => {
-  const normalizeEndTime = (endTime: bigint) => {
-    if (endTime === 8640000000000n) {
-      // max uint256
-      return BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
-    }
-    return endTime;
-  };
-
-  return {
-    ...req.requisition,
-    blueprint: {
-      ...req.requisition.blueprint,
-      startTime: req.requisition.blueprint.startTime,
-      endTime: normalizeEndTime(req.requisition.blueprint.endTime),
-      operatorPasteInstrs: req.requisition.blueprint.operatorPasteInstrs.filter(
-        (instr) => instr !== "0x" && instr !== ("" as `0x${string}`),
-      ),
-    },
-  };
+export const prepareSowOrderV0RequisitionEventForTxn = (req: RequisitionEvent | RequisitionData) => {
+  return prepareRequisitionForTxn(req);
 };
