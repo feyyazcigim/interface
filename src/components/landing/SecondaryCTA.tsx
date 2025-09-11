@@ -142,11 +142,6 @@ const propertiesData = [
   },
 ];
 
-interface GlowingCard {
-  component: "values" | "properties";
-  cardIndex: number;
-}
-
 interface CardData {
   logo: string;
   title: string;
@@ -303,7 +298,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
 
 export default function SecondaryCTA() {
   const isMobile = useIsMobile();
-  const { formattedText: liquidityDistributionText, loading: liquidityLoading } = useLiquidityDistribution();
+  const { formattedText: liquidityDistributionText } = useLiquidityDistribution();
 
   // Create valuesData with dynamic liquidity distribution
   const valuesData = createValuesData(liquidityDistributionText);
@@ -311,95 +306,6 @@ export default function SecondaryCTA() {
   // Modal state
   const [selectedCard, setSelectedCard] = useState<(typeof valuesData)[0] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Glow effect state management
-  const [glowingCard, setGlowingCard] = useState<GlowingCard | null>(null);
-  const [isHoveringCarousel, setIsHoveringCarousel] = useState(false);
-  const glowTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const valuesCarouselRef = useRef<HTMLDivElement>(null);
-  const propertiesCarouselRef = useRef<HTMLDivElement>(null);
-
-  // Constants for glow effect
-  const GLOW_DURATION = 2000; // 2 second glow
-  const GAP_DURATION = 1500; // 1.5 second gap with no glow
-  const TOTAL_CYCLE_TIME = GLOW_DURATION + GAP_DURATION; // 3.5 seconds total
-  const TOTAL_VALUES_CARDS = valuesData.length; // 5
-  const TOTAL_PROPERTIES_CARDS = propertiesData.length; // 4
-
-  // Flip-flop selection logic with center-weighted preference for better visibility
-  const selectRandomCard = useCallback(
-    (currentCard: GlowingCard | null): GlowingCard => {
-      // Determine which component to use next (flip-flop between values and properties)
-      const nextComponent: "values" | "properties" = currentCard?.component === "values" ? "properties" : "values";
-
-      // Get the appropriate card count for the next component
-      const cardCount = nextComponent === "values" ? TOTAL_VALUES_CARDS : TOTAL_PROPERTIES_CARDS;
-
-      // HEAVILY center-weighted selection - strongly prefer middle cards for visibility
-      const centerIndex = Math.floor(cardCount / 2);
-
-      // Always select from center area (±1 from center for all card counts)
-      const centerStart = Math.max(0, centerIndex - 1);
-      const centerEnd = Math.min(cardCount - 1, centerIndex + 1);
-      const selectedIndex: number = centerStart + Math.floor(Math.random() * (centerEnd - centerStart + 1));
-
-      return {
-        component: nextComponent,
-        cardIndex: selectedIndex,
-      };
-    },
-    [TOTAL_VALUES_CARDS, TOTAL_PROPERTIES_CARDS],
-  );
-
-  // Glow effect timer - pauses when hovering over carousels
-  useEffect(() => {
-    // Don't start glow timer if currently hovering over carousel
-    if (isHoveringCarousel) {
-      return;
-    }
-
-    let currentGlowingCard: GlowingCard | null = null;
-    let mainInterval: NodeJS.Timeout | null = null;
-    let glowClearTimeout: NodeJS.Timeout | null = null;
-
-    const runGlowCycle = () => {
-      // Start glow phase - select next card
-      currentGlowingCard = selectRandomCard(currentGlowingCard);
-      setGlowingCard(currentGlowingCard);
-
-      // Clear glow after GLOW_DURATION
-      glowClearTimeout = setTimeout(() => {
-        setGlowingCard(null);
-      }, GLOW_DURATION);
-    };
-
-    // Start immediately with first glow
-    runGlowCycle();
-
-    // Set up recurring cycle (glow + gap = total cycle time)
-    mainInterval = setInterval(runGlowCycle, TOTAL_CYCLE_TIME);
-
-    // Store reference for cleanup
-    glowTimerRef.current = mainInterval;
-
-    // Cleanup function
-    return () => {
-      if (mainInterval) {
-        clearInterval(mainInterval);
-        mainInterval = null;
-      }
-      if (glowClearTimeout) {
-        clearTimeout(glowClearTimeout);
-        glowClearTimeout = null;
-      }
-      if (glowTimerRef.current) {
-        clearInterval(glowTimerRef.current);
-        glowTimerRef.current = null;
-      }
-      setGlowingCard(null);
-    };
-  }, [selectRandomCard, GLOW_DURATION, TOTAL_CYCLE_TIME, isHoveringCarousel]);
 
   const handleCardClick = (cardData: (typeof valuesData)[0]) => {
     setSelectedCard(cardData);
@@ -417,51 +323,15 @@ export default function SecondaryCTA() {
     <>
       <div className="flex flex-col items-center">
         {/* Values Carousel */}
-        <div
-          ref={valuesCarouselRef}
-          className="flex flex-col max-md:w-[95%] md:flex-row items-center place-self-center gap-4 min-[1700px]:gap-8"
-          onMouseEnter={() => setIsHoveringCarousel(true)}
-          onMouseLeave={() => setIsHoveringCarousel(false)}
-        >
+        <div className="flex flex-col max-md:w-[95%] md:flex-row items-center place-self-center gap-4 min-[1700px]:gap-8">
           {valuesData.map((info, index) => {
-            // Calculate original data index for glow effect
-            const originalIndex = index % valuesData.length;
-
-            // Check if this card should glow based on card type
-            const shouldGlow = glowingCard?.component === "values" && glowingCard.cardIndex === originalIndex;
-
-            // If multiple cards should glow, only show the one closest to screen center
-            let isGlowing = false;
-            if (shouldGlow && valuesCarouselRef.current) {
-              const buttons = valuesCarouselRef.current.querySelectorAll("button");
-              const screenCenter = window.innerWidth / 2;
-              let closestDistance = Infinity;
-              let closestIndex = -1;
-
-              // Find all buttons with the same originalIndex and pick the closest to center
-              buttons.forEach((button, buttonIndex) => {
-                const buttonOriginalIndex = buttonIndex % valuesData.length;
-                if (buttonOriginalIndex === originalIndex) {
-                  const rect = button.getBoundingClientRect();
-                  const buttonCenter = rect.left + rect.width / 2;
-                  const distance = Math.abs(buttonCenter - screenCenter);
-                  if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestIndex = buttonIndex;
-                  }
-                }
-              });
-
-              isGlowing = index === closestIndex;
-            }
-
             return (
               <CarouselCard
                 key={`dataInfo1_${info.title}_${index}`}
                 data={info}
                 index={index}
                 keyPrefix="dataInfo1"
-                isGlowing={isGlowing}
+                isGlowing={false}
                 glowColor="purple"
                 onClick={handleCardClick}
               />
@@ -499,51 +369,15 @@ export default function SecondaryCTA() {
         </div>
 
         {/* Properties Carousel */}
-        <div
-          ref={propertiesCarouselRef}
-          className="flex flex-col max-md:w-[95%] md:flex-row items-center place-self-center gap-4 min-[1700px]:gap-8"
-          onMouseEnter={() => setIsHoveringCarousel(true)}
-          onMouseLeave={() => setIsHoveringCarousel(false)}
-        >
+        <div className="flex flex-col max-md:w-[95%] md:flex-row items-center place-self-center gap-4 min-[1700px]:gap-8">
           {propertiesData.map((info, index) => {
-            // Calculate original data index for glow effect
-            const originalIndex = index % propertiesData.length;
-
-            // Check if this card should glow based on card type
-            const shouldGlow = glowingCard?.component === "properties" && glowingCard.cardIndex === originalIndex;
-
-            // If multiple cards should glow, only show the one closest to screen center
-            let isGlowing = false;
-            if (shouldGlow && propertiesCarouselRef.current) {
-              const buttons = propertiesCarouselRef.current.querySelectorAll("button");
-              const screenCenter = window.innerWidth / 2;
-              let closestDistance = Infinity;
-              let closestIndex = -1;
-
-              // Find all buttons with the same originalIndex and pick the closest to center
-              buttons.forEach((button, buttonIndex) => {
-                const buttonOriginalIndex = buttonIndex % propertiesData.length;
-                if (buttonOriginalIndex === originalIndex) {
-                  const rect = button.getBoundingClientRect();
-                  const buttonCenter = rect.left + rect.width / 2;
-                  const distance = Math.abs(buttonCenter - screenCenter);
-                  if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestIndex = buttonIndex;
-                  }
-                }
-              });
-
-              isGlowing = index === closestIndex;
-            }
-
             return (
               <CarouselCard
                 key={`dataInfo2_${info.title}_${index}`}
                 data={info}
                 index={index}
                 keyPrefix="dataInfo2"
-                isGlowing={isGlowing}
+                isGlowing={false}
                 glowColor="green"
                 onClick={handleCardClick}
               />
