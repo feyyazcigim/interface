@@ -55,21 +55,21 @@ export default function BugBounty() {
       </div>
       <div>
         {/* Three columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-16 w-full mx-auto items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-16 w-full mx-auto items-stretch">
           {/* Column 1: Audits */}
           <div className="flex flex-col items-center text-center h-full justify-between">
             {/* Top section - metric */}
-            <div className="flex flex-col items-center h-[3rem] sm:h-[5rem] justify-center">
+            <div className="flex flex-col items-center h-[2rem] sm:h-[5rem] justify-center">
               <div className="text-2xl sm:text-6xl font-light text-black">25</div>
             </div>
 
             {/* Middle section - description */}
-            <div className="flex flex-col items-center h-[2.5rem] sm:h-[3.25rem] justify-center">
+            <div className="flex flex-col items-center h-[2rem] sm:h-[3.25rem] justify-center">
               <div className="pinto-body sm:text-2xl font-light text-black">Audits to Date</div>
             </div>
 
             {/* Bottom section - button */}
-            <div className="flex items-center justify-center h-[3.5rem] sm:h-[4rem]">
+            <div className="flex items-center justify-center h-[2rem] sm:h-[4rem]">
               <Link to={"https://docs.pinto.money/resources/audits"} target="_blank" rel="noopener noreferrer">
                 <Button
                   variant="outline"
@@ -86,7 +86,7 @@ export default function BugBounty() {
           {/* Column 2: Bug Bounty */}
           <div className="flex flex-col items-center text-center h-full justify-between" ref={componentRef}>
             {/* Top section - metric */}
-            <div className="flex flex-col items-center h-[3rem] sm:h-[5rem] justify-center">
+            <div className="flex flex-col items-center h-[2rem] sm:h-[5rem] justify-center">
               <div className="flex flex-row gap-2 sm:gap-4 items-center">
                 <img
                   src={PintoTokenLogo}
@@ -109,7 +109,7 @@ export default function BugBounty() {
             </div>
 
             {/* Middle section - description */}
-            <div className="flex flex-col items-center h-[2.5rem] sm:h-[3.25rem] justify-center">
+            <div className="flex flex-col items-center h-[2rem] sm:h-[3.25rem] justify-center">
               <div className="pinto-body sm:text-2xl font-light flex flex-row gap-2 sm:gap-4 items-center">
                 <span>Bug Bounty with</span>
                 <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-4 sm:h-8" />
@@ -117,7 +117,7 @@ export default function BugBounty() {
             </div>
 
             {/* Bottom section - button */}
-            <div className="flex items-center justify-center h-[3.5rem] sm:h-[4rem]">
+            <div className="flex items-center justify-center h-[2rem] sm:h-[4rem]">
               <Link to={"https://immunefi.com/bug-bounty/pinto/information/"} target="_blank" rel="noopener noreferrer">
                 <Button
                   variant="outline"
@@ -134,19 +134,19 @@ export default function BugBounty() {
           {/* Column 3: Off-chain Monitoring */}
           <div className="flex flex-col items-center text-center h-full justify-between">
             {/* Top section - metric */}
-            <div className="flex flex-col items-center h-[3rem] sm:h-[5rem] justify-center">
+            <div className="flex flex-col items-center h-[2rem] sm:h-[5rem] justify-center">
               <img src={HypernativeLogo} alt={"Hypernative"} className="h-10 sm:h-16" />
             </div>
 
             {/* Middle section - description */}
-            <div className="flex flex-col items-center h-[2.5rem] sm:h-[3.25rem] justify-center">
+            <div className="flex flex-col items-center h-[2rem] sm:h-[3.25rem] justify-center">
               <div className="pinto-body sm:text-2xl font-light text-black whitespace-nowrap">
                 24/7 Real-Time Off-Chain Monitoring
               </div>
             </div>
 
             {/* Bottom section - button */}
-            <div className="flex items-center justify-center h-[3.5rem] sm:h-[4rem]">
+            <div className="flex items-center justify-center h-[2rem] sm:h-[4rem]">
               <Link
                 to={"https://www.hypernative.io/blog/pinto-extends-protocol-security-with-hypernative"}
                 target="_blank"
