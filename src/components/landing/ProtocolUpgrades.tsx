@@ -1323,11 +1323,16 @@ export default function ProtocolUpgrades() {
     return { before: Math.round(lines / 2), after: Math.round(lines / 2) };
   };
 
+  // Initial scroll to end on mount
   useEffect(() => {
-    // Navigate to the last item in the carousel
     if (api && sortedAudits.length > 0) {
       api.scrollTo(sortedAudits.length);
+    }
+  }, [api]);
 
+  // Event handlers
+  useEffect(() => {
+    if (api && sortedAudits.length > 0) {
       const handleSelect = () => {
         const selectedIndex = api.selectedScrollSnap();
         const selected = sortedAudits[selectedIndex];
