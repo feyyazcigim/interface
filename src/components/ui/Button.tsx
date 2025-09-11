@@ -142,20 +142,43 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         {...props}
       >
-        {shimmer && (
-          <div
-            className={cn(
-              "absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent to-transparent",
-              shimmerOnHover
-                ? "opacity-0 hover:opacity-100 hover:animate-[shimmer_2s_infinite] transition-opacity duration-300"
-                : "animate-[shimmer_2s_infinite]",
+        {!asChild ? (
+          <>
+            {shimmer && (
+              <div
+                className={cn(
+                  "absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent to-transparent",
+                  shimmerOnHover
+                    ? "opacity-0 hover:opacity-100 hover:animate-[shimmer_2s_infinite] transition-opacity duration-300"
+                    : "animate-[shimmer_2s_infinite]",
+                )}
+                style={{
+                  background: `linear-gradient(to right, transparent, ${shimmerColor}, transparent)`,
+                }}
+              />
             )}
-            style={{
-              background: `linear-gradient(to right, transparent, ${shimmerColor}, transparent)`,
-            }}
-          />
+            {props.children}
+          </>
+        ) : shimmer ? (
+          // When using asChild with shimmer, wrap everything in a single element
+          <span className="relative inline-flex items-center justify-center w-full h-full">
+            <div
+              className={cn(
+                "absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent to-transparent",
+                shimmerOnHover
+                  ? "opacity-0 hover:opacity-100 hover:animate-[shimmer_2s_infinite] transition-opacity duration-300"
+                  : "animate-[shimmer_2s_infinite]",
+              )}
+              style={{
+                background: `linear-gradient(to right, transparent, ${shimmerColor}, transparent)`,
+              }}
+            />
+            {props.children}
+          </span>
+        ) : (
+          // When using asChild withput shimmer, pass props.children directly
+          props.children
         )}
-        {props.children}
       </Comp>
     );
   },
