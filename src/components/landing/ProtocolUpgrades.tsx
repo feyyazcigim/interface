@@ -1326,7 +1326,7 @@ export default function ProtocolUpgrades() {
   useEffect(() => {
     // Navigate to the last item in the carousel
     if (api && sortedAudits.length > 0) {
-      // api.scrollTo(sortedAudits.length - 1);
+      api.scrollTo(sortedAudits.length);
 
       const handleSelect = () => {
         const selectedIndex = api.selectedScrollSnap();
