@@ -340,10 +340,10 @@ export default function SecondaryCTA() {
         </div>
 
         {/* Middle Content */}
-        <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 w-full sm:max-w-[53rem] mx-auto my-[3.75rem]">
+        <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 w-full sm:max-w-[59rem] mx-auto my-[3.75rem]">
           <h2 className="text-[1.75rem] md:pinto-h2 md:text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center text-center">
             <span>
-              Combining <span className="text-pinto-purple-2">the values of Ethereum</span> with{" "}
+              Pinto combines <span className="text-pinto-purple-2">the values of Ethereum</span> with{" "}
               <span className="text-pinto-green-4">the properties of USD</span>
             </span>
           </h2>
