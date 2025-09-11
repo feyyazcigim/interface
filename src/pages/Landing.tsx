@@ -131,7 +131,7 @@ export default function Landing() {
   return (
     <div className="w-full place-self-center">
       <div
-        className={`flex flex-col items-center h-screen ${sectionsVisible ? "overflow-y-auto overflow-scroll scrollbar-none" : "overflow-hidden"}`}
+        className={`flex flex-col items-center h-screen overflow-y-auto overflow-x-clip scrollbar-none`}
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
