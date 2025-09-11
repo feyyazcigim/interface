@@ -14,7 +14,7 @@ import PintoLogo from "@/assets/protocol/PintoLogo.svg";
 import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { cubicBezier, findBezierExtrema, generateChaoticUnstableData } from "@/utils/utils";
-import { AnimatePresence, MotionValue, animate, motion, useMotionValue, useTransform } from "framer-motion";
+import { MotionValue, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";

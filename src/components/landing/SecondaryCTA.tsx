@@ -29,7 +29,9 @@ const createValuesData = (liquidityDistributionText: string) => [
     description: `Censorship can take the form of: 
 
 1. **Communication failures:**
+
       **Communication:**  information sharing
+
 2. **Availability failures**
     
       **Availability:** accessibility and operational readiness
@@ -56,9 +58,7 @@ A future blacklist mitigation mechanism will extend the censorship resistance of
       "Pinto is building fiat currency free from the risk of arbitrary money printing and interest rate manipulation.",
     definition:
       "**Trustlessness:** reliability is assured through autonomy, incorruptibility, and verifiability rather than trust.",
-    description: `Key components of trustlessness include:
-
-- **Reliability:** consistent and correct performance.
+    description: `- **Reliability:** consistent and correct performance.
     - Reliable systems function as expected over time under both normal and adverse conditions.
 - **Autonomy:** rule compliance guaranteed by internal mechanisms.
     - A system is autonomous if its rules are upheld by protocol design and crypto-economics without arbitrary or subjective judgement.
