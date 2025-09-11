@@ -149,7 +149,7 @@ export default function Landing() {
         {/* Sticky CTA Button - below header, outside scroll container */}
         <motion.div
           id="landing-cta"
-          className="flex flex-col sm:flex-row gap-4 mx-auto items-center sticky top-4 sm:top-8 sm:mt-4 mt-2 sm:mb-10 mb-4 place-self-center z-50 justify-center"
+          className="flex flex-col sm:flex-row gap-4 mx-auto items-center sticky top-4 sm:mt-4 mt-2 sm:mb-10 mb-4 place-self-center z-50 justify-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
