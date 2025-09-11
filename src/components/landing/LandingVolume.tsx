@@ -22,27 +22,24 @@ const makeAreaGradients: MakeGradientFunction[] = [
   },
 ];
 
-// Cumulative volume data from 2021 to 2025 - steady growth to $1.1B
 const sampleVolumeData: LineChartData[] = [
   { values: [0], day: "2021" },
-  { values: [57894737], day: "2021" },
-  { values: [95789474], day: "2021" },
-  { values: [113684211], day: "2021" },
-  { values: [211578947], day: "2022" },
-  { values: [249473684], day: "2022" },
-  { values: [347368421], day: "2022" },
-  { values: [385263158], day: "2022" },
-  { values: [473157895], day: "2023" },
-  { values: [511052632], day: "2023" },
-  { values: [558947368], day: "2023" },
-  { values: [616842105], day: "2023" },
-  { values: [634736842], day: "2024" },
-  { values: [772631579], day: "2024" },
-  { values: [830526316], day: "2024" },
-  { values: [848421053], day: "2024" },
-  { values: [956315789], day: "2025" },
-  { values: [984210526], day: "2025" },
-  { values: [1000000000], day: "2025" },
+  { values: [87940000], day: "2021" },
+  { values: [126220000], day: "2022" },
+  { values: [224640000], day: "2022" },
+  { values: [227200000], day: "2022" },
+  { values: [230290000], day: "2022" },
+  { values: [231430000], day: "2023" },
+  { values: [233740000], day: "2023" },
+  { values: [235867517], day: "2023" },
+  { values: [248240000], day: "2023" },
+  { values: [336786300], day: "2024" },
+  { values: [356946000], day: "2024" },
+  { values: [409147200], day: "2024" },
+  { values: [572663400], day: "2024" },
+  { values: [771050100], day: "2025" },
+  { values: [887211300], day: "2025" },
+  { values: [1018422800], day: "2025" },
 ];
 
 const valueFormatter = (value: number) => {
