@@ -256,9 +256,6 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
   const priceUpTxTypes = ["deposit", "convertUp", "sow", "buy"];
   const priceDownTxTypes = ["withdraw", "convertDown", "harvest", "sell"];
 
-  // Count original non-null txTypes
-  const originalTxTypeCount = baseData.filter((point) => point.txType !== null).length;
-
   // First pass: randomize values and speeds, clear all txTypes
   const randomizedData = baseData.map((point) => {
     // Determine price randomization direction based on original price relative to $1.00
@@ -283,28 +280,9 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
     };
   });
 
-  // Second pass: randomly assign txTypes to maintain the same count
-  const availableIndices = randomizedData.map((_, index) => index);
-  const mandatoryIndices = randomizedData
-    .map((point, index) => (point.mandatoryTx ? index : null))
-    .filter((index) => index !== null) as number[];
-
-  // Shuffle and pick random indices for transactions
-  for (let i = availableIndices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [availableIndices[i], availableIndices[j]] = [availableIndices[j], availableIndices[i]];
-  }
-
-  // Ensure mandatory indices are always included in selected indices
-  const selectedIndices = [...new Set([...mandatoryIndices, ...availableIndices.slice(0, originalTxTypeCount)])].slice(
-    0,
-    Math.max(originalTxTypeCount, mandatoryIndices.length),
-  );
-
-  // Assign appropriate txTypes based on price relative to $1.00
-  selectedIndices.forEach((index) => {
-    const currentPoint = randomizedData[index];
-    if (currentPoint.value >= 1.0) {
+  // Second pass: assign txTypes to datapoints
+  randomizedData.forEach((point, index) => {
+    if (point.value >= 1.0) {
       // Price above or at $1, use bearish transaction
       randomizedData[index].txType = priceDownTxTypes[Math.floor(Math.random() * priceDownTxTypes.length)];
     } else {
