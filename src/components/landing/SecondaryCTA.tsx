@@ -128,7 +128,7 @@ const propertiesData = [
     logo: PropertyMediumOfExchange,
     title: "Medium of Exchange",
     subtitle:
-      "Prioritizing low volatility and yield over upward price movement makes Pinto the optimal crypto-native MoE",
+      "Prioritizing low volatility and yield over upward price movement makes Pinto the optimal crypto-native Medium of Exchange.",
     definition: "**Medium of Exchange:** an asset widely accepted as payment, enabling trade without direct barter.",
     description: `Pinto has the unique combination of being low in volatility and generating native yield, which makes an optimal medium of exchange between various types of value. sPinto, the fungible yield-bearing ERC-20 wrapper of Pinto Deposits, offers the ability to integrate Pinto into existing DeFi primitives and distribute yield to liquidity providers with minimal friction.`,
   },
@@ -136,7 +136,7 @@ const propertiesData = [
     logo: PropertyUnitOfAccount,
     title: "Unit of Account",
     subtitle:
-      "Low volatility and algorithmic distribution of new mints make Pinto the optimal crypto-native UoA for loans.",
+      "Low volatility and algorithmic distribution of new mints make Pinto the optimal crypto-native Unit of Account for loans.",
     definition: "**Unit of Account:** a monetary standard used to price and compare value.",
     description: `Unlike centralized fiat currencies, in which new currency is printed and distributed arbitrarily, often devaluing the wealth of the respective system's participants and the purchasing power of each unit of the currency, Pinto autonomously distributes newly minted currency directly to its holders. Combined with its native volatility-minimization mechanisms, the protocol creates a currency designed to serve as a unit of account for value and loans of value.`,
   },
@@ -348,7 +348,7 @@ export default function SecondaryCTA() {
             </span>
           </h2>
           <span className="text-xl lg:text-lg lg:leading-[1.4] font-thin text-black text-center">
-            Printed directly to the people. Founded on decentralized credit.
+            Printed directly to the people. Founded on leviathan-free credit.
           </span>
           <Link to={navLinks.printsToThePeople} target="_blank" rel="noopener noreferrer">
             <Button
