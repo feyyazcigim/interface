@@ -229,7 +229,7 @@ export default function ProjectStats() {
   return (
     <div>
       <motion.div
-        className="flex flex-col max-sm:gap-3 max-[850px]:scale-90 items-center sm:mx-auto sm:my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
+        className="flex flex-col max-sm:gap-3 sm:max-w-[1920px] max-[850px]:scale-90 items-center sm:mx-auto sm:my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
         <span className="flex flex-col sm:flex-row gap-3 sm:gap-6 items-center">

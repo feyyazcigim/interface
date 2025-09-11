@@ -44,7 +44,7 @@ export default function BugBounty() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-0 sm:gap-4">
+    <div className="flex flex-col gap-0 sm:gap-4 sm:max-w-[2200px] place-self-center">
       <div className="flex flex-col items-center sm:mx-auto sm:my-auto px-4 sm:px-8 max-w-6xl w-full">
         {/* Title */}
         <div className="text-center mb-8 sm:mb-12">
@@ -56,80 +56,113 @@ export default function BugBounty() {
       </div>
       <div>
         {/* Three columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-16 w-[90%] mx-auto items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-16 w-full mx-auto items-stretch">
           {/* Column 1: Audits */}
-          <div className="flex flex-col items-center text-center">
-            <div className="text-2xl sm:text-6xl font-light text-black mb-2 sm:mb-6">25</div>
-            <div className="pinto-body sm:text-2xl font-light text-black mb-2 sm:mb-6">Audits to Date</div>
-            <Link to={"https://docs.pinto.money/resources/audits"} target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="outline"
-                size={isMobile ? "sm" : "lg"}
-                rounded="full"
-                className="shadow-none text-pinto-gray-4"
-              >
-                Learn More
-              </Button>
-            </Link>
+          <div className="flex flex-col items-center text-center h-full justify-between">
+            {/* Top section - metric */}
+            <div className="flex flex-col items-center h-[3rem] sm:h-[5rem] justify-center">
+              <div className="text-2xl sm:text-6xl font-light text-black">25</div>
+            </div>
+
+            {/* Middle section - description */}
+            <div className="flex flex-col items-center h-[2.5rem] sm:h-[3.25rem] justify-center">
+              <div className="pinto-body sm:text-2xl font-light text-black">Audits to Date</div>
+            </div>
+
+            {/* Bottom section - button */}
+            <div className="flex items-center justify-center h-[3.5rem] sm:h-[4rem]">
+              <Link to={"https://docs.pinto.money/resources/audits"} target="_blank" rel="noopener noreferrer">
+                <Button
+                  variant="outline"
+                  size={isMobile ? "sm" : "lg"}
+                  rounded="full"
+                  className="shadow-none text-pinto-gray-4"
+                >
+                  Learn More
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Column 2: Bug Bounty */}
-          <div className="flex flex-col items-center text-center" ref={componentRef}>
-            <div className="flex flex-row gap-2 sm:gap-4 items-center mb-2 sm:mb-4">
-              <img
-                src={PintoTokenLogo}
-                alt={"Pinto Token Icon"}
-                className="h-8 w-8 min-w-8 min-h-8 sm:w-16 sm:h-16 sm:min-h-16 sm:min-w-16"
-              />
-              <NumberFlow
-                value={value}
-                respectMotionPreference={false}
-                trend={+1}
-                format={{
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                  trailingZeroDisplay: "auto",
-                }}
-                className="text-black font-thin text-2xl sm:text-6xl"
-              />
+          <div className="flex flex-col items-center text-center h-full justify-between" ref={componentRef}>
+            {/* Top section - metric */}
+            <div className="flex flex-col items-center h-[3rem] sm:h-[5rem] justify-center">
+              <div className="flex flex-row gap-2 sm:gap-4 items-center">
+                <img
+                  src={PintoTokenLogo}
+                  alt={"Pinto Token Icon"}
+                  className="h-8 w-8 min-w-8 min-h-8 sm:w-16 sm:h-16 sm:min-h-16 sm:min-w-16"
+                />
+                <NumberFlow
+                  value={value}
+                  respectMotionPreference={false}
+                  trend={+1}
+                  format={{
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                    trailingZeroDisplay: "auto",
+                  }}
+                  className="text-black font-thin text-2xl sm:text-6xl"
+                />
+              </div>
             </div>
-            <div className="pinto-body sm:text-2xl font-light flex flex-row gap-2 sm:gap-4 items-center mb-4 sm:mb-6">
-              <span>Bug Bounty with</span>
-              <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-4 sm:h-8" />
+
+            {/* Middle section - description */}
+            <div className="flex flex-col items-center h-[2.5rem] sm:h-[3.25rem] justify-center">
+              <div className="pinto-body sm:text-2xl font-light flex flex-row gap-2 sm:gap-4 items-center">
+                <span>Bug Bounty with</span>
+                <img src={ImmunefiLogo} alt={"ImmuneFi"} className="h-4 sm:h-8" />
+              </div>
             </div>
-            <Link to={"https://immunefi.com/bug-bounty/pinto/information/"} target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="outline"
-                size={isMobile ? "sm" : "lg"}
-                rounded="full"
-                className="shadow-none text-pinto-gray-4"
-              >
-                Learn More
-              </Button>
-            </Link>
+
+            {/* Bottom section - button */}
+            <div className="flex items-center justify-center h-[3.5rem] sm:h-[4rem]">
+              <Link to={"https://immunefi.com/bug-bounty/pinto/information/"} target="_blank" rel="noopener noreferrer">
+                <Button
+                  variant="outline"
+                  size={isMobile ? "sm" : "lg"}
+                  rounded="full"
+                  className="shadow-none text-pinto-gray-4"
+                >
+                  Learn More
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Column 3: Off-chain Monitoring */}
-          <div className="flex flex-col items-center text-center gap-2 sm:gap-6">
-            <img src={HypernativeLogo} alt={"Hypernative"} className="h-10 sm:h-16" />
-            <div className="pinto-body sm:text-2xl font-light text-black">
-              24/7 Real-time off-chain monitoring with Hypernative
+          <div className="flex flex-col items-center text-center h-full justify-between">
+            {/* Top section - metric */}
+            <div className="flex flex-col items-center h-[3rem] sm:h-[5rem] justify-center">
+              <img src={HypernativeLogo} alt={"Hypernative"} className="h-10 sm:h-16" />
             </div>
-            <Link
-              to={"https://www.hypernative.io/blog/pinto-extends-protocol-security-with-hypernative"}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button
-                variant="outline"
-                size={isMobile ? "sm" : "lg"}
-                rounded="full"
-                className="shadow-none text-pinto-gray-4"
+
+            {/* Middle section - description */}
+            <div className="flex flex-col items-center h-[2.5rem] sm:h-[3.25rem] justify-center">
+              <div className="pinto-body sm:text-2xl font-light text-black whitespace-nowrap">
+                24/7 Real-Time Off-Chain Monitoring
+              </div>
+            </div>
+
+            {/* Bottom section - button */}
+            <div className="flex items-center justify-center h-[3.5rem] sm:h-[4rem]">
+              <Link
+                to={"https://www.hypernative.io/blog/pinto-extends-protocol-security-with-hypernative"}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Learn More
-              </Button>
-            </Link>
+                <Button
+                  variant="outline"
+                  size={isMobile ? "sm" : "lg"}
+                  rounded="full"
+                  className="shadow-none text-pinto-gray-4"
+                >
+                  Learn More
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

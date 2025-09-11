@@ -135,20 +135,19 @@ export default function Landing() {
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
-        <section className="flex flex-col overflow-clip place-content-center min-h-screen sm:max-w-[1920px] sm:w-full bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
-          <LandingChart currentTriggerPhase={currentTriggerPhase} setCurrentTriggerPhase={setCurrentTriggerPhase} />
+        <section className="flex flex-col overflow-clip place-content-center min-h-screen w-full bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
+          <div className="sm:max-w-[1920px] w-full mx-auto min-h-screen overflow-clip">
+            <LandingChart currentTriggerPhase={currentTriggerPhase} setCurrentTriggerPhase={setCurrentTriggerPhase} />
+          </div>
         </section>
         <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-[64rem] sm:w-full sm:min-h-[max(1024px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
           <SecondaryCTA />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center sm:w-full min-h-[50rem] sm:min-h-[max(800px,100vh)] sm:max-w-[1920px] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
+        <section className="flex flex-col overflow-clip place-content-center sm:w-full min-h-[50rem] sm:min-h-[max(800px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
           <ProjectStats />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center sm:w-full min-h-screen sm:max-w-[2200px] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
+        <section className="flex flex-col overflow-clip place-content-center sm:w-full min-h-screen bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
           <BugBounty />
-          {/* 
-            <AuditsList />
-            */}
         </section>
         <section className="flex flex-col overflow-clip place-content-center h-auto min-h-[110rem] w-full sm:h-screen sm:min-h-[max(800px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
           <Resources />

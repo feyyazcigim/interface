@@ -1388,7 +1388,7 @@ export default function ProtocolUpgrades() {
   }, [hoveredData, carouselCenterData]);
 
   return (
-    <div className={`relative w-screen p-0 2xl:mt-8 transition-all transform-gpu items-center`}>
+    <div className={`relative w-full sm:max-w-[1920px] p-0 2xl:mt-8 transition-all transform-gpu items-center`}>
       <AnimatePresence mode="wait">
         <div className="h-12 sm:h-14 place-content-center">
           {highlightedData && (
