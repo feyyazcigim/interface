@@ -181,10 +181,10 @@ export default function Landing() {
         <section className="flex flex-col overflow-clip place-content-center sm:w-full min-h-[50rem] sm:min-h-[max(800px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
           <ProjectStats />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center sm:w-full min-h-screen bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
+        <section className="flex flex-col overflow-clip place-content-center sm:w-full min-h-[34rem] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
           <BugBounty />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center h-auto min-h-[110rem] w-full sm:h-screen sm:min-h-[max(800px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
+        <section className="flex flex-col overflow-clip place-content-center h-auto min-h-[114rem] w-full sm:h-screen sm:min-h-[max(800px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
           <Resources />
         </section>
       </div>
