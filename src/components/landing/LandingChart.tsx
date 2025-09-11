@@ -163,6 +163,37 @@ function calculateDurations() {
   };
 }
 
+// Calculate phase2Duration based on current position, target, speed, and viewport
+function calculatePhase2Duration(
+  measurementLineOffset: MotionValue<number>,
+  clipPathWidth: MotionValue<number>,
+  containerRef: React.RefObject<HTMLDivElement>,
+  isMobile: boolean,
+): number {
+  // Get the actual current container width
+  const actualViewportWidth = containerRef.current?.clientWidth || window.innerWidth;
+
+  // Calculate measurement line distance
+  const currentMeasurementLineOffset = measurementLineOffset.get();
+  const finalMeasurementLineOffset = ANIMATION_CONFIG.measurementLine.final * 100;
+  const measurementLineDistance = Math.abs(finalMeasurementLineOffset - currentMeasurementLineOffset);
+  const measurementLinePixelDistance = (measurementLineDistance / 100) * actualViewportWidth;
+
+  // Calculate clip path distance (clipPathWidth is stored as decimal percentage 0-1)
+  const currentClipPathWidth = clipPathWidth.get();
+  const finalClipPathWidth = ANIMATION_CONFIG.clipPath.final;
+  const clipPathDistance = Math.abs(finalClipPathWidth - currentClipPathWidth);
+  const clipPathPixelDistance = clipPathDistance * actualViewportWidth;
+
+  // Use the larger distance to determine duration
+  const maxPixelDistance = Math.max(measurementLinePixelDistance, clipPathPixelDistance);
+  const speedPixelsPerSecond = ANIMATION_CONFIG.baseSpeed * 60; // Convert to pixels per second
+  const calculatedDuration = maxPixelDistance / speedPixelsPerSecond;
+
+  // Apply mobile scaling and reasonable bounds
+  return Math.max(isMobile ? 0.5 : 1, Math.min(calculatedDuration, isMobile ? 2 : 8));
+}
+
 // Price data with more baseline points to space out peaks and dips
 // Define the type for priceData
 export interface PricePoint {
@@ -633,13 +664,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   const isMobile = useIsMobile();
 
   // Check if user has seen the full animation before
-  const [hasSeenFullAnimation, setHasSeenFullAnimation] = useState(() => {
-    try {
-      return localStorage.getItem("pinto-landing-animation-completed") === "true";
-    } catch {
-      return false;
-    }
-  });
+  const [hasSeenFullAnimation, setHasSeenFullAnimation] = useState(true);
 
   // Dynamic price data that gets updated
   const [fullPriceData, setFullPriceData] = useState<PricePoint[]>(() => {
@@ -1131,24 +1156,23 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
           ),
         );
 
-        // Now animate to final positions like the full animation does
-        const phase2Duration = isMobile ? 1 : 3;
-
+        // Calculate phase2Duration based on distance and speed
+        const phase2Duration = calculatePhase2Duration(measurementLineOffset, clipPathWidth, containerRef, isMobile);
         // Horizontal line: Reveal during position animations
         animate(horizontalLineClipPath, 0, {
           duration: phase2Duration, // Same duration as full animation
-          ease: "easeInOut",
+          ease: "linear",
         });
 
         const clipPathControls = animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
           duration: phase2Duration,
-          ease: "easeIn",
+          ease: "linear",
         });
         clipPathControlsRef.current = clipPathControls;
 
         const controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.final * 100, {
           duration: phase2Duration,
-          ease: "easeIn",
+          ease: "linear",
         });
         animationControlsRef.current = controls;
 
@@ -1209,15 +1233,15 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
       });
       animationControlsRef.current = controls;
 
-      // Phase 2: Move measurement line back to final position and expand clip path
-      const phase2Duration = isMobile ? 1 : 3;
+      // Calculate phase2Duration based on distance and speed
+      const phase2Duration = calculatePhase2Duration(measurementLineOffset, clipPathWidth, containerRef, isMobile);
       const phase2StartDelay = measurementLineStartDelay + measurementLineDuration - 0.5;
 
       // Horizontal line Stage 2: Start when measurement line begins moving back to left
       const horizontalStage2Delay = isRestart ? measurementLineDuration - 0.5 : phase2StartDelay - 0.5;
       const _horizontalStage2 = animate(horizontalLineClipPath, 0, {
         duration: 1.5 * phase2Duration, // Same duration as measurement line return
-        ease: "easeInOut",
+        ease: "linear",
         delay: horizontalStage2Delay, // Start when Phase 2 begins
       });
 
@@ -1225,12 +1249,12 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
 
       animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
         duration: phase2Duration,
-        ease: "easeIn",
+        ease: "linear",
       });
 
       controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.final * 100, {
         duration: phase2Duration,
-        ease: "easeIn",
+        ease: "linear",
       });
       animationControlsRef.current = controls;
 
@@ -1371,7 +1395,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   const handleChartClick = useCallback(() => {
     if (currentTriggerPhase === "mainCTA") {
       // console.log("RESTARTING");
-      restartAnimation();
+      // restartAnimation();
     }
   }, [currentTriggerPhase, restartAnimation]);
 
@@ -1471,98 +1495,57 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         className="min-h-[250px] sm:min-h-[300px] flex flex-col items-center justify-center pt-4 pb-2 sm:pt-8 sm:pb-4"
         id={"cta-header"}
       >
-        <AnimatePresence mode="wait">
-          {currentTriggerPhase === "unstable" && (
-            <motion.span
-              key="credit-earned"
-              className="text-[2.5rem] sm:text-6xl leading-[1.1] font-thin text-pinto-gray-5 sm:text-pinto-gray-5 text-center w-[70%] sm:w-fit"
+        <motion.div
+          className="flex flex-col gap-4 sm:gap-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+        >
+          <div className="flex flex-col gap-2 sm:gap-4 self-stretch items-center">
+            <motion.h2
+              className="text-[4rem] leading-[1.1] font-thin text-black"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
+              transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
             >
-              Credit is earned.
-            </motion.span>
-          )}
-          {currentTriggerPhase === "semiStable" && (
-            <motion.span
-              key="real-stability"
-              className="text-[2.5rem] sm:text-6xl leading-[1.1] font-thin text-pinto-gray-5 sm:text-pinto-gray-5 text-center w-[70%] sm:w-fit"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-            >
-              Real stability takes time.
-            </motion.span>
-          )}
-          {currentTriggerPhase === "stable" && (
-            <motion.span
-              key="pinto-alive"
-              className="text-[2.5rem] sm:text-6xl leading-[1.1] font-thin text-pinto-gray-5 sm:text-pinto-gray-5 text-center w-[70%] sm:w-fit"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-            >
-              Pinto is alive.
-            </motion.span>
-          )}
-          {/* MainCTA Component */}
-          {currentTriggerPhase === "mainCTA" && (
-            <motion.div
-              className="flex flex-col gap-4 sm:gap-8"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeInOut" }}
-            >
-              <div className="flex flex-col gap-2 sm:gap-4 self-stretch items-center">
-                <motion.h2
-                  className="text-[4rem] leading-[1.1] font-thin text-black"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
-                >
-                  <div className="flex flex-row gap-4 items-center">
-                    <img src={PintoLogo} alt="Pinto Logo" className="h-14 sm:h-20" />
-                    <img src={PintoLogoText} alt="Pinto Logo" className="h-14 sm:h-20" />
-                  </div>
-                </motion.h2>
-                <motion.span
-                  className="text-[1.25rem] sm:text-2xl sm:leading-[1.4] font-thin text-pinto-gray-4 w-[70%] sm:w-fit text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, ease: "easeInOut", delay: 0.4 }}
-                >
-                  An Algorithmic Stablecoin Balanced by Farmers Like You.
-                </motion.span>
+              <div className="flex flex-row gap-4 items-center">
+                <img src={PintoLogo} alt="Pinto Logo" className="h-14 sm:h-20" />
+                <img src={PintoLogoText} alt="Pinto Logo" className="h-14 sm:h-20" />
               </div>
-              <motion.div
-                className="flex flex-col sm:flex-row gap-4 mx-auto items-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
+            </motion.h2>
+            <motion.span
+              className="text-[1.25rem] sm:text-2xl sm:leading-[1.4] font-thin text-pinto-gray-4 w-[70%] sm:w-fit text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut", delay: 0.4 }}
+            >
+              An Algorithmic Stablecoin Balanced by Farmers Like You.
+            </motion.span>
+          </div>
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 mx-auto items-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
+          >
+            <Link to={navLinks.overview}>
+              <Button
+                rounded="full"
+                size={isMobile ? "lg" : "xxl"}
+                className="hover:bg-pinto-green-4 max-sm:px-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]"
+                id={"come-seed-the-trustless-economy"}
+                shimmer
+                glow
               >
-                <Link to={navLinks.overview}>
-                  <Button
-                    rounded="full"
-                    size={isMobile ? "lg" : "xxl"}
-                    className="hover:bg-pinto-green-4 max-sm:px-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]"
-                    id={"come-seed-the-trustless-economy"}
-                    shimmer
-                    glow
-                  >
-                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
-                    <span className="relative z-10">Come Seed the Leviathan Free Economy</span>
-                    <div className="relative z-10" style={{ isolation: "isolate" }}>
-                      <PintoRightArrow width={isMobile ? "1rem" : "1.25rem"} height={isMobile ? "1rem" : "1.25rem"} />
-                    </div>
-                  </Button>
-                </Link>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
+                <span className="relative z-10">Come Seed the Leviathan Free Economy</span>
+                <div className="relative z-10" style={{ isolation: "isolate" }}>
+                  <PintoRightArrow width={isMobile ? "1rem" : "1.25rem"} height={isMobile ? "1rem" : "1.25rem"} />
+                </div>
+              </Button>
+            </Link>
+          </motion.div>
+        </motion.div>
       </div>
       {/* Chart Component */}
       <div

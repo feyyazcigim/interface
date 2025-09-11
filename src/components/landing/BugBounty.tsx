@@ -5,7 +5,6 @@ import useIsMobile from "@/hooks/display/useIsMobile";
 import NumberFlow from "@number-flow/react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { PintoRightArrow } from "../Icons";
 import { Button } from "../ui/Button";
 
 export default function BugBounty() {
