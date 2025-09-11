@@ -1,3 +1,5 @@
+import PintoLogo from "@/assets/protocol/PintoLogo.svg";
+import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import { PintoRightArrow } from "@/components/Icons";
 import BugBounty from "@/components/landing/BugBounty";
 import LandingChart from "@/components/landing/LandingChart";
@@ -7,6 +9,7 @@ import SecondaryCTA from "@/components/landing/SecondaryCTA";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -15,24 +18,12 @@ export default function Landing() {
 
   const isMobile = useIsMobile();
   const [currentTriggerPhase, setCurrentTriggerPhase] = useState<string | undefined>(undefined);
-  const [reachedMainCta, setReachedMainCta] = useState<boolean>(false);
-  const [isAtTop, setIsAtTop] = useState<boolean>(true); // Track if scroll is at very top
+  const [reachedMainCta, setReachedMainCta] = useState<boolean>(true);
   const [isInLastSection, setIsInLastSection] = useState<boolean>(false); // Track if in last section
 
   // Track first-time visitor status
   const [isFirstTimeVisitor, setIsFirstTimeVisitor] = useState<boolean>(false);
   const [sectionsVisible, setSectionsVisible] = useState<boolean>(true); // Default to visible
-
-  // Check if user is a first-time visitor
-  useEffect(() => {
-    const hasVisited = localStorage.getItem("pinto-has-visited");
-    if (!hasVisited) {
-      setIsFirstTimeVisitor(true);
-      setSectionsVisible(false); // Hide sections for first-time visitors
-      localStorage.setItem("pinto-has-visited", "true");
-    }
-    // For returning visitors, sectionsVisible remains true by default
-  }, []);
 
   // Trigger bottom cta once we reach mainCTA for the first time
   useEffect(() => {
@@ -60,9 +51,6 @@ export default function Landing() {
       }
 
       const currentScrollTop = scrollContainer.scrollTop;
-      const halfScreenHeight = window.innerHeight / 2;
-      const newIsAtTop = currentScrollTop < halfScreenHeight;
-      setIsAtTop(newIsAtTop);
 
       // Check if in last section
       const sections = scrollContainer.querySelectorAll("section");
@@ -129,14 +117,65 @@ export default function Landing() {
   };
 
   return (
-    <div className="w-full place-self-center">
+    <div className="w-full place-self-center relative">
       <div
         className={`flex flex-col items-center h-screen overflow-y-auto overflow-x-clip scrollbar-none`}
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
-        <section className="flex flex-col overflow-clip place-content-center min-h-screen w-full bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
-          <div className="sm:max-w-[1920px] w-full mx-auto min-h-screen overflow-clip">
+        {/* Header Logo and Text - static, above everything */}
+        <div className="flex flex-col gap-2 sm:gap-4 self-stretch items-center pt-[5dvh] sm:pt-[10dvh] 3xl:pt-[6dvh] min-[2130px]:pt-[8dvh] min-[2400px]:pt-[10dvh] pb-2 sm:pb-4">
+          <motion.h2
+            className="text-[4rem] leading-[1.1] font-thin text-black"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
+          >
+            <div className="flex flex-row gap-4 items-center">
+              <img src={PintoLogo} alt="Pinto Logo" className="h-14 sm:h-20" />
+              <img src={PintoLogoText} alt="Pinto Logo" className="h-14 sm:h-20" />
+            </div>
+          </motion.h2>
+          <motion.span
+            className="text-[1.25rem] sm:text-2xl sm:leading-[1.4] font-thin text-pinto-gray-4 w-[70%] sm:w-fit text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut", delay: 0.4 }}
+          >
+            An Algorithmic Stablecoin Balanced by Farmers Like You.
+          </motion.span>
+        </div>
+        {/* Sticky CTA Button - below header, outside scroll container */}
+        <motion.div
+          id="landing-cta"
+          className="flex flex-col sm:flex-row gap-4 mx-auto items-center sticky top-4 sm:top-8 sm:mt-4 mt-2 sm:mb-10 mb-4 place-self-center z-50 justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
+        >
+          <Link to={navLinks.overview}>
+            <Button
+              rounded="full"
+              size={isMobile ? "lg" : "xxl"}
+              className="hover:bg-pinto-green-4 max-sm:px-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]"
+              id={"come-seed-the-trustless-economy"}
+              shimmer
+              glow
+            >
+              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
+              <span className="relative z-10">Come Seed the Leviathan Free Economy</span>
+              <div className="relative z-10" style={{ isolation: "isolate" }}>
+                <PintoRightArrow width={isMobile ? "1rem" : "1.25rem"} height={isMobile ? "1rem" : "1.25rem"} />
+              </div>
+            </Button>
+          </Link>
+        </motion.div>
+        <div className="flex flex-col place-content-center w-full h-[100dvh] sticky top-0 bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)] pointer-events-none" />
+        <section className="flex flex-col overflow-clip place-content-center w-full">
+          <div
+            className="sm:max-w-[1920px] w-full mx-auto overflow-clip"
+            style={{ height: isMobile ? "calc(100dvh - 250px)" : "calc(100dvh - 300px)" }}
+          >
             <LandingChart currentTriggerPhase={currentTriggerPhase} setCurrentTriggerPhase={setCurrentTriggerPhase} />
           </div>
         </section>
@@ -171,30 +210,6 @@ export default function Landing() {
           </div>
         </Button>
       </div>
-      <Link
-        to={isAtTop && reachedMainCta ? "" : navLinks.overview}
-        onClick={isAtTop && reachedMainCta ? handleArrowClick : undefined}
-        className={`z-20`}
-      >
-        <div
-          className={`fixed left-1/2 -translate-x-1/2 flex z-20 justify-center ${
-            reachedMainCta && !isAtTop ? "top-[2vh]" : "-top-28"
-          } transition-all duration-500 ease-in-out`}
-        >
-          <Button
-            rounded="full"
-            size={isMobile ? "lg" : "xxl"}
-            className={`z-20 hover:bg-pinto-green-4 max-sm:px-4 hover:brightness-125 transition-all [transition:transform_300ms_cubic-bezier(0.4,0,0.2,1)] ease-in-out flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]`}
-            shimmer={true}
-            glow={true}
-          >
-            <span className="relative z-10">Come Seed the Leviathan Free Economy</span>
-            <div className="relative z-10" style={{ isolation: "isolate" }}>
-              <PintoRightArrow width={isMobile ? "1rem" : "1.25rem"} height={isMobile ? "1rem" : "1.25rem"} />
-            </div>
-          </Button>
-        </div>
-      </Link>
     </div>
   );
 }

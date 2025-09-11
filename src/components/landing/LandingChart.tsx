@@ -702,15 +702,14 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         setViewportWidth(newViewportWidth);
       }
 
-      // Calculate dynamic height
-      const ctaHeaderElement = document.getElementById("cta-header");
-      if (ctaHeaderElement) {
-        const ctaHeaderHeight = ctaHeaderElement.offsetHeight;
-        const screenHeight = window.innerHeight;
-        const availableHeight = screenHeight - ctaHeaderHeight;
+      // Calculate dynamic height based on parent container
+      // The parent section already handles height calculation, so we use the full container height
+      const parentElement = containerRef.current?.parentElement;
+      if (parentElement) {
+        const parentHeight = parentElement.clientHeight;
 
-        // Apply maximum constraint of the current default height (577px)
-        const newHeight = Math.min(availableHeight, ANIMATION_CONFIG.height);
+        // Use the parent height directly since it's already calculated to fit properly
+        const newHeight = Math.min(parentHeight, ANIMATION_CONFIG.height);
 
         // Only update if the new height is significantly different and positive
         if (newHeight > 200 && Math.abs(newHeight - dynamicHeight) > 10) {
@@ -1468,63 +1467,6 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
 
   return (
     <div ref={componentRef} className="flex flex-col items-center justify-around h-full w-full">
-      {/* Stage Messages */}
-      <div
-        className="min-h-[250px] sm:min-h-[300px] flex flex-col items-center justify-center pt-4 pb-2 sm:pt-8 sm:pb-4"
-        id={"cta-header"}
-      >
-        <motion.div
-          className="flex flex-col gap-4 sm:gap-8"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
-        >
-          <div className="flex flex-col gap-2 sm:gap-4 self-stretch items-center">
-            <motion.h2
-              className="text-[4rem] leading-[1.1] font-thin text-black"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
-            >
-              <div className="flex flex-row gap-4 items-center">
-                <img src={PintoLogo} alt="Pinto Logo" className="h-14 sm:h-20" />
-                <img src={PintoLogoText} alt="Pinto Logo" className="h-14 sm:h-20" />
-              </div>
-            </motion.h2>
-            <motion.span
-              className="text-[1.25rem] sm:text-2xl sm:leading-[1.4] font-thin text-pinto-gray-4 w-[70%] sm:w-fit text-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut", delay: 0.4 }}
-            >
-              An Algorithmic Stablecoin Balanced by Farmers Like You.
-            </motion.span>
-          </div>
-          <motion.div
-            className="flex flex-col sm:flex-row gap-4 mx-auto items-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
-          >
-            <Link to={navLinks.overview}>
-              <Button
-                rounded="full"
-                size={isMobile ? "lg" : "xxl"}
-                className="hover:bg-pinto-green-4 max-sm:px-4 hover:brightness-125 [transition:filter_0.3s_ease] flex flex-row gap-2 items-center relative overflow-hidden !font-[340] !tracking-[-0.025rem]"
-                id={"come-seed-the-trustless-economy"}
-                shimmer
-                glow
-              >
-                <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
-                <span className="relative z-10">Come Seed the Leviathan Free Economy</span>
-                <div className="relative z-10" style={{ isolation: "isolate" }}>
-                  <PintoRightArrow width={isMobile ? "1rem" : "1.25rem"} height={isMobile ? "1rem" : "1.25rem"} />
-                </div>
-              </Button>
-            </Link>
-          </motion.div>
-        </motion.div>
-      </div>
       {/* Chart Component */}
       <div
         ref={containerRef}
