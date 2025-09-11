@@ -120,7 +120,7 @@ export default function Landing() {
   return (
     <div className="w-full place-self-center relative">
       <div
-        className={`flex flex-col items-center h-screen overflow-y-auto overflow-x-clip scrollbar-none`}
+        className={`flex flex-col items-center h-[100dvh] overflow-y-auto overflow-x-clip scrollbar-none`}
         data-scroll-container="true"
         ref={scrollContainerRef}
       >
