@@ -28,7 +28,7 @@ const createValuesData = (liquidityDistributionText: string) => [
     definition: "**Censorship Resistant:** resilient to the prevention of valid actions from being executed reliably.",
     description: `Censorship can take the form of: 
 
-1. **Communication failures:**
+1. **Communication failures**
 
       **Communication:**  information sharing
 
