@@ -42,6 +42,18 @@ interface Audit {
 // Pinto Improvement Proposals
 const piAudits: Audit[] = [
   {
+    name: "PI-12",
+    description: "Decrease Excessively Low L2SR Threshold",
+    githubLink: "https://github.com/pinto-org/protocol/issues/142",
+    hashLink: "",
+    date: "September 8, 2025",
+    timestamp: new Date("September 8, 2025").getTime(),
+    auditHash: "",
+    auditor: "bean",
+    type: ["modelImprovement", "parametrization"],
+    customLines: { after: 6, before: 6 },
+  },
+  {
     name: "PI-11",
     description: "Update Convert Down Penalty Gauge and Dewhitelist Pools",
     githubLink: "https://github.com/pinto-org/protocol/pull/136",
