@@ -51,6 +51,7 @@ const resourceCards = [
       {
         href: navLinks.overview,
         label: "Take me to the Farm",
+        variant: "default",
       },
     ],
   },
@@ -84,7 +85,7 @@ export default function Resources() {
               <div className={`flex flex-col min-[1200px]:flex-row gap-4`}>
                 {card.buttons.map((button, buttonIndex) => (
                   <Link key={buttonIndex} to={button.href} target="_blank" rel="noopener noreferrer" className="flex-1">
-                    <Button variant="outline-white" className={buttonStyles}>
+                    <Button variant={button.variant || "outline-white"} className={buttonStyles}>
                       {button.icon && (
                         <img
                           src={button.icon}

@@ -1,3 +1,4 @@
+import PintoLogo from "@/assets/protocol/PintoLogo.svg";
 import { cn } from "@/utils/utils";
 import { DiscordLogoIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
 import { Link as ReactLink } from "react-router-dom";
@@ -50,7 +51,7 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
   </a>
 );
 
-export default function Footer() {
+export default function Footer({ landingPageVersion }: { landingPageVersion?: boolean }) {
   const { isMobileActionBarVisible } = useMobileActionBarContext();
 
   return (
@@ -65,13 +66,16 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           {/* Links Section - Bottom Left Corner */}
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <img src={PintoLogo} alt="Pinto Logo" className="h-4 mb-0.5" />
             <FooterLink href="/?fromNav=true">About</FooterLink>
             <FooterLink href="https://docs.pinto.money/disclosures" external>
-              Terms & Privacy
+              {landingPageVersion ? "Disclosures" : "Terms & Privacy"}
             </FooterLink>
-            <FooterLink href="https://pinto.exchange/" external>
-              Pinto Exchange
-            </FooterLink>
+            {!landingPageVersion && (
+              <FooterLink href="https://pinto.exchange/" external>
+                Pinto Exchange
+              </FooterLink>
+            )}
           </div>
 
           {/* Social Icons Section - Bottom Right Corner */}
