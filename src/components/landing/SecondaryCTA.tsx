@@ -186,10 +186,15 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
         "min-[1100px]:w-[17rem] min-[1100px]:h-[17rem]",
 
         // Extra large screens
-        "min-[2100px]:w-[19rem] min-[2100px]:h-[18rem]",
+        "xl:w-[19rem] xl:h-[18rem]",
 
         // 2XL screens
         "2xl:gap-6 2xl:p-4",
+
+        // 3XL screens
+        "3xl:w-[17rem] 3xl:h-[16rem]",
+
+        "min-[2100px]:w-[19rem] min-[2100px]:h-[18rem]",
 
         // Glow effects
         isGlowing && [
@@ -237,6 +242,11 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
 
           // 2XL screens
           "2xl:w-24 2xl:h-24",
+
+          // 3XL screens
+          "3xl:w-20 3xl:h-20",
+
+          "min-[2100px]:w-24 min-[2100px]:h-24",
         )}
         alt={data.title}
       />
