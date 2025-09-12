@@ -307,6 +307,7 @@ function ModifyTractorOrderReviewDialog({
   const { signBlueprint, signedRequisition, isSigning } = useSignTractorBlueprint();
 
   const handleSignBlueprint = async () => {
+    console.log({ orderData, existingOrder });
     if (!blueprintHash) {
       toast.error("Blueprint hash not ready yet, please try again in a moment");
       return;
@@ -330,7 +331,10 @@ function ModifyTractorOrderReviewDialog({
       setSubmitting(true);
       toast.loading("Modifying order...");
 
+      const prevRequisition = prepareRequisitionForTxn(existingOrder.requisition);
       const preparedRequisition = prepareRequisitionForTxn(signedRequisition);
+
+      console.log({ prevRequisition, preparedRequisition });
 
       // Create the farm call data that cancels the old order and creates the new one
       const farmCalls = [
@@ -338,7 +342,7 @@ function ModifyTractorOrderReviewDialog({
         encodeFunctionData({
           abi: diamondABI,
           functionName: "cancelBlueprint",
-          args: [existingOrder.requisition],
+          args: [prevRequisition],
         }),
         // Create the new order (publish requisition)
         encodeFunctionData({
