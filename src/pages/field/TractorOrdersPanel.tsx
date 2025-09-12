@@ -34,7 +34,7 @@ import { format } from "date-fns";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { decodeFunctionData } from "viem";
-import { useAccount, usePublicClient } from "wagmi";
+import { useAccount } from "wagmi";
 
 interface TractorOrdersPanelProps {
   refreshData?: number; // A value that changes to trigger a refresh
@@ -44,8 +44,6 @@ interface TractorOrdersPanelProps {
 const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelProps) => {
   const { address } = useAccount();
   const protocolAddress = useProtocolAddress();
-
-  const client = usePublicClient();
 
   const getStrategyProps = useGetTractorTokenStrategyWithBlueprint();
 
