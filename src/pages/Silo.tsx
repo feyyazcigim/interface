@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/Card";
 import IconImage from "@/components/ui/IconImage";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import { PINTO_WETH_TOKEN, PINTO_WSOL_TOKEN } from "@/constants/tokens";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import useIsSmallDesktop from "@/hooks/display/useIsSmallDesktop";
@@ -29,6 +30,7 @@ import { useSeedGauge } from "@/state/useSeedGauge";
 import { useSiloData } from "@/state/useSiloData";
 import { useSeason } from "@/state/useSunData";
 import useTokenData, { useWhitelistedTokens } from "@/state/useTokenData";
+import { trackClick } from "@/utils/analytics";
 import { useChainConstant } from "@/utils/chain";
 import { formatter } from "@/utils/format";
 import { getClaimText } from "@/utils/string";
@@ -372,6 +374,10 @@ const SiloStats = React.memo(() => {
         <Link
           to="/explorer/silo"
           className="pinto-xs sm:pinto-sm font-light text-pinto-green-4 sm:text-pinto-green-4 hover:underline transition-all mt-2"
+          onClick={trackClick(ANALYTICS_EVENTS.SILO.EXPLORER_LINK_CLICK, {
+            source_page: "silo",
+            destination: "/explorer/silo",
+          })}
         >
           See more data →
         </Link>

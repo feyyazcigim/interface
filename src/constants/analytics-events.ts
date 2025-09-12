@@ -89,12 +89,20 @@ const SILO_EVENTS = {
   DEPOSIT_TAB_CLICK: "silo_deposit_tab_click",
   WITHDRAW_TAB_CLICK: "silo_withdraw_tab_click",
   CONVERT_TAB_CLICK: "silo_convert_tab_click",
+  WRAP_TAB_CLICK: "silo_wrap_tab_click",
+  UNWRAP_TAB_CLICK: "silo_unwrap_tab_click",
+
+  // Main Page Navigation
+  EXPLORER_LINK_CLICK: "silo_explorer_link_click",
+  TOKEN_ROW_CLICK: "silo_token_row_click",
 
   // Token Selection
   DEPOSIT_TOKEN_SELECT_OPEN: "silo_deposit_token_select_open",
   DEPOSIT_TOKEN_SELECTED: "silo_deposit_token_selected",
   WITHDRAW_TOKEN_SELECT_OPEN: "silo_withdraw_token_select_open",
   WITHDRAW_TOKEN_SELECTED: "silo_withdraw_token_selected",
+  CONVERT_TOKEN_SELECT_OPEN: "silo_convert_token_select_open",
+  CONVERT_TOKEN_SELECTED: "silo_convert_token_selected",
 
   // Actions
   DEPOSIT_SUBMIT: "silo_deposit_submit",
@@ -103,10 +111,32 @@ const SILO_EVENTS = {
 
   // Amount Inputs
   DEPOSIT_AMOUNT_INPUT: "silo_deposit_amount_input",
+  DEPOSIT_AMOUNT_MAX_CLICK: "silo_deposit_amount_max_click",
   WITHDRAW_AMOUNT_INPUT: "silo_withdraw_amount_input",
+  CONVERT_AMOUNT_INPUT: "silo_convert_amount_input",
 
-  // Strategy Selection
-  CONVERT_STRATEGY_SELECT: "silo_convert_strategy_select",
+  // Settings & Configuration
+  DEPOSIT_SLIPPAGE_CHANGE: "silo_deposit_slippage_change",
+  WITHDRAW_SLIPPAGE_CHANGE: "silo_withdraw_slippage_change",
+  CONVERT_SLIPPAGE_CHANGE: "silo_convert_slippage_change",
+  WITHDRAW_DESTINATION_SELECT: "silo_withdraw_destination_select",
+
+  // Convert Specific
+  CONVERT_ROUTE_SELECT: "silo_convert_route_select",
+  CONVERT_PENALTY_ACCEPT: "silo_convert_penalty_accept",
+
+  // Claims & Rewards
+  CLAIM_REWARDS_SUBMIT: "silo_claim_rewards_submit",
+
+  // Wrap/Unwrap Actions
+  WRAP_SUBMIT: "silo_wrap_submit",
+  WRAP_TOKEN_SELECTED: "silo_wrap_token_selected",
+  WRAP_SOURCE_TOGGLE: "silo_wrap_source_toggle",
+  WRAP_DESTINATION_SELECT: "silo_wrap_destination_select",
+  UNWRAP_SUBMIT: "silo_unwrap_submit",
+  UNWRAP_TOKEN_SELECTED: "silo_unwrap_token_selected",
+  UNWRAP_MODE_TOGGLE: "silo_unwrap_mode_toggle",
+  UNWRAP_DESTINATION_SELECT: "silo_unwrap_destination_select",
 } as const;
 
 // Field Events
