@@ -306,7 +306,6 @@ function ModifyTractorOrderReviewDialog({
   const { signBlueprint, signedRequisition, isSigning } = useSignTractorBlueprint();
 
   const handleSignBlueprint = async () => {
-    console.log({ orderData, existingOrder });
     if (!blueprintHash) {
       toast.error("Blueprint hash not ready yet, please try again in a moment");
       return;
@@ -332,8 +331,6 @@ function ModifyTractorOrderReviewDialog({
 
       const prevRequisition = prepareRequisitionForTxn(existingOrder.requisition);
       const preparedRequisition = prepareRequisitionForTxn(signedRequisition);
-
-      console.log({ prevRequisition, preparedRequisition });
 
       // Create the farm call data that cancels the old order and creates the new one
       const farmCalls = [
