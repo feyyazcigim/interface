@@ -1143,6 +1143,7 @@ const events: Audit[] = [
     timestamp: new Date("December 22, 2021").getTime(),
     auditHash: "",
     auditor: "",
+    customLines: { before: 7, after: 7 },
     type: ["event"],
   },
   {
