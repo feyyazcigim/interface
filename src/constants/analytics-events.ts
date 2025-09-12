@@ -74,7 +74,6 @@ export const WALLET_EVENTS = {
   TRANSFER_BUTTON_CLICK: "wallet_transfer_button_click",
   TRANSFER_MODE_ENTER: "wallet_transfer_mode_enter",
   TRANSFER_MODE_EXIT: "wallet_transfer_mode_exit",
-  TRANSFER_DIRECTION_TOGGLE: "wallet_transfer_direction_toggle",
   TRANSFER_SUBMIT: "wallet_transfer_submit",
 } as const;
 

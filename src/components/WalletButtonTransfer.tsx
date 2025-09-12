@@ -140,17 +140,11 @@ export default function WalletButtonTransfer() {
           <Button
             variant={"outline"}
             className="rounded-full h-10 w-10 sm:h-12 sm:w-12 p-0 border-none self-center hover:cursor-pointer"
-            onClick={withTracking(
-              ANALYTICS_EVENTS.WALLET.TRANSFER_DIRECTION_TOGGLE,
-              () => {
-                const newDirection =
-                  balanceFrom === FarmFromMode.EXTERNAL ? FarmFromMode.INTERNAL : FarmFromMode.EXTERNAL;
-                setBalanceFrom(newDirection);
-              },
-              {
-                direction: balanceFrom === FarmFromMode.EXTERNAL ? "wallet_to_farm" : "farm_to_wallet",
-              },
-            )}
+            onClick={() => {
+              const newDirection =
+                balanceFrom === FarmFromMode.EXTERNAL ? FarmFromMode.INTERNAL : FarmFromMode.EXTERNAL;
+              setBalanceFrom(newDirection);
+            }}
           >
             <UpDownArrowsIcon />
           </Button>
