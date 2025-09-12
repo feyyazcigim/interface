@@ -197,16 +197,18 @@ export default function ProjectStats() {
 
   function Volume() {
     return (
-      <span className="flex flex-col sm:flex-row gap-3 sm:gap-6 items-center">
-        <span className={`transition-all duration-300 whitespace-nowrap ${getElementOpacity(false)}`}>
+      <span className="flex flex-col min-[1000px]:flex-row gap-3 sm:gap-6 items-center">
+        <span
+          className={`transition-all flex flex-row gap-3 sm:gap-6 items-center duration-300 whitespace-nowrap ${getElementOpacity(false)}`}
+        >
           to facilitate
-        </span>
-        <span className="flex flex-row gap-3 sm:gap-6 items-center">
           <span
             className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
           >
-            $1B+
+            $800M+
           </span>
+        </span>
+        <span className="flex flex-row gap-3 sm:gap-6 items-center">
           <Button
             variant={"outline-rounded"}
             className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
@@ -232,11 +234,11 @@ export default function ProjectStats() {
         className="flex flex-col max-sm:gap-3 sm:max-w-[1920px] max-[850px]:scale-90 items-center sm:mx-auto sm:my-auto text-2xl sm:text-4xl font-thin text-pinto-gray-4 transform-gpu transition-all relative"
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
-        <span className="flex flex-col sm:flex-row gap-3 sm:gap-6 items-center">
+        <span className="flex flex-col min-[1000px]:flex-row gap-3 min-[1000px]:gap-6 items-center">
           <Upgrades />
           <Contributors />
         </span>
-        <span className="flex flex-col sm:flex-row gap-3 sm:gap-6 items-center">
+        <span className="flex flex-col min-[1000px]:flex-row gap-3 min-[1000px]:gap-6 items-center">
           <Years />
           <Volume />
         </span>

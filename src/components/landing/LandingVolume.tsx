@@ -33,13 +33,13 @@ const sampleVolumeData: LineChartData[] = [
   { values: [233740000], day: "2023" },
   { values: [235867517], day: "2023" },
   { values: [248240000], day: "2023" },
-  { values: [336786300], day: "2024" },
-  { values: [356946000], day: "2024" },
-  { values: [409147200], day: "2024" },
-  { values: [572663400], day: "2024" },
-  { values: [771050100], day: "2025" },
-  { values: [887211300], day: "2025" },
-  { values: [1018422800], day: "2025" },
+  { values: [273810000], day: "2024" },
+  { values: [290200000], day: "2024" },
+  { values: [332640000], day: "2024" },
+  { values: [465580000], day: "2024" },
+  { values: [626870000], day: "2025" },
+  { values: [721310000], day: "2025" },
+  { values: [826360000], day: "2025" },
 ];
 
 const valueFormatter = (value: number) => {
@@ -68,7 +68,7 @@ export default function LandingVolume() {
         <div className="bg-white border mx-4 p-3 sm:mx-0 sm:p-6 rounded-lg flex flex-col gap-8">
           <div className="flex flex-col gap-2">
             <span className="text-sm sm:text-xl font-light text-pinto-gray-4">Cumulative Volume</span>
-            <span className="text-body sm:text-[2rem] font-normal leading-[1.1] tracking-h3 text-black">$1B</span>
+            <span className="text-body sm:text-[2rem] font-normal leading-[1.1] tracking-h3 text-black">$826M</span>
           </div>
           <div className="max-sm:aspect-3/1">
             <div className="h-[250px] sm:w-[60rem] sm:h-[25rem] bg-gray-100 rounded animate-pulse" />
@@ -83,9 +83,9 @@ export default function LandingVolume() {
       <div className="bg-white border mx-4 p-3 sm:mx-0 sm:p-6 rounded-lg flex flex-col gap-8">
         <div className="flex flex-col gap-2">
           <span className="text-sm sm:text-xl font-light text-pinto-gray-4">Cumulative Volume</span>
-          <span className="text-body sm:text-[2rem] font-normal leading-[1.1] tracking-h3 text-black">$1B</span>
+          <span className="text-body sm:text-[2rem] font-normal leading-[1.1] tracking-h3 text-black">$826M</span>
         </div>
-        <div className="max-sm:aspect-3/1">
+        <div>
           <div className="h-[150px] sm:w-[60rem] sm:h-[15rem] pointer-events-none">
             <LineChart
               key="volume-chart"
