@@ -1,9 +1,11 @@
 import { TokenValue } from "@/classes/TokenValue";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import { useWalletNFTProfile } from "@/hooks/useWalletNFTProfile";
 import { navbarPanelAtom } from "@/state/app/navBar.atoms";
 import { FarmerBalance, useFarmerBalances } from "@/state/useFarmerBalances";
 import { useFarmerSilo } from "@/state/useFarmerSilo";
 import { usePriceData } from "@/state/usePriceData";
+import { trackClick, withTracking } from "@/utils/analytics";
 import { formatter } from "@/utils/format";
 import { Token } from "@/utils/types";
 import { ENABLE_SWITCH_CHAINS } from "@/utils/wagmi/chains";
@@ -42,10 +44,17 @@ const NFTProfileDisplay = ({ navigate, togglePanel }: NFTProfileDisplayProps) =>
   return (
     <button
       type="button"
-      onClick={() => {
-        navigate("/collection");
-        togglePanel();
-      }}
+      onClick={withTracking(
+        ANALYTICS_EVENTS.WALLET.PANEL_NFT_COLLECTION_NAVIGATE,
+        () => {
+          navigate("/collection");
+          togglePanel();
+        },
+        {
+          has_nft: hasNFT,
+          from_page: "wallet_panel",
+        },
+      )}
       className="w-[11.25rem] h-20 rounded-lg overflow-hidden bg-gray-100 hover:opacity-80 transition-opacity flex-shrink-0 flex items-center justify-center"
     >
       {hideNFTProfile ? (
@@ -113,10 +122,16 @@ interface ActionButtonsProps {
 const ActionButtons = ({ navigate, togglePanel }: ActionButtonsProps) => (
   <div className="flex flex-row gap-3 w-full">
     <Button
-      onClick={() => {
-        navigate("/swap");
-        togglePanel();
-      }}
+      onClick={withTracking(
+        ANALYTICS_EVENTS.WALLET.PANEL_SWAP_NAVIGATE,
+        () => {
+          navigate("/swap");
+          togglePanel();
+        },
+        {
+          from_page: "wallet_panel",
+        },
+      )}
       variant="ghost"
       className="bg-pinto-gray-1 hover:hover:bg-pinto-green flex-1 h-auto 2xl:h-[6.375rem] rounded-[1rem] font-[400] text-[1rem] text-pinto-gray-5 hover:text-white flex flex-row 2xl:flex-col gap-4"
     >
@@ -128,10 +143,16 @@ const ActionButtons = ({ navigate, togglePanel }: ActionButtonsProps) => (
       Swap
     </Button>
     <Button
-      onClick={() => {
-        navigate("/transfer");
-        togglePanel();
-      }}
+      onClick={withTracking(
+        ANALYTICS_EVENTS.WALLET.PANEL_SEND_NAVIGATE,
+        () => {
+          navigate("/transfer");
+          togglePanel();
+        },
+        {
+          from_page: "wallet_panel",
+        },
+      )}
       variant="ghost"
       className="bg-pinto-gray-1 hover:hover:bg-pinto-green flex-1 h-auto 2xl:h-[6.375rem] rounded-[1rem] font-[400] text-[1rem] text-pinto-gray-5 hover:text-white flex flex-row 2xl:flex-col gap-4"
     >
@@ -245,20 +266,6 @@ export default function WalletButtonPanel({ togglePanel }) {
     [setPanelState],
   );
 
-  const setCurrentTab = useCallback(
-    (tab) => {
-      if (!tab) return;
-      setPanelState((prev) => ({
-        ...prev,
-        walletPanel: {
-          ...prev.walletPanel,
-          balanceTab: tab,
-        },
-      }));
-    },
-    [setPanelState],
-  );
-
   const { balances: farmerBalances } = useFarmerBalances();
   const priceData = usePriceData();
   const farmerSilo = useFarmerSilo();
@@ -310,6 +317,30 @@ export default function WalletButtonPanel({ togglePanel }) {
     return { totalBalance, hasSiloWrappedToken, tokens };
   }, [farmerBalances, priceData.tokenPrices]);
 
+  const setCurrentTab = useCallback(
+    (tab: string) => {
+      if (!tab) return;
+
+      // Track tab switch
+      trackClick(ANALYTICS_EVENTS.WALLET.BALANCE_TAB_SWITCH, {
+        previous_tab: currentTab,
+        new_tab: tab,
+        total_balance: totalBalance.total.toHuman(),
+        has_external_balance: totalBalance.external.gt(0),
+        has_internal_balance: totalBalance.internal.gt(0),
+      })();
+
+      setPanelState((prev) => ({
+        ...prev,
+        walletPanel: {
+          ...prev.walletPanel,
+          balanceTab: tab,
+        },
+      }));
+    },
+    [setPanelState, currentTab, totalBalance],
+  );
+
   // If in transfer mode, just render the transfer component
   if (showTransfer) {
     return <WalletButtonTransfer />;
@@ -337,10 +368,17 @@ export default function WalletButtonPanel({ togglePanel }) {
             {address && (
               <button
                 type="button"
-                onClick={() => {
-                  disconnect();
-                  togglePanel();
-                }}
+                onClick={withTracking(
+                  ANALYTICS_EVENTS.WALLET.DISCONNECT_BUTTON_CLICK,
+                  () => {
+                    disconnect();
+                    togglePanel();
+                  },
+                  {
+                    has_ens: !!ensName,
+                    from_page: "wallet_panel",
+                  },
+                )}
                 className="flex justify-center items-center gap-1 w-[11.25rem] h-[2.125rem] bg-[#F8F8F8] rounded-full pinto-sm hover:hover:bg-pinto-green hover:text-white"
               >
                 <span>Disconnect Wallet</span>
@@ -429,7 +467,10 @@ export default function WalletButtonPanel({ togglePanel }) {
         {ENABLE_SWITCH_CHAINS && !showClaim && <ChainButton />}
         <Button
           variant="default"
-          onClick={() => setShowTransfer(true)}
+          onClick={withTracking(ANALYTICS_EVENTS.WALLET.FARM_BALANCE_MANAGE_CLICK, () => setShowTransfer(true), {
+            has_internal_balance: totalBalance.internal.gt(0),
+            from_page: "wallet_panel",
+          })}
           className={`transition-all ${showClaim ? "hidden" : "inline-flex"} rounded-full gap-x-1 m-0 text-[1rem] 2xl:text-[1.25rem] h-8 sm:h-10`}
         >
           <span className="self-center items-center">

@@ -58,9 +58,24 @@ export const WALLET_EVENTS = {
   PANEL_CLOSE: "wallet_panel_close",
   BALANCE_TAB_SWITCH: "wallet_balance_tab_switch",
 
+  // Navigation Actions
+  PANEL_SWAP_NAVIGATE: "wallet_panel_swap_navigate",
+  PANEL_SEND_NAVIGATE: "wallet_panel_send_navigate",
+  PANEL_NFT_COLLECTION_NAVIGATE: "wallet_panel_nft_collection_navigate",
+
+  // Wallet Management
+  DISCONNECT_BUTTON_CLICK: "wallet_disconnect_button_click",
+  FARM_BALANCE_MANAGE_CLICK: "wallet_farm_balance_manage_click",
+
   // Actions
-  CLAIM_BUTTON_CLICK: "wallet_claim_button_click",
+  CLAIM_FLOOD_SUBMIT: "wallet_claim_flood_submit",
+  CLAIM_FLOOD_TOGGLE: "wallet_claim_flood_toggle",
+  CLAIM_DESTINATION_SELECT: "wallet_claim_destination_select",
   TRANSFER_BUTTON_CLICK: "wallet_transfer_button_click",
+  TRANSFER_MODE_ENTER: "wallet_transfer_mode_enter",
+  TRANSFER_MODE_EXIT: "wallet_transfer_mode_exit",
+  TRANSFER_DIRECTION_TOGGLE: "wallet_transfer_direction_toggle",
+  TRANSFER_SUBMIT: "wallet_transfer_submit",
 } as const;
 
 // Silo Events
