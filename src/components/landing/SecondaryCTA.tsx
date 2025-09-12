@@ -186,7 +186,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
         "min-[1100px]:w-[17rem] min-[1100px]:h-[17rem]",
 
         // Extra large screens
-        "xl:w-[19rem] xl:h-[18rem]",
+        "min-[2100px]:w-[19rem] min-[2100px]:h-[18rem]",
 
         // 2XL screens
         "2xl:gap-6 2xl:p-4",
@@ -340,7 +340,7 @@ export default function SecondaryCTA() {
         </div>
 
         {/* Middle Content */}
-        <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-6 w-full sm:max-w-[59rem] mx-auto my-[3.75rem]">
+        <div className="flex flex-col items-center place-content-center px-3 lg:px-12 gap-3 lg:gap-4 min-[2100px]:gap-6 w-full sm:max-w-[59rem] mx-auto my-[3.75rem] 3xl:my-[1rem] min-[2100px]:my-[3.75rem]">
           <h2 className="text-[1.75rem] md:pinto-h2 md:text-5xl leading-[1.1] text-black flex flex-row gap-4 items-center text-center">
             <span>
               Pinto combines <span className="text-pinto-purple-2">the values of Ethereum</span> with{" "}
