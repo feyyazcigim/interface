@@ -88,7 +88,13 @@ export default function Resources() {
               </div>
               <div className={`flex flex-col min-[1200px]:flex-row gap-4`}>
                 {card.buttons.map((button, buttonIndex) => (
-                  <Link key={buttonIndex} to={button.href} target="_blank" rel="noopener noreferrer" className="flex-1">
+                  <Link
+                    key={buttonIndex}
+                    to={button.href}
+                    target={button.ctaStyle ? undefined : "_blank"}
+                    rel={button.ctaStyle ? undefined : "noopener noreferrer"}
+                    className="flex-1"
+                  >
                     <Button
                       variant={button.variant || "outline-white"}
                       className={buttonStyles}
