@@ -191,13 +191,27 @@ const SWAP_EVENTS = {
 
 // Market Events (Pod Market)
 const MARKET_EVENTS = {
-  // Pod Actions
-  POD_LIST_CREATE: "market_pod_list_create",
+  // Navigation & UI Events
+  ACTIVITY_TAB_CLICK: "market_activity_tab_click",
+  BUY_SELL_TAB_CLICK: "market_buy_sell_tab_click",
+  CREATE_FILL_TAB_CLICK: "market_create_fill_tab_click",
+  CHART_POINT_CLICK: "market_chart_point_click",
+
+  // Pod Order Events
   POD_ORDER_CREATE: "market_pod_order_create",
-  POD_LIST_CANCEL: "market_pod_list_cancel",
-  POD_ORDER_CANCEL: "market_pod_order_cancel",
-  POD_LIST_FILL: "market_pod_list_fill",
+  ORDER_TOKEN_SELECTED: "market_order_token_selected",
+  ORDER_PRICE_INPUT: "market_order_price_input",
+  ORDER_PLACE_INPUT: "market_order_place_input",
   POD_ORDER_FILL: "market_pod_order_fill",
+  POD_ORDER_CANCEL: "market_pod_order_cancel",
+
+  // Pod Listing Events
+  POD_LIST_CREATE: "market_pod_list_create",
+  LISTING_PLOT_SELECTED: "market_listing_plot_selected",
+  LISTING_PRICE_INPUT: "market_listing_price_input",
+  LISTING_AMOUNT_INPUT: "market_listing_amount_input",
+  POD_LIST_FILL: "market_pod_list_fill",
+  POD_LIST_CANCEL: "market_pod_list_cancel",
 } as const;
 
 // Footer Events
