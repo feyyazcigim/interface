@@ -242,6 +242,22 @@ const COLLECTION_EVENTS = {
   PAGE_NUMBER_CLICK: "collection_page_number_click",
 } as const;
 
+// Explorer Events (Analytics Dashboard)
+const EXPLORER_EVENTS = {
+  // Main Tab Navigation
+  MAIN_TAB_CLICK: "explorer_main_tab_click",
+
+  // Global Time Filter (affects all charts)
+  GLOBAL_TIME_FILTER_CLICK: "explorer_global_time_filter_click",
+
+  // Individual Chart Time Filters
+  CHART_TIME_FILTER_CLICK: "explorer_chart_time_filter_click",
+
+  // Chart Interactions (future enhancement)
+  CHART_TOOLTIP_OPEN: "explorer_chart_tooltip_open",
+  CHART_DATA_POINT_CLICK: "explorer_chart_data_point_click",
+} as const;
+
 // Farmer Overview Events (Dashboard)
 const OVERVIEW_EVENTS = {
   // Tab Navigation
@@ -330,6 +346,7 @@ export const ANALYTICS_EVENTS = {
   SWAP: SWAP_EVENTS,
   MARKET: MARKET_EVENTS,
   COLLECTION: COLLECTION_EVENTS,
+  EXPLORER: EXPLORER_EVENTS,
   OVERVIEW: OVERVIEW_EVENTS,
   FOOTER: FOOTER_EVENTS,
   UI: UI_EVENTS,
@@ -346,6 +363,7 @@ export type AnalyticsEventName =
   | (typeof SWAP_EVENTS)[keyof typeof SWAP_EVENTS]
   | (typeof MARKET_EVENTS)[keyof typeof MARKET_EVENTS]
   | (typeof COLLECTION_EVENTS)[keyof typeof COLLECTION_EVENTS]
+  | (typeof EXPLORER_EVENTS)[keyof typeof EXPLORER_EVENTS]
   | (typeof OVERVIEW_EVENTS)[keyof typeof OVERVIEW_EVENTS]
   | (typeof FOOTER_EVENTS)[keyof typeof FOOTER_EVENTS]
   | (typeof UI_EVENTS)[keyof typeof UI_EVENTS]
