@@ -590,6 +590,38 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
   };
 };
 
+export async function loadPublishedRequisitionsWithCancellations(
+  address: string | undefined,
+  protocolAddress: `0x${string}` | undefined,
+  publicClient: PublicClient | null,
+  latestBlock?: { number: bigint; timestamp: bigint } | null,
+  requisitionType?: MayArray<RequisitionType>, // Add requisition type filter
+  fromBlock?: bigint,
+) {
+  if (!protocolAddress || !publicClient)
+    return {
+      selected: [],
+      cancelledHashes: new Set(),
+    };
+
+  try {
+    const data = await fetchTractorEvents(publicClient, protocolAddress, fromBlock);
+    const selectRequisitionType = getSelectRequisitionType(requisitionType, address);
+    const selected = selectRequisitionType({
+      latestBlock: { number: latestBlock?.number ?? 0n, timestamp: latestBlock?.timestamp ?? 0n },
+      data,
+    });
+
+    return {
+      selected,
+      cancelledHashes: data.cancelledHashes,
+    };
+  } catch (error) {
+    console.error("Error loading published requisitions:", error);
+    throw new Error("Failed to load published requisitions");
+  }
+}
+
 export async function loadPublishedRequisitions(
   address: string | undefined,
   protocolAddress: `0x${string}` | undefined,
@@ -990,7 +1022,12 @@ export async function loadOrderbookData(
     // Fetch SowOrderComplete events to identify completed orders
     console.debug("[TRACTOR/loadOrderbookData] Fetching...");
 
-    const [podIndexResult, harvestableIndexResult, sowOrderCompleteEvents, requisitions = []] = await Promise.all([
+    const [
+      podIndexResult,
+      harvestableIndexResult,
+      sowOrderCompleteEvents,
+      { selected: requisitions = [], cancelledHashes },
+    ] = await Promise.all([
       publicClient.readContract({ address: protocolAddress, abi: diamondABI, args: [0n], functionName: "podIndex" }),
       publicClient.readContract({
         address: protocolAddress,
@@ -1005,7 +1042,14 @@ export async function loadOrderbookData(
         fromBlock: fromBlock,
         toBlock: "latest",
       }),
-      loadPublishedRequisitions(address, protocolAddress, publicClient, latestBlock, "sowBlueprintv0", fromBlock),
+      loadPublishedRequisitionsWithCancellations(
+        address,
+        protocolAddress,
+        publicClient,
+        latestBlock,
+        "sowBlueprintv0",
+        fromBlock,
+      ),
     ]);
 
     if (podIndexResult && harvestableIndexResult) {
@@ -1031,7 +1075,11 @@ export async function loadOrderbookData(
       if (knownBlueprintHashes.has(hash.toLowerCase())) {
         return false;
       }
-      return !req.isCancelled && !completedOrders.has(req.requisition.blueprintHash);
+      return (
+        !req.isCancelled &&
+        !completedOrders.has(req.requisition.blueprintHash) &&
+        !cancelledHashes.has(req.requisition.blueprintHash)
+      );
     });
 
     // Decode data and sort requisitions by temperature (lowest first)
