@@ -258,6 +258,16 @@ const OVERVIEW_EVENTS = {
   DEPOSITS_CLAIM_REWARDS_CLICK: "overview_deposits_claim_rewards_click",
   DEPOSITS_CLAIM_HOVER_START: "overview_deposits_claim_hover_start",
   DEPOSITS_CLAIM_HOVER_END: "overview_deposits_claim_hover_end",
+
+  // New User View Events
+  NEWUSER_CONNECT_WALLET_CLICK: "overview_newuser_connect_wallet_click",
+  NEWUSER_UNDEPOSITED_BANNER_DEPOSIT_CLICK: "overview_newuser_undeposited_banner_deposit_click",
+  NEWUSER_PEG_TOGGLE_CLICK: "overview_newuser_peg_toggle_click",
+  NEWUSER_SILO_INFO_DEPOSIT_CLICK: "overview_newuser_silo_info_deposit_click",
+  NEWUSER_FIELD_INFO_SOW_CLICK: "overview_newuser_field_info_sow_click",
+  NEWUSER_FLOW_CARD_INTERACTION: "overview_newuser_flow_card_interaction",
+  NEWUSER_YIELD_STATS_VIEW: "overview_newuser_yield_stats_view",
+  NEWUSER_FIELD_CONDITIONS_VIEW: "overview_newuser_field_conditions_view",
 } as const;
 
 // Footer Events
