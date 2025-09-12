@@ -10,7 +10,7 @@ import ContributorMessage from "./ContributorMessage";
 import ContributorProfiles from "./ContributorProfiles";
 import ImageCarousel from "./ImageCarousel";
 import LandingVolume from "./LandingVolume";
-import ProtocolUpgrades from "./ProtocolUpgrades";
+import ProtocolUpgrades, { PROTOCOL_UPGRADES } from "./ProtocolUpgrades";
 
 type ActiveButton = "upgrades" | "contributors" | "years" | "volume" | null;
 
@@ -104,7 +104,7 @@ export default function ProjectStats() {
         <span
           className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
         >
-          90
+          {PROTOCOL_UPGRADES.length}
         </span>
         <Button
           variant={"outline-rounded"}

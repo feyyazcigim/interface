@@ -78,7 +78,7 @@ const piAudits: Audit[] = [
   {
     name: "PI-9",
     description: "Helper Function Bug Fix",
-    githubLink: "https://github.com/pinto-org/protocol/pull/54",
+    githubLink: "https://github.com/pinto-org/protocol/pull/77",
     hashLink: "",
     date: "April 18, 2025",
     timestamp: new Date("April 18, 2025").getTime(),
@@ -89,7 +89,7 @@ const piAudits: Audit[] = [
   {
     name: "PI-8",
     description: "Misc. Efficiency Improvements",
-    githubLink: "https://github.com/pinto-org/protocol/pull/54",
+    githubLink: "https://github.com/pinto-org/protocol/pull/47",
     hashLink: "",
     date: "April 17, 2025",
     timestamp: new Date("April 17, 2025").getTime(),
@@ -259,7 +259,7 @@ const bipAudits: Audit[] = [
   {
     name: "BIP-44",
     description: "Seed Gauge",
-    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/722",
+    githubLink: "https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-44-seed-gauge.md",
     hashLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/722/commits/ac8e681c7daa7cb046c1e405b27e50e7e44c0504",
     date: "May 8, 2024",
     timestamp: new Date("May 8, 2024").getTime(),
@@ -281,7 +281,7 @@ const bipAudits: Audit[] = [
   {
     name: "BIP-42",
     description: "Seed Gauge",
-    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/722",
+    githubLink: "https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-42-seed-gauge.md",
     hashLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/722/commits/cbef4ff3330ed2642081e35a9e2435f442e628ae",
     date: "May 1, 2024",
     timestamp: new Date("May 1, 2024").getTime(),
@@ -380,7 +380,7 @@ const bipAudits: Audit[] = [
   {
     name: "BIP-33",
     description: "Beanstalk Farms H1 2023 Budget",
-    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/175/commits/bac39bb8c51e8076c6fe9690ac2fd09c5bdbeeea",
+    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/285",
     hashLink: "",
     date: "February 8, 2023",
     timestamp: new Date("February 8, 2023").getTime(),
@@ -435,7 +435,8 @@ const bipAudits: Audit[] = [
   {
     name: "BIP-28",
     description: "Pod Market Price Functions",
-    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/87",
+    githubLink:
+      "https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-28-pod-market-price-functions.md",
     hashLink: "https://github.com/BeanstalkFarms/Beanstalk/commit/b6a567d842e72c73176099ffd8ddb04cae2232e6",
     date: "November 1, 2022",
     timestamp: new Date("November 1, 2022").getTime(),
@@ -524,7 +525,8 @@ const bipAudits: Audit[] = [
   {
     name: "BIP-20",
     description: "Migration of Balances",
-    githubLink: "https://bean.money/bip-20",
+    githubLink:
+      "https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-20-migration-of-balances.md",
     hashLink: "",
     date: "June 21, 2022",
     timestamp: new Date("June 21, 2022").getTime(),
@@ -628,8 +630,7 @@ const bipAudits: Audit[] = [
   {
     name: "BIP-10",
     description: "Omniscia Retainer",
-    githubLink:
-      "https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-10-omniscia-retainer.md",
+    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/42",
     hashLink: "",
     date: "February 3, 2022",
     timestamp: new Date("February 3, 2022").getTime(),
@@ -640,7 +641,7 @@ const bipAudits: Audit[] = [
   {
     name: "BIP-9",
     description: "Various Efficiency Improvements",
-    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/34",
+    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/32",
     hashLink: "",
     date: "January 11, 2022",
     timestamp: new Date("January 11, 2022").getTime(),
@@ -751,6 +752,29 @@ const bipAudits: Audit[] = [
 
 // Emergency Bean Improvement Proposals
 const ebipAudits: Audit[] = [
+  {
+    name: "EBIP-19",
+    description: "Misc Bug Fixes 2",
+    githubLink: "https://github.com/BeanstalkFarms/Beanstalk/pull/1148",
+    hashLink: "https://github.com/BeanstalkFarms/Beanstalk/tree/a26664dd64ca39bdc1db98355736363f29a9fc06",
+    date: "October 13, 2024",
+    timestamp: new Date("October 13, 2024").getTime(),
+    auditHash: "",
+    auditor: "bean",
+    type: ["emergencyBugFix"],
+  },
+  {
+    name: "EBIP-18",
+    description: "Burn Excess",
+    githubLink:
+      "https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-18-burn-excess.md",
+    hashLink: "",
+    date: "October 8, 2024",
+    timestamp: new Date("October 8, 2024").getTime(),
+    auditHash: "",
+    auditor: "bean",
+    type: ["emergencyBugFix"],
+  },
   {
     name: "EBIP-17",
     description: "Misc Bug Fixes",
@@ -933,7 +957,8 @@ const ebipAudits: Audit[] = [
   {
     name: "EBIP-1",
     description: "Remove Chop",
-    githubLink: "https://app.bean.money/#/governance/ebip-1",
+    githubLink:
+      "https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-01-remove-chop.md",
     hashLink: "",
     date: "September 5, 2022",
     timestamp: new Date("September 5, 2022").getTime(),
@@ -1170,9 +1195,11 @@ const events: Audit[] = [
   },
 ];
 
+export const PROTOCOL_UPGRADES: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...events];
+
 // Combine all audits and sort by timestamp (most recent first)
 // If timestamps are equal, sort by audit number (lowest number first)
-const audits: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...events].sort((a, b) => {
+const audits: Audit[] = PROTOCOL_UPGRADES.sort((a, b) => {
   // Primary sort: timestamp (most recent first)
   if (a.timestamp !== b.timestamp) {
     return b.timestamp - a.timestamp;
