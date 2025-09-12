@@ -3,12 +3,14 @@ import sunIcon from "@/assets/protocol/Sun.png";
 import pintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
 import Panel from "@/components/ui/Panel";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import useIsExtraSmall from "@/hooks/display/useIsExtraSmall";
 import { useDiamondEvalulationParameters } from "@/state/useDiamondEvaluationParameters";
 import useFieldSnapshots from "@/state/useFieldSnapshots";
 import useSiloSnapshots from "@/state/useSiloSnapshots";
 import { useSeason } from "@/state/useSunData";
 import useSupplySnapshots from "@/state/useSupplySnapshots";
+import { withTracking } from "@/utils/analytics";
 import { formatter } from "@/utils/format";
 import { textConfig } from "@/utils/theme";
 import { cn, isDev } from "@/utils/utils";
@@ -371,6 +373,12 @@ export default function SeasonsButton({ isOpen = false, togglePanel, ...props }:
     (seasonData) => seasonData.floodFieldBeans.gt(0) || seasonData.floodSiloBeans.gt(0),
   );
 
+  const handleTogglePanel = () => {
+    return withTracking(ANALYTICS_EVENTS.NAVIGATION.SEASONS_BUTTON_TOGGLE, togglePanel, {
+      panel_state: isOpen ? "closed" : "open",
+    })();
+  };
+
   return (
     <Panel
       isOpen={isOpen}
@@ -382,7 +390,7 @@ export default function SeasonsButton({ isOpen = false, togglePanel, ...props }:
       trigger={
         <Button
           variant="outline-secondary"
-          onClick={() => togglePanel()}
+          onClick={handleTogglePanel}
           noShrink
           rounded="full"
           {...props}
@@ -399,7 +407,7 @@ export default function SeasonsButton({ isOpen = false, togglePanel, ...props }:
           {!isExtraSmall && <IconImage src={chevronDown} size={4} mobileSize={2.5} />}
         </Button>
       }
-      toggle={() => togglePanel()}
+      toggle={handleTogglePanel}
     >
       <PanelContent
         season={season}

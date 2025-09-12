@@ -4,10 +4,12 @@ import { TokenValue } from "@/classes/TokenValue";
 import { Button } from "@/components/ui/Button";
 import IconImage from "@/components/ui/IconImage";
 import Panel from "@/components/ui/Panel";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import useIsExtraSmall from "@/hooks/display/useIsExtraSmall";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { usePriceData, useTwaDeltaBLPQuery, useTwaDeltaBQuery } from "@/state/usePriceData";
 import useTokenData from "@/state/useTokenData";
+import { withTracking } from "@/utils/analytics";
 import { formatter } from "@/utils/format";
 import { getTokenIndex } from "@/utils/token";
 import { Token } from "@/utils/types";
@@ -432,7 +434,7 @@ function PriceButtonPanel() {
           noShrink
           rounded="full"
           className={`h-6 w-6 p-0 z-[1] absolute peer-hover:bottom-16 bottom-2 left-1/2 transform -translate-x-1/2 shadow-xl border-black transition-all`}
-          onClick={() => setShowPrices(true)}
+          onClick={withTracking(ANALYTICS_EVENTS.NAVIGATION.TOKEN_PRICES_TOGGLE, () => setShowPrices(true))}
         >
           {isMobile ? (
             <ForwardArrowIcon color={"currentColor"} height={"1rem"} width={"1rem"} />
@@ -464,7 +466,9 @@ const PriceTrigger = ({ isOpen, togglePanel, ...props }: IPriceButton) => {
       variant="outline-primary"
       size="default"
       rounded="full"
-      onClick={togglePanel}
+      onClick={withTracking(ANALYTICS_EVENTS.NAVIGATION.PRICE_BUTTON_TOGGLE, togglePanel, {
+        panel_state: isOpen ? "open" : "closed",
+      })}
       noShrink
       {...props}
       className={cn(`flex flex-row gap-0.5 sm:gap-2 ${isOpen && "border-pinto-green"}`, props.className)}
