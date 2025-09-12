@@ -3,6 +3,7 @@ import Resources2 from "@/assets/landing/Resources_2.png";
 import Resources3 from "@/assets/landing/Resources_3.png";
 import clsx from "clsx";
 import { Link } from "react-router-dom";
+import { PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
 
@@ -52,6 +53,7 @@ const resourceCards = [
         href: navLinks.overview,
         label: "Take me to the Farm",
         variant: "default",
+        ctaStyle: true,
       },
     ],
   },
@@ -87,7 +89,11 @@ export default function Resources() {
               <div className={`flex flex-col min-[1200px]:flex-row gap-4`}>
                 {card.buttons.map((button, buttonIndex) => (
                   <Link key={buttonIndex} to={button.href} target="_blank" rel="noopener noreferrer" className="flex-1">
-                    <Button variant={button.variant || "outline-white"} className={buttonStyles}>
+                    <Button
+                      variant={button.variant || "outline-white"}
+                      className={buttonStyles}
+                      shimmer={button.ctaStyle || false}
+                    >
                       {button.icon && (
                         <img
                           src={button.icon}
@@ -95,8 +101,14 @@ export default function Resources() {
                           alt={button.label}
                         />
                       )}
-                      <span className="w-full text-start">{button.label}</span>
-                      <span>→</span>
+                      <span className="w-full text-start z-10">{button.label}</span>
+                      {button.ctaStyle ? (
+                        <div className="relative z-10" style={{ isolation: "isolate" }}>
+                          <PintoRightArrow width={"1rem"} height={"1rem"} />
+                        </div>
+                      ) : (
+                        <span>→</span>
+                      )}
                     </Button>
                   </Link>
                 ))}
