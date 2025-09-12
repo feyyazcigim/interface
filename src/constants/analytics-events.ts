@@ -7,7 +7,7 @@
  */
 
 // Navigation Events
-export const NAVIGATION_EVENTS = {
+const NAVIGATION_EVENTS = {
   // Header Navigation
   HEADER_HOME_CLICK: "navigation_header_home_click",
   HEADER_LEARN_CLICK: "navigation_header_learn_click",
@@ -45,8 +45,14 @@ export const NAVIGATION_EVENTS = {
   MOBILE_MENU_TOGGLE: "navigation_mobile_menu_toggle",
 } as const;
 
+const PRICE_PANEL_EVENTS = {
+  PRICE_BUTTON_TOGGLE: "price_panel_price_button_toggle",
+  TOKEN_PRICES_TOGGLE: "price_panel_token_prices_toggle",
+  EXCHANGE_NAVIGATE: "price_panel_exchange_navigate",
+} as const;
+
 // Wallet Events
-export const WALLET_EVENTS = {
+const WALLET_EVENTS = {
   // Connection
   CONNECT_BUTTON_CLICK: "wallet_connect_button_click",
   CONNECT_MODAL_OPEN: "wallet_connect_modal_open",
@@ -78,7 +84,7 @@ export const WALLET_EVENTS = {
 } as const;
 
 // Silo Events
-export const SILO_EVENTS = {
+const SILO_EVENTS = {
   // Tabs
   DEPOSIT_TAB_CLICK: "silo_deposit_tab_click",
   WITHDRAW_TAB_CLICK: "silo_withdraw_tab_click",
@@ -104,7 +110,7 @@ export const SILO_EVENTS = {
 } as const;
 
 // Field Events
-export const FIELD_EVENTS = {
+const FIELD_EVENTS = {
   // Actions
   SOW_SUBMIT: "field_sow_submit",
   HARVEST_SUBMIT: "field_harvest_submit",
@@ -118,7 +124,7 @@ export const FIELD_EVENTS = {
 } as const;
 
 // Swap Events
-export const SWAP_EVENTS = {
+const SWAP_EVENTS = {
   // Token Selection
   TOKEN_FROM_SELECT_OPEN: "swap_token_from_select_open",
   TOKEN_FROM_SELECTED: "swap_token_from_selected",
@@ -136,7 +142,7 @@ export const SWAP_EVENTS = {
 } as const;
 
 // Market Events (Pod Market)
-export const MARKET_EVENTS = {
+const MARKET_EVENTS = {
   // Pod Actions
   POD_LIST_CREATE: "market_pod_list_create",
   POD_ORDER_CREATE: "market_pod_order_create",
@@ -147,7 +153,7 @@ export const MARKET_EVENTS = {
 } as const;
 
 // Footer Events
-export const FOOTER_EVENTS = {
+const FOOTER_EVENTS = {
   // Internal Links
   ABOUT_CLICK: "footer_about_click",
   TERMS_PRIVACY_CLICK: "footer_terms_privacy_click",
@@ -160,7 +166,7 @@ export const FOOTER_EVENTS = {
 } as const;
 
 // UI Component Events
-export const UI_EVENTS = {
+const UI_EVENTS = {
   // Modals & Dialogs
   MODAL_OPEN: "ui_modal_open",
   MODAL_CLOSE: "ui_modal_close",
@@ -178,7 +184,7 @@ export const UI_EVENTS = {
 } as const;
 
 // Transaction Events
-export const TRANSACTION_EVENTS = {
+const TRANSACTION_EVENTS = {
   // Transaction Flow
   TRANSACTION_INITIATED: "transaction_initiated",
   TRANSACTION_CONFIRMED: "transaction_confirmed",
@@ -201,6 +207,7 @@ export const ANALYTICS_EVENTS = {
   FOOTER: FOOTER_EVENTS,
   UI: UI_EVENTS,
   TRANSACTION: TRANSACTION_EVENTS,
+  PRICE_PANEL: PRICE_PANEL_EVENTS,
 } as const;
 
 // Type for all possible event names
@@ -213,4 +220,5 @@ export type AnalyticsEventName =
   | (typeof MARKET_EVENTS)[keyof typeof MARKET_EVENTS]
   | (typeof FOOTER_EVENTS)[keyof typeof FOOTER_EVENTS]
   | (typeof UI_EVENTS)[keyof typeof UI_EVENTS]
-  | (typeof TRANSACTION_EVENTS)[keyof typeof TRANSACTION_EVENTS];
+  | (typeof TRANSACTION_EVENTS)[keyof typeof TRANSACTION_EVENTS]
+  | (typeof PRICE_PANEL_EVENTS)[keyof typeof PRICE_PANEL_EVENTS];
