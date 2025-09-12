@@ -214,6 +214,27 @@ const MARKET_EVENTS = {
   POD_LIST_CANCEL: "market_pod_list_cancel",
 } as const;
 
+// Collection Events (NFT Gallery)
+const COLLECTION_EVENTS = {
+  // View Mode & Display
+  VIEW_MODE_TOGGLE: "collection_view_mode_toggle",
+  GRID_MODE_TOGGLE: "collection_grid_mode_toggle",
+
+  // NFT Interactions
+  NFT_CARD_CLICK: "collection_nft_card_click",
+  NFT_DETAIL_MODAL_OPEN: "collection_nft_detail_modal_open",
+  NFT_MODAL_NAVIGATE: "collection_nft_modal_navigate",
+  NFT_MODAL_CLOSE: "collection_nft_modal_close",
+
+  // External Links
+  OPENSEA_CLICK: "collection_opensea_click",
+
+  // Pagination
+  PAGE_NEXT_CLICK: "collection_page_next_click",
+  PAGE_PREVIOUS_CLICK: "collection_page_previous_click",
+  PAGE_NUMBER_CLICK: "collection_page_number_click",
+} as const;
+
 // Footer Events
 const FOOTER_EVENTS = {
   // Internal Links
@@ -266,6 +287,7 @@ export const ANALYTICS_EVENTS = {
   FIELD: FIELD_EVENTS,
   SWAP: SWAP_EVENTS,
   MARKET: MARKET_EVENTS,
+  COLLECTION: COLLECTION_EVENTS,
   FOOTER: FOOTER_EVENTS,
   UI: UI_EVENTS,
   TRANSACTION: TRANSACTION_EVENTS,
@@ -280,6 +302,7 @@ export type AnalyticsEventName =
   | (typeof FIELD_EVENTS)[keyof typeof FIELD_EVENTS]
   | (typeof SWAP_EVENTS)[keyof typeof SWAP_EVENTS]
   | (typeof MARKET_EVENTS)[keyof typeof MARKET_EVENTS]
+  | (typeof COLLECTION_EVENTS)[keyof typeof COLLECTION_EVENTS]
   | (typeof FOOTER_EVENTS)[keyof typeof FOOTER_EVENTS]
   | (typeof UI_EVENTS)[keyof typeof UI_EVENTS]
   | (typeof TRANSACTION_EVENTS)[keyof typeof TRANSACTION_EVENTS]
