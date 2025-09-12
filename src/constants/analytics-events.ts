@@ -235,6 +235,31 @@ const COLLECTION_EVENTS = {
   PAGE_NUMBER_CLICK: "collection_page_number_click",
 } as const;
 
+// Farmer Overview Events (Dashboard)
+const OVERVIEW_EVENTS = {
+  // Tab Navigation
+  TAB_DEPOSITS_CLICK: "overview_tab_deposits_click",
+  TAB_PODS_CLICK: "overview_tab_pods_click",
+  TAB_TRACTOR_CLICK: "overview_tab_tractor_click",
+
+  // Helper Link Navigation
+  HELPER_SOW_NAVIGATE: "overview_helper_sow_navigate",
+  HELPER_HARVEST_NAVIGATE: "overview_helper_harvest_navigate",
+  HELPER_HARVEST_CLICK: "overview_helper_harvest_click",
+  HELPER_SILO_EXPLORER_NAVIGATE: "overview_helper_silo_explorer_navigate",
+
+  // Stat Panel Interactions
+  STAT_PANEL_HOVER_START: "overview_stat_panel_hover_start",
+  STAT_PANEL_HOVER_END: "overview_stat_panel_hover_end",
+  STAT_ACTION_BUTTON_HOVER: "overview_stat_action_button_hover",
+
+  // Deposits Table Events
+  DEPOSITS_TOKEN_ROW_CLICK: "overview_deposits_token_row_click",
+  DEPOSITS_CLAIM_REWARDS_CLICK: "overview_deposits_claim_rewards_click",
+  DEPOSITS_CLAIM_HOVER_START: "overview_deposits_claim_hover_start",
+  DEPOSITS_CLAIM_HOVER_END: "overview_deposits_claim_hover_end",
+} as const;
+
 // Footer Events
 const FOOTER_EVENTS = {
   // Internal Links
@@ -288,6 +313,7 @@ export const ANALYTICS_EVENTS = {
   SWAP: SWAP_EVENTS,
   MARKET: MARKET_EVENTS,
   COLLECTION: COLLECTION_EVENTS,
+  OVERVIEW: OVERVIEW_EVENTS,
   FOOTER: FOOTER_EVENTS,
   UI: UI_EVENTS,
   TRANSACTION: TRANSACTION_EVENTS,
@@ -303,6 +329,7 @@ export type AnalyticsEventName =
   | (typeof SWAP_EVENTS)[keyof typeof SWAP_EVENTS]
   | (typeof MARKET_EVENTS)[keyof typeof MARKET_EVENTS]
   | (typeof COLLECTION_EVENTS)[keyof typeof COLLECTION_EVENTS]
+  | (typeof OVERVIEW_EVENTS)[keyof typeof OVERVIEW_EVENTS]
   | (typeof FOOTER_EVENTS)[keyof typeof FOOTER_EVENTS]
   | (typeof UI_EVENTS)[keyof typeof UI_EVENTS]
   | (typeof TRANSACTION_EVENTS)[keyof typeof TRANSACTION_EVENTS]
