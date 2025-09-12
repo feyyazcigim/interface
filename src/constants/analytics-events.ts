@@ -141,14 +141,32 @@ const SILO_EVENTS = {
 
 // Field Events
 const FIELD_EVENTS = {
-  // Actions
+  // Field Page Navigation
+  TAB_CLICK: "field_tab_click",
+  EXPLORER_LINK_CLICK: "field_explorer_link_click",
+  SEND_PODS_CLICK: "field_send_pods_click",
+  MARKET_PODS_CLICK: "field_market_pods_click",
+  MOBILE_HARVEST_CLICK: "field_mobile_harvest_click",
+  MOBILE_SOW_CLICK: "field_mobile_sow_click",
+
+  // FieldActions
+  ACTION_TAB_CLICK: "field_action_tab_click",
+
+  // Sow Actions
+  SOW_TOKEN_SELECTED: "field_sow_token_selected",
+  SOW_DEPOSITS_TOGGLE: "field_sow_deposits_toggle",
+  SOW_SETTINGS_OPEN: "field_sow_settings_open",
   SOW_SUBMIT: "field_sow_submit",
+
+  // Harvest Actions
   HARVEST_SUBMIT: "field_harvest_submit",
 
-  // Amount Inputs
-  SOW_AMOUNT_INPUT: "field_sow_amount_input",
+  // Tractor Actions
+  TRACTOR_BUTTON_CLICK: "field_tractor_button_click",
+  TRACTOR_PANEL_CREATE_ORDER: "field_tractor_panel_create_order",
 
-  // Tractor Orders
+  // Legacy Events (keeping for backwards compatibility)
+  SOW_AMOUNT_INPUT: "field_sow_amount_input",
   TRACTOR_ORDER_CREATE: "field_tractor_order_create",
   TRACTOR_ORDER_CANCEL: "field_tractor_order_cancel",
 } as const;
