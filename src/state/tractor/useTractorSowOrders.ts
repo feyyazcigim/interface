@@ -166,7 +166,7 @@ export function useTractorSowOrderbook<T = OrderbookEntry[]>({
    * - DEV, use a 24 hour lookback to allow for forwarding seasons locally
    * - PROD, use a 1 hour lookback
    */
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Select may not change when address / order data changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Select may not change when address / order data changes so we re-select here.
   const selectOrders: NonNullable<typeof select> = useCallback(
     (data) => {
       return select?.(data) ?? (data as T);

@@ -145,84 +145,85 @@ export default function ModifyTractorOrderDialog({
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
-                <div className="h-[1px] w-full bg-pinto-gray-2" />
-                <div className="flex flex-col gap-6">
-                  {/* Main Form */}
-                  <SowOrderV0Fields>
-                    {/* I want to Sow up to */}
-                    <SowOrderV0Fields.TotalAmount />
-                    {/* Min and Max per Season - combined in a single row */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-4">
-                        <SowOrderV0Fields.MinSoil />
-                        <SowOrderV0Fields.MaxPerSeason />
+                <form>
+                  <div className="h-[1px] w-full bg-pinto-gray-2" />
+                  <div className="flex flex-col gap-6">
+                    {/* Main Form */}
+                    <SowOrderV0Fields>
+                      {/* I want to Sow up to */}
+                      <SowOrderV0Fields.TotalAmount />
+                      {/* Min and Max per Season - combined in a single row */}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-4">
+                          <SowOrderV0Fields.MinSoil />
+                          <SowOrderV0Fields.MaxPerSeason />
+                        </div>
                       </div>
-                    </div>
-                    {/* Fund order using */}
-                    <SowOrderV0Fields.TokenStrategy openDialog={() => setShowTokenSelectionDialog(true)} />
-                    {/* Execute when Temperature is at least */}
-                    <SowOrderV0Fields.Temperature />
-                    {/* Execute when the length of the Pod Line is at most */}
-                    <SowOrderV0Fields.PodLineLength />
-                    {/* Execute during the Morning Auction */}
-                    <SowOrderV0Fields.MorningAuction />
-                    <SowOrderV0Fields.OperatorTip averageTipPaid={averageTipValue} noInitToAverageTipPaid />
-                    <SowOrderV0Fields.ExecutionsAndTip />
-                  </SowOrderV0Fields>
+                      {/* Fund order using */}
+                      <SowOrderV0Fields.TokenStrategy openDialog={() => setShowTokenSelectionDialog(true)} />
+                      {/* Execute when Temperature is at least */}
+                      <SowOrderV0Fields.Temperature />
+                      {/* Execute when the length of the Pod Line is at most */}
+                      <SowOrderV0Fields.PodLineLength />
+                      {/* Execute during the Morning Auction */}
+                      <SowOrderV0Fields.MorningAuction />
+                      <SowOrderV0Fields.OperatorTip averageTipPaid={averageTipValue} noInitToAverageTipPaid />
+                      <SowOrderV0Fields.ExecutionsAndTip />
+                    </SowOrderV0Fields>
 
-                  <Row className="gap-6">
-                    <Button
-                      variant="outline"
-                      size="xlargest"
-                      rounded="full"
-                      className="flex-1 text-pinto-light bg-pinto-gray-1"
-                      onClick={handleBack}
-                      type="button"
-                    >
-                      ← Back
-                    </Button>
-                    <TooltipSimple
-                      content={
-                        isMissingFields ? (
-                          <div className="p-1">
-                            <div className="font-medium mb-1">Please fill in the following fields:</div>
-                            <ul className="list-disc pl-4 text-sm">
-                              {missingFields.map((field) => (
-                                <li key={field}>{field}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : null
-                      }
-                      side="top"
-                      align="center"
-                      // Only show tooltip when there are missing fields or errors
-                      disabled={!isMissingFields}
-                    >
-                      <div className="flex-1">
-                        <Button
-                          size="xlargest"
-                          rounded="full"
-                          className={`w-full ${
-                            isLoading ? "bg-pinto-gray-2 text-pinto-light" : "bg-pinto-green-4 text-white"
-                          }`}
-                          disabled={nextDisabled}
-                          onClick={handleNext}
-                          type="button"
-                        >
-                          {isLoading ? (
-                            <div className="flex items-center gap-2">
-                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+                    <Row className="gap-6">
+                      <Button
+                        variant="outline"
+                        size="xlargest"
+                        rounded="full"
+                        className="flex-1 text-pinto-light bg-pinto-gray-1"
+                        onClick={handleBack}
+                        type="button"
+                      >
+                        ← Back
+                      </Button>
+                      <TooltipSimple
+                        content={
+                          isMissingFields ? (
+                            <div className="p-1">
+                              <div className="font-medium mb-1">Please fill in the following fields:</div>
+                              <ul className="list-disc pl-4 text-sm">
+                                {missingFields.map((field) => (
+                                  <li key={field}>{field}</li>
+                                ))}
+                              </ul>
                             </div>
-                          ) : (
-                            "Review"
-                          )}
-                        </Button>
-                      </div>
-                    </TooltipSimple>
-                  </Row>
-                </div>
-
+                          ) : null
+                        }
+                        side="top"
+                        align="center"
+                        // Only show tooltip when there are missing fields or errors
+                        disabled={!isMissingFields}
+                      >
+                        <div className="flex-1">
+                          <Button
+                            size="xlargest"
+                            rounded="full"
+                            className={`w-full ${
+                              isLoading ? "bg-pinto-gray-2 text-pinto-light" : "bg-pinto-green-4 text-white"
+                            }`}
+                            disabled={nextDisabled}
+                            onClick={handleNext}
+                            type="button"
+                          >
+                            {isLoading ? (
+                              <div className="flex items-center gap-2">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+                              </div>
+                            ) : (
+                              "Review"
+                            )}
+                          </Button>
+                        </div>
+                      </TooltipSimple>
+                    </Row>
+                  </div>
+                </form>
                 {/* Token Selection Dialog */}
                 <SowOrderV0TokenStrategyDialog
                   open={showTokenSelectionDialog}

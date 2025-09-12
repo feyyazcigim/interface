@@ -1075,11 +1075,7 @@ export async function loadOrderbookData(
       if (knownBlueprintHashes.has(hash.toLowerCase())) {
         return false;
       }
-      return (
-        !req.isCancelled &&
-        !completedOrders.has(req.requisition.blueprintHash) &&
-        !cancelledHashes.has(req.requisition.blueprintHash)
-      );
+      return !req.isCancelled && !completedOrders.has(req.requisition.blueprintHash);
     });
 
     // Decode data and sort requisitions by temperature (lowest first)
@@ -1114,6 +1110,8 @@ export async function loadOrderbookData(
     // Process requisitions in a single loop (already sorted by temperature)
     const orderbookData: OrderbookEntry[] = (activeApiEntries ?? []).filter((entry) => {
       if (!!loadOptions.filterOutCompleted && entry.isComplete) return false;
+      // filter out cancelled requisitions
+      if (cancelledHashes.has(entry.requisition.blueprintHash)) return false;
       return true;
     });
 
