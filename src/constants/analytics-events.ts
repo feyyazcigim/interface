@@ -137,6 +137,13 @@ const SILO_EVENTS = {
   UNWRAP_TOKEN_SELECTED: "silo_unwrap_token_selected",
   UNWRAP_MODE_TOGGLE: "silo_unwrap_mode_toggle",
   UNWRAP_DESTINATION_SELECT: "silo_unwrap_destination_select",
+
+  // Protocol Integration Events (Wrapped Silo Token Page)
+  WRAPPED_TOKEN_PROTOCOL_INTEGRATION_CLICK: "silo_wrapped_token_protocol_integration_click",
+  WRAPPED_TOKEN_CREAM_FINANCE_CLICK: "silo_wrapped_token_cream_finance_click",
+  WRAPPED_TOKEN_SPECTRA_POOL_CLICK: "silo_wrapped_token_spectra_pool_click",
+  WRAPPED_TOKEN_SPECTRA_FIXED_RATE_CLICK: "silo_wrapped_token_spectra_fixed_rate_click",
+  WRAPPED_TOKEN_SPECTRA_YIELD_TRADING_CLICK: "silo_wrapped_token_spectra_yield_trading_click",
 } as const;
 
 // Field Events
