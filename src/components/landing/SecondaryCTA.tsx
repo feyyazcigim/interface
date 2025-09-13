@@ -166,7 +166,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
       variant="outline-white"
       className={clsx(
         // Base styles
-        "flex items-center rounded-2xl justify-between",
+        "flex items-center rounded-2xl md:justify-between",
 
         // Color & gradient styles
         glowColor === "green"
@@ -247,7 +247,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
       <div
         className={clsx(
           // Base styles
-          "flex flex-col flex-1",
+          "flex flex-col md:flex-1",
 
           // Mobile (default)
           "gap-1",
@@ -268,10 +268,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
             "leading-[1.1] font-thin text-black",
 
             // Mobile (default)
-            "text-[1.25rem] md:text-xl lg:text-lg text-left max-sm:whitespace-pre-wrap",
-
-            // Small screens and up
-            "md:text-center",
+            "text-[1.25rem] md:text-xl lg:text-lg text-center max-sm:whitespace-pre-wrap",
           )}
         >
           {data.title}
@@ -295,7 +292,6 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
           {data.subtitle}
         </div>
       </div>
-      <IconImage src={chevronDown} size={6} className="block md:hidden" alt="chevron down" />
     </Button>
   );
 }
