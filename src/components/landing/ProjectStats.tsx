@@ -198,10 +198,8 @@ export default function ProjectStats() {
   function Volume() {
     return (
       <span className="flex flex-col min-[1000px]:flex-row gap-3 sm:gap-6 items-center">
-        <span
-          className={`transition-all flex flex-row gap-3 sm:gap-6 items-center duration-300 whitespace-nowrap ${getElementOpacity(false)}`}
-        >
-          to facilitate
+        <span className={`transition-all flex flex-row gap-3 sm:gap-6 items-center whitespace-nowrap`}>
+          <span className={`${getElementOpacity(false)} duration-300`}>to facilitate</span>
           <span
             className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
           >
