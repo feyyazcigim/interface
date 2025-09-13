@@ -63,7 +63,7 @@ export default function Footer({ landingPageVersion }: { landingPageVersion?: bo
       id="pinto-footer"
     >
       <div className="w-full px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
           {/* Links Section - Bottom Left Corner */}
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <img src={PintoLogo} alt="Pinto Logo" className="h-4 mb-0.5" />
