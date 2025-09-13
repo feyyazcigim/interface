@@ -15,6 +15,7 @@ interface CarouselData {
   alt: string;
   href: string;
   date: string;
+  year: string;
   name: string;
   description: string;
 }
@@ -25,6 +26,7 @@ const whitepaperImages: CarouselData[] = [
     alt: "Beanstalk",
     href: "https://bean.money/beanstalk.pdf",
     date: "August 2021",
+    year: "2021",
     name: "Beanstalk",
     description: "The OG paper that started it all",
   },
@@ -33,6 +35,7 @@ const whitepaperImages: CarouselData[] = [
     alt: "Pipeline",
     href: "https://evmpipeline.org/pipeline.pdf",
     date: "November 2022",
+    year: "2022",
     name: "Pipeline and Depot",
     description: "Do anything in DeFi in one transaction",
   },
@@ -41,6 +44,7 @@ const whitepaperImages: CarouselData[] = [
     alt: "Basin",
     href: "https://basin.exchange/basin.pdf",
     date: "August 2023",
+    year: "2023",
     name: "Basin",
     description: "Fee-less swaps for hyper efficient peg maintenance",
   },
@@ -49,6 +53,7 @@ const whitepaperImages: CarouselData[] = [
     alt: "Multi Flow Pump",
     href: "https://basin.exchange/multi-flow-pump.pdf",
     date: "August 2023",
+    year: "2023",
     name: "Multi-flow",
     description: "On-chain manipulation resistant oracle",
   },
@@ -57,6 +62,7 @@ const whitepaperImages: CarouselData[] = [
     alt: "Pinto",
     href: "https://pinto.money/pinto.pdf",
     date: "April 2025",
+    year: "2025",
     name: "Pinto",
     description: "The new generation of crypto fiat",
   },
@@ -196,7 +202,7 @@ export default function ImageCarousel() {
       </Carousel>
       <div className="flex flex-col text-center gap-1 -mt-4 text-xs sm:text-xl">
         <span>
-          <span className="font-bold">{currentWp.name}:</span> {currentWp.description}
+          <span className="font-bold">{`${currentWp.name} (${currentWp.year}):`}</span> {currentWp.description}
         </span>
       </div>
     </>
