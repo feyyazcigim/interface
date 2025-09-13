@@ -99,8 +99,8 @@ export default function BugBounty() {
                   trend={+1}
                   format={{
                     style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
                     trailingZeroDisplay: "auto",
                   }}
                   className="text-black font-thin text-2xl sm:text-6xl"
