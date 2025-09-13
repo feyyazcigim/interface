@@ -58,7 +58,7 @@ export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalP
           </div>
 
           {/* Definition section */}
-          <div className="text-sm sm:text-lg leading-[1.3] font-thin text-black prose prose-neutral max-w-none prose-strong:font-bold flex-shrink-0">
+          <div className="text-sm sm:text-lg leading-[1.3] font-thin text-black prose prose-p:leading-[1.3] prose-neutral max-w-none prose-strong:font-bold flex-shrink-0">
             <Markdown>{cardData.definition}</Markdown>
           </div>
 
