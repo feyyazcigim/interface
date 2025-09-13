@@ -125,7 +125,7 @@ export default function Landing() {
         ref={scrollContainerRef}
       >
         {/* Header Logo and Text - static, above everything */}
-        <div className="flex flex-col gap-2 sm:gap-4 self-stretch items-center pt-[5dvh] sm:pt-[10dvh] 3xl:pt-[6dvh] min-[2130px]:pt-[8dvh] min-[2400px]:pt-[10dvh] pb-2 sm:pb-4">
+        <div className="flex flex-col gap-2 sm:gap-4 self-stretch items-center pt-[5dvh] sm:pt-[10dvh] 3xl:pt-[6dvh] min-[2130px]:pt-[8dvh] min-[2400px]:pt-[10dvh]">
           <motion.h2
             className="text-[4rem] leading-[1.1] font-thin text-black"
             initial={{ opacity: 0, y: 20 }}
@@ -138,7 +138,7 @@ export default function Landing() {
             </div>
           </motion.h2>
           <motion.span
-            className="text-[1.25rem] sm:text-2xl sm:leading-[1.4] font-thin text-pinto-gray-4 w-[70%] sm:w-fit text-center"
+            className="text-[1.25rem] sm:text-2xl font-thin text-pinto-gray-4 w-[70%] sm:w-fit text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeInOut", delay: 0.4 }}
@@ -149,7 +149,7 @@ export default function Landing() {
         {/* Sticky CTA Button - below header, outside scroll container */}
         <motion.div
           id="landing-cta"
-          className="flex flex-col sm:flex-row gap-4 mx-auto items-center sticky top-4 sm:mt-4 mt-2 sm:mb-10 mb-4 place-self-center z-50 justify-center"
+          className="flex flex-col sm:flex-row gap-4 mx-auto items-center sticky top-4 mt-2 sm:mt-4 mb-4 sm:mb-10 place-self-center z-50 justify-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
