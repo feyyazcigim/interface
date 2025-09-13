@@ -166,7 +166,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
       variant="outline-white"
       className={clsx(
         // Base styles
-        "flex items-center rounded-2xl",
+        "flex items-center rounded-2xl justify-between",
 
         // Color & gradient styles
         glowColor === "green"
@@ -177,7 +177,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
         "flex-row gap-4 w-full h-auto px-4",
 
         // Small screens and up
-        "md:flex-col md:gap-5 md:p-5 md:w-[14rem] md:h-[18rem] md:flex-shrink-0 md:active:scale-95 md:hover:scale-105",
+        "md:flex-col md:gap-4 md:p-4 md:w-[14rem] md:h-[18rem] md:flex-shrink-0 md:active:scale-95 md:hover:scale-105",
 
         // Medium screens
         "min-[1000px]:w-[16rem] min-[1000px]:h-[17rem]",
@@ -188,13 +188,10 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
         // Extra large screens
         "xl:w-[19rem] xl:h-[18rem]",
 
-        // 2XL screens
-        "2xl:gap-6 2xl:p-4",
-
         // 3XL screens
-        "3xl:w-[17rem] 3xl:h-[16rem]",
+        "3xl:w-[17rem] 3xl:h-[17rem] 3xl:gap-6",
 
-        "min-[2100px]:w-[19rem] min-[2100px]:h-[18rem]",
+        "min-[2100px]:w-[19rem] min-[2100px]:h-[19rem]",
 
         // Glow effects
         isGlowing && [
@@ -235,16 +232,13 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
           "sm:w-16 sm:h-16",
 
           // Large screens
-          "lg:w-18 lg:h-18",
+          "lg:w-[4.5rem] lg:h-[4.5rem]",
 
           // Extra large screens
           "xl:w-20 xl:h-20",
 
-          // 2XL screens
-          "2xl:w-24 2xl:h-24",
-
           // 3XL screens
-          "3xl:w-20 3xl:h-20",
+          "3xl:w-[4.5rem] 3xl:h-[4.5rem]",
 
           "min-[2100px]:w-24 min-[2100px]:h-24",
         )}
