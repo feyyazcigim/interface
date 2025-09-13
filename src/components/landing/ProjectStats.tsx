@@ -142,7 +142,7 @@ export default function ProjectStats() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="absolute -left-[4.5rem] sm:left-24 sm:-top-20 -top-40"
+                className="absolute -left-[4.5rem] -top-40 sm:-left-4 sm:-top-[12.5rem] min-[1000px]:left-5 min-[1000px]:-top-24"
               >
                 <ContributorProfiles />
               </motion.div>

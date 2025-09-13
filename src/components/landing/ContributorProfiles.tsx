@@ -1,4 +1,3 @@
-import useIsMobile from "@/hooks/display/useIsMobile";
 import { motion } from "framer-motion";
 import { atom, useAtom } from "jotai";
 import { useEffect, useMemo, useRef } from "react";
@@ -82,7 +81,6 @@ function getRandomContributors(count: number = 5, selectedContributor?: Contribu
 
 export default function ContributorProfiles() {
   const [selectedContributor, setSelectedContributor] = useAtom(selectedContributorAtom);
-  const isMobile = useIsMobile();
   const hasAutoSelected = useRef(false);
 
   // Auto-select a contributor only once on first render
@@ -103,20 +101,8 @@ export default function ContributorProfiles() {
     setSelectedContributor(contributor);
   };
 
-  // W shape positions with random variations: left peak, left valley, center peak, right valley, right peak
-  const lineDesktopPositions = useMemo(
-    () => [
-      { x: -5 + (Math.random() * 0.3125 - 0.15625), y: 5.5 + (Math.random() * 0.3125 - 0.15625) },
-      { x: 0 + (Math.random() * 0.3125 - 0.15625), y: 5.5 + (Math.random() * 0.3125 - 0.15625) },
-      { x: 5 + (Math.random() * 0.3125 - 0.15625), y: 5.5 + (Math.random() * 0.3125 - 0.15625) },
-      { x: 10 + (Math.random() * 0.3125 - 0.15625), y: 5.5 + (Math.random() * 0.3125 - 0.15625) },
-      { x: 15 + (Math.random() * 0.3125 - 0.15625), y: 5.5 + (Math.random() * 0.3125 - 0.15625) },
-    ],
-    [],
-  );
-
   // Line shape positions for mobile: evenly spaced horizontally with slight random variation
-  const linePositions = useMemo(
+  const positions = useMemo(
     () => [
       { x: 0 + (Math.random() * 0.3125 - 0.15625), y: 6.5 + (Math.random() * 0.3125 - 0.15625) },
       { x: 5 + (Math.random() * 0.3125 - 0.15625), y: 6.5 + (Math.random() * 0.3125 - 0.15625) },
@@ -126,9 +112,6 @@ export default function ContributorProfiles() {
     ],
     [],
   );
-
-  // Use line positions on mobile, W positions on desktop
-  const positions = isMobile ? linePositions : lineDesktopPositions;
 
   // Memoize random animation values to prevent restarts on re-render
   const animationValues = useMemo(
