@@ -52,7 +52,7 @@ export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalP
               <img src={cardData.logo} className="w-12 h-12 flex-shrink-0" alt={cardData.title} />
               <h2 className="text-2xl sm:text-4xl leading-[1.1] font-thin text-black">{cardData.title}</h2>
             </div>
-            <div className="text-base sm:text-xl md:text-2xl lg:text-3xl leading-[1.2] font-thin text-pinto-gray-4 w-full">
+            <div className="text-base sm:text-xl md:text-2xl lg:text-3xl leading-[1.2] font-thin text-pinto-gray-5 w-full">
               {cardData.subtitle}
             </div>
           </div>
