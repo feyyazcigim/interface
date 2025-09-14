@@ -75,7 +75,7 @@ export default function BugBounty() {
                   variant="outline"
                   size={isMobile ? "sm" : "lg"}
                   rounded="full"
-                  className="shadow-none text-pinto-gray-5 border-pinto-gray-5"
+                  className="shadow-none text-pinto-gray-5"
                 >
                   Learn More
                 </Button>
@@ -123,7 +123,7 @@ export default function BugBounty() {
                   variant="outline"
                   size={isMobile ? "sm" : "lg"}
                   rounded="full"
-                  className="shadow-none text-pinto-gray-5 border-pinto-gray-5"
+                  className="shadow-none text-pinto-gray-5"
                 >
                   Learn More
                 </Button>
@@ -156,7 +156,7 @@ export default function BugBounty() {
                   variant="outline"
                   size={isMobile ? "sm" : "lg"}
                   rounded="full"
-                  className="shadow-none text-pinto-gray-5 border-pinto-gray-5"
+                  className="shadow-none text-pinto-gray-5"
                 >
                   Learn More
                 </Button>
