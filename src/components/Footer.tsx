@@ -1,3 +1,5 @@
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
+import { trackClick } from "@/utils/analytics";
 import { cn } from "@/utils/utils";
 import { DiscordLogoIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
 import { Link as ReactLink } from "react-router-dom";
@@ -17,16 +19,32 @@ const FooterLink = ({ href, children, external = false, className = "" }: Footer
     className,
   );
 
+  const getEventName = (url: string, isExternal: boolean) => {
+    if (!isExternal) return ANALYTICS_EVENTS.FOOTER.ABOUT_CLICK;
+    if (url.includes("pinto.exchange")) return ANALYTICS_EVENTS.FOOTER.PINTO_EXCHANGE_CLICK;
+    if (url.includes("disclosures")) return ANALYTICS_EVENTS.FOOTER.TERMS_PRIVACY_CLICK;
+    return "footer_external_unknown_click";
+  };
+
   if (external) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={linkClasses}>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={linkClasses}
+        onClick={trackClick(getEventName(href, true), {
+          link_type: "external",
+          link_url: href,
+        })}
+      >
         {children}
       </a>
     );
   }
 
   return (
-    <ReactLink to={href} className={linkClasses}>
+    <ReactLink to={href} className={linkClasses} onClick={trackClick(getEventName(href, false))}>
       {children}
     </ReactLink>
   );
@@ -38,17 +56,31 @@ interface SocialIconProps {
   label: string;
 }
 
-const SocialIcon = ({ href, icon, label }: SocialIconProps) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="text-pinto-light hover:text-pinto-green-4 transition-colors duration-200"
-    aria-label={label}
-  >
-    {icon}
-  </a>
-);
+const SocialIcon = ({ href, icon, label }: SocialIconProps) => {
+  const getEventName = (url: string) => {
+    if (url.includes("discord")) return ANALYTICS_EVENTS.FOOTER.DISCORD_CLICK;
+    if (url.includes("x.com") || url.includes("twitter")) return ANALYTICS_EVENTS.FOOTER.TWITTER_CLICK;
+    if (url.includes("github")) return ANALYTICS_EVENTS.FOOTER.GITHUB_CLICK;
+    return "footer_social_unknown_click";
+  };
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-pinto-light hover:text-pinto-green-4 transition-colors duration-200"
+      aria-label={label}
+      onClick={trackClick(getEventName(href), {
+        link_type: "social",
+        link_url: href,
+        social_platform: label.toLowerCase(),
+      })}
+    >
+      {icon}
+    </a>
+  );
+};
 
 export default function Footer() {
   const { isMobileActionBarVisible } = useMobileActionBarContext();
@@ -69,7 +101,7 @@ export default function Footer() {
             <FooterLink href="https://docs.pinto.money/disclosures" external>
               Terms & Privacy
             </FooterLink>
-            <FooterLink href="https://pinto.exchange/" external>
+            <FooterLink href="https://pinto.exchange/" external className="pinto-exchange-link">
               Pinto Exchange
             </FooterLink>
           </div>

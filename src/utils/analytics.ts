@@ -125,3 +125,55 @@ export function trackEvent(eventName: string, eventData?: Record<string, any>): 
     console.error("[Analytics/GA] event tracking error:", error);
   }
 }
+
+/**
+ * Create a click handler that tracks an event before executing
+ *
+ * @param eventName - Name of the event to track
+ * @param eventData - Additional event parameters
+ * @returns Click handler function
+ */
+export function trackClick(eventName: string, eventData?: Record<string, any>) {
+  return (e?: React.MouseEvent) => {
+    trackEvent(eventName, {
+      element_text: e?.currentTarget.textContent?.trim() || "",
+      page_location: window.location.pathname,
+      timestamp: Date.now(),
+      ...eventData,
+    });
+  };
+}
+
+/**
+ * Compose event tracking with an existing click handler
+ *
+ * @param eventName - Name of the event to track
+ * @param originalHandler - Original click handler to execute after tracking
+ * @param eventData - Additional event parameters
+ * @returns Composed click handler function
+ */
+export function withTracking(eventName: string, originalHandler?: (e: any) => void, eventData?: Record<string, any>) {
+  return (e?: React.MouseEvent) => {
+    trackEvent(eventName, {
+      element_text: e?.currentTarget.textContent?.trim() || "",
+      page_location: window.location.pathname,
+      timestamp: Date.now(),
+      ...eventData,
+    });
+    originalHandler?.(e);
+  };
+}
+
+/**
+ * Track an event with minimal context (for inline usage)
+ *
+ * @param eventName - Name of the event to track
+ * @param eventData - Additional event parameters
+ */
+export function trackSimpleEvent(eventName: string, eventData?: Record<string, any>): void {
+  trackEvent(eventName, {
+    page_location: window.location.pathname,
+    timestamp: Date.now(),
+    ...eventData,
+  });
+}

@@ -10,11 +10,13 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import MorningTemperatureChart from "@/pages/field/MorningTemperature";
 import {
   useUpdateMorningSoilOnInterval,
   useUpdateMorningTemperatureOnInterval,
 } from "@/state/protocol/field/field.updater";
+import { trackSimpleEvent } from "@/utils/analytics";
 
 import { Col } from "@/components/Container";
 import CornerBorders from "@/components/CornerBorders";
@@ -252,7 +254,17 @@ function Field() {
                 </TextSkeleton>
               </div>
               <Button asChild variant={"outline"} className="rounded-full text-[1rem] sm:text-[1.25rem]">
-                <Link to="/explorer/field">View Data</Link>
+                <Link
+                  to="/explorer/field"
+                  onClick={() =>
+                    trackSimpleEvent(ANALYTICS_EVENTS.FIELD.EXPLORER_LINK_CLICK, {
+                      source_page: "field",
+                      destination: "/explorer/field",
+                    })
+                  }
+                >
+                  View Data
+                </Link>
               </Button>
             </div>
           )}
@@ -264,6 +276,10 @@ function Field() {
                     type="button"
                     className={`hidden sm:block pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "activity" ? "text-pinto-secondary" : "text-pinto-gray-4"}`}
                     onClick={() => {
+                      trackSimpleEvent(ANALYTICS_EVENTS.FIELD.TAB_CLICK, {
+                        previous_tab: activeTab,
+                        new_tab: "activity",
+                      });
                       setActiveTab("activity");
                       const params = new URLSearchParams(window.location.search);
                       params.set("tab", "activity");
@@ -276,6 +292,10 @@ function Field() {
                     type="button"
                     className={`hidden sm:block pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "tractor" ? "text-pinto-secondary" : "text-pinto-gray-4"}`}
                     onClick={() => {
+                      trackSimpleEvent(ANALYTICS_EVENTS.FIELD.TAB_CLICK, {
+                        previous_tab: activeTab,
+                        new_tab: "tractor",
+                      });
                       setActiveTab("tractor");
                       const params = new URLSearchParams(window.location.search);
                       params.set("tab", "tractor");
@@ -288,6 +308,10 @@ function Field() {
                     type="button"
                     className={`pinto-h3 py-2 pr-4 pl-0 text-left ${activeTab === "pods" ? "text-pinto-secondary" : "text-pinto-gray-4"}`}
                     onClick={() => {
+                      trackSimpleEvent(ANALYTICS_EVENTS.FIELD.TAB_CLICK, {
+                        previous_tab: activeTab,
+                        new_tab: "pods",
+                      });
                       setActiveTab("pods");
                       const params = new URLSearchParams(window.location.search);
                       params.set("tab", "pods");
@@ -342,7 +366,16 @@ function Field() {
               )}
             </div>
           )}
-          {!isMobile && <TractorButton onClick={() => setShowSowOrder(true)} />}
+          {!isMobile && (
+            <TractorButton
+              onClick={() => {
+                trackSimpleEvent(ANALYTICS_EVENTS.FIELD.TRACTOR_BUTTON_CLICK, {
+                  source_page: "field",
+                });
+                setShowSowOrder(true);
+              }}
+            />
+          )}
           {!isMobile && (
             <div className="p-2 rounded-[1rem] bg-pinto-off-white border-pinto-gray-2 border flex flex-col gap-2">
               <Button
@@ -353,6 +386,11 @@ function Field() {
                   if (totalPods.isZero) {
                     e.preventDefault();
                     e.stopPropagation();
+                  } else {
+                    trackSimpleEvent(ANALYTICS_EVENTS.FIELD.SEND_PODS_CLICK, {
+                      source_page: "field",
+                      destination: "/transfer/pods",
+                    });
                   }
                 }}
               >
@@ -366,7 +404,16 @@ function Field() {
                 </NavLink>
               </Button>
               <Button asChild variant="silo-action" className="w-full">
-                <NavLink to="/market/pods" className="flex flex-row gap-2 items-center">
+                <NavLink
+                  to="/market/pods"
+                  className="flex flex-row gap-2 items-center"
+                  onClick={() =>
+                    trackSimpleEvent(ANALYTICS_EVENTS.FIELD.MARKET_PODS_CLICK, {
+                      source_page: "field",
+                      destination: "/market/pods",
+                    })
+                  }
+                >
                   <div className="rounded-full bg-pinto-green h-6 w-6 flex justify-evenly">
                     <span className="self-center items-center">
                       <UpDownArrowsIcon color={"white"} height={"1rem"} width={"1rem"} />
@@ -380,7 +427,13 @@ function Field() {
           {!currentAction && (
             <MobileActionBar>
               <Button
-                onClick={() => navigate(`/field?action=harvest`)}
+                onClick={() => {
+                  trackSimpleEvent(ANALYTICS_EVENTS.FIELD.MOBILE_HARVEST_CLICK, {
+                    source_page: "field",
+                    destination: "/field?action=harvest",
+                  });
+                  navigate(`/field?action=harvest`);
+                }}
                 rounded={"full"}
                 variant={"outline-secondary"}
                 className="pinto-sm-bold text-sm flex-1 flex h-full"
@@ -388,7 +441,14 @@ function Field() {
                 Harvest
               </Button>
               <Button
-                onClick={() => navigate(`/field?action=sow`)}
+                onClick={() => {
+                  trackSimpleEvent(ANALYTICS_EVENTS.FIELD.MOBILE_SOW_CLICK, {
+                    source_page: "field",
+                    destination: "/field?action=sow",
+                    is_morning: morning.isMorning,
+                  });
+                  navigate(`/field?action=sow`);
+                }}
                 rounded={"full"}
                 className={`pinto-sm-bold text-sm flex-1 flex h-full transition-colors ${morning.isMorning ? "bg-pinto-morning-orange text-pinto-morning" : ""}`}
               >
