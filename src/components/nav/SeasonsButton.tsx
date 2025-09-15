@@ -5,8 +5,10 @@ import { TokenValue } from "@/classes/TokenValue";
 import Panel from "@/components/ui/Panel";
 import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import useIsExtraSmall from "@/hooks/display/useIsExtraSmall";
+import useSafeTokenValue from "@/hooks/useSafeTokenValue";
 import { useDiamondEvalulationParameters } from "@/state/useDiamondEvaluationParameters";
 import useFieldSnapshots from "@/state/useFieldSnapshots";
+import { useSeedGauge } from "@/state/useSeedGauge";
 import useSiloSnapshots from "@/state/useSiloSnapshots";
 import { useSeason } from "@/state/useSunData";
 import useSupplySnapshots from "@/state/useSupplySnapshots";
@@ -15,7 +17,7 @@ import { formatter } from "@/utils/format";
 import { textConfig } from "@/utils/theme";
 import { cn, isDev } from "@/utils/utils";
 import clsx from "clsx";
-import { HTMLAttributes, useMemo } from "react";
+import React, { HTMLAttributes, useMemo } from "react";
 import { renderAnnouncement } from "../AnnouncementBanner";
 import TooltipSimple from "../TooltipSimple";
 import { Button } from "../ui/Button";
@@ -49,6 +51,15 @@ const PanelContent = ({
   hasFloodOrRain,
 }: SeasonsButtonPanel) => {
   const { getEvaluationParametersWithSeason } = evaluationParams;
+
+  const { data } = useDiamondEvalulationParameters();
+
+  const maxBeanMaxLpGpPerBdvRatio = data?.maxBeanMaxLpGpPerBdvRatio
+    ? data.maxBeanMaxLpGpPerBdvRatio / BigInt(1e18)
+    : undefined;
+  const minBeanMaxLpGpPerBdvRatio = data?.minBeanMaxLpGpPerBdvRatio
+    ? data.minBeanMaxLpGpPerBdvRatio / BigInt(1e18)
+    : undefined;
 
   const cropRatios = useMemo(() => {
     const ratios: {
@@ -278,7 +289,15 @@ const PanelContent = ({
                                 The Crop Ratio represents the comparative Seed reward between Pinto and the LP token
                                 with the most Seeds. <br /> For example, if the Crop Ratio is 50%, the Seed reward for
                                 Pinto is half the reward of the LP token with the most <br /> Seeds. The Crop Ratio can
-                                vary between 50% and 150%.
+                                vary between{" "}
+                                {minBeanMaxLpGpPerBdvRatio
+                                  ? formatter.pct(minBeanMaxLpGpPerBdvRatio, { minDecimals: 0, maxDecimals: 2 })
+                                  : "--%"}{" "}
+                                and{" "}
+                                {maxBeanMaxLpGpPerBdvRatio
+                                  ? formatter.pct(maxBeanMaxLpGpPerBdvRatio, { minDecimals: 0, maxDecimals: 2 })
+                                  : "--%"}
+                                .
                               </div>
                             }
                           />
