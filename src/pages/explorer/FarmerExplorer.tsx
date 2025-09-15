@@ -52,6 +52,11 @@ const FarmerExplorer = () => {
         valueFormatter={f.number0dFormatter}
         tickValueFormatter={f.largeNumber1dFormatter}
         noDataMessage={NO_DATA_MESSAGE}
+        analyticsContext={{
+          chart_id: "plantedPinto",
+          chart_title: "Planted Pinto",
+          explorer_tab: "farmer",
+        }}
       />
       <div className="flex flex-col sm:flex-row w-full sm:space-x-8">
         <div className="w-full sm:w-1/2">
@@ -66,6 +71,11 @@ const FarmerExplorer = () => {
             valueFormatter={f.number0dFormatter}
             tickValueFormatter={f.largeNumber1dFormatter}
             noDataMessage={NO_DATA_MESSAGE}
+            analyticsContext={{
+              chart_id: "grownStalk",
+              chart_title: "Claimed Grown Stalk Balance",
+              explorer_tab: "farmer",
+            }}
           />
         </div>
         <div className="w-full sm:w-1/2">
@@ -80,6 +90,11 @@ const FarmerExplorer = () => {
             valueFormatter={f.percent3dFormatter}
             tickValueFormatter={f.percent0dFormatter}
             noDataMessage={NO_DATA_MESSAGE}
+            analyticsContext={{
+              chart_id: "stalkOwnership",
+              chart_title: "Stalk Ownership %",
+              explorer_tab: "farmer",
+            }}
           />
         </div>
       </div>

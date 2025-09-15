@@ -8,10 +8,12 @@ import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
 import { Switch } from "@/components/ui/Switch";
 import { NFT_COLLECTION_1_CONTRACT } from "@/constants/address";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import { getCollectionName } from "@/constants/collections";
 import { externalLinks } from "@/constants/links";
 import { useCardFlipAnimation } from "@/hooks/useCardFlipAnimation";
 import { type NFTData, type ViewMode, useNFTData } from "@/state/useNFTData";
+import { trackClick, trackSimpleEvent, withTracking } from "@/utils/analytics";
 import { ChevronLeftIcon, ChevronRightIcon, GridIcon, StackIcon } from "@radix-ui/react-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -65,7 +67,11 @@ function PaginationControls({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onPageChange(currentPage - 1)}
+          onClick={withTracking(ANALYTICS_EVENTS.COLLECTION.PAGE_PREVIOUS_CLICK, () => onPageChange(currentPage - 1), {
+            current_page: currentPage,
+            total_pages: totalPages,
+            total_items: totalItems,
+          })}
           disabled={currentPage === 1}
           className="rounded-lg"
         >
@@ -90,7 +96,12 @@ function PaginationControls({
                 key={pageNum}
                 variant={currentPage === pageNum ? "default" : "outline"}
                 size="sm"
-                onClick={() => onPageChange(pageNum)}
+                onClick={withTracking(ANALYTICS_EVENTS.COLLECTION.PAGE_NUMBER_CLICK, () => onPageChange(pageNum), {
+                  previous_page: currentPage,
+                  new_page: pageNum,
+                  total_pages: totalPages,
+                  total_items: totalItems,
+                })}
                 className="w-10 h-10 rounded-lg"
               >
                 {pageNum}
@@ -101,7 +112,11 @@ function PaginationControls({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onPageChange(currentPage + 1)}
+          onClick={withTracking(ANALYTICS_EVENTS.COLLECTION.PAGE_NEXT_CLICK, () => onPageChange(currentPage + 1), {
+            current_page: currentPage,
+            total_pages: totalPages,
+            total_items: totalItems,
+          })}
           disabled={currentPage === totalPages}
           className="rounded-lg"
         >
@@ -135,7 +150,17 @@ function EmptyState() {
           variant="outline"
           className="rounded-[0.75rem] font-medium inline-flex items-center gap-2 bg-[#0086FF] hover:bg-[#0074E0] hover:text-white text-white border-[#0086FF] hover:border-[#0074E0]"
         >
-          <Link to={externalLinks.nftMarketplace} target="_blank" rel="noopener noreferrer" className="text-white">
+          <Link
+            to={externalLinks.nftMarketplace}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white"
+            onClick={trackClick(ANALYTICS_EVENTS.COLLECTION.OPENSEA_CLICK, {
+              link_type: "external",
+              link_url: externalLinks.nftMarketplace,
+              context: "empty_state",
+            })}
+          >
             <img src={openSeaLogo} alt="OpenSea" className="w-5 h-5" />
             Visit OpenSea
           </Link>
@@ -273,16 +298,48 @@ export default function Collection() {
     setActiveFilter(activeFilter === filter ? "all" : filter);
   };
 
-  const handleNFTClick = useCallback((nft: NFTData) => {
-    setSelectedNFT(nft);
-    setIsModalOpen(true);
-  }, []);
+  const handleNFTClick = useCallback(
+    (nft: NFTData) => {
+      trackSimpleEvent(ANALYTICS_EVENTS.COLLECTION.NFT_CARD_CLICK, {
+        nft_id: nft.id,
+        view_mode: viewMode,
+        display_mode: isGridMode ? "grid" : "carousel",
+      });
 
-  const handleNFTNavigate = useCallback((nft: NFTData) => {
-    setSelectedNFT(nft);
-  }, []);
+      trackSimpleEvent(ANALYTICS_EVENTS.COLLECTION.NFT_DETAIL_MODAL_OPEN, {
+        nft_id: nft.id,
+        view_mode: viewMode,
+        display_mode: isGridMode ? "grid" : "carousel",
+      });
+
+      setSelectedNFT(nft);
+      setIsModalOpen(true);
+    },
+    [viewMode, userNFTs, isGridMode, displayNFTs.length],
+  );
+
+  const handleNFTNavigate = useCallback(
+    (nft: NFTData) => {
+      trackSimpleEvent(ANALYTICS_EVENTS.COLLECTION.NFT_MODAL_NAVIGATE, {
+        nft_id: nft.id,
+        view_mode: viewMode,
+        display_mode: isGridMode ? "grid" : "carousel",
+      });
+
+      setSelectedNFT(nft);
+    },
+    [viewMode, isGridMode],
+  );
 
   const handleCloseModal = () => {
+    if (selectedNFT) {
+      trackSimpleEvent(ANALYTICS_EVENTS.COLLECTION.NFT_MODAL_CLOSE, {
+        nft_id: selectedNFT.id,
+        view_mode: viewMode,
+        display_mode: isGridMode ? "grid" : "carousel",
+      });
+    }
+
     setIsModalOpen(false);
     // Delay clearing the selected NFT to prevent text flicker during modal close animation
     setTimeout(() => {
@@ -292,6 +349,13 @@ export default function Collection() {
 
   const handleViewModeToggle = () => {
     const newMode = viewMode === "owned" ? "all" : "owned";
+
+    trackSimpleEvent(ANALYTICS_EVENTS.COLLECTION.VIEW_MODE_TOGGLE, {
+      previous_mode: viewMode,
+      new_mode: newMode,
+      user_nft_count: balance ? Number(balance) : 0,
+    });
+
     setViewMode(newMode);
     setCurrentPage(1); // Reset to first page when switching modes
   };
@@ -307,6 +371,19 @@ export default function Collection() {
     // Scroll to top when page changes
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
+
+  const handleGridModeToggle = useCallback(
+    (newGridMode: boolean) => {
+      trackSimpleEvent(ANALYTICS_EVENTS.COLLECTION.GRID_MODE_TOGGLE, {
+        previous_mode: isGridMode ? "grid" : "carousel",
+        new_mode: newGridMode ? "grid" : "carousel",
+        view_mode: viewMode,
+      });
+
+      setIsGridMode(newGridMode);
+    },
+    [isGridMode, viewMode, displayNFTs.length],
+  );
 
   if (!address) {
     return (
@@ -344,7 +421,7 @@ export default function Collection() {
               {displayNFTs.length > 1 && (
                 <div className="flex items-center gap-2">
                   <StackIcon className="w-4 h-4 text-pinto-light" />
-                  <Switch checked={isGridMode} onCheckedChange={setIsGridMode} className="h-5 w-9" />
+                  <Switch checked={isGridMode} onCheckedChange={handleGridModeToggle} className="h-5 w-9" />
                   <GridIcon className="w-4 h-4 text-pinto-light" />
                 </div>
               )}

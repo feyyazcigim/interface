@@ -1,7 +1,9 @@
 import chevronDown from "@/assets/misc/ChevronDown.svg";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import useIsExtraSmall from "@/hooks/display/useIsExtraSmall";
 import useIsTablet from "@/hooks/display/useIsTablet";
 import { useWalletNFTProfile } from "@/hooks/useWalletNFTProfile";
+import { withTracking } from "@/utils/analytics";
 import { truncateAddress } from "@/utils/string";
 import { useModal } from "connectkit";
 import { Avatar } from "connectkit";
@@ -46,6 +48,19 @@ const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
 
     useSyncAccountConnecting(modal.open, account);
 
+    const handleTogglePanel = () => {
+      return withTracking(
+        address ? ANALYTICS_EVENTS.WALLET.PANEL_OPEN : ANALYTICS_EVENTS.WALLET.CONNECT_BUTTON_CLICK,
+        () => (address ? togglePanel() : modal.setOpen(true)),
+        {
+          wallet_connected: !!address,
+          panel_state: isOpen ? "open" : "closed",
+          has_ens: !!ensName,
+          has_nft: hasNFT,
+        },
+      );
+    };
+
     return (
       <Panel
         isOpen={isOpen}
@@ -57,7 +72,7 @@ const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
         screenReaderTitle="Wallet Panel"
         trigger={
           <Button
-            onClick={() => (address ? togglePanel() : modal.setOpen(true))}
+            onClick={handleTogglePanel()}
             variant="outline-secondary"
             noShrink
             rounded="full"
@@ -100,7 +115,7 @@ const WalletButton = forwardRef<HTMLButtonElement, WalletButtonProps>(
           </Button>
         }
       >
-        <WalletButtonPanel togglePanel={togglePanel} />
+        <WalletButtonPanel togglePanel={handleTogglePanel()} />
       </Panel>
     );
   },
