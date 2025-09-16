@@ -225,10 +225,12 @@ function CarouselCard({ data, index, keyPrefix, color, onClick }: CarouselCardPr
           "flex flex-col md:flex-1",
 
           // Mobile (default)
-          "gap-1",
+          "gap-1 w-full -ml-8",
 
           // Small screens and up
-          "sm:gap-2",
+          "sm:gap-2 sm:-ml-[4rem]",
+
+          "md:ml-0 md:w-auto",
 
           // Large screens
           "lg:gap-3",
