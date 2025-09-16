@@ -1,4 +1,3 @@
-import chevronDown from "@/assets/misc/ChevronDown.svg";
 import PropertyLowVolatility from "@/assets/misc/Property_Low_Volatility.svg";
 import PropertyMediumOfExchange from "@/assets/misc/Property_Medium_of_Exchange.svg";
 import PropertyScalable from "@/assets/misc/Property_Scalable.svg";
@@ -11,12 +10,11 @@ import ValueTrustless from "@/assets/misc/Value_Trustlessness.svg";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useLiquidityDistribution } from "@/hooks/useLiquidityDistribution";
 import clsx from "clsx";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
-import IconImage from "../ui/IconImage";
 import CardModal from "./CardModal";
 
 // Function to create values data with dynamic liquidity distribution
@@ -154,12 +152,11 @@ interface CarouselCardProps {
   data: CardData;
   index: number;
   keyPrefix: string;
-  isGlowing: boolean;
-  glowColor: string;
+  color: string;
   onClick: (cardData: CardData) => void;
 }
 
-function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }: CarouselCardProps) {
+function CarouselCard({ data, index, keyPrefix, color, onClick }: CarouselCardProps) {
   return (
     <Button
       key={`${keyPrefix}_${data.title}_${index}`}
@@ -169,7 +166,7 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
         "flex items-center rounded-2xl md:justify-between",
 
         // Color & gradient styles
-        glowColor === "green"
+        color === "green"
           ? "border-pinto-green-4/50 bg-[linear-gradient(90deg,#D8F1E2_0%,#FCFCFC_35%)] hover:bg-[linear-gradient(90deg,#D8F1E2_0%,#D8F1E2_35%)] md:bg-[linear-gradient(180deg,#D8F1E2_0%,#FCFCFC_50%)] hover:md:bg-[linear-gradient(180deg,#D8F1E2_0%,#D8F1E2_0%)]"
           : "border-pinto-purple-2 bg-[linear-gradient(90deg,#F0EBF6_0%,#FCFCFC_35%)] hover:bg-[linear-gradient(90deg,#F0EBF6_0%,#F0EBF6_35%)] md:bg-[linear-gradient(180deg,#F0EBF6_0%,#FCFCFC_50%)] hover:md:bg-[linear-gradient(180deg,#F0EBF6_0%,#F0EBF6_50%)]",
 
@@ -193,30 +190,8 @@ function CarouselCard({ data, index, keyPrefix, isGlowing, glowColor, onClick }:
 
         "min-[2100px]:w-[19rem] min-[2100px]:h-[19rem]",
 
-        // Glow effects
-        isGlowing && [
-          glowColor === "orange" &&
-            "shadow-[0_0_15px_rgba(255,186,107,0.6),0_0_25px_rgba(255,186,107,0.4)] scale-[1.02]",
-          glowColor === "purple" &&
-            "shadow-[0_0_15px_rgba(201,179,244,0.6),0_0_25px_rgba(201,179,244,0.4)] scale-[1.02]",
-          glowColor === "green" && "shadow-[0_0_15px_rgba(56,127,92,0.6),0_0_25px_rgba(56,127,92,0.4)] scale-[1.02]",
-        ],
+        "duration-200 transition-all",
       )}
-      style={
-        {
-          "--glow-color": isGlowing ? glowColor : undefined,
-          "--transition-duration-glow": "700ms",
-          "--transition-duration-hover": "200ms",
-          transition:
-            "box-shadow var(--transition-duration-glow) ease-in-out, transform var(--transition-duration-glow) ease-in-out",
-          ...(isGlowing
-            ? {}
-            : {
-                transition:
-                  "box-shadow var(--transition-duration-glow) ease-in-out, transform var(--transition-duration-hover) ease-in-out",
-              }),
-        } as React.CSSProperties
-      }
       onClick={() => onClick(data)}
     >
       <img
@@ -331,8 +306,7 @@ export default function SecondaryCTA() {
                 data={info}
                 index={index}
                 keyPrefix="dataInfo1"
-                isGlowing={false}
-                glowColor="purple"
+                color="purple"
                 onClick={handleCardClick}
               />
             );
@@ -377,8 +351,7 @@ export default function SecondaryCTA() {
                 data={info}
                 index={index}
                 keyPrefix="dataInfo2"
-                isGlowing={false}
-                glowColor="green"
+                color="green"
                 onClick={handleCardClick}
               />
             );
