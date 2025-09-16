@@ -138,7 +138,7 @@ export default function Landing() {
             </div>
           </motion.h2>
           <motion.span
-            className="text-[1.25rem] sm:text-2xl font-thin text-pinto-gray-4 w-[70%] sm:w-fit text-center"
+            className="text-[1.25rem] sm:text-2xl font-thin text-pinto-gray-4 min-w-[20rem] max-sm:max-w-[20rem] w-[70%] sm:w-fit text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeInOut", delay: 0.4 }}
