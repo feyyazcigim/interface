@@ -331,7 +331,7 @@ export default function SecondaryCTA() {
               rounded="full"
               variant={"defaultAlt"}
               size={isMobile ? "md" : "xl"}
-              className={`z-20 hover:bg-pinto-green-2/20 border border-pinto-green-3 bg-pinto-green-1 max-sm:pl-3 max-sm:pr-2 transition-all duration-300 ease-in-out flex flex-row gap-[10px] sm:gap-2 items-center relative overflow-hidden max-sm:px-4 max-sm:py-8 text-xl leading-6 !font-[300]`}
+              className={`z-20 hover:bg-pinto-green-2/20 max-sm:text-sm h-auto border border-pinto-green-3 bg-pinto-green-1 max-sm:pl-4 max-sm:pr-2 transition-all duration-300 ease-in-out flex flex-row gap-[10px] sm:gap-2 items-center relative overflow-hidden text-xl leading-6 !font-[300]`}
             >
               <span>
                 Why is Pinto the best alternative <br className="block sm:hidden" />
