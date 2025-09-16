@@ -590,6 +590,38 @@ export const getSelectRequisitionType = (requisitionsType: MayArray<RequisitionT
   };
 };
 
+export async function loadPublishedRequisitionsWithCancellations(
+  address: string | undefined,
+  protocolAddress: `0x${string}` | undefined,
+  publicClient: PublicClient | null,
+  latestBlock?: { number: bigint; timestamp: bigint } | null,
+  requisitionType?: MayArray<RequisitionType>, // Add requisition type filter
+  fromBlock?: bigint,
+) {
+  if (!protocolAddress || !publicClient)
+    return {
+      selected: [],
+      cancelledHashes: new Set(),
+    };
+
+  try {
+    const data = await fetchTractorEvents(publicClient, protocolAddress, fromBlock);
+    const selectRequisitionType = getSelectRequisitionType(requisitionType, address);
+    const selected = selectRequisitionType({
+      latestBlock: { number: latestBlock?.number ?? 0n, timestamp: latestBlock?.timestamp ?? 0n },
+      data,
+    });
+
+    return {
+      selected,
+      cancelledHashes: data.cancelledHashes,
+    };
+  } catch (error) {
+    console.error("Error loading published requisitions:", error);
+    throw new Error("Failed to load published requisitions");
+  }
+}
+
 export async function loadPublishedRequisitions(
   address: string | undefined,
   protocolAddress: `0x${string}` | undefined,
@@ -990,7 +1022,12 @@ export async function loadOrderbookData(
     // Fetch SowOrderComplete events to identify completed orders
     console.debug("[TRACTOR/loadOrderbookData] Fetching...");
 
-    const [podIndexResult, harvestableIndexResult, sowOrderCompleteEvents, requisitions = []] = await Promise.all([
+    const [
+      podIndexResult,
+      harvestableIndexResult,
+      sowOrderCompleteEvents,
+      { selected: requisitions = [], cancelledHashes },
+    ] = await Promise.all([
       publicClient.readContract({ address: protocolAddress, abi: diamondABI, args: [0n], functionName: "podIndex" }),
       publicClient.readContract({
         address: protocolAddress,
@@ -1005,7 +1042,14 @@ export async function loadOrderbookData(
         fromBlock: fromBlock,
         toBlock: "latest",
       }),
-      loadPublishedRequisitions(address, protocolAddress, publicClient, latestBlock, "sowBlueprintv0", fromBlock),
+      loadPublishedRequisitionsWithCancellations(
+        address,
+        protocolAddress,
+        publicClient,
+        latestBlock,
+        "sowBlueprintv0",
+        fromBlock,
+      ),
     ]);
 
     if (podIndexResult && harvestableIndexResult) {
@@ -1066,6 +1110,8 @@ export async function loadOrderbookData(
     // Process requisitions in a single loop (already sorted by temperature)
     const orderbookData: OrderbookEntry[] = (activeApiEntries ?? []).filter((entry) => {
       if (!!loadOptions.filterOutCompleted && entry.isComplete) return false;
+      // filter out cancelled requisitions
+      if (cancelledHashes.has(entry.requisition.blueprintHash)) return false;
       return true;
     });
 
@@ -1467,6 +1513,40 @@ export const isTractorTokenStrategy = (value: unknown): value is TractorTokenStr
   }
 };
 
+const normalizeBPEndTime = (endTime: bigint) => {
+  if (endTime === 8640000000000n) {
+    // max uint256
+    return BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
+  }
+  return endTime;
+};
+
+export const prepareRequisitionForTxn = (req: RequisitionData | RequisitionEvent | Requisition): RequisitionData => {
+  let signature: `0x${string}`;
+
+  const requisition = "requisition" in req ? req.requisition : req;
+  if (!requisition.signature) {
+    throw new Error("Cannot prepare blueprint for transaction, blueprint is not signed");
+  }
+
+  signature = requisition.signature;
+
+  const struct: RequisitionData = {
+    signature,
+    blueprintHash: requisition.blueprintHash,
+    blueprint: {
+      ...requisition.blueprint,
+      startTime: requisition.blueprint.startTime,
+      endTime: normalizeBPEndTime(requisition.blueprint.endTime),
+      operatorPasteInstrs: requisition.blueprint.operatorPasteInstrs.filter(
+        (instr) => instr !== "0x" && instr !== ("" as `0x${string}`),
+      ),
+    },
+  };
+
+  return struct;
+};
+
 /**
  * Prepare a requisition event for a transaction by normalizing the blueprint data.
  * - Fix timestamp values for transaction
@@ -1474,24 +1554,6 @@ export const isTractorTokenStrategy = (value: unknown): value is TractorTokenStr
  * @param req - The requisition event to prepare
  * @returns The prepared requisition event
  */
-export const prepareSowOrderV0RequisitionEventForTxn = (req: RequisitionEvent) => {
-  const normalizeEndTime = (endTime: bigint) => {
-    if (endTime === 8640000000000n) {
-      // max uint256
-      return BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
-    }
-    return endTime;
-  };
-
-  return {
-    ...req.requisition,
-    blueprint: {
-      ...req.requisition.blueprint,
-      startTime: req.requisition.blueprint.startTime,
-      endTime: normalizeEndTime(req.requisition.blueprint.endTime),
-      operatorPasteInstrs: req.requisition.blueprint.operatorPasteInstrs.filter(
-        (instr) => instr !== "0x" && instr !== ("" as `0x${string}`),
-      ),
-    },
-  };
+export const prepareSowOrderV0RequisitionEventForTxn = (req: RequisitionEvent | RequisitionData) => {
+  return prepareRequisitionForTxn(req);
 };
