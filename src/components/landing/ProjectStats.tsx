@@ -30,9 +30,9 @@ function StatContent({ activeButton }: StatContentProps) {
         y: activeButton ? 0 : -20,
       }}
       transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="flex items-center"
+      className="flex items-start"
     >
-      <div ref={contentRef}>
+      <div ref={contentRef} className="sm:mt-4">
         <AnimatePresence mode="wait" initial={false}>
           {activeButton === "upgrades" && (
             <motion.div

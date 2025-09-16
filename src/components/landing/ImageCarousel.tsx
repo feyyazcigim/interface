@@ -117,8 +117,8 @@ export default function ImageCarousel() {
   }, [api]);
 
   return (
-    <>
-      <div className="flex flex-col text-center gap-1 text-xs sm:text-xl mt-4">
+    <div>
+      <div className="flex flex-col text-center gap-1 text-xs sm:text-xl">
         <span>Pinto is the culmination of more than four years of rigorous development on Ethereum.</span>
       </div>
       <Carousel
@@ -205,6 +205,6 @@ export default function ImageCarousel() {
           <span className="font-bold">{`${currentWp.name} (${currentWp.year}):`}</span> {currentWp.description}
         </span>
       </div>
-    </>
+    </div>
   );
 }

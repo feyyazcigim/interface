@@ -19,7 +19,7 @@ export default function ContributorMessage() {
   const [selectedContributor] = useAtom(selectedContributorAtom);
 
   return (
-    <div className="flex flex-col mx-auto text-center mt-28 sm:mt-8 w-full max-w-full px-4 sm:px-0 sm:w-[65%] h-[400px] sm:h-[400px]">
+    <div className="flex flex-col mx-auto text-center w-full max-w-full px-4 sm:px-0 sm:w-[65%] h-[400px] sm:h-[400px]">
       <AnimatePresence mode="wait">
         <motion.div
           key={selectedContributor.id}
