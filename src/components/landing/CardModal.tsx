@@ -67,10 +67,6 @@ export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalP
               <div className="text-sm sm:text-lg px-4 pt-4 sm:px-8 sm:pt-4 prose-p:leading-[1.3] prose-li:leading-[1.3] prose-a:text-pinto-green-4 hover:prose-a:text-pinto-green-2 prose-a:transition-all prose-a:duration-300 prose-a:after:content-['↗'] prose-a:after:ml-1 prose-a:after:inline-block font-thin text-black overflow-y-auto h-full prose prose-neutral max-w-none prose-h2:font-normal prose-h2:sm:text-lg prose-h2:text-sm prose-h2:text-pinto-gray-4 prose-img:inline prose-img:w-5 prose-img:h-5 sm:prose-img:w-6 sm:prose-img:h-6 prose-img:mx-1 prose-img:align-middle prose-img:-translate-y-0.5 prose-img:!my-0 prose-img:!py-0 prose-ul:!mt-4 prose-ul:!mb-4 prose-ul:!py-0 prose-li:!my-2 prose-li:!py-0 prose-p:!mb-4 prose-p:first:!mt-0 prose-p:last:!mb-0">
                 <Markdown>{cardData.description}</Markdown>
               </div>
-              {/* Fade overlay at top of description */}
-              <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-gray-100 to-transparent pointer-events-none" />
-              {/* Fade overlay at bottom of description */}
-              <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-gray-100 to-transparent pointer-events-none" />
             </div>
           </div>
         </motion.div>
