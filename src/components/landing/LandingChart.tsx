@@ -357,16 +357,6 @@ function priceToY(price: number, chartHeight = ANIMATION_CONFIG.height) {
   return minY - ((price - minPrice) / (maxPrice - minPrice)) * (minY - maxY);
 }
 
-// Convert Y coordinate back to price (inverse of priceToY)
-function yToPrice(y: number, chartHeight = ANIMATION_CONFIG.height) {
-  const minPrice = 0.99;
-  const maxPrice = 1.01;
-  const minY = chartHeight - 0; // Bottom margin
-  const maxY = 0; // Top margin
-  const normalizedY = (minY - y) / (minY - maxY);
-  return minPrice + normalizedY * (maxPrice - minPrice);
-}
-
 // Convert price to Y coordinate for labels (aligned to grid lines)
 function priceLabelToY(
   price: number,
