@@ -1393,82 +1393,91 @@ export default function ProtocolUpgrades() {
     }
   }, [api]);
 
+  const handleSelect = useCallback(() => {
+    if (!api) return;
+    const selectedIndex = api.selectedScrollSnap();
+    const selected = sortedAudits[selectedIndex];
+
+    // Handle carousel item selection with safety check
+    if (selected && !selected.isYearMarker) {
+      setCarouselCenterData(selected);
+    }
+  }, [api, sortedAudits]);
+
+  const handleSettle = useCallback(() => {
+    if (!api) return;
+    const selectedIndex = api.selectedScrollSnap();
+    const selected = sortedAudits[selectedIndex];
+
+    // If we settled on a year marker, find the nearest non-year marker and snap to it
+    if (selected?.isYearMarker) {
+      let nearestIndex = selectedIndex;
+      let minDistance = Infinity;
+
+      // Find the nearest non-year marker
+      sortedAudits.forEach((audit, index) => {
+        if (!audit.isYearMarker) {
+          const distance = Math.abs(index - selectedIndex);
+          if (distance < minDistance) {
+            minDistance = distance;
+            nearestIndex = index;
+          }
+        }
+      });
+
+      // Scroll to the nearest non-year marker
+      if (nearestIndex !== selectedIndex && nearestIndex < sortedAudits.length) {
+        api.scrollTo(nearestIndex);
+      }
+    } else if (selectedIndex < sortedAudits.length) {
+      // Normal case - scroll to the selected index if it's not a year marker
+      api.scrollTo(selectedIndex);
+    }
+  }, [api, sortedAudits]);
+
+  const handleScroll = useCallback(() => {
+    if (!api) return;
+    const now = Date.now();
+    if (now - lastScrollTime.current >= 100) {
+      lastScrollTime.current = now;
+
+      const snapPoints = api.scrollSnapList();
+      const scrollProgress = api.scrollProgress();
+
+      const closestIndex = snapPoints.reduce((closest, point, index) => {
+        const currentDistance = Math.abs(point - scrollProgress);
+        const closestDistance = Math.abs(snapPoints[closest] - scrollProgress);
+        return currentDistance < closestDistance ? index : closest;
+      }, 0);
+
+      const selected = sortedAudits[closestIndex];
+      // Handle carousel item selection with safety check
+      if (selected && !selected.isYearMarker && selected.name !== carouselCenterData?.name) {
+        setCarouselCenterData(selected);
+      }
+    }
+  }, [api, sortedAudits, carouselCenterData]);
+
   // Event handlers
   useEffect(() => {
-    if (api && sortedAudits.length > 0) {
-      const handleSelect = () => {
-        const selectedIndex = api.selectedScrollSnap();
-        const selected = sortedAudits[selectedIndex];
-
-        // Handle carousel item selection with safety check
-        if (selected && !selected.isYearMarker && selected.name !== carouselCenterData?.name) {
-          setCarouselCenterData(selected);
-        }
-      };
-
-      const handleSettle = () => {
-        const selectedIndex = api.selectedScrollSnap();
-        const selected = sortedAudits[selectedIndex];
-
-        // If we settled on a year marker, find the nearest non-year marker and snap to it
-        if (selected?.isYearMarker) {
-          let nearestIndex = selectedIndex;
-          let minDistance = Infinity;
-
-          // Find the nearest non-year marker
-          sortedAudits.forEach((audit, index) => {
-            if (!audit.isYearMarker) {
-              const distance = Math.abs(index - selectedIndex);
-              if (distance < minDistance) {
-                minDistance = distance;
-                nearestIndex = index;
-              }
-            }
-          });
-
-          // Scroll to the nearest non-year marker
-          if (nearestIndex !== selectedIndex && nearestIndex < sortedAudits.length) {
-            api.scrollTo(nearestIndex);
-          }
-        } else if (selectedIndex < sortedAudits.length) {
-          // Normal case - scroll to the selected index if it's not a year marker
-          api.scrollTo(selectedIndex);
-        }
-      };
-
-      const handleScroll = () => {
-        const now = Date.now();
-        if (now - lastScrollTime.current >= 100) {
-          lastScrollTime.current = now;
-
-          const snapPoints = api.scrollSnapList();
-          const scrollProgress = api.scrollProgress();
-
-          const closestIndex = snapPoints.reduce((closest, point, index) => {
-            const currentDistance = Math.abs(point - scrollProgress);
-            const closestDistance = Math.abs(snapPoints[closest] - scrollProgress);
-            return currentDistance < closestDistance ? index : closest;
-          }, 0);
-
-          const selected = sortedAudits[closestIndex];
-          // Handle carousel item selection with safety check
-          if (selected && !selected.isYearMarker && selected.name !== carouselCenterData?.name) {
-            setCarouselCenterData(selected);
-          }
-        }
-      };
-
+    if (api) {
       api.on("select", handleSelect);
       api.on("settle", handleSettle);
-      api.on("scroll", handleScroll);
-
       return () => {
         api.off("select", handleSelect);
         api.off("settle", handleSettle);
+      };
+    }
+  }, [api, handleSelect, handleSettle]);
+
+  useEffect(() => {
+    if (api) {
+      api.on("scroll", handleScroll);
+      return () => {
         api.off("scroll", handleScroll);
       };
     }
-  }, [api, sortedAudits, carouselCenterData]);
+  }, [api, handleScroll]);
 
   useEffect(() => {
     // Update selected data when hovered data changes
