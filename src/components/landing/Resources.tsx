@@ -1,6 +1,6 @@
-import Resources1 from "@/assets/landing/Resources_1.png";
-import Resources2 from "@/assets/landing/Resources_2.png";
-import Resources3 from "@/assets/landing/Resources_3.png";
+import Resources1 from "@/assets/landing/Resources_1.avif";
+import Resources2 from "@/assets/landing/Resources_2.avif";
+import Resources3 from "@/assets/landing/Resources_3.avif";
 import clsx from "clsx";
 import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
