@@ -128,8 +128,8 @@ export default function Landing() {
         <div className="flex flex-col gap-2 sm:gap-4 self-stretch items-center pt-[5dvh] sm:pt-[10dvh] 3xl:pt-[6dvh] min-[2130px]:pt-[8dvh] min-[2400px]:pt-[10dvh]">
           <motion.h2
             className="text-[4rem] leading-[1.1] font-thin text-black"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, transform: "translateY(20px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
             transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
           >
             <div className="flex flex-row gap-4 items-center">
@@ -139,8 +139,8 @@ export default function Landing() {
           </motion.h2>
           <motion.span
             className="text-[1.25rem] sm:text-2xl font-thin text-pinto-gray-4 min-w-[20rem] max-sm:max-w-[20rem] w-[70%] sm:w-fit text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, transform: "translateY(20px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
             transition={{ duration: 0.5, ease: "easeInOut", delay: 0.4 }}
           >
             An Algorithmic Stablecoin Balanced by Farmers Like You.
@@ -150,8 +150,8 @@ export default function Landing() {
         <motion.div
           id="landing-cta"
           className="flex flex-col sm:flex-row gap-4 mx-auto items-center sticky top-4 mt-2 sm:mt-4 mb-4 sm:mb-10 place-self-center z-50 justify-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, transform: "translateY(20px)" }}
+          animate={{ opacity: 1, transform: "translateY(0px)" }}
           transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }}
         >
           <Link to={navLinks.overview}>
