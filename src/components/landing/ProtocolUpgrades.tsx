@@ -1529,7 +1529,7 @@ export default function ProtocolUpgrades() {
               dragFree: true,
             }}
             plugins={[WheelGesturesPlugin()]}
-            className="w-full"
+            className="w-full select-none"
             setApi={setApi}
           >
             <CarouselContent>
