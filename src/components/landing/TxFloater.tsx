@@ -185,30 +185,16 @@ export default function TxFloater({
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={controls} className="z-10 relative" id={id}>
-      {/* Action label positioned above or below based on pill position relative to value target */}
-      <AnimatePresence>
-        {actionLabel && (
-          <motion.div
-            key="label"
-            className="absolute text-pinto-gray-6 text-base text-[18px] font-normal opacity-90 whitespace-nowrap w-full flex justify-center items-center"
-            style={{
-              top: positionAbove ? "-24px" : "50px", // When pill is above $1 target, text goes above; when pill is below $1 target, text goes below
-            }}
-            initial={{ opacity: 0, y: positionAbove ? 5 : -5 }}
-            animate={{ opacity: 0.9, y: 0 }}
-            exit={{ opacity: 0, y: positionAbove ? -5 : 5 }}
-            transition={{ duration: 0.3 }}
-          >
-            {actionLabel}
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {/* The pill stays in its original position */}
-      <motion.div
-        className="flex items-center justify-center bg-white border border-pinto-green-4 rounded-full p-2 gap-2 w-fit transition-all duration-200"
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
+      <div
+        key="label"
+        className="absolute text-pinto-gray-6 text-base text-[18px] font-normal opacity-90 whitespace-nowrap w-full flex justify-center items-center"
+        style={{
+          top: positionAbove ? "-24px" : "50px", // When pill is above $1 target, text goes above; when pill is below $1 target, text goes below
+        }}
       >
+        {actionLabel}
+      </div>
+      <div className="flex items-center justify-center bg-white border border-pinto-green-4 rounded-full p-2 gap-2 w-fit transition-all duration-200">
         <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center">
           <img
             className="w-full h-full object-cover"
@@ -242,7 +228,7 @@ export default function TxFloater({
           }
           className={`w-8 h-8`}
         />
-      </motion.div>
+      </div>
     </motion.div>
   );
 }

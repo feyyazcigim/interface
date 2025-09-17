@@ -23,6 +23,7 @@ function FloaterContainer({
   measurementX,
 }: FloaterContainerProps) {
   const leftPosition = useTransform(x, (scrollX: number) => marker.x + scrollX);
+  const transformValue = useTransform(leftPosition, (pos: number) => `translateX(${pos}px) translateX(-50%)`);
 
   // Check if this floater is in the early reveal zone (0-75% of viewport)
   const shouldPopOnReveal = useTransform([measurementX, x], (values: number[]) => {
@@ -37,12 +38,11 @@ function FloaterContainer({
 
   return (
     <motion.div
-      className="absolute z-20"
+      className="absolute z-20 will-change-transform"
       style={{
         opacity: floatersOpacity,
-        left: leftPosition,
-        top: positionAbove ? marker.y - 50 : marker.y + 10,
-        transform: "translateX(-50%)",
+        top: positionAbove ? marker.y - 50 : marker.y,
+        transform: transformValue,
       }}
     >
       <TxFloater
