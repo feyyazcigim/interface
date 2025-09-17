@@ -682,7 +682,6 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   const clipPathRectWidth = useTransform(clipPathWidth, (pct) => pct * viewportWidth);
   const measurementLineX = useTransform(measurementLineOffset, (offset) => (offset / 100) * viewportWidth);
   const horizontalLineClipPathStyle = useTransform(horizontalLineClipPath, (clipX) => `inset(0 ${clipX}px 0 0)`);
-  const priceLineTransform = useTransform(x, (xValue) => `translateX(${xValue}px)`);
 
   // Update viewport width and dynamic height on mount and resize
   useEffect(() => {
@@ -1580,7 +1579,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{ transform: priceLineTransform, opacity: priceLineOpacity }}
+              style={{ x, opacity: priceLineOpacity }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{
