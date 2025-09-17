@@ -1,4 +1,5 @@
 import { cn, isDev } from "@/utils/utils";
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import DevPage from "./components/DevPage";
 import PageMetaWrapper from "./components/PageMetaWrapper";
@@ -9,7 +10,6 @@ import Collection from "./pages/Collection";
 import Error404 from "./pages/Error404";
 import Explorer from "./pages/Explorer";
 import Field from "./pages/Field";
-import Landing from "./pages/Landing";
 import { Market as MarketPage } from "./pages/Market";
 import Overview from "./pages/Overview";
 import Silo from "./pages/Silo";
@@ -18,6 +18,8 @@ import Swap from "./pages/Swap";
 import Transfer from "./pages/Transfer";
 import Whitepaper from "./pages/Whitepaper";
 import NewUserView from "./pages/overview/NewUserView";
+
+const Landing = lazy(() => import("./pages/Landing"));
 
 import Footer from "@/components/Footer";
 import { MobileActionBarProvider } from "@/components/MobileActionBarContext";
@@ -193,7 +195,9 @@ function App() {
               index
               element={
                 <PageMetaWrapper metaKey="index">
-                  <Landing />
+                  <Suspense fallback={<div className="h-screen w-screen" />}>
+                    <Landing />
+                  </Suspense>
                 </PageMetaWrapper>
               }
             />
