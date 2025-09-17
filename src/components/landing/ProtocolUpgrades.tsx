@@ -1468,7 +1468,7 @@ export default function ProtocolUpgrades() {
         api.off("scroll", handleScroll);
       };
     }
-  }, [api, sortedAudits]);
+  }, [api, sortedAudits, carouselCenterData]);
 
   useEffect(() => {
     // Update selected data when hovered data changes
