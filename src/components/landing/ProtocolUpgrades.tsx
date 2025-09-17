@@ -1252,6 +1252,7 @@ export default function ProtocolUpgrades() {
   const [hoveredData, setHoveredData] = useState<Audit | null>(null);
   const [highlightedData, setHighlightedData] = useState<Audit | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<Set<TimelineEventType>>(new Set());
+  const lastScrollTime = useRef(0);
 
   // Create year markers for each year between the first and last audit
   const createYearMarkers = () => {
@@ -1400,7 +1401,7 @@ export default function ProtocolUpgrades() {
         const selected = sortedAudits[selectedIndex];
 
         // Handle carousel item selection with safety check
-        if (selected && !selected.isYearMarker) {
+        if (selected && !selected.isYearMarker && selected.name !== carouselCenterData?.name) {
           setCarouselCenterData(selected);
         }
       };
@@ -1435,12 +1436,36 @@ export default function ProtocolUpgrades() {
         }
       };
 
+      const handleScroll = () => {
+        const now = Date.now();
+        if (now - lastScrollTime.current >= 100) {
+          lastScrollTime.current = now;
+
+          const snapPoints = api.scrollSnapList();
+          const scrollProgress = api.scrollProgress();
+
+          const closestIndex = snapPoints.reduce((closest, point, index) => {
+            const currentDistance = Math.abs(point - scrollProgress);
+            const closestDistance = Math.abs(snapPoints[closest] - scrollProgress);
+            return currentDistance < closestDistance ? index : closest;
+          }, 0);
+
+          const selected = sortedAudits[closestIndex];
+          // Handle carousel item selection with safety check
+          if (selected && !selected.isYearMarker && selected.name !== carouselCenterData?.name) {
+            setCarouselCenterData(selected);
+          }
+        }
+      };
+
       api.on("select", handleSelect);
       api.on("settle", handleSettle);
+      api.on("scroll", handleScroll);
 
       return () => {
         api.off("select", handleSelect);
         api.off("settle", handleSettle);
+        api.off("scroll", handleScroll);
       };
     }
   }, [api, sortedAudits]);
