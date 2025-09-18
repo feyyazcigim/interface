@@ -249,6 +249,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["security"],
+    isUpgrade: true,
   },
   {
     name: "BIP-45",
@@ -408,6 +409,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["security"],
+    isUpgrade: true,
   },
   {
     name: "BIP-31",
