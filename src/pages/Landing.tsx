@@ -32,9 +32,6 @@ export default function Landing() {
     // Track page load immediately
     trackClick(ANALYTICS_EVENTS.LANDING.PAGE_LOAD, {
       timestamp: Date.now(),
-      user_agent: navigator.userAgent,
-      viewport_width: window.innerWidth,
-      viewport_height: window.innerHeight,
     })();
 
     // Set up session time tracking
@@ -106,8 +103,6 @@ export default function Landing() {
           if (event) {
             trackClick(event, {
               scroll_depth: milestone,
-              scroll_position: currentScrollTop,
-              scroll_height: scrollHeight,
               timestamp: Date.now(),
             })();
           }
