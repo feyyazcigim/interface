@@ -16,11 +16,11 @@ type ActiveButton = "upgrades" | "contributors" | "years" | "volume" | null;
 
 interface StatContentProps {
   activeButton: ActiveButton;
+  isMobile: boolean;
 }
 
-function StatContent({ activeButton }: StatContentProps) {
+function StatContent({ activeButton, isMobile }: StatContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
 
   return (
     <motion.div
@@ -86,10 +86,31 @@ function StatContent({ activeButton }: StatContentProps) {
 
 export default function ProjectStats() {
   const [activeButton, setActiveButton] = useState<ActiveButton>("upgrades");
+  const isMobile = useIsMobile();
 
   // Handle manual button selection
-  const handleButtonClick = (buttonType: ActiveButton) => {
+  const handleButtonClick = (buttonType: ActiveButton, event?: React.MouseEvent) => {
     setActiveButton(buttonType);
+    // On mobile, scroll so the upgrades button is 80px from top (only for upgrades button)
+    if (isMobile && buttonType === "upgrades" && event?.currentTarget) {
+      const scrollContainer = document.getElementById("scrollContainer");
+      const buttonElement = event.target as HTMLElement;
+
+      if (scrollContainer) {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const buttonRect = buttonElement.getBoundingClientRect();
+
+        // Calculate position relative to the scroll container
+        const buttonRelativeTop = buttonRect.top - containerRect.top;
+        const currentScrollTop = scrollContainer.scrollTop;
+        const targetScrollTop = currentScrollTop + buttonRelativeTop - 80;
+
+        scrollContainer.scrollTo({
+          top: targetScrollTop,
+          behavior: "smooth",
+        });
+      }
+    }
   };
 
   // Helper to determine opacity class
@@ -109,7 +130,7 @@ export default function ProjectStats() {
         <Button
           variant={"outline-rounded"}
           className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
-          onClick={() => handleButtonClick("upgrades")}
+          onClick={(event) => handleButtonClick("upgrades", event)}
           glow={activeButton === "upgrades"}
           shimmer={!activeButton || activeButton === "upgrades"}
           shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
@@ -240,7 +261,7 @@ export default function ProjectStats() {
           <Years />
           <Volume />
         </span>
-        <StatContent activeButton={activeButton} />
+        <StatContent activeButton={activeButton} isMobile={isMobile} />
       </motion.div>
     </div>
   );
