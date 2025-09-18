@@ -816,99 +816,95 @@ export default function LandingChart() {
         // console.log("🔄 Extending price data at 80% progress");
         lastExtensionRef.current = now;
 
-        // Stop current animation
+        // Stop current animation immediately
         if (animationControlsRef.current) {
           animationControlsRef.current.stop();
         }
 
-        setFullPriceData((currentData) => {
-          // Generate new randomized stable data
+        // Step 1: Generate new data in next tick
+        setTimeout(() => {
           const newStableData = Array.from({ length: repetitions }).flatMap(() =>
             generateRandomizedStableData(stablePriceData),
           );
 
-          // Only remove points that are well off-screen to the left
           const clipPathStartX = viewportWidth * ANIMATION_CONFIG.clipPath.initial;
-          const offScreenBuffer = viewportWidth * 0.2; // 20% of viewport as buffer
+          const offScreenBuffer = viewportWidth * 0.2;
           const safeRemovalThreshold = currentOffset - clipPathStartX - offScreenBuffer;
 
-          // Calculate how much data we can safely remove
-          let removableWidth = 0;
-          let pointsToRemove = 0;
+          // Step 2: Update state in next animation frame
+          requestAnimationFrame(() => {
+            setFullPriceData((currentData) => {
+              // Fast calculation of removable points
+              let removableWidth = 0;
+              let pointsToRemove = 0;
 
-          for (let i = 0; i < currentData.length; i++) {
-            const segSpeed = currentData[i].speed || 1;
-            const pointWidth = pointSpacing / segSpeed;
+              for (let i = 0; i < currentData.length && removableWidth < safeRemovalThreshold; i++) {
+                const segSpeed = currentData[i].speed || 1;
+                const pointWidth = pointSpacing / segSpeed;
 
-            if (removableWidth + pointWidth <= safeRemovalThreshold) {
-              removableWidth += pointWidth;
-              pointsToRemove++;
-            } else {
-              break;
-            }
-          }
+                if (removableWidth + pointWidth <= safeRemovalThreshold) {
+                  removableWidth += pointWidth;
+                  pointsToRemove++;
+                } else {
+                  break;
+                }
+              }
 
-          // Only remove points if we have a reasonable amount to remove
-          // and don't remove more than we're adding
-          const maxPointsToRemove = Math.min(pointsToRemove, newStableData.length);
+              const maxPointsToRemove = Math.min(pointsToRemove, newStableData.length);
 
-          if (maxPointsToRemove > 0) {
-            const actualRemovedPoints = currentData.slice(0, maxPointsToRemove);
-            const actualRemovedWidth = actualRemovedPoints.reduce((width, point) => {
-              const segSpeed = point.speed || 1;
-              return width + pointSpacing / segSpeed;
-            }, 0);
+              if (maxPointsToRemove > 0) {
+                // Pre-calculate removed width more efficiently
+                let actualRemovedWidth = 0;
+                for (let i = 0; i < maxPointsToRemove; i++) {
+                  const segSpeed = currentData[i].speed || 1;
+                  actualRemovedWidth += pointSpacing / segSpeed;
+                }
 
-            const newData = [
-              ...currentData.slice(maxPointsToRemove), // Remove safe points from beginning
-              ...newStableData, // Add new randomized points to end
-            ];
+                const newScrollOffset = Math.max(0, currentOffset - actualRemovedWidth);
+                scrollOffset.set(newScrollOffset);
 
-            // Adjust scroll offset to account for removed points
-            const newScrollOffset = Math.max(0, currentOffset - actualRemovedWidth);
-            scrollOffset.set(newScrollOffset);
+                /* console.log(
+                  `📊 Safely removed ${maxPointsToRemove} off-screen points, added ${newStableData.length} new points`,
+                ); */
 
-            /* console.log(
-                `📊 Safely removed ${maxPointsToRemove} off-screen points, added ${newStableData.length} new points`,
-              );*/
-            return newData;
-          } else {
-            // If we can't safely remove points, just add new ones
-            // console.log("📊 Added new data without removing (not safe to remove yet)");
-            return [...currentData, ...newStableData];
-          }
-        });
-
-        // Restart the continuous scroll with new data immediately
-        const speedScale = 1; // viewportWidth / 1920;
-        const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
-
-        // Use requestAnimationFrame for smoother restart
-        requestAnimationFrame(() => {
-          const startContinuousScroll = () => {
-            const currentDataWidth = fullPriceData.reduce((width, point) => {
-              const segSpeed = point.speed || 1;
-              return width + pointSpacing / segSpeed;
-            }, 0);
-
-            const currentScrollOffset = scrollOffset.get();
-            const remainingWidth = currentDataWidth - currentScrollOffset;
-            const scrollDuration = remainingWidth / pxPerSecond;
-
-            const controls = animate(scrollOffset, currentDataWidth, {
-              duration: scrollDuration,
-              ease: "linear",
-              onComplete: startContinuousScroll,
+                return [...currentData.slice(maxPointsToRemove), ...newStableData];
+              } else {
+                // console.log("📊 Added new data without removing (not safe to remove yet)");
+                return [...currentData, ...newStableData];
+              }
             });
-            animationControlsRef.current = controls;
-          };
 
-          startContinuousScroll();
-        });
+            // Step 3: Restart animation in another frame
+            setTimeout(() => {
+              const speedScale = 1;
+              const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
+
+              const startContinuousScroll = () => {
+                const currentDataWidth = fullPriceData.reduce((width, point) => {
+                  const segSpeed = point.speed || 1;
+                  return width + pointSpacing / segSpeed;
+                }, 0);
+
+                const currentScrollOffset = scrollOffset.get();
+                const remainingWidth = currentDataWidth - currentScrollOffset;
+                const scrollDuration = remainingWidth / pxPerSecond;
+
+                const controls = animate(scrollOffset, currentDataWidth, {
+                  duration: scrollDuration,
+                  ease: "linear",
+                  onComplete: startContinuousScroll,
+                });
+                animationControlsRef.current = controls;
+              };
+
+              startContinuousScroll();
+            }, 0);
+          });
+        }, 0);
       }
     });
     return unsubscribe;
-  }, [scrollOffset, priceLabelsOpacity, fullPriceData]);
+  }, [scrollOffset, fullPriceData]);
 
   // Cleanup timers on unmount
   useEffect(() => {
