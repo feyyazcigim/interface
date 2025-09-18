@@ -1,6 +1,8 @@
 import Resources1 from "@/assets/landing/Resources_1.avif";
 import Resources2 from "@/assets/landing/Resources_2.avif";
 import Resources3 from "@/assets/landing/Resources_3.avif";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
+import { trackClick } from "@/utils/analytics";
 import clsx from "clsx";
 import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
@@ -67,6 +69,24 @@ const buttonStyles = clsx(
   "w-full flex p-2 pr-3 sm:p-4 sm:pr-4 justify-center items-center gap-2.5 h-[3.125rem] text-sm font-normal",
 );
 
+// Helper function to get the appropriate analytics event based on button label
+function getResourcesAnalyticsEvent(label: string) {
+  switch (label) {
+    case "Docs":
+      return ANALYTICS_EVENTS.LANDING.RESOURCES_DOCS_CLICK;
+    case "Blog":
+      return ANALYTICS_EVENTS.LANDING.RESOURCES_BLOG_CLICK;
+    case "@pintodotmoney":
+      return ANALYTICS_EVENTS.LANDING.RESOURCES_TWITTER_CLICK;
+    case "Discord":
+      return ANALYTICS_EVENTS.LANDING.RESOURCES_DISCORD_CLICK;
+    case "Take me to the Farm":
+      return ANALYTICS_EVENTS.LANDING.RESOURCES_FARM_CTA_CLICK;
+    default:
+      return null;
+  }
+}
+
 export default function Resources() {
   return (
     <div className="flex flex-col items-center self-stretch gap-8 2xl:gap-12">
@@ -94,6 +114,18 @@ export default function Resources() {
                     target={button.ctaStyle ? undefined : "_blank"}
                     rel={button.ctaStyle ? undefined : "noopener noreferrer"}
                     className="flex-1"
+                    onClick={(() => {
+                      const analyticsEvent = getResourcesAnalyticsEvent(button.label);
+                      return analyticsEvent
+                        ? trackClick(analyticsEvent, {
+                            section: "resources",
+                            card_title: card.title.toLowerCase(),
+                            button_label: button.label,
+                            destination: button.href,
+                            button_type: button.ctaStyle ? "cta" : "external_link",
+                          })
+                        : undefined;
+                    })()}
                   >
                     <Button
                       variant={button.variant || "outline-white"}
