@@ -113,26 +113,49 @@ export default function ProjectStats() {
 
     setActiveButton(buttonType);
 
-    // On mobile, scroll so the upgrades button is 80px from top (only for upgrades button)
-    if (isMobile && (buttonType === "upgrades" || buttonType === "contributors") && event?.currentTarget) {
+    // Handle scrolling behavior for both mobile and desktop
+    if (event?.currentTarget) {
       const scrollContainer = document.getElementById("scrollContainer");
-      const buttonElement = event.target as HTMLElement;
 
       if (scrollContainer) {
-        const containerRect = scrollContainer.getBoundingClientRect();
-        const buttonRect = buttonElement.getBoundingClientRect();
+        if (isMobile) {
+          // Mobile: scroll to position upgrades button at specific offset from top
+          const upgradesButton = document.getElementById("upgradesButton");
 
-        const offset = buttonType === "upgrades" ? 80 : 200;
+          if (upgradesButton) {
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const upgradesRect = upgradesButton.getBoundingClientRect();
 
-        // Calculate position relative to the scroll container
-        const buttonRelativeTop = buttonRect.top - containerRect.top;
-        const currentScrollTop = scrollContainer.scrollTop;
-        const targetScrollTop = currentScrollTop + buttonRelativeTop - offset;
+            const offset = buttonType === "contributors" ? 140 : 70;
 
-        scrollContainer.scrollTo({
-          top: targetScrollTop,
-          behavior: "smooth",
-        });
+            // Calculate position relative to the scroll container
+            const upgradesRelativeTop = upgradesRect.top - containerRect.top;
+            const currentScrollTop = scrollContainer.scrollTop;
+            const targetScrollTop = currentScrollTop + upgradesRelativeTop - offset;
+
+            scrollContainer.scrollTo({
+              top: targetScrollTop,
+              behavior: "smooth",
+            });
+          }
+        } else {
+          // Desktop: scroll to stats section
+          const statsElement = document.getElementById("stats");
+
+          if (statsElement) {
+            const viewportHeight = scrollContainer.clientHeight;
+            let targetScrollTop = statsElement.offsetTop;
+
+            const topCtaSpace = viewportHeight * 0.02;
+            const ctaOffset = topCtaSpace;
+            targetScrollTop = targetScrollTop - ctaOffset;
+
+            scrollContainer.scrollTo({
+              top: targetScrollTop,
+              behavior: "smooth",
+            });
+          }
+        }
       }
     }
   };
@@ -159,6 +182,7 @@ export default function ProjectStats() {
           shimmer={!activeButton || activeButton === "upgrades"}
           shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
           glowColor="rgba(156, 156, 156, 0.5)" // pinto-gray-4
+          id={"upgradesButton"}
         >
           <span className="flex items-center gap-2">
             <img src={Hammer} alt="hammer" className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -225,7 +249,7 @@ export default function ProjectStats() {
         <Button
           variant={"outline-rounded"}
           className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "years")}`}
-          onClick={() => handleButtonClick("years")}
+          onClick={(event) => handleButtonClick("years", event)}
           glow={activeButton === "years"}
           shimmer={!activeButton || activeButton === "years"}
           shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
@@ -255,7 +279,7 @@ export default function ProjectStats() {
           <Button
             variant={"outline-rounded"}
             className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "volume")}`}
-            onClick={() => handleButtonClick("volume")}
+            onClick={(event) => handleButtonClick("volume", event)}
             glow={activeButton === "volume"}
             shimmer={!activeButton || activeButton === "volume"}
             shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
