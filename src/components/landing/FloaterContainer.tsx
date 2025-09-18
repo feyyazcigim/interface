@@ -7,21 +7,12 @@ interface FloaterContainerProps {
   marker: TransactionMarker;
   x: MotionValue<number>;
   viewportWidth: number;
-  floatersOpacity: MotionValue<1 | 0>;
   positionAbove: boolean;
   isFirst: boolean;
   measurementX: MotionValue<number>;
 }
 
-function FloaterContainer({
-  marker,
-  x,
-  viewportWidth,
-  floatersOpacity,
-  positionAbove,
-  isFirst,
-  measurementX,
-}: FloaterContainerProps) {
+function FloaterContainer({ marker, x, viewportWidth, positionAbove, isFirst, measurementX }: FloaterContainerProps) {
   const leftPosition = useTransform(x, (scrollX: number) => marker.x + scrollX);
   const transformValue = useTransform(leftPosition, (pos: number) => `translateX(${pos}px) translateX(-50%)`);
 
@@ -40,7 +31,7 @@ function FloaterContainer({
     <motion.div
       className="absolute z-20 will-change-transform"
       style={{
-        opacity: floatersOpacity,
+        opacity: 1,
         top: positionAbove ? marker.y - 50 : marker.y,
         transform: transformValue,
       }}
@@ -88,7 +79,6 @@ function arePropsEqual(prevProps: FloaterContainerProps, nextProps: FloaterConta
     prevProps.positionAbove !== nextProps.positionAbove ||
     prevProps.isFirst !== nextProps.isFirst ||
     prevProps.x !== nextProps.x ||
-    prevProps.floatersOpacity !== nextProps.floatersOpacity ||
     prevProps.measurementX !== nextProps.measurementX
   ) {
     return false;

@@ -11,7 +11,7 @@ import Beaver_10 from "@/assets/landing/Beaver_10.png";
 import Beaver_11 from "@/assets/landing/Beaver_11.png";
 import Beaver_12 from "@/assets/landing/Beaver_12.png";
 import useIsMobile from "@/hooks/display/useIsMobile";
-import { cubicBezier, findBezierExtrema, generateChaoticUnstableData } from "@/utils/utils";
+import { cubicBezier, findBezierExtrema } from "@/utils/utils";
 import { MotionValue, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FloaterContainer from "./FloaterContainer";
@@ -106,29 +106,6 @@ const ANIMATION_CONFIG = {
 const repetitions = ANIMATION_CONFIG.repetitions;
 const pointSpacing = ANIMATION_CONFIG.pointSpacing;
 
-// Position calculation system based on data segment widths
-function calculatePositions(chartHeight: number) {
-  // Calculate actual widths of each data segment
-  const unstableWidth = getSegmentWidth(unstablePriceData, pointSpacing);
-  const semiStableWidth = getSegmentWidth(semiStablePriceData, pointSpacing);
-  const stableWidth = getSegmentWidth(stablePriceData, pointSpacing);
-
-  return {
-    // Data segment widths
-    segments: {
-      unstable: unstableWidth,
-      semiStable: semiStableWidth,
-      stable: stableWidth,
-      totalInitial: unstableWidth + semiStableWidth,
-    },
-
-    // Price indicator positions
-    priceIndicator: {
-      staticY: chartHeight * ANIMATION_CONFIG.priceIndicator.staticPosition,
-    },
-  };
-}
-
 // Duration calculation system - simplified for fade-in only
 function calculateDurations() {
   const fadeInDuration = 8; // Fixed fade-in duration in seconds
@@ -206,20 +183,6 @@ export interface TransactionMarker {
   index: number;
   apexType?: "peak" | "valley";
 }
-
-const unstablePriceData: PricePoint[] = generateChaoticUnstableData();
-
-const semiStablePriceData: PricePoint[] = [
-  { txType: null, value: 0.9998 },
-  { txType: "withdraw", value: 1.004 },
-  { txType: null, value: 0.997 },
-  { txType: null, value: 1.003 },
-  { txType: "deposit", value: 0.998 },
-  { txType: null, value: 1.0025 },
-  { txType: null, value: 1.0 },
-  { txType: "sow", value: 0.9994 },
-  { txType: "harvest", value: 1.0004 },
-];
 
 const stablePriceData: PricePoint[] = [
   { txType: null, value: 0.9994, speed: 3 },
@@ -586,16 +549,6 @@ function generateCompletePathWithIncrementalMarkers(
   return { path, points, totalWidth, beziers, transactionMarkers: apexTransactionMarkers };
 }
 
-// Helper to get width of a price data segment
-function getSegmentWidth(data: PricePoint[], pointSpacing: number) {
-  let width = 0;
-  for (let i = 0; i < data.length; i++) {
-    const segSpeed = data[i].speed || 1;
-    width += pointSpacing / segSpeed;
-  }
-  return width;
-}
-
 // Generate price label data
 function generatePriceLabelData(chartHeight = ANIMATION_CONFIG.height) {
   return ANIMATION_CONFIG.priceLabels.levels.map((price) => {
@@ -625,7 +578,6 @@ export default function LandingChart() {
 
   // Calculate durations and positions
   const durations = useMemo(() => calculateDurations(), []);
-  const positions = useMemo(() => calculatePositions(dynamicHeight), [dynamicHeight]);
 
   // Generate price label data
   const priceLabelData = useMemo(() => {
@@ -638,16 +590,13 @@ export default function LandingChart() {
   const measurementLineOffset = useMotionValue(ANIMATION_CONFIG.measurementLine.initial * 100); // Separate offset for measurement line movement (percentage)
   const clipPathWidth = useMotionValue(ANIMATION_CONFIG.clipPath.initial); // Separate motion value for clip path (decimal 0-1)
   const horizontalLineClipPath = useMotionValue(viewportWidth); // For horizontal line reveal animation (starts hidden from right)
-  const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
   const priceLabelsOpacity = useMotionValue(0); // 0 = hidden, 1 = visible
   const priceLineOpacity = useMotionValue(0); // 0 = hidden, 1 = visible
   const horizontalLineOpacity = useMotionValue(1); // 0 = hidden, 1 = visible
-  const transactionMarkersOpacity = useMotionValue<number>(1); // 0 = hidden, 1 = visible
-  const baseFloatersOpacity = useTransform(priceTrackingActive, (active: number) => (active >= 1 ? 1 : 0) as number);
-  const floatersOpacity = useTransform(
-    [baseFloatersOpacity, transactionMarkersOpacity, priceLineOpacity],
-    ([base, restart, priceLineOpac]: number[]) => base * restart * priceLineOpac,
-  ) as MotionValue<0 | 1>;
+  const gridOpacity = useMotionValue(0); // 0 = hidden, 1 = visible
+  const gridClipPath = useMotionValue("inset(0 0 100% 0)"); // Initial clip path
+  const measurementLineClipPath = useMotionValue("inset(0 0 100% 0)"); // Initial clip path for measurement line
+  const priceIndicatorOpacity = useMotionValue(0); // 0 = hidden, 1 = visible
   const x = useTransform(scrollOffset, (value) => viewportWidth * ANIMATION_CONFIG.clipPath.initial - value);
 
   // Transform values for motion properties (moved from JSX to avoid hook violations)
@@ -820,38 +769,11 @@ export default function LandingChart() {
   );
 
   // Use Bezier curve for indicator Y - only when price tracking is active
-  const staticY = positions.priceIndicator.staticY; // Calculated static position
-  const currentY = useTransform(
-    [scrollOffset, measurementX, priceTrackingActive],
-    ([currentOffset, measX, isActive]) => {
-      // If price tracking is not active, return static position
-      // @ts-ignore-next-line
-      if (isActive < 1) {
-        return staticY;
-      }
-
-      // Direct position calculation without looping to prevent desync
-      // @ts-ignore-next-line
-      const xVal = measX + currentOffset - viewportWidth * ANIMATION_CONFIG.clipPath.initial; // Account for price line offset
-      return getYOnBezierCurve(xVal);
-    },
-  );
-
-  // Get current price and txType at the measurement position
-  const currentIndex = useTransform([scrollOffset, measurementX], ([currentOffset, measX]) => {
+  const currentY = useTransform([scrollOffset, measurementX], ([currentOffset, measX]) => {
+    // Direct position calculation without looping to prevent desync
     // @ts-ignore-next-line
-    const xVal = measX + currentOffset;
-    // Find the closest point index by X
-    let minDist = Infinity;
-    let idx = 0;
-    for (let i = 0; i < beziers.length; i++) {
-      const seg = beziers[i];
-      if (Math.abs(seg.p1.x - xVal) < minDist) {
-        minDist = Math.abs(seg.p1.x - xVal);
-        idx = i;
-      }
-    }
-    return idx;
+    const xVal = measX + currentOffset - viewportWidth * ANIMATION_CONFIG.clipPath.initial; // Account for price line offset
+    return getYOnBezierCurve(xVal);
   });
 
   // currentTriggerPhase and setCurrentTriggerPhase are now passed as props
@@ -867,10 +789,6 @@ export default function LandingChart() {
   const componentRef = useRef<HTMLDivElement>(null);
   const isComponentVisibleRef = useRef(false);
 
-  // Monitor scroll progress to fade in price labels during semi-stable phase
-  // Track if we've reached stable phase to know when to remove initial segments
-  const [hasReachedStable, setHasReachedStable] = useState(false);
-
   // Track last extension to prevent rapid fire updates
   const lastExtensionRef = useRef<number>(0);
 
@@ -878,17 +796,6 @@ export default function LandingChart() {
   useEffect(() => {
     const unsubscribe = scrollOffset.on("change", (currentOffset) => {
       if (isPausedRef.current) return;
-      // Check if we've reached the semi-stable phase (after unstable phase)
-      if (currentOffset >= positions.segments.unstable && priceLabelsOpacity.get() === 0) {
-        animate(priceLabelsOpacity, 1, { duration: 1, ease: "easeInOut" });
-      }
-
-      // Check if we've reached stable phase
-      const stableThreshold = positions.segments.unstable + positions.segments.semiStable;
-      if (currentOffset >= stableThreshold && !hasReachedStable) {
-        setHasReachedStable(true);
-        // console.log("🎯 Reached stable phase - initial story arc complete");
-      }
 
       // Calculate total data width for progress tracking
       const totalDataWidth = fullPriceData.reduce((width, point) => {
@@ -920,69 +827,55 @@ export default function LandingChart() {
             generateRandomizedStableData(stablePriceData),
           );
 
-          if (hasReachedStable) {
-            // Story arc is complete - remove oldest stable points from beginning
-            // But only remove points that are well off-screen to the left
-            const clipPathStartX = viewportWidth * ANIMATION_CONFIG.clipPath.initial;
-            const offScreenBuffer = viewportWidth * 0.2; // 20% of viewport as buffer
-            const safeRemovalThreshold = currentOffset - clipPathStartX - offScreenBuffer;
+          // Only remove points that are well off-screen to the left
+          const clipPathStartX = viewportWidth * ANIMATION_CONFIG.clipPath.initial;
+          const offScreenBuffer = viewportWidth * 0.2; // 20% of viewport as buffer
+          const safeRemovalThreshold = currentOffset - clipPathStartX - offScreenBuffer;
 
-            // Calculate how much data we can safely remove
-            let removableWidth = 0;
-            let pointsToRemove = 0;
+          // Calculate how much data we can safely remove
+          let removableWidth = 0;
+          let pointsToRemove = 0;
 
-            for (let i = 0; i < currentData.length; i++) {
-              const segSpeed = currentData[i].speed || 1;
-              const pointWidth = pointSpacing / segSpeed;
+          for (let i = 0; i < currentData.length; i++) {
+            const segSpeed = currentData[i].speed || 1;
+            const pointWidth = pointSpacing / segSpeed;
 
-              if (removableWidth + pointWidth <= safeRemovalThreshold) {
-                removableWidth += pointWidth;
-                pointsToRemove++;
-              } else {
-                break;
-              }
-            }
-
-            // Only remove points if we have a reasonable amount to remove
-            // and don't remove more than we're adding
-            const maxPointsToRemove = Math.min(pointsToRemove, newStableData.length);
-
-            if (maxPointsToRemove > 0) {
-              const actualRemovedPoints = currentData.slice(0, maxPointsToRemove);
-              const actualRemovedWidth = actualRemovedPoints.reduce((width, point) => {
-                const segSpeed = point.speed || 1;
-                return width + pointSpacing / segSpeed;
-              }, 0);
-
-              const newData = [
-                ...currentData.slice(maxPointsToRemove), // Remove safe points from beginning
-                ...newStableData, // Add new randomized points to end
-              ];
-
-              // Adjust scroll offset to account for removed points
-              const newScrollOffset = Math.max(0, currentOffset - actualRemovedWidth);
-              scrollOffset.set(newScrollOffset);
-
-              /* console.log(
-                `📊 Safely removed ${maxPointsToRemove} off-screen points, added ${newStableData.length} new points`,
-              );*/
-              return newData;
+            if (removableWidth + pointWidth <= safeRemovalThreshold) {
+              removableWidth += pointWidth;
+              pointsToRemove++;
             } else {
-              // If we can't safely remove points, just add new ones
-              // console.log("📊 Added new data without removing (not safe to remove yet)");
-              return [...currentData, ...newStableData];
+              break;
             }
-          } else {
-            // Still in story arc - keep initial segments, remove some stable points
-            const initialSegmentLength = unstablePriceData.length + semiStablePriceData.length;
-            const pointsToRemove = newStableData.length;
+          }
+
+          // Only remove points if we have a reasonable amount to remove
+          // and don't remove more than we're adding
+          const maxPointsToRemove = Math.min(pointsToRemove, newStableData.length);
+
+          if (maxPointsToRemove > 0) {
+            const actualRemovedPoints = currentData.slice(0, maxPointsToRemove);
+            const actualRemovedWidth = actualRemovedPoints.reduce((width, point) => {
+              const segSpeed = point.speed || 1;
+              return width + pointSpacing / segSpeed;
+            }, 0);
 
             const newData = [
-              ...currentData.slice(0, initialSegmentLength), // Keep unstable + semi-stable
-              ...currentData.slice(initialSegmentLength + pointsToRemove), // Remove old stable points
-              ...newStableData, // Add new randomized points
+              ...currentData.slice(maxPointsToRemove), // Remove safe points from beginning
+              ...newStableData, // Add new randomized points to end
             ];
+
+            // Adjust scroll offset to account for removed points
+            const newScrollOffset = Math.max(0, currentOffset - actualRemovedWidth);
+            scrollOffset.set(newScrollOffset);
+
+            /* console.log(
+                `📊 Safely removed ${maxPointsToRemove} off-screen points, added ${newStableData.length} new points`,
+              );*/
             return newData;
+          } else {
+            // If we can't safely remove points, just add new ones
+            // console.log("📊 Added new data without removing (not safe to remove yet)");
+            return [...currentData, ...newStableData];
           }
         });
 
@@ -1015,14 +908,7 @@ export default function LandingChart() {
       }
     });
     return unsubscribe;
-  }, [
-    scrollOffset,
-    positions.segments.unstable,
-    positions.segments.semiStable,
-    priceLabelsOpacity,
-    fullPriceData,
-    hasReachedStable,
-  ]);
+  }, [scrollOffset, priceLabelsOpacity, fullPriceData]);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -1035,22 +921,35 @@ export default function LandingChart() {
 
   // Start animation function
   const startAnimation = useCallback(async () => {
-    // Set up initial positions
-    measurementLineOffset.set(ANIMATION_CONFIG.measurementLine.minimum * 100); // Start at 10%
-    clipPathWidth.set(ANIMATION_CONFIG.clipPath.initial); // Start at 0.1
-    horizontalLineClipPath.set(viewportWidth); // Start hidden from right
-    priceLabelsOpacity.set(0);
-    priceLineOpacity.set(0); // Start price line hidden
-    priceTrackingActive.set(0); // Start price tracking inactive
+    // Start with grid animation
+    animate(gridOpacity, 1, {
+      duration: durations.fadeInSequence.grid.duration,
+      ease: "easeInOut",
+      delay: durations.fadeInSequence.grid.start,
+    });
+    animate(gridClipPath, "inset(0 0 0 0)", {
+      duration: durations.fadeInSequence.grid.duration,
+      ease: "easeInOut",
+      delay: durations.fadeInSequence.grid.start,
+    });
 
-    // For returning users, start at the beginning since we only have stable data
-    scrollOffset.set(0);
+    // Measurement line reveal animation
+    animate(measurementLineClipPath, "inset(0 0 0.01% 0)", {
+      duration: durations.fadeInSequence.measurementLine.duration,
+      ease: "easeInOut",
+      delay: durations.fadeInSequence.measurementLine.start,
+    });
 
-    // Reveal animations first (similar to full animation sequence)
-
-    // Start with price line reveal animation
+    // Price line reveal animation
     animate(priceLineOpacity, 1, {
       duration: durations.fadeInSequence.priceLine.duration,
+      ease: "easeInOut",
+    });
+
+    // Price indicator opacity animation
+    animate(priceIndicatorOpacity, 1, {
+      delay: durations.fadeInSequence.priceIndicator.start,
+      duration: durations.fadeInSequence.priceIndicator.duration,
       ease: "easeInOut",
     });
 
@@ -1067,6 +966,7 @@ export default function LandingChart() {
 
     // Calculate phase2Duration based on distance and speed
     const phase2Duration = calculatePhase2Duration(measurementLineOffset, clipPathWidth, containerRef, isMobile);
+
     // Horizontal line: Reveal during position animations
     animate(horizontalLineClipPath, 0, {
       duration: phase2Duration, // Same duration as full animation
@@ -1077,16 +977,13 @@ export default function LandingChart() {
       duration: phase2Duration,
       ease: "linear",
     });
-    clipPathControlsRef.current = clipPathControls;
+    // clipPathControlsRef.current = clipPathControls;
 
     const controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.final * 100, {
       duration: phase2Duration,
       ease: "linear",
     });
     animationControlsRef.current = controls;
-
-    // Activate price tracking at the start of phase 2
-    priceTrackingActive.set(1);
 
     await controls;
 
@@ -1124,9 +1021,7 @@ export default function LandingChart() {
     horizontalLineClipPath,
     viewportWidth,
     clipPathWidth,
-    priceTrackingActive,
     scrollOffset,
-    positions,
     fullPriceData,
     pointSpacing,
   ]);
@@ -1208,7 +1103,7 @@ export default function LandingChart() {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
-  // Position-based animation system: start scrolling and track position for messages
+  // Start animation on mount
   useEffect(() => {
     startAnimation();
 
@@ -1275,12 +1170,9 @@ export default function LandingChart() {
             height="100%"
             fill="url(#grid)"
             mask="url(#fadeMask)"
-            initial={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
-            animate={{ opacity: 1, clipPath: "inset(0 0 0 0)" }}
-            transition={{
-              duration: durations.fadeInSequence.grid.duration,
-              ease: "easeInOut",
-              delay: durations.fadeInSequence.grid.start,
+            style={{
+              opacity: gridOpacity,
+              clipPath: gridClipPath,
             }}
           />
           {/* Measurement line */}
@@ -1293,13 +1185,7 @@ export default function LandingChart() {
             mask="url(#fadeMask)"
             style={{
               x: measurementLineX,
-            }}
-            initial={{ clipPath: "inset(0 0 100% 0)" }}
-            animate={{ clipPath: "inset(0 0 0.01% 0)" }}
-            transition={{
-              duration: durations.fadeInSequence.measurementLine.duration,
-              ease: "easeInOut",
-              delay: durations.fadeInSequence.measurementLine.start,
+              clipPath: measurementLineClipPath,
             }}
           />
           {/* Horizontal reference line at $1.00 - Two-stage reveal */}
@@ -1340,12 +1226,6 @@ export default function LandingChart() {
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{ x, opacity: priceLineOpacity }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{
-                duration: durations.fadeInSequence.priceLine.duration,
-                delay: durations.fadeInSequence.priceLine.start,
-              }}
             />
           </g>
         </svg>
@@ -1378,7 +1258,6 @@ export default function LandingChart() {
               marker={marker}
               x={x}
               viewportWidth={viewportWidth}
-              floatersOpacity={floatersOpacity}
               positionAbove={positionAbove}
               isFirst={i === 0}
               measurementX={measurementX}
@@ -1397,14 +1276,10 @@ export default function LandingChart() {
             borderColor: lineStrokeColor,
             backgroundColor: lineStrokeColor,
             boxShadow: `0 0 10px ${lineStrokeColor}, 0 0 4.32px ${lineStrokeColor}, 0 0 2.16px ${lineStrokeColor}`,
+            opacity: priceIndicatorOpacity,
           }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, scale: [1, 1.1, 1] }}
+          animate={{ scale: [1, 1.1, 1] }}
           transition={{
-            opacity: {
-              duration: durations.fadeInSequence.priceIndicator.duration,
-              delay: durations.fadeInSequence.priceIndicator.start,
-            },
             scale: { duration: 1, repeat: Infinity, ease: "easeInOut" },
           }}
         >
