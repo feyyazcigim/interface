@@ -9,7 +9,9 @@ import Resources from "@/components/landing/Resources";
 import SecondaryCTA from "@/components/landing/SecondaryCTA";
 import { navLinks } from "@/components/nav/nav/Navbar";
 import { Button } from "@/components/ui/Button";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import { trackClick } from "@/utils/analytics";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -18,27 +20,7 @@ export default function Landing() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const isMobile = useIsMobile();
-  const [currentTriggerPhase, setCurrentTriggerPhase] = useState<string | undefined>(undefined);
-  const [reachedMainCta, setReachedMainCta] = useState<boolean>(true);
   const [isInLastSection, setIsInLastSection] = useState<boolean>(false); // Track if in last section
-
-  // Track first-time visitor status
-  const [isFirstTimeVisitor, setIsFirstTimeVisitor] = useState<boolean>(false);
-  const [sectionsVisible, setSectionsVisible] = useState<boolean>(true); // Default to visible
-
-  // Trigger bottom cta once we reach mainCTA for the first time
-  useEffect(() => {
-    if (currentTriggerPhase === "mainCTA" && !reachedMainCta) {
-      setReachedMainCta(true);
-    }
-  }, [currentTriggerPhase, reachedMainCta]);
-
-  // Show sections when mainCTA phase is reached for first-time visitors
-  useEffect(() => {
-    if (isFirstTimeVisitor && currentTriggerPhase === "mainCTA" && !sectionsVisible) {
-      setSectionsVisible(true);
-    }
-  }, [isFirstTimeVisitor, currentTriggerPhase, sectionsVisible]);
 
   // Track scroll position to determine if at top
   useEffect(() => {
@@ -46,11 +28,6 @@ export default function Landing() {
     if (!scrollContainer) return;
 
     const handleScroll = () => {
-      // If sections are not visible, ignore all scroll events
-      if (!sectionsVisible) {
-        return;
-      }
-
       const currentScrollTop = scrollContainer.scrollTop;
 
       // Check if in last section
@@ -72,7 +49,7 @@ export default function Landing() {
     return () => {
       (scrollContainer as HTMLElement).removeEventListener("scroll", handleScroll);
     };
-  }, [sectionsVisible]);
+  }, []);
 
   const handleArrowClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -89,22 +66,32 @@ export default function Landing() {
 
     // Find current section
     let currentSectionIndex = 0;
+    let currentSectionId = "";
     sections.forEach((section, index) => {
       const sectionTop = (section as HTMLElement).offsetTop;
       if (currentScrollTop >= sectionTop - viewportHeight / 10) {
         currentSectionIndex = index;
+        currentSectionId = (section as HTMLElement).id || `section-${index}`;
       }
     });
 
     // Get next section
     const nextSectionIndex = Math.min(currentSectionIndex + 1, sections.length - 1);
     const nextSection = sections[nextSectionIndex] as HTMLElement;
+    const nextSectionId = nextSection?.id || `section-${nextSectionIndex}`;
+
+    // Track the scroll arrow click with section context
+    trackClick(ANALYTICS_EVENTS.LANDING.SCROLL_ARROW_CLICK, {
+      current_section: currentSectionId,
+      target_section: nextSectionId,
+      scroll_direction: "down",
+      action_type: "navigation",
+    })(e);
 
     if (nextSection) {
       let targetScrollTop = nextSection.offsetTop;
 
-      // Apply same CTA offset logic as in snapToNearestSection
-      if (reachedMainCta && nextSectionIndex !== sections.length - 1) {
+      if (nextSectionIndex !== sections.length - 1) {
         const topCtaSpace = viewportHeight * 0.02;
         const ctaOffset = topCtaSpace;
         targetScrollTop = targetScrollTop - ctaOffset;
@@ -163,6 +150,32 @@ export default function Landing() {
               id={"come-seed-the-trustless-economy"}
               shimmer
               glow
+              onClick={(e) => {
+                // Determine current section
+                const scrollContainer = scrollContainerRef.current;
+                let currentSectionId = "chart"; // Default if no scroll container
+
+                if (scrollContainer) {
+                  const sections = scrollContainer.querySelectorAll("section");
+                  const currentScrollTop = scrollContainer.scrollTop;
+                  const viewportHeight = window.innerHeight;
+
+                  // Find current section
+                  sections.forEach((section) => {
+                    const sectionTop = (section as HTMLElement).offsetTop;
+                    if (currentScrollTop >= sectionTop - viewportHeight / 10) {
+                      currentSectionId = (section as HTMLElement).id || currentSectionId;
+                    }
+                  });
+                }
+
+                // Track with current section context
+                trackClick(ANALYTICS_EVENTS.LANDING.MAIN_CTA_CLICK, {
+                  button_text: "Come Seed the Leviathan Free Economy",
+                  destination: navLinks.overview,
+                  current_section: currentSectionId,
+                })(e);
+              }}
             >
               <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-pinto-green-2/50 to-transparent" />
               <span className="relative z-10">Come Seed the Leviathan Free Economy</span>
@@ -172,21 +185,36 @@ export default function Landing() {
             </Button>
           </Link>
         </motion.div>
-        <section className="flex flex-col overflow-clip place-content-center min-h-[calc(100dvh-250px)] sm:min-h-[calc(100dvh-300px)] w-full bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
+        <section
+          id="chart"
+          className="flex flex-col overflow-clip place-content-center min-h-[calc(100dvh-250px)] sm:min-h-[calc(100dvh-300px)] w-full bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]"
+        >
           <div className="sm:max-w-[1920px] w-full mx-auto min-h-[calc(100dvh-250px)] sm:min-h-[calc(100dvh-300px)] overflow-clip">
             <LandingChart />
           </div>
         </section>
-        <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-[64rem] sm:w-full sm:min-h-[max(1024px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
+        <section
+          id="values_properties"
+          className="flex flex-col overflow-clip place-content-center gap-4 min-h-[64rem] sm:w-full sm:min-h-[max(1024px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]"
+        >
           <SecondaryCTA />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center sm:w-full min-h-[50rem] sm:min-h-[max(800px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
+        <section
+          id="stats"
+          className="flex flex-col overflow-clip place-content-center sm:w-full min-h-[50rem] sm:min-h-[max(800px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]"
+        >
           <ProjectStats />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center sm:w-full min-h-[34rem] sm:min-h-[54rem] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
+        <section
+          id="bug_bounty"
+          className="flex flex-col overflow-clip place-content-center sm:w-full min-h-[34rem] sm:min-h-[54rem] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]"
+        >
           <BugBounty />
         </section>
-        <section className="flex flex-col overflow-clip place-content-center h-auto min-h-[116rem] -mb-[5rem] sm:mb-0 w-full sm:min-h-[90dvh] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]">
+        <section
+          id="resources"
+          className="flex flex-col overflow-clip place-content-center h-auto min-h-[116rem] -mb-[5rem] sm:mb-0 w-full sm:min-h-[90dvh] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#D8F1E2_49.41%,#FEFDF6_99.89%)]"
+        >
           <Resources />
         </section>
         <div className="flex-1 w-full">
@@ -195,7 +223,7 @@ export default function Landing() {
       </div>
       <div
         className={`fixed left-1/2 -translate-x-1/2 flex z-20 justify-center ${
-          reachedMainCta && !isInLastSection ? "bottom-[1vh] sm:bottom-[2vh]" : "-bottom-28"
+          !isInLastSection ? "bottom-[1vh] sm:bottom-[2vh]" : "-bottom-28"
         } transition-all duration-500 ease-in-out pointer-events-none`}
         onClick={handleArrowClick}
       >

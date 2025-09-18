@@ -337,6 +337,79 @@ const TRANSACTION_EVENTS = {
   TRANSACTION_SPEED_SELECT: "transaction_speed_select",
 } as const;
 
+const LANDING_EVENTS = {
+  // Main Landing Actions
+  MAIN_CTA_CLICK: "landing_main_cta_click", // "Come Seed the Leviathan Free Economy"
+  SCROLL_ARROW_CLICK: "landing_scroll_arrow_click", // Bottom scroll arrow
+
+  // Landing Chart Interactions
+  CHART_VIEW_START: "landing_chart_view_start", // Chart becomes visible
+  CHART_ANIMATION_COMPLETE: "landing_chart_animation_complete", // Animation sequence finishes
+  CHART_TRANSACTION_FLOATER_VIEW: "landing_chart_transaction_floater_view", // TX floater becomes visible
+  CHART_PRICE_LINE_REVEAL: "landing_chart_price_line_reveal", // Price line animation triggers
+  CHART_GRID_REVEAL: "landing_chart_grid_reveal", // Grid animation triggers
+  CHART_MEASUREMENT_LINE_REVEAL: "landing_chart_measurement_line_reveal", // Measurement line animation
+
+  // Secondary CTA Section
+  SECONDARY_CTA_ARTICLE_CLICK: "landing_secondary_cta_article_click", // "Why is Pinto the best alternative..."
+
+  // Values Cards (Purple cards - Ethereum values)
+  VALUES_CARD_CLICK: "landing_values_card_click", // Any purple values card
+  VALUES_CENSORSHIP_RESISTANCE_CLICK: "landing_values_censorship_resistance_click",
+  VALUES_TRUSTLESSNESS_CLICK: "landing_values_trustlessness_click",
+  VALUES_PERMISSIONLESSNESS_CLICK: "landing_values_permissionlessness_click",
+  VALUES_FAIRNESS_CLICK: "landing_values_fairness_click",
+  VALUES_OPEN_SOURCE_CLICK: "landing_values_open_source_click",
+
+  // Properties Cards (Green cards - USD properties)
+  PROPERTIES_CARD_CLICK: "landing_properties_card_click", // Any green properties card
+  PROPERTIES_SCALABLE_CLICK: "landing_properties_scalable_click",
+  PROPERTIES_LOW_VOLATILITY_CLICK: "landing_properties_low_volatility_click",
+  PROPERTIES_MEDIUM_OF_EXCHANGE_CLICK: "landing_properties_medium_of_exchange_click",
+  PROPERTIES_UNIT_OF_ACCOUNT_CLICK: "landing_properties_unit_of_account_click",
+
+  // Card Modal Interactions
+  CARD_MODAL_OPEN: "landing_card_modal_open",
+  CARD_MODAL_CLOSE: "landing_card_modal_close",
+  CARD_MODAL_BACKGROUND_CLICK: "landing_card_modal_background_click",
+
+  // Project Stats Section
+  STATS_UPGRADES_BUTTON_CLICK: "landing_stats_upgrades_click",
+  STATS_CONTRIBUTORS_BUTTON_CLICK: "landing_stats_contributors_click",
+  STATS_YEARS_BUTTON_CLICK: "landing_stats_years_click",
+  STATS_VOLUME_BUTTON_CLICK: "landing_stats_volume_click",
+
+  // Bug Bounty Section
+  BUG_BOUNTY_AUDITS_CLICK: "landing_bug_bounty_audits_click", // Learn More - Audits
+  BUG_BOUNTY_IMMUNEFI_CLICK: "landing_bug_bounty_immunefi_click", // Learn More - Bug Bounty
+  BUG_BOUNTY_HYPERNATIVE_CLICK: "landing_bug_bounty_hypernative_click", // Learn More - Off-chain Monitoring
+
+  // Resources Section
+  RESOURCES_DOCS_CLICK: "landing_resources_docs_click", // GitBook docs button
+  RESOURCES_BLOG_CLICK: "landing_resources_blog_click", // Mirror blog button
+  RESOURCES_TWITTER_CLICK: "landing_resources_twitter_click", // Twitter/X button
+  RESOURCES_DISCORD_CLICK: "landing_resources_discord_click", // Discord button
+  RESOURCES_FARM_CTA_CLICK: "landing_resources_cta_click", // "Take me to the Farm"
+
+  // Navigation & Scroll Behavior
+  CHART_SECTION_VIEW: "landing_chart_section_view",
+  SECONDARY_CTA_SECTION_VIEW: "landing_secondary_cta_section_view",
+  STATS_SECTION_VIEW: "landing_stats_section_view",
+  BUG_BOUNTY_SECTION_VIEW: "landing_bug_bounty_section_view",
+  RESOURCES_SECTION_VIEW: "landing_resources_section_view",
+
+  // User Journey & Engagement
+  PAGE_LOAD: "landing_page_load", // Landing page loads
+  PAGE_SCROLL_START: "landing_page_scroll_start", // First scroll action
+  PAGE_SCROLL_DEPTH_25: "landing_page_scroll_depth_25", // 25% scroll depth
+  PAGE_SCROLL_DEPTH_50: "landing_page_scroll_depth_50", // 50% scroll depth
+  PAGE_SCROLL_DEPTH_75: "landing_page_scroll_depth_75", // 75% scroll depth
+  PAGE_SCROLL_DEPTH_100: "landing_page_scroll_depth_100", // 100% scroll depth
+  SESSION_TIME_30S: "landing_session_time_30s", // 30 seconds on page
+  SESSION_TIME_60S: "landing_session_time_60s", // 1 minute on page
+  SESSION_TIME_120S: "landing_session_time_120s", // 2 minutes on page
+} as const;
+
 // All events combined for easy access
 export const ANALYTICS_EVENTS = {
   NAVIGATION: NAVIGATION_EVENTS,
@@ -352,6 +425,7 @@ export const ANALYTICS_EVENTS = {
   UI: UI_EVENTS,
   TRANSACTION: TRANSACTION_EVENTS,
   PRICE_PANEL: PRICE_PANEL_EVENTS,
+  LANDING: LANDING_EVENTS,
 } as const;
 
 // Type for all possible event names
@@ -368,4 +442,5 @@ export type AnalyticsEventName =
   | (typeof FOOTER_EVENTS)[keyof typeof FOOTER_EVENTS]
   | (typeof UI_EVENTS)[keyof typeof UI_EVENTS]
   | (typeof TRANSACTION_EVENTS)[keyof typeof TRANSACTION_EVENTS]
-  | (typeof PRICE_PANEL_EVENTS)[keyof typeof PRICE_PANEL_EVENTS];
+  | (typeof PRICE_PANEL_EVENTS)[keyof typeof PRICE_PANEL_EVENTS]
+  | (typeof LANDING_EVENTS)[keyof typeof LANDING_EVENTS];
