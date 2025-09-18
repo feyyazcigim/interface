@@ -3,6 +3,7 @@ import pintoLogo from "@/assets/tokens/PINTO.png";
 import pintoUsdcLogo from "@/assets/tokens/PINTO_USDC.png";
 import pintoCbbtcLogo from "@/assets/tokens/PINTO_cbBTC.png";
 import pintoCbethLogo from "@/assets/tokens/PINTO_cbETH.png";
+import { breakpoints } from "@/utils/theme/breakpoints";
 import { AnimatePresence, AnimationDefinition, MotionValue, motion, useAnimation, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
 
@@ -189,7 +190,13 @@ export default function TxFloater({
         key="label"
         className="absolute text-pinto-gray-6 text-base text-[18px] font-normal opacity-90 whitespace-nowrap w-full flex justify-center items-center"
         style={{
-          top: positionAbove ? "-24px" : "50px", // When pill is above $1 target, text goes above; when pill is below $1 target, text goes below
+          top: positionAbove
+            ? viewportWidth >= breakpoints.sm && viewportWidth < breakpoints["3xl"]
+              ? "-18px"
+              : "-24px"
+            : viewportWidth >= breakpoints.sm && viewportWidth < breakpoints["3xl"]
+              ? "40px"
+              : "50px", // When pill is above $1 target, text goes above; when pill is below $1 target, text goes below
         }}
       >
         {actionLabel}

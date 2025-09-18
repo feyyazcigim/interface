@@ -1,3 +1,4 @@
+import { breakpoints } from "@/utils/theme/breakpoints";
 import { MotionValue, motion, useTransform } from "framer-motion";
 import { memo } from "react";
 import { TransactionMarker } from "./LandingChart";
@@ -32,7 +33,11 @@ function FloaterContainer({ marker, x, viewportWidth, positionAbove, isFirst, me
       className="absolute z-20 will-change-transform"
       style={{
         opacity: 1,
-        top: positionAbove ? marker.y - 50 : marker.y,
+        top: positionAbove
+          ? viewportWidth >= breakpoints.sm && viewportWidth < breakpoints["3xl"]
+            ? marker.y - 40
+            : marker.y - 50
+          : marker.y,
         transform: transformValue,
       }}
     >
