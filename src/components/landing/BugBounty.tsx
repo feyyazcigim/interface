@@ -1,7 +1,9 @@
 import HypernativeLogo from "@/assets/misc/hypernative-logo.png";
 import ImmunefiLogo from "@/assets/misc/immunefi-logo.png";
 import PintoTokenLogo from "@/assets/tokens/PINTO.png";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import { trackClick } from "@/utils/analytics";
 import NumberFlow from "@number-flow/react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -70,7 +72,15 @@ export default function BugBounty() {
 
             {/* Bottom section - button */}
             <div className="flex items-center justify-center h-[2.5rem] sm:h-[4rem]">
-              <Link to={"https://docs.pinto.money/resources/audits"} target="_blank" rel="noopener noreferrer">
+              <Link
+                to={"https://docs.pinto.money/resources/audits"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={trackClick(ANALYTICS_EVENTS.LANDING.BUG_BOUNTY_AUDITS_CLICK, {
+                  section: "bug_bounty",
+                  destination: "https://docs.pinto.money/resources/audits",
+                })}
+              >
                 <Button
                   variant="outline"
                   size={isMobile ? "sm" : "lg"}
@@ -118,7 +128,15 @@ export default function BugBounty() {
 
             {/* Bottom section - button */}
             <div className="flex items-center justify-center h-[2.5rem] sm:h-[4rem]">
-              <Link to={"https://immunefi.com/bug-bounty/pinto/information/"} target="_blank" rel="noopener noreferrer">
+              <Link
+                to={"https://immunefi.com/bug-bounty/pinto/information/"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={trackClick(ANALYTICS_EVENTS.LANDING.BUG_BOUNTY_IMMUNEFI_CLICK, {
+                  section: "bug_bounty",
+                  destination: "https://immunefi.com/bug-bounty/pinto/information/",
+                })}
+              >
                 <Button
                   variant="outline"
                   size={isMobile ? "sm" : "lg"}
@@ -151,6 +169,10 @@ export default function BugBounty() {
                 to={"https://www.hypernative.io/blog/pinto-extends-protocol-security-with-hypernative"}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={trackClick(ANALYTICS_EVENTS.LANDING.BUG_BOUNTY_HYPERNATIVE_CLICK, {
+                  section: "bug_bounty",
+                  destination: "https://www.hypernative.io/blog/pinto-extends-protocol-security-with-hypernative",
+                })}
               >
                 <Button
                   variant="outline"
