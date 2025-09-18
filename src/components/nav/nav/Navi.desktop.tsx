@@ -11,7 +11,7 @@ import { stringEq } from "@/utils/string";
 import { isDev } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useRef, useState } from "react";
-import { Link as ReactLink, useLocation } from "react-router-dom";
+import { Link as ReactLink, useLocation, useMatch } from "react-router-dom";
 import { navLinks, navPathNameToTopMenu } from "./Navbar";
 
 const Link = ({
@@ -309,7 +309,6 @@ export default function Navi() {
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
-
       <div className="h-[3.75rem]">
         <AnimatePresence mode="wait">
           {naviTab === "home" && <AppNavi />}
