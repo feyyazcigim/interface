@@ -7,8 +7,10 @@ import ValueFairness from "@/assets/misc/Value_Fairness.svg";
 import ValueOpenSource from "@/assets/misc/Value_Open_Source.svg";
 import ValuePermissionlessness from "@/assets/misc/Value_Permissionlessness.svg";
 import ValueTrustless from "@/assets/misc/Value_Trustlessness.svg";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { useLiquidityDistribution } from "@/hooks/useLiquidityDistribution";
+import { trackClick } from "@/utils/analytics";
 import clsx from "clsx";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -153,10 +155,11 @@ interface CarouselCardProps {
   index: number;
   keyPrefix: string;
   color: string;
-  onClick: (cardData: CardData) => void;
+  cardType: "values" | "properties";
+  onClick: (cardData: CardData, cardType: "values" | "properties") => void;
 }
 
-function CarouselCard({ data, index, keyPrefix, color, onClick }: CarouselCardProps) {
+function CarouselCard({ data, index, keyPrefix, color, cardType, onClick }: CarouselCardProps) {
   return (
     <Button
       key={`${keyPrefix}_${data.title}_${index}`}
@@ -192,7 +195,7 @@ function CarouselCard({ data, index, keyPrefix, color, onClick }: CarouselCardPr
 
         "duration-200 transition-all",
       )}
-      onClick={() => onClick(data)}
+      onClick={() => onClick(data, cardType)}
     >
       <img
         src={data.logo}
@@ -284,15 +287,98 @@ export default function SecondaryCTA() {
   const [selectedCard, setSelectedCard] = useState<(typeof valuesData)[0] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleCardClick = (cardData: (typeof valuesData)[0]) => {
+  const handleCardClick = (cardData: (typeof valuesData)[0], cardType: "values" | "properties") => {
+    // Track card click with specific analytics events
+    if (cardType === "values") {
+      // Track general values card click
+      trackClick(ANALYTICS_EVENTS.LANDING.VALUES_CARD_CLICK, {
+        card_title: cardData.title,
+        card_type: "ethereum_values",
+        section: "values_properties",
+      })();
+
+      // Track specific values card based on title
+      const specificEvent = getSpecificValuesEvent(cardData.title);
+      if (specificEvent) {
+        trackClick(specificEvent, {
+          card_title: cardData.title,
+          section: "values_properties",
+        })();
+      }
+    } else {
+      // Track general properties card click
+      trackClick(ANALYTICS_EVENTS.LANDING.PROPERTIES_CARD_CLICK, {
+        card_title: cardData.title,
+        card_type: "usd_properties",
+        section: "values_properties",
+      })();
+
+      // Track specific properties card based on title
+      const specificEvent = getSpecificPropertiesEvent(cardData.title);
+      if (specificEvent) {
+        trackClick(specificEvent, {
+          card_title: cardData.title,
+          section: "values_properties",
+        })();
+      }
+    }
+
+    // Track modal open
+    trackClick(ANALYTICS_EVENTS.LANDING.CARD_MODAL_OPEN, {
+      card_title: cardData.title,
+      card_type: cardType === "values" ? "ethereum_values" : "usd_properties",
+      section: "values_properties",
+    })();
+
     setSelectedCard(cardData);
     setIsModalOpen(true);
   };
 
   const handleModalClose = (open: boolean) => {
+    if (!open && selectedCard) {
+      // Track modal close
+      trackClick(ANALYTICS_EVENTS.LANDING.CARD_MODAL_CLOSE, {
+        card_title: selectedCard.title,
+        section: "values_properties",
+      })();
+    }
+
     setIsModalOpen(open);
     if (!open) {
       setSelectedCard(null);
+    }
+  };
+
+  // Helper functions to get specific analytics events
+  const getSpecificValuesEvent = (title: string) => {
+    switch (title) {
+      case "Censorship Resistance":
+        return ANALYTICS_EVENTS.LANDING.VALUES_CENSORSHIP_RESISTANCE_CLICK;
+      case "Trustlessness":
+        return ANALYTICS_EVENTS.LANDING.VALUES_TRUSTLESSNESS_CLICK;
+      case "Permissionlessness":
+        return ANALYTICS_EVENTS.LANDING.VALUES_PERMISSIONLESSNESS_CLICK;
+      case "Fairness":
+        return ANALYTICS_EVENTS.LANDING.VALUES_FAIRNESS_CLICK;
+      case "Open-Source":
+        return ANALYTICS_EVENTS.LANDING.VALUES_OPEN_SOURCE_CLICK;
+      default:
+        return null;
+    }
+  };
+
+  const getSpecificPropertiesEvent = (title: string) => {
+    switch (title) {
+      case "Scalable":
+        return ANALYTICS_EVENTS.LANDING.PROPERTIES_SCALABLE_CLICK;
+      case "Low Volatility":
+        return ANALYTICS_EVENTS.LANDING.PROPERTIES_LOW_VOLATILITY_CLICK;
+      case "Medium of Exchange":
+        return ANALYTICS_EVENTS.LANDING.PROPERTIES_MEDIUM_OF_EXCHANGE_CLICK;
+      case "Unit of Account":
+        return ANALYTICS_EVENTS.LANDING.PROPERTIES_UNIT_OF_ACCOUNT_CLICK;
+      default:
+        return null;
     }
   };
 
@@ -309,6 +395,7 @@ export default function SecondaryCTA() {
                 index={index}
                 keyPrefix="dataInfo1"
                 color="purple"
+                cardType="values"
                 onClick={handleCardClick}
               />
             );
@@ -332,6 +419,12 @@ export default function SecondaryCTA() {
               variant={"defaultAlt"}
               size={isMobile ? "md" : "xl"}
               className={`z-20 hover:bg-pinto-green-2/20 max-sm:text-sm h-auto border border-pinto-green-3 bg-pinto-green-1 max-sm:pl-4 max-sm:pr-2 transition-all duration-300 ease-in-out flex flex-row gap-[10px] sm:gap-2 items-center relative overflow-hidden text-xl leading-6 !font-[300]`}
+              onClick={trackClick(ANALYTICS_EVENTS.LANDING.SECONDARY_CTA_ARTICLE_CLICK, {
+                button_text: "Why is Pinto the best alternative to centralized stablecoins?",
+                destination: navLinks.printsToThePeople,
+                section: "values_properties",
+                article_type: "external_blog_post",
+              })}
             >
               <span>
                 Why is Pinto the best alternative <br className="block sm:hidden" />
@@ -354,6 +447,7 @@ export default function SecondaryCTA() {
                 index={index}
                 keyPrefix="dataInfo2"
                 color="green"
+                cardType="properties"
                 onClick={handleCardClick}
               />
             );

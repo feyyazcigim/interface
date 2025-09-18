@@ -342,14 +342,6 @@ const LANDING_EVENTS = {
   MAIN_CTA_CLICK: "landing_main_cta_click", // "Come Seed the Leviathan Free Economy"
   SCROLL_ARROW_CLICK: "landing_scroll_arrow_click", // Bottom scroll arrow
 
-  // Landing Chart Interactions
-  CHART_VIEW_START: "landing_chart_view_start", // Chart becomes visible
-  CHART_ANIMATION_COMPLETE: "landing_chart_animation_complete", // Animation sequence finishes
-  CHART_TRANSACTION_FLOATER_VIEW: "landing_chart_transaction_floater_view", // TX floater becomes visible
-  CHART_PRICE_LINE_REVEAL: "landing_chart_price_line_reveal", // Price line animation triggers
-  CHART_GRID_REVEAL: "landing_chart_grid_reveal", // Grid animation triggers
-  CHART_MEASUREMENT_LINE_REVEAL: "landing_chart_measurement_line_reveal", // Measurement line animation
-
   // Secondary CTA Section
   SECONDARY_CTA_ARTICLE_CLICK: "landing_secondary_cta_article_click", // "Why is Pinto the best alternative..."
 
