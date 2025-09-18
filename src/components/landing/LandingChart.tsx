@@ -611,12 +611,7 @@ function generatePriceLabelData(chartHeight = ANIMATION_CONFIG.height) {
   });
 }
 
-interface LandingChartProps {
-  currentTriggerPhase: string | undefined;
-  setCurrentTriggerPhase: (phase: string | undefined) => void;
-}
-
-export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPhase }: LandingChartProps) {
+export default function LandingChart() {
   const [viewportWidth, setViewportWidth] = useState(1920); // Default width
 
   const [dynamicHeight, setDynamicHeight] = useState(ANIMATION_CONFIG.height); // Default to config height
@@ -889,30 +884,6 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   const componentRef = useRef<HTMLDivElement>(null);
   const isComponentVisibleRef = useRef(false);
 
-  // Phase trigger system (still based on position/index)
-  useEffect(() => {
-    const unsubscribe = currentIndex.on("change", (idx) => {
-      if (isPausedRef.current) return;
-      const i = Math.max(0, Math.min(Math.round(idx), fullPriceData.length - 1));
-      const newTriggerPhase = fullPriceData[i].triggerPhase;
-
-      if (newTriggerPhase && currentTriggerPhase !== "mainCTA" && priceTrackingActive.get() >= 1) {
-        setCurrentTriggerPhase(newTriggerPhase);
-
-        // Mark animation as completed when mainCTA phase is reached for the first time
-        if (newTriggerPhase === "mainCTA" && !hasSeenFullAnimation) {
-          try {
-            localStorage.setItem("pinto-landing-animation-completed", "true");
-            setHasSeenFullAnimation(true);
-          } catch {
-            // Ignore localStorage errors
-          }
-        }
-      }
-    });
-    return unsubscribe;
-  }, [currentIndex, currentTriggerPhase, priceTrackingActive, hasSeenFullAnimation]);
-
   // Monitor scroll progress to fade in price labels during semi-stable phase
   // Track if we've reached stable phase to know when to remove initial segments
   const [hasReachedStable, setHasReachedStable] = useState(false);
@@ -1088,9 +1059,6 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
     priceLabelsOpacity.set(0);
     priceLineOpacity.set(0); // Start price line hidden
     priceTrackingActive.set(0); // Start price tracking inactive
-
-    // Start directly at mainCTA phase
-    setCurrentTriggerPhase("mainCTA");
 
     // For returning users, start at the beginning since we only have stable data
     scrollOffset.set(0);
@@ -1273,11 +1241,7 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   return (
     <div ref={componentRef} className="flex flex-col items-center justify-around h-full w-full">
       {/* Chart Component */}
-      <div
-        ref={containerRef}
-        className={`w-full relative ${currentTriggerPhase === "stable" ? "cursor-pointer" : ""} mb-10`}
-        id={"cta-chart"}
-      >
+      <div ref={containerRef} className={`w-full relative mb-10`} id={"cta-chart"}>
         <svg
           width="100%"
           height={dynamicHeight}

@@ -174,7 +174,7 @@ export default function Landing() {
         </motion.div>
         <section className="flex flex-col overflow-clip place-content-center min-h-[calc(100dvh-250px)] sm:min-h-[calc(100dvh-300px)] w-full bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
           <div className="sm:max-w-[1920px] w-full mx-auto min-h-[calc(100dvh-250px)] sm:min-h-[calc(100dvh-300px)] overflow-clip">
-            <LandingChart currentTriggerPhase={currentTriggerPhase} setCurrentTriggerPhase={setCurrentTriggerPhase} />
+            <LandingChart />
           </div>
         </section>
         <section className="flex flex-col overflow-clip place-content-center gap-4 min-h-[64rem] sm:w-full sm:min-h-[max(1024px,100vh)] bg-[linear-gradient(180deg,#FEFDF7_-0.11%,#ECF7ED_49.41%,#FEFDF6_99.89%)]">
