@@ -92,7 +92,7 @@ export default function ProjectStats() {
   const handleButtonClick = (buttonType: ActiveButton, event?: React.MouseEvent) => {
     setActiveButton(buttonType);
     // On mobile, scroll so the upgrades button is 80px from top (only for upgrades button)
-    if (isMobile && buttonType === "upgrades" && event?.currentTarget) {
+    if (isMobile && (buttonType === "upgrades" || buttonType === "contributors") && event?.currentTarget) {
       const scrollContainer = document.getElementById("scrollContainer");
       const buttonElement = event.target as HTMLElement;
 
@@ -100,10 +100,12 @@ export default function ProjectStats() {
         const containerRect = scrollContainer.getBoundingClientRect();
         const buttonRect = buttonElement.getBoundingClientRect();
 
+        const offset = buttonType === "upgrades" ? 80 : 200;
+
         // Calculate position relative to the scroll container
         const buttonRelativeTop = buttonRect.top - containerRect.top;
         const currentScrollTop = scrollContainer.scrollTop;
-        const targetScrollTop = currentScrollTop + buttonRelativeTop - 80;
+        const targetScrollTop = currentScrollTop + buttonRelativeTop - offset;
 
         scrollContainer.scrollTo({
           top: targetScrollTop,
@@ -172,7 +174,7 @@ export default function ProjectStats() {
           <Button
             variant="outline-rounded"
             className={`text-pinto-gray-5 text-2xl sm:text-4xl font-thin h-[3rem] sm:h-[4rem] cursor-pointer transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
-            onClick={() => handleButtonClick("contributors")}
+            onClick={(event) => handleButtonClick("contributors", event)}
             glow={activeButton === "contributors"}
             shimmer={!activeButton || activeButton === "contributors"}
             shimmerColor="rgba(156, 156, 156, 0.2)" // pinto-gray-4
