@@ -10,16 +10,10 @@ import Beaver_9 from "@/assets/landing/Beaver_9.png";
 import Beaver_10 from "@/assets/landing/Beaver_10.png";
 import Beaver_11 from "@/assets/landing/Beaver_11.png";
 import Beaver_12 from "@/assets/landing/Beaver_12.png";
-import PintoLogo from "@/assets/protocol/PintoLogo.svg";
-import PintoLogoText from "@/assets/protocol/PintoLogoText.svg";
 import useIsMobile from "@/hooks/display/useIsMobile";
 import { cubicBezier, findBezierExtrema, generateChaoticUnstableData } from "@/utils/utils";
 import { MotionValue, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { PintoRightArrow } from "../Icons";
-import { navLinks } from "../nav/nav/Navbar";
-import { Button } from "../ui/Button";
 import FloaterContainer from "./FloaterContainer";
 
 // Function to calculate grid X offset so measurement line aligns with grid lines
