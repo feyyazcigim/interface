@@ -220,10 +220,28 @@ export default function Landing() {
     if (nextSection) {
       let targetScrollTop = nextSection.offsetTop;
 
-      if (nextSectionIndex !== sections.length - 1) {
-        const topCtaSpace = viewportHeight * 0.02;
-        const ctaOffset = topCtaSpace;
-        targetScrollTop = targetScrollTop - ctaOffset;
+      // Special mobile handling for stats section
+      if (isMobile && nextSectionId === "stats") {
+        const upgradesButton = document.getElementById("upgradesButton");
+
+        if (upgradesButton) {
+          const containerRect = scrollContainer.getBoundingClientRect();
+          const upgradesRect = upgradesButton.getBoundingClientRect();
+
+          const offset = 70; // Fixed offset for mobile stats section
+
+          // Calculate position relative to the scroll container
+          const upgradesRelativeTop = upgradesRect.top - containerRect.top;
+          const currentScrollTop = scrollContainer.scrollTop;
+          targetScrollTop = currentScrollTop + upgradesRelativeTop - offset;
+        }
+      } else {
+        // Default behavior for other sections
+        if (nextSectionIndex !== sections.length - 1) {
+          const topCtaSpace = viewportHeight * 0.02;
+          const ctaOffset = topCtaSpace;
+          targetScrollTop = targetScrollTop - ctaOffset;
+        }
       }
 
       scrollContainer.scrollTo({
