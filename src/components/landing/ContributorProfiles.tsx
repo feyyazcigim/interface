@@ -4,11 +4,26 @@ import { motion } from "framer-motion";
 import { atom, useAtom } from "jotai";
 import { useEffect, useMemo, useRef } from "react";
 
+import DefaultJuiceBg from "@/assets/landing/DefaultJuice-bg.avif";
+import DefaultJuiceAvatar from "@/assets/landing/DefaultJuice.avif";
+import FordPintoBg from "@/assets/landing/FordPinto-bg.avif";
+import FordPintoAvatar from "@/assets/landing/FordPinto.avif";
+import PintoPirateBg from "@/assets/landing/PintoPirate-bg.avif";
+import PintoPirateAvatar from "@/assets/landing/PintoPirate.avif";
+import RyanBg from "@/assets/landing/Ryan-bg.avif";
+import RyanAvatar from "@/assets/landing/Ryan.avif";
+import burrBg from "@/assets/landing/burr-bg.avif";
+// Import contributor images
+import burrAvatar from "@/assets/landing/burr.avif";
+import nattoBg from "@/assets/landing/natto-bg.avif";
+import nattoAvatar from "@/assets/landing/natto.avif";
+
 export const contributors = [
   {
     id: 1,
     name: "Ryan",
-    avatar: "/Ryan.jpg",
+    avatar: RyanAvatar,
+    background: RyanBg,
     description:
       "I believe a decentralized, pseudonymous group of creditors and value providers all around the world can work together to create stable value on the internet.",
     article:
@@ -17,7 +32,8 @@ export const contributors = [
   {
     id: 2,
     name: "DefaultJuice",
-    avatar: "/DefaultJuice.jpg",
+    avatar: DefaultJuiceAvatar,
+    background: DefaultJuiceBg,
     description:
       "Living through a financial crisis showed me the underbelly of a centralized fiat currency system. I'm building a decentralized one.",
     article:
@@ -26,7 +42,8 @@ export const contributors = [
   {
     id: 3,
     name: "PintoPirate",
-    avatar: "/PintoPirate.jpg",
+    avatar: PintoPirateAvatar,
+    background: PintoPirateBg,
     description:
       "I don't want others to be aware of my financial activities, nor am I comfortable having a centralized custodian managing or holding my wealth and potentially restricting my access to it.",
     article:
@@ -35,7 +52,8 @@ export const contributors = [
   {
     id: 4,
     name: "natto",
-    avatar: "/natto.jpg",
+    avatar: nattoAvatar,
+    background: nattoBg,
     description:
       "Pinto is a push back against 'good enough' — it openly continues to experiment and will bring the industry one step closer to the scalable and decentralized money that we need.",
     article:
@@ -44,7 +62,8 @@ export const contributors = [
   {
     id: 5,
     name: "FordPinto",
-    avatar: "/FordPinto.jpg",
+    avatar: FordPintoAvatar,
+    background: FordPintoBg,
     description:
       "We want sustainable growth and functionality over the long term. We want a new money. Not in the hands of the government, but in the hands of those using the money, and only by their choice.",
     article:
@@ -53,9 +72,10 @@ export const contributors = [
   {
     id: 6,
     name: "burr",
-    avatar: "/burr.jpg",
+    avatar: burrAvatar,
+    background: burrBg,
     description:
-      "This isn’t just about rebuilding. It’s about fulfilling the long-term vision: creating Leviathan-free, low-volatility money that can make the promise of Bitcoin work for the world. I look forward to seeing it through.",
+      "This isn't just about rebuilding. It's about fulfilling the long-term vision: creating Leviathan-free, low-volatility money that can make the promise of Bitcoin work for the world. I look forward to seeing it through.",
     article:
       "https://mirror.xyz/0xe7731147bBe1BEBe5CF1Ab101C6EceD384dAbD07/UwlJoyWsUPyzct4IHT4Drlaea2PhtWsxyhSGJaoJqw8",
   },

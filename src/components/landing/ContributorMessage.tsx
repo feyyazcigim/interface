@@ -56,7 +56,7 @@ export default function ContributorMessage() {
             <motion.div
               className={`sm:h-[400px] sm:w-[900px] h-[400px] w-[400px] place-self-center bg-cover ${getBackgroundPosition(selectedContributor.name)} bg-no-repeat rounded-lg`}
               style={{
-                backgroundImage: `url(/${selectedContributor.name}-bg.png)`,
+                backgroundImage: `url(${selectedContributor.background})`,
                 maskImage:
                   "linear-gradient(to right, rgba(0,0,0,0) 5%, rgba(0,0,0,1) 7%, rgba(0,0,0,1) 93%, rgba(0,0,0,0) 95%), linear-gradient(to bottom, rgba(0,0,0,0) 5%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 95%)",
                 maskComposite: "intersect",
