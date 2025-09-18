@@ -22,6 +22,53 @@ export default function Landing() {
   const isMobile = useIsMobile();
   const [isInLastSection, setIsInLastSection] = useState<boolean>(false); // Track if in last section
 
+  // Tracking refs for one-time events
+  const hasScrolledRef = useRef(false);
+  const scrollDepthTrackedRef = useRef(new Set<number>());
+  const sessionTimersRef = useRef<NodeJS.Timeout[]>([]);
+
+  // Track page load and session time
+  useEffect(() => {
+    // Track page load immediately
+    trackClick(ANALYTICS_EVENTS.LANDING.PAGE_LOAD, {
+      timestamp: Date.now(),
+      user_agent: navigator.userAgent,
+      viewport_width: window.innerWidth,
+      viewport_height: window.innerHeight,
+    })();
+
+    // Set up session time tracking
+    const sessionTimers = [
+      setTimeout(() => {
+        trackClick(ANALYTICS_EVENTS.LANDING.SESSION_TIME_30S, {
+          session_duration: 30000,
+          timestamp: Date.now(),
+        })();
+      }, 30000), // 30 seconds
+
+      setTimeout(() => {
+        trackClick(ANALYTICS_EVENTS.LANDING.SESSION_TIME_60S, {
+          session_duration: 60000,
+          timestamp: Date.now(),
+        })();
+      }, 60000), // 1 minute
+
+      setTimeout(() => {
+        trackClick(ANALYTICS_EVENTS.LANDING.SESSION_TIME_120S, {
+          session_duration: 120000,
+          timestamp: Date.now(),
+        })();
+      }, 120000), // 2 minutes
+    ];
+
+    sessionTimersRef.current = sessionTimers;
+
+    // Cleanup timers on unmount
+    return () => {
+      sessionTimers.forEach((timer) => clearTimeout(timer));
+    };
+  }, []);
+
   // Track scroll position to determine if at top
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
@@ -29,6 +76,43 @@ export default function Landing() {
 
     const handleScroll = () => {
       const currentScrollTop = scrollContainer.scrollTop;
+
+      // Track first scroll
+      if (!hasScrolledRef.current && currentScrollTop > 0) {
+        hasScrolledRef.current = true;
+        trackClick(ANALYTICS_EVENTS.LANDING.PAGE_SCROLL_START, {
+          timestamp: Date.now(),
+          initial_scroll_position: currentScrollTop,
+        })();
+      }
+
+      // Calculate scroll depth
+      const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+      const scrollPercentage = Math.round((currentScrollTop / scrollHeight) * 100);
+
+      // Track scroll depth milestones
+      const depthMilestones = [25, 50, 75, 100];
+      const eventMap = {
+        25: ANALYTICS_EVENTS.LANDING.PAGE_SCROLL_DEPTH_25,
+        50: ANALYTICS_EVENTS.LANDING.PAGE_SCROLL_DEPTH_50,
+        75: ANALYTICS_EVENTS.LANDING.PAGE_SCROLL_DEPTH_75,
+        100: ANALYTICS_EVENTS.LANDING.PAGE_SCROLL_DEPTH_100,
+      };
+
+      depthMilestones.forEach((milestone) => {
+        if (scrollPercentage >= milestone && !scrollDepthTrackedRef.current.has(milestone)) {
+          scrollDepthTrackedRef.current.add(milestone);
+          const event = eventMap[milestone as keyof typeof eventMap];
+          if (event) {
+            trackClick(event, {
+              scroll_depth: milestone,
+              scroll_position: currentScrollTop,
+              scroll_height: scrollHeight,
+              timestamp: Date.now(),
+            })();
+          }
+        }
+      });
 
       // Check if in last section
       const sections = scrollContainer.querySelectorAll("section");
@@ -48,6 +132,56 @@ export default function Landing() {
 
     return () => {
       (scrollContainer as HTMLElement).removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  // Track section views using Intersection Observer
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    const viewedSections = new Set<string>(); // Track which sections have been viewed
+
+    // Map section IDs to analytics events
+    const sectionEventMap: Record<string, string> = {
+      chart: ANALYTICS_EVENTS.LANDING.CHART_SECTION_VIEW,
+      values_properties: ANALYTICS_EVENTS.LANDING.SECONDARY_CTA_SECTION_VIEW,
+      stats: ANALYTICS_EVENTS.LANDING.STATS_SECTION_VIEW,
+      bug_bounty: ANALYTICS_EVENTS.LANDING.BUG_BOUNTY_SECTION_VIEW,
+      resources: ANALYTICS_EVENTS.LANDING.RESOURCES_SECTION_VIEW,
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const sectionId = entry.target.id;
+          const analyticsEvent = sectionEventMap[sectionId];
+
+          // Track when section becomes visible (50% threshold) and hasn't been tracked yet
+          if (entry.isIntersecting && analyticsEvent && !viewedSections.has(sectionId)) {
+            viewedSections.add(sectionId);
+            // Track section view with context
+            trackClick(analyticsEvent, {
+              section: sectionId,
+              view_time: Date.now(),
+            })();
+          }
+        });
+      },
+      {
+        root: scrollContainer,
+        threshold: 0.5, // Trigger when 50% of section is visible
+        rootMargin: "-10% 0px -10% 0px", // Add some margin to be more precise
+      },
+    );
+
+    // Observe all sections
+    const sections = scrollContainer.querySelectorAll("section[id]");
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      sections.forEach((section) => observer.unobserve(section));
+      observer.disconnect();
     };
   }, []);
 
