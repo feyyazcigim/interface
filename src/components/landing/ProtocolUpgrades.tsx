@@ -2,7 +2,6 @@ import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import { trackClick } from "@/utils/analytics";
 import { WheelGesturesPlugin } from "embla-carousel-wheel-gestures";
 import { AnimatePresence, motion } from "framer-motion";
-import { useAtom, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DiagonalRightArrowIcon } from "../Icons";
@@ -23,7 +22,7 @@ type TimelineEventType =
   | "yearMarker"
   | "audit";
 
-interface Audit {
+interface TimelineEvent {
   name: string;
   description: string;
   githubLink: string;
@@ -42,7 +41,7 @@ interface Audit {
 }
 
 // Pinto Improvement Proposals
-const piAudits: Audit[] = [
+const piAudits: TimelineEvent[] = [
   {
     name: "PI-12",
     description: "Decrease Excessively Low L2SR Threshold",
@@ -191,7 +190,7 @@ const piAudits: Audit[] = [
 ];
 
 // Bean Improvement Proposals
-const bipAudits: Audit[] = [
+const bipAudits: TimelineEvent[] = [
   {
     name: "BIP-50",
     description: "Reseed Beanstalk",
@@ -753,7 +752,7 @@ const bipAudits: Audit[] = [
 ];
 
 // Emergency Bean Improvement Proposals
-const ebipAudits: Audit[] = [
+const ebipAudits: TimelineEvent[] = [
   {
     name: "EBIP-19",
     description: "Misc Bug Fixes 2",
@@ -983,7 +982,7 @@ const ebipAudits: Audit[] = [
 
 // Audits
 /*
-const regularAudits: Audit[] = [
+const regularAudits: TimelineEvent[] = [
   {
     name: "Cyfrin Complete Audit",
     description: "",
@@ -1080,7 +1079,7 @@ function FilterButton({ type, label, isSelected, hasNoFilters, colorClass, onCli
   );
 }
 
-const events: Audit[] = [
+const events: TimelineEvent[] = [
   {
     name: "Beanstalk Launch",
     description: "",
@@ -1219,11 +1218,13 @@ const events: Audit[] = [
   },
 ];
 
-export const PROTOCOL_UPGRADES: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...events];
+export const PROTOCOL_UPGRADES: TimelineEvent[] = [...piAudits, ...bipAudits, ...ebipAudits];
+
+const ALL_DATA: TimelineEvent[] = [...PROTOCOL_UPGRADES, ...events];
 
 // Combine all audits and sort by timestamp (most recent first)
 // If timestamps are equal, sort by audit number (lowest number first)
-const audits: Audit[] = PROTOCOL_UPGRADES.sort((a, b) => {
+const audits: TimelineEvent[] = ALL_DATA.sort((a, b) => {
   // Primary sort: timestamp (most recent first)
   if (a.timestamp !== b.timestamp) {
     return b.timestamp - a.timestamp;
@@ -1250,9 +1251,9 @@ const audits: Audit[] = PROTOCOL_UPGRADES.sort((a, b) => {
 export default function ProtocolUpgrades() {
   const [api, setApi] = useState<CarouselApi>();
 
-  const [carouselCenterData, setCarouselCenterData] = useState<Audit | null>(null);
-  const [hoveredData, setHoveredData] = useState<Audit | null>(null);
-  const [highlightedData, setHighlightedData] = useState<Audit | null>(null);
+  const [carouselCenterData, setCarouselCenterData] = useState<TimelineEvent | null>(null);
+  const [hoveredData, setHoveredData] = useState<TimelineEvent | null>(null);
+  const [highlightedData, setHighlightedData] = useState<TimelineEvent | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<Set<TimelineEventType>>(new Set());
   const lastScrollTime = useRef(0);
 
@@ -1262,7 +1263,7 @@ export default function ProtocolUpgrades() {
     const firstYear = new Date(sortedOriginalAudits[0].timestamp).getFullYear();
     const lastYear = new Date(sortedOriginalAudits[sortedOriginalAudits.length - 1].timestamp).getFullYear();
 
-    const yearMarkers: Audit[] = [];
+    const yearMarkers: TimelineEvent[] = [];
     for (let year = firstYear; year <= lastYear; year++) {
       yearMarkers.push({
         name: `${year}`,

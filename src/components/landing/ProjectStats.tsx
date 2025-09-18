@@ -172,7 +172,8 @@ export default function ProjectStats() {
         <span
           className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
         >
-          {PROTOCOL_UPGRADES.length}
+          {/* Protocol Upgrades + Pinto Launch (+1) + BIP-18/BIP-19 are stored as one so we add 1 as well */}
+          {PROTOCOL_UPGRADES.length + 2}
         </span>
         <Button
           variant={"outline-rounded"}
