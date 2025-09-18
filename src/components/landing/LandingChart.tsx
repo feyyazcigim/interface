@@ -803,17 +803,22 @@ export default function LandingChart() {
         return width + pointSpacing / segSpeed;
       }, 0);
 
-      // Calculate progress relative to measurement marker position
-      const measurementX = viewportWidth * ANIMATION_CONFIG.measurementLine.final;
-      const adjustedMeasurementX = measurementX + currentOffset - viewportWidth * ANIMATION_CONFIG.clipPath.initial;
-      const progress = adjustedMeasurementX / totalDataWidth;
+      // Calculate progress based on scroll position (same as animation uses)
+      const progress = currentOffset / totalDataWidth;
 
       // Throttle extensions to prevent rapid fire updates (minimum 2 seconds between extensions)
       const now = Date.now();
       const timeSinceLastExtension = now - lastExtensionRef.current;
 
+      // Log progress when approaching extension threshold
+      /*
+      if (progress > 0.7 && progress < 1.0) {
+        console.log(`📊 Progress: ${(progress * 100).toFixed(1)}%, timeSinceExtension: ${timeSinceLastExtension}ms`);
+      }
+      */
+
       if (progress >= 0.8 && timeSinceLastExtension > 2000) {
-        // console.log("🔄 Extending price data at 80% progress");
+        //console.log(`🔄 Extending price data at 80% progress - current data length: ${fullPriceData.length}`);
         lastExtensionRef.current = now;
 
         // Stop current animation immediately
@@ -863,13 +868,13 @@ export default function LandingChart() {
                 const newScrollOffset = Math.max(0, currentOffset - actualRemovedWidth);
                 scrollOffset.set(newScrollOffset);
 
-                /* console.log(
+                /*console.log(
                   `📊 Safely removed ${maxPointsToRemove} off-screen points, added ${newStableData.length} new points`,
-                ); */
+                );*/
 
                 return [...currentData.slice(maxPointsToRemove), ...newStableData];
               } else {
-                // console.log("📊 Added new data without removing (not safe to remove yet)");
+                //console.log("📊 Added new data without removing (not safe to remove yet)");
                 return [...currentData, ...newStableData];
               }
             });
@@ -880,19 +885,66 @@ export default function LandingChart() {
               const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
 
               const startContinuousScroll = () => {
-                const currentDataWidth = fullPriceData.reduce((width, point) => {
+                // Get fresh data from state - don't use closure variable
+                const currentPriceData = fullPriceData;
+
+                // Safety check: ensure we have data
+                if (currentPriceData.length === 0) {
+                  //console.warn("📊 No price data available, retrying in 100ms");
+                  setTimeout(startContinuousScroll, 100);
+                  return;
+                }
+
+                const currentDataWidth = currentPriceData.reduce((width, point) => {
                   const segSpeed = point.speed || 1;
                   return width + pointSpacing / segSpeed;
                 }, 0);
 
                 const currentScrollOffset = scrollOffset.get();
                 const remainingWidth = currentDataWidth - currentScrollOffset;
-                const scrollDuration = remainingWidth / pxPerSecond;
 
+                // If we've reached the end, reset to beginning and animate full width
+                if (remainingWidth <= 0 || !Number.isFinite(remainingWidth)) {
+                  //console.log("📊 Animation reached end, resetting to beginning");
+                  scrollOffset.set(0);
+                  const scrollDuration = currentDataWidth / pxPerSecond;
+
+                  const controls = animate(scrollOffset, currentDataWidth, {
+                    duration: scrollDuration,
+                    ease: "linear",
+                    onComplete: () => {
+                      //console.log("📊 Animation completed, checking for restart...");
+                      if (animationControlsRef.current === controls) {
+                        //console.log("📊 Controls match, restarting scroll");
+                        startContinuousScroll();
+                      } else {
+                        //console.warn("📊 Controls don't match, not restarting");
+                      }
+                    },
+                  });
+                  animationControlsRef.current = controls;
+                  return;
+                }
+
+                const scrollDuration = remainingWidth / pxPerSecond;
+                /*
+                console.log(
+                  `📊 Restarting scroll: offset=${currentScrollOffset}, width=${currentDataWidth}, duration=${scrollDuration}`,
+                );
+                */
                 const controls = animate(scrollOffset, currentDataWidth, {
                   duration: scrollDuration,
                   ease: "linear",
-                  onComplete: startContinuousScroll,
+                  onComplete: () => {
+                    //console.log("📊 Animation completed, checking for restart...");
+                    // Safety check before recursive call
+                    if (animationControlsRef.current === controls) {
+                      //console.log("📊 Controls match, restarting scroll");
+                      startContinuousScroll();
+                    } else {
+                      //console.warn("📊 Controls don't match, not restarting");
+                    }
+                  },
                 });
                 animationControlsRef.current = controls;
               };
