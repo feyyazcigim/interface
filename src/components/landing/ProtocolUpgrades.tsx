@@ -37,6 +37,7 @@ interface TimelineEvent {
   combinedLinks?: string[];
   descriptions?: string[];
   customLines?: { before?: number; after?: number };
+  isUpgrade?: boolean;
   type: TimelineEventType[];
 }
 
@@ -201,6 +202,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "4e0ad0b964f74a1b4880114f4dd5b339bc69cd3e",
     auditor: "codehawks",
     type: ["modelImprovement", "infrastructure", "parametrization", "event"],
+    isUpgrade: true,
   },
   {
     name: "BIP-49",
@@ -212,6 +214,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "0552609b63f76a69190015b7e2abfded60a30960",
     auditor: "codehawks",
     type: ["parametrization", "utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-48",
@@ -223,6 +226,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "9b77984f43a1fd47f5617006502f28b8528962a3",
     auditor: "codehawks",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-47",
@@ -289,6 +293,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["modelImprovement", "didNotPass"],
+    isUpgrade: true,
   },
   {
     name: "BIP-41",
@@ -333,6 +338,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "76066733bcddb944b9af8f29acf150c02a5b8437",
     auditor: "cyfrin",
     type: ["event"],
+    isUpgrade: true,
   },
   {
     name: "BIP-37",
@@ -344,6 +350,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "78d7045a4e6900dfbdc5f1119b202b4f30ff6ab8",
     auditor: "halborn",
     type: ["infrastructure", "utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-36",
@@ -355,6 +362,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "24bf3d33355f516648b02780b4b232181afde200",
     auditor: "halborn",
     type: ["infrastructure", "modelImprovement"],
+    isUpgrade: true,
   },
   {
     name: "BIP-35",
@@ -377,6 +385,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "f37cb42809fb8dfc9a0f2891db1ad96a1b848a4c",
     auditor: "halborn",
     type: ["modelImprovement"],
+    isUpgrade: true,
   },
   {
     name: "BIP-33",
@@ -421,6 +430,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "e193bdf747e804c13280453f3dbb52ebc797091b",
     auditor: "halborn",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-29",
@@ -432,6 +442,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "0bdd376263b0fe94af84aaf4adb6391b39fa80ab",
     auditor: "halborn",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-28",
@@ -488,6 +499,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "6699e071626a17283facc67242536037989ecd91",
     auditor: "halborn",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-23",
@@ -522,6 +534,7 @@ const bipAudits: TimelineEvent[] = [
     auditor: "bean",
     customLines: { before: 6, after: 6 },
     type: ["event"],
+    isUpgrade: true,
   },
   {
     name: "BIP-20",
@@ -534,6 +547,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["event"],
+    isUpgrade: true,
   },
   {
     name: "Governance Exploit Response",
@@ -572,6 +586,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-15",
@@ -583,6 +598,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["modelImprovement"],
+    isUpgrade: true,
   },
   {
     name: "BIP-14",
@@ -605,6 +621,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["parametrization"],
+    isUpgrade: true,
   },
   {
     name: "BIP-12",
@@ -616,6 +633,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["infrastructure", "utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-11",
@@ -627,6 +645,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-10",
@@ -649,6 +668,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["parametrization"],
+    isUpgrade: true,
   },
   {
     name: "BIP-8",
@@ -671,6 +691,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["modelImprovement"],
+    isUpgrade: true,
   },
   {
     name: "BIP-6",
@@ -682,6 +703,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["parametrization"],
+    isUpgrade: true,
   },
   {
     name: "BIP-5",
@@ -726,6 +748,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["budget"],
+    isUpgrade: true,
   },
   {
     name: "BIP-1",
@@ -748,6 +771,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["bugFix", "utility"],
+    isUpgrade: true,
   },
 ];
 
@@ -1218,9 +1242,13 @@ const events: TimelineEvent[] = [
   },
 ];
 
-export const PROTOCOL_UPGRADES: TimelineEvent[] = [...piAudits, ...bipAudits, ...ebipAudits];
+export const PROTOCOL_UPGRADES: TimelineEvent[] = [
+  ...piAudits,
+  ...bipAudits.filter((audit) => audit.isUpgrade === true),
+  ...ebipAudits,
+];
 
-const ALL_DATA: TimelineEvent[] = [...PROTOCOL_UPGRADES, ...events];
+const ALL_DATA: TimelineEvent[] = [...piAudits, ...bipAudits, ...ebipAudits, ...events];
 
 // Combine all audits and sort by timestamp (most recent first)
 // If timestamps are equal, sort by audit number (lowest number first)
