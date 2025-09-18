@@ -977,7 +977,7 @@ export default function LandingChart() {
       duration: phase2Duration,
       ease: "linear",
     });
-    // clipPathControlsRef.current = clipPathControls;
+    clipPathControlsRef.current = clipPathControls;
 
     const controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.final * 100, {
       duration: phase2Duration,
