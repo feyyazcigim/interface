@@ -1080,285 +1080,106 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
   }, []);
 
   // Start animation function
-  const startAnimation = useCallback(
-    async (isRestart = false) => {
-      // Skip intro phases for returning users, unless it's a restart
-      if (hasSeenFullAnimation && !isRestart) {
-        // Set up initial positions for returning users
-        measurementLineOffset.set(ANIMATION_CONFIG.measurementLine.minimum * 100); // Start at 10%
-        clipPathWidth.set(ANIMATION_CONFIG.clipPath.initial); // Start at 0.1
-        horizontalLineClipPath.set(viewportWidth); // Start hidden from right
-        priceLabelsOpacity.set(0);
-        priceLineOpacity.set(0); // Start price line hidden
-        priceTrackingActive.set(0); // Start price tracking inactive
+  const startAnimation = useCallback(async () => {
+    // Set up initial positions
+    measurementLineOffset.set(ANIMATION_CONFIG.measurementLine.minimum * 100); // Start at 10%
+    clipPathWidth.set(ANIMATION_CONFIG.clipPath.initial); // Start at 0.1
+    horizontalLineClipPath.set(viewportWidth); // Start hidden from right
+    priceLabelsOpacity.set(0);
+    priceLineOpacity.set(0); // Start price line hidden
+    priceTrackingActive.set(0); // Start price tracking inactive
 
-        // Start directly at mainCTA phase
-        setCurrentTriggerPhase("mainCTA");
+    // Start directly at mainCTA phase
+    setCurrentTriggerPhase("mainCTA");
 
-        // For returning users, start at the beginning since we only have stable data
-        scrollOffset.set(0);
+    // For returning users, start at the beginning since we only have stable data
+    scrollOffset.set(0);
 
-        // Reveal animations first (similar to full animation sequence)
+    // Reveal animations first (similar to full animation sequence)
 
-        // Start with price line reveal animation
-        animate(priceLineOpacity, 1, {
-          duration: durations.fadeInSequence.priceLine.duration,
-          ease: "easeInOut",
-        });
+    // Start with price line reveal animation
+    animate(priceLineOpacity, 1, {
+      duration: durations.fadeInSequence.priceLine.duration,
+      ease: "easeInOut",
+    });
 
-        // Wait for reveals to complete before starting movement
-        await new Promise((resolve) =>
-          setTimeout(
-            resolve,
-            Math.max(
-              durations.fadeInSequence.priceLine.duration * 1000 * 0.5,
-              durations.fadeInSequence.priceIndicator.duration * 1000 * 0.5,
-            ),
-          ),
-        );
+    // Wait for reveals to complete before starting movement
+    await new Promise((resolve) =>
+      setTimeout(
+        resolve,
+        Math.max(
+          durations.fadeInSequence.priceLine.duration * 1000 * 0.5,
+          durations.fadeInSequence.priceIndicator.duration * 1000 * 0.5,
+        ),
+      ),
+    );
 
-        // Calculate phase2Duration based on distance and speed
-        const phase2Duration = calculatePhase2Duration(measurementLineOffset, clipPathWidth, containerRef, isMobile);
-        // Horizontal line: Reveal during position animations
-        animate(horizontalLineClipPath, 0, {
-          duration: phase2Duration, // Same duration as full animation
-          ease: "linear",
-        });
+    // Calculate phase2Duration based on distance and speed
+    const phase2Duration = calculatePhase2Duration(measurementLineOffset, clipPathWidth, containerRef, isMobile);
+    // Horizontal line: Reveal during position animations
+    animate(horizontalLineClipPath, 0, {
+      duration: phase2Duration, // Same duration as full animation
+      ease: "linear",
+    });
 
-        const clipPathControls = animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
-          duration: phase2Duration,
-          ease: "linear",
-        });
-        clipPathControlsRef.current = clipPathControls;
+    const clipPathControls = animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
+      duration: phase2Duration,
+      ease: "linear",
+    });
+    clipPathControlsRef.current = clipPathControls;
 
-        const controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.final * 100, {
-          duration: phase2Duration,
-          ease: "linear",
-        });
-        animationControlsRef.current = controls;
+    const controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.final * 100, {
+      duration: phase2Duration,
+      ease: "linear",
+    });
+    animationControlsRef.current = controls;
 
-        // Activate price tracking at the start of phase 2
-        priceTrackingActive.set(1);
+    // Activate price tracking at the start of phase 2
+    priceTrackingActive.set(1);
 
-        await controls;
+    await controls;
 
-        // Fade in price labels only after measurement line reaches final position
-        animate(priceLabelsOpacity, 1, { duration: 1, ease: "easeInOut" });
+    // Fade in price labels only after measurement line reaches final position
+    animate(priceLabelsOpacity, 1, { duration: 1, ease: "easeInOut" });
 
-        // Start continuous scrolling after animation completes
-        const speedScale = 1; // viewportWidth / 1920;
-        const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
+    // Start continuous scrolling after animation completes
+    const speedScale = 1; // viewportWidth / 1920;
+    const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
 
-        const startContinuousScroll = () => {
-          const currentDataWidth = fullPriceData.reduce((width, point) => {
-            const segSpeed = point.speed || 1;
-            return width + pointSpacing / segSpeed;
-          }, 0);
+    const startContinuousScroll = () => {
+      const currentDataWidth = fullPriceData.reduce((width, point) => {
+        const segSpeed = point.speed || 1;
+        return width + pointSpacing / segSpeed;
+      }, 0);
 
-          const currentOffset = scrollOffset.get();
-          const remainingWidth = currentDataWidth - currentOffset;
-          const scrollDuration = remainingWidth / pxPerSecond;
+      const currentOffset = scrollOffset.get();
+      const remainingWidth = currentDataWidth - currentOffset;
+      const scrollDuration = remainingWidth / pxPerSecond;
 
-          const controls = animate(scrollOffset, currentDataWidth, {
-            duration: scrollDuration,
-            ease: "linear",
-            onComplete: () => {
-              setTimeout(startContinuousScroll, 0);
-            },
-          });
-          animationControlsRef.current = controls;
-        };
-
-        startContinuousScroll();
-        return;
-      }
-
-      // Calculate timing for measurement line animations
-      const measurementLineStartDelay = isRestart
-        ? 0
-        : durations.fadeInSequence.priceIndicator.start + durations.fadeInSequence.priceIndicator.duration + 0.5;
-      const measurementLineDuration = 1.5;
-
-      // Horizontal line Stage 1: Start when measurement line reveals, end halfway through measurement line reveal
-      animate(horizontalLineClipPath, viewportWidth * 0.25, {
-        duration: durations.fadeInSequence.measurementLine.duration / 2, // Half the measurement line reveal duration
-        ease: "easeInOut",
-        delay: isRestart ? 0 : durations.fadeInSequence.measurementLine.start, // Start when measurement line reveals
-      });
-
-      // Phase 1: Move measurement line to 10% position
-      let controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.minimum * 100, {
-        duration: measurementLineDuration,
-        ease: "anticipate",
-        delay: measurementLineStartDelay,
-      });
-      animationControlsRef.current = controls;
-
-      // Calculate phase2Duration based on distance and speed
-      const phase2Duration = calculatePhase2Duration(measurementLineOffset, clipPathWidth, containerRef, isMobile);
-      const phase2StartDelay = measurementLineStartDelay + measurementLineDuration - 0.5;
-
-      // Horizontal line Stage 2: Start when measurement line begins moving back to left
-      const horizontalStage2Delay = isRestart ? measurementLineDuration - 0.5 : phase2StartDelay - 0.5;
-      const _horizontalStage2 = animate(horizontalLineClipPath, 0, {
-        duration: 1.5 * phase2Duration, // Same duration as measurement line return
-        ease: "linear",
-        delay: horizontalStage2Delay, // Start when Phase 2 begins
-      });
-
-      await controls;
-
-      animate(clipPathWidth, ANIMATION_CONFIG.clipPath.final, {
-        duration: phase2Duration,
-        ease: "linear",
-      });
-
-      controls = animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.final * 100, {
-        duration: phase2Duration,
-        ease: "linear",
-      });
-      animationControlsRef.current = controls;
-
-      // Activate price tracking at the start of Phase 2
-      priceTrackingActive.set(1);
-
-      await controls;
-
-      // No need for setTimeout-based messages anymore - they're handled by position monitoring
-
-      // Phase 3: Start continuous scrolling through all data
-      const speedScale = 1; // viewportWidth / 1920; // Scale speed based on viewport width (1920 = base)
-      const pxPerSecond = ANIMATION_CONFIG.baseSpeed * 60 * speedScale;
-      const totalDataWidth = positions.segments.unstable + positions.segments.semiStable;
-
-      // Scroll through initial segments (unstable + semi-stable)
-      controls = animate(scrollOffset, totalDataWidth, {
-        duration: totalDataWidth / pxPerSecond,
+      const controls = animate(scrollOffset, currentDataWidth, {
+        duration: scrollDuration,
         ease: "linear",
         onComplete: () => {
-          // Start continuous linear scrolling without fixed loops
-          // This will be controlled by the data extension logic
-          const startContinuousScroll = () => {
-            // Calculate current total data width dynamically
-            const currentDataWidth = fullPriceData.reduce((width, point) => {
-              const segSpeed = point.speed || 1;
-              return width + pointSpacing / segSpeed;
-            }, 0);
-
-            const currentOffset = scrollOffset.get();
-            const remainingWidth = currentDataWidth - currentOffset;
-            const scrollDuration = remainingWidth / pxPerSecond;
-
-            controls = animate(scrollOffset, currentDataWidth, {
-              duration: scrollDuration,
-              ease: "linear",
-              onComplete: () => {
-                // When we reach the end, restart the continuous scroll
-                setTimeout(startContinuousScroll, 0);
-              },
-            });
-            animationControlsRef.current = controls;
-          };
-
-          startContinuousScroll();
+          setTimeout(startContinuousScroll, 0);
         },
       });
       animationControlsRef.current = controls;
-    },
-    [
-      durations,
-      measurementLineOffset,
-      horizontalLineClipPath,
-      viewportWidth,
-      clipPathWidth,
-      priceTrackingActive,
-      scrollOffset,
-      positions,
-      fullPriceData,
-      pointSpacing,
-      hasSeenFullAnimation,
-    ],
-  );
+    };
 
-  // Function to restart the animation
-  const restartAnimation = useCallback(async () => {
-    // Stop current animation
-    if (animationControlsRef.current) {
-      animationControlsRef.current.stop();
-    }
-    if (clipPathControlsRef.current) {
-      clipPathControlsRef.current.stop();
-    }
-
-    priceTrackingActive.set(0);
-    scrollOffset.set(0);
-    clipPathWidth.set(ANIMATION_CONFIG.clipPath.initial);
-    amplitudeCallCount = 0; // Reset amplitude for fresh randomization
-
-    // Fade out visible elements and move measurement point to center
-    await Promise.all([
-      animate(priceLineOpacity, 0, {
-        duration: 0.3,
-        ease: "easeOut",
-      }),
-      animate(horizontalLineOpacity, 0, {
-        duration: 0.3,
-        ease: "easeOut",
-      }),
-      animate(priceLabelsOpacity, 0, {
-        duration: 0.3,
-        ease: "easeOut",
-      }),
-      animate(transactionMarkersOpacity, 0, {
-        duration: 0.3,
-        ease: "easeOut",
-      }),
-      // Move measurement point to 50% height (center)
-      animate(currentY, dynamicHeight * 0.5, {
-        duration: 0.3,
-        ease: "easeOut",
-      }),
-      animate(measurementLineOffset, ANIMATION_CONFIG.measurementLine.minimum * 100, {
-        duration: 1,
-        ease: "anticipate",
-      }),
-    ]);
-
-    // Reset all motion values to initial state
-    horizontalLineClipPath.set(viewportWidth);
-    priceLabelsOpacity.set(0);
-    priceLineOpacity.set(1); // Reset price line opacity
-    horizontalLineOpacity.set(1); // Reset horizontal line opacity
-    transactionMarkersOpacity.set(1); // Reset transaction markers opacity
-    setCurrentTriggerPhase(undefined);
-
-    // Reset to full data for restarts (always show complete story arc)
-    setFullPriceData(initialFullPriceData);
-
-    // Start the animation again with restart flag
-    startAnimation(true);
+    startContinuousScroll();
   }, [
-    scrollOffset,
+    durations,
     measurementLineOffset,
-    clipPathWidth,
     horizontalLineClipPath,
-    priceTrackingActive,
-    priceLabelsOpacity,
-    priceLineOpacity,
-    horizontalLineOpacity,
-    transactionMarkersOpacity,
     viewportWidth,
-    dynamicHeight,
-    startAnimation,
+    clipPathWidth,
+    priceTrackingActive,
+    scrollOffset,
+    positions,
+    fullPriceData,
+    pointSpacing,
+    hasSeenFullAnimation,
   ]);
-
-  // Click handler for chart during stable phase
-  const handleChartClick = useCallback(() => {
-    if (currentTriggerPhase === "mainCTA") {
-      // console.log("RESTARTING");
-      // restartAnimation();
-    }
-  }, [currentTriggerPhase, restartAnimation]);
 
   // Handle component visibility with Intersection Observer
   useEffect(() => {
@@ -1456,7 +1277,6 @@ export default function LandingChart({ currentTriggerPhase, setCurrentTriggerPha
         ref={containerRef}
         className={`w-full relative ${currentTriggerPhase === "stable" ? "cursor-pointer" : ""} mb-10`}
         id={"cta-chart"}
-        onClick={handleChartClick}
       >
         <svg
           width="100%"
