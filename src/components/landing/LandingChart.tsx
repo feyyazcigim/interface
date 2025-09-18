@@ -103,7 +103,6 @@ const ANIMATION_CONFIG = {
 };
 
 // Legacy constants for backward compatibility during transition
-const height = ANIMATION_CONFIG.height;
 const repetitions = ANIMATION_CONFIG.repetitions;
 const pointSpacing = ANIMATION_CONFIG.pointSpacing;
 
@@ -195,8 +194,6 @@ export interface PricePoint {
   value: number;
   farmer?: string; // Farmer is now just a filename string
   speed?: number; // Optional speed for specific transactions
-  triggerPhase?: string; // Optional phase trigger, for the animation above the chart
-  mandatoryTx?: boolean; // Optional flag, ensures there's always a txType attached to this datapoint
 }
 
 // Define transaction marker with stable ID
@@ -217,7 +214,7 @@ const semiStablePriceData: PricePoint[] = [
   { txType: "withdraw", value: 1.004 },
   { txType: null, value: 0.997 },
   { txType: null, value: 1.003 },
-  { txType: "deposit", value: 0.998, triggerPhase: "semiStable" },
+  { txType: "deposit", value: 0.998 },
   { txType: null, value: 1.0025 },
   { txType: null, value: 1.0 },
   { txType: "sow", value: 0.9994 },
@@ -226,11 +223,11 @@ const semiStablePriceData: PricePoint[] = [
 
 const stablePriceData: PricePoint[] = [
   { txType: null, value: 0.9994, speed: 3 },
-  { txType: "yield", value: 1.005, speed: 3, mandatoryTx: true, triggerPhase: "stable" },
-  { txType: "deposit", value: 0.995, speed: 0.85, mandatoryTx: true },
+  { txType: "yield", value: 1.005, speed: 3 },
+  { txType: "deposit", value: 0.995, speed: 0.85 },
   { txType: null, value: 1.0004, speed: 0.85 },
   { txType: null, value: 0.9994, speed: 0.85 },
-  { txType: "deposit", value: 1.0004, speed: 0.85, triggerPhase: "mainCTA" },
+  { txType: "deposit", value: 1.0004, speed: 0.85 },
 ];
 
 // Track amplitude calls for progressive dampening
@@ -300,8 +297,8 @@ function generateRandomizedStableData(baseData: PricePoint[]): PricePoint[] {
 
 // Initial combined price data
 const initialFullPriceData: PricePoint[] = [
-  ...unstablePriceData,
-  ...semiStablePriceData,
+  { txType: null, value: 1, speed: 0.85 },
+  { txType: null, value: 1.0005, speed: 0.85 },
   ...Array.from({ length: repetitions }).flatMap(() => generateRandomizedStableData(stablePriceData)),
 ];
 
@@ -431,7 +428,6 @@ function updateMarkersIncremental(
       current.txType === previous.txType &&
       current.value === previous.value &&
       current.speed === previous.speed &&
-      current.triggerPhase === previous.triggerPhase &&
       current.farmer === previous.farmer
     ) {
       commonPrefixLength++;
@@ -620,21 +616,8 @@ export default function LandingChart() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
-  // Check if user has seen the full animation before
-  const [hasSeenFullAnimation, setHasSeenFullAnimation] = useState(true);
-
   // Dynamic price data that gets updated
-  const [fullPriceData, setFullPriceData] = useState<PricePoint[]>(() => {
-    // For returning users, start with only stable data
-    if (hasSeenFullAnimation) {
-      return [
-        { txType: null, value: 1, speed: 0.85 },
-        { txType: null, value: 1.0005, speed: 0.85 },
-        ...Array.from({ length: repetitions }).flatMap(() => generateRandomizedStableData(stablePriceData)),
-      ];
-    }
-    return initialFullPriceData;
-  });
+  const [fullPriceData, setFullPriceData] = useState<PricePoint[]>(initialFullPriceData);
 
   // Persistent marker cache that survives data updates
   const persistentMarkersRef = useRef<Map<string, TransactionMarker>>(new Map());
@@ -1146,7 +1129,6 @@ export default function LandingChart() {
     positions,
     fullPriceData,
     pointSpacing,
-    hasSeenFullAnimation,
   ]);
 
   // Handle component visibility with Intersection Observer
