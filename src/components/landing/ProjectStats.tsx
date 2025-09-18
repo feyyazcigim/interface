@@ -2,7 +2,9 @@ import ChartIncreasing from "@/assets/landing/chart-increasing.png";
 import Farmer_1 from "@/assets/landing/farmer_1.png";
 import Hammer from "@/assets/landing/hammer.png";
 import Memo from "@/assets/landing/memo.png";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import useIsMobile from "@/hooks/display/useIsMobile";
+import { trackClick } from "@/utils/analytics";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRef, useState } from "react";
 import { Button } from "../ui/Button";
@@ -90,7 +92,27 @@ export default function ProjectStats() {
 
   // Handle manual button selection
   const handleButtonClick = (buttonType: ActiveButton, event?: React.MouseEvent) => {
+    // Track button click with specific analytics events
+    if (buttonType) {
+      const eventMapping = {
+        upgrades: ANALYTICS_EVENTS.LANDING.STATS_UPGRADES_BUTTON_CLICK,
+        contributors: ANALYTICS_EVENTS.LANDING.STATS_CONTRIBUTORS_BUTTON_CLICK,
+        years: ANALYTICS_EVENTS.LANDING.STATS_YEARS_BUTTON_CLICK,
+        volume: ANALYTICS_EVENTS.LANDING.STATS_VOLUME_BUTTON_CLICK,
+      };
+
+      const analyticsEvent = eventMapping[buttonType];
+      if (analyticsEvent) {
+        trackClick(analyticsEvent, {
+          button_type: buttonType,
+          section: "stats",
+          previous_active: activeButton || "none",
+        })(event);
+      }
+    }
+
     setActiveButton(buttonType);
+
     // On mobile, scroll so the upgrades button is 80px from top (only for upgrades button)
     if (isMobile && (buttonType === "upgrades" || buttonType === "contributors") && event?.currentTarget) {
       const scrollContainer = document.getElementById("scrollContainer");

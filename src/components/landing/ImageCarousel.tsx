@@ -3,6 +3,8 @@ import wpBean from "@/assets/landing/wp_bean.png";
 import wpMultiflow from "@/assets/landing/wp_multiflow.png";
 import wpPinto from "@/assets/landing/wp_pinto.png";
 import wpPipeline from "@/assets/landing/wp_pipeline.png";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
+import { trackClick } from "@/utils/analytics";
 import AutoPlay from "embla-carousel-autoplay";
 import ClassNames from "embla-carousel-class-names";
 import WheelGesturesPlugin from "embla-carousel-wheel-gestures";
@@ -168,6 +170,11 @@ export default function ImageCarousel() {
                     style={{
                       maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%)",
                     }}
+                    onClick={trackClick(ANALYTICS_EVENTS.LANDING.STATS_YEARS_WHITEPAPER_CLICK, {
+                      whitepaper_name: image.name,
+                      whitepaper_url: image.href,
+                      section: "stats",
+                    })}
                   >
                     <img src={image.src} alt={image.alt} />
                   </Link>

@@ -366,10 +366,20 @@ const LANDING_EVENTS = {
   CARD_MODAL_BACKGROUND_CLICK: "landing_card_modal_background_click",
 
   // Project Stats Section
-  STATS_UPGRADES_BUTTON_CLICK: "landing_stats_upgrades_click",
-  STATS_CONTRIBUTORS_BUTTON_CLICK: "landing_stats_contributors_click",
-  STATS_YEARS_BUTTON_CLICK: "landing_stats_years_click",
-  STATS_VOLUME_BUTTON_CLICK: "landing_stats_volume_click",
+  STATS_UPGRADES_BUTTON_CLICK: "landing_stats_upgrades_button_click",
+  STATS_CONTRIBUTORS_BUTTON_CLICK: "landing_stats_contributors_button_click",
+  STATS_YEARS_BUTTON_CLICK: "landing_stats_years_button_click",
+  STATS_VOLUME_BUTTON_CLICK: "landing_stats_volume_button_click",
+
+  // Project Stats Section - Protocol Upgrades
+  STATS_PROTOCOL_UPGRADE_CLICK: "landing_stats_protocol_upgrade_click", // Specific upgrade link clicked
+
+  // Project Stats Section - Contributors
+  STATS_CONTRIBUTOR_PROFILE_LOAD: "landing_stats_contributor_profile_loaded", // Specific contributor clicked
+  STATS_CONTRIBUTOR_ARTICLE_CLICK: "landing_stats_contributor_article_click", // Contributor article link clicked
+
+  // Project Stats Section - Whitepapers
+  STATS_YEARS_WHITEPAPER_CLICK: "landing_stats_years_whitepaper_click", // Whitepaper link clicked in years carousel
 
   // Bug Bounty Section
   BUG_BOUNTY_AUDITS_CLICK: "landing_bug_bounty_audits_click", // Learn More - Audits

@@ -1,3 +1,5 @@
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
+import { trackClick } from "@/utils/analytics";
 import { WheelGesturesPlugin } from "embla-carousel-wheel-gestures";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAtom, useSetAtom } from "jotai";
@@ -1575,6 +1577,14 @@ export default function ProtocolUpgrades() {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex flex-row gap-0.5 text-pinto-green-4 hover:underline decoration-1 opacity-0 group-hover:opacity-100 transition-all transform-gpu text-center items-center justify-center"
+                                        onClick={trackClick(ANALYTICS_EVENTS.LANDING.STATS_PROTOCOL_UPGRADE_CLICK, {
+                                          upgrade_name: audit.name,
+                                          upgrade_description: description,
+                                          upgrade_type: audit.type.join(","),
+                                          upgrade_date: audit.date,
+                                          destination: audit.combinedLinks[index],
+                                          section: "stats",
+                                        })}
                                       >
                                         <span className="text-base sm:text-xl font-light text-pinto-green-4">
                                           {description}
@@ -1602,6 +1612,14 @@ export default function ProtocolUpgrades() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={`flex flex-row gap-0.5 text-pinto-green-4 peer hover:underline decoration-1 whitespace-nowrap text-center items-center justify-center absolute top-0 transition-all transform-gpu`}
+                                    onClick={trackClick(ANALYTICS_EVENTS.LANDING.STATS_PROTOCOL_UPGRADE_CLICK, {
+                                      upgrade_name: audit.name,
+                                      upgrade_description: audit.description,
+                                      upgrade_type: audit.type.join(","),
+                                      upgrade_date: audit.date,
+                                      destination: audit.githubLink,
+                                      section: "stats",
+                                    })}
                                   >
                                     <span className="text-base sm:text-xl font-light text-pinto-green-4">
                                       {audit.name}

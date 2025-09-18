@@ -1,3 +1,5 @@
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
+import { trackClick } from "@/utils/analytics";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { Link } from "react-router-dom";
@@ -37,6 +39,11 @@ export default function ContributorMessage() {
             target="_blank"
             rel="noopener noreferrer"
             className="group flex flex-col h-full"
+            onClick={trackClick(ANALYTICS_EVENTS.LANDING.STATS_CONTRIBUTOR_ARTICLE_CLICK, {
+              contributor_name: selectedContributor.name,
+              article_url: selectedContributor.article,
+              section: "stats",
+            })}
           >
             <motion.p
               className="text-xl sm:text-4xl font-light text-pinto-gray-5 mb-4"

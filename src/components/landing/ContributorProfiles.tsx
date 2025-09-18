@@ -1,3 +1,5 @@
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
+import { trackClick } from "@/utils/analytics";
 import { motion } from "framer-motion";
 import { atom, useAtom } from "jotai";
 import { useEffect, useMemo, useRef } from "react";
@@ -82,6 +84,7 @@ function getRandomContributors(count: number = 5, selectedContributor?: Contribu
 export default function ContributorProfiles() {
   const [selectedContributor, setSelectedContributor] = useAtom(selectedContributorAtom);
   const hasAutoSelected = useRef(false);
+  const isInitialLoad = useRef(true);
 
   // Auto-select a contributor only once on first render
   useEffect(() => {
@@ -91,6 +94,19 @@ export default function ContributorProfiles() {
       hasAutoSelected.current = true;
     }
   }, [setSelectedContributor]);
+
+  // Track contributor profile loads (both auto-selection and user clicks)
+  useEffect(() => {
+    if (selectedContributor) {
+      trackClick(ANALYTICS_EVENTS.LANDING.STATS_CONTRIBUTOR_PROFILE_LOAD, {
+        contributor_name: selectedContributor.name,
+        section: "stats",
+        contributor_article: selectedContributor.article,
+        trigger_type: isInitialLoad.current ? "auto_select" : "user_click",
+      })();
+      isInitialLoad.current = false;
+    }
+  }, [selectedContributor]);
 
   // Get random contributors, always including the selected contributor
   const displayedContributors = useMemo(() => {
