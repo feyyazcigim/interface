@@ -59,7 +59,7 @@ const ANIMATION_CONFIG = {
 
   // Measurement line positions (as viewport percentages)
   measurementLine: {
-    initial: 0.75, // 75% from left
+    initial: 0.1, // 75% from left
     minimum: 0.1, // 10% from left
     final: 0.75, // back to 75%
   },
@@ -657,7 +657,7 @@ export default function LandingChart() {
   const horizontalLineClipPath = useMotionValue(viewportWidth); // For horizontal line reveal animation (starts hidden from right)
   const priceTrackingActive = useMotionValue(0); // 0 = inactive, 1 = active
   const priceLabelsOpacity = useMotionValue(0); // 0 = hidden, 1 = visible
-  const priceLineOpacity = useMotionValue(1); // 0 = hidden, 1 = visible
+  const priceLineOpacity = useMotionValue(0); // 0 = hidden, 1 = visible
   const horizontalLineOpacity = useMotionValue(1); // 0 = hidden, 1 = visible
   const transactionMarkersOpacity = useMotionValue<number>(1); // 0 = hidden, 1 = visible
   const baseFloatersOpacity = useTransform(priceTrackingActive, (active: number) => (active >= 1 ? 1 : 0) as number);
