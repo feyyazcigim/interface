@@ -1136,15 +1136,13 @@ export default function LandingChart() {
         // Page is now visible AND component is visible - resume animations
         if (isComponentVisibleRef.current) {
           // Note: setTimeout/setInterval will be throttled by browser automatically
-          setTimeout(() => {
-            isPausedRef.current = false;
-            if (animationControlsRef.current) {
-              animationControlsRef.current.play();
-            }
-            if (clipPathControlsRef.current) {
-              clipPathControlsRef.current.play();
-            }
-          }, 100);
+          isPausedRef.current = false;
+          if (animationControlsRef.current) {
+            animationControlsRef.current.play();
+          }
+          if (clipPathControlsRef.current) {
+            clipPathControlsRef.current.play();
+          }
         }
       }
     }
