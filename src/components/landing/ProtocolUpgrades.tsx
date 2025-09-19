@@ -261,6 +261,7 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "a3658861af8f5126224718af494d02352fbb3ea5",
     auditor: "codehawks",
     type: ["modelImprovement"],
+    isUpgrade: true,
   },
   {
     name: "BIP-44",
@@ -294,7 +295,6 @@ const bipAudits: TimelineEvent[] = [
     auditHash: "",
     auditor: "bean",
     type: ["modelImprovement", "didNotPass"],
-    isUpgrade: true,
   },
   {
     name: "BIP-41",
