@@ -1122,38 +1122,36 @@ export default function LandingChart() {
 
   // Handle page visibility changes to pause/resume animations properly
   useEffect(() => {
-    function handleBlur() {
-      // Page is now hidden - pause all animations
-      isPausedRef.current = true;
-      if (animationControlsRef.current) {
-        animationControlsRef.current.pause();
-      }
-      if (clipPathControlsRef.current) {
-        clipPathControlsRef.current.pause();
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        // Page is now hidden - pause all animations
+        isPausedRef.current = true;
+        if (animationControlsRef.current) {
+          animationControlsRef.current.pause();
+        }
+        if (clipPathControlsRef.current) {
+          clipPathControlsRef.current.pause();
+        }
+      } else if (document.visibilityState === "visible") {
+        // Page is now visible AND component is visible - resume animations
+        if (isComponentVisibleRef.current) {
+          // Note: setTimeout/setInterval will be throttled by browser automatically
+          setTimeout(() => {
+            isPausedRef.current = false;
+            if (animationControlsRef.current) {
+              animationControlsRef.current.play();
+            }
+            if (clipPathControlsRef.current) {
+              clipPathControlsRef.current.play();
+            }
+          }, 100);
+        }
       }
     }
 
-    function handleFocus() {
-      // Page is now visible AND component is visible - resume animations
-      if (isComponentVisibleRef.current) {
-        // Note: setTimeout/setInterval will be throttled by browser automatically
-        setTimeout(() => {
-          isPausedRef.current = false;
-          if (animationControlsRef.current) {
-            animationControlsRef.current.play();
-          }
-          if (clipPathControlsRef.current) {
-            clipPathControlsRef.current.play();
-          }
-        }, 100);
-      }
-    }
-
-    window.addEventListener("blur", handleBlur);
-    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      window.removeEventListener("blur", handleBlur);
-      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 

@@ -50,26 +50,24 @@ function FloaterContainer({ marker, x, viewportWidth, positionAbove, isFirst, me
     return unsubscribe;
   }, [shouldAnimate, animationScale]);
 
-  // Handle blur/focus events to pause/resume animations
+  // Handle page visibility changes to pause/resume animations
   useEffect(() => {
-    const handleBlur = () => {
-      if (animationController.current) {
-        animationController.current.pause();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        if (animationController.current) {
+          animationController.current.pause();
+        }
+      } else if (document.visibilityState === "visible") {
+        if (animationController.current) {
+          animationController.current.play();
+        }
       }
     };
 
-    const handleFocus = () => {
-      if (animationController.current) {
-        animationController.current.play();
-      }
-    };
-
-    window.addEventListener("blur", handleBlur);
-    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.removeEventListener("blur", handleBlur);
-      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
