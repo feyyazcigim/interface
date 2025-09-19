@@ -1,3 +1,4 @@
+import PintoLogo from "@/assets/protocol/PintoLogo.svg";
 import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import { trackClick } from "@/utils/analytics";
 import { cn } from "@/utils/utils";
@@ -82,7 +83,7 @@ const SocialIcon = ({ href, icon, label }: SocialIconProps) => {
   );
 };
 
-export default function Footer() {
+export default function Footer({ landingPageVersion }: { landingPageVersion?: boolean }) {
   const { isMobileActionBarVisible } = useMobileActionBarContext();
 
   return (
@@ -94,16 +95,19 @@ export default function Footer() {
       id="pinto-footer"
     >
       <div className="w-full px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
           {/* Links Section - Bottom Left Corner */}
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <img src={PintoLogo} alt="Pinto Logo" className="h-4 mb-0.5" />
             <FooterLink href="/?fromNav=true">About</FooterLink>
             <FooterLink href="https://docs.pinto.money/disclosures" external>
-              Terms & Privacy
+              {landingPageVersion ? "Disclosures" : "Terms & Privacy"}
             </FooterLink>
-            <FooterLink href="https://pinto.exchange/" external className="pinto-exchange-link">
-              Pinto Exchange
-            </FooterLink>
+            {!landingPageVersion && (
+              <FooterLink href="https://pinto.exchange/" external className="pinto-exchange-link">
+                Pinto Exchange
+              </FooterLink>
+            )}
           </div>
 
           {/* Social Icons Section - Bottom Right Corner */}

@@ -108,6 +108,24 @@ function PriceButtonPanel() {
     [underlyingTokensToShow],
   );
 
+  const renderTokenItem = (token, index, marqueeId) => {
+    const [tokenData, priceInfo] = token;
+
+    if (!tokenData.isWhitelisted || !tokenData.name) return null;
+
+    const price = priceInfo[useTwa ? "twa" : "instant"];
+    const formattedPrice = formatter.usd(price ? price.toHuman() : 0);
+
+    return (
+      <div key={`${tokenData.address}_marquee${marqueeId}_${index}`}>
+        <div className="inline-flex items-center px-2 gap-1.5">
+          <IconImage src={tokenData.logoURI} size={6} />
+          <div className="pinto-body text-pinto-secondary text-nowrap">{`${tokenData.symbol}: ${formattedPrice}`}</div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       className="grid grid-rows-[auto_auto_auto]"
