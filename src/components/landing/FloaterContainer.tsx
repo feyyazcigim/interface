@@ -1,6 +1,6 @@
 import { breakpoints } from "@/utils/theme/breakpoints";
-import { MotionValue, motion, useTransform } from "framer-motion";
-import { memo } from "react";
+import { MotionValue, animate, motion, useMotionValue, useTransform } from "framer-motion";
+import { memo, useEffect, useRef } from "react";
 import { TransactionMarker } from "./LandingChart";
 import TxFloater from "./TxFloater";
 
@@ -14,25 +14,69 @@ interface FloaterContainerProps {
 }
 
 function FloaterContainer({ marker, x, viewportWidth, positionAbove, isFirst, measurementX }: FloaterContainerProps) {
+  const animationScale = useMotionValue(0);
   const leftPosition = useTransform(x, (scrollX: number) => marker.x + scrollX);
   const transformValue = useTransform(leftPosition, (pos: number) => `translateX(${pos}px) translateX(-50%)`);
 
+  // Animation control
+  const hasAnimated = useRef(false);
+  const animationController = useRef<any>(null);
+
   // Check if this floater is in the early reveal zone (0-75% of viewport)
-  const shouldPopOnReveal = useTransform([measurementX, x], (values: number[]) => {
+  const shouldAnimate = useTransform([measurementX, x], (values: number[]) => {
     const measX = values[0];
     const scrollX = values[1];
     const markerScreenPosition = marker.x + scrollX;
-    const isInEarlyZone = markerScreenPosition <= viewportWidth * 0.75;
-    const shouldTriggerPop = isInEarlyZone && measX >= markerScreenPosition;
+    const triggerZone = markerScreenPosition <= viewportWidth * 0.755 && markerScreenPosition > viewportWidth * 0.75;
+    const shouldTriggerPop = triggerZone || measX >= markerScreenPosition;
 
     return shouldTriggerPop;
   });
+
+  // Handle animation trigger
+  useEffect(() => {
+    const unsubscribe = shouldAnimate.on("change", (shouldPop) => {
+      if (shouldPop && !hasAnimated.current) {
+        // Start animation
+        animationController.current = animate(animationScale, [0, 1, 0.8], {
+          duration: 0.8,
+          times: [0, 0.5, 1],
+          ease: "easeInOut",
+        });
+        hasAnimated.current = true;
+      }
+    });
+
+    return unsubscribe;
+  }, [shouldAnimate, animationScale]);
+
+  // Handle blur/focus events to pause/resume animations
+  useEffect(() => {
+    const handleBlur = () => {
+      if (animationController.current) {
+        animationController.current.pause();
+      }
+    };
+
+    const handleFocus = () => {
+      if (animationController.current) {
+        animationController.current.play();
+      }
+    };
+
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
 
   return (
     <motion.div
       className="absolute z-20 will-change-transform"
       style={{
-        opacity: 1,
         top: positionAbove
           ? viewportWidth >= breakpoints.sm && viewportWidth < breakpoints["3xl"]
             ? marker.y - 40
@@ -45,12 +89,9 @@ function FloaterContainer({ marker, x, viewportWidth, positionAbove, isFirst, me
         from={marker.farmer}
         txType={marker.txType}
         viewportWidth={viewportWidth}
-        x={x}
-        markerX={marker.x}
-        isFixed={true}
-        id={isFirst ? "txFloater" : undefined}
         positionAbove={positionAbove}
-        shouldPopOnReveal={shouldPopOnReveal}
+        id={isFirst ? "txFloater" : undefined}
+        scale={animationScale}
       />
     </motion.div>
   );

@@ -1149,11 +1149,11 @@ export default function LandingChart() {
       }
     }
 
-    document.addEventListener("blur", handleBlur);
-    document.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
     return () => {
-      document.removeEventListener("blur", handleBlur);
-      document.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
