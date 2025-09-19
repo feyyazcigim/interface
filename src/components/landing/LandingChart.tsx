@@ -1122,8 +1122,8 @@ export default function LandingChart() {
 
   // Handle page visibility changes to pause/resume animations properly
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") {
         // Page is now hidden - pause all animations
         isPausedRef.current = true;
         if (animationControlsRef.current) {
@@ -1132,10 +1132,10 @@ export default function LandingChart() {
         if (clipPathControlsRef.current) {
           clipPathControlsRef.current.pause();
         }
-        // Note: setTimeout/setInterval will be throttled by browser automatically
-      } else if (isComponentVisibleRef.current) {
+      } else if (document.visibilityState === "visible") {
         // Page is now visible AND component is visible - resume animations
-        setTimeout(() => {
+        if (isComponentVisibleRef.current) {
+          // Note: setTimeout/setInterval will be throttled by browser automatically
           isPausedRef.current = false;
           if (animationControlsRef.current) {
             animationControlsRef.current.play();
@@ -1143,12 +1143,14 @@ export default function LandingChart() {
           if (clipPathControlsRef.current) {
             clipPathControlsRef.current.play();
           }
-        }, 100);
+        }
       }
-    };
+    }
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   // Start animation on mount

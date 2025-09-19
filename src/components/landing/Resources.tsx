@@ -95,7 +95,11 @@ export default function Resources() {
         {resourceCards.map((card, index) => (
           <div key={index} className={cardStyles}>
             <div className="overflow-hidden relative h-[16rem] sm:h-[24rem] xl:h-[15rem] min-[1300px]:h-[20rem] 3xl:h-[18rem] min-[2100px]:h-[24rem] flex justify-center items-center">
-              <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+              <img
+                src={card.image}
+                alt={card.title}
+                className={`w-full h-full object-cover ${card.title !== "Participate" ? "xl:object-top min-[1300px]:object-cover" : ""}`}
+              />
             </div>
             <div className="flex flex-col justify-between flex-1 gap-4 2xl:gap-8 mx-4 mb-4 2xl:mx-6 2xl:mb-6">
               <div className="flex flex-col gap-4">

@@ -2,7 +2,6 @@ import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import { trackClick } from "@/utils/analytics";
 import { WheelGesturesPlugin } from "embla-carousel-wheel-gestures";
 import { AnimatePresence, motion } from "framer-motion";
-import { useAtom, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DiagonalRightArrowIcon } from "../Icons";
@@ -23,7 +22,7 @@ type TimelineEventType =
   | "yearMarker"
   | "audit";
 
-interface Audit {
+interface TimelineEvent {
   name: string;
   description: string;
   githubLink: string;
@@ -38,11 +37,12 @@ interface Audit {
   combinedLinks?: string[];
   descriptions?: string[];
   customLines?: { before?: number; after?: number };
+  isUpgrade?: boolean;
   type: TimelineEventType[];
 }
 
 // Pinto Improvement Proposals
-const piAudits: Audit[] = [
+const piAudits: TimelineEvent[] = [
   {
     name: "PI-12",
     description: "Decrease Excessively Low L2SR Threshold",
@@ -191,7 +191,7 @@ const piAudits: Audit[] = [
 ];
 
 // Bean Improvement Proposals
-const bipAudits: Audit[] = [
+const bipAudits: TimelineEvent[] = [
   {
     name: "BIP-50",
     description: "Reseed Beanstalk",
@@ -202,6 +202,7 @@ const bipAudits: Audit[] = [
     auditHash: "4e0ad0b964f74a1b4880114f4dd5b339bc69cd3e",
     auditor: "codehawks",
     type: ["modelImprovement", "infrastructure", "parametrization", "event"],
+    isUpgrade: true,
   },
   {
     name: "BIP-49",
@@ -213,6 +214,7 @@ const bipAudits: Audit[] = [
     auditHash: "0552609b63f76a69190015b7e2abfded60a30960",
     auditor: "codehawks",
     type: ["parametrization", "utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-48",
@@ -224,6 +226,7 @@ const bipAudits: Audit[] = [
     auditHash: "9b77984f43a1fd47f5617006502f28b8528962a3",
     auditor: "codehawks",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-47",
@@ -246,6 +249,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["security"],
+    isUpgrade: true,
   },
   {
     name: "BIP-45",
@@ -257,6 +261,7 @@ const bipAudits: Audit[] = [
     auditHash: "a3658861af8f5126224718af494d02352fbb3ea5",
     auditor: "codehawks",
     type: ["modelImprovement"],
+    isUpgrade: true,
   },
   {
     name: "BIP-44",
@@ -334,6 +339,7 @@ const bipAudits: Audit[] = [
     auditHash: "76066733bcddb944b9af8f29acf150c02a5b8437",
     auditor: "cyfrin",
     type: ["event"],
+    isUpgrade: true,
   },
   {
     name: "BIP-37",
@@ -345,6 +351,7 @@ const bipAudits: Audit[] = [
     auditHash: "78d7045a4e6900dfbdc5f1119b202b4f30ff6ab8",
     auditor: "halborn",
     type: ["infrastructure", "utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-36",
@@ -356,6 +363,7 @@ const bipAudits: Audit[] = [
     auditHash: "24bf3d33355f516648b02780b4b232181afde200",
     auditor: "halborn",
     type: ["infrastructure", "modelImprovement"],
+    isUpgrade: true,
   },
   {
     name: "BIP-35",
@@ -378,6 +386,7 @@ const bipAudits: Audit[] = [
     auditHash: "f37cb42809fb8dfc9a0f2891db1ad96a1b848a4c",
     auditor: "halborn",
     type: ["modelImprovement"],
+    isUpgrade: true,
   },
   {
     name: "BIP-33",
@@ -400,6 +409,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["security"],
+    isUpgrade: true,
   },
   {
     name: "BIP-31",
@@ -422,6 +432,7 @@ const bipAudits: Audit[] = [
     auditHash: "e193bdf747e804c13280453f3dbb52ebc797091b",
     auditor: "halborn",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-29",
@@ -433,6 +444,7 @@ const bipAudits: Audit[] = [
     auditHash: "0bdd376263b0fe94af84aaf4adb6391b39fa80ab",
     auditor: "halborn",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-28",
@@ -489,6 +501,7 @@ const bipAudits: Audit[] = [
     auditHash: "6699e071626a17283facc67242536037989ecd91",
     auditor: "halborn",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-23",
@@ -523,6 +536,7 @@ const bipAudits: Audit[] = [
     auditor: "bean",
     customLines: { before: 6, after: 6 },
     type: ["event"],
+    isUpgrade: true,
   },
   {
     name: "BIP-20",
@@ -535,6 +549,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["event"],
+    isUpgrade: true,
   },
   {
     name: "Governance Exploit Response",
@@ -573,6 +588,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-15",
@@ -584,6 +600,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["modelImprovement"],
+    isUpgrade: true,
   },
   {
     name: "BIP-14",
@@ -606,6 +623,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["parametrization"],
+    isUpgrade: true,
   },
   {
     name: "BIP-12",
@@ -617,6 +635,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["infrastructure", "utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-11",
@@ -628,6 +647,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["utility"],
+    isUpgrade: true,
   },
   {
     name: "BIP-10",
@@ -650,6 +670,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["parametrization"],
+    isUpgrade: true,
   },
   {
     name: "BIP-8",
@@ -672,6 +693,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["modelImprovement"],
+    isUpgrade: true,
   },
   {
     name: "BIP-6",
@@ -683,6 +705,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["parametrization"],
+    isUpgrade: true,
   },
   {
     name: "BIP-5",
@@ -727,6 +750,7 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["budget"],
+    isUpgrade: true,
   },
   {
     name: "BIP-1",
@@ -749,11 +773,12 @@ const bipAudits: Audit[] = [
     auditHash: "",
     auditor: "bean",
     type: ["bugFix", "utility"],
+    isUpgrade: true,
   },
 ];
 
 // Emergency Bean Improvement Proposals
-const ebipAudits: Audit[] = [
+const ebipAudits: TimelineEvent[] = [
   {
     name: "EBIP-19",
     description: "Misc Bug Fixes 2",
@@ -983,7 +1008,7 @@ const ebipAudits: Audit[] = [
 
 // Audits
 /*
-const regularAudits: Audit[] = [
+const regularAudits: TimelineEvent[] = [
   {
     name: "Cyfrin Complete Audit",
     description: "",
@@ -1080,7 +1105,7 @@ function FilterButton({ type, label, isSelected, hasNoFilters, colorClass, onCli
   );
 }
 
-const events: Audit[] = [
+const events: TimelineEvent[] = [
   {
     name: "Beanstalk Launch",
     description: "",
@@ -1219,11 +1244,17 @@ const events: Audit[] = [
   },
 ];
 
-export const PROTOCOL_UPGRADES: Audit[] = [...piAudits, ...bipAudits, ...ebipAudits, ...events];
+export const PROTOCOL_UPGRADES: TimelineEvent[] = [
+  ...piAudits,
+  ...bipAudits.filter((audit) => audit.isUpgrade === true),
+  ...ebipAudits,
+];
+
+const ALL_DATA: TimelineEvent[] = [...piAudits, ...bipAudits, ...ebipAudits, ...events];
 
 // Combine all audits and sort by timestamp (most recent first)
 // If timestamps are equal, sort by audit number (lowest number first)
-const audits: Audit[] = PROTOCOL_UPGRADES.sort((a, b) => {
+const audits: TimelineEvent[] = ALL_DATA.sort((a, b) => {
   // Primary sort: timestamp (most recent first)
   if (a.timestamp !== b.timestamp) {
     return b.timestamp - a.timestamp;
@@ -1250,9 +1281,9 @@ const audits: Audit[] = PROTOCOL_UPGRADES.sort((a, b) => {
 export default function ProtocolUpgrades() {
   const [api, setApi] = useState<CarouselApi>();
 
-  const [carouselCenterData, setCarouselCenterData] = useState<Audit | null>(null);
-  const [hoveredData, setHoveredData] = useState<Audit | null>(null);
-  const [highlightedData, setHighlightedData] = useState<Audit | null>(null);
+  const [carouselCenterData, setCarouselCenterData] = useState<TimelineEvent | null>(null);
+  const [hoveredData, setHoveredData] = useState<TimelineEvent | null>(null);
+  const [highlightedData, setHighlightedData] = useState<TimelineEvent | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<Set<TimelineEventType>>(new Set());
   const lastScrollTime = useRef(0);
 
@@ -1262,7 +1293,7 @@ export default function ProtocolUpgrades() {
     const firstYear = new Date(sortedOriginalAudits[0].timestamp).getFullYear();
     const lastYear = new Date(sortedOriginalAudits[sortedOriginalAudits.length - 1].timestamp).getFullYear();
 
-    const yearMarkers: Audit[] = [];
+    const yearMarkers: TimelineEvent[] = [];
     for (let year = firstYear; year <= lastYear; year++) {
       yearMarkers.push({
         name: `${year}`,

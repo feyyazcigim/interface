@@ -172,7 +172,8 @@ export default function ProjectStats() {
         <span
           className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "upgrades")}`}
         >
-          {PROTOCOL_UPGRADES.length}
+          {/* Protocol Upgrades + Pinto Launch (+1)*/}
+          {PROTOCOL_UPGRADES.length + 1}
         </span>
         <Button
           variant={"outline-rounded"}
@@ -200,7 +201,7 @@ export default function ProjectStats() {
         <span
           className={`text-[2rem] sm:text-[4rem] leading-[1.4] text-black transition-all duration-300 ${getElementOpacity(activeButton === "contributors")}`}
         >
-          51
+          52
         </span>
         {/* Contributors floating above the button */}
         <span className="relative">
