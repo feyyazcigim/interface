@@ -129,7 +129,7 @@ function EmptyState() {
     <div className="flex flex-col items-center justify-center py-16 px-4">
       <div className="text-center max-w-md">
         <div className="pinto-h3 mb-4 text-pinto-dark">No NFT Found</div>
-        <div className="pinto-body text-pinto-light mb-6">You can purchase one from a NFT marketplace.</div>
+        <div className="pinto-body text-pinto-light mb-6">You can purchase one from an NFT marketplace.</div>
         <Button
           asChild
           variant="outline"

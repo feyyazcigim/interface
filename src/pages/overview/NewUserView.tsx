@@ -175,7 +175,7 @@ const flowCards: {
         <InlineFlex>
           <PintoIcon /> Depositors
         </InlineFlex>{" "}
-        <span>can</span> <span>convert</span> <span>LP</span> <span>into</span> <span>Pinto</span> <span>to</span>{" "}
+        <span>can</span> <span>Convert</span> <span>LP</span> <span>into</span> <span>Pinto</span> <span>to</span>{" "}
         <span>buy</span> <span>at</span> <span>a</span> <span>lower</span> <span>price</span>
       </FlowCard>
     ),
