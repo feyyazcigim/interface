@@ -58,7 +58,7 @@ function Silo() {
   const pintoWETHLP = useChainConstant(PINTO_WETH_TOKEN);
   const pintoWSOLLP = useChainConstant(PINTO_WSOL_TOKEN);
 
-  const [hoveredButton, setHoveredButton] = useState("");
+  const [hoveredButton, setHoveredButton] = useState("claim");
   const enableStatPanels =
     farmerSilo.depositsUSD.gt(0) || farmerSilo.activeStalkBalance.gt(0) || farmerSilo.activeSeedsBalance.gt(0);
 
@@ -172,8 +172,7 @@ function Silo() {
               These are Deposits which are currently incentivized by Pinto.
             </div>
             <div className="relative action-container">
-              <SiloTable hovering={hoveredButton === "claim"} />
-
+              <SiloTable hovering={false} />
               {/*convertEnabled && convertFrom && convertTo && (
                 <TableRowConnector
                   fromTarget={`token-row-${convertFrom.address}`}
@@ -228,8 +227,6 @@ function Silo() {
                   source90Degree={true}
                   perpLength={10}
                   onClick={submitClaimRewards}
-                  onMouseEnter={() => setHoveredButton("claim")}
-                  onMouseLeave={() => setHoveredButton("")}
                 />
               )}
               {/* {enablePintoToLPHelper && (
