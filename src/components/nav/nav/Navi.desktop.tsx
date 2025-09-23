@@ -131,10 +131,13 @@ const DataNavi = ({ setNaviTab }) => {
             <Link href={navLinks.explorer_field}>Field</Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link href={navLinks.explorer_farmer}>Farmer</Link>
+            <Link href={navLinks.explorer_seasons}>Seasons</Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link href={navLinks.explorer_seasons}>Seasons</Link>
+            <Link href={navLinks.explorer_tractor}>Tractor</Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href={navLinks.explorer_farmer}>My Silo</Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link href={navLinks.explorer_all}>All</Link>

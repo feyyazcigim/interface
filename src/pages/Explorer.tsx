@@ -26,10 +26,6 @@ const TABS = [
     tabName: "Field",
   },
   {
-    urlSlug: "farmer",
-    tabName: "Farmer",
-  },
-  {
     urlSlug: "seasons",
     tabName: "Seasons",
     description:
@@ -38,6 +34,10 @@ const TABS = [
   {
     urlSlug: "tractor",
     tabName: "Tractor",
+  },
+  {
+    urlSlug: "farmer",
+    tabName: "My Silo",
   },
   {
     urlSlug: "all",
@@ -62,7 +62,7 @@ const Explorer = () => {
 
   const selectedIdx = TABS.findIndex((t) => t.urlSlug === tab);
   const description = TABS[selectedIdx].description;
-  const removeBottomPadding = selectedIdx === 4; //Remove on seasons table for the pagination to fit nicely on the bottm
+  const removeBottomPadding = selectedIdx === 3; //Remove on seasons table for the pagination to fit nicely on the bottm
 
   return (
     <PageContainer variant="xlAltExplorer" removeBottomPadding={removeBottomPadding}>
@@ -98,9 +98,9 @@ const Explorer = () => {
           {selectedIdx === 0 && <PintoExplorer />}
           {selectedIdx === 1 && <SiloExplorer />}
           {selectedIdx === 2 && <FieldExplorer />}
-          {selectedIdx === 3 && <FarmerExplorer />}
-          {selectedIdx === 4 && <SeasonsExplorer />}
-          {selectedIdx === 5 && <TractorExplorer />}
+          {selectedIdx === 3 && <SeasonsExplorer />}
+          {selectedIdx === 4 && <TractorExplorer />}
+          {selectedIdx === 5 && <FarmerExplorer />}
           {selectedIdx === 6 && <AllExplorer />}
         </div>
       </div>
