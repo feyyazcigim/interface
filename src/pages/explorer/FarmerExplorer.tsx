@@ -14,9 +14,9 @@ import { useAccount } from "wagmi";
 const NO_DATA_MESSAGE = "No silo interactions from connected wallet";
 
 const FarmerExplorer = () => {
-  const [plantedTab, setPlantedTab] = useSharedTimeTab("farmerPlanted");
-  const [grownStalkTab, setGrownStalkTab] = useSharedTimeTab("farmerGrownStalk");
-  const [stalkOwnershipTab, setStalkOwnershipTab] = useSharedTimeTab("farmerStalkOwnership");
+  const [plantedTab, setPlantedTab] = useSharedTimeTab("farmerPlanted", TimeTab.AllTime);
+  const [grownStalkTab, setGrownStalkTab] = useSharedTimeTab("farmerGrownStalk", TimeTab.AllTime);
+  const [stalkOwnershipTab, setStalkOwnershipTab] = useSharedTimeTab("farmerStalkOwnership", TimeTab.AllTime);
   const season = useSunData().current;
 
   const { address, isConnecting } = useAccount();
