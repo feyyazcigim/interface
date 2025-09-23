@@ -42,7 +42,7 @@ const FarmerExplorer = () => {
     <>
       <SeasonalChart
         title="Earned Pinto"
-        tooltip="Total number of Pinto my Deposits have accumulated from the Silo"
+        tooltip="Total number of Pinto my Deposits have accumulated from the Silo."
         size="large"
         fillArea
         activeTab={plantedTab}
@@ -57,7 +57,7 @@ const FarmerExplorer = () => {
         <div className="w-full sm:w-1/2">
           <SeasonalChart
             title="Mown Stalk"
-            tooltip="Amount of Stalk accumulated from Seeds currently tied to my Deposits (i.e., not burned from Withdrawals or disincentivized Converts)"
+            tooltip="Amount of Stalk accumulated from Seeds currently tied to my Deposits (i.e., not burned from Withdrawals or disincentivized Converts)."
             size="small"
             activeTab={grownStalkTab}
             onChangeTab={setGrownStalkTab}
