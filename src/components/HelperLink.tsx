@@ -36,6 +36,7 @@ interface HelperLinkProps extends HTMLAttributes<HTMLDivElement> {
   perpLength?: number;
   lineAngle?: number;
   componentRotateWithLine?: boolean;
+  lineShimmer?: boolean;
 }
 
 export const hoveredIdAtom = atom<string>("");
@@ -61,6 +62,7 @@ export default function HelperLink({
   perpLength = 20,
   lineAngle,
   componentRotateWithLine = false,
+  lineShimmer = false,
   ...props
 }: HelperLinkProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -98,7 +100,7 @@ export default function HelperLink({
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onClick={onClick}
-          className={`cursor-pointer ${className}`}
+          className={`cursor-pointer ${className} w-6 overflow-visible`}
           data-action-target={id}
           {...props}
         >
@@ -140,6 +142,7 @@ export default function HelperLink({
           source90Degree={source90Degree}
           target90Degree={target90Degree}
           perpLength={perpLength}
+          shimmer={lineShimmer}
         />
       </ResizeVisibilityWrapper>
     </div>

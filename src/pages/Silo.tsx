@@ -219,14 +219,21 @@ function Silo() {
               )*/}
               {claimEnabled && (
                 <HelperLink
-                  text={claimableText}
-                  className="absolute -right-[90px] max-[1800px]:-right-[215px] top-8 max-[1800px]:whitespace-break-spaces max-[1800px]:w-[160px]"
+                  className="absolute -right-[90px] max-[1800px]:-right-[215px] top-8 max-[1800px]:whitespace-break-spaces max-[1800px]:w-[160px] hover:brightness-125 transition-all duration-300"
                   dataTarget={`token-row-${mainToken.address}`}
                   sourceAnchor="left"
                   targetAnchor="right"
                   source90Degree={true}
                   perpLength={10}
                   onClick={submitClaimRewards}
+                  lineShimmer
+                  component={
+                    <div
+                      className={`w-fit overflow-visible animate-text-background-scroll bg-pinto-green-shimmer text-transparent whitespace-nowrap pinto-body-light`}
+                    >
+                      {claimableText}
+                    </div>
+                  }
                 />
               )}
               {/* {enablePintoToLPHelper && (
