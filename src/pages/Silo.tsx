@@ -58,7 +58,7 @@ function Silo() {
   const pintoWETHLP = useChainConstant(PINTO_WETH_TOKEN);
   const pintoWSOLLP = useChainConstant(PINTO_WSOL_TOKEN);
 
-  const [hoveredButton, setHoveredButton] = useState("");
+  const [hoveredButton, setHoveredButton] = useState("claim");
   const enableStatPanels =
     farmerSilo.depositsUSD.gt(0) || farmerSilo.activeStalkBalance.gt(0) || farmerSilo.activeSeedsBalance.gt(0);
 
@@ -172,8 +172,7 @@ function Silo() {
               These are Deposits which are currently incentivized by Pinto.
             </div>
             <div className="relative action-container">
-              <SiloTable hovering={hoveredButton === "claim"} />
-
+              <SiloTable hovering={false} />
               {/*convertEnabled && convertFrom && convertTo && (
                 <TableRowConnector
                   fromTarget={`token-row-${convertFrom.address}`}
@@ -220,16 +219,21 @@ function Silo() {
               )*/}
               {claimEnabled && (
                 <HelperLink
-                  text={claimableText}
-                  className="absolute -right-[90px] max-[1800px]:-right-[215px] top-8 max-[1800px]:whitespace-break-spaces max-[1800px]:w-[160px]"
+                  className="absolute -right-[90px] max-[1800px]:-right-[215px] top-8 max-[1800px]:whitespace-break-spaces max-[1800px]:w-[160px] hover:brightness-125 transition-all duration-300"
                   dataTarget={`token-row-${mainToken.address}`}
                   sourceAnchor="left"
                   targetAnchor="right"
                   source90Degree={true}
                   perpLength={10}
                   onClick={submitClaimRewards}
-                  onMouseEnter={() => setHoveredButton("claim")}
-                  onMouseLeave={() => setHoveredButton("")}
+                  lineShimmer
+                  component={
+                    <div
+                      className={`w-fit overflow-visible animate-text-background-scroll bg-pinto-green-shimmer text-transparent whitespace-nowrap pinto-body-light`}
+                    >
+                      {claimableText}
+                    </div>
+                  }
                 />
               )}
               {/* {enablePintoToLPHelper && (

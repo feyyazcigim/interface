@@ -231,6 +231,10 @@ module.exports = {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
         },
+        "text-background-scroll": {
+          "0%": { backgroundPosition: "100% 50%"},
+          "100%": { backgroundPosition: "0% 50%" },
+        },
         "pulse-glow": {
           "0%, 100%": { 
             boxShadow: "0 0 20px var(--glow-color, rgba(36, 102, 69, 0.4))" 
@@ -250,6 +254,7 @@ module.exports = {
         "vertical-marquee": "vertical-marquee 36s linear infinite",
         "vertical-marquee-reverse": "vertical-marquee-reverse 54s linear infinite",
         "vertical-marquee-small": "vertical-marquee-small 80s linear infinite",
+        "text-background-scroll": "text-background-scroll 5s linear infinite",
         "pulse-glow": "pulse-glow 8s ease-in-out infinite",
       },
       aspectRatio: {
