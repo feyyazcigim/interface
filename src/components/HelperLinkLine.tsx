@@ -363,7 +363,7 @@ const HelperLinkLine = ({
             <stop offset="66.66%" stopColor="#246645" />
             <stop offset="83.33%" stopColor="#00c767" stopOpacity="0.8" />
             <stop offset="100%" stopColor="#246645" />
-            <animate attributeName="x1" values="100%;-300%;" dur="5s" repeatCount="indefinite" />
+            <animate attributeName="x1" values="-300%;100%;" dur="5s" repeatCount="indefinite" />
           </linearGradient>
         </defs>
         <path

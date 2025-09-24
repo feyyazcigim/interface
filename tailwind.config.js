@@ -232,8 +232,8 @@ module.exports = {
           "100%": { transform: "translateX(100%)" },
         },
         "text-background-scroll": {
-          "0%": { backgroundPosition: "0% 50%" },
-          "100%": { backgroundPosition: "100% 50%"},
+          "0%": { backgroundPosition: "100% 50%"},
+          "100%": { backgroundPosition: "0% 50%" },
         },
         "pulse-glow": {
           "0%, 100%": { 
