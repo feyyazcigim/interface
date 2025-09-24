@@ -345,7 +345,7 @@ const HelperLinkLine = ({
           height: dimensions.height,
           overflow: "visible",
         }}
-        className={`transition-colors ${isHovered ? "text-pinto-green-4" : "text-pinto-gray-3"}`}
+        className={`transition-colors ${isHovered ? "text-pinto-green-5" : "text-pinto-green-4"}`}
       >
         <defs>
           <linearGradient
