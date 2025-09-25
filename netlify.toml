@@ -12,7 +12,7 @@
   status = 301
 
 [[redirects]]
-  from = "/discordben"
+  from = "/join"
   to = "https://discord.gg/2QBKHwhpkT"
   status = 301
 
