@@ -410,8 +410,8 @@ export default function SecondaryCTA() {
               <span className="text-pinto-green-4">the properties of USD</span>
             </span>
           </h2>
-          <span className="text-xl lg:text-lg lg:leading-[1.4] font-thin text-black text-center">
-            Printed directly to the people. Founded on leviathan-free credit.
+          <span className="text-xl lg:text-lg lg:leading-[1.4] font-thin text-black text-center sm:whitespace-nowrap">
+            Pinto is designed to save the Ethereum network from the threat of centralized stablecoins
           </span>
           <Link to={navLinks.printsToThePeople} target="_blank" rel="noopener noreferrer">
             <Button
@@ -426,10 +426,7 @@ export default function SecondaryCTA() {
                 article_type: "external_blog_post",
               })}
             >
-              <span>
-                Why is Pinto the best alternative <br className="block sm:hidden" />
-                to centralized stablecoins?
-              </span>
+              <span>Why does Ethereum need crypto-native fiat?</span>
               <span className="text-pinto-green-4 transition-all duration-300 ease-in-out">
                 <PintoRightArrow width={"1rem"} height={"1rem"} className="transition-all" color="currentColor" />
               </span>
