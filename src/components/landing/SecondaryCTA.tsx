@@ -429,7 +429,9 @@ export default function SecondaryCTA() {
                 article_type: "external_blog_post",
               })}
             >
-              <span>Why does Ethereum need crypto-native fiat?</span>
+              <span>
+                Why does Ethereum need <br className={"min-[400px]:hidden"} /> crypto-native fiat?
+              </span>
               <span className="text-pinto-green-4 transition-all duration-300 ease-in-out">
                 <PintoRightArrow width={"1rem"} height={"1rem"} className="transition-all" color="currentColor" />
               </span>
