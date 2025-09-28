@@ -1,3 +1,4 @@
+import chevronDown from "@/assets/misc/ChevronDown.svg";
 import PropertyLowVolatility from "@/assets/misc/Property_Low_Volatility.svg";
 import PropertyMediumOfExchange from "@/assets/misc/Property_Medium_of_Exchange.svg";
 import PropertyScalable from "@/assets/misc/Property_Scalable.svg";
@@ -17,6 +18,7 @@ import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
+import IconImage from "../ui/IconImage";
 import CardModal from "./CardModal";
 
 // Function to create values data with dynamic liquidity distribution
@@ -228,7 +230,7 @@ function CarouselCard({ data, index, keyPrefix, color, cardType, onClick }: Caro
           "flex flex-col md:flex-1",
 
           // Mobile (default)
-          "gap-1 w-full -ml-8",
+          "gap-1 w-full",
 
           // Small screens and up
           "sm:gap-2 sm:-ml-[4rem]",
@@ -272,6 +274,7 @@ function CarouselCard({ data, index, keyPrefix, color, cardType, onClick }: Caro
           {data.subtitle}
         </div>
       </div>
+      <IconImage src={chevronDown} size={6} className="block ml-2 sm:-ml-5 md:hidden" alt="chevron down" />
     </Button>
   );
 }
