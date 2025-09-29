@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/Dialog";
 import { cn } from "@/utils/utils";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import Markdown from "react-markdown";
 
 interface CardData {
@@ -18,6 +19,15 @@ interface CardModalProps {
 }
 
 export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalProps) {
+  // Override Radix Dialog's scroll lock to allow viewport panning when zoomed
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "initial";
+    } else {
+      document.body.style.overflow = "hidden";
+    }
+  }, [isOpen]);
+
   if (!cardData) return null;
 
   return (
