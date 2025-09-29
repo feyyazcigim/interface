@@ -63,7 +63,13 @@ export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalP
               <h2 className="text-2xl sm:text-4xl leading-[1.1] font-thin text-black">{cardData.title}</h2>
             </div>
           </div>
-          <div className="overflow-hidden overflow-y-auto overflow-x-visible">
+          <div
+            className="overflow-hidden overflow-y-auto overflow-x-visible"
+            style={{
+              touchAction: "pan-x pan-y pinch-zoom",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
             <div className="text-base mt-2 mb-4 sm:text-xl md:text-2xl lg:text-3xl leading-[1.2] font-thin text-pinto-gray-5 w-full">
               {cardData.subtitle}
             </div>
