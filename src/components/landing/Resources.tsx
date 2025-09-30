@@ -90,7 +90,12 @@ function getResourcesAnalyticsEvent(label: string) {
 export default function Resources() {
   return (
     <div className="flex flex-col items-center self-stretch gap-8 2xl:gap-12">
-      <h2 className="text-2xl sm:text-4xl leading-same-h2 font-light text-black">Resources</h2>
+      <div className="flex flex-col gap-6 items-center">
+        <h2 className="text-2xl sm:text-4xl leading-same-h2 font-light text-black flex flex-col md:flex-row md:gap-2 items-center">
+          <span>Printed directly to the people.</span>
+          <span>Founded on leviathan-free credit.</span>
+        </h2>
+      </div>
       <div className="flex flex-col w-full sm:flex-row sm:justify-center gap-4 lg:gap-8 max-2xl:px-4 sm:max-2xl:px-4">
         {resourceCards.map((card, index) => (
           <div key={index} className={cardStyles}>
