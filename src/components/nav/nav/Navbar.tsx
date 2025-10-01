@@ -340,6 +340,7 @@ export const navLinks = {
   explorer_field: "/explorer/field",
   explorer_farmer: "/explorer/farmer",
   explorer_seasons: "/explorer/seasons",
+  explorer_tractor: "/explorer/tractor",
   explorer_all: "/explorer/all",
   whitepaper: "/whitepaper",
   twitter: "https://x.com/pintodotmoney",

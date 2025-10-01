@@ -154,18 +154,26 @@ const DataNavi = ({ setNaviTab }) => {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link
-              href={navLinks.explorer_farmer}
-              onClick={trackClick(ANALYTICS_EVENTS.NAVIGATION.EXPLORER_FARMER_CLICK)}
-            >
-              Farmer
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link
               href={navLinks.explorer_seasons}
               onClick={trackClick(ANALYTICS_EVENTS.NAVIGATION.EXPLORER_SEASONS_CLICK)}
             >
               Seasons
+            </Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link
+              href={navLinks.explorer_tractor}
+              onClick={trackClick(ANALYTICS_EVENTS.NAVIGATION.EXPLORER_TRACTOR_CLICK)}
+            >
+              Tractor
+            </Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link
+              href={navLinks.explorer_farmer}
+              onClick={trackClick(ANALYTICS_EVENTS.NAVIGATION.EXPLORER_FARMER_CLICK)}
+            >
+              My Silo
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
