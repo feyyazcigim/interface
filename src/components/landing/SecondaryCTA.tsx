@@ -1,3 +1,4 @@
+import chevronDown from "@/assets/misc/ChevronDown.svg";
 import PropertyLowVolatility from "@/assets/misc/Property_Low_Volatility.svg";
 import PropertyMediumOfExchange from "@/assets/misc/Property_Medium_of_Exchange.svg";
 import PropertyScalable from "@/assets/misc/Property_Scalable.svg";
@@ -17,6 +18,7 @@ import { Link } from "react-router-dom";
 import { PintoRightArrow } from "../Icons";
 import { navLinks } from "../nav/nav/Navbar";
 import { Button } from "../ui/Button";
+import IconImage from "../ui/IconImage";
 import CardModal from "./CardModal";
 
 // Function to create values data with dynamic liquidity distribution
@@ -228,7 +230,7 @@ function CarouselCard({ data, index, keyPrefix, color, cardType, onClick }: Caro
           "flex flex-col md:flex-1",
 
           // Mobile (default)
-          "gap-1 w-full -ml-8",
+          "gap-1 w-full",
 
           // Small screens and up
           "sm:gap-2 sm:-ml-[4rem]",
@@ -272,6 +274,7 @@ function CarouselCard({ data, index, keyPrefix, color, cardType, onClick }: Caro
           {data.subtitle}
         </div>
       </div>
+      <IconImage src={chevronDown} size={6} className="block ml-2 sm:-ml-5 md:hidden" alt="chevron down" />
     </Button>
   );
 }
@@ -410,8 +413,8 @@ export default function SecondaryCTA() {
               <span className="text-pinto-green-4">the properties of USD</span>
             </span>
           </h2>
-          <span className="text-xl lg:text-lg lg:leading-[1.4] font-thin text-black text-center">
-            Printed directly to the people. Founded on leviathan-free credit.
+          <span className="text-xl lg:text-lg lg:leading-[1.4] font-thin text-black text-center sm:whitespace-nowrap">
+            Pinto is designed to save the Ethereum network from the threat of centralized stablecoins
           </span>
           <Link to={navLinks.printsToThePeople} target="_blank" rel="noopener noreferrer">
             <Button
@@ -427,8 +430,7 @@ export default function SecondaryCTA() {
               })}
             >
               <span>
-                Why is Pinto the best alternative <br className="block sm:hidden" />
-                to centralized stablecoins?
+                Why does Ethereum need <br className={"min-[400px]:hidden"} /> crypto-native fiat?
               </span>
               <span className="text-pinto-green-4 transition-all duration-300 ease-in-out">
                 <PintoRightArrow width={"1rem"} height={"1rem"} className="transition-all" color="currentColor" />

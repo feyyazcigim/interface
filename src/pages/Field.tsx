@@ -379,6 +379,7 @@ function Field() {
           {!isMobile && (
             <div className="p-2 rounded-[1rem] bg-pinto-off-white border-pinto-gray-2 border flex flex-col gap-2">
               <Button
+                asChild
                 className="w-full"
                 variant="silo-action"
                 disabled={totalPods.isZero}

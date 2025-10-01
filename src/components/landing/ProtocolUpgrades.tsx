@@ -1286,6 +1286,7 @@ export default function ProtocolUpgrades() {
   const [highlightedData, setHighlightedData] = useState<TimelineEvent | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<Set<TimelineEventType>>(new Set());
   const lastScrollTime = useRef(0);
+  const isNavigating = useRef(false);
 
   // Create year markers for each year between the first and last audit
   const createYearMarkers = () => {
@@ -1439,8 +1440,19 @@ export default function ProtocolUpgrades() {
 
   const handleSettle = useCallback(() => {
     if (!api) return;
+
+    if (isNavigating.current) {
+      // Reset navigation flag
+      isNavigating.current = false;
+    }
+
     const selectedIndex = api.selectedScrollSnap();
     const selected = sortedAudits[selectedIndex];
+
+    // Update carousel center data with the final settled position
+    if (selected && !selected.isYearMarker) {
+      setCarouselCenterData(selected);
+    }
 
     // If we settled on a year marker, find the nearest non-year marker and snap to it
     if (selected?.isYearMarker) {
@@ -1460,6 +1472,7 @@ export default function ProtocolUpgrades() {
 
       // Scroll to the nearest non-year marker
       if (nearestIndex !== selectedIndex && nearestIndex < sortedAudits.length) {
+        isNavigating.current = true; // Set flag again for the corrective scroll
         api.scrollTo(nearestIndex);
       }
     } else if (selectedIndex < sortedAudits.length) {
@@ -1468,8 +1481,57 @@ export default function ProtocolUpgrades() {
     }
   }, [api, sortedAudits]);
 
+  const navigateToNearestNonYearMarker = useCallback(
+    (direction: "prev" | "next") => {
+      if (!api) return;
+
+      // Set navigation flag to prevent intermediate handlers from firing
+      isNavigating.current = true;
+
+      // Reset the flag after a timeout as a safety measure
+      setTimeout(() => {
+        isNavigating.current = false;
+      }, 300);
+
+      const currentIndex = api.selectedScrollSnap();
+      const nonYearMarkers = sortedAudits
+        .map((audit, index) => ({ audit, index }))
+        .filter(({ audit }) => !audit.isYearMarker);
+
+      if (nonYearMarkers.length === 0) {
+        isNavigating.current = false;
+        return;
+      }
+
+      let targetIndex: number;
+
+      if (direction === "prev") {
+        // Find the previous non-year marker
+        const prevMarkers = nonYearMarkers.filter(({ index }) => index < currentIndex);
+        if (prevMarkers.length > 0) {
+          targetIndex = prevMarkers[prevMarkers.length - 1].index;
+        } else {
+          // Loop to the last non-year marker
+          targetIndex = nonYearMarkers[nonYearMarkers.length - 1].index;
+        }
+      } else {
+        // Find the next non-year marker
+        const nextMarkers = nonYearMarkers.filter(({ index }) => index > currentIndex);
+        if (nextMarkers.length > 0) {
+          targetIndex = nextMarkers[0].index;
+        } else {
+          // Loop to the first non-year marker
+          targetIndex = nonYearMarkers[0].index;
+        }
+      }
+
+      api.scrollTo(targetIndex);
+    },
+    [api, sortedAudits],
+  );
+
   const handleScroll = useCallback(() => {
-    if (!api) return;
+    if (!api || isNavigating.current) return;
     const now = Date.now();
     if (now - lastScrollTime.current >= 100) {
       lastScrollTime.current = now;
@@ -1562,7 +1624,7 @@ export default function ProtocolUpgrades() {
               dragFree: true,
             }}
             plugins={[WheelGesturesPlugin()]}
-            className="w-full select-none"
+            className="w-[93.5%] select-none place-self-center"
             setApi={setApi}
           >
             <CarouselContent>
@@ -1712,6 +1774,18 @@ export default function ProtocolUpgrades() {
                 </div>
               </CarouselItem>
             </CarouselContent>
+            <CarouselPrevious
+              variant="ghost"
+              noPadding={true}
+              className="[&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-8 sm:[&>svg]:h-8 -left-8 sm:-left-12"
+              onClick={() => navigateToNearestNonYearMarker("prev")}
+            />
+            <CarouselNext
+              variant="ghost"
+              noPadding={true}
+              className="[&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-8 sm:[&>svg]:h-8 -right-8 sm:-right-12"
+              onClick={() => navigateToNearestNonYearMarker("next")}
+            />
           </Carousel>
         </motion.div>
       </AnimatePresence>

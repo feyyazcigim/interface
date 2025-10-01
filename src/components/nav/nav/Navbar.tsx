@@ -254,7 +254,7 @@ const Navbar = () => {
             <img src={PintoLogoText} alt="Pinto Logo" className="h-6" />
           </div>
         )}
-        <div className="hidden lg:flex lg:justify-center pr-[208px]">
+        <div className="hidden lg:flex lg:justify-center pr-[150px]">
           <Navi />
         </div>
         <div className="flex flex-row justify-end">
