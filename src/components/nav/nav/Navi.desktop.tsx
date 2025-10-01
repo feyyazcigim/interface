@@ -187,22 +187,6 @@ const DataNavi = ({ setNaviTab }) => {
   );
 };
 
-// =======
-//             <Link
-//               href={navLinks.explorer_farmer}
-//               onClick={trackClick(ANALYTICS_EVENTS.NAVIGATION.EXPLORER_FARMER_CLICK)}
-//             >
-//               Farmer
-//             </Link>
-//           </NavigationMenuItem>
-//           <NavigationMenuItem>
-//             <Link
-//               href={navLinks.explorer_seasons}
-//               onClick={trackClick(ANALYTICS_EVENTS.NAVIGATION.EXPLORER_SEASONS_CLICK)}
-//             >
-//               Seasons
-//             </Link>
-
 const LearnNavi = ({ setNaviTab }) => {
   return (
     <motion.div
