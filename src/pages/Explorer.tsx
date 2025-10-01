@@ -1,8 +1,10 @@
 import TimeTabsSelector from "@/components/charts/TimeTabs";
 import PageContainer from "@/components/ui/PageContainer";
 import { Separator } from "@/components/ui/Separator";
+import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import useRouterTabs, { UseRouterTabsOptions } from "@/hooks/useRouterTabs";
 import { useSharedTimeTab } from "@/hooks/useSharedTimeTab";
+import { withTracking } from "@/utils/analytics";
 import { useCallback } from "react";
 import AllExplorer from "./explorer/AllExplorer";
 import FarmerExplorer from "./explorer/FarmerExplorer";
@@ -55,12 +57,23 @@ const Explorer = () => {
   const [tab, handleChangeTab] = useRouterTabs(routerSlugs, routerTabsOptions);
   const [globalTimeTab, setGlobalTimeTab] = useSharedTimeTab();
 
-  const handleMainTabClickFactory = useCallback(
-    (selection: string) => () => handleChangeTab(selection),
-    [handleChangeTab],
-  );
-
   const selectedIdx = TABS.findIndex((t) => t.urlSlug === tab);
+
+  const handleMainTabClickFactory = useCallback(
+    (selection: string) => () => {
+      const previousTab = TABS[selectedIdx]?.urlSlug;
+      const newTab = selection;
+      const tabDescription = TABS.find((t) => t.urlSlug === selection)?.description || null;
+
+      // Track the tab change and then execute the original handler
+      withTracking(ANALYTICS_EVENTS.EXPLORER.MAIN_TAB_CLICK, () => handleChangeTab(selection), {
+        previous_tab: previousTab,
+        new_tab: newTab,
+        tab_description: tabDescription,
+      })();
+    },
+    [handleChangeTab, selectedIdx],
+  );
   const description = TABS[selectedIdx].description;
   const removeBottomPadding = selectedIdx === 3; //Remove on seasons table for the pagination to fit nicely on the bottm
 
@@ -72,7 +85,15 @@ const Explorer = () => {
             <div className="flex justify-between items-center">
               <div className="pinto-h2 sm:pinto-h1 ml-[-3px]">Data</div>
               <div className="scale-110 sm:mr-4">
-                <TimeTabsSelector tab={globalTimeTab} setTab={setGlobalTimeTab} />
+                <TimeTabsSelector
+                  tab={globalTimeTab}
+                  setTab={setGlobalTimeTab}
+                  context={{
+                    component: "explorer_global",
+                    explorer_tab: tab,
+                    affects_all_charts: true,
+                  }}
+                />
               </div>
             </div>
             <div className="flex gap-6 sm:gap-10 mt-4 sm:mt-8 overflow-x-auto scrollbar-none  ml-[-1px]">

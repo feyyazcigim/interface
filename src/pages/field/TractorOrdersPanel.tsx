@@ -20,7 +20,7 @@ import {
   RequisitionEvent,
   decodeSowTractorData,
   getSowOrderTokenStrategy,
-  prepareSowOrderV0RequisitionEventForTxn,
+  prepareRequisitionForTxn,
 } from "@/lib/Tractor/utils";
 import usePublisherTractorExecutions from "@/state/tractor/useTractorExecutions";
 import { useTractorSowOrderbook } from "@/state/tractor/useTractorSowOrders";
@@ -82,6 +82,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     filterOutCompleted: false,
     select: selectOrdersWithExecutions,
     enabled: !!address,
+    // chainOnly: true,
   });
 
   // derived
@@ -126,7 +127,7 @@ const TractorOrdersPanel = ({ refreshData, onCreateOrder }: TractorOrdersPanelPr
     toast.loading("Cancelling order...");
 
     // Fix timestamp values for transaction
-    const fixedRequisition = prepareSowOrderV0RequisitionEventForTxn(req);
+    const fixedRequisition = prepareRequisitionForTxn(req);
 
     try {
       return writeWithEstimateGas({
