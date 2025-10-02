@@ -28,6 +28,7 @@ const NAVIGATION_EVENTS = {
   EXPLORER_FIELD_CLICK: "navigation_explorer_field_click",
   EXPLORER_FARMER_CLICK: "navigation_explorer_farmer_click",
   EXPLORER_SEASONS_CLICK: "navigation_explorer_seasons_click",
+  EXPLORER_TRACTOR_CLICK: "navigation_explorer_tractor_click",
   EXPLORER_ALL_CLICK: "navigation_explorer_all_click",
 
   // Learn Sub-navigation

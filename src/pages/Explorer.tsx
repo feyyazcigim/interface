@@ -28,10 +28,6 @@ const TABS = [
     tabName: "Field",
   },
   {
-    urlSlug: "farmer",
-    tabName: "Farmer",
-  },
-  {
     urlSlug: "seasons",
     tabName: "Seasons",
     description:
@@ -40,6 +36,10 @@ const TABS = [
   {
     urlSlug: "tractor",
     tabName: "Tractor",
+  },
+  {
+    urlSlug: "farmer",
+    tabName: "My Silo",
   },
   {
     urlSlug: "all",
@@ -75,7 +75,7 @@ const Explorer = () => {
     [handleChangeTab, selectedIdx],
   );
   const description = TABS[selectedIdx].description;
-  const removeBottomPadding = selectedIdx === 4; //Remove on seasons table for the pagination to fit nicely on the bottm
+  const removeBottomPadding = selectedIdx === 3; //Remove on seasons table for the pagination to fit nicely on the bottm
 
   return (
     <PageContainer variant="xlAltExplorer" removeBottomPadding={removeBottomPadding}>
@@ -83,7 +83,7 @@ const Explorer = () => {
         <div className="flex flex-col w-full gap-4 sm:gap-8">
           <div className="flex flex-col gap-2 sm:ml-4">
             <div className="flex justify-between items-center">
-              <div className="pinto-h2 sm:pinto-h1 ml-[-3px]">Explorer</div>
+              <div className="pinto-h2 sm:pinto-h1 ml-[-3px]">Data</div>
               <div className="scale-110 sm:mr-4">
                 <TimeTabsSelector
                   tab={globalTimeTab}
@@ -119,9 +119,9 @@ const Explorer = () => {
           {selectedIdx === 0 && <PintoExplorer />}
           {selectedIdx === 1 && <SiloExplorer />}
           {selectedIdx === 2 && <FieldExplorer />}
-          {selectedIdx === 3 && <FarmerExplorer />}
-          {selectedIdx === 4 && <SeasonsExplorer />}
-          {selectedIdx === 5 && <TractorExplorer />}
+          {selectedIdx === 3 && <SeasonsExplorer />}
+          {selectedIdx === 4 && <TractorExplorer />}
+          {selectedIdx === 5 && <FarmerExplorer />}
           {selectedIdx === 6 && <AllExplorer />}
         </div>
       </div>
