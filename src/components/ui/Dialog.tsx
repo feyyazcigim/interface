@@ -7,9 +7,11 @@ const Dialog = ({ onOpenChange, ...props }: React.ComponentPropsWithoutRef<typeo
   <DialogPrimitive.Root
     onOpenChange={(open) => {
       if (open) {
-        document.body.style.overflow = "initial";
-      } else {
         document.body.style.overflow = "hidden";
+        document.body.style.touchAction = "pinch-zoom";
+      } else {
+        document.body.style.overflow = "initial";
+        document.body.style.touchAction = "auto";
       }
       onOpenChange?.(open);
     }}
