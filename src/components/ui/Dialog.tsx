@@ -3,7 +3,20 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import React from "react";
 
-const Dialog = DialogPrimitive.Root;
+const Dialog = ({ onOpenChange, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => (
+  <DialogPrimitive.Root
+    onOpenChange={(open) => {
+      if (open) {
+        document.body.style.overflow = "initial";
+      } else {
+        document.body.style.overflow = "hidden";
+      }
+      onOpenChange?.(open);
+    }}
+    {...props}
+  />
+);
+Dialog.displayName = DialogPrimitive.Root.displayName;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;
@@ -22,7 +35,7 @@ interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof Dialo
 
 const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DialogContentProps>(
   ({ className, children, hideCloseButton = false, ...props }, ref) => (
-    <DialogPortal>
+    <div>
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
@@ -40,7 +53,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>
-    </DialogPortal>
+    </div>
   ),
 );
 DialogContent.displayName = DialogPrimitive.Content.displayName;
