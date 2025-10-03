@@ -6,12 +6,10 @@ import React from "react";
 const Dialog = ({ onOpenChange, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => (
   <DialogPrimitive.Root
     onOpenChange={(open) => {
-      if (open) {
+      if (!open) {
         document.body.style.overflow = "hidden";
-        document.body.style.touchAction = "pinch-zoom";
       } else {
         document.body.style.overflow = "initial";
-        document.body.style.touchAction = "auto";
       }
       onOpenChange?.(open);
     }}
@@ -27,7 +25,7 @@ const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("fixed inset-0 z-50 bg-transparent touch-pinch-zoom", className)} {...props} />
+  <div ref={ref} className={cn("fixed inset-0 z-50 bg-transparent", className)} {...props} />
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
