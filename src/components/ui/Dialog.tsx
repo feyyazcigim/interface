@@ -6,10 +6,13 @@ import React, { useEffect } from "react";
 const Dialog = ({ onOpenChange, open, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => {
   // Handle body overflow when dialog is controlled externally
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+    const scrollContainer = document.getElementById("scrollContainer");
+    if (scrollContainer) {
+      if (open) {
+        scrollContainer.style.overflow = "hidden";
+      } else {
+        scrollContainer.style.overflow = "";
+      }
     }
   }, [open]);
 
@@ -17,10 +20,13 @@ const Dialog = ({ onOpenChange, open, ...props }: React.ComponentPropsWithoutRef
     <DialogPrimitive.Root
       open={open}
       onOpenChange={(newOpen) => {
-        if (newOpen) {
-          document.body.style.overflow = "hidden";
-        } else {
-          document.body.style.overflow = "";
+        const scrollContainer = document.getElementById("scrollContainer");
+        if (scrollContainer) {
+          if (newOpen) {
+            scrollContainer.style.overflow = "hidden";
+          } else {
+            scrollContainer.style.overflow = "";
+          }
         }
         onOpenChange?.(newOpen);
       }}
