@@ -1,21 +1,37 @@
 import { cn } from "@/utils/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
-import React from "react";
+import React, { useEffect } from "react";
 
-const Dialog = ({ onOpenChange, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => (
-  <DialogPrimitive.Root
-    onOpenChange={(open) => {
-      if (!open) {
-        document.body.style.overflow = "hidden";
-      } else {
-        document.body.style.overflow = "initial";
-      }
-      onOpenChange?.(open);
-    }}
-    {...props}
-  />
-);
+const Dialog = ({ onOpenChange, open, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => {
+  // Handle body overflow when dialog is controlled externally
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    }
+  }, [open]);
+
+  return (
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (newOpen) {
+          document.body.style.overflow = "hidden";
+          document.body.style.touchAction = "none";
+        } else {
+          document.body.style.overflow = "";
+          document.body.style.touchAction = "";
+        }
+        onOpenChange?.(newOpen);
+      }}
+      {...props}
+    />
+  );
+};
 Dialog.displayName = DialogPrimitive.Root.displayName;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
