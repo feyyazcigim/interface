@@ -8,10 +8,8 @@ const Dialog = ({ onOpenChange, open, ...props }: React.ComponentPropsWithoutRef
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
-      document.body.style.touchAction = "none";
     } else {
       document.body.style.overflow = "";
-      document.body.style.touchAction = "";
     }
   }, [open]);
 
@@ -21,10 +19,8 @@ const Dialog = ({ onOpenChange, open, ...props }: React.ComponentPropsWithoutRef
       onOpenChange={(newOpen) => {
         if (newOpen) {
           document.body.style.overflow = "hidden";
-          document.body.style.touchAction = "none";
         } else {
           document.body.style.overflow = "";
-          document.body.style.touchAction = "";
         }
         onOpenChange?.(newOpen);
       }}
