@@ -19,15 +19,6 @@ interface CardModalProps {
 }
 
 export default function CardModal({ isOpen, onOpenChange, cardData }: CardModalProps) {
-  // Override scroll lock to allow viewport panning when zoomed
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "initial";
-    } else {
-      document.body.style.overflow = "hidden";
-    }
-  }, [isOpen]);
-
   if (!cardData) return null;
 
   return (
