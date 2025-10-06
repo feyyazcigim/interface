@@ -43,7 +43,11 @@ const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("fixed inset-0 z-50 bg-transparent h-[120dvh]", className)} {...props} />
+  <div
+    ref={ref}
+    className={cn("fixed inset-0 z-50 bg-transparent h-[100dvh] touch-pan-x touch-pan-y touch-pinch-zoom", className)}
+    {...props}
+  />
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
