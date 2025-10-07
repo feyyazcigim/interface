@@ -53,7 +53,7 @@ interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof Dialo
 
 const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DialogContentProps>(
   ({ className, children, hideCloseButton = false, ...props }, ref) => (
-    <div>
+    <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
@@ -71,7 +71,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>
-    </div>
+    </DialogPortal>
   ),
 );
 DialogContent.displayName = DialogPrimitive.Content.displayName;
