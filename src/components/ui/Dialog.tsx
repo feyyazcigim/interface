@@ -1,40 +1,9 @@
 import { cn } from "@/utils/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
-import React, { useEffect } from "react";
+import React from "react";
 
-const Dialog = ({ onOpenChange, open, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => {
-  // Handle body overflow when dialog is controlled externally
-  useEffect(() => {
-    const scrollContainer = document.getElementById("scrollContainer");
-    if (scrollContainer) {
-      if (open) {
-        scrollContainer.style.overflow = "hidden";
-      } else {
-        scrollContainer.style.overflow = "";
-      }
-    }
-  }, [open]);
-
-  return (
-    <DialogPrimitive.Root
-      open={open}
-      onOpenChange={(newOpen) => {
-        const scrollContainer = document.getElementById("scrollContainer");
-        if (scrollContainer) {
-          if (newOpen) {
-            scrollContainer.style.overflow = "hidden";
-          } else {
-            scrollContainer.style.overflow = "";
-          }
-        }
-        onOpenChange?.(newOpen);
-      }}
-      {...props}
-    />
-  );
-};
-Dialog.displayName = DialogPrimitive.Root.displayName;
+const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;
@@ -43,7 +12,7 @@ const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("fixed inset-0 z-50 bg-transparent h-[120dvh]", className)} {...props} />
+  <DialogPrimitive.Overlay ref={ref} className={cn("fixed inset-0 z-50 bg-transparent", className)} {...props} />
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
@@ -53,7 +22,7 @@ interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof Dialo
 
 const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DialogContentProps>(
   ({ className, children, hideCloseButton = false, ...props }, ref) => (
-    <div>
+    <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
@@ -71,7 +40,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>
-    </div>
+    </DialogPortal>
   ),
 );
 DialogContent.displayName = DialogPrimitive.Content.displayName;
