@@ -61,6 +61,14 @@ export default function useSeasonalInflowSnapshots(
     staleTime: Infinity,
     gcTime: 20 * 60 * 1000,
     enabled: enabled && fromSeason >= 0 && toSeason > 0,
+    refetchInterval: (query) => {
+      // Refetch every 5 seconds if the response doesn't include data up to toSeason
+      // Once the data includes toSeason, refetching stops
+      const data = query.state.data;
+      if (!data?.snapshots?.length) return false;
+      const maxSeason = Math.max(...data.snapshots.map((s) => s.season));
+      return maxSeason < toSeason ? 5000 : false;
+    },
   });
 
   return {
