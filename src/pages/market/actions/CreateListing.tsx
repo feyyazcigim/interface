@@ -107,7 +107,8 @@ export default function CreateListing() {
       prefillPrice >= pricePerPodValidation.minValue &&
       prefillPrice <= pricePerPodValidation.maxValue
     ) {
-      newPricePerPod = prefillPrice;
+      // Format to 6 decimals for display
+      newPricePerPod = Number(prefillPrice.toFixed(6));
     }
 
     // Find nearest plot within 10% tolerance (only if prefillExpiresIn exists)

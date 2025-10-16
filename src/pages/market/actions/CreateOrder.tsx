@@ -152,7 +152,8 @@ export default function CreateOrder() {
       prefillPrice >= pricePerPodValidation.minValue &&
       prefillPrice <= pricePerPodValidation.maxValue
     ) {
-      newPricePerPod = prefillPrice;
+      // Format to 6 decimals for display
+      newPricePerPod = Number(prefillPrice.toFixed(6));
     }
 
     // Calculate max place in line
