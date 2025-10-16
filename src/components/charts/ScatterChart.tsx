@@ -508,9 +508,9 @@ const ScatterChart = React.memo(
             const activeElement = activeElements[0];
             selectedPointRef.current = [activeElement.datasetIndex, activeElement.index];
 
-            const dataPoint = chart.data.datasets[activeElement.datasetIndex].data[
-              activeElement.index
-            ] as Point & { [key: string]: any };
+            const dataPoint = chart.data.datasets[activeElement.datasetIndex].data[activeElement.index] as Point & {
+              [key: string]: any;
+            };
 
             payload.activeElement = {
               datasetIndex: activeElement.datasetIndex,

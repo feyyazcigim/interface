@@ -1,8 +1,8 @@
 import PodIcon from "@/assets/protocol/Pod.png";
 import PintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
-import { ContextMenu } from "@/components/MarketContextMenu";
 import FrameAnimator from "@/components/LoadingSpinner";
+import { ContextMenu } from "@/components/MarketContextMenu";
 import ScatterChart, { PointClickPayload } from "@/components/charts/ScatterChart";
 import { Separator } from "@/components/ui/Separator";
 import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
