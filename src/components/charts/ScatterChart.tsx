@@ -52,6 +52,28 @@ export type ScatterChartAxisOptions = {
   max: number;
 };
 
+export interface PointClickPayload {
+  // Clicked coordinates in chart scale (always present, null if event has no position)
+  clickedXY: { x: number; y: number } | null;
+
+  // Scale ranges for parent component validation (e.g., "is click within 10% of nearest plot?")
+  scaleRanges: {
+    x: { min: number; max: number };
+    y: { min: number; max: number };
+  };
+
+  // Active element info (present only if clicked directly on a data point)
+  activeElement?: {
+    datasetIndex: number;
+    index: number;
+    dataPoint: Point & { [key: string]: any };
+  };
+
+  // Raw Chart.js references for advanced usage
+  rawEvent: ChartEvent;
+  chart: Chart;
+}
+
 export interface ScatterChartProps {
   data: ScatterChartData;
   size?: "small" | "large";
@@ -66,7 +88,7 @@ export interface ScatterChartProps {
     dash?: number[];
     label?: string;
   }[];
-  onPointClick?: (event: ChartEvent, activeElements: ActiveElement[], chart: Chart) => void;
+  onPointClick?: (payload: PointClickPayload) => void;
   xOptions: ScatterChartAxisOptions;
   yOptions: ScatterChartAxisOptions;
   customValueTransform?: CustomChartValueTransform;
@@ -393,7 +415,7 @@ const ScatterChart = React.memo(
           }
         },
       }),
-      [selectedPointRef.current],
+      [],
     );
 
     const selectionCallbackPlugin: Plugin = useMemo<Plugin>(
@@ -403,7 +425,7 @@ const ScatterChart = React.memo(
           onMouseOver?.(chart.getActiveElements()[0]?.index);
         },
       }),
-      [],
+      [onMouseOver],
     );
 
     const chartOptions: ChartOptions = useMemo(() => {
@@ -426,8 +448,8 @@ const ScatterChart = React.memo(
           },
         },
         interaction: {
-          mode: "nearest",
-          intersect: false,
+          mode: "point",
+          intersect: true,
         },
         scales: {
           x: {
@@ -438,26 +460,68 @@ const ScatterChart = React.memo(
             type: "linear",
             position: "bottom",
             min: xOptions.min,
-            max: Math.round((xOptions.max / 10) * 10), // round to nearest 10 so auto tick generation works
+            max: Math.ceil(xOptions.max / 10) * 10,
             ticks: {
               padding: 0,
               callback: (val) => `${Number(val)}M`,
             },
           },
           y: {
+            type: useLogarithmicScale ? "logarithmic" : "linear",
             title: {
               display: true,
               text: yOptions.label || "",
             },
+            min: yTickMin,
+            max: yTickMax,
             ticks: {
               padding: 0,
+              callback: (val) => (valueFormatter ? valueFormatter(Number(val)) : Number(val)),
             },
           },
         },
         onClick: (event, activeElements, chart) => {
-          const activeElement = activeElements[0];
-          selectedPointRef.current = [activeElement.datasetIndex, activeElement.index];
-          onPointClick?.(event, activeElements, chart);
+          // Convert pixel coordinates to scale values
+          const canvasPosition = chart.canvas.getBoundingClientRect();
+          const nativeEvent = event.native as MouseEvent;
+          const pixelX = nativeEvent.clientX - canvasPosition.left;
+          const pixelY = nativeEvent.clientY - canvasPosition.top;
+
+          const xScale = chart.scales.x;
+          const yScale = chart.scales.y;
+          const xValue = xScale.getValueForPixel(pixelX);
+          const yValue = yScale.getValueForPixel(pixelY);
+
+          // Prepare payload
+          const payload: PointClickPayload = {
+            clickedXY: xValue !== undefined && yValue !== undefined ? { x: xValue, y: yValue } : null,
+            scaleRanges: {
+              x: { min: xScale.min, max: xScale.max },
+              y: { min: yScale.min, max: yScale.max },
+            },
+            rawEvent: event,
+            chart,
+          };
+
+          // Add active element info if point was clicked
+          if (activeElements.length > 0) {
+            const activeElement = activeElements[0];
+            selectedPointRef.current = [activeElement.datasetIndex, activeElement.index];
+
+            const dataPoint = chart.data.datasets[activeElement.datasetIndex].data[
+              activeElement.index
+            ] as Point & { [key: string]: any };
+
+            payload.activeElement = {
+              datasetIndex: activeElement.datasetIndex,
+              index: activeElement.index,
+              dataPoint,
+            };
+          } else {
+            selectedPointRef.current = null;
+          }
+
+          onPointClick?.(payload);
         },
       };
     }, [data, yTickMin, yTickMax, valueFormatter, useLogarithmicScale, customValueTransform]);

@@ -1,15 +1,15 @@
 import PodIcon from "@/assets/protocol/Pod.png";
 import PintoIcon from "@/assets/tokens/PINTO.png";
 import { TokenValue } from "@/classes/TokenValue";
+import { ContextMenu } from "@/components/MarketContextMenu";
 import FrameAnimator from "@/components/LoadingSpinner";
-import ScatterChart from "@/components/charts/ScatterChart";
+import ScatterChart, { PointClickPayload } from "@/components/charts/ScatterChart";
 import { Separator } from "@/components/ui/Separator";
 import { ANALYTICS_EVENTS } from "@/constants/analytics-events";
 import { useAllMarket } from "@/state/market/useAllMarket";
 import { useHarvestableIndex, usePodLine } from "@/state/useFieldData";
 import { trackSimpleEvent } from "@/utils/analytics";
-import { ActiveElement, ChartEvent, PointStyle, TooltipOptions } from "chart.js";
-import { Chart } from "chart.js";
+import { PointStyle, TooltipOptions } from "chart.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AllActivityTable } from "./market/AllActivityTable";
@@ -146,6 +146,11 @@ const shapeScatterChartData = (data: any[], harvestableIndex: TokenValue): Marke
 export function Market() {
   const { mode, id } = useParams();
   const [tab, handleChangeTab] = useState(TABLE_SLUGS[0]);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    clickedCoords: { x: number; y: number };
+  } | null>(null);
   const navigate = useNavigate();
   const { data, isLoaded } = useAllMarket();
   const podLine = usePodLine();
@@ -271,24 +276,71 @@ export function Market() {
     [mode],
   );
 
-  const onPointClick = (event: ChartEvent, activeElements: ActiveElement[], chart: Chart) => {
-    const dataPoint = scatterChartData[activeElements[0].datasetIndex].data[activeElements[0].index] as any;
+  const contextMenuOptions = useMemo(() => {
+    if (!contextMenu) return [];
 
-    if (!dataPoint) return;
+    return [
+      {
+        label: "Create Order",
+        onClick: () => {
+          navigate("/market/pods/buy", {
+            state: {
+              // Convert Y from percentage (0-100) to decimal (0-1)
+              prefillPrice: contextMenu.clickedCoords.y / 100,
+              prefillPlaceInLine: contextMenu.clickedCoords.x,
+            },
+          });
+        },
+      },
+      {
+        label: "Create Listing",
+        onClick: () => {
+          navigate("/market/pods/sell", {
+            state: {
+              // Convert Y from percentage (0-100) to decimal (0-1)
+              prefillPrice: contextMenu.clickedCoords.y / 100,
+              // X coordinate for place in line (also used for expires in)
+              prefillPlaceInLine: contextMenu.clickedCoords.x,
+              prefillExpiresIn: contextMenu.clickedCoords.x,
+            },
+          });
+        },
+      },
+    ];
+  }, [contextMenu, navigate]);
 
-    // Track chart point click event
-    trackSimpleEvent(ANALYTICS_EVENTS.MARKET.CHART_POINT_CLICK, {
-      event_type: dataPoint?.eventType?.toLowerCase() ?? "unknown",
-      event_status: dataPoint?.status?.toLowerCase() ?? "unknown",
-      price_per_pod: dataPoint?.y ?? 0,
-      place_in_line_millions: Math.floor(dataPoint?.x ?? -1),
-      current_mode: !mode || mode === "buy" ? "buy" : "sell",
-    });
+  const onPointClick = (payload: PointClickPayload) => {
+    // If clicked on a data point, navigate to detail page
+    if (payload.activeElement) {
+      const dataPoint = payload.activeElement.dataPoint as any;
 
-    if (dataPoint.eventType === "LISTING") {
-      navigate(`/market/pods/buy/${dataPoint.eventIndex.toString().replace(".", "")}`);
-    } else {
-      navigate(`/market/pods/sell/${dataPoint.eventId.replace(".", "")}`);
+      if (!dataPoint) return;
+
+      // Track chart point click event
+      trackSimpleEvent(ANALYTICS_EVENTS.MARKET.CHART_POINT_CLICK, {
+        event_type: dataPoint?.eventType?.toLowerCase() ?? "unknown",
+        event_status: dataPoint?.status?.toLowerCase() ?? "unknown",
+        price_per_pod: dataPoint?.y ?? 0,
+        place_in_line_millions: Math.floor(dataPoint?.x ?? -1),
+        current_mode: !mode || mode === "buy" ? "buy" : "sell",
+      });
+
+      if (dataPoint.eventType === "LISTING") {
+        navigate(`/market/pods/buy/${dataPoint.eventIndex.toString().replace(".", "")}`);
+      } else {
+        navigate(`/market/pods/sell/${dataPoint.eventId.replace(".", "")}`);
+      }
+      return;
+    }
+
+    // If clicked on empty space, open context menu
+    if (payload.clickedXY && payload.rawEvent.native) {
+      const nativeEvent = payload.rawEvent.native as MouseEvent;
+      setContextMenu({
+        x: nativeEvent.clientX,
+        y: nativeEvent.clientY,
+        clickedCoords: payload.clickedXY,
+      });
     }
   };
 
@@ -352,6 +404,15 @@ export function Market() {
           </div>
         </div>
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          options={contextMenuOptions}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </>
   );
 }
