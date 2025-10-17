@@ -238,6 +238,8 @@ const COLLECTION_EVENTS = {
   OPENSEA_CLICK: "collection_opensea_click",
 
   // Pagination
+  PAGE_FIRST_CLICK: "collection_page_first_click",
+  PAGE_LAST_CLICK: "collection_page_last_click",
   PAGE_NEXT_CLICK: "collection_page_next_click",
   PAGE_PREVIOUS_CLICK: "collection_page_previous_click",
   PAGE_NUMBER_CLICK: "collection_page_number_click",
